@@ -233,10 +233,16 @@ describe("createPost", () => {
 
     const result = await createPost(db, input);
 
-    expect(db.execute).toHaveBeenCalledOnce();
+    // First execute should be the INSERT
     const [sql] = vi.mocked(db.execute).mock.calls[0];
     expect(sql).toContain("INSERT INTO posts");
     expect(result.title).toBe("New Post");
+
+    // Should also refresh category post_count
+    const categoryRefresh = vi.mocked(db.execute).mock.calls.find(([s]) =>
+      s.includes("UPDATE categories SET post_count"),
+    );
+    expect(categoryRefresh).toBeDefined();
   });
 
   it("computes reading_time and excerpt automatically", async () => {
@@ -298,15 +304,14 @@ describe("updatePost", () => {
       content: "Updated content",
     };
 
+    // firstOrNull calls: 1) getPostById (existing), 2) getPostById (after update)
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce({ ...samplePostWithCategory, ...input });
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
-    vi.mocked(db.firstOrNull).mockResolvedValue({
-      ...samplePost,
-      ...input,
-    });
 
     const result = await updatePost(db, "test-id", input);
 
-    expect(db.execute).toHaveBeenCalledOnce();
     const [sql, params] = vi.mocked(db.execute).mock.calls[0];
     expect(sql).toContain("UPDATE posts SET");
     expect(sql).toContain("title = ?");
@@ -317,8 +322,10 @@ describe("updatePost", () => {
   });
 
   it("recomputes reading_time when content changes", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce(samplePostWithCategory);
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
-    vi.mocked(db.firstOrNull).mockResolvedValue(samplePost);
 
     await updatePost(db, "test-id", { content: "new content" });
 
@@ -326,8 +333,7 @@ describe("updatePost", () => {
     expect(sql).toContain("reading_time");
   });
 
-  it("returns null when post not found after update", async () => {
-    vi.mocked(db.execute).mockResolvedValue({ changes: 0, duration: 1 });
+  it("returns null when post not found", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(null);
 
     const result = await updatePost(db, "nonexistent", { title: "X" });
@@ -335,11 +341,12 @@ describe("updatePost", () => {
   });
 
   it("auto-sets published_at when status changes to published", async () => {
-    // First call: getPostById to check existing published_at (returns null)
-    // Second call: getPostById after UPDATE to return result
+    // Call sequence: 1) getPostById (existing, draft, no published_at)
+    // then execute (UPDATE), then refreshCategoryPostCount (execute), refreshAllTagPostCounts (execute)
+    // then getPostById (after update)
     vi.mocked(db.firstOrNull)
-      .mockResolvedValueOnce({ ...samplePost, status: "draft", published_at: null })
-      .mockResolvedValueOnce({ ...samplePost, status: "published", published_at: now });
+      .mockResolvedValueOnce({ ...samplePostWithCategory, status: "draft", published_at: null })
+      .mockResolvedValueOnce({ ...samplePostWithCategory, status: "published", published_at: now });
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
 
     await updatePost(db, "test-id", { status: "published" });
@@ -355,11 +362,9 @@ describe("updatePost", () => {
 
   it("does not overwrite existing published_at on re-publish", async () => {
     const existingPublishedAt = 1700000000;
-    // First call: getPostById — post already has published_at
-    // Second call: getPostById after UPDATE
     vi.mocked(db.firstOrNull)
-      .mockResolvedValueOnce({ ...samplePost, status: "draft", published_at: existingPublishedAt })
-      .mockResolvedValueOnce({ ...samplePost, status: "published", published_at: existingPublishedAt });
+      .mockResolvedValueOnce({ ...samplePostWithCategory, status: "draft", published_at: existingPublishedAt })
+      .mockResolvedValueOnce({ ...samplePostWithCategory, status: "published", published_at: existingPublishedAt });
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
 
     await updatePost(db, "test-id", { status: "published" });
@@ -367,6 +372,24 @@ describe("updatePost", () => {
     const [sql] = vi.mocked(db.execute).mock.calls[0];
     // Should NOT contain published_at since it already exists
     expect(sql).not.toContain("published_at");
+  });
+
+  it("refreshes category post_count when status changes", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({ ...samplePostWithCategory, status: "draft", category_id: "cat-1" })
+      .mockResolvedValueOnce({ ...samplePostWithCategory, status: "published" });
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
+
+    await updatePost(db, "test-id", { status: "published" });
+
+    // Should have execute calls: UPDATE posts, refreshCategoryPostCount, refreshAllTagPostCounts
+    const executeCalls = vi.mocked(db.execute).mock.calls;
+    expect(executeCalls.length).toBeGreaterThanOrEqual(2);
+    // One of the execute calls should update categories post_count
+    const categoryRefresh = executeCalls.find(([sql]) =>
+      sql.includes("UPDATE categories SET post_count"),
+    );
+    expect(categoryRefresh).toBeDefined();
   });
 });
 
@@ -382,11 +405,13 @@ describe("deletePost", () => {
   });
 
   it("deletes post by id and returns true", async () => {
+    // firstOrNull: getPostById before delete
+    vi.mocked(db.firstOrNull).mockResolvedValue(samplePostWithCategory);
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
 
     const result = await deletePost(db, "test-id");
 
-    expect(db.execute).toHaveBeenCalledOnce();
+    // First execute call should be the DELETE
     const [sql, params] = vi.mocked(db.execute).mock.calls[0];
     expect(sql).toContain("DELETE FROM posts");
     expect(sql).toContain("WHERE id = ?");
@@ -394,7 +419,23 @@ describe("deletePost", () => {
     expect(result).toBe(true);
   });
 
+  it("refreshes category post_count after deletion", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue({ ...samplePostWithCategory, category_id: "cat-1" });
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await deletePost(db, "test-id");
+
+    // Should have execute calls: DELETE, refreshCategoryPostCount, refreshAllTagPostCounts
+    const executeCalls = vi.mocked(db.execute).mock.calls;
+    expect(executeCalls.length).toBeGreaterThanOrEqual(2);
+    const categoryRefresh = executeCalls.find(([sql]) =>
+      sql.includes("UPDATE categories SET post_count"),
+    );
+    expect(categoryRefresh).toBeDefined();
+  });
+
   it("returns false when post not found", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue(null);
     vi.mocked(db.execute).mockResolvedValue({ changes: 0, duration: 1 });
 
     const result = await deletePost(db, "nonexistent");

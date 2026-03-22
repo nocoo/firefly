@@ -214,6 +214,12 @@ export async function createPost(
   ]);
 
   const post = await getPostById(db, id);
+
+  // Refresh category post_count if the new post has a category
+  if (input.category_id) {
+    await refreshCategoryPostCount(db, input.category_id);
+  }
+
   return post!;
 }
 
@@ -226,6 +232,10 @@ export async function updatePost(
   id: string,
   input: UpdatePostInput,
 ): Promise<PostWithCategory | null> {
+  // Fetch existing post to track category/status changes
+  const existingPost = await getPostById(db, id);
+  if (!existingPost) return null;
+
   const setClauses: string[] = [];
   const params: unknown[] = [];
 
@@ -288,9 +298,7 @@ export async function updatePost(
     input.status === "published" &&
     input.published_at === undefined
   ) {
-    // Fetch current post to check if it already has a published_at
-    const existing = await getPostById(db, id);
-    if (existing && !existing.published_at) {
+    if (!existingPost.published_at) {
       setClauses.push("published_at = ?");
       params.push(Math.floor(Date.now() / 1000));
     }
@@ -307,6 +315,25 @@ export async function updatePost(
   const sql = `UPDATE posts SET ${setClauses.join(", ")} WHERE id = ?`;
   await db.execute(sql, params);
 
+  // Refresh category post_count if category or status changed
+  const categoryChanged = input.category_id !== undefined && input.category_id !== existingPost.category_id;
+  const statusChanged = input.status !== undefined && input.status !== existingPost.status;
+
+  if (categoryChanged || statusChanged) {
+    // Refresh old category
+    await refreshCategoryPostCount(db, existingPost.category_id);
+    // Refresh new category (may be the same if only status changed)
+    const newCategoryId = input.category_id !== undefined ? input.category_id : existingPost.category_id;
+    if (newCategoryId !== existingPost.category_id) {
+      await refreshCategoryPostCount(db, newCategoryId);
+    }
+  }
+
+  // Refresh all tag counts if status changed (published ↔ non-published affects counts)
+  if (statusChanged) {
+    await refreshAllTagPostCounts(db);
+  }
+
   return getPostById(db, id);
 }
 
@@ -315,8 +342,19 @@ export async function updatePost(
 // ---------------------------------------------------------------------------
 
 export async function deletePost(db: Db, id: string): Promise<boolean> {
+  // Fetch post before deletion to know which category/tags to refresh
+  const post = await getPostById(db, id);
+
   const meta = await db.execute("DELETE FROM posts WHERE id = ?", [id]);
-  return meta.changes > 0;
+  if (meta.changes === 0) return false;
+
+  // Refresh category and tag counts after deletion
+  if (post?.category_id) {
+    await refreshCategoryPostCount(db, post.category_id);
+  }
+  await refreshAllTagPostCounts(db);
+
+  return true;
 }
 
 // ---------------------------------------------------------------------------
@@ -364,4 +402,42 @@ export async function setPostTags(
     // Only delete (no tags to add)
     await db.execute(statements[0].sql, statements[0].params);
   }
+
+  // Refresh post_count for all affected tags
+  await refreshAllTagPostCounts(db);
+}
+
+// ---------------------------------------------------------------------------
+// Post count maintenance helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Refresh post_count for a specific category by counting published posts.
+ * Pass null to refresh the "no category" case (no-op).
+ */
+export async function refreshCategoryPostCount(
+  db: Db,
+  categoryId: string | null | undefined,
+): Promise<void> {
+  if (!categoryId) return;
+  await db.execute(
+    `UPDATE categories SET post_count = (
+      SELECT COUNT(*) FROM posts WHERE category_id = ? AND status = 'published'
+    ) WHERE id = ?`,
+    [categoryId, categoryId],
+  );
+}
+
+/**
+ * Refresh post_count for ALL tags from ground truth.
+ * Uses a single UPDATE ... subquery to avoid N+1.
+ */
+export async function refreshAllTagPostCounts(db: Db): Promise<void> {
+  await db.execute(
+    `UPDATE tags SET post_count = (
+      SELECT COUNT(*) FROM post_tags pt
+      INNER JOIN posts p ON p.id = pt.post_id AND p.status = 'published'
+      WHERE pt.tag_id = tags.id
+    )`,
+  );
 }
