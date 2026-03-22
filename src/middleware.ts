@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { createDb } from "@/lib/db";
+import { trackPageView } from "@/lib/tracking";
 
 // Routes that require authentication
 const PROTECTED_PREFIXES = ["/admin"];
@@ -80,6 +81,30 @@ export async function middleware(request: NextRequest) {
     } catch {
       // If redirect lookup fails, continue normally
     }
+  }
+
+  // --- Analytics: track public page views (fire-and-forget) ---
+  if (
+    !pathname.startsWith("/api/") &&
+    !pathname.startsWith("/admin") &&
+    !pathname.startsWith("/login")
+  ) {
+    trackPageView({
+      path: pathname,
+      userAgent: request.headers.get("user-agent"),
+      ip:
+        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+        request.ip ??
+        null,
+      referrer: request.headers.get("referer"),
+      country:
+        request.headers.get("cf-ipcountry") ??
+        request.geo?.country ??
+        null,
+      city: request.geo?.city ?? null,
+    }).catch(() => {
+      // Never let analytics break the response
+    });
   }
 
   return NextResponse.next();
