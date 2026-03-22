@@ -119,21 +119,20 @@ Commits:
 5. ✅ `feat: add structured data (json-ld) to all pages`
 6. ✅ `feat: add dark mode with os preference detection`
 
-### 1.4 Comments (read-only display)
+### 1.4 Comments (read-only display) ✅
 
 Display historical WordPress comments on post pages. No new comment submission.
 Comments shown only on posts with `comment_enabled = 1`.
 
 Commits:
-1. `test: add comment data layer tests`
-2. `feat: implement comment display on post pages`
+1. ✅ `feat: implement comment display on post pages` — data layer + threaded display, 5 tests
 
-### 1.5 Redirects
+### 1.5 Redirects ✅
 
 Middleware to handle 301 redirects from WordPress URLs.
 
 Commits:
-1. `feat: implement 301 redirect middleware for wordpress urls`
+1. ✅ `feat: implement 301 redirect middleware for wordpress urls` — with async hit counter
 
 ## Phase 2: Admin Panel
 
