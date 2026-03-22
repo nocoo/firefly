@@ -18,7 +18,10 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
     const { slug } = await params;
     const db = getDb();
-    const post = await getPostBySlug(db, slug);
+
+    // Public GET only returns published posts.
+    // Admin edit page fetches via its own server component (getPostBySlug without status filter).
+    const post = await getPostBySlug(db, slug, "published");
 
     if (!post) return notFoundResponse("Post");
 

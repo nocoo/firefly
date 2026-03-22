@@ -124,15 +124,25 @@ export async function listPosts(
 export async function getPostBySlug(
   db: Db,
   slug: string,
+  /** When set, only returns posts with this status (use for public access). */
+  status?: PostStatus,
 ): Promise<PostWithCategory | null> {
+  const conditions = ["p.slug = ?"];
+  const params: unknown[] = [slug];
+
+  if (status) {
+    conditions.push("p.status = ?");
+    params.push(status);
+  }
+
   const sql = `
     SELECT p.*, c.name AS category_name, c.slug AS category_slug
     FROM posts p
     LEFT JOIN categories c ON p.category_id = c.id
-    WHERE p.slug = ?
+    WHERE ${conditions.join(" AND ")}
   `;
 
-  return db.firstOrNull<PostWithCategory>(sql, [slug]);
+  return db.firstOrNull<PostWithCategory>(sql, params);
 }
 
 // ---------------------------------------------------------------------------

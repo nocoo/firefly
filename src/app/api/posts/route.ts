@@ -18,8 +18,9 @@ export async function GET(request: NextRequest) {
 
     const options: ListPostsOptions = {};
 
+    // Default to published for public access — admin frontend passes explicit status
     const status = searchParams.get("status");
-    if (status) options.status = status as PostStatus;
+    options.status = status ? (status as PostStatus) : "published";
 
     const categoryId = searchParams.get("category_id");
     if (categoryId) options.categoryId = categoryId;

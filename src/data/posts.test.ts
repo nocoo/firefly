@@ -159,6 +159,28 @@ describe("getPostBySlug", () => {
 
     expect(result).toBeNull();
   });
+
+  it("filters by status when specified", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue(samplePostWithCategory);
+
+    await getPostBySlug(db, "test-post", "published");
+
+    const [sql, params] = vi.mocked(db.firstOrNull).mock.calls[0];
+    expect(sql).toContain("p.slug = ?");
+    expect(sql).toContain("p.status = ?");
+    expect(params).toEqual(["test-post", "published"]);
+  });
+
+  it("does not filter by status when not specified", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue(samplePostWithCategory);
+
+    await getPostBySlug(db, "test-post");
+
+    const [sql, params] = vi.mocked(db.firstOrNull).mock.calls[0];
+    expect(sql).toContain("slug = ?");
+    expect(sql).not.toContain("status = ?");
+    expect(params).toEqual(["test-post"]);
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -23,7 +23,7 @@ export async function generateMetadata({
 }: PostPageProps): Promise<Metadata> {
   const { slug } = await params;
   const db = getDb();
-  const post = await getPostBySlug(db, slug);
+  const post = await getPostBySlug(db, slug, "published");
 
   if (!post) return { title: "Not Found" };
 
@@ -45,7 +45,7 @@ export async function generateMetadata({
 export default async function PostPage({ params }: PostPageProps) {
   const { year, month, slug } = await params;
   const db = getDb();
-  const post = await getPostBySlug(db, slug);
+  const post = await getPostBySlug(db, slug, "published");
 
   if (!post) notFound();
 
