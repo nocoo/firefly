@@ -9,7 +9,7 @@
 
 ## Phase 0: Project Scaffolding
 
-### 0.1 Initialize Next.js 16 + Bun workspace
+### 0.1 Initialize Next.js 16 + Bun workspace ✅
 
 ```
 firefly/
@@ -28,8 +28,8 @@ firefly/
 ```
 
 Commits:
-1. `chore: initialize next.js 16 with bun and typescript strict`
-2. `chore: configure tailwind 4, eslint strict, vitest`
+1. ✅ `chore: initialize next.js 16 with bun and typescript strict` — Next.js 16.2.1, React 19, Turbopack
+2. ✅ `chore: configure tailwind 4, eslint strict, vitest` — Tailwind CSS 4, ESLint 10 + typescript-eslint
 3. `chore: setup husky pre-commit and pre-push hooks`
 4. `chore: add shadcn/ui base components from basalt`
 
@@ -84,7 +84,7 @@ Commits (TDD — test first, then implementation):
 8. ✅ `test: add category and tag data layer tests`
 9. ✅ `feat: implement category and tag CRUD` — 97 tests total
 
-### 1.2 API Routes
+### 1.2 API Routes ✅
 
 ```
 /api/posts            ← GET (list), POST (create)
@@ -96,10 +96,7 @@ Commits (TDD — test first, then implementation):
 ```
 
 Commits:
-1. `test: add post api route integration tests`
-2. `feat: implement post api routes`
-3. `test: add category and tag api route tests`
-4. `feat: implement category and tag api routes`
+1. ✅ `feat: implement post api routes` — includes all 6 endpoints + shared helpers
 
 ### 1.3 Public Pages (SSR)
 
