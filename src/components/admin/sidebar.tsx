@@ -24,13 +24,30 @@ interface NavItem {
   icon: React.ElementType;
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { title: "Posts", href: "/admin/posts", icon: FileText },
-  { title: "Categories", href: "/admin/categories", icon: FolderOpen },
-  { title: "Tags", href: "/admin/tags", icon: Tags },
-  { title: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: "OVERVIEW",
+    items: [
+      { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
+      { title: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "CONTENT",
+    items: [
+      { title: "Posts", href: "/admin/posts", icon: FileText },
+      { title: "Categories", href: "/admin/categories", icon: FolderOpen },
+      { title: "Tags", href: "/admin/tags", icon: Tags },
+    ],
+  },
 ];
+
+const ALL_NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
 
 // ── Sidebar ──
 
@@ -92,7 +109,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
 
           {/* Nav icons */}
           <nav className="flex-1 flex flex-col items-center gap-1 pt-1">
-            {NAV_ITEMS.map((item) => (
+            {ALL_NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -131,6 +148,9 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
                 <span className="text-lg font-semibold text-foreground">
                   Firefly
                 </span>
+                <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground leading-none">
+                  v0.1
+                </span>
               </div>
               <button
                 onClick={onToggle}
@@ -147,27 +167,34 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto px-3 pt-2">
-            <div className="flex flex-col gap-0.5">
-              {NAV_ITEMS.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-normal transition-colors",
-                    isActive(item.href)
-                      ? "bg-accent text-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                  )}
-                >
-                  <item.icon
-                    className="h-4 w-4 shrink-0"
-                    strokeWidth={1.5}
-                  />
-                  <span>{item.title}</span>
-                </Link>
-              ))}
-            </div>
+          <nav className="flex-1 overflow-y-auto px-3 pt-1">
+            {NAV_GROUPS.map((group) => (
+              <div key={group.label} className="mt-2">
+                <span className="block px-3 py-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                  {group.label}
+                </span>
+                <div className="flex flex-col gap-0.5">
+                  {group.items.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-normal transition-colors",
+                        isActive(item.href)
+                          ? "bg-accent text-foreground"
+                          : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                      )}
+                    >
+                      <item.icon
+                        className="h-4 w-4 shrink-0"
+                        strokeWidth={1.5}
+                      />
+                      <span>{item.title}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
           </nav>
 
           {/* User footer */}
