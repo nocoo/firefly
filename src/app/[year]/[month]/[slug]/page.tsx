@@ -10,6 +10,7 @@ import {
   formatDateISO,
   postPath,
 } from "@/lib/seo";
+import { blogPostingJsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 
 interface PostPageProps {
   params: Promise<{ year: string; month: string; slug: string }>;
@@ -62,8 +63,25 @@ export default async function PostPage({ params }: PostPageProps) {
     ? formatDateDisplay(post.published_at)
     : "Draft";
 
+  const breadcrumbs = [
+    { name: "Home", href: "/" },
+    ...(post.category_name && post.category_slug
+      ? [{ name: post.category_name, href: `/category/${post.category_slug}` }]
+      : []),
+    { name: post.title, href: postPath(post.slug, post.published_at) },
+  ];
+
   return (
-    <main className="max-w-2xl mx-auto px-4 py-12">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: blogPostingJsonLd(post) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd(breadcrumbs) }}
+      />
+      <main className="max-w-2xl mx-auto px-4 py-12">
       <article>
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
@@ -130,5 +148,6 @@ export default async function PostPage({ params }: PostPageProps) {
         </Link>
       </nav>
     </main>
+    </>
   );
 }

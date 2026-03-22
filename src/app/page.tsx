@@ -4,6 +4,7 @@ import { listPosts } from "@/data/posts";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { SITE_NAME, SITE_DESCRIPTION, buildPageMeta } from "@/lib/seo";
+import { websiteJsonLd } from "@/lib/jsonld";
 
 const PAGE_SIZE = 20;
 
@@ -34,7 +35,12 @@ export default async function Home({ searchParams }: HomeProps) {
   const displayPosts = hasMore ? posts.slice(0, PAGE_SIZE) : posts;
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-12">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: websiteJsonLd() }}
+      />
+      <main className="max-w-2xl mx-auto px-4 py-12">
       <header className="mb-12">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
           {SITE_NAME}
@@ -62,5 +68,6 @@ export default async function Home({ searchParams }: HomeProps) {
         basePath="/"
       />
     </main>
+    </>
   );
 }
