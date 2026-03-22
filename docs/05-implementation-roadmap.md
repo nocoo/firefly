@@ -33,13 +33,13 @@ Commits:
 3. `chore: setup husky pre-commit and pre-push hooks`
 4. `chore: add shadcn/ui base components from basalt`
 
-### 0.2 D1 Database Setup
+### 0.2 D1 Database Setup ✅
 
-1. Create D1 databases: `lizhengme-db` (prod) + `lizhengme-db-test` (test)
-2. Write SQL migration files
-3. Apply schema to both databases
-4. Implement D1 REST client (`data/db.ts`)
-5. Verify test isolation (D1 isolation dimension)
+1. ✅ Create D1 databases: `lizhengme-db` (prod) + `lizhengme-db-test` (test)
+2. ✅ Write SQL migration files (`scripts/migrations/001-init.sql`)
+3. ✅ Apply schema to both databases (`scripts/migrations/apply-migration.ts`)
+4. ✅ Deploy Worker D1 proxy (`worker/`, `lizhengme.worker.hexly.ai`)
+5. ✅ Implement DB client (`src/lib/db.ts`) — 16 tests, 100% coverage
 
 Commits:
 1. `chore: create d1 databases and migration scripts`

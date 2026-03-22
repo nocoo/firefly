@@ -27,7 +27,7 @@
           │  │ /admin/editor │  │
           │  │ /admin/stats  │  │
           │  ├───────────────┤  │
-          │  │ API Routes    │  │  ← D1 REST via binding
+          │  │ API Routes    │  │  ← D1 via Worker proxy
           │  │ /api/posts    │  │
           │  │ /api/auth     │  │
           │  │ /api/analytics│  │
@@ -55,7 +55,7 @@
 |-------|-----------|-----------|
 | Database | Cloudflare D1 | SQLite at edge, free tier generous, zero-config |
 | Object Storage | Cloudflare R2 | Already has blog images, S3-compatible |
-| D1 Access | REST API from Railway | Railway → D1 via Cloudflare API |
+| D1 Access | Worker proxy (native D1 binding) | Railway → Worker HTTP → D1, lower latency than REST API |
 | ORM | None (raw SQL) | D1 works best with raw SQL, keeps control |
 
 ### Auth
@@ -121,26 +121,39 @@ src/
     └── bot.ts       ← Bot/crawler detection
 ```
 
-### D1 Access Pattern (Railway → Cloudflare D1)
+### D1 Access Pattern (Railway → Worker → D1)
 
-Since Next.js runs on Railway (not Cloudflare Workers), we access D1 via REST API:
+Next.js runs on Railway. D1 access goes through a Cloudflare Worker (`lizhengme`)
+with native D1 binding, deployed at `lizhengme.worker.hexly.ai`.
+
+```
+Railway (Next.js) → HTTP → Worker (lizhengme.worker.hexly.ai) → D1 native binding
+```
+
+Worker endpoints:
+- `GET  /api/live`    — health check (no auth)
+- `POST /api/query`   — read-only SQL (write-guarded by regex)
+- `POST /api/execute`  — write SQL (single + batch)
+
+Auth: `Authorization: Bearer WORKER_SECRET` on query/execute.
+
+Application client (`src/lib/db.ts`) provides a typed interface:
 
 ```typescript
-// data/db.ts
-const D1_API = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/d1/database/${DB_ID}/query`;
+const db = getDb();  // singleton, reads WORKER_URL + WORKER_SECRET from env
 
-export async function query<T>(sql: string, params?: unknown[]): Promise<T[]> {
-  const res = await fetch(D1_API, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${CF_API_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ sql, params }),
-  });
-  const data = await res.json();
-  return data.result[0].results;
-}
+// Read
+const posts = await db.query<Post>("SELECT * FROM posts WHERE status = ?", ["published"]);
+const post = await db.firstOrNull<Post>("SELECT * FROM posts WHERE slug = ?", [slug]);
+
+// Write
+await db.execute("INSERT INTO posts (id, title, slug) VALUES (?, ?, ?)", [id, title, slug]);
+
+// Batch (atomic via D1.batch)
+await db.batch([
+  { sql: "INSERT INTO tags ...", params: [...] },
+  { sql: "INSERT INTO post_tags ...", params: [...] },
+]);
 ```
 
 ### SEO Strategy
