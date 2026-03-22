@@ -1,10 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Db, DbQueryResult } from "@/lib/db";
+import type { Db } from "@/lib/db";
 import type { Category } from "@/models/types";
 import {
   listCategories,
   getCategoryBySlug,
-  getCategoryById,
   createCategory,
   updateCategory,
   deleteCategory,

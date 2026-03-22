@@ -1,10 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Db, DbQueryResult } from "@/lib/db";
+import type { Db } from "@/lib/db";
 import type { Tag } from "@/models/types";
 import {
   listTags,
   getTagBySlug,
-  getTagById,
   createTag,
   updateTag,
   deleteTag,

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Db, DbQueryResult, DbMeta } from "@/lib/db";
-import type { Post, PostWithCategory, PostWithTags, Category, Tag } from "@/models/types";
+import type { Db } from "@/lib/db";
+import type { Post, PostWithCategory } from "@/models/types";
 import {
   listPosts,
   getPostBySlug,
@@ -9,7 +9,6 @@ import {
   deletePost,
   type CreatePostInput,
   type UpdatePostInput,
-  type ListPostsOptions,
 } from "./posts";
 
 // ---------------------------------------------------------------------------
@@ -78,7 +77,7 @@ describe("listPosts", () => {
     const result = await listPosts(db);
 
     expect(db.query).toHaveBeenCalledOnce();
-    const [sql, params] = vi.mocked(db.query).mock.calls[0];
+    const [sql, _params] = vi.mocked(db.query).mock.calls[0];
     expect(sql).toContain("SELECT");
     expect(sql).toContain("LEFT JOIN categories");
     expect(sql).toContain("ORDER BY");
@@ -213,8 +212,6 @@ describe("createPost", () => {
     const [sql, params] = vi.mocked(db.execute).mock.calls[0];
     // Should include reading_time in the INSERT
     expect(sql).toContain("reading_time");
-    // params should contain the computed reading_time
-    const readingTimeIdx = sql.split("?").length - 1; // count params
     expect(params!.length).toBeGreaterThan(0);
   });
 
