@@ -6,6 +6,10 @@ import {
   getOverviewStats,
   getTopPosts,
   getRecentViewCount,
+  getTopReferrers,
+  getDeviceBreakdown,
+  getBrowserBreakdown,
+  getBotBreakdown,
 } from "./analytics";
 
 function createMockDb(): Db {
@@ -176,5 +180,102 @@ describe("getRecentViewCount", () => {
     const count = await getRecentViewCount(db);
 
     expect(count).toBe(0);
+  });
+});
+
+describe("getTopReferrers", () => {
+  let db: Db;
+  beforeEach(() => {
+    db = createMockDb();
+  });
+
+  it("returns top referrers sorted by views", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [
+        { referrer: "https://google.com", views: 50 },
+        { referrer: "https://twitter.com", views: 20 },
+      ],
+      meta: { changes: 0, duration: 1 },
+    });
+
+    const referrers = await getTopReferrers(db, 30, 10);
+
+    expect(referrers).toHaveLength(2);
+    expect(referrers[0].referrer).toBe("https://google.com");
+    expect(referrers[0].views).toBe(50);
+    const [sql] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("is_bot = 0");
+  });
+});
+
+describe("getDeviceBreakdown", () => {
+  let db: Db;
+  beforeEach(() => {
+    db = createMockDb();
+  });
+
+  it("returns device type distribution", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [
+        { device_type: "desktop", count: 100 },
+        { device_type: "mobile", count: 50 },
+      ],
+      meta: { changes: 0, duration: 1 },
+    });
+
+    const devices = await getDeviceBreakdown(db, 30);
+
+    expect(devices).toHaveLength(2);
+    expect(devices[0].deviceType).toBe("desktop");
+    expect(devices[0].count).toBe(100);
+  });
+});
+
+describe("getBrowserBreakdown", () => {
+  let db: Db;
+  beforeEach(() => {
+    db = createMockDb();
+  });
+
+  it("returns browser distribution", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [
+        { browser: "Chrome", count: 80 },
+        { browser: "Safari", count: 30 },
+      ],
+      meta: { changes: 0, duration: 1 },
+    });
+
+    const browsers = await getBrowserBreakdown(db, 30, 10);
+
+    expect(browsers).toHaveLength(2);
+    expect(browsers[0].browser).toBe("Chrome");
+  });
+});
+
+describe("getBotBreakdown", () => {
+  let db: Db;
+  beforeEach(() => {
+    db = createMockDb();
+  });
+
+  it("returns bot breakdown with category", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [
+        { bot_name: "Googlebot", bot_category: "search", count: 100 },
+        { bot_name: "GPTBot", bot_category: "ai", count: 50 },
+      ],
+      meta: { changes: 0, duration: 1 },
+    });
+
+    const bots = await getBotBreakdown(db, 30, 20);
+
+    expect(bots).toHaveLength(2);
+    expect(bots[0].botName).toBe("Googlebot");
+    expect(bots[0].botCategory).toBe("search");
+    expect(bots[1].botName).toBe("GPTBot");
+    expect(bots[1].botCategory).toBe("ai");
+    const [sql] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("is_bot = 1");
   });
 });

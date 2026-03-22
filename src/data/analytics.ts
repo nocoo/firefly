@@ -170,3 +170,123 @@ export async function getRecentViewCount(
   );
   return row?.count ?? 0;
 }
+
+// ---------------------------------------------------------------------------
+// Top referrers
+// ---------------------------------------------------------------------------
+
+export interface TopReferrer {
+  referrer: string;
+  views: number;
+}
+
+export async function getTopReferrers(
+  db: Db,
+  days: number = 30,
+  limit: number = 10,
+): Promise<TopReferrer[]> {
+  const since = Math.floor(Date.now() / 1000) - days * 86400;
+  const result = await db.query<{ referrer: string; views: number }>(
+    `SELECT referrer, COUNT(*) AS views
+     FROM page_views
+     WHERE viewed_at >= ? AND is_bot = 0 AND referrer IS NOT NULL AND referrer != ''
+     GROUP BY referrer
+     ORDER BY views DESC
+     LIMIT ?`,
+    [since, limit],
+  );
+  return result.results;
+}
+
+// ---------------------------------------------------------------------------
+// Device breakdown
+// ---------------------------------------------------------------------------
+
+export interface DeviceBreakdown {
+  deviceType: string;
+  count: number;
+}
+
+export async function getDeviceBreakdown(
+  db: Db,
+  days: number = 30,
+): Promise<DeviceBreakdown[]> {
+  const since = Math.floor(Date.now() / 1000) - days * 86400;
+  const result = await db.query<{ device_type: string; count: number }>(
+    `SELECT COALESCE(device_type, 'unknown') AS device_type, COUNT(*) AS count
+     FROM page_views
+     WHERE viewed_at >= ? AND is_bot = 0
+     GROUP BY device_type
+     ORDER BY count DESC`,
+    [since],
+  );
+  return result.results.map((r) => ({
+    deviceType: r.device_type,
+    count: r.count,
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// Browser breakdown
+// ---------------------------------------------------------------------------
+
+export interface BrowserBreakdown {
+  browser: string;
+  count: number;
+}
+
+export async function getBrowserBreakdown(
+  db: Db,
+  days: number = 30,
+  limit: number = 10,
+): Promise<BrowserBreakdown[]> {
+  const since = Math.floor(Date.now() / 1000) - days * 86400;
+  const result = await db.query<{ browser: string; count: number }>(
+    `SELECT COALESCE(browser, 'Unknown') AS browser, COUNT(*) AS count
+     FROM page_views
+     WHERE viewed_at >= ? AND is_bot = 0
+     GROUP BY browser
+     ORDER BY count DESC
+     LIMIT ?`,
+    [since, limit],
+  );
+  return result.results;
+}
+
+// ---------------------------------------------------------------------------
+// Bot breakdown
+// ---------------------------------------------------------------------------
+
+export interface BotBreakdown {
+  botName: string;
+  botCategory: string;
+  count: number;
+}
+
+export async function getBotBreakdown(
+  db: Db,
+  days: number = 30,
+  limit: number = 20,
+): Promise<BotBreakdown[]> {
+  const since = Math.floor(Date.now() / 1000) - days * 86400;
+  const result = await db.query<{
+    bot_name: string;
+    bot_category: string;
+    count: number;
+  }>(
+    `SELECT COALESCE(bot_name, 'Unknown') AS bot_name,
+            COALESCE(bot_category, 'other') AS bot_category,
+            COUNT(*) AS count
+     FROM page_views
+     WHERE viewed_at >= ? AND is_bot = 1
+     GROUP BY bot_name, bot_category
+     ORDER BY count DESC
+     LIMIT ?`,
+    [since, limit],
+  );
+  return result.results.map((r) => ({
+    botName: r.bot_name,
+    botCategory: r.bot_category,
+    count: r.count,
+  }));
+}
