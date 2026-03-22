@@ -60,28 +60,29 @@ Commits:
 
 ## Phase 1: Core Blog (Public)
 
-### 1.1 Models & Data Layer
+### 1.1 Models & Data Layer ✅
 
 Write models and data access for posts, categories, tags — all with tests first.
 
 ```
 models/types.ts      ← Post, Category, Tag, Comment interfaces
 models/post.ts       ← slugify, readingTime, excerptFromContent
-models/markdown.ts   ← markdown → HTML rendering (server-side)
+models/markdown.ts   ← markdown → HTML rendering (server-side, marked)
 data/posts.ts        ← CRUD queries
 data/categories.ts   ← CRUD queries
 data/tags.ts         ← CRUD queries
 ```
 
 Commits (TDD — test first, then implementation):
-1. `test: add post model unit tests`
-2. `feat: implement post model (slug, reading time, excerpt)`
-3. `test: add markdown rendering tests`
-4. `feat: implement markdown to html renderer`
-5. `test: add post data layer integration tests`
-6. `feat: implement post CRUD data layer`
-7. `test: add category and tag data layer tests`
-8. `feat: implement category and tag CRUD`
+1. ✅ `feat: add domain type definitions for all database entities`
+2. ✅ `test: add post model unit tests`
+3. ✅ `feat: implement post model (slugify, reading time, excerpt)` — 28 tests
+4. ✅ `test: add markdown rendering tests`
+5. ✅ `feat: implement markdown to html renderer` — 21 tests, marked
+6. ✅ `test: add post data layer tests`
+7. ✅ `feat: implement post CRUD data layer` — 15 tests
+8. ✅ `test: add category and tag data layer tests`
+9. ✅ `feat: implement category and tag CRUD` — 97 tests total
 
 ### 1.2 API Routes
 
