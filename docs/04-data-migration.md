@@ -4,33 +4,21 @@
 
 Migrate WordPress MySQL → Cloudflare D1 SQLite. Run on local machine, not VPS.
 
-**Source**: `ssh blog.nocoo.cloud` → MySQL `host_lizheng` (user: `wpuser`)
+**Source**: WordPress MySQL database (full dump in `scripts/migrations/data/`)
 **Target**: Cloudflare D1 `lizhengme-db`
 
 ## Step 0: Export MySQL Dump
 
-```bash
-ssh blog.nocoo.cloud "mysqldump -u wpuser -p'<password>' host_lizheng \
-  lizheng_posts lizheng_postmeta lizheng_terms lizheng_term_taxonomy \
-  lizheng_term_relationships lizheng_comments lizheng_users \
-  lizheng_independent_analytics_views lizheng_independent_analytics_visitors \
-  lizheng_independent_analytics_sessions lizheng_independent_analytics_referrers \
-  --no-create-info --complete-insert" > wp_data.sql
-```
-
-Better approach: Export as JSON via SQL queries for programmatic migration.
+Full database dump already exported to `scripts/migrations/data/host_lizheng_dump.sql.gz` (61 tables).
+Migration scripts read from this local dump — no live VPS access needed.
 
 ## Step 1: Image Audit (VPS vs R2)
 
-**Critical**: Must verify every VPS attachment exists in R2 before going live.
+**Critical**: Must verify every WordPress attachment exists in R2 before going live.
 
 ### 1a. Export VPS file list with sizes
 
-```bash
-ssh blog.nocoo.cloud "find /var/www/html/wordpress/wp-content/uploads/ -type f \
-  -exec stat -c '%n %s' {} \;" | \
-  sed 's|/var/www/html/wordpress/||' | sort > vps_files.txt
-```
+List all files under `wp-content/uploads/` on the WordPress server with sizes.
 
 ### 1b. Export R2 file list with sizes
 
@@ -43,14 +31,13 @@ node scripts/migrations/list-r2-objects.ts > r2_files.txt
 ### 1c. Diff comparison
 
 ```bash
-# Compare: files in VPS but not in R2 (need upload)
+# Compare: files on server but not in R2 (need upload)
 comm -23 <(cut -d' ' -f1 vps_files.txt | sort) <(cut -d' ' -f1 r2_files.txt | sort) > missing_in_r2.txt
 
-# Compare: files in R2 but not in VPS (orphans, OK)
+# Compare: files in R2 but not on server (orphans, OK)
 comm -13 <(cut -d' ' -f1 vps_files.txt | sort) <(cut -d' ' -f1 r2_files.txt | sort) > only_in_r2.txt
 
 # Compare: size mismatches (corruption check)
-# Join on filename, compare sizes
 node scripts/migrations/compare-sizes.ts vps_files.txt r2_files.txt > size_mismatches.txt
 ```
 
@@ -58,9 +45,8 @@ node scripts/migrations/compare-sizes.ts vps_files.txt r2_files.txt > size_misma
 
 ```bash
 # For each file in missing_in_r2.txt:
-# scp from VPS → local → wrangler r2 object put
+# Copy from server → local → wrangler r2 object put
 for file in $(cat missing_in_r2.txt); do
-  scp blog.nocoo.cloud:/var/www/html/wordpress/$file /tmp/upload_staging/
   npx wrangler r2 object put lizhengblog/$file --file=/tmp/upload_staging/$(basename $file)
 done
 ```
