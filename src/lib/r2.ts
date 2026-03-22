@@ -74,11 +74,57 @@ const ALLOWED_MIME_TYPES = new Set([
   "image/png",
   "image/gif",
   "image/webp",
-  "image/svg+xml",
   "image/avif",
+  // SVG intentionally excluded — it is an executable format (can embed
+  // <script> tags) and should not be accepted for user-uploaded images.
 ]);
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
+/**
+ * Magic-byte signatures for allowed image formats.
+ * Used to verify actual file content regardless of client-declared MIME.
+ */
+const MAGIC_SIGNATURES: { mime: string; check: (buf: Uint8Array) => boolean }[] = [
+  {
+    mime: "image/png",
+    check: (b) => b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47,
+  },
+  {
+    mime: "image/jpeg",
+    check: (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
+  },
+  {
+    mime: "image/gif",
+    check: (b) => b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46, // GIF
+  },
+  {
+    mime: "image/webp",
+    // RIFF....WEBP
+    check: (b) =>
+      b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
+      b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50,
+  },
+  {
+    mime: "image/avif",
+    // ....ftypavif  or  ....ftypavis
+    check: (b) =>
+      b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70 &&
+      b[8] === 0x61 && b[9] === 0x76 && b[10] === 0x69,
+  },
+];
+
+/**
+ * Detect MIME type from file magic bytes.
+ * Returns the detected MIME or null if unrecognized.
+ */
+export function detectMimeType(data: Uint8Array): string | null {
+  if (data.length < 12) return null;
+  for (const sig of MAGIC_SIGNATURES) {
+    if (sig.check(data)) return sig.mime;
+  }
+  return null;
+}
 
 export interface UploadResult {
   key: string;
@@ -108,18 +154,30 @@ export function generateR2Key(filename: string): string {
 
 /**
  * Validate upload input before sending to R2.
+ * Checks size limit, declared MIME against allowlist, and verifies
+ * actual content via magic-byte detection to prevent spoofed types.
  * Returns error message if invalid, null if valid.
  */
 export function validateUpload(
-  size: number,
-  mimeType: string,
+  data: Uint8Array,
+  declaredMime: string,
 ): string | null {
-  if (size > MAX_FILE_SIZE) {
-    return `File too large: ${(size / 1024 / 1024).toFixed(1)}MB exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit`;
+  if (data.length > MAX_FILE_SIZE) {
+    return `File too large: ${(data.length / 1024 / 1024).toFixed(1)}MB exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit`;
   }
-  if (!ALLOWED_MIME_TYPES.has(mimeType)) {
-    return `Unsupported file type: ${mimeType}`;
+  if (!ALLOWED_MIME_TYPES.has(declaredMime)) {
+    return `Unsupported file type: ${declaredMime}`;
   }
+
+  // Verify magic bytes match an allowed image format
+  const detected = detectMimeType(data);
+  if (!detected) {
+    return "File content does not match any supported image format";
+  }
+  if (detected !== declaredMime) {
+    return `MIME type mismatch: declared ${declaredMime} but content is ${detected}`;
+  }
+
   return null;
 }
 
@@ -131,7 +189,10 @@ export async function uploadToR2(
   filename: string,
   mimeType: string,
 ): Promise<UploadResult> {
-  const validationError = validateUpload(data.length, mimeType);
+  const validationError = validateUpload(
+    data instanceof Uint8Array ? data : new Uint8Array(data),
+    mimeType,
+  );
   if (validationError) {
     throw new Error(validationError);
   }
