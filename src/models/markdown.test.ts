@@ -209,4 +209,44 @@ const x = 1;
     expect(html).not.toContain("<script>");
     expect(html).toContain("&quot;");
   });
+
+  // --- XSS: inline HTML in heading text ---
+  it("escapes img onerror in heading text", () => {
+    const html = renderMarkdown("# <img src=x onerror=alert(1)>");
+    // The raw <img> tag must be escaped, not rendered as HTML element
+    expect(html).not.toContain("<img src=x");
+    expect(html).toContain("&lt;img");
+  });
+
+  it("escapes script tags in heading text", () => {
+    const html = renderMarkdown("# <script>alert(1)</script>");
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("&lt;script&gt;");
+  });
+
+  // --- XSS: inline HTML in link text ---
+  it("escapes img onerror in link text", () => {
+    const html = renderMarkdown("[<img src=x onerror=alert(1)>](https://example.com)");
+    // The raw <img> tag must be escaped, not rendered as HTML element
+    expect(html).not.toContain("<img src=x");
+    expect(html).toContain("&lt;img");
+  });
+
+  it("escapes script tags in link text", () => {
+    const html = renderMarkdown("[<script>alert(1)</script>](https://example.com)");
+    expect(html).not.toContain("<script>");
+  });
+
+  // --- Inline formatting still works inside heading/link ---
+  it("preserves bold inside headings", () => {
+    const html = renderMarkdown("# Hello **world**");
+    expect(html).toContain("<strong>world</strong>");
+    expect(html).toContain("<h1");
+  });
+
+  it("preserves bold inside link text", () => {
+    const html = renderMarkdown("[Hello **world**](https://example.com)");
+    expect(html).toContain("<strong>world</strong>");
+    expect(html).toContain("<a ");
+  });
 });

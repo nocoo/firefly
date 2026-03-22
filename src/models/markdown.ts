@@ -12,25 +12,31 @@ import { Marked, type MarkedExtension, type Tokens } from "marked";
 function createRenderer(): MarkedExtension {
   return {
     renderer: {
-      heading({ text, depth }: Tokens.Heading): string {
-        const id = text
+      heading({ tokens, depth }: Tokens.Heading): string {
+        // Use parseInline to render inline tokens through our custom html()
+        // renderer, which escapes dangerous HTML tags in the text content.
+        const rendered = this.parser.parseInline(tokens);
+        const id = rendered
           .toLowerCase()
           .replace(/<[^>]+>/g, "")
           .replace(/[^a-z0-9\u4e00-\u9fff]+/g, "-")
           .replace(/^-|-$/g, "");
-        return `<h${depth} id="${id}">${text}</h${depth}>\n`;
+        return `<h${depth} id="${id}">${rendered}</h${depth}>\n`;
       },
 
-      link({ href, text }: Tokens.Link): string {
+      link({ href, tokens }: Tokens.Link): string {
         const safeHref = sanitizeUrl(href);
-        if (!safeHref) return escapeHtml(text);
+        // Render inline tokens (bold, code, etc.) through parseInline so
+        // that any inline HTML goes through our html() escaper.
+        const rendered = this.parser.parseInline(tokens);
+        if (!safeHref) return rendered;
 
         const isExternal =
           safeHref.startsWith("http://") || safeHref.startsWith("https://");
         const attrs = isExternal
           ? ` target="_blank" rel="noopener noreferrer"`
           : "";
-        return `<a href="${escapeAttr(safeHref)}"${attrs}>${text}</a>`;
+        return `<a href="${escapeAttr(safeHref)}"${attrs}>${rendered}</a>`;
       },
 
       image({ href, text }: Tokens.Image): string {
