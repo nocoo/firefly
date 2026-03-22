@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from "@/lib/seo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -20,6 +21,18 @@ export const metadata: Metadata = {
   },
 };
 
+// Inline script to prevent dark mode FOUC — runs before paint
+const themeInitScript = `
+(function(){
+  try {
+    var t = localStorage.getItem('theme');
+    if (t === 'dark' || (!t || t === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+  } catch(e){}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: {
@@ -27,7 +40,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased">
+        <div className="fixed top-4 right-4 z-50">
+          <ThemeToggle />
+        </div>
         {children}
       </body>
     </html>
