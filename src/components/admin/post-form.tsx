@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { Category, Tag, PostWithCategory, PostStatus } from "@/models/types";
 import { slugify } from "@/models/post";
+import { renderMarkdown } from "@/models/markdown";
 
 interface PostFormProps {
   post?: PostWithCategory & { tagIds: string[] };
@@ -30,6 +31,13 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
   );
 
   const isEditing = !!post;
+
+  // Markdown preview (memoized to avoid re-rendering on every keystroke)
+  const [previewMode, setPreviewMode] = useState(false);
+  const previewHtml = useMemo(
+    () => (previewMode && content ? renderMarkdown(content) : ""),
+    [previewMode, content],
+  );
 
   const handleTitleChange = (value: string) => {
     setTitle(value);
@@ -135,23 +143,61 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         />
       </div>
 
-      {/* Content */}
+      {/* Content — Write / Preview tabs */}
       <div className="space-y-2">
-        <label
-          htmlFor="content"
-          className="text-sm font-medium text-foreground"
-        >
-          Content (Markdown)
-        </label>
-        <textarea
-          id="content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          required
-          rows={20}
-          className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
-          placeholder="Write your post content in Markdown..."
-        />
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-foreground">
+            Content (Markdown)
+          </label>
+          <div className="flex rounded-[var(--radius-widget)] border border-border bg-secondary p-0.5">
+            <button
+              type="button"
+              onClick={() => setPreviewMode(false)}
+              className={`rounded-[calc(var(--radius-widget)-2px)] px-3 py-1 text-xs font-medium transition-colors ${
+                !previewMode
+                  ? "bg-background text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Write
+            </button>
+            <button
+              type="button"
+              onClick={() => setPreviewMode(true)}
+              className={`rounded-[calc(var(--radius-widget)-2px)] px-3 py-1 text-xs font-medium transition-colors ${
+                previewMode
+                  ? "bg-background text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Preview
+            </button>
+          </div>
+        </div>
+        {previewMode ? (
+          <div className="min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-4 py-3 overflow-y-auto">
+            {content ? (
+              <div
+                className="prose dark:prose-invert max-w-none text-sm"
+                dangerouslySetInnerHTML={{ __html: previewHtml }}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Nothing to preview
+              </p>
+            )}
+          </div>
+        ) : (
+          <textarea
+            id="content"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            required
+            rows={20}
+            className="w-full min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
+            placeholder="Write your post content in Markdown..."
+          />
+        )}
       </div>
 
       {/* Excerpt */}
