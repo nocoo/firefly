@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
+import { Menu, Github } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminSidebar } from "@/components/admin/sidebar";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 // Map admin routes to page titles
 const PAGE_TITLES: Record<string, string> = {
@@ -107,7 +108,20 @@ export function AdminShell({ user, children }: AdminShellProps) {
             </h1>
           </div>
           <div className="flex items-center gap-1">
-            {/* ThemeToggle provided by root layout */}
+            <a
+              href="https://github.com/nocoo/firefly"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            >
+              <Github
+                className="h-[18px] w-[18px]"
+                aria-hidden="true"
+                strokeWidth={1.5}
+              />
+            </a>
+            <ThemeToggle />
           </div>
         </header>
 
