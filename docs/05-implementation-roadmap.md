@@ -169,9 +169,9 @@ Track and display:
 - Time-series charts (daily/weekly/monthly)
 
 Commits:
-1. `feat: implement page view tracking middleware`
-2. `feat: implement bot detection and classification`
-3. `test: add analytics model and data layer tests`
+1. ✅ `feat: implement page view tracking middleware` — fire-and-forget tracking, IP hashing, 9 tests
+2. ✅ `feat: implement bot detection and classification`
+3. ✅ `test: add analytics model and data layer tests`
 4. `feat: implement analytics api routes`
 5. `feat: implement analytics dashboard with charts`
 
