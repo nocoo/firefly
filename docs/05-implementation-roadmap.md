@@ -208,15 +208,3 @@ Commits:
 5. Monitor 301 redirects and error rates
 6. Sunset WordPress after 30 days of stable operation
 
-## Timeline Estimate
-
-| Phase | Effort | Dependency |
-|-------|--------|------------|
-| Phase 0: Scaffolding | 1 day | None |
-| Phase 1: Core Blog | 3-4 days | Phase 0 |
-| Phase 2: Admin Panel | 3-4 days | Phase 1 |
-| Phase 3: Migration | 1-2 days | Phase 1 (at minimum) |
-| Phase 4: Launch | 1 day | Phase 1 + 3 |
-
-**Total: ~9-12 days** for full feature set.
-MVP (public blog + migration) possible in **~5-6 days** (Phase 0+1+3).
