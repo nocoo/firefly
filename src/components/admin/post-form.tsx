@@ -55,6 +55,26 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
     );
   };
 
+  const handleDelete = async () => {
+    if (!post) return;
+    if (!confirm(`Delete "${post.title}"? This cannot be undone.`)) return;
+
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/posts/${post.slug}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Failed to delete post");
+      }
+      router.push("/admin/posts");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -329,6 +349,16 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         >
           Cancel
         </button>
+        {isEditing && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={saving}
+            className="ml-auto inline-flex items-center rounded-[var(--radius-widget)] bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50"
+          >
+            Delete Post
+          </button>
+        )}
       </div>
     </form>
   );

@@ -5,6 +5,7 @@ import { listCategories } from "@/data/categories";
 import type { PostStatus } from "@/models/types";
 import { formatDateDisplay } from "@/lib/seo";
 import { PostFilters } from "@/components/admin/post-filters";
+import { DeletePostButton } from "@/components/admin/delete-post-button";
 
 interface AdminPostsPageProps {
   searchParams: Promise<{
@@ -131,12 +132,15 @@ export default async function AdminPostsPage({
                       : "—"}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Link
-                      href={`/admin/posts/${post.id}/edit`}
-                      className="text-sm text-primary hover:text-primary/80 transition-colors"
-                    >
-                      Edit
-                    </Link>
+                    <div className="flex items-center justify-end gap-2">
+                      <Link
+                        href={`/admin/posts/${post.id}/edit`}
+                        className="text-sm text-primary hover:text-primary/80 transition-colors"
+                      >
+                        Edit
+                      </Link>
+                      <DeletePostButton slug={post.slug} title={post.title} />
+                    </div>
                   </td>
                 </tr>
               ))
