@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Db } from "@/lib/db";
+import type { Db, DbQueryResult } from "@/lib/db";
 import type { Post, PostWithCategory } from "@/models/types";
 import {
   listPosts,
@@ -72,7 +72,7 @@ describe("listPosts", () => {
       results: [samplePostWithCategory],
       meta: { changes: 0, duration: 1 },
     };
-    vi.mocked(db.query).mockResolvedValue(mockResult as DbQueryResult);
+    vi.mocked(db.query).mockResolvedValue(mockResult as unknown as DbQueryResult);
 
     const result = await listPosts(db);
 

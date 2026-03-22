@@ -18,9 +18,9 @@ const PAGE_TITLES: Record<string, string> = {
 
 interface AdminShellProps {
   user: {
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
+    name?: string | null | undefined;
+    email?: string | null | undefined;
+    image?: string | null | undefined;
   };
   children: React.ReactNode;
 }

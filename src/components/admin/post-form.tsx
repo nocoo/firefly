@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { Category, Tag, PostWithCategory } from "@/models/types";
+import type { Category, Tag, PostWithCategory, PostStatus } from "@/models/types";
 import { slugify } from "@/models/post";
 
 interface PostFormProps {
@@ -20,7 +20,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
   const [slug, setSlug] = useState(post?.slug ?? "");
   const [content, setContent] = useState(post?.content ?? "");
   const [excerpt, setExcerpt] = useState(post?.excerpt ?? "");
-  const [status, setStatus] = useState(post?.status ?? "draft");
+  const [status, setStatus] = useState<PostStatus>(post?.status ?? "draft");
   const [categoryId, setCategoryId] = useState(post?.category_id ?? "");
   const [selectedTags, setSelectedTags] = useState<string[]>(
     post?.tagIds ?? [],
@@ -188,7 +188,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           <select
             id="status"
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
+            onChange={(e) => setStatus(e.target.value as PostStatus)}
             className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="draft">Draft</option>

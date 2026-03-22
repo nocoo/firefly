@@ -38,9 +38,9 @@ interface AdminSidebarProps {
   collapsed: boolean;
   onToggle: () => void;
   user: {
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
+    name?: string | null | undefined;
+    email?: string | null | undefined;
+    image?: string | null | undefined;
   };
 }
 
