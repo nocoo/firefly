@@ -5,6 +5,7 @@ import {
   getPostBySlug,
   updatePost,
   deletePost,
+  setPostTags,
   type UpdatePostInput,
 } from "@/data/posts";
 
@@ -40,10 +41,18 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const existing = await getPostBySlug(db, slug);
     if (!existing) return notFoundResponse("Post");
 
-    const body = (await request.json()) as UpdatePostInput;
-    const updated = await updatePost(db, existing.id, body);
+    const body = (await request.json()) as UpdatePostInput & {
+      tag_ids?: string[];
+    };
+    const { tag_ids, ...updateInput } = body;
+    const updated = await updatePost(db, existing.id, updateInput);
 
     if (!updated) return notFoundResponse("Post");
+
+    // Update tags if provided
+    if (tag_ids) {
+      await setPostTags(db, existing.id, tag_ids);
+    }
 
     return jsonResponse(updated);
   } catch (error) {

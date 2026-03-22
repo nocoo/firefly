@@ -4,6 +4,7 @@ import { jsonResponse, errorResponse } from "@/lib/api";
 import {
   listPosts,
   createPost,
+  setPostTags,
   type CreatePostInput,
   type ListPostsOptions,
 } from "@/data/posts";
@@ -49,7 +50,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const db = getDb();
-    const body = (await request.json()) as CreatePostInput;
+    const body = (await request.json()) as CreatePostInput & {
+      tag_ids?: string[];
+    };
 
     if (!body.title?.trim()) {
       return errorResponse("title is required");
@@ -72,6 +75,11 @@ export async function POST(request: NextRequest) {
       comment_enabled: body.comment_enabled,
       published_at: body.published_at,
     });
+
+    // Set tags if provided
+    if (body.tag_ids && body.tag_ids.length > 0) {
+      await setPostTags(db, post.id, body.tag_ids);
+    }
 
     return jsonResponse(post, 201);
   } catch (error) {
