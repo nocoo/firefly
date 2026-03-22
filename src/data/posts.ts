@@ -276,6 +276,19 @@ export async function updatePost(
     params.push(input.published_at);
   }
 
+  // Auto-set published_at when transitioning to published without explicit date
+  if (
+    input.status === "published" &&
+    input.published_at === undefined
+  ) {
+    // Fetch current post to check if it already has a published_at
+    const existing = await getPostById(db, id);
+    if (existing && !existing.published_at) {
+      setClauses.push("published_at = ?");
+      params.push(Math.floor(Date.now() / 1000));
+    }
+  }
+
   if (setClauses.length === 0) return getPostById(db, id);
 
   // Always update updated_at

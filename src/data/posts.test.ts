@@ -312,6 +312,41 @@ describe("updatePost", () => {
     const result = await updatePost(db, "nonexistent", { title: "X" });
     expect(result).toBeNull();
   });
+
+  it("auto-sets published_at when status changes to published", async () => {
+    // First call: getPostById to check existing published_at (returns null)
+    // Second call: getPostById after UPDATE to return result
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({ ...samplePost, status: "draft", published_at: null })
+      .mockResolvedValueOnce({ ...samplePost, status: "published", published_at: now });
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
+
+    await updatePost(db, "test-id", { status: "published" });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("published_at = ?");
+    // Should include a timestamp parameter (a number > 1700000000)
+    const publishedAtParam = (params as unknown[]).find(
+      (p) => typeof p === "number" && p > 1700000000,
+    );
+    expect(publishedAtParam).toBeDefined();
+  });
+
+  it("does not overwrite existing published_at on re-publish", async () => {
+    const existingPublishedAt = 1700000000;
+    // First call: getPostById — post already has published_at
+    // Second call: getPostById after UPDATE
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({ ...samplePost, status: "draft", published_at: existingPublishedAt })
+      .mockResolvedValueOnce({ ...samplePost, status: "published", published_at: existingPublishedAt });
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
+
+    await updatePost(db, "test-id", { status: "published" });
+
+    const [sql] = vi.mocked(db.execute).mock.calls[0];
+    // Should NOT contain published_at since it already exists
+    expect(sql).not.toContain("published_at");
+  });
 });
 
 // ---------------------------------------------------------------------------
