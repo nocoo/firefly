@@ -175,18 +175,18 @@ Commits:
 4. ✅ `feat: implement analytics api routes` — overview, daily stats, top posts, referrers, devices, browsers, bots
 5. ✅ `feat: implement analytics dashboard with charts` — recharts, area/pie/bar charts, period selector
 
-## Phase 3: Data Migration
+## Phase 3: Data Migration ✅
 
 Execute migration scripts in order (see doc 04).
 
 Commits:
-1. `feat: add wp data export script`
-2. `feat: add r2 image audit and sync scripts`
-3. `feat: add post migration with content transform`
-4. `feat: add comment migration with parent remapping`
-5. `feat: add redirect generation from wordpress urls`
-6. `feat: add analytics seed migration`
-7. `feat: add migration verification script`
+1. ✅ `feat: add wp data export script` — parse MySQL dump to JSON
+2. ✅ `feat: add r2 image audit and sync scripts` — list R2 objects, directory summary
+3. ✅ `feat: add post migration with content transform` — users, categories, tags, posts with image URL rewriting
+4. ✅ `feat: add comment migration with parent remapping` — threaded parent-child remapping
+5. ✅ `feat: add redirect generation from wordpress urls` — posts, categories, tags, writting→writing
+6. ✅ `feat: add analytics seed migration` — IA data + post view_count fallback
+7. ✅ `feat: add migration verification script` — count, integrity, and spot checks
 
 ## Phase 4: Launch
 
