@@ -172,7 +172,7 @@ Commits:
 1. ✅ `feat: implement page view tracking middleware` — fire-and-forget tracking, IP hashing, 9 tests
 2. ✅ `feat: implement bot detection and classification`
 3. ✅ `test: add analytics model and data layer tests`
-4. `feat: implement analytics api routes`
+4. ✅ `feat: implement analytics api routes` — overview, daily stats, top posts, referrers, devices, browsers, bots
 5. `feat: implement analytics dashboard with charts`
 
 ## Phase 3: Data Migration
