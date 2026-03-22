@@ -1,3 +1,134 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Basalt design system tokens → Tailwind v4 theme mapping
+ * Register --color-<name> so utilities like bg-background, text-foreground work.
+ */
+@theme inline {
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+
+  --radius-card: 14px;
+  --radius-widget: 10px;
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+/*
+ * Design tokens — light (default) & dark mode
+ */
+:root {
+  /* L0 body */
+  --background: 220 14% 94%;
+  --foreground: 0 0% 12%;
+
+  /* L1 content panel */
+  --card: 220 14% 97%;
+  --card-foreground: 0 0% 12%;
+
+  /* L2 inner cards */
+  --secondary: 0 0% 100%;
+  --secondary-foreground: 0 0% 12%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 12%;
+
+  --primary: 217 91% 60%;
+  --primary-foreground: 0 0% 100%;
+
+  --muted: 220 14% 92%;
+  --muted-foreground: 0 0% 45%;
+
+  --accent: 220 14% 92%;
+  --accent-foreground: 0 0% 12%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 220 13% 88%;
+  --input: 220 13% 88%;
+  --ring: 217 91% 60%;
+
+  --radius: 0.75rem;
+
+  --success: 142 71% 45%;
+  --success-foreground: 0 0% 100%;
+}
+
+.dark {
+  /* L0 body: #171717 */
+  --background: 0 0% 9%;
+  --foreground: 0 0% 93%;
+
+  /* L1 content panel: #1b1b1b */
+  --card: 0 0% 10.6%;
+  --card-foreground: 0 0% 93%;
+
+  /* L2 inner cards: #1f1f1f */
+  --secondary: 0 0% 12.2%;
+  --secondary-foreground: 0 0% 93%;
+
+  --popover: 0 0% 10.6%;
+  --popover-foreground: 0 0% 93%;
+
+  --primary: 217 91% 60%;
+  --primary-foreground: 0 0% 100%;
+
+  --muted: 0 0% 12.2%;
+  --muted-foreground: 0 0% 48%;
+
+  --accent: 0 0% 14%;
+  --accent-foreground: 0 0% 93%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 0 0% 16%;
+  --input: 0 0% 12%;
+  --ring: 217 91% 60%;
+
+  --success: 142 71% 45%;
+  --success-foreground: 0 0% 100%;
+}
+
+/*
+ * Base styles
+ */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

@@ -43,7 +43,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased">
+      <body className="antialiased">
         <div className="fixed top-4 right-4 z-50">
           <ThemeToggle />
         </div>
