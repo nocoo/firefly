@@ -1,8 +1,15 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { Sun, Moon, Monitor } from "lucide-react";
 
 type Theme = "light" | "dark" | "system";
+
+const ICON_PROPS = {
+  className: "h-4 w-4",
+  strokeWidth: 1.5,
+  "aria-hidden": true as const,
+};
 
 function getStoredTheme(): Theme {
   if (typeof window === "undefined") return "system";
@@ -64,16 +71,20 @@ export function ThemeToggle() {
 
   const label =
     theme === "system" ? "System" : theme === "light" ? "Light" : "Dark";
-  const icon = theme === "system" ? "◐" : theme === "light" ? "☀" : "☾";
 
   return (
     <button
       onClick={cycleTheme}
-      className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-      title={`Theme: ${label}`}
+      className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
       aria-label={`Toggle theme (current: ${label})`}
     >
-      {icon}
+      {theme === "system" ? (
+        <Monitor {...ICON_PROPS} />
+      ) : theme === "dark" ? (
+        <Moon {...ICON_PROPS} />
+      ) : (
+        <Sun {...ICON_PROPS} />
+      )}
     </button>
   );
 }
