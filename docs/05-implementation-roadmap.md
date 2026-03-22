@@ -152,7 +152,7 @@ Commits:
 1. ✅ `feat: implement admin post list with search and filters` — paginated table, status/category/search filters
 2. ✅ `feat: implement post create/edit form` — PostForm with markdown, tags, API tag_ids support
 3. ✅ `feat: add markdown editor with live preview`
-4. `feat: add image upload to r2 from editor`
+4. ✅ `feat: add image upload to r2 from editor` — R2 S3 client, upload API, drag-and-drop component, 18 tests
 5. ✅ `feat: implement post delete with confirmation`
 
 ### 2.3 Category & Tag Management ✅
