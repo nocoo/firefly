@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { getPostBySlug, getPostTags } from "@/data/posts";
+import { listCommentsByPost, buildCommentTree } from "@/data/comments";
 import { renderMarkdown } from "@/models/markdown";
 import {
   buildPageMeta,
@@ -11,6 +12,7 @@ import {
   postPath,
 } from "@/lib/seo";
 import { blogPostingJsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
+import { Comments } from "@/components/blog/comments";
 
 interface PostPageProps {
   params: Promise<{ year: string; month: string; slug: string }>;
@@ -58,6 +60,14 @@ export default async function PostPage({ params }: PostPageProps) {
   }
 
   const tags = await getPostTags(db, post.id);
+
+  // Load comments only for posts with comments enabled
+  let commentTree: Awaited<ReturnType<typeof buildCommentTree>> = [];
+  if (post.comment_enabled) {
+    const comments = await listCommentsByPost(db, post.id);
+    commentTree = buildCommentTree(comments);
+  }
+
   const html = renderMarkdown(post.content);
   const date = post.published_at
     ? formatDateDisplay(post.published_at)
@@ -138,6 +148,8 @@ export default async function PostPage({ params }: PostPageProps) {
           </footer>
         )}
       </article>
+
+      <Comments comments={commentTree} />
 
       <nav className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800">
         <Link
