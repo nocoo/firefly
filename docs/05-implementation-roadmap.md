@@ -160,7 +160,7 @@ Commits:
 Commits:
 1. ✅ `feat: implement admin category and tag crud` — reusable TaxonomyManager, inline create/edit/delete
 
-### 2.4 Site Analytics Dashboard
+### 2.4 Site Analytics Dashboard ✅
 
 Track and display:
 - Page views, unique visitors, sessions
@@ -173,7 +173,7 @@ Commits:
 2. ✅ `feat: implement bot detection and classification`
 3. ✅ `test: add analytics model and data layer tests`
 4. ✅ `feat: implement analytics api routes` — overview, daily stats, top posts, referrers, devices, browsers, bots
-5. `feat: implement analytics dashboard with charts`
+5. ✅ `feat: implement analytics dashboard with charts` — recharts, area/pie/bar charts, period selector
 
 ## Phase 3: Data Migration
 
