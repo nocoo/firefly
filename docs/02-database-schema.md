@@ -31,22 +31,6 @@ CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_google_id ON users(google_id);
 ```
 
-### sessions
-
-Auth sessions for Google OAuth.
-
-```sql
-CREATE TABLE sessions (
-  id            TEXT PRIMARY KEY,  -- session token
-  user_id       TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  expires_at    INTEGER NOT NULL,
-  created_at    INTEGER NOT NULL DEFAULT (unixepoch())
-);
-
-CREATE INDEX idx_sessions_user_id ON sessions(user_id);
-CREATE INDEX idx_sessions_expires ON sessions(expires_at);
-```
-
 ### categories
 
 ```sql
@@ -248,7 +232,7 @@ Map old WordPress URLs to new clean URLs for 301 handling.
 CREATE TABLE redirects (
   id            TEXT PRIMARY KEY,  -- ULID
   source_path   TEXT NOT NULL UNIQUE,  -- e.g., "/index.php/2026/01/some-slug/"
-  target_path   TEXT NOT NULL,         -- e.g., "/posts/some-slug"
+  target_path   TEXT NOT NULL,         -- e.g., "/2026/01/some-slug"
   status_code   INTEGER NOT NULL DEFAULT 301,
   hit_count     INTEGER NOT NULL DEFAULT 0,
   created_at    INTEGER NOT NULL DEFAULT (unixepoch())
@@ -262,9 +246,11 @@ CREATE UNIQUE INDEX idx_redirects_source ON redirects(source_path);
 WordPress uses auto-increment integer IDs. Firefly uses ULIDs.
 The `wp_id` columns on posts, comments, and attachments enable:
 
-1. Reliable migration (idempotent re-runs)
-2. 301 redirect generation from old permalink patterns
-3. Cross-reference during comment parent_id remapping
+1. 301 redirect generation from old permalink patterns
+2. Cross-reference during comment parent_id remapping
+
+Migration is a one-shot process: drop and recreate the D1 database if a re-run
+is needed. No upsert or dedup logic required.
 
 ## Denormalized Counters
 

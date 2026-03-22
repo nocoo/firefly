@@ -165,8 +165,7 @@ Explicit support for AI crawlers:
 ### Image Handling
 
 R2 bucket `lizhengblog` already has 2,035 files (529MB).
-Options for serving:
-1. **R2 custom domain**: Bind `assets.lizheng.me` → R2 bucket (recommended)
-2. **Cloudflare Transform Rules**: Rewrite `/wp-content/uploads/*` to R2
+Keep original R2 keys (`wp-content/uploads/YYYY/MM/filename.ext`) unchanged.
+Bind `assets.lizheng.me` custom domain → R2 bucket to serve images directly.
 
 New image uploads go through admin panel → API route → R2 PUT.

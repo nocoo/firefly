@@ -115,7 +115,7 @@ Source: `lizheng_posts` WHERE post_type='post' AND post_status IN ('publish', 'd
 For each post:
 1. Extract markdown from `post_content` (WordPress stores HTML/Gutenberg blocks)
 2. Convert WordPress HTML → clean Markdown (using turndown or similar)
-3. Replace image URLs: `https://lizheng.me/wp-content/uploads/` → R2 custom domain URL
+3. Replace image URLs: `https://lizheng.me/wp-content/uploads/` → `https://assets.lizheng.me/wp-content/uploads/`
 4. Set `wp_permalink` = `/index.php/YYYY/MM/slug/` for 301 redirect generation
 5. Parse `post_date` for the `published_at` field
 6. Generate reading time from content length
@@ -226,7 +226,8 @@ scripts/migrations/
 └── compare-sizes.ts              ← File size comparison utility
 ```
 
-Each script is idempotent (can re-run safely using `wp_id` as dedup key).
+Each script runs once. Migration is a one-shot process: if a re-run is needed,
+drop and recreate the D1 database, then re-run all scripts in order.
 
 ## Rollback Strategy
 

@@ -83,11 +83,13 @@ wp-content/uploads/YYYY/MM/filename.ext
 
 **Target (R2 custom domain):**
 ```
-https://assets.lizheng.me/YYYY/MM/filename.ext
+https://assets.lizheng.me/wp-content/uploads/YYYY/MM/filename.ext
 ```
 
-During migration: strip `wp-content/uploads/` prefix from R2 keys (or bind custom
-domain to serve with that prefix). Batch-replace URLs in post_content.
+During migration: keep R2 keys as-is (`wp-content/uploads/...`). Bind custom domain
+`assets.lizheng.me` to R2 bucket, serving objects at their original keys.
+Batch-replace `https://lizheng.me/wp-content/uploads/` →
+`https://assets.lizheng.me/wp-content/uploads/` in post_content.
 
 ## Feature Scope
 
