@@ -31,7 +31,7 @@ Commits:
 1. ✅ `chore: initialize next.js 16 with bun and typescript strict` — Next.js 16.2.1, React 19, Turbopack
 2. ✅ `chore: configure tailwind 4, eslint strict, vitest` — Tailwind CSS 4, ESLint 10 + typescript-eslint
 3. `chore: setup husky pre-commit and pre-push hooks`
-4. `chore: add shadcn/ui base components from basalt`
+4. ✅ `chore: add shadcn/ui base components from basalt` — Button, Card, Input, cn(), design tokens
 
 ### 0.2 D1 Database Setup ✅
 
@@ -46,17 +46,18 @@ Commits:
 2. `feat: implement d1 rest client with test isolation`
 3. `test: verify d1 client against test database`
 
-### 0.3 Auth Setup
+### 0.3 Auth Setup ✅
 
-1. Configure Auth.js with Google OAuth
-2. Implement email whitelist check
-3. Add proxy.ts for route protection
-4. Login page (minimal)
+1. ✅ Configure Auth.js with Google OAuth
+2. ✅ Implement email whitelist check
+3. ✅ Add middleware route protection
+4. ✅ Login page (basalt design)
 
 Commits:
-1. `feat: configure google oauth with auth.js`
-2. `feat: add email whitelist and proxy route guard`
-3. `test: auth flow unit tests`
+1. ✅ `feat: configure google oauth with auth.js` — Auth.js v5, Google provider, JWT strategy
+2. ✅ `feat: add email whitelist and route guard middleware` — protect /admin/* and write APIs
+3. ✅ `feat: implement login page with basalt design` — gradient blobs, Card, Google OAuth button
+4. ✅ `test: add auth email whitelist unit tests` — 8 tests, auth-utils extracted
 
 ## Phase 1: Core Blog (Public)
 
