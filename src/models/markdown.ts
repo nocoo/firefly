@@ -22,22 +22,28 @@ function createRenderer(): MarkedExtension {
       },
 
       link({ href, text }: Tokens.Link): string {
+        const safeHref = sanitizeUrl(href);
+        if (!safeHref) return escapeHtml(text);
+
         const isExternal =
-          href.startsWith("http://") || href.startsWith("https://");
+          safeHref.startsWith("http://") || safeHref.startsWith("https://");
         const attrs = isExternal
           ? ` target="_blank" rel="noopener noreferrer"`
           : "";
-        return `<a href="${href}"${attrs}>${text}</a>`;
+        return `<a href="${escapeAttr(safeHref)}"${attrs}>${text}</a>`;
       },
 
       image({ href, text }: Tokens.Image): string {
-        const alt = text ? ` alt="${text}"` : "";
-        return `<img src="${href}"${alt} loading="lazy">`;
+        const safeHref = sanitizeUrl(href);
+        if (!safeHref) return "";
+
+        const alt = text ? ` alt="${escapeAttr(text)}"` : "";
+        return `<img src="${escapeAttr(safeHref)}"${alt} loading="lazy">`;
       },
 
       code({ text, lang }: Tokens.Code): string {
         const escaped = escapeHtml(text);
-        const langClass = lang ? ` class="language-${lang}"` : "";
+        const langClass = lang ? ` class="language-${escapeAttr(lang)}"` : "";
         return `<pre><code${langClass}>${escaped}</code></pre>\n`;
       },
 
@@ -92,4 +98,37 @@ function escapeHtml(str: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+/** Escape a string for safe use inside an HTML attribute value. */
+function escapeAttr(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+/** Allow only safe URL schemes; returns null for dangerous ones. */
+function sanitizeUrl(url: string): string | null {
+  const trimmed = url.trim();
+  // Allow relative URLs, http(s), mailto, tel, and hash links
+  if (
+    trimmed.startsWith("/") ||
+    trimmed.startsWith("#") ||
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("mailto:") ||
+    trimmed.startsWith("tel:")
+  ) {
+    return trimmed;
+  }
+  // Block everything else (javascript:, data:, vbscript:, etc.)
+  // Also block protocol-relative URLs that could be abused
+  if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) {
+    return null;
+  }
+  // Allow bare relative paths (e.g., "page.html", "../file")
+  return trimmed;
 }

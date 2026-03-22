@@ -162,4 +162,51 @@ const x = 1;
     const html = renderMarkdown(md);
     expect(html).not.toContain("<script>alert");
   });
+
+  // --- XSS: link href injection ---
+  it("blocks javascript: URLs in links", () => {
+    const html = renderMarkdown("[click](javascript:alert(1))");
+    expect(html).not.toContain("javascript:");
+    expect(html).not.toContain("href=");
+    expect(html).toContain("click"); // text should still render
+  });
+
+  it("blocks data: URLs in links", () => {
+    const html = renderMarkdown("[click](data:text/html,<script>alert(1)</script>)");
+    expect(html).not.toContain("data:");
+    expect(html).not.toContain("href=");
+  });
+
+  it("blocks vbscript: URLs in links", () => {
+    const html = renderMarkdown("[click](vbscript:msgbox)");
+    expect(html).not.toContain("vbscript:");
+    expect(html).not.toContain("href=");
+  });
+
+  it("allows mailto: and tel: URLs in links", () => {
+    const html1 = renderMarkdown("[email](mailto:user@example.com)");
+    expect(html1).toContain('href="mailto:user@example.com"');
+
+    const html2 = renderMarkdown("[call](tel:+1234567890)");
+    expect(html2).toContain('href="tel:+1234567890"');
+  });
+
+  it("escapes quotes in link href attributes", () => {
+    const html = renderMarkdown('[click](https://example.com/a"onmouseover="alert(1))');
+    expect(html).not.toContain('"onmouseover=');
+    expect(html).toContain("&quot;");
+  });
+
+  // --- XSS: image src injection ---
+  it("blocks javascript: URLs in images", () => {
+    const html = renderMarkdown("![alt](javascript:alert(1))");
+    expect(html).not.toContain("javascript:");
+    expect(html).not.toContain("src=");
+  });
+
+  it("escapes quotes in image alt text", () => {
+    const html = renderMarkdown('!["><script>alert(1)</script>](https://example.com/img.jpg)');
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("&quot;");
+  });
 });
