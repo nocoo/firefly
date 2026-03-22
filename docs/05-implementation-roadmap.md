@@ -98,7 +98,7 @@ Commits (TDD — test first, then implementation):
 Commits:
 1. ✅ `feat: implement post api routes` — includes all 6 endpoints + shared helpers
 
-### 1.3 Public Pages (SSR)
+### 1.3 Public Pages (SSR) ✅
 
 ```
 /                       ← Home (post list, paginated)
@@ -112,12 +112,12 @@ Commits:
 ```
 
 Commits:
-1. `feat: implement home page with post list`
-2. `feat: implement post detail page with seo meta`
-3. `feat: implement category and tag archive pages`
-4. `feat: add rss feed, sitemap, robots.txt, llms.txt`
-5. `feat: add structured data (json-ld) to all pages`
-6. `feat: add dark mode with os preference detection`
+1. ✅ `feat: implement home page with post list`
+2. ✅ `feat: implement post detail page with seo meta`
+3. ✅ `feat: implement category and tag archive pages`
+4. ✅ `feat: add rss feed, sitemap, robots.txt, llms.txt`
+5. ✅ `feat: add structured data (json-ld) to all pages`
+6. ✅ `feat: add dark mode with os preference detection`
 
 ### 1.4 Comments (read-only display)
 
