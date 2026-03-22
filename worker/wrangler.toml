@@ -1,0 +1,12 @@
+name = "lizhengme"
+main = "src/index.ts"
+compatibility_date = "2026-03-01"
+
+[[routes]]
+pattern = "lizhengme.worker.hexly.ai"
+custom_domain = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lizhengme-db"
+database_id = "4bf7da18-b41c-41c1-8191-20e664c2f067"
