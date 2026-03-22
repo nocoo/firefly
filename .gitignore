@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Build
+.next/
+dist/
+out/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Migration data (contains database dumps, never commit)
+scripts/migrations/data/
