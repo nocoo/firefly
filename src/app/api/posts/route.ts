@@ -8,7 +8,6 @@ import {
   type CreatePostInput,
   type ListPostsOptions,
 } from "@/data/posts";
-import type { PostStatus } from "@/models/types";
 
 // GET /api/posts — list posts with optional filters
 export async function GET(request: NextRequest) {
@@ -18,9 +17,11 @@ export async function GET(request: NextRequest) {
 
     const options: ListPostsOptions = {};
 
-    // Default to published for public access — admin frontend passes explicit status
-    const status = searchParams.get("status");
-    options.status = status ? (status as PostStatus) : "published";
+    // Public GET always returns published posts only.
+    // The status query param is ignored — unauthenticated GET requests
+    // must never see draft/private/archived content.
+    // Admin uses server components with direct data access, not this API.
+    options.status = "published";
 
     const categoryId = searchParams.get("category_id");
     if (categoryId) options.categoryId = categoryId;
