@@ -151,9 +151,9 @@ List, create, edit, delete posts from admin panel.
 Commits:
 1. ✅ `feat: implement admin post list with search and filters` — paginated table, status/category/search filters
 2. ✅ `feat: implement post create/edit form` — PostForm with markdown, tags, API tag_ids support
-3. `feat: add markdown editor with live preview`
+3. ✅ `feat: add markdown editor with live preview`
 4. `feat: add image upload to r2 from editor`
-5. `feat: implement post delete with confirmation`
+5. ✅ `feat: implement post delete with confirmation`
 
 ### 2.3 Category & Tag Management ✅
 
