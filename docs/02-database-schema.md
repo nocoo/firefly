@@ -67,6 +67,10 @@ CREATE UNIQUE INDEX idx_tags_slug ON tags(slug);
 
 Core content table. Stores markdown source, not rendered HTML.
 
+Slug is globally unique (same as WordPress behavior). The public URL `/YYYY/MM/slug`
+uses date prefix for SEO continuity, but slug alone is the canonical identifier used
+by the API (`/api/posts/[slug]`). The date prefix is derived from `published_at`.
+
 ```sql
 CREATE TABLE posts (
   id              TEXT PRIMARY KEY,  -- ULID
@@ -77,8 +81,8 @@ CREATE TABLE posts (
   status          TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'private', 'archived')),
   category_id     TEXT REFERENCES categories(id) ON DELETE SET NULL,
   featured_image  TEXT,                             -- R2 key or URL
-  comment_enabled INTEGER NOT NULL DEFAULT 0,      -- 0=off, 1=on (default off)
-  comment_count   INTEGER NOT NULL DEFAULT 0,      -- denormalized
+  comment_enabled INTEGER NOT NULL DEFAULT 0,      -- 0=off, 1=on (controls display of historical comments)
+  comment_count   INTEGER NOT NULL DEFAULT 0,      -- denormalized (historical comments only)
   view_count      INTEGER NOT NULL DEFAULT 0,      -- denormalized
   reading_time    INTEGER,                          -- estimated minutes
   wp_id           INTEGER,                          -- original WordPress post ID for migration
@@ -112,7 +116,7 @@ CREATE INDEX idx_post_tags_tag ON post_tags(tag_id);
 
 ### comments
 
-Threaded comments, migrated from WordPress. Default off for new posts.
+Historical comments migrated from WordPress. Read-only display, no new submissions.
 
 ```sql
 CREATE TABLE comments (
@@ -123,15 +127,12 @@ CREATE TABLE comments (
   author_email    TEXT,
   author_url      TEXT,
   content         TEXT NOT NULL,
-  status          TEXT NOT NULL DEFAULT 'approved' CHECK (status IN ('approved', 'pending', 'spam')),
   wp_id           INTEGER,           -- original WordPress comment ID
-  created_at      INTEGER NOT NULL DEFAULT (unixepoch()),
-  updated_at      INTEGER NOT NULL DEFAULT (unixepoch())
+  created_at      INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
 CREATE INDEX idx_comments_post ON comments(post_id);
 CREATE INDEX idx_comments_parent ON comments(parent_id);
-CREATE INDEX idx_comments_status ON comments(status);
 ```
 
 ### attachments

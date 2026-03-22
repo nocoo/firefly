@@ -122,6 +122,9 @@ For each post:
 
 ### 5b. Category assignment
 
+Firefly uses single category per post (`category_id` FK). If a WordPress post has
+multiple categories, take the first one by `term_id` order and log a warning.
+
 ```sql
 SELECT tr.object_id as post_id, t.slug as category_slug
 FROM lizheng_term_relationships tr
@@ -152,7 +155,8 @@ WHERE p.post_type = 'post';
 
 ## Step 6: Migrate Comments
 
-Source: `lizheng_comments` WHERE comment_approved='1'
+Source: `lizheng_comments` WHERE comment_approved='1' (discard pending/spam).
+Historical display only — no status field needed in target schema.
 
 ```sql
 SELECT comment_ID, comment_post_ID, comment_parent,
@@ -161,7 +165,7 @@ SELECT comment_ID, comment_post_ID, comment_parent,
 FROM lizheng_comments
 WHERE comment_approved = '1'
 ORDER BY comment_date;
--- 595 comments
+-- 595 comments (all approved)
 ```
 
 Parent comment remapping: WordPress uses integer IDs for `comment_parent`.

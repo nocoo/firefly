@@ -19,7 +19,7 @@ admin experience using the basalt design system.
 | Categories (empty) | 3 | ❌ | 参考, 存档, 博物馆 — discard |
 | Tags (with posts) | 36 | ✅ | AI(46), GPT-4o(25), Gemini(16), etc. |
 | Tags (orphaned) | ~170 | ❌ | Nokia, jQuery, etc. — discard |
-| Comments | 595 | ✅ | All approved, all ≤2012, threaded |
+| Comments | 595 | ✅ | All approved, all ≤2012, threaded. Discard spam/pending during migration |
 | Attachments (R2) | 2,035 files | ✅ | 529MB in `lizhengblog` R2 bucket |
 | Revisions | 2,429 | ❌ | WordPress revision history — discard |
 | Analytics | 3,178 views | ✅ | Independent Analytics, 2025-05 ~ present |
@@ -33,7 +33,7 @@ admin experience using the basalt design system.
 | WP Dark Mode | Rebuild natively (OS-preference based) |
 | Offload Media (R2) | Files already in R2; replace URLs during migration |
 | Featured Images RSS | Not needed |
-| Disable Comments | Not needed (comments default-off per post) |
+| Disable Comments | Not needed (new comments not supported) |
 | Enable Media Replace | Not needed |
 | Loco Translate | Not needed |
 | Redis Cache | Not needed (edge caching via CF/Railway) |
@@ -105,7 +105,7 @@ Batch-replace `https://lizheng.me/wp-content/uploads/` →
 - [x] RSS feed
 - [x] Image management via R2
 - [x] 301 redirects from WordPress URLs
-- [x] Comments (display historical, default-off for new posts)
+- [x] Comments (display historical only, no new comment submission)
 - [x] Site analytics (visitor tracking, crawler/bot detection)
 
 ### Phase 2 — Enhanced

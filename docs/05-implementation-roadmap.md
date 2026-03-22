@@ -123,11 +123,11 @@ Commits:
 
 ### 1.4 Comments (read-only display)
 
-Display historical WordPress comments on post pages.
-Comments default off; toggle via admin.
+Display historical WordPress comments on post pages. No new comment submission.
+Comments shown only on posts with `comment_enabled = 1`.
 
 Commits:
-1. `test: add comment model and data layer tests`
+1. `test: add comment data layer tests`
 2. `feat: implement comment display on post pages`
 
 ### 1.5 Redirects
@@ -164,14 +164,7 @@ Commits:
 1. `feat: implement admin category crud`
 2. `feat: implement admin tag crud`
 
-### 2.4 Comment Management
-
-View, approve/reject comments (for future comments).
-
-Commits:
-1. `feat: implement admin comment management`
-
-### 2.5 Site Analytics Dashboard
+### 2.4 Site Analytics Dashboard
 
 Track and display:
 - Page views, unique visitors, sessions
