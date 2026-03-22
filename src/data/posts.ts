@@ -16,32 +16,32 @@ export interface CreatePostInput {
   slug: string;
   content: string;
   status: PostStatus;
-  excerpt?: string;
-  category_id?: string;
-  featured_image?: string;
-  comment_enabled?: number;
-  published_at?: number;
+  excerpt?: string | undefined;
+  category_id?: string | undefined;
+  featured_image?: string | undefined;
+  comment_enabled?: number | undefined;
+  published_at?: number | undefined;
 }
 
 export interface UpdatePostInput {
-  title?: string;
-  slug?: string;
-  content?: string;
-  excerpt?: string;
-  status?: PostStatus;
-  category_id?: string | null;
-  featured_image?: string | null;
-  comment_enabled?: number;
-  published_at?: number | null;
+  title?: string | undefined;
+  slug?: string | undefined;
+  content?: string | undefined;
+  excerpt?: string | undefined;
+  status?: PostStatus | undefined;
+  category_id?: string | null | undefined;
+  featured_image?: string | null | undefined;
+  comment_enabled?: number | undefined;
+  published_at?: number | null | undefined;
 }
 
 export interface ListPostsOptions {
-  status?: PostStatus;
-  categoryId?: string;
-  tagId?: string;
-  query?: string;
-  page?: number;
-  pageSize?: number;
+  status?: PostStatus | undefined;
+  categoryId?: string | undefined;
+  tagId?: string | undefined;
+  query?: string | undefined;
+  page?: number | undefined;
+  pageSize?: number | undefined;
 }
 
 export interface ListPostsResult {

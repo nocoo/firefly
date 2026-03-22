@@ -13,15 +13,15 @@ import { ulid } from "ulid";
 export interface CreateCategoryInput {
   name: string;
   slug: string;
-  description?: string;
-  sort_order?: number;
+  description?: string | undefined;
+  sort_order?: number | undefined;
 }
 
 export interface UpdateCategoryInput {
-  name?: string;
-  slug?: string;
-  description?: string | null;
-  sort_order?: number;
+  name?: string | undefined;
+  slug?: string | undefined;
+  description?: string | null | undefined;
+  sort_order?: number | undefined;
 }
 
 // ---------------------------------------------------------------------------

@@ -16,8 +16,8 @@ export interface CreateTagInput {
 }
 
 export interface UpdateTagInput {
-  name?: string;
-  slug?: string;
+  name?: string | undefined;
+  slug?: string | undefined;
 }
 
 // ---------------------------------------------------------------------------
