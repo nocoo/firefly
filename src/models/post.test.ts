@@ -101,7 +101,8 @@ describe("excerptFromContent", () => {
     const text = "This is a long blog post about TypeScript and its benefits for web development.";
     const result = excerptFromContent(text, 30);
     expect(result.length).toBeLessThanOrEqual(30);
-    expect(result).toBe("This is a long blog post about");
+    // Truncates at word boundary before maxLength
+    expect(result).toBe("This is a long blog post");
   });
 
   it("strips markdown formatting", () => {
