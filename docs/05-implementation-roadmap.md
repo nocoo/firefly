@@ -137,30 +137,28 @@ Commits:
 
 ## Phase 2: Admin Panel
 
-### 2.1 Admin Layout
+### 2.1 Admin Layout ✅
 
 Based on basalt design system: sidebar navigation, top bar, responsive.
 
 Commits:
-1. `feat: implement admin layout with basalt design system`
-2. `feat: add admin navigation and sidebar`
+1. ✅ `feat: implement admin layout with basalt design system` — sidebar, top bar, mobile overlay, dashboard page
 
-### 2.2 Post Management
+### 2.2 Post Management ✅
 
 List, create, edit, delete posts from admin panel.
 
 Commits:
-1. `feat: implement admin post list with search and filters`
-2. `feat: implement post create/edit form`
+1. ✅ `feat: implement admin post list with search and filters` — paginated table, status/category/search filters
+2. ✅ `feat: implement post create/edit form` — PostForm with markdown, tags, API tag_ids support
 3. `feat: add markdown editor with live preview`
 4. `feat: add image upload to r2 from editor`
 5. `feat: implement post delete with confirmation`
 
-### 2.3 Category & Tag Management
+### 2.3 Category & Tag Management ✅
 
 Commits:
-1. `feat: implement admin category crud`
-2. `feat: implement admin tag crud`
+1. ✅ `feat: implement admin category and tag crud` — reusable TaxonomyManager, inline create/edit/delete
 
 ### 2.4 Site Analytics Dashboard
 
