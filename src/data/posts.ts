@@ -111,9 +111,16 @@ export async function listPosts(
     offset,
   ]);
 
+  // Separate COUNT query for accurate pagination total
+  const countSql = `SELECT COUNT(*) AS count FROM posts p ${where}`;
+  const countResult = await db.firstOrNull<{ count: number }>(
+    countSql,
+    params,
+  );
+
   return {
     posts: result.results,
-    total: result.results.length, // TODO: add COUNT query for proper pagination
+    total: countResult?.count ?? result.results.length,
   };
 }
 

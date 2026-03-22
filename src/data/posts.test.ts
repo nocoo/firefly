@@ -73,6 +73,7 @@ describe("listPosts", () => {
       meta: { changes: 0, duration: 1 },
     };
     vi.mocked(db.query).mockResolvedValue(mockResult as unknown as DbQueryResult);
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 42 });
 
     const result = await listPosts(db);
 
@@ -84,10 +85,27 @@ describe("listPosts", () => {
     expect(sql).toContain("LIMIT");
     expect(result.posts).toHaveLength(1);
     expect(result.posts[0].title).toBe("Test Post");
+    // Verify total comes from COUNT query, not results.length
+    expect(result.total).toBe(42);
+  });
+
+  it("issues a separate COUNT query for total", async () => {
+    vi.mocked(db.query).mockResolvedValue({ results: [samplePostWithCategory], meta: { changes: 0, duration: 0 } });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 100 });
+
+    const result = await listPosts(db, { status: "published" });
+
+    // firstOrNull should be called with a COUNT query
+    const [countSql, countParams] = vi.mocked(db.firstOrNull).mock.calls[0];
+    expect(countSql).toContain("COUNT(*)");
+    expect(countSql).toContain("status = ?");
+    expect(countParams).toContain("published");
+    expect(result.total).toBe(100);
   });
 
   it("filters by status when specified", async () => {
     vi.mocked(db.query).mockResolvedValue({ results: [], meta: { changes: 0, duration: 0 } });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
 
     await listPosts(db, { status: "published" });
 
@@ -98,6 +116,7 @@ describe("listPosts", () => {
 
   it("filters by category_id when specified", async () => {
     vi.mocked(db.query).mockResolvedValue({ results: [], meta: { changes: 0, duration: 0 } });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
 
     await listPosts(db, { categoryId: "cat-1" });
 
@@ -108,6 +127,7 @@ describe("listPosts", () => {
 
   it("applies pagination offset and limit", async () => {
     vi.mocked(db.query).mockResolvedValue({ results: [], meta: { changes: 0, duration: 0 } });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
 
     await listPosts(db, { page: 2, pageSize: 10 });
 
@@ -120,6 +140,7 @@ describe("listPosts", () => {
 
   it("searches by title when query specified", async () => {
     vi.mocked(db.query).mockResolvedValue({ results: [], meta: { changes: 0, duration: 0 } });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
 
     await listPosts(db, { query: "typescript" });
 
