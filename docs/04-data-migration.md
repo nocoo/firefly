@@ -90,7 +90,7 @@ WHERE tt.taxonomy = 'category' AND tt.count > 0;
 -- Result: 随笔(writting, 47), 流水账(diary, 25)
 ```
 
-Note: WordPress has `writting` (typo) — decide whether to fix slug on migration.
+Fix typo during migration: rename slug `writting` → `writing`.
 
 ## Step 4: Migrate Tags
 
@@ -180,7 +180,7 @@ For each published post, create redirect:
 
 Also handle:
 ```
-/index.php/category/writting/ → /category/writting
+/index.php/category/writting/ → /category/writing
 /index.php/category/diary/ → /category/diary
 /index.php/tag/ai/ → /tag/ai
 ... (36 tags)
