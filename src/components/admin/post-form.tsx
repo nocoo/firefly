@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { Category, Tag, PostWithCategory, PostStatus } from "@/models/types";
 import { slugify } from "@/models/post";
 import { renderMarkdown } from "@/models/markdown";
+import { ImageUpload } from "./image-upload";
 
 interface PostFormProps {
   post?: PostWithCategory & { tagIds: string[] };
@@ -38,6 +39,12 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
     () => (previewMode && content ? renderMarkdown(content) : ""),
     [previewMode, content],
   );
+
+  // Insert uploaded image URL as markdown at cursor (or end)
+  const handleImageUpload = useCallback((url: string) => {
+    const markdown = `![](${url})`;
+    setContent((prev) => (prev ? `${prev}\n\n${markdown}` : markdown));
+  }, []);
 
   const handleTitleChange = (value: string) => {
     setTitle(value);
@@ -208,15 +215,18 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             )}
           </div>
         ) : (
-          <textarea
-            id="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            required
-            rows={20}
-            className="w-full min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
-            placeholder="Write your post content in Markdown..."
-          />
+          <>
+            <ImageUpload onUpload={handleImageUpload} className="mb-2" />
+            <textarea
+              id="content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              required
+              rows={20}
+              className="w-full min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
+              placeholder="Write your post content in Markdown..."
+            />
+          </>
         )}
       </div>
 

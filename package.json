@@ -26,6 +26,7 @@
     "vitest": "^4.1.0"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1014.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@tailwindcss/postcss": "^4.2.2",
     "class-variance-authority": "^0.7.1",
