@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Analytics tracking — called from middleware for public page views
+// Analytics tracking — called from proxy for public page views
 // ---------------------------------------------------------------------------
 
 import { createDb } from "@/lib/db";

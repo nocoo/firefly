@@ -5,7 +5,7 @@ import { uploadToR2 } from "@/lib/r2";
 /**
  * POST /api/upload — upload an image to R2.
  * Accepts multipart/form-data with a single "file" field.
- * Protected by middleware (requires auth).
+ * Protected by proxy (requires auth).
  */
 export async function POST(request: NextRequest) {
   try {

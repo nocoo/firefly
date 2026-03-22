@@ -14,7 +14,7 @@ import {
 
 /**
  * GET /api/analytics — fetch analytics data for the dashboard.
- * Protected by middleware (requires admin auth).
+ * Protected by proxy (requires admin auth).
  *
  * Query params:
  *   days=30 (default) — time range in days (1-365)
