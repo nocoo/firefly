@@ -5,7 +5,7 @@
 Migrate WordPress MySQL → Cloudflare D1 SQLite. Run on local machine, not VPS.
 
 **Source**: `ssh blog.nocoo.cloud` → MySQL `host_lizheng` (user: `wpuser`)
-**Target**: Cloudflare D1 `firefly-db`
+**Target**: Cloudflare D1 `lizhengme-db`
 
 ## Step 0: Export MySQL Dump
 

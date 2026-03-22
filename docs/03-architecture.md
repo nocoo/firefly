@@ -7,8 +7,8 @@
 │                    Cloudflare Edge                       │
 │  ┌──────────┐  ┌───────────────┐  ┌──────────────────┐  │
 │  │ CDN/Cache│  │ R2 (images)   │  │ D1 (database)    │  │
-│  │          │  │ lizhengblog   │  │ firefly-db       │  │
-│  │          │  │ 2035 files    │  │ firefly-db-test  │  │
+│  │          │  │ lizhengblog   │  │ lizhengme-db     │  │
+│  │          │  │ 2035 files    │  │ lizhengme-db-test│  │
 │  └──────────┘  └───────────────┘  └──────────────────┘  │
 └────────────────────┬────────────────────────────────────┘
                      │
@@ -72,7 +72,7 @@
 | Component | Platform | Notes |
 |-----------|----------|-------|
 | Compute | Railway | Docker (Bun build → Node runtime) |
-| Database | Cloudflare D1 | `firefly-db` (prod) / `firefly-db-test` (test) |
+| Database | Cloudflare D1 | `lizhengme-db` (prod) / `lizhengme-db-test` (test) |
 | Images | Cloudflare R2 | `lizhengblog` bucket, custom domain |
 | DNS | Cloudflare | lizheng.me |
 | CI/CD | Railway auto-deploy | From GitHub main branch |
@@ -86,7 +86,7 @@
 | L3 System | Playwright | CI |
 | G1 Static | tsc --noEmit + ESLint strict | pre-commit |
 | G2 Security | osv-scanner + gitleaks | pre-push |
-| D1 Isolation | firefly-db-test (separate D1) | E2E only |
+| D1 Isolation | lizhengme-db-test (separate D1) | E2E only |
 
 ## Architecture Patterns
 

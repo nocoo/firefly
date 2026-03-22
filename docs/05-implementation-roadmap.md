@@ -35,7 +35,7 @@ Commits:
 
 ### 0.2 D1 Database Setup
 
-1. Create D1 databases: `firefly-db` (prod) + `firefly-db-test` (test)
+1. Create D1 databases: `lizhengme-db` (prod) + `lizhengme-db-test` (test)
 2. Write SQL migration files
 3. Apply schema to both databases
 4. Implement D1 REST client (`data/db.ts`)
