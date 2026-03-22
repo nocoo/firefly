@@ -41,9 +41,9 @@ function createRenderer(): MarkedExtension {
         return `<pre><code${langClass}>${escaped}</code></pre>\n`;
       },
 
-      html({ text }: Tokens.HTML): string {
+      html(token: Tokens.HTML | Tokens.Tag): string {
         // Escape raw HTML to prevent XSS
-        return escapeHtml(text);
+        return escapeHtml(token.text);
       },
     },
   };
