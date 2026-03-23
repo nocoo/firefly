@@ -280,7 +280,6 @@
   min-height: 100vh;
   background: var(--blog-bg);
   color: var(--blog-text);
-  font-family: -apple-system, system-ui, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
 }
 
 .blog-max-width {
