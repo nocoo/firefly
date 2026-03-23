@@ -1,9 +1,27 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useState } from "react";
-import { ArrowRight } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { Github, Layers } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
+
+// ── Decorative barcode ──
+
+function Barcode() {
+  const bars = [2, 1, 3, 1, 2, 1, 1, 3, 1, 2, 1, 3, 2, 1, 1, 2, 3, 1, 2, 1];
+  return (
+    <div className="flex items-stretch gap-[1.5px] h-full">
+      {bars.map((w, i) => (
+        <div
+          key={i}
+          className="rounded-[0.5px] bg-primary-foreground"
+          style={{ width: `${w * 1.5}px`, opacity: i % 3 === 0 ? 0.9 : 0.5 }}
+        />
+      ))}
+    </div>
+  );
+}
 
 function GoogleIcon() {
   return (
@@ -28,57 +46,177 @@ function GoogleIcon() {
   );
 }
 
-export function LoginCard() {
-  const [loading, setLoading] = useState(false);
+// ── Login content (needs useSearchParams) ──
 
-  const handleGoogleSignIn = () => {
-    setLoading(true);
+function LoginContent() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+  const year = new Date().getFullYear();
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+
+  const handleGoogleLogin = () => {
     signIn("google", { callbackUrl: "/admin" });
   };
 
   return (
-    <Card className="rounded-card border-0 bg-card shadow-none">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-normal text-muted-foreground">
-          Sign in with your account
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {/* Primary sign-in button — basalt "Sign in" style */}
-          <button
-            type="button"
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-widget bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none"
-          >
-            <GoogleIcon />
-            {loading ? "Signing in…" : "Continue with Google"}
-            <ArrowRight
-              className="h-4 w-4"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
-          </button>
+    <div className="relative flex min-h-screen flex-col bg-background overflow-hidden">
+      <div className="flex flex-1 items-center justify-center p-4">
+        {/* Radial glow */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: [
+              "radial-gradient(ellipse 70% 55% at 50% 50%,",
+              "hsl(var(--foreground) / 0.045) 0%,",
+              "hsl(var(--foreground) / 0.042) 10%,",
+              "hsl(var(--foreground) / 0.036) 20%,",
+              "hsl(var(--foreground) / 0.028) 32%,",
+              "hsl(var(--foreground) / 0.020) 45%,",
+              "hsl(var(--foreground) / 0.012) 58%,",
+              "hsl(var(--foreground) / 0.006) 72%,",
+              "hsl(var(--foreground) / 0.002) 86%,",
+              "transparent 100%)",
+            ].join(" "),
+          }}
+        />
 
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border" />
+        {/* Top-right controls */}
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-1">
+          <a
+            href="https://github.com/nocoo/firefly"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub repository"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          >
+            <Github className="h-[18px] w-[18px]" aria-hidden="true" strokeWidth={1.5} />
+          </a>
+          <ThemeToggle />
+        </div>
+
+        <div className="flex flex-col items-center">
+          {/* Badge card */}
+          <div
+            className="relative w-72 overflow-hidden rounded-2xl bg-card flex flex-col ring-1 ring-black/[0.08] dark:ring-white/[0.06]"
+            style={{
+              boxShadow: [
+                "0 1px 2px rgba(0,0,0,0.06)",
+                "0 4px 8px rgba(0,0,0,0.04)",
+                "0 12px 24px rgba(0,0,0,0.06)",
+                "0 24px 48px rgba(0,0,0,0.04)",
+                "0 0 0 0.5px rgba(0,0,0,0.02)",
+                "0 0 60px rgba(0,0,0,0.03)",
+              ].join(", "),
+            }}
+          >
+            {/* Header strip with barcode */}
+            <div className="bg-primary px-5 py-4">
+              <div className="flex items-center justify-between">
+                {/* Punch hole */}
+                <div
+                  className="h-4 w-8 rounded-full bg-background/80"
+                  style={{
+                    boxShadow: "inset 0 1.5px 3px rgba(0,0,0,0.35), inset 0 -0.5px 1px rgba(255,255,255,0.1)",
+                  }}
+                />
+                <div className="flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />
+                  <span className="text-sm font-semibold text-primary-foreground">Firefly</span>
+                </div>
+                <span className="text-[10px] font-medium uppercase tracking-widest text-primary-foreground/60">
+                  BLOG
+                </span>
+              </div>
+              {/* Barcode row */}
+              <div className="mt-3 flex items-center justify-between">
+                <span className="text-[9px] font-mono text-primary-foreground/40 tracking-wider">
+                  ID {year}-{today.slice(4)}
+                </span>
+                <div className="h-6">
+                  <Barcode />
+                </div>
+              </div>
             </div>
-            <div className="relative flex justify-center">
-              <span className="bg-card px-3 text-xs text-muted-foreground">
-                Admin access only
-              </span>
+
+            {/* Badge content */}
+            <div className="flex flex-1 flex-col items-center px-6 pt-6 pb-5">
+              {/* Avatar placeholder */}
+              <div className="h-24 w-24 overflow-hidden rounded-full bg-secondary dark:bg-[#171717] ring-1 ring-border flex items-center justify-center">
+                <Layers className="h-10 w-10 text-primary" strokeWidth={1.5} />
+              </div>
+
+              <p className="mt-5 text-lg font-semibold text-foreground">Welcome back</p>
+              <p className="mt-1 text-xs text-muted-foreground">Sign in to manage your blog</p>
+
+              {/* Error message */}
+              {error && (
+                <div className="mt-3 w-full rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive text-center">
+                  {error === "AccessDenied"
+                    ? "Your account is not authorized to access this application."
+                    : "Sign in failed. Please try again."}
+                </div>
+              )}
+
+              {/* Divider */}
+              <div className="mt-5 h-px w-full bg-border" />
+
+              {/* Spacing before action area */}
+              <div className="mt-5" />
+
+              {/* Google Sign-in button */}
+              <button
+                onClick={handleGoogleLogin}
+                className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-secondary px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-accent cursor-pointer"
+              >
+                <GoogleIcon />
+                Sign in with Google
+              </button>
+
+              {/* Terms */}
+              <p className="mt-3 text-center text-[10px] leading-relaxed text-muted-foreground/60">
+                Admin access only · Authorized emails
+              </p>
+            </div>
+
+            {/* Footer strip */}
+            <div className="mt-auto flex items-center justify-center border-t border-border bg-secondary/50 py-2.5">
+              <div className="flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                <span className="text-[10px] text-muted-foreground">Secure Auth</span>
+              </div>
             </div>
           </div>
-
-          {/* Info text */}
-          <p className="text-center text-xs text-muted-foreground">
-            Only authorized email addresses can sign in.
-          </p>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Page footer */}
+      <footer className="py-4 text-center">
+        <p className="text-xs text-muted-foreground">
+          Powered by{" "}
+          <a
+            href="https://lizheng.me"
+            className="text-primary hover:text-primary/80 transition-colors"
+          >
+            lizheng.me
+          </a>
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+// ── Exported component with Suspense for useSearchParams ──
+
+export function LoginCard() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }
