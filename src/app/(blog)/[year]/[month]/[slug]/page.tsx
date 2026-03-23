@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { getDb } from "@/lib/db";
@@ -18,6 +19,13 @@ import { Comments } from "@/components/blog/comments";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 
+// Deduplicate getPostBySlug across generateMetadata + page component
+// within the same request. React cache() is per-request in server components.
+const getCachedPost = cache((slug: string) => {
+  const db = getDb();
+  return getPostBySlug(db, slug, "published");
+});
+
 interface PostPageProps {
   params: Promise<{ year: string; month: string; slug: string }>;
 }
@@ -27,15 +35,11 @@ export async function generateMetadata({
 }: PostPageProps): Promise<Metadata> {
   const { slug } = await params;
   const db = getDb();
-  const [post, tags] = await Promise.all([
-    getPostBySlug(db, slug, "published"),
-    getPostBySlug(db, slug, "published").then((p) =>
-      p ? getPostTags(db, p.id) : [],
-    ),
-  ]);
+  const post = await getCachedPost(slug);
 
   if (!post) return { title: "Not Found" };
 
+  const tags = await getPostTags(db, post.id);
   const path = postPath(post.slug, post.published_at);
 
   return buildPageMeta({
@@ -55,7 +59,7 @@ export async function generateMetadata({
 export default async function PostPage({ params }: PostPageProps) {
   const { year, month, slug } = await params;
   const db = getDb();
-  const post = await getPostBySlug(db, slug, "published");
+  const post = await getCachedPost(slug);
 
   if (!post) notFound();
 
