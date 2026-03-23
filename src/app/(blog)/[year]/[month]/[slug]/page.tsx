@@ -139,7 +139,7 @@ export default async function PostPage({ params }: PostPageProps) {
           <div className="blog-featured-image">
             <Image
               src={post.featured_image}
-              alt={`Featured image for ${post.title}`}
+              alt=""
               fill
               sizes="(max-width: 900px) 100vw, 75vw"
               priority

@@ -42,7 +42,7 @@ export function PostCard({ post, locale }: PostCardProps) {
           <Link href={href}>
             <Image
               src={post.featured_image}
-              alt={`Featured image for ${post.title}`}
+              alt=""
               fill
               sizes="(max-width: 900px) 100vw, 75vw"
             />
