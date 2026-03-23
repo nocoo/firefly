@@ -62,6 +62,28 @@ export interface ListPostsResult {
 
 const DEFAULT_PAGE_SIZE = 20;
 
+// ---------------------------------------------------------------------------
+// Post count cache — keyed by WHERE clause, 5 min TTL
+// ---------------------------------------------------------------------------
+
+const COUNT_TTL = 5 * 60 * 1000;
+
+interface CountEntry {
+  value: number;
+  cachedAt: number;
+}
+
+const countCache = new Map<string, CountEntry>();
+
+function countCacheKey(where: string, params: unknown[]): string {
+  return `${where}|${JSON.stringify(params)}`;
+}
+
+/** Force all cached count entries to expire. */
+export function invalidateCountCache(): void {
+  countCache.clear();
+}
+
 export async function listPosts(
   db: Db,
   options: ListPostsOptions = {},
@@ -133,16 +155,26 @@ export async function listPosts(
     offset,
   ]);
 
-  // Separate COUNT query for accurate pagination total
+  // Separate COUNT query for accurate pagination total (cached)
   const countSql = `SELECT COUNT(*) AS count FROM posts p ${where}`;
-  const countResult = await db.firstOrNull<{ count: number }>(
-    countSql,
-    params,
-  );
+  const cacheKey = countCacheKey(where, params);
+  const cachedCount = countCache.get(cacheKey);
+  let total: number;
+
+  if (cachedCount && Date.now() - cachedCount.cachedAt < COUNT_TTL) {
+    total = cachedCount.value;
+  } else {
+    const countResult = await db.firstOrNull<{ count: number }>(
+      countSql,
+      params,
+    );
+    total = countResult?.count ?? result.results.length;
+    countCache.set(cacheKey, { value: total, cachedAt: Date.now() });
+  }
 
   return {
     posts: result.results,
-    total: countResult?.count ?? result.results.length,
+    total,
   };
 }
 
@@ -247,6 +279,7 @@ export async function createPost(
     invalidateArchivesCache();
   }
 
+  invalidateCountCache();
   return post!;
 }
 
@@ -362,6 +395,7 @@ export async function updatePost(
     invalidateArchivesCache();
   }
 
+  invalidateCountCache();
   return getPostById(db, id);
 }
 
@@ -382,6 +416,7 @@ export async function deletePost(db: Db, id: string): Promise<boolean> {
   }
   await refreshAllTagPostCounts(db);
   invalidateArchivesCache();
+  invalidateCountCache();
 
   return true;
 }
