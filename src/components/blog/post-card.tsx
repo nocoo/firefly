@@ -58,7 +58,7 @@ export function PostCard({ post, locale }: PostCardProps) {
 
       {/* Excerpt */}
       {post.excerpt && (
-        <p className="mt-2 text-sm leading-relaxed text-blog-muted">
+        <p className="mt-2 text-base leading-relaxed text-blog-muted">
           {post.excerpt}
         </p>
       )}
