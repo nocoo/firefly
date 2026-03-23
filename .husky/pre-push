@@ -1,4 +1,10 @@
+# === Quality Gate: pre-push ===
+# L2 Integration/API + G2 Security
+echo "▸ L1: unit tests"
 bun run test
+echo "▸ G1: lint"
 bun run lint
+echo "▸ L2: API E2E"
 bun run test:e2e:api
+echo "▸ G2: security"
 bun run security

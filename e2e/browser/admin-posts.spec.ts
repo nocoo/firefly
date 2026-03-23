@@ -22,11 +22,7 @@ test.describe("Admin post management", () => {
     await page.goto("/admin/editor");
     await page.waitForLoadState("networkidle");
 
-    // Should show an editor form with title input
-    const titleInput = page.locator(
-      "input[name='title'], input[placeholder*='Title'], input[placeholder*='title'], [data-testid='title-input']",
-    );
-    // Editor page should have some form element
+    // Should show an editor form with title input or content area
     const formElement = page.locator("input, textarea, [contenteditable]").first();
     await expect(formElement).toBeVisible({ timeout: 10_000 });
   });
