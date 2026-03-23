@@ -40,6 +40,10 @@ export interface ListPostsOptions {
   categoryId?: string | undefined;
   tagId?: string | undefined;
   query?: string | undefined;
+  /** Filter by archive year (e.g. 2026) */
+  archiveYear?: number | undefined;
+  /** Filter by archive month (1-12). Only used when archiveYear is set. */
+  archiveMonth?: number | undefined;
   page?: number | undefined;
   pageSize?: number | undefined;
 }
@@ -64,6 +68,8 @@ export async function listPosts(
     categoryId,
     tagId,
     query,
+    archiveYear,
+    archiveMonth,
     page = 1,
     pageSize = DEFAULT_PAGE_SIZE,
   } = options;
@@ -91,6 +97,19 @@ export async function listPosts(
   if (query) {
     conditions.push("p.title LIKE ?");
     params.push(`%${query}%`);
+  }
+
+  if (archiveYear != null) {
+    conditions.push(
+      "CAST(strftime('%Y', p.published_at, 'unixepoch') AS INTEGER) = ?",
+    );
+    params.push(archiveYear);
+    if (archiveMonth != null) {
+      conditions.push(
+        "CAST(strftime('%m', p.published_at, 'unixepoch') AS INTEGER) = ?",
+      );
+      params.push(archiveMonth);
+    }
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";

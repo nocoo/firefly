@@ -11,7 +11,7 @@ import { t } from "@/i18n/translations";
 const PAGE_SIZE = 20;
 
 interface HomeProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; archive?: string }>;
 }
 
 export function generateMetadata(): Metadata {
@@ -27,9 +27,28 @@ export default async function Home({ searchParams }: HomeProps) {
   const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
   const locale = await getLocale();
 
+  // Parse archive filter: "2026-02" (year-month) or "2024" (year only)
+  let archiveYear: number | undefined;
+  let archiveMonth: number | undefined;
+  if (params.archive) {
+    const parts = params.archive.split("-");
+    const y = parseInt(parts[0], 10);
+    if (!Number.isNaN(y)) {
+      archiveYear = y;
+      if (parts[1]) {
+        const m = parseInt(parts[1], 10);
+        if (!Number.isNaN(m) && m >= 1 && m <= 12) {
+          archiveMonth = m;
+        }
+      }
+    }
+  }
+
   const db = getDb();
   const { posts } = await listPosts(db, {
     status: "published",
+    archiveYear,
+    archiveMonth,
     page,
     pageSize: PAGE_SIZE + 1,
   });
@@ -66,6 +85,7 @@ export default async function Home({ searchParams }: HomeProps) {
         hasMore={hasMore}
         basePath="/"
         locale={locale}
+        {...(params.archive ? { extraParams: { archive: params.archive } } : {})}
       />
     </>
   );
