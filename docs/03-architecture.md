@@ -77,16 +77,16 @@
 | DNS | Cloudflare | lizheng.me |
 | CI/CD | Railway auto-deploy | From GitHub main branch |
 
-### Quality (6-dimensional)
+### Quality (6-dimensional) — Tier S
 
-| Dimension | Tool | Gate |
-|-----------|------|------|
-| L1 Unit | Vitest, ≥90% coverage | pre-commit |
-| L2 Integration | Custom HTTP E2E vs D1-test | pre-push |
-| L3 System | Playwright | CI |
-| G1 Static | tsc --noEmit + ESLint strict | pre-commit |
-| G2 Security | osv-scanner + gitleaks | pre-push |
-| D1 Isolation | lizhengme-db-test (separate D1) | E2E only |
+| Dimension | Tool | Gate | Status |
+|-----------|------|------|--------|
+| L1 Unit | Vitest 4.1, ≥90% coverage (actual: 97%+) | pre-commit | ✅ 241 tests |
+| L2 Integration | 27 API E2E tests, real HTTP vs D1-test | pre-push | ✅ 13/14 endpoints |
+| L3 System | Playwright 1.58 (chromium) | manual/CI | ✅ 15 specs |
+| G1 Static | tsc --noEmit + ESLint strict + --max-warnings=0 | pre-commit | ✅ 0 errors |
+| G2 Security | osv-scanner 2.3 + gitleaks 8.30 | pre-push | ✅ 0 vulns, 0 leaks |
+| D1 Isolation | lizhengme-db-test via worker [env.test] | E2E only | ✅ |
 
 ## Architecture Patterns
 

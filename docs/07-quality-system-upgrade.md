@@ -3,7 +3,7 @@
 > Upgrade firefly from Tier B to Tier S using the 6-dimensional quality system.
 >
 > Date: 2026-03-24
-> Current Tier: **B** (L1 ✅ only, G1 ⚠️ not strict)
+> Current Tier: ~~B~~ → **S** ✅ (upgraded 2026-03-24)
 > Target Tier: **S** (L1+L2+L3+G1+G2+D1 all green)
 
 ---
@@ -13,11 +13,11 @@
 | Dimension | Status | Details |
 |-----------|--------|---------|
 | L1 Unit | ✅ | 241 tests, 97%+ coverage, vitest, pre-commit |
-| G1 Static | ❌ | ESLint `recommended` (not `strict`), no `--max-warnings=0`, no `tsc --noEmit` in hooks |
-| L2 Integration | ❌ | No API E2E tests, no `run-e2e.ts` script |
-| G2 Security | ❌ | No osv-scanner, no gitleaks |
-| L3 System | ❌ | No Playwright tests |
-| D1 Isolation | ⚠️ | `CF_D1_TEST_DATABASE_ID` exists in `.env`; `scripts/migrations/apply-migration.ts` supports `--test` flag but no E2E runner uses the test DB yet |
+| G1 Static | ✅ | ESLint `strict`, `--max-warnings=0`, `tsc --noEmit` in pre-commit |
+| L2 Integration | ✅ | 27 API E2E tests, 13/14 endpoints (upload excluded), 6 test files |
+| G2 Security | ✅ | osv-scanner 0 vulns, gitleaks 0 leaks, pre-push |
+| L3 System | ✅ | 15 Playwright specs (blog nav, SEO, admin, RSS), manual/CI |
+| D1 Isolation | ✅ | `lizhengme-db-test` via worker `[env.test]`, `E2E_SKIP_AUTH` in proxy |
 
 ### API Endpoints to Cover (L2)
 
