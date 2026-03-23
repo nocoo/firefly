@@ -369,6 +369,45 @@
   background: var(--blog-separator);
 }
 
+/* Mobile nav button — hamburger menu */
+.blog-mobile-nav {
+  display: none;
+}
+
+.blog-mobile-nav-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5em;
+  height: 2.5em;
+  color: var(--blog-text);
+  background: var(--blog-surface);
+  border: 1px solid var(--blog-separator);
+  border-radius: 0.5em;
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.blog-mobile-nav-button:hover {
+  color: var(--blog-accent);
+  background: var(--blog-separator);
+}
+
+/* Sidebar close button (mobile only) */
+.blog-sidebar-close {
+  display: none;
+}
+
+/* Mobile sidebar backdrop */
+.blog-sidebar-backdrop {
+  display: none;
+}
+
+/* Mobile sidebar open state */
+.blog-sidebar-mobile-open {
+  transform: translateX(0) !important;
+}
+
 /* Site title */
 .blog-site-title {
   font-size: 1.5em;
@@ -703,17 +742,81 @@
   }
 }
 
-/* ─── Mobile: sidebar stacks above main ─── */
+/* ─── Mobile: sidebar is off-screen drawer, toggled by hamburger ─── */
 @media all and (max-width: 56.24em) {
-  .blog-sidebar {
-    position: relative;
-    border-right: none;
-    border-bottom: 1px solid var(--blog-separator);
+  /* Show mobile nav button */
+  .blog-mobile-nav {
+    display: block;
+    position: fixed;
+    top: 0.75em;
+    left: 0.75em;
+    z-index: 21;
   }
 
-  .blog-max-width {
+  /* Sidebar as off-canvas drawer */
+  .blog-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 80%;
+    max-width: 320px;
+    height: 100vh;
+    background: var(--blog-sidebar);
+    transform: translateX(-100%);
+    transition: transform 300ms ease-out;
+    z-index: 22;
+    overflow-y: auto;
+    border-right: 1px solid var(--blog-separator);
+    padding: 1.25em 1.5em 2em;
+  }
+
+  /* Show close button on mobile */
+  .blog-sidebar-close {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 2.25em;
+    height: 2.25em;
+    margin-bottom: 1em;
+    color: var(--blog-muted);
+    background: none;
+    border: 1px solid var(--blog-separator);
+    border-radius: 0.5em;
+    cursor: pointer;
+    transition: color 0.15s, background-color 0.15s;
+  }
+
+  .blog-sidebar-close:hover {
+    color: var(--blog-text);
+    background: var(--blog-separator);
+  }
+
+  /* Backdrop overlay */
+  .blog-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 21;
+    animation: fade-in 200ms ease-out;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Main content takes full width */
+  .blog-main {
+    width: 100%;
+    margin-left: 0;
+    padding: 3.5em 5% 2em; /* Extra top padding for mobile nav */
+  }
+
+  /* Adjust global bar to not overlap with mobile nav */
+  .blog-global-bar {
+    top: 0.5em;
+    right: 0.5em;
   }
 }
 

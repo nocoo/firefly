@@ -2,9 +2,8 @@ import { getDb } from "@/lib/db";
 import { listCategories } from "@/data/categories";
 import { listTags } from "@/data/tags";
 import { listMonthlyArchives } from "@/data/posts";
-import { BlogSidebar } from "@/components/blog/blog-sidebar";
-import { BlogFooter } from "@/components/blog/blog-footer";
 import { BlogGlobalBar } from "@/components/blog/blog-global-bar";
+import { BlogLayoutClient } from "@/components/blog/blog-layout-client";
 import { getLocale } from "@/i18n/server";
 
 export default async function BlogLayout({
@@ -34,15 +33,14 @@ export default async function BlogLayout({
       </a>
       <BlogGlobalBar />
       <div className="blog-max-width">
-        <BlogSidebar
+        <BlogLayoutClient
           categories={activeCategories}
           tags={activeTags}
           archives={archives}
-        />
-        <main id="main" className="blog-main">
+          locale={locale}
+        >
           {children}
-          <BlogFooter locale={locale} />
-        </main>
+        </BlogLayoutClient>
       </div>
     </div>
   );

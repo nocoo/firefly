@@ -1,44 +1,47 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 
-const MOBILE_BREAKPOINT = 768;
-const TABLET_BREAKPOINT = 1024;
+// Mobile breakpoint: < 768px (48em)
+const MOBILE_BREAKPOINT = 48;
+// Tablet breakpoint: < 1024px (64em)
+const TABLET_BREAKPOINT = 64;
 
-function subscribeMobile(callback: () => void) {
-  const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
-  mql.addEventListener("change", callback);
-  return () => mql.removeEventListener("change", callback);
-}
-
-function getMobileSnapshot(): boolean {
-  return window.innerWidth < MOBILE_BREAKPOINT;
-}
-
-function getMobileServerSnapshot(): boolean {
-  return false;
+function getBreakpoint() {
+  if (typeof window === "undefined") return { isMobile: false, isTablet: false };
+  const em = window.innerWidth / 16;
+  return {
+    isMobile: em < MOBILE_BREAKPOINT,
+    isTablet: em < TABLET_BREAKPOINT,
+  };
 }
 
 export function useIsMobile() {
-  return useSyncExternalStore(subscribeMobile, getMobileSnapshot, getMobileServerSnapshot);
-}
+  const [isMobile, setIsMobile] = useState(getBreakpoint().isMobile);
 
-function subscribeTablet(callback: () => void) {
-  const mql = window.matchMedia(
-    `(min-width: ${MOBILE_BREAKPOINT}px) and (max-width: ${TABLET_BREAKPOINT - 1}px)`,
-  );
-  mql.addEventListener("change", callback);
-  return () => mql.removeEventListener("change", callback);
-}
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(getBreakpoint().isMobile);
+    };
 
-function getTabletSnapshot(): boolean {
-  return window.innerWidth >= MOBILE_BREAKPOINT && window.innerWidth < TABLET_BREAKPOINT;
-}
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-function getTabletServerSnapshot(): boolean {
-  return false;
+  return isMobile;
 }
 
 export function useIsTablet() {
-  return useSyncExternalStore(subscribeTablet, getTabletSnapshot, getTabletServerSnapshot);
+  const [isTablet, setIsTablet] = useState(getBreakpoint().isTablet);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsTablet(getBreakpoint().isTablet);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return isTablet;
 }

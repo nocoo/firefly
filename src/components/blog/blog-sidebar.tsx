@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Github, Facebook, Linkedin, Mail, FileUser } from "lucide-react";
+import { Github, Facebook, Linkedin, Mail, FileUser, X } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/posts";
 import { useLocale } from "@/i18n/context";
 import { SocialLink } from "./social-link";
+import { useEffect } from "react";
 
 // ─── X (Twitter) icon — not in lucide ───
 function XIcon({ className }: { className?: string }) {
@@ -30,13 +31,45 @@ interface BlogSidebarProps {
   categories: Category[];
   tags: Tag[];
   archives: MonthlyArchive[];
+  isMobileOpen: boolean;
+  onMobileClose: () => void;
 }
 
-export function BlogSidebar({ categories, tags, archives }: BlogSidebarProps) {
+export function BlogSidebar({ categories, tags, archives, isMobileOpen, onMobileClose }: BlogSidebarProps) {
   const { t } = useLocale();
+
+  // Lock body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (isMobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileOpen]);
   return (
-    <aside className="blog-sidebar">
-      <div className="blog-sidebar-inner">
+    <>
+      {/* Mobile backdrop */}
+      {isMobileOpen && (
+        <div
+          className="blog-sidebar-backdrop"
+          onClick={onMobileClose}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside className={`blog-sidebar ${isMobileOpen ? "blog-sidebar-mobile-open" : ""}`}>
+        <div className="blog-sidebar-inner">
+          {/* Mobile close button */}
+          <button
+            className="blog-sidebar-close"
+            onClick={onMobileClose}
+            aria-label="Close menu"
+          >
+            <X className="h-5 w-5" strokeWidth={1.5} />
+          </button>
         {/* Site identity */}
         <div className="blog-site-title">
           <Link href="/">LIZHENG.ME</Link>
@@ -152,5 +185,6 @@ export function BlogSidebar({ categories, tags, archives }: BlogSidebarProps) {
         )}
       </div>
     </aside>
+    </>
   );
 }
