@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LocaleToggle } from "@/components/locale-toggle";
 
 // Map admin routes to page titles
 const PAGE_TITLES: Record<string, string> = {
@@ -126,6 +127,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
                 strokeWidth={1.5}
               />
             </a>
+            <LocaleToggle />
             <ThemeToggle />
           </div>
         </header>

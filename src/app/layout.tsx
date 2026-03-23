@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR } from "@/lib/seo";
+import { getLocale } from "@/i18n/server";
+import { LocaleProvider } from "@/i18n/context";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -46,20 +48,24 @@ const themeInitScript = `
 })();
 `;
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const locale = await getLocale();
+
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
+    <html lang={locale === "zh" ? "zh-CN" : "en"} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <meta name="theme-color" content="#FAF8F5" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#1C1A17" media="(prefers-color-scheme: dark)" />
       </head>
       <body className="antialiased">
-        {children}
+        <LocaleProvider locale={locale}>
+          {children}
+        </LocaleProvider>
       </body>
     </html>
   );
