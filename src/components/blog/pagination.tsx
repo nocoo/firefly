@@ -15,13 +15,13 @@ export function Pagination({ currentPage, hasMore, basePath }: PaginationProps) 
   const nextHref = `${basePath}?page=${currentPage + 1}`;
 
   return (
-    <nav className="flex justify-between items-center py-8" aria-label="Pagination">
+    <nav className="flex items-center justify-between py-8" aria-label="Pagination">
       {currentPage > 1 ? (
         <Link
           href={prevHref}
-          className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+          className="text-sm text-blog-muted transition-colors hover:text-blog-text"
         >
-          ← Newer posts
+          &larr; Newer posts
         </Link>
       ) : (
         <span />
@@ -30,9 +30,9 @@ export function Pagination({ currentPage, hasMore, basePath }: PaginationProps) 
       {hasMore ? (
         <Link
           href={nextHref}
-          className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+          className="text-sm text-blog-muted transition-colors hover:text-blog-text"
         >
-          Older posts →
+          Older posts &rarr;
         </Link>
       ) : (
         <span />
