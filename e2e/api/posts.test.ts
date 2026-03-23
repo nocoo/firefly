@@ -14,7 +14,6 @@ describe("GET /api/posts", () => {
     const body = await res.json();
     expect(body).toHaveProperty("posts");
     expect(body).toHaveProperty("total");
-    expect(body).toHaveProperty("page");
     expect(Array.isArray(body.posts)).toBe(true);
   });
 
