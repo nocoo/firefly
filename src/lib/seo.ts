@@ -4,11 +4,11 @@
 
 import type { Metadata } from "next";
 
-const SITE_NAME = "Li Zheng";
+const SITE_NAME = "LIZHENG.ME";
 const SITE_URL = "https://lizheng.me";
-const SITE_DESCRIPTION = "Personal blog by Li Zheng — technology, design, and life.";
+const SITE_DESCRIPTION = "知白守黑，不语万千算 — Li Zheng's personal blog on technology, design, and life.";
 const SITE_AUTHOR = "Li Zheng";
-const TWITTER_HANDLE = "@nicnocquee";
+const TWITTER_HANDLE = "@zhengli";
 
 export { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR, TWITTER_HANDLE };
 

@@ -22,12 +22,13 @@ export async function generateMetadata({
   const { slug } = await params;
   const db = getDb();
   const tag = await getTagBySlug(db, slug);
+  const locale = await getLocale();
 
   if (!tag) return { title: "Not Found" };
 
   return buildPageMeta({
     title: `#${tag.name}`,
-    description: `Posts tagged with ${tag.name}`,
+    description: t(locale, "blog.tag.metaDescription", { name: tag.name }),
     path: `/tag/${tag.slug}`,
   });
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR } from "@/lib/seo";
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR, TWITTER_HANDLE } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { LocaleProvider } from "@/i18n/context";
 import "./globals.css";
@@ -7,7 +7,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: SITE_NAME,
+    default: `${SITE_NAME} – 知白守黑，不语万千算`,
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
@@ -26,13 +26,25 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
+    canonical: SITE_URL,
     types: {
       "application/rss+xml": "/feed.xml",
     },
   },
-  other: {
-    "theme-color-light": "#FAF8F5",
-    "theme-color-dark": "#1C1A17",
+  openGraph: {
+    type: "website",
+    locale: "zh_CN",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} – 知白守黑，不语万千算`,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary",
+    site: TWITTER_HANDLE,
+    creator: TWITTER_HANDLE,
+    title: `${SITE_NAME} – 知白守黑，不语万千算`,
+    description: SITE_DESCRIPTION,
   },
 };
 

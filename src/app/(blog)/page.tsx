@@ -16,7 +16,7 @@ interface HomeProps {
 
 export function generateMetadata(): Metadata {
   return buildPageMeta({
-    title: SITE_NAME,
+    title: `${SITE_NAME} – 知白守黑，不语万千算`,
     description: SITE_DESCRIPTION,
     path: "/",
   });
