@@ -37,8 +37,15 @@ export function AdminShell({ user, children }: AdminShellProps) {
   const pathname = usePathname();
   const { t } = useLocale();
 
-  // On tablet, default to collapsed (user can still toggle)
-  const sidebarCollapsed = isTablet ? !collapsed : collapsed;
+  // Auto-collapse once when entering tablet range; user toggle still works.
+  // Uses a ref to track previous isTablet so we only fire on the transition.
+  const wasTablet = useRef(isTablet);
+  useEffect(() => {
+    if (isTablet && !wasTablet.current) {
+      setCollapsed(true); // eslint-disable-line react-hooks/set-state-in-effect
+    }
+    wasTablet.current = isTablet;
+  }, [isTablet]);
 
   // Resolve page title from pathname
   const titleKey =
@@ -76,7 +83,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
       {/* Desktop sidebar */}
       {!isMobile && (
         <AdminSidebar
-          collapsed={sidebarCollapsed}
+          collapsed={collapsed}
           onToggle={() => setCollapsed(!collapsed)}
           user={user}
         />
