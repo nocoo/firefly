@@ -318,7 +318,7 @@ Port convention:
 | `tags.test.ts` | GET `/api/tags`, GET `/api/tags/[slug]` | List, get, 404 |
 | `analytics.test.ts` | GET/POST `/api/analytics` | Track pageview, get stats |
 | `settings.test.ts` | GET/PUT `/api/settings` | Get, update |
-| `auth.test.ts` | Auth-gated endpoints without token (E2E_SKIP_AUTH=false) | 401 responses |
+| `auth.test.ts` | Auth-gated endpoints | Auth bypass verification, read-only public access |
 
 ### 4.3 E2E Vitest Config
 
@@ -378,7 +378,7 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./browser",
-  baseURL: "http://localhost:27043",
+  baseURL: process.env.E2E_BASE_URL ?? "http://localhost:27043",
   use: {
     headless: true,
     screenshot: "only-on-failure",
