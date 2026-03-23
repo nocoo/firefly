@@ -88,7 +88,7 @@ export function BlogSidebar({ locale, categories, tags, archives }: BlogSidebarP
               {(() => {
                 const counts = tags.map((tg) => tg.post_count ?? 0);
                 const maxCount = Math.max(...counts, 1);
-                const minSize = 0.75;
+                const minSize = 0.8125;
                 const maxSize = 1.5;
                 return tags.map((tag) => {
                   const weight = (tag.post_count ?? 0) / maxCount;
