@@ -203,7 +203,7 @@ export function AnalyticsDashboard() {
 
       {/* Traffic chart */}
       {data.dailyStats.length > 0 && (
-        <ChartCard title={t("admin.analytics.trafficOverTime")}>
+        <DataCard title={t("admin.analytics.trafficOverTime")}>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={data.dailyStats}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
@@ -253,13 +253,13 @@ export function AnalyticsDashboard() {
               />
             </AreaChart>
           </ResponsiveContainer>
-        </ChartCard>
+        </DataCard>
       )}
 
       {/* Two-column: Top posts + Referrers */}
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Top posts */}
-        <TableCard title={t("admin.analytics.topPosts")}>
+        <DataCard title={t("admin.analytics.topPosts")}>
           {data.topPosts.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4">{t("admin.analytics.noData")}</p>
           ) : (
@@ -287,10 +287,10 @@ export function AnalyticsDashboard() {
               </tbody>
             </table>
           )}
-        </TableCard>
+        </DataCard>
 
         {/* Referrers */}
-        <TableCard title={t("admin.analytics.topReferrers")}>
+        <DataCard title={t("admin.analytics.topReferrers")}>
           {data.topReferrers.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4">{t("admin.analytics.noData")}</p>
           ) : (
@@ -315,13 +315,13 @@ export function AnalyticsDashboard() {
               </tbody>
             </table>
           )}
-        </TableCard>
+        </DataCard>
       </div>
 
       {/* Three-column: Devices, Browsers, Bots */}
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Devices */}
-        <ChartCard title={t("admin.analytics.devices")}>
+        <DataCard title={t("admin.analytics.devices")}>
           {data.devices.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4">{t("admin.analytics.noData")}</p>
           ) : (
@@ -356,10 +356,10 @@ export function AnalyticsDashboard() {
               </PieChart>
             </ResponsiveContainer>
           )}
-        </ChartCard>
+        </DataCard>
 
         {/* Browsers */}
-        <ChartCard title={t("admin.analytics.browsers")}>
+        <DataCard title={t("admin.analytics.browsers")}>
           {data.browsers.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4">{t("admin.analytics.noData")}</p>
           ) : (
@@ -391,10 +391,10 @@ export function AnalyticsDashboard() {
               </BarChart>
             </ResponsiveContainer>
           )}
-        </ChartCard>
+        </DataCard>
 
         {/* Bot traffic */}
-        <ChartCard title={t("admin.analytics.botTraffic")}>
+        <DataCard title={t("admin.analytics.botTraffic")}>
           {data.bots.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4">{t("admin.analytics.noData")}</p>
           ) : (
@@ -423,7 +423,7 @@ export function AnalyticsDashboard() {
               ))}
             </div>
           )}
-        </ChartCard>
+        </DataCard>
       </div>
     </div>
   );
@@ -455,22 +455,7 @@ function StatCard({
   );
 }
 
-function ChartCard({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-[var(--radius-widget)] border border-border/50 bg-secondary/50 p-4">
-      <h3 className="text-sm font-medium text-foreground mb-3">{title}</h3>
-      {children}
-    </div>
-  );
-}
-
-function TableCard({
+function DataCard({
   title,
   children,
 }: {
