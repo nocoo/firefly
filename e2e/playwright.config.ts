@@ -2,7 +2,7 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./browser",
-  baseURL: "http://localhost:27043",
+  baseURL: process.env.E2E_BASE_URL ?? "http://localhost:27043",
   timeout: 30_000,
   retries: 0,
   use: {

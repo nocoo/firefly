@@ -75,6 +75,24 @@ process.on("SIGINT", () => {
   process.exit(130);
 });
 
+function startNextServer(
+  env: Record<string, string | undefined>,
+  port: number,
+): Subprocess {
+  console.log(`▸ Starting Next.js on port ${port}...`);
+  const proc = spawn(
+    ["bun", "run", "next", "dev", "--turbopack", "-p", String(port)],
+    {
+      cwd: process.cwd(),
+      env: { ...env, PORT: String(port) },
+      stdout: "ignore",
+      stderr: "ignore",
+    },
+  );
+  procs.push(proc);
+  return proc;
+}
+
 async function main() {
   const testEnv = loadEnvFile(".env.test");
   const prodEnv = loadEnvFile(".env");
@@ -82,25 +100,23 @@ async function main() {
   // Merge: prod env as base, test env overrides
   const env = { ...process.env, ...prodEnv, ...testEnv };
 
-  const port = apiOnly ? API_E2E_PORT : browserOnly ? BROWSER_E2E_PORT : API_E2E_PORT;
+  // --- Start Next.js dev server(s) ---
+  // In default (all) mode, start two servers: API on 17043, browser on 27043.
+  // In --api-only or --browser-only mode, start one server on the appropriate port.
+  const apiPort = API_E2E_PORT;
+  const browserPort = BROWSER_E2E_PORT;
 
-  // --- Start Next.js dev server ---
-  console.log(`▸ Starting Next.js on port ${port}...`);
-  const nextProc = spawn(["bun", "run", "next", "dev", "--turbopack", "-p", String(port)], {
-    cwd: process.cwd(),
-    env: { ...env, PORT: String(port) },
-    stdout: "ignore",
-    stderr: "ignore",
-  });
-  procs.push(nextProc);
-
-  try {
-    await waitForServer(`http://localhost:${port}/api/posts`, 60_000);
-    console.log(`▸ Next.js ready on port ${port}`);
-  } catch (e) {
-    console.error("❌ Next.js failed to start");
-    cleanup();
-    process.exit(1);
+  if (apiOnly) {
+    startNextServer(env, apiPort);
+    await waitForReady(apiPort);
+  } else if (browserOnly) {
+    startNextServer(env, browserPort);
+    await waitForReady(browserPort);
+  } else {
+    // Default: start both servers for API + browser E2E
+    startNextServer(env, apiPort);
+    startNextServer(env, browserPort);
+    await Promise.all([waitForReady(apiPort), waitForReady(browserPort)]);
   }
 
   // --- Run tests ---
@@ -112,7 +128,7 @@ async function main() {
       ["bun", "run", "vitest", "run", "--config", "e2e/vitest.config.ts"],
       {
         cwd: process.cwd(),
-        env: { ...env, E2E_BASE_URL: `http://localhost:${API_E2E_PORT}` },
+        env: { ...env, E2E_BASE_URL: `http://localhost:${apiPort}` },
         stdout: "inherit",
         stderr: "inherit",
       },
@@ -122,13 +138,12 @@ async function main() {
   }
 
   if (!apiOnly) {
-    const bPort = browserOnly ? BROWSER_E2E_PORT : BROWSER_E2E_PORT;
     console.log("\n▸ Running browser E2E tests (L3)...\n");
     const browserTest = spawn(
       ["bunx", "playwright", "test", "--config", "e2e/playwright.config.ts"],
       {
         cwd: process.cwd(),
-        env: { ...env, E2E_BASE_URL: `http://localhost:${bPort}` },
+        env: { ...env, E2E_BASE_URL: `http://localhost:${browserPort}` },
         stdout: "inherit",
         stderr: "inherit",
       },
@@ -140,6 +155,17 @@ async function main() {
   // --- Cleanup ---
   cleanup();
   process.exit(exitCode);
+}
+
+async function waitForReady(port: number): Promise<void> {
+  try {
+    await waitForServer(`http://localhost:${port}/api/posts`, 60_000);
+    console.log(`▸ Next.js ready on port ${port}`);
+  } catch {
+    console.error(`❌ Next.js failed to start on port ${port}`);
+    cleanup();
+    process.exit(1);
+  }
 }
 
 main();
