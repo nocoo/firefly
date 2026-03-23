@@ -31,11 +31,12 @@ interface BlogSidebarProps {
   categories: Category[];
   tags: Tag[];
   archives: MonthlyArchive[];
+  isMobile: boolean;
   isMobileOpen: boolean;
   onMobileClose: () => void;
 }
 
-export function BlogSidebar({ categories, tags, archives, isMobileOpen, onMobileClose }: BlogSidebarProps) {
+export function BlogSidebar({ categories, tags, archives, isMobile, isMobileOpen, onMobileClose }: BlogSidebarProps) {
   const { t } = useLocale();
 
   // Lock body scroll when mobile sidebar is open
@@ -52,7 +53,7 @@ export function BlogSidebar({ categories, tags, archives, isMobileOpen, onMobile
   return (
     <>
       {/* Mobile backdrop */}
-      {isMobileOpen && (
+      {isMobile && isMobileOpen && (
         <div
           className="blog-sidebar-backdrop"
           onClick={onMobileClose}
@@ -60,7 +61,9 @@ export function BlogSidebar({ categories, tags, archives, isMobileOpen, onMobile
         />
       )}
 
-      <aside className={`blog-sidebar ${isMobileOpen ? "blog-sidebar-mobile-open" : ""}`}>
+      <aside
+        className={`blog-sidebar ${isMobile ? "blog-sidebar-mobile" : ""} ${isMobileOpen ? "blog-sidebar-mobile-open" : ""}`}
+      >
         <div className="blog-sidebar-inner">
           {/* Mobile close button */}
           <button
