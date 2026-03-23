@@ -5,7 +5,6 @@ import { listMonthlyArchives } from "@/data/posts";
 import { BlogSidebar } from "@/components/blog/blog-sidebar";
 import { BlogFooter } from "@/components/blog/blog-footer";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { LocaleToggle } from "@/components/locale-toggle";
 import { getLocale } from "@/i18n/server";
 
 export default async function BlogLayout({
@@ -42,7 +41,6 @@ export default async function BlogLayout({
         />
         <main id="main" className="blog-main">
           <div className="blog-theme-toggle">
-            <LocaleToggle />
             <ThemeToggle />
           </div>
           {children}

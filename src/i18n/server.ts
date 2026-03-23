@@ -1,11 +1,13 @@
-import { cookies } from "next/headers";
-import { DEFAULT_LOCALE, type Locale, LOCALES } from "./translations";
+import { getDb } from "@/lib/db";
+import { getSiteSettings } from "@/data/settings";
+import type { Locale } from "./translations";
 
 /**
- * Read the user's locale preference from the cookie (server-side).
+ * Read the site's locale from DB-backed settings (process-cached).
+ * No longer reads cookies — locale is a site-wide setting configured in admin.
  */
 export async function getLocale(): Promise<Locale> {
-  const cookieStore = await cookies();
-  const raw = cookieStore.get("locale")?.value;
-  return LOCALES.includes(raw as Locale) ? (raw as Locale) : DEFAULT_LOCALE;
+  const db = getDb();
+  const settings = await getSiteSettings(db);
+  return settings.locale;
 }

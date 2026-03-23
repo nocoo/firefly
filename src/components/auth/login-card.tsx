@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Github, Layers } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { LocaleToggle } from "@/components/locale-toggle";
 import { useLocale } from "@/i18n/context";
 
 // ── Decorative barcode ──
@@ -94,7 +93,6 @@ function LoginContent() {
           >
             <Github className="h-[18px] w-[18px]" aria-hidden="true" strokeWidth={1.5} />
           </a>
-          <LocaleToggle />
           <ThemeToggle />
         </div>
 
