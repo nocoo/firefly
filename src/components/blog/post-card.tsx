@@ -7,9 +7,11 @@ import { t, type Locale } from "@/i18n/translations";
 interface PostCardProps {
   post: PostWithCategory;
   locale: Locale;
+  /** Mark the featured image as high-priority (LCP) */
+  priority?: boolean;
 }
 
-export function PostCard({ post, locale }: PostCardProps) {
+export function PostCard({ post, locale, priority }: PostCardProps) {
   const href = postPath(post.slug, post.published_at);
   const date = post.published_at
     ? formatDateDisplay(post.published_at)
@@ -39,12 +41,13 @@ export function PostCard({ post, locale }: PostCardProps) {
       {/* Featured image */}
       {post.featured_image && (
         <div className="blog-featured-image">
-          <Link href={href}>
+          <Link href={href} className="absolute inset-0">
             <Image
               src={post.featured_image}
               alt=""
               fill
               sizes="(max-width: 900px) 100vw, 75vw"
+              priority={priority ?? false}
             />
           </Link>
         </div>

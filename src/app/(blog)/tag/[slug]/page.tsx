@@ -74,8 +74,13 @@ export default async function TagPage({
             {t(locale, "blog.tag.noPosts")}
           </p>
         ) : (
-          displayPosts.map((post) => (
-            <PostCard key={post.id} post={post} locale={locale} />
+          displayPosts.map((post, i) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              locale={locale}
+              priority={i === 0 && !!post.featured_image}
+            />
           ))
         )}
       </section>

@@ -50,8 +50,13 @@ export default async function Home({ searchParams }: HomeProps) {
             {t(locale, "blog.home.noPosts")}
           </p>
         ) : (
-          displayPosts.map((post) => (
-            <PostCard key={post.id} post={post} locale={locale} />
+          displayPosts.map((post, i) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              locale={locale}
+              priority={i === 0 && !!post.featured_image}
+            />
           ))
         )}
       </section>
