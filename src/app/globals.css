@@ -331,10 +331,10 @@
 
 /* Site title */
 .blog-site-title {
-  font-size: 1.25em;
+  font-size: 1.5em;
   line-height: 1.2;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
 }
 
 .blog-site-title a {
@@ -344,8 +344,8 @@
 
 .blog-tagline {
   color: var(--blog-muted);
-  margin: 0.35em 0 0;
-  font-size: 0.8125em;
+  margin: 0.5em 0 0;
+  font-size: 0.9375em;
   line-height: 1.6;
 }
 
@@ -397,27 +397,32 @@
 /* Social links row */
 .blog-social {
   display: flex;
-  gap: 0.5em;
-  margin-top: 1.25em;
+  gap: 0.75em;
+  margin-top: 2em;
 }
 
-.blog-social a {
+.blog-social-link {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2em;
-  height: 2em;
+  width: 2.75em;
+  height: 2.75em;
+  border-radius: 50%;
+  border: 1px solid var(--blog-separator);
   color: var(--blog-muted);
-  transition: color 0.15s;
+  transition: color 0.25s ease, border-color 0.25s ease, transform 0.25s ease, background-color 0.25s ease;
 }
 
-.blog-social a:hover {
+.blog-social-link:hover {
   color: var(--blog-text);
+  border-color: var(--blog-muted);
+  background: var(--blog-separator);
+  transform: translateY(-2px);
 }
 
-.blog-social svg {
-  width: 1em;
-  height: 1em;
+.blog-social-icon {
+  width: 1.125em;
+  height: 1.125em;
 }
 
 /* Tag cloud in sidebar */
@@ -573,7 +578,7 @@
   }
 
   .blog-site-title {
-    font-size: 1.5em;
+    font-size: 1.75em;
     line-height: 1.3;
   }
 }
