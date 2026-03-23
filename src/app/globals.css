@@ -606,6 +606,7 @@
     width: 75%;
     min-height: 100vh;
     float: none;
+    overflow-x: clip;
   }
 
   /* Magazine bleed — image extends left into sidebar overlap */
