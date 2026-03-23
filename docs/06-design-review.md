@@ -192,48 +192,48 @@ Admin shell inner content uses `p-3 md:p-5` with `rounded-[16px] md:rounded-[20p
 
 ## 8. Implementation Priority
 
-### Phase 1 — Quick Wins (1-2 hours)
+### Phase 1 — Quick Wins
 
-| Task | Files | Est. |
-|------|-------|------|
-| Restore Basalt radius tokens to non-zero values | `globals.css` | 10 min |
-| Add focus-visible global outline | `globals.css` | 5 min |
-| Add skip-to-content link | `(blog)/layout.tsx` | 10 min |
-| Remove duplicate font-family from `.blog-shell` | `globals.css` | 2 min |
-| Bump tag cloud min font size | `blog-sidebar.tsx` | 2 min |
-| Add `loading="lazy"` to featured images | `post-card.tsx`, `[slug]/page.tsx` | 10 min |
+| Task | Files |
+|------|-------|
+| Restore Basalt radius tokens to non-zero values | `globals.css` |
+| Add focus-visible global outline | `globals.css` |
+| Add skip-to-content link | `(blog)/layout.tsx` |
+| Remove duplicate font-family from `.blog-shell` | `globals.css` |
+| Bump tag cloud min font size | `blog-sidebar.tsx` |
+| Add `loading="lazy"` to featured images | `post-card.tsx`, `[slug]/page.tsx` |
 
-### Phase 2 — Component Extraction (2-3 hours)
+### Phase 2 — Component Extraction
 
-| Task | Files | Est. |
-|------|-------|------|
-| Extract `IconButton` component | New `ui/icon-button.tsx` + refactor 4 files | 30 min |
-| Extract `SegmentedControl` component | New `ui/segmented-control.tsx` + refactor 2 files | 30 min |
-| Unify `DataCard` from three analytics wrappers | `analytics-dashboard.tsx` | 20 min |
-| Extract `EmptyState` component | New `ui/empty-state.tsx` + refactor admin pages | 20 min |
+| Task | Files |
+|------|-------|
+| Extract `IconButton` component | New `ui/icon-button.tsx` + refactor 4 files |
+| Extract `SegmentedControl` component | New `ui/segmented-control.tsx` + refactor 2 files |
+| Unify `DataCard` from three analytics wrappers | `analytics-dashboard.tsx` |
+| Extract `EmptyState` component | New `ui/empty-state.tsx` + refactor admin pages |
 
-### Phase 3 — Image Optimization (1-2 hours)
+### Phase 3 — Image Optimization
 
-| Task | Files | Est. |
-|------|-------|------|
-| Replace `<img>` with Next.js `<Image>` for featured images | `post-card.tsx`, `[slug]/page.tsx` | 45 min |
-| Add lazy loading to markdown-rendered images | `models/markdown.ts` | 30 min |
+| Task | Files |
+|------|-------|
+| Replace `<img>` with Next.js `<Image>` for featured images | `post-card.tsx`, `[slug]/page.tsx` |
+| Add lazy loading to markdown-rendered images | `models/markdown.ts` |
 
-### Phase 4 — Responsive Polish (2-3 hours)
+### Phase 4 — Responsive Polish
 
-| Task | Files | Est. |
-|------|-------|------|
-| Add admin tablet breakpoint (auto-collapse sidebar) | `shell.tsx`, `sidebar.tsx` | 1 hour |
-| Refactor sidebar `translateX` magic number to CSS calc | `globals.css` | 30 min |
-| Constrain featured image bleed on wide screens | `globals.css` | 20 min |
+| Task | Files |
+|------|-------|
+| Add admin tablet breakpoint (auto-collapse sidebar) | `shell.tsx`, `sidebar.tsx` |
+| Refactor sidebar `translateX` magic number to CSS calc | `globals.css` |
+| Constrain featured image bleed on wide screens | `globals.css` |
 
-### Phase 5 — Design Token Unification (1-2 hours)
+### Phase 5 — Design Token Unification
 
-| Task | Files | Est. |
-|------|-------|------|
-| Add chart color CSS custom properties | `globals.css` | 15 min |
-| Migrate hardcoded hex colors in analytics to tokens | `analytics-dashboard.tsx` | 30 min |
-| Formalize blog ↔ admin color mapping documentation | This doc | 30 min |
+| Task | Files |
+|------|-------|
+| Add chart color CSS custom properties | `globals.css` |
+| Migrate hardcoded hex colors in analytics to tokens | `analytics-dashboard.tsx` |
+| Formalize blog ↔ admin color mapping documentation | This doc |
 
 ---
 
