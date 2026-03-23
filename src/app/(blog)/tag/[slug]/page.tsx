@@ -9,7 +9,7 @@ import { buildPageMeta } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 interface TagPageProps {
   params: Promise<{ slug: string }>;
@@ -47,15 +47,15 @@ export default async function TagPage({
 
   if (!tag) notFound();
 
-  const { posts } = await listPosts(db, {
+  const { posts, total } = await listPosts(db, {
     status: "published",
     tagId: tag.id,
     page,
-    pageSize: PAGE_SIZE + 1,
+    pageSize: PAGE_SIZE,
   });
 
-  const hasMore = posts.length > PAGE_SIZE;
-  const displayPosts = hasMore ? posts.slice(0, PAGE_SIZE) : posts;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const displayPosts = posts;
 
   return (
     <>
@@ -87,7 +87,7 @@ export default async function TagPage({
 
       <Pagination
         currentPage={page}
-        hasMore={hasMore}
+        totalPages={totalPages}
         basePath={`/tag/${slug}`}
         locale={locale}
       />

@@ -27,7 +27,6 @@
   "blog.post.backToAll": "← Back to all posts",
   "blog.post.home": "Home",
   "blog.pagination.ariaLabel": "Pagination",
-  "blog.pagination.older": "Older posts →",
   "blog.comments.title": "Comments",
   "blog.home.noPosts": "No posts yet.",
   "blog.category.postCount": "{n} post(s)",

@@ -27,7 +27,6 @@
   "blog.post.backToAll": "← 返回所有文章",
   "blog.post.home": "首页",
   "blog.pagination.ariaLabel": "分页",
-  "blog.pagination.older": "较旧文章 →",
   "blog.comments.title": "评论",
   "blog.home.noPosts": "暂无文章。",
   "blog.category.postCount": "{n} 篇文章",

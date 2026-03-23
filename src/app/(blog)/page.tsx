@@ -8,7 +8,7 @@ import { websiteJsonLd } from "@/lib/jsonld";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 interface HomeProps {
   searchParams: Promise<{ page?: string; archive?: string }>;
@@ -45,16 +45,15 @@ export default async function Home({ searchParams }: HomeProps) {
   }
 
   const db = getDb();
-  const { posts } = await listPosts(db, {
+  const { posts, total } = await listPosts(db, {
     status: "published",
     archiveYear,
     archiveMonth,
     page,
-    pageSize: PAGE_SIZE + 1,
+    pageSize: PAGE_SIZE,
   });
 
-  const hasMore = posts.length > PAGE_SIZE;
-  const displayPosts = hasMore ? posts.slice(0, PAGE_SIZE) : posts;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
     <>
@@ -64,12 +63,12 @@ export default async function Home({ searchParams }: HomeProps) {
       />
 
       <section>
-        {displayPosts.length === 0 ? (
+        {posts.length === 0 ? (
           <p className="py-12 text-center text-blog-muted">
             {t(locale, "blog.home.noPosts")}
           </p>
         ) : (
-          displayPosts.map((post, i) => (
+          posts.map((post, i) => (
             <PostCard
               key={post.id}
               post={post}
@@ -82,7 +81,7 @@ export default async function Home({ searchParams }: HomeProps) {
 
       <Pagination
         currentPage={page}
-        hasMore={hasMore}
+        totalPages={totalPages}
         basePath="/"
         locale={locale}
         {...(params.archive ? { extraParams: { archive: params.archive } } : {})}
