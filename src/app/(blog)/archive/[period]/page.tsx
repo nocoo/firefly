@@ -1,12 +1,11 @@
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { listPosts } from "@/data/posts";
+import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
-
-export const PAGE_SIZE = 10;
 
 interface ArchivePageProps {
   params: Promise<{ period: string }>;
@@ -38,15 +37,16 @@ export default async function ArchivePage({ params }: ArchivePageProps) {
   const locale = await getLocale();
   const db = getDb();
 
+  const { postsPerPage } = await getSiteSettings(db);
   const { posts, total } = await listPosts(db, {
     status: "published",
     archiveYear: parsed.year,
     archiveMonth: parsed.month,
     page: 1,
-    pageSize: PAGE_SIZE,
+    pageSize: postsPerPage,
   });
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const totalPages = Math.ceil(total / postsPerPage);
 
   return (
     <>

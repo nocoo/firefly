@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
 import { listPosts } from "@/data/posts";
+import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { SITE_NAME, SITE_DESCRIPTION, buildPageMeta } from "@/lib/seo";
 import { websiteJsonLd } from "@/lib/jsonld";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
-
-export const PAGE_SIZE = 10;
 
 export function generateMetadata(): Metadata {
   return buildPageMeta({
@@ -22,13 +21,14 @@ export default async function Home() {
   const locale = await getLocale();
 
   const db = getDb();
+  const { postsPerPage } = await getSiteSettings(db);
   const { posts, total } = await listPosts(db, {
     status: "published",
     page: 1,
-    pageSize: PAGE_SIZE,
+    pageSize: postsPerPage,
   });
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const totalPages = Math.ceil(total / postsPerPage);
 
   return (
     <>

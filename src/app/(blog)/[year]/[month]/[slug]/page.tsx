@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getDb } from "@/lib/db";
 import { getPostBySlug, getPostTags } from "@/data/posts";
+import { getSiteSettings } from "@/data/settings";
 import { listCommentsByPost, buildCommentTree } from "@/data/comments";
 import { renderMarkdown } from "@/models/markdown";
 import {
@@ -70,10 +71,11 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const locale = await getLocale();
   const tags = await getPostTags(db, post.id);
+  const settings = await getSiteSettings(db);
 
-  // Load comments only for posts with comments enabled
+  // Load comments only when both global and per-post toggles are on
   let commentTree: Awaited<ReturnType<typeof buildCommentTree>> = [];
-  if (post.comment_enabled) {
+  if (settings.commentsEnabled && post.comment_enabled) {
     const comments = await listCommentsByPost(db, post.id);
     commentTree = buildCommentTree(comments);
   }

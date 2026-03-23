@@ -3,13 +3,12 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { getTagBySlug } from "@/data/tags";
 import { listPosts } from "@/data/posts";
+import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { buildPageMeta } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
-
-export const PAGE_SIZE = 10;
 
 interface TagPageProps {
   params: Promise<{ slug: string }>;
@@ -41,14 +40,15 @@ export default async function TagPage({ params }: TagPageProps) {
 
   if (!tag) notFound();
 
+  const { postsPerPage } = await getSiteSettings(db);
   const { posts, total } = await listPosts(db, {
     status: "published",
     tagId: tag.id,
     page: 1,
-    pageSize: PAGE_SIZE,
+    pageSize: postsPerPage,
   });
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const totalPages = Math.ceil(total / postsPerPage);
 
   return (
     <>

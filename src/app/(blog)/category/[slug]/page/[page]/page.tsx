@@ -2,11 +2,11 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { getCategoryBySlug } from "@/data/categories";
 import { listPosts } from "@/data/posts";
+import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
-import { PAGE_SIZE } from "../../page";
 
 interface Props {
   params: Promise<{ slug: string; page: string }>;
@@ -24,14 +24,15 @@ export default async function CategoryPaged({ params }: Props) {
 
   if (!category) notFound();
 
+  const { postsPerPage } = await getSiteSettings(db);
   const { posts, total } = await listPosts(db, {
     status: "published",
     categoryId: category.id,
     page,
-    pageSize: PAGE_SIZE,
+    pageSize: postsPerPage,
   });
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const totalPages = Math.ceil(total / postsPerPage);
   if (page > totalPages) notFound();
 
   return (
