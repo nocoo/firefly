@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useLocale } from "@/i18n/context";
 import {
   AreaChart,
   Area,
@@ -111,21 +112,22 @@ export function AnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [days, setDays] = useState(30);
+  const { t } = useLocale();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await fetch(`/api/analytics?days=${days}`);
-      if (!res.ok) throw new Error("Failed to fetch analytics");
+      if (!res.ok) throw new Error(t("admin.analytics.fetchError"));
       const json = await res.json();
       setData(json);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : t("admin.analytics.fetchError"));
     } finally {
       setLoading(false);
     }
-  }, [days]);
+  }, [days, t]);
 
   useEffect(() => {
     fetchData();
@@ -134,7 +136,7 @@ export function AnalyticsDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-muted-foreground">
-        Loading analytics...
+        {t("admin.analytics.loading")}
       </div>
     );
   }
@@ -155,10 +157,10 @@ export function AnalyticsDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-foreground">
-            Site Analytics
+            {t("admin.analytics.title")}
           </h2>
           <p className="text-sm text-muted-foreground">
-            {data.recentViews} views in the last 24 hours
+            {t("admin.analytics.recentViews", { n: data.recentViews })}
           </p>
         </div>
         <div className="flex rounded-[var(--radius-widget)] border border-border bg-secondary p-0.5">
@@ -181,27 +183,27 @@ export function AnalyticsDashboard() {
       {/* Overview cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="Total Views"
+          label={t("admin.analytics.totalViews")}
           value={data.overview.totalViews}
         />
         <StatCard
-          label="Unique Visitors"
+          label={t("admin.analytics.uniqueVisitors")}
           value={data.overview.totalUniqueVisitors}
         />
         <StatCard
-          label="Bot Views"
+          label={t("admin.analytics.botViews")}
           value={data.overview.totalBotViews}
-          sublabel={`AI: ${data.overview.totalAiBotViews} · Search: ${data.overview.totalSearchBotViews}`}
+          sublabel={t("admin.analytics.botSublabel", { ai: data.overview.totalAiBotViews, search: data.overview.totalSearchBotViews })}
         />
         <StatCard
-          label="Recent (24h)"
+          label={t("admin.analytics.recent24h")}
           value={data.recentViews}
         />
       </div>
 
       {/* Traffic chart */}
       {data.dailyStats.length > 0 && (
-        <ChartCard title="Traffic Over Time">
+        <ChartCard title={t("admin.analytics.trafficOverTime")}>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={data.dailyStats}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
@@ -224,7 +226,7 @@ export function AnalyticsDashboard() {
               <Area
                 type="monotone"
                 dataKey="total_views"
-                name="Views"
+                name={t("admin.analytics.chartViews")}
                 stroke={CHART_COLORS[0]}
                 fill={CHART_COLORS[0]}
                 fillOpacity={0.1}
@@ -233,7 +235,7 @@ export function AnalyticsDashboard() {
               <Area
                 type="monotone"
                 dataKey="unique_visitors"
-                name="Unique"
+                name={t("admin.analytics.chartUnique")}
                 stroke={CHART_COLORS[2]}
                 fill={CHART_COLORS[2]}
                 fillOpacity={0.1}
@@ -242,7 +244,7 @@ export function AnalyticsDashboard() {
               <Area
                 type="monotone"
                 dataKey="total_bot_views"
-                name="Bots"
+                name={t("admin.analytics.chartBots")}
                 stroke={CHART_COLORS[3]}
                 fill={CHART_COLORS[3]}
                 fillOpacity={0.05}
@@ -257,15 +259,15 @@ export function AnalyticsDashboard() {
       {/* Two-column: Top posts + Referrers */}
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Top posts */}
-        <TableCard title="Top Posts">
+        <TableCard title={t("admin.analytics.topPosts")}>
           {data.topPosts.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4">No data yet</p>
+            <p className="text-sm text-muted-foreground py-4">{t("admin.analytics.noData")}</p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-muted-foreground">
-                  <th className="pb-2 font-medium">Post</th>
-                  <th className="pb-2 font-medium text-right">Views</th>
+                  <th className="pb-2 font-medium">{t("admin.analytics.tablePost")}</th>
+                  <th className="pb-2 font-medium text-right">{t("admin.analytics.tableViews")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -288,15 +290,15 @@ export function AnalyticsDashboard() {
         </TableCard>
 
         {/* Referrers */}
-        <TableCard title="Top Referrers">
+        <TableCard title={t("admin.analytics.topReferrers")}>
           {data.topReferrers.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4">No data yet</p>
+            <p className="text-sm text-muted-foreground py-4">{t("admin.analytics.noData")}</p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-muted-foreground">
-                  <th className="pb-2 font-medium">Referrer</th>
-                  <th className="pb-2 font-medium text-right">Views</th>
+                  <th className="pb-2 font-medium">{t("admin.analytics.tableReferrer")}</th>
+                  <th className="pb-2 font-medium text-right">{t("admin.analytics.tableViews")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -319,9 +321,9 @@ export function AnalyticsDashboard() {
       {/* Three-column: Devices, Browsers, Bots */}
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Devices */}
-        <ChartCard title="Devices">
+        <ChartCard title={t("admin.analytics.devices")}>
           {data.devices.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4">No data yet</p>
+            <p className="text-sm text-muted-foreground py-4">{t("admin.analytics.noData")}</p>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
@@ -357,9 +359,9 @@ export function AnalyticsDashboard() {
         </ChartCard>
 
         {/* Browsers */}
-        <ChartCard title="Browsers">
+        <ChartCard title={t("admin.analytics.browsers")}>
           {data.browsers.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4">No data yet</p>
+            <p className="text-sm text-muted-foreground py-4">{t("admin.analytics.noData")}</p>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart
@@ -392,9 +394,9 @@ export function AnalyticsDashboard() {
         </ChartCard>
 
         {/* Bot traffic */}
-        <ChartCard title="Bot Traffic">
+        <ChartCard title={t("admin.analytics.botTraffic")}>
           {data.bots.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4">No data yet</p>
+            <p className="text-sm text-muted-foreground py-4">{t("admin.analytics.noData")}</p>
           ) : (
             <div className="space-y-2 text-sm">
               {data.bots.map((bot, i) => (
