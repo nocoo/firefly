@@ -28,7 +28,7 @@ Firefly is a WordPress-to-Next.js blog migration with two distinct surfaces: a *
 | # | Issue | Location | Impact |
 |---|-------|----------|--------|
 | C-04 | **Sidebar fixed-left positioning uses magic number `translateX(-670px)`** — calculated from `1340px / 2` max-width. Fragile; breaks if max-width changes. Should use CSS calc or container queries. | `src/app/globals.css:565` | Maintainability |
-| C-05 | **Admin `PostForm` has dead code** — `editorFields` JSX is assigned to a variable, followed by a `return` statement. The variable assignment includes a full JSX tree that's never rendered directly; the actual `return` wraps it in a form. The first "return" inside the variable (line ~395 `return ( <div className="flex gap-6">`) shadows the `editorFields` variable. | `src/components/admin/post-form.tsx:132-395` | Correctness — likely unreachable code |
+| C-05 | ~~**Admin `PostForm` has dead code**~~ — **RETRACTED**: `editorFields` variable (lines 132-395) is actively rendered at line 404 via `{editorFields}` inside the `<form>`. Not dead code; it's a JSX extraction pattern for readability. | `src/components/admin/post-form.tsx:132-395` | N/A — false positive |
 | C-06 | **No loading skeleton or suspense boundary for blog pages** — SSR pages render instantly, but client-navigations show no feedback. Admin `AnalyticsDashboard` shows plain text "Loading..." instead of skeleton. | `src/components/admin/analytics-dashboard.tsx:137-141` | Perceived performance |
 | C-07 | **Pagination is text-only ("← Newer" / "Older →")** — no page numbers, no total count indicator. For a 20-items-per-page blog with hundreds of posts, users have no sense of depth. | `src/components/blog/pagination.tsx` | Navigation UX |
 
@@ -239,16 +239,132 @@ Admin shell inner content uses `p-3 md:p-5` with `rounded-[16px] md:rounded-[20p
 
 ## Atomic Commit Plan
 
-Each phase should be committed independently:
+> Verified 2026-03-23: Each commit touches one logical concern, passes build + tests independently.
+> C-05 retracted after code verification — `editorFields` is actively used, not dead code.
 
-```
-feat: restore basalt radius tokens and add focus-visible outlines
-feat: add skip-to-content link and a11y improvements
-refactor: extract icon-button, segmented-control, data-card components
-feat: replace raw img with next/image for featured images
-fix: add admin tablet breakpoint and refactor sidebar positioning
-refactor: unify chart colors under CSS custom properties
-```
+### Commit 1 — `fix: restore non-zero radius tokens for admin surface`
+| File | Change |
+|------|--------|
+| `src/app/globals.css` | Restore `--radius-card: 14px`, `--radius-widget: 10px`, `--radius-lg: 12px`, `--radius-md: 8px`, `--radius-sm: 6px`, `--radius: 0.5rem` |
+
+> Blog stays sharp-edge (uses no radius tokens); admin gets Basalt-standard rounding back.
+> Admin shell hardcoded `rounded-[16px] md:rounded-[20px]` in shell.tsx can then be replaced with `rounded-[var(--radius-island)]`.
+
+### Commit 2 — `feat: add focus-visible outline and skip-to-content link`
+| File | Change |
+|------|--------|
+| `src/app/globals.css` | Add `*:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }` in base layer |
+| `src/app/(blog)/layout.tsx` | Add `<a href="#main" className="sr-only focus:not-sr-only ...">Skip to content</a>`, add `id="main"` on `<main>` |
+
+### Commit 3 — `fix: remove duplicate font-family from .blog-shell`
+| File | Change |
+|------|--------|
+| `src/app/globals.css` | Delete `font-family` declaration from `.blog-shell` (line 278) — identical to `body` (line 161) |
+
+### Commit 4 — `fix: bump tag cloud min font size to 0.8125em`
+| File | Change |
+|------|--------|
+| `src/components/blog/blog-sidebar.tsx` | Change `minSize = 0.75` → `minSize = 0.8125` (~13px at 16px base, meets WCAG readability for CJK) |
+
+### Commit 5 — `feat: replace raw img with next/image for featured images`
+| File | Change |
+|------|--------|
+| `src/components/blog/post-card.tsx` | Replace `<img>` with `<Image>` from `next/image`, add `width`, `height`, `sizes`, `loading="lazy"` |
+| `src/app/(blog)/[year]/[month]/[slug]/page.tsx` | Same replacement for post detail featured image |
+
+### Commit 6 — `feat: add loading="lazy" to markdown-rendered images`
+| File | Change |
+|------|--------|
+| `src/lib/markdown.ts` (or wherever `renderMarkdown` lives) | Configure marked renderer to inject `loading="lazy"` on all `<img>` tags |
+
+### Commit 7 — `refactor: unify StatCard/ChartCard/TableCard into DataCard`
+| File | Change |
+|------|--------|
+| `src/components/admin/analytics-dashboard.tsx` | Replace three near-identical wrappers with single `DataCard` component with `variant` prop (`stat` / `chart`) |
+
+### Commit 8 — `refactor: extract IconButton component`
+| File | Change |
+|------|--------|
+| `src/components/ui/icon-button.tsx` | New — shared `h-8 w-8 items-center justify-center rounded-lg` button |
+| `src/components/admin/shell.tsx` | Refactor to use `<IconButton>` |
+| `src/components/admin/sidebar.tsx` | Refactor to use `<IconButton>` |
+| `src/components/theme-toggle.tsx` | Refactor to use `<IconButton>` |
+| `src/components/locale-toggle.tsx` | Refactor to use `<IconButton>` |
+
+### Commit 9 — `refactor: extract SegmentedControl component`
+| File | Change |
+|------|--------|
+| `src/components/ui/segmented-control.tsx` | New — pill-toggle extracted from analytics period selector and post form tabs |
+| `src/components/admin/analytics-dashboard.tsx` | Refactor period selector to use `<SegmentedControl>` |
+| `src/components/admin/post-form.tsx` | Refactor write/preview tabs to use `<SegmentedControl>` |
+
+### Commit 10 — `refactor: migrate chart colors to CSS custom properties`
+| File | Change |
+|------|--------|
+| `src/app/globals.css` | Add `--chart-1` through `--chart-5` HSL tokens in `:root` and `.dark` |
+| `src/components/admin/analytics-dashboard.tsx` | Replace hardcoded hex in `CHART_COLORS`, `PIE_COLORS`, `BOT_CATEGORY_COLORS` with `var(--chart-*)` references |
+
+### Commit 11 — `fix: refactor sidebar translateX magic number to CSS calc`
+| File | Change |
+|------|--------|
+| `src/app/globals.css` | Replace `translateX(-670px)` with `calc(-1 * var(--blog-max-width) / 2)` using a `--blog-max-width: 1340px` custom property |
+
+### Commit 12 — `feat: add admin tablet breakpoint with auto-collapsed sidebar`
+| File | Change |
+|------|--------|
+| `src/components/admin/shell.tsx` | Default to collapsed sidebar in 768-1024px range |
+| `src/components/admin/sidebar.tsx` | Replace `transition-all` with `transition-[width]` to avoid layout thrashing; respond to tablet breakpoint |
+
+### Commit 13 — `fix: constrain featured image bleed on ultra-wide screens`
+| File | Change |
+|------|--------|
+| `src/app/globals.css` | Add `overflow: hidden` on `.blog-main` or `max-width` on `.blog-featured-image` to prevent image extending under sidebar at >1600px |
+
+### Commit 14 — `feat: add loading skeleton for admin analytics dashboard`
+| File | Change |
+|------|--------|
+| `src/components/admin/analytics-dashboard.tsx` | Replace plain-text "Loading..." with animated skeleton cards matching the DataCard layout |
+
+### Commit 15 — `fix: sanitize analytics error messages shown to users`
+| File | Change |
+|------|--------|
+| `src/components/admin/analytics-dashboard.tsx` | Show generic i18n error text instead of raw error message from fetch |
+
+---
+
+## Issue ↔ Commit Traceability
+
+| Issue | Commit(s) | Status |
+|-------|-----------|--------|
+| C-01 Radius tokens 0px | #1 | Planned |
+| C-02 Dual color systems | #10 (partial — chart colors only) | Planned |
+| C-03 Raw `<img>` no optimization | #5, #6 | Planned |
+| C-04 Magic translateX | #11 | Planned |
+| C-05 PostForm dead code | — | ~~Retracted~~ (false positive) |
+| C-06 No loading skeleton | #14 | Planned |
+| C-07 Text-only pagination | — | Deferred (functional, low priority) |
+| C-08 ThemeToggle token mismatch | #8 (partial — via IconButton extraction) | Planned |
+| C-09 Generic alt text | #5 (improve during Image migration) | Planned |
+| C-10 Lone hover animation | — | Accepted (intentional micro-interaction) |
+| C-11 Sidebar transition-all | #12 | Planned |
+| C-12 Near-identical card wrappers | #7 | Planned |
+| P-05 Focus-visible outlines | #2 | Planned |
+| P-06 Skip-to-content link | #2 | Planned |
+| 4.2 Duplicate font-family | #3 | Planned |
+| 7.5 Tag cloud min size | #4 | Planned |
+| H-02 Error message leak | #15 | Planned |
+
+### Deferred (out of scope for this pass)
+
+| Issue | Reason |
+|-------|--------|
+| C-07 Pagination page numbers | Requires design decision on style; current text-only is functional |
+| C-10 Lone hover animation | Intentional design choice, not a defect |
+| H-01 `confirm()` → modal dialog | Requires new component + design, separate effort |
+| H-03 `<noscript>` fallback | Low impact — SSR covers core content |
+| H-04 Comment markdown support | Product decision needed |
+| A-02 Sidebar width on 900px | Requires CJK content testing with real data |
+| EmptyState component extraction | Low ROI — few instances, each unique enough |
 
 ---
 
