@@ -11,7 +11,7 @@ export default async function NewPostPage() {
   ]);
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-foreground">New Post</h2>
         <p className="text-sm text-muted-foreground">

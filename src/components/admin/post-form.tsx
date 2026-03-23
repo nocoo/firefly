@@ -6,6 +6,7 @@ import type { Category, Tag, PostWithCategory, PostStatus } from "@/models/types
 import { slugify } from "@/models/post";
 import { renderMarkdown } from "@/models/markdown";
 import { ImageUpload } from "./image-upload";
+import { MarkdownPreview } from "./markdown-preview";
 
 interface PostFormProps {
   post?: PostWithCategory & { tagIds: string[] };
@@ -33,7 +34,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
 
   const isEditing = !!post;
 
-  // Markdown preview (memoized to avoid re-rendering on every keystroke)
+  // Markdown preview — tab mode for small screens
   const [previewMode, setPreviewMode] = useState(false);
   const previewHtml = useMemo(
     () => (previewMode && content ? renderMarkdown(content) : ""),
@@ -124,8 +125,10 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+  // ── Shared form fields ──
+
+  const editorFields = (
+    <>
       {error && (
         <div className="rounded-[var(--radius-widget)] border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
@@ -170,13 +173,14 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         />
       </div>
 
-      {/* Content — Write / Preview tabs */}
+      {/* Content — Write / Preview tabs (mobile) or always-write (desktop) */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium text-foreground">
             Content (Markdown)
           </label>
-          <div className="flex rounded-[var(--radius-widget)] border border-border bg-secondary p-0.5">
+          {/* Tab switcher — hidden on lg+ where preview is side-by-side */}
+          <div className="flex rounded-[var(--radius-widget)] border border-border bg-secondary p-0.5 lg:hidden">
             <button
               type="button"
               onClick={() => setPreviewMode(false)}
@@ -201,33 +205,48 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             </button>
           </div>
         </div>
-        {previewMode ? (
-          <div className="min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-4 py-3 overflow-y-auto">
-            {content ? (
-              <div
-                className="prose dark:prose-invert max-w-none text-sm"
-                dangerouslySetInnerHTML={{ __html: previewHtml }}
+        {/* Mobile: tab-based preview */}
+        <div className="lg:hidden">
+          {previewMode ? (
+            <div className="min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-4 py-3 overflow-y-auto">
+              {content ? (
+                <div
+                  className="prose-firefly prose dark:prose-invert max-w-none text-sm"
+                  dangerouslySetInnerHTML={{ __html: previewHtml }}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Nothing to preview
+                </p>
+              )}
+            </div>
+          ) : (
+            <>
+              <ImageUpload onUpload={handleImageUpload} className="mb-2" />
+              <textarea
+                id="content"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                required
+                rows={20}
+                className="w-full min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
+                placeholder="Write your post content in Markdown..."
               />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Nothing to preview
-              </p>
-            )}
-          </div>
-        ) : (
-          <>
-            <ImageUpload onUpload={handleImageUpload} className="mb-2" />
-            <textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              required
-              rows={20}
-              className="w-full min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
-              placeholder="Write your post content in Markdown..."
-            />
-          </>
-        )}
+            </>
+          )}
+        </div>
+        {/* Desktop: always show editor (preview is in right panel) */}
+        <div className="hidden lg:block">
+          <ImageUpload onUpload={handleImageUpload} className="mb-2" />
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            required
+            rows={20}
+            className="w-full min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
+            placeholder="Write your post content in Markdown..."
+          />
+        </div>
       </div>
 
       {/* Excerpt */}
@@ -370,6 +389,28 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           </button>
         )}
       </div>
-    </form>
+    </>
+  );
+
+  return (
+    <div className="flex gap-6">
+      {/* Left: Editor form */}
+      <form
+        onSubmit={handleSubmit}
+        className="w-full space-y-6 lg:w-1/2 lg:min-w-0"
+      >
+        {editorFields}
+      </form>
+
+      {/* Right: Live preview — visible only on lg+ */}
+      <div className="sticky top-14 hidden h-[calc(100vh-56px-24px)] w-1/2 min-w-0 overflow-y-auto rounded-[var(--radius-widget)] border border-border bg-secondary p-6 lg:block">
+        <MarkdownPreview
+          title={title}
+          excerpt={excerpt}
+          content={content}
+          featuredImage={featuredImage}
+        />
+      </div>
+    </div>
   );
 }

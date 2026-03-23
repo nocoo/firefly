@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -130,5 +131,113 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/*
+ * Prose typography overrides — optimized for CJK (Chinese) content
+ */
+.prose-firefly {
+  /* CJK-optimized font stack */
+  font-family:
+    "Noto Serif SC",
+    "Source Han Serif SC",
+    "Songti SC",
+    "PingFang SC",
+    ui-serif,
+    Georgia,
+    serif;
+
+  /* Comfortable line height for CJK */
+  line-height: 1.85;
+
+  /* Slightly wider paragraph spacing for readability */
+  & p {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+  }
+
+  /* CJK heading rhythm */
+  & h1 {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  & h2 {
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  & h3 {
+    font-weight: 600;
+  }
+
+  /* Blockquote — subtle left accent */
+  & blockquote {
+    font-style: normal;
+    border-left-color: hsl(var(--primary) / 0.3);
+  }
+
+  & blockquote p {
+    font-style: normal;
+  }
+
+  /* Code block styling */
+  & pre {
+    border-radius: var(--radius-widget);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--secondary));
+    font-size: 0.8125em;
+  }
+
+  & :not(pre) > code {
+    background: hsl(var(--secondary));
+    border: 1px solid hsl(var(--border));
+    border-radius: 4px;
+    padding: 0.15em 0.35em;
+    font-size: 0.85em;
+  }
+
+  & :not(pre) > code::before,
+  & :not(pre) > code::after {
+    content: none;
+  }
+
+  /* Images: full-width, rounded */
+  & img {
+    border-radius: var(--radius-widget);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Table alignment with design tokens */
+  & table {
+    font-size: 0.875em;
+  }
+
+  & th {
+    font-weight: 600;
+  }
+
+  & th,
+  & td {
+    border-color: hsl(var(--border));
+  }
+
+  /* Link styling */
+  & a {
+    color: hsl(var(--primary));
+    text-decoration-color: hsl(var(--primary) / 0.3);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.15s;
+  }
+
+  & a:hover {
+    text-decoration-color: hsl(var(--primary));
+  }
+
+  /* Horizontal rule */
+  & hr {
+    border-color: hsl(var(--border));
   }
 }
