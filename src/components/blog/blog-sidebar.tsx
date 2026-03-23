@@ -62,7 +62,7 @@ export function BlogSidebar({ categories, tags, archives, isMobile, isMobileOpen
       )}
 
       <aside
-        className={`blog-sidebar ${isMobile ? "blog-sidebar-mobile" : ""} ${isMobileOpen ? "blog-sidebar-mobile-open" : ""}`}
+        className={`blog-sidebar ${isMobile ? "blog-sidebar-mobile" : "blog-sidebar-desktop"} ${isMobileOpen ? "blog-sidebar-mobile-open" : ""}`}
       >
         <div className="blog-sidebar-inner">
           {/* Mobile close button */}

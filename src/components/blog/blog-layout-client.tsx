@@ -78,7 +78,7 @@ export function BlogLayoutClient({ categories, tags, archives, locale, children 
         </>
       )}
 
-      <main id="main" className={`blog-main ${isMobile ? "blog-main-mobile" : ""}`}>
+      <main id="main" className={`blog-main ${isMobile ? "blog-main-mobile" : "blog-main-desktop"}`}>
         {children}
         <BlogFooter locale={locale} />
       </main>
