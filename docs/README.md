@@ -11,3 +11,4 @@ Modern blog platform built with Next.js, Cloudflare D1, and R2. Migrated from Wo
 | 03 | [Architecture & Tech Stack](./03-architecture.md) | ✅ |
 | 04 | [Data Migration Plan](./04-data-migration.md) | ✅ |
 | 05 | [Implementation Roadmap](./05-implementation-roadmap.md) | ✅ |
+| 06 | [Design Review & Optimization Plan](./06-design-review.md) | ✅ |
