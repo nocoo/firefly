@@ -47,11 +47,12 @@
   --color-blog-separator: var(--blog-separator);
   --color-blog-accent: var(--blog-accent);
 
-  --radius-card: 0px;
-  --radius-widget: 0px;
-  --radius-lg: 0px;
-  --radius-md: 0px;
-  --radius-sm: 0px;
+  --radius-card: 14px;
+  --radius-widget: 10px;
+  --radius-island: 20px;
+  --radius-lg: 12px;
+  --radius-md: 8px;
+  --radius-sm: 6px;
 }
 
 /*
@@ -89,7 +90,7 @@
   --input: 220 13% 88%;
   --ring: 217 91% 60%;
 
-  --radius: 0;
+  --radius: 0.5rem;
 
   --success: 142 71% 45%;
   --success-foreground: 0 0% 100%;
