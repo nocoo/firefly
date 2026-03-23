@@ -38,6 +38,15 @@
   --color-success: hsl(var(--success));
   --color-success-foreground: hsl(var(--success-foreground));
 
+  /* Blog (CeleRev) palette */
+  --color-blog-bg: var(--blog-bg);
+  --color-blog-surface: var(--blog-surface);
+  --color-blog-sidebar: var(--blog-sidebar);
+  --color-blog-text: var(--blog-text);
+  --color-blog-muted: var(--blog-muted);
+  --color-blog-separator: var(--blog-separator);
+  --color-blog-accent: var(--blog-accent);
+
   --radius-card: 14px;
   --radius-widget: 10px;
   --radius-lg: var(--radius);
@@ -84,6 +93,15 @@
 
   --success: 142 71% 45%;
   --success-foreground: 0 0% 100%;
+
+  /* Blog (CeleRev) colors */
+  --blog-bg: #F0F0F0;
+  --blog-surface: #FAFAFA;
+  --blog-sidebar: #FFFFFF;
+  --blog-text: #333333;
+  --blog-muted: #666666;
+  --blog-separator: #F0F0F0;
+  --blog-accent: #A5D3ED;
 }
 
 .dark {
@@ -120,6 +138,15 @@
 
   --success: 142 71% 45%;
   --success-foreground: 0 0% 100%;
+
+  /* Blog (CeleRev) dark colors */
+  --blog-bg: #0f0f0f;
+  --blog-surface: #171717;
+  --blog-sidebar: #131313;
+  --blog-text: #E0E0E0;
+  --blog-muted: #888888;
+  --blog-separator: #252525;
+  --blog-accent: #5BA3C9;
 }
 
 /*
@@ -239,5 +266,265 @@
   /* Horizontal rule */
   & hr {
     border-color: hsl(var(--border));
+  }
+}
+
+/*
+ * Blog layout — CeleRev-inspired sidebar + main structure
+ */
+.blog-shell {
+  min-height: 100vh;
+  background: var(--blog-bg);
+  color: var(--blog-text);
+  font-family: -apple-system, system-ui, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+}
+
+.blog-max-width {
+  position: relative;
+  max-width: 1340px;
+  margin: 0 auto;
+}
+
+/* Sidebar */
+.blog-sidebar {
+  background: var(--blog-sidebar);
+  padding: 2.25em 8.3334%;
+}
+
+.blog-sidebar-inner {
+  padding: 0;
+}
+
+/* Main content */
+.blog-main {
+  background: var(--blog-surface);
+  margin: 0 auto;
+  padding: 1.875em 8.3334%;
+}
+
+/* Site title */
+.blog-site-title {
+  font-size: 1.3125em;
+  line-height: 1.143;
+  font-weight: 700;
+}
+
+.blog-site-title a {
+  color: var(--blog-text);
+  text-decoration: none;
+  transition: color 0.1s ease-in-out;
+}
+
+.blog-site-title a:hover {
+  color: var(--blog-muted);
+}
+
+.blog-tagline {
+  color: var(--blog-muted);
+  margin: 0.25em 0 0;
+  font-size: 0.875em;
+}
+
+/* Post entry in list */
+.blog-entry {
+  position: relative;
+  margin-top: 1.875em;
+}
+
+.blog-entry:first-child {
+  margin-top: 0;
+}
+
+.blog-entry::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: -10%;
+  right: -10%;
+  height: 1px;
+  background: var(--blog-separator);
+}
+
+.blog-entry:last-child::after {
+  display: none;
+}
+
+/* Featured image in list/post */
+.blog-featured-image {
+  position: relative;
+  height: 0;
+  padding-bottom: 50%;
+  margin: 1.5em 0;
+  overflow: hidden;
+}
+
+.blog-featured-image img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+/* Post byline */
+.blog-byline {
+  color: var(--blog-muted);
+  font-size: 0.875em;
+  margin-top: 0.5em;
+}
+
+.blog-byline a {
+  color: var(--blog-muted);
+  text-decoration: none;
+  transition: color 0.1s ease-in-out;
+}
+
+.blog-byline a:hover {
+  color: var(--blog-text);
+}
+
+/* Post content links — animated underline like CeleRev */
+.blog-content a {
+  color: var(--blog-text);
+  text-decoration: none;
+  background-image: linear-gradient(var(--blog-accent), var(--blog-accent));
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.15s ease-in-out;
+}
+
+.blog-content a:hover {
+  background-size: 100% 2px;
+}
+
+/* Footer */
+.blog-footer {
+  position: relative;
+  padding: 0.75em 0;
+  margin-top: 3em;
+  font-size: 0.8125em;
+  color: var(--blog-muted);
+}
+
+.blog-footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -10%;
+  right: -10%;
+  height: 1px;
+  background: var(--blog-separator);
+}
+
+.blog-footer a {
+  color: var(--blog-muted);
+  text-decoration: none;
+}
+
+.blog-footer a:hover {
+  color: var(--blog-text);
+}
+
+/* Desktop: sidebar fixed left, main right */
+@media all and (min-width: 56.25em) {
+  .blog-shell {
+    padding: 0;
+  }
+
+  .blog-sidebar {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-670px);
+    width: 30.5558%;
+    max-width: calc(1340px * 0.305558);
+    height: 100vh;
+    padding: 0 2.7778%;
+    overflow-y: auto;
+    z-index: 9;
+  }
+
+  .blog-sidebar-inner {
+    padding: 2.25em 0;
+  }
+
+  .blog-main {
+    float: right;
+    width: 69.445%;
+    margin-left: 30.5558%;
+    min-height: 100vh;
+  }
+
+  .blog-featured-image {
+    left: -15.789%;
+    width: 115.498%;
+    padding-bottom: 57.75%;
+  }
+
+  .blog-entry::after {
+    left: -15.834%;
+    right: -15.834%;
+  }
+
+  .blog-footer::before {
+    left: -15.834%;
+    right: -15.834%;
+  }
+}
+
+@media all and (min-width: 62.5em) {
+  .blog-sidebar {
+    margin-top: 0.75em;
+    margin-left: 0.75em;
+  }
+
+  .blog-main {
+    margin: 0.75em 0.75em 0 0;
+  }
+
+  .blog-site-title {
+    font-size: 1.75em;
+    line-height: 1.357;
+  }
+}
+
+@media all and (min-width: 68.75em) {
+  .blog-sidebar {
+    margin-top: 1.5em;
+    margin-left: 1.5em;
+  }
+
+  .blog-main {
+    margin: 1.5em 1.5em 0 0;
+    padding: 3em 8.3334%;
+  }
+
+  .blog-entry {
+    margin-top: 3em;
+  }
+
+  .blog-featured-image {
+    margin: 2.25em 0;
+  }
+}
+
+/* Mobile: sidebar positioning reset */
+@media all and (max-width: 56.24em) {
+  .blog-sidebar {
+    position: relative;
+  }
+
+  .blog-max-width {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* Small mobile padding */
+@media all and (min-width: 37.5em) and (max-width: 56.24em) {
+  .blog-shell {
+    padding: 0.75em;
   }
 }
