@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { cache } from "react";
+import { Suspense, cache } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { getDb } from "@/lib/db";
@@ -76,13 +76,7 @@ export default async function PostPage({ params }: PostPageProps) {
   const locale = await getLocale();
   const tags = await getPostTags(db, post.id);
   const settings = await getSiteSettings(db);
-
-  // Load comments only when both global and per-post toggles are on
-  let commentTree: Awaited<ReturnType<typeof buildCommentTree>> = [];
-  if (settings.commentsEnabled && post.comment_enabled) {
-    const comments = await listCommentsByPost(db, post.id);
-    commentTree = buildCommentTree(comments);
-  }
+  const showComments = settings.commentsEnabled && !!post.comment_enabled;
 
   const html = post.content_html || renderMarkdown(post.content);
   const date = post.published_at
@@ -176,7 +170,11 @@ export default async function PostPage({ params }: PostPageProps) {
         )}
       </article>
 
-      <Comments comments={commentTree} locale={locale} />
+      {showComments && (
+        <Suspense>
+          <CommentsSection postId={post.id} locale={locale} />
+        </Suspense>
+      )}
 
       <nav className="mt-8 border-t border-blog-separator pt-6">
         <Link
@@ -188,4 +186,21 @@ export default async function PostPage({ params }: PostPageProps) {
       </nav>
     </>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Async server component — loaded inside Suspense to keep article LCP fast
+// ---------------------------------------------------------------------------
+
+async function CommentsSection({
+  postId,
+  locale,
+}: {
+  postId: string;
+  locale: import("@/i18n/translations").Locale;
+}) {
+  const db = getDb();
+  const comments = await listCommentsByPost(db, postId);
+  const tree = buildCommentTree(comments);
+  return <Comments comments={tree} locale={locale} />;
 }
