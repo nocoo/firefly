@@ -141,7 +141,7 @@ export default async function PostPage({ params }: PostPageProps) {
               src={post.featured_image}
               alt=""
               fill
-              sizes="(max-width: 900px) 100vw, 75vw"
+              sizes="(max-width: 900px) 100vw, min(75vw, 1000px)"
               priority
             />
           </div>
