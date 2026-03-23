@@ -106,18 +106,18 @@ export default async function PostPage({ params }: PostPageProps) {
                   : undefined
               }
             >
-              Published {date}
+              {date}
             </time>
             {post.category_name && post.category_slug && (
               <>
-                {" in "}
+                {" · "}
                 <Link href={`/category/${post.category_slug}`}>
                   {post.category_name}
                 </Link>
               </>
             )}
             {post.reading_time && (
-              <> &middot; {post.reading_time} min read</>
+              <> · {post.reading_time} min read</>
             )}
           </div>
         </header>
@@ -140,13 +140,12 @@ export default async function PostPage({ params }: PostPageProps) {
 
         {/* Tags */}
         {tags.length > 0 && (
-          <footer className="mt-8 border-t border-blog-separator pt-6">
-            <div className="flex flex-wrap gap-2">
+          <footer className="mt-10 pt-6 border-t border-blog-separator">
+            <div className="blog-tag-cloud">
               {tags.map((tag) => (
                 <Link
                   key={tag.id}
                   href={`/tag/${tag.slug}`}
-                  className="inline-block rounded-full bg-blog-separator px-3 py-1 text-xs text-blog-muted transition-colors hover:text-blog-text"
                 >
                   {tag.name}
                 </Link>

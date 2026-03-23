@@ -441,3 +441,34 @@ export async function refreshAllTagPostCounts(db: Db): Promise<void> {
     )`,
   );
 }
+
+// ---------------------------------------------------------------------------
+// Monthly archives
+// ---------------------------------------------------------------------------
+
+export interface MonthlyArchive {
+  year: number;
+  month: number;
+  count: number;
+}
+
+/**
+ * Group published posts by year/month, newest first.
+ */
+export async function listMonthlyArchives(
+  db: Db,
+): Promise<MonthlyArchive[]> {
+  const sql = `
+    SELECT
+      CAST(strftime('%Y', published_at, 'unixepoch') AS INTEGER) AS year,
+      CAST(strftime('%m', published_at, 'unixepoch') AS INTEGER) AS month,
+      COUNT(*) AS count
+    FROM posts
+    WHERE status = 'published' AND published_at IS NOT NULL
+    GROUP BY year, month
+    ORDER BY year DESC, month DESC
+  `;
+
+  const rows = await db.query<MonthlyArchive>(sql);
+  return rows;
+}
