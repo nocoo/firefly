@@ -8,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LocaleToggle } from "@/components/locale-toggle";
+import { IconButton } from "@/components/ui/icon-button";
 import { useLocale } from "@/i18n/context";
 
 // Map admin routes to i18n title keys
@@ -100,17 +101,16 @@ export function AdminShell({ user, children }: AdminShellProps) {
         <header className="flex h-14 items-center justify-between px-4 md:px-6 shrink-0">
           <div className="flex items-center gap-3">
             {isMobile && (
-              <button
+              <IconButton
                 onClick={() => setMobileOpen(true)}
                 aria-label={t("admin.sidebar.openNav")}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
               >
                 <Menu
                   className="h-5 w-5"
                   aria-hidden="true"
                   strokeWidth={1.5}
                 />
-              </button>
+              </IconButton>
             )}
             <h1 className="text-lg md:text-xl font-semibold text-foreground">
               {title}

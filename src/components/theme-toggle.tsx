@@ -3,6 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Sun, Moon, Monitor } from "lucide-react";
 import { useLocale } from "@/i18n/context";
+import { IconButton } from "@/components/ui/icon-button";
 
 type Theme = "light" | "dark" | "system";
 
@@ -79,9 +80,8 @@ export function ThemeToggle() {
         : t("theme.dark");
 
   return (
-    <button
+    <IconButton
       onClick={cycleTheme}
-      className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
       aria-label={t("theme.toggle", { label })}
     >
       {theme === "system" ? (
@@ -91,6 +91,6 @@ export function ThemeToggle() {
       ) : (
         <Sun {...ICON_PROPS} />
       )}
-    </button>
+    </IconButton>
   );
 }

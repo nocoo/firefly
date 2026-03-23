@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { IconButton } from "@/components/ui/icon-button";
 import { useLocale } from "@/i18n/context";
 
 // ── Navigation data model ──
@@ -164,17 +165,18 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
           </div>
 
           {/* Expand button */}
-          <button
+          <IconButton
             onClick={onToggle}
             aria-label={t("admin.sidebar.expand")}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors mb-2"
+            size="lg"
+            className="mb-2"
           >
             <PanelLeft
               className="h-4 w-4"
               aria-hidden="true"
               strokeWidth={1.5}
             />
-          </button>
+          </IconButton>
 
           {/* Nav icons */}
           <nav className="flex-1 flex flex-col items-center gap-1 pt-1">
@@ -221,17 +223,17 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
                   v0.1
                 </span>
               </div>
-              <button
+              <IconButton
                 onClick={onToggle}
                 aria-label={t("admin.sidebar.collapse")}
-                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                size="sm"
               >
                 <PanelLeft
                   className="h-4 w-4"
                   aria-hidden="true"
                   strokeWidth={1.5}
                 />
-              </button>
+              </IconButton>
             </div>
           </div>
 
@@ -261,17 +263,17 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
                   {user.email}
                 </p>
               </div>
-              <button
+              <IconButton
                 onClick={() => signOut({ callbackUrl: "/login" })}
                 aria-label={t("admin.sidebar.signOut")}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shrink-0"
+                className="shrink-0"
               >
                 <LogOut
                   className="h-4 w-4"
                   aria-hidden="true"
                   strokeWidth={1.5}
                 />
-              </button>
+              </IconButton>
             </div>
           </div>
         </div>
