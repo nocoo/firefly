@@ -136,7 +136,7 @@ export function BlogSidebar({ locale, categories, tags, archives }: BlogSidebarP
                   <>
                     {recent.map((a) => (
                       <li key={`${a.year}-${a.month}`}>
-                        <Link href={`/?archive=${a.year}-${String(a.month).padStart(2, "0")}`}>
+                        <Link href={`/archive/${a.year}-${String(a.month).padStart(2, "0")}`}>
                           <span>{a.year} {t(locale, "blog.sidebar.yearSuffix")} {a.month} {t(locale, "blog.sidebar.monthSuffix")}</span>
                           <span className="blog-sidebar-count">({a.count})</span>
                         </Link>
@@ -144,7 +144,7 @@ export function BlogSidebar({ locale, categories, tags, archives }: BlogSidebarP
                     ))}
                     {olderEntries.map(([year, count]) => (
                       <li key={year}>
-                        <Link href={`/?archive=${year}`}>
+                        <Link href={`/archive/${year}`}>
                           <span>{year} {t(locale, "blog.sidebar.yearSuffix")}</span>
                           <span className="blog-sidebar-count">({count})</span>
                         </Link>

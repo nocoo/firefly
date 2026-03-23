@@ -1,34 +1,33 @@
-import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { listPosts } from "@/data/posts";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
-import { SITE_NAME, SITE_DESCRIPTION, buildPageMeta } from "@/lib/seo";
 import { websiteJsonLd } from "@/lib/jsonld";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
+import { PAGE_SIZE } from "../../page";
 
-export const PAGE_SIZE = 10;
-
-export function generateMetadata(): Metadata {
-  return buildPageMeta({
-    title: `${SITE_NAME} – 知白守黑，不语万千算`,
-    description: SITE_DESCRIPTION,
-    path: "/",
-  });
+interface PageProps {
+  params: Promise<{ page: string }>;
 }
 
-export default async function Home() {
+export default async function HomePaged({ params }: PageProps) {
+  const { page: pageStr } = await params;
+  const page = parseInt(pageStr, 10);
+  if (Number.isNaN(page) || page < 2) notFound();
+
   const locale = await getLocale();
 
   const db = getDb();
   const { posts, total } = await listPosts(db, {
     status: "published",
-    page: 1,
+    page,
     pageSize: PAGE_SIZE,
   });
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+  if (page > totalPages) notFound();
 
   return (
     <>
@@ -55,7 +54,7 @@ export default async function Home() {
       </section>
 
       <Pagination
-        currentPage={1}
+        currentPage={page}
         totalPages={totalPages}
         basePath="/"
         locale={locale}

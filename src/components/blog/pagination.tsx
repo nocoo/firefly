@@ -4,10 +4,9 @@ import { t, type Locale } from "@/i18n/translations";
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
+  /** Base path without trailing slash, e.g. "/" or "/category/tech" or "/archive/2026-02" */
   basePath: string;
   locale: Locale;
-  /** Extra query params to preserve (e.g. archive filter) */
-  extraParams?: Record<string, string>;
 }
 
 export function Pagination({
@@ -15,15 +14,13 @@ export function Pagination({
   totalPages,
   basePath,
   locale,
-  extraParams,
 }: PaginationProps) {
   if (totalPages <= 1) return null;
 
   const href = (page: number) => {
-    const p = new URLSearchParams(extraParams);
-    if (page > 1) p.set("page", String(page));
-    const s = p.toString();
-    return s ? `${basePath}?${s}` : basePath;
+    if (page <= 1) return basePath === "/" ? "/" : basePath;
+    const base = basePath === "/" ? "" : basePath;
+    return `${base}/page/${page}`;
   };
 
   // Build page number slots: always show first, last, current ± 1, with ellipses

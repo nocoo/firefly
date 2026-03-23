@@ -1,46 +1,54 @@
-import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
+import { getTagBySlug } from "@/data/tags";
 import { listPosts } from "@/data/posts";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
-import { SITE_NAME, SITE_DESCRIPTION, buildPageMeta } from "@/lib/seo";
-import { websiteJsonLd } from "@/lib/jsonld";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
+import { PAGE_SIZE } from "../../page";
 
-export const PAGE_SIZE = 10;
-
-export function generateMetadata(): Metadata {
-  return buildPageMeta({
-    title: `${SITE_NAME} – 知白守黑，不语万千算`,
-    description: SITE_DESCRIPTION,
-    path: "/",
-  });
+interface Props {
+  params: Promise<{ slug: string; page: string }>;
 }
 
-export default async function Home() {
+export default async function TagPaged({ params }: Props) {
+  const { slug, page: pageStr } = await params;
+  const page = parseInt(pageStr, 10);
+  if (Number.isNaN(page) || page < 2) notFound();
+
   const locale = await getLocale();
 
   const db = getDb();
+  const tag = await getTagBySlug(db, slug);
+
+  if (!tag) notFound();
+
   const { posts, total } = await listPosts(db, {
     status: "published",
-    page: 1,
+    tagId: tag.id,
+    page,
     pageSize: PAGE_SIZE,
   });
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+  if (page > totalPages) notFound();
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: websiteJsonLd() }}
-      />
+      <header className="mb-8">
+        <h1 className="text-2xl font-bold leading-tight text-blog-text md:text-3xl">
+          #{tag.name}
+        </h1>
+        <p className="mt-1 text-xs text-blog-muted">
+          {t(locale, "blog.category.postCount", { n: tag.post_count })}
+        </p>
+      </header>
 
       <section>
         {posts.length === 0 ? (
           <p className="py-12 text-center text-blog-muted">
-            {t(locale, "blog.home.noPosts")}
+            {t(locale, "blog.tag.noPosts")}
           </p>
         ) : (
           posts.map((post, i) => (
@@ -55,9 +63,9 @@ export default async function Home() {
       </section>
 
       <Pagination
-        currentPage={1}
+        currentPage={page}
         totalPages={totalPages}
-        basePath="/"
+        basePath={`/tag/${slug}`}
         locale={locale}
       />
     </>

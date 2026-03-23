@@ -1,70 +1,59 @@
-import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { getTagBySlug } from "@/data/tags";
+import { getCategoryBySlug } from "@/data/categories";
 import { listPosts } from "@/data/posts";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
-import { buildPageMeta } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
+import { PAGE_SIZE } from "../../page";
 
-export const PAGE_SIZE = 10;
-
-interface TagPageProps {
-  params: Promise<{ slug: string }>;
+interface Props {
+  params: Promise<{ slug: string; page: string }>;
 }
 
-export async function generateMetadata({
-  params,
-}: TagPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const db = getDb();
-  const tag = await getTagBySlug(db, slug);
-  const locale = await getLocale();
+export default async function CategoryPaged({ params }: Props) {
+  const { slug, page: pageStr } = await params;
+  const page = parseInt(pageStr, 10);
+  if (Number.isNaN(page) || page < 2) notFound();
 
-  if (!tag) return { title: "Not Found" };
-
-  return buildPageMeta({
-    title: `#${tag.name}`,
-    description: t(locale, "blog.tag.metaDescription", { name: tag.name }),
-    path: `/tag/${tag.slug}`,
-  });
-}
-
-export default async function TagPage({ params }: TagPageProps) {
-  const { slug } = await params;
   const locale = await getLocale();
 
   const db = getDb();
-  const tag = await getTagBySlug(db, slug);
+  const category = await getCategoryBySlug(db, slug);
 
-  if (!tag) notFound();
+  if (!category) notFound();
 
   const { posts, total } = await listPosts(db, {
     status: "published",
-    tagId: tag.id,
-    page: 1,
+    categoryId: category.id,
+    page,
     pageSize: PAGE_SIZE,
   });
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+  if (page > totalPages) notFound();
 
   return (
     <>
       <header className="mb-8">
         <h1 className="text-2xl font-bold leading-tight text-blog-text md:text-3xl">
-          #{tag.name}
+          {category.name}
         </h1>
+        {category.description && (
+          <p className="mt-2 text-sm text-blog-muted">
+            {category.description}
+          </p>
+        )}
         <p className="mt-1 text-xs text-blog-muted">
-          {t(locale, "blog.category.postCount", { n: tag.post_count })}
+          {t(locale, "blog.category.postCount", { n: category.post_count })}
         </p>
       </header>
 
       <section>
         {posts.length === 0 ? (
           <p className="py-12 text-center text-blog-muted">
-            {t(locale, "blog.tag.noPosts")}
+            {t(locale, "blog.category.noPosts")}
           </p>
         ) : (
           posts.map((post, i) => (
@@ -79,9 +68,9 @@ export default async function TagPage({ params }: TagPageProps) {
       </section>
 
       <Pagination
-        currentPage={1}
+        currentPage={page}
         totalPages={totalPages}
-        basePath={`/tag/${slug}`}
+        basePath={`/category/${slug}`}
         locale={locale}
       />
     </>

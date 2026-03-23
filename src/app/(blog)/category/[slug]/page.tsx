@@ -9,11 +9,10 @@ import { buildPageMeta } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 
-const PAGE_SIZE = 10;
+export const PAGE_SIZE = 10;
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ page?: string }>;
 }
 
 export async function generateMetadata({
@@ -33,13 +32,8 @@ export async function generateMetadata({
   });
 }
 
-export default async function CategoryPage({
-  params,
-  searchParams,
-}: CategoryPageProps) {
+export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
-  const sp = await searchParams;
-  const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
   const locale = await getLocale();
 
   const db = getDb();
@@ -50,12 +44,11 @@ export default async function CategoryPage({
   const { posts, total } = await listPosts(db, {
     status: "published",
     categoryId: category.id,
-    page,
+    page: 1,
     pageSize: PAGE_SIZE,
   });
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
-  const displayPosts = posts;
 
   return (
     <>
@@ -74,12 +67,12 @@ export default async function CategoryPage({
       </header>
 
       <section>
-        {displayPosts.length === 0 ? (
+        {posts.length === 0 ? (
           <p className="py-12 text-center text-blog-muted">
             {t(locale, "blog.category.noPosts")}
           </p>
         ) : (
-          displayPosts.map((post, i) => (
+          posts.map((post, i) => (
             <PostCard
               key={post.id}
               post={post}
@@ -91,7 +84,7 @@ export default async function CategoryPage({
       </section>
 
       <Pagination
-        currentPage={page}
+        currentPage={1}
         totalPages={totalPages}
         basePath={`/category/${slug}`}
         locale={locale}
