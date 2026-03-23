@@ -1,2 +1,3 @@
 bun run test
 bun run lint
+bun run security
