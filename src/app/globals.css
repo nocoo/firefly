@@ -667,8 +667,8 @@
   color: var(--blog-text);
 }
 
-/* ─── Desktop: sidebar fixed left, main right — 1:3 ratio ─── */
-@media all and (min-width: 64em) {
+/* ─── L (Large) - ≥ 1280px: Full fixed sidebar 25%, magazine bleed ─── */
+@media all and (min-width: 80em) {
   .blog-shell {
     padding: 0;
   }
@@ -699,46 +699,58 @@
     overflow-x: clip;
   }
 
-  /* Magazine bleed — image extends left into sidebar overlap */
+  /* Magazine bleed — image extends left into sidebar */
   .blog-featured-image {
     margin-left: calc(-1 * var(--blog-main-px, 6%) - 3em);
     margin-right: 0;
   }
 }
 
-@media all and (min-width: 62.5em) {
+/* ─── M (Medium) - 768px to 1279px: Fixed narrow sidebar, NO bleed ─── */
+@media all and (min-width: 48em) and (max-width: 79.99em) {
+  .blog-shell {
+    padding: 0;
+  }
+
   .blog-sidebar {
-    padding: 2.5em 2.25em;
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(calc(-1 * var(--blog-max-width) / 2));
+    width: 22%;
+    max-width: 280px;
+    height: 100vh;
+    padding: 2em 1.5em;
+    overflow-y: auto;
+    z-index: 9;
+    border-right: 1px solid var(--blog-separator);
+  }
+
+  .blog-sidebar-inner {
+    padding: 0;
   }
 
   .blog-main {
-    --blog-main-px: 6%;
-    padding: 2.5em var(--blog-main-px);
+    margin-left: 22%;
+    width: 78%;
+    min-height: 100vh;
+    float: none;
+    overflow-x: clip;
   }
 
+  /* NO magazine bleed — image aligned with text */
+  .blog-featured-image {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  /* Adjust font sizes for medium screens */
   .blog-site-title {
-    font-size: 1.75em;
-    line-height: 1.3;
-  }
-}
-
-@media all and (min-width: 68.75em) {
-  .blog-sidebar {
-    padding: 3em 2.5em;
+    font-size: 1.4em;
   }
 
-  .blog-main {
-    --blog-main-px: 7%;
-    padding: 3em var(--blog-main-px);
-  }
-
-  .blog-entry {
-    padding-bottom: 2.5em;
-    margin-top: 2.5em;
-  }
-
-  .blog-entry + .blog-entry {
-    padding-top: 2.5em;
+  .blog-tagline {
+    font-size: 0.8125em;
   }
 }
 
@@ -811,6 +823,12 @@
     width: 100%;
     margin-left: 0;
     padding: 3.5em 5% 2em; /* Extra top padding for mobile nav */
+  }
+
+  /* NO magazine bleed on mobile */
+  .blog-featured-image {
+    margin-left: 0;
+    margin-right: 0;
   }
 
   /* Adjust global bar to not overlap with mobile nav */
