@@ -141,11 +141,7 @@ export function AnalyticsDashboard() {
   }, [fetchData]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20 text-muted-foreground">
-        {t("admin.analytics.loading")}
-      </div>
-    );
+    return <AnalyticsSkeleton />;
   }
 
   if (error) {
@@ -463,6 +459,59 @@ function DataCard({
     <div className="rounded-[var(--radius-widget)] border border-border/50 bg-secondary/50 p-4">
       <h3 className="text-sm font-medium text-foreground mb-3">{title}</h3>
       {children}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Skeleton loader
+// ---------------------------------------------------------------------------
+
+function SkeletonPulse({ className }: { className?: string }) {
+  return (
+    <div
+      className={`animate-pulse rounded-[var(--radius-sm)] bg-muted ${className ?? ""}`}
+    />
+  );
+}
+
+function AnalyticsSkeleton() {
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <SkeletonPulse className="h-6 w-32" />
+          <SkeletonPulse className="h-4 w-48" />
+        </div>
+        <SkeletonPulse className="h-8 w-[120px]" />
+      </div>
+      {/* Stat cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="rounded-[var(--radius-widget)] bg-secondary p-4 space-y-2">
+            <SkeletonPulse className="h-4 w-20" />
+            <SkeletonPulse className="h-7 w-16" />
+            <SkeletonPulse className="h-3 w-24" />
+          </div>
+        ))}
+      </div>
+      {/* Chart placeholder */}
+      <div className="rounded-[var(--radius-widget)] border border-border/50 bg-secondary/50 p-4 space-y-3">
+        <SkeletonPulse className="h-4 w-36" />
+        <SkeletonPulse className="h-[200px] w-full" />
+      </div>
+      {/* Table placeholders */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="rounded-[var(--radius-widget)] border border-border/50 bg-secondary/50 p-4 space-y-3">
+            <SkeletonPulse className="h-4 w-28" />
+            {Array.from({ length: 5 }).map((_, j) => (
+              <SkeletonPulse key={j} className="h-4 w-full" />
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
