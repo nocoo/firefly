@@ -5,6 +5,9 @@
 import type { Db } from "@/lib/db";
 import type { Post, PostWithCategory, PostStatus } from "@/models/types";
 import { readingTime, excerptFromContent } from "@/models/post";
+import { createCache } from "@/lib/cache";
+import { invalidateCategoriesCache } from "./categories";
+import { invalidateTagsCache } from "./tags";
 import { ulid } from "ulid";
 
 // ---------------------------------------------------------------------------
@@ -239,6 +242,11 @@ export async function createPost(
     await refreshCategoryPostCount(db, input.category_id);
   }
 
+  // Published post changes archive counts
+  if (input.status === "published") {
+    invalidateArchivesCache();
+  }
+
   return post!;
 }
 
@@ -351,6 +359,7 @@ export async function updatePost(
   // Refresh all tag counts if status changed (published ↔ non-published affects counts)
   if (statusChanged) {
     await refreshAllTagPostCounts(db);
+    invalidateArchivesCache();
   }
 
   return getPostById(db, id);
@@ -372,6 +381,7 @@ export async function deletePost(db: Db, id: string): Promise<boolean> {
     await refreshCategoryPostCount(db, post.category_id);
   }
   await refreshAllTagPostCounts(db);
+  invalidateArchivesCache();
 
   return true;
 }
@@ -445,6 +455,7 @@ export async function refreshCategoryPostCount(
     ) WHERE id = ?`,
     [categoryId, categoryId],
   );
+  invalidateCategoriesCache();
 }
 
 /**
@@ -459,11 +470,19 @@ export async function refreshAllTagPostCounts(db: Db): Promise<void> {
       WHERE pt.tag_id = tags.id
     )`,
   );
+  invalidateTagsCache();
 }
 
 // ---------------------------------------------------------------------------
 // Monthly archives
 // ---------------------------------------------------------------------------
+
+const archivesCache = createCache<MonthlyArchive[]>(5 * 60 * 1000);
+
+/** Force next `listMonthlyArchives` call to re-fetch from DB. */
+export function invalidateArchivesCache(): void {
+  archivesCache.invalidate();
+}
 
 export interface MonthlyArchive {
   year: number;
@@ -477,6 +496,9 @@ export interface MonthlyArchive {
 export async function listMonthlyArchives(
   db: Db,
 ): Promise<MonthlyArchive[]> {
+  const cached = archivesCache.get();
+  if (cached) return cached;
+
   const sql = `
     SELECT
       CAST(strftime('%Y', published_at, 'unixepoch') AS INTEGER) AS year,
@@ -489,5 +511,6 @@ export async function listMonthlyArchives(
   `;
 
   const { results } = await db.query<MonthlyArchive>(sql);
+  archivesCache.set(results);
   return results;
 }

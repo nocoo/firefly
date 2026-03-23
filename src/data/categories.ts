@@ -4,7 +4,19 @@
 
 import type { Db } from "@/lib/db";
 import type { Category } from "@/models/types";
+import { createCache } from "@/lib/cache";
 import { ulid } from "ulid";
+
+// ---------------------------------------------------------------------------
+// Process-level cache (TTL = 5 min)
+// ---------------------------------------------------------------------------
+
+const categoriesCache = createCache<Category[]>(5 * 60 * 1000);
+
+/** Force next `listCategories` call to re-fetch from DB. */
+export function invalidateCategoriesCache(): void {
+  categoriesCache.invalidate();
+}
 
 // ---------------------------------------------------------------------------
 // Input types
@@ -29,9 +41,13 @@ export interface UpdateCategoryInput {
 // ---------------------------------------------------------------------------
 
 export async function listCategories(db: Db): Promise<Category[]> {
+  const cached = categoriesCache.get();
+  if (cached) return cached;
+
   const result = await db.query<Category>(
     "SELECT * FROM categories ORDER BY sort_order ASC, name ASC",
   );
+  categoriesCache.set(result.results);
   return result.results;
 }
 
@@ -90,6 +106,7 @@ export async function createCategory(
   ]);
 
   const category = await getCategoryById(db, id);
+  invalidateCategoriesCache();
   return category!;
 }
 
@@ -134,6 +151,7 @@ export async function updateCategory(
   const sql = `UPDATE categories SET ${setClauses.join(", ")} WHERE id = ?`;
   await db.execute(sql, params);
 
+  invalidateCategoriesCache();
   return getCategoryById(db, id);
 }
 
@@ -143,5 +161,6 @@ export async function updateCategory(
 
 export async function deleteCategory(db: Db, id: string): Promise<boolean> {
   const meta = await db.execute("DELETE FROM categories WHERE id = ?", [id]);
+  if (meta.changes > 0) invalidateCategoriesCache();
   return meta.changes > 0;
 }

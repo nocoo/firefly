@@ -4,7 +4,19 @@
 
 import type { Db } from "@/lib/db";
 import type { Tag } from "@/models/types";
+import { createCache } from "@/lib/cache";
 import { ulid } from "ulid";
+
+// ---------------------------------------------------------------------------
+// Process-level cache (TTL = 5 min)
+// ---------------------------------------------------------------------------
+
+const tagsCache = createCache<Tag[]>(5 * 60 * 1000);
+
+/** Force next `listTags` call to re-fetch from DB. */
+export function invalidateTagsCache(): void {
+  tagsCache.invalidate();
+}
 
 // ---------------------------------------------------------------------------
 // Input types
@@ -25,9 +37,13 @@ export interface UpdateTagInput {
 // ---------------------------------------------------------------------------
 
 export async function listTags(db: Db): Promise<Tag[]> {
+  const cached = tagsCache.get();
+  if (cached) return cached;
+
   const result = await db.query<Tag>(
     "SELECT * FROM tags ORDER BY name ASC",
   );
+  tagsCache.set(result.results);
   return result.results;
 }
 
@@ -78,6 +94,7 @@ export async function createTag(
   await db.execute(sql, [id, input.name, input.slug, now, now]);
 
   const tag = await getTagById(db, id);
+  invalidateTagsCache();
   return tag!;
 }
 
@@ -112,6 +129,7 @@ export async function updateTag(
   const sql = `UPDATE tags SET ${setClauses.join(", ")} WHERE id = ?`;
   await db.execute(sql, params);
 
+  invalidateTagsCache();
   return getTagById(db, id);
 }
 
@@ -121,5 +139,6 @@ export async function updateTag(
 
 export async function deleteTag(db: Db, id: string): Promise<boolean> {
   const meta = await db.execute("DELETE FROM tags WHERE id = ?", [id]);
+  if (meta.changes > 0) invalidateTagsCache();
   return meta.changes > 0;
 }
