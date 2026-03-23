@@ -469,6 +469,6 @@ export async function listMonthlyArchives(
     ORDER BY year DESC, month DESC
   `;
 
-  const rows = await db.query<MonthlyArchive>(sql);
-  return rows;
+  const { results } = await db.query<MonthlyArchive>(sql);
+  return results;
 }

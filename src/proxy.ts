@@ -93,15 +93,10 @@ export async function proxy(request: NextRequest) {
       path: pathname,
       userAgent: request.headers.get("user-agent"),
       ip:
-        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-        request.ip ??
-        null,
+        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
       referrer: request.headers.get("referer"),
-      country:
-        request.headers.get("cf-ipcountry") ??
-        request.geo?.country ??
-        null,
-      city: request.geo?.city ?? null,
+      country: request.headers.get("cf-ipcountry") ?? null,
+      city: null,
     }).catch(() => {
       // Never let analytics break the response
     });

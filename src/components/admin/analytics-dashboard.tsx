@@ -329,8 +329,14 @@ export function AnalyticsDashboard() {
                   outerRadius={70}
                   innerRadius={40}
                   paddingAngle={2}
-                  label={({ deviceType, percent }) =>
-                    `${deviceType} ${(percent * 100).toFixed(0)}%`
+                  label={({
+                    name,
+                    percent,
+                  }: {
+                    name?: string | number;
+                    percent?: number;
+                  }) =>
+                    `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`
                   }
                   labelLine={false}
                 >
