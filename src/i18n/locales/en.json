@@ -50,6 +50,7 @@
   "admin.sidebar.collapse": "Collapse sidebar",
   "admin.sidebar.userFallback": "User",
   "admin.sidebar.adminFallback": "Admin",
+  "admin.sidebar.visitSite": "Visit Site",
   "admin.sidebar.openNav": "Open navigation",
   "admin.pageTitle.admin": "Admin",
   "admin.dashboard.overview": "Overview",

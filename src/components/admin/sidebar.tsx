@@ -15,6 +15,7 @@ import {
   Layers,
   ChevronUp,
   Settings,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -186,6 +187,17 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
             />
           </IconButton>
 
+          {/* Visit site */}
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            title={t("admin.sidebar.visitSite")}
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <ExternalLink className="h-4 w-4" strokeWidth={1.5} />
+          </a>
+
           {/* Nav icons */}
           <nav className="flex-1 flex flex-col items-center gap-1 pt-1">
             {ALL_NAV_ITEMS.map((item) => (
@@ -243,6 +255,19 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
                 />
               </IconButton>
             </div>
+          </div>
+
+          {/* Visit site */}
+          <div className="px-3">
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-normal text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <ExternalLink className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+              <span>{t("admin.sidebar.visitSite")}</span>
+            </a>
           </div>
 
           {/* Navigation — collapsible groups */}

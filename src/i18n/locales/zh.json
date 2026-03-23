@@ -50,6 +50,7 @@
   "admin.sidebar.collapse": "收起侧边栏",
   "admin.sidebar.userFallback": "用户",
   "admin.sidebar.adminFallback": "管理员",
+  "admin.sidebar.visitSite": "访问站点",
   "admin.sidebar.openNav": "打开导航",
   "admin.pageTitle.admin": "管理",
   "admin.dashboard.overview": "概览",
