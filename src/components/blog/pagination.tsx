@@ -17,7 +17,7 @@ export function Pagination({ currentPage, hasMore, basePath, locale }: Paginatio
   const nextHref = `${basePath}?page=${currentPage + 1}`;
 
   return (
-    <nav className="flex items-center justify-between py-8" aria-label="Pagination">
+    <nav className="flex items-center justify-between py-8" aria-label={t(locale, "blog.pagination.ariaLabel")}>
       {currentPage > 1 ? (
         <Link
           href={prevHref}

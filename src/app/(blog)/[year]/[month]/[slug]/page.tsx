@@ -83,7 +83,7 @@ export default async function PostPage({ params }: PostPageProps) {
     : t(locale, "blog.post.draft");
 
   const breadcrumbs = [
-    { name: "Home", href: "/" },
+    { name: t(locale, "blog.post.home"), href: "/" },
     ...(post.category_name && post.category_slug
       ? [{ name: post.category_name, href: `/category/${post.category_slug}` }]
       : []),

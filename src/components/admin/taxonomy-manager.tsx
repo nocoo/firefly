@@ -105,7 +105,7 @@ export function TaxonomyManager({
       resetForm();
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : t("admin.taxonomy.unknownError"));
     } finally {
       setSaving(false);
     }
@@ -130,7 +130,7 @@ export function TaxonomyManager({
 
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : t("admin.taxonomy.unknownError"));
     }
   };
 

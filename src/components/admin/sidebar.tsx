@@ -198,7 +198,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
           {/* User avatar */}
           <div className="py-3 flex justify-center w-full">
             <Avatar className="h-9 w-9">
-              {user.image && <AvatarImage src={user.image} alt={user.name ?? "User"} />}
+              {user.image && <AvatarImage src={user.image} alt={user.name ?? t("admin.sidebar.userFallback")} />}
               <AvatarFallback className="text-xs">{initials}</AvatarFallback>
             </Avatar>
           </div>
@@ -250,12 +250,12 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
           <div className="px-4 py-3">
             <div className="flex items-center gap-3">
               <Avatar className="h-9 w-9 shrink-0">
-                {user.image && <AvatarImage src={user.image} alt={user.name ?? "User"} />}
+                {user.image && <AvatarImage src={user.image} alt={user.name ?? t("admin.sidebar.userFallback")} />}
                 <AvatarFallback className="text-xs">{initials}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  {user.name ?? "Admin"}
+                  {user.name ?? t("admin.sidebar.adminFallback")}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
                   {user.email}

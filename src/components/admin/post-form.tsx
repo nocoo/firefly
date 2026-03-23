@@ -121,7 +121,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       router.push("/admin/posts");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : t("admin.postForm.unknownError"));
     } finally {
       setSaving(false);
     }
