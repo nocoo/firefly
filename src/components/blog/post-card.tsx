@@ -11,12 +11,12 @@ export function PostCard({ post }: PostCardProps) {
   const date = post.published_at ? formatDateDisplay(post.published_at) : "Draft";
 
   return (
-    <article className="blog-entry pb-[1.875em]">
+    <article className="blog-entry">
       {/* Post title */}
-      <h2 className="text-xl font-semibold leading-snug md:text-2xl">
+      <h2 className="text-lg font-semibold leading-snug md:text-xl">
         <Link
           href={href}
-          className="text-blog-text no-underline transition-colors hover:text-blog-muted"
+          className="text-blog-text no-underline transition-colors hover:text-blog-accent"
         >
           {post.title}
         </Link>
@@ -25,18 +25,18 @@ export function PostCard({ post }: PostCardProps) {
       {/* Byline */}
       <div className="blog-byline">
         <time dateTime={post.published_at ? new Date(post.published_at * 1000).toISOString() : undefined}>
-          Published {date}
+          {date}
         </time>
         {post.category_name && post.category_slug && (
           <>
-            {" in "}
+            {" · "}
             <Link href={`/category/${post.category_slug}`}>
               {post.category_name}
             </Link>
           </>
         )}
         {post.reading_time && (
-          <> &middot; {post.reading_time} min read</>
+          <> · {post.reading_time} min read</>
         )}
       </div>
 
@@ -54,7 +54,7 @@ export function PostCard({ post }: PostCardProps) {
 
       {/* Excerpt */}
       {post.excerpt && (
-        <p className="mt-3 leading-relaxed text-blog-text">
+        <p className="mt-2 text-sm leading-relaxed text-blog-muted">
           {post.excerpt}
         </p>
       )}
