@@ -95,6 +95,16 @@
   --success: 142 71% 45%;
   --success-foreground: 0 0% 100%;
 
+  /* Chart palette */
+  --chart-1: 217 91% 60%;   /* blue — #3b82f6 */
+  --chart-2: 160 60% 45%;   /* emerald — #10b981 */
+  --chart-3: 38 92% 50%;    /* amber — #f59e0b */
+  --chart-4: 0 72% 51%;     /* red — #ef4444 */
+  --chart-5: 258 90% 66%;   /* violet — #8b5cf6 */
+  --chart-6: 330 81% 60%;   /* pink — #ec4899 */
+  --chart-7: 189 94% 43%;   /* cyan — #06b6d4 */
+  --chart-8: 220 9% 46%;    /* gray — #6b7280 */
+
   /* Blog — warm parchment palette */
   --blog-bg: #F0EDE8;
   --blog-surface: #FAF8F5;
@@ -139,6 +149,16 @@
 
   --success: 142 71% 45%;
   --success-foreground: 0 0% 100%;
+
+  /* Chart palette — slightly lighter for dark backgrounds */
+  --chart-1: 217 91% 65%;
+  --chart-2: 160 60% 50%;
+  --chart-3: 38 92% 55%;
+  --chart-4: 0 72% 56%;
+  --chart-5: 258 90% 70%;
+  --chart-6: 330 81% 65%;
+  --chart-7: 189 94% 48%;
+  --chart-8: 220 9% 55%;
 
   /* Blog — warm dark palette (matched to screenshot) */
   --blog-bg: #2D2B28;

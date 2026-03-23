@@ -84,24 +84,30 @@ interface AnalyticsData {
 // ---------------------------------------------------------------------------
 
 const CHART_COLORS = [
-  "var(--color-primary)",
-  "#3b82f6",
-  "#10b981",
-  "#f59e0b",
-  "#ef4444",
-  "#8b5cf6",
-  "#ec4899",
-  "#06b6d4",
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+  "hsl(var(--chart-6))",
+  "hsl(var(--chart-7))",
+  "hsl(var(--chart-8))",
 ];
 
-const PIE_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+const PIE_COLORS = [
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+];
 
 const BOT_CATEGORY_COLORS: Record<string, string> = {
-  search: "#3b82f6",
-  ai: "#8b5cf6",
-  social: "#ec4899",
-  monitor: "#06b6d4",
-  other: "#6b7280",
+  search: "hsl(var(--chart-1))",
+  ai: "hsl(var(--chart-5))",
+  social: "hsl(var(--chart-6))",
+  monitor: "hsl(var(--chart-7))",
+  other: "hsl(var(--chart-8))",
 };
 
 // ---------------------------------------------------------------------------
