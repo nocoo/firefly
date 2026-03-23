@@ -156,6 +156,59 @@ describe("updateCategory", () => {
     expect(result?.name).toBe("Tech & Science");
   });
 
+  it("updates slug field", async () => {
+    const input: UpdateCategoryInput = { slug: "new-slug" };
+
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ ...sampleCategory, slug: "new-slug" });
+
+    const result = await updateCategory(db, "cat-1", input);
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("slug = ?");
+    expect(params).toContain("new-slug");
+    expect(result?.slug).toBe("new-slug");
+  });
+
+  it("updates description field", async () => {
+    const input: UpdateCategoryInput = { description: "New desc" };
+
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ ...sampleCategory, description: "New desc" });
+
+    const result = await updateCategory(db, "cat-1", input);
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("description = ?");
+    expect(params).toContain("New desc");
+    expect(result?.description).toBe("New desc");
+  });
+
+  it("updates sort_order field", async () => {
+    const input: UpdateCategoryInput = { sort_order: 5 };
+
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ ...sampleCategory, sort_order: 5 });
+
+    const result = await updateCategory(db, "cat-1", input);
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("sort_order = ?");
+    expect(params).toContain(5);
+    expect(result?.sort_order).toBe(5);
+  });
+
+  it("returns existing category when no fields provided", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue(sampleCategory);
+
+    const result = await updateCategory(db, "cat-1", {});
+
+    // Should call getCategoryById, not execute
+    expect(db.execute).not.toHaveBeenCalled();
+    expect(db.firstOrNull).toHaveBeenCalledOnce();
+    expect(result?.name).toBe("Technology");
+  });
+
   it("returns null when not found", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 0, duration: 1 });
     vi.mocked(db.firstOrNull).mockResolvedValue(null);

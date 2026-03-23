@@ -135,6 +135,31 @@ describe("updateTag", () => {
     expect(result?.name).toBe("React.js");
   });
 
+  it("updates slug field", async () => {
+    const input: UpdateTagInput = { slug: "reactjs" };
+
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ ...sampleTag, slug: "reactjs" });
+
+    const result = await updateTag(db, "tag-1", input);
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("slug = ?");
+    expect(params).toContain("reactjs");
+    expect(result?.slug).toBe("reactjs");
+  });
+
+  it("returns existing tag when no fields provided", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue(sampleTag);
+
+    const result = await updateTag(db, "tag-1", {});
+
+    // Should call getTagById, not execute
+    expect(db.execute).not.toHaveBeenCalled();
+    expect(db.firstOrNull).toHaveBeenCalledOnce();
+    expect(result?.name).toBe("TypeScript");
+  });
+
   it("returns null when not found", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 0, duration: 1 });
     vi.mocked(db.firstOrNull).mockResolvedValue(null);

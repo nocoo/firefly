@@ -7,6 +7,8 @@ import {
   createPost,
   updatePost,
   deletePost,
+  getPostTags,
+  setPostTags,
   type CreatePostInput,
   type UpdatePostInput,
 } from "./posts";
@@ -147,6 +149,17 @@ describe("listPosts", () => {
     const [sql, params] = vi.mocked(db.query).mock.calls[0];
     expect(sql).toContain("title LIKE ?");
     expect(params).toContain("%typescript%");
+  });
+
+  it("filters by tagId when specified", async () => {
+    vi.mocked(db.query).mockResolvedValue({ results: [], meta: { changes: 0, duration: 0 } });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+
+    await listPosts(db, { tagId: "tag-1" });
+
+    const [sql, params] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("post_tags WHERE tag_id = ?");
+    expect(params).toContain("tag-1");
   });
 });
 
@@ -391,6 +404,100 @@ describe("updatePost", () => {
     );
     expect(categoryRefresh).toBeDefined();
   });
+
+  it("updates featured_image field", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
+
+    await updatePost(db, "test-id", { featured_image: "https://img.example.com/hero.jpg" });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("featured_image = ?");
+    expect(params).toContain("https://img.example.com/hero.jpg");
+  });
+
+  it("updates comment_enabled field", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
+
+    await updatePost(db, "test-id", { comment_enabled: 1 });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("comment_enabled = ?");
+    expect(params).toContain(1);
+  });
+
+  it("updates published_at when explicitly provided", async () => {
+    const explicitDate = 1700000000;
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
+
+    await updatePost(db, "test-id", { published_at: explicitDate });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("published_at = ?");
+    expect(params).toContain(explicitDate);
+  });
+
+  it("updates slug field", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce({ ...samplePostWithCategory, slug: "new-slug" });
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
+
+    const result = await updatePost(db, "test-id", { slug: "new-slug" });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("slug = ?");
+    expect(params).toContain("new-slug");
+    expect(result?.slug).toBe("new-slug");
+  });
+
+  it("updates excerpt field independently", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce({ ...samplePostWithCategory, excerpt: "Custom excerpt" });
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
+
+    const result = await updatePost(db, "test-id", { excerpt: "Custom excerpt" });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("excerpt = ?");
+    expect(params).toContain("Custom excerpt");
+    expect(result?.excerpt).toBe("Custom excerpt");
+  });
+
+  it("returns existing post when no fields provided", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue(samplePostWithCategory);
+
+    const result = await updatePost(db, "test-id", {});
+
+    // Should call getPostById (firstOrNull) twice: once to check existence, once to return
+    // But execute should only be called for getPostById
+    expect(result?.title).toBe("Test Post");
+  });
+
+  it("refreshes both categories when category changes", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({ ...samplePostWithCategory, category_id: "cat-old" })
+      .mockResolvedValueOnce({ ...samplePostWithCategory, category_id: "cat-new" });
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
+
+    await updatePost(db, "test-id", { category_id: "cat-new" });
+
+    const executeCalls = vi.mocked(db.execute).mock.calls;
+    // Should refresh both old and new category post_count
+    const categoryRefreshCalls = executeCalls.filter(([sql]) =>
+      sql.includes("UPDATE categories SET post_count"),
+    );
+    expect(categoryRefreshCalls.length).toBe(2);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -440,5 +547,85 @@ describe("deletePost", () => {
 
     const result = await deletePost(db, "nonexistent");
     expect(result).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getPostTags()
+// ---------------------------------------------------------------------------
+
+describe("getPostTags", () => {
+  let db: Db;
+
+  beforeEach(() => {
+    db = createMockDb();
+  });
+
+  it("returns tags for a post", async () => {
+    const tags = [
+      { id: "tag-1", name: "TypeScript", slug: "typescript" },
+      { id: "tag-2", name: "React", slug: "react" },
+    ];
+    vi.mocked(db.query).mockResolvedValue({
+      results: tags,
+      meta: { changes: 0, duration: 1 },
+    });
+
+    const result = await getPostTags(db, "post-1");
+
+    const [sql, params] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("INNER JOIN post_tags");
+    expect(sql).toContain("WHERE pt.post_id = ?");
+    expect(params).toEqual(["post-1"]);
+    expect(result).toHaveLength(2);
+    expect(result[0].name).toBe("TypeScript");
+  });
+
+  it("returns empty array when post has no tags", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+
+    const result = await getPostTags(db, "post-no-tags");
+    expect(result).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// setPostTags()
+// ---------------------------------------------------------------------------
+
+describe("setPostTags", () => {
+  let db: Db;
+
+  beforeEach(() => {
+    db = createMockDb();
+  });
+
+  it("replaces tags via batch when tags provided", async () => {
+    vi.mocked(db.batch).mockResolvedValue(undefined as never);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 0, duration: 1 });
+
+    await setPostTags(db, "post-1", ["tag-1", "tag-2"]);
+
+    expect(db.batch).toHaveBeenCalledOnce();
+    const [statements] = vi.mocked(db.batch).mock.calls[0];
+    // First statement: DELETE existing tags
+    expect(statements[0].sql).toContain("DELETE FROM post_tags");
+    // Remaining statements: INSERT new tags
+    expect(statements).toHaveLength(3); // 1 delete + 2 inserts
+  });
+
+  it("only deletes when no tags provided", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 0, duration: 1 });
+
+    await setPostTags(db, "post-1", []);
+
+    // Should use execute (not batch) for single delete statement
+    expect(db.batch).not.toHaveBeenCalled();
+    expect(db.execute).toHaveBeenCalled();
+    const [sql] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("DELETE FROM post_tags");
   });
 });

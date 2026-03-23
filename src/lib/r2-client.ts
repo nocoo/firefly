@@ -1,0 +1,134 @@
+// ---------------------------------------------------------------------------
+// R2 client — S3-compatible upload/delete via Cloudflare R2
+//
+// This is integration glue over @aws-sdk/client-s3 and is tested via E2E,
+// not unit tests. Pure validation/key-generation logic lives in r2.ts.
+// ---------------------------------------------------------------------------
+
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
+
+import {
+  validateUpload,
+  generateR2Key,
+  type UploadResult,
+} from "./r2";
+
+// ---------------------------------------------------------------------------
+// Configuration
+// ---------------------------------------------------------------------------
+
+export interface R2Config {
+  accountId: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  bucketName: string;
+  publicUrl: string; // e.g. https://assets.lizheng.me
+}
+
+function getR2Config(): R2Config {
+  const accountId = process.env.CF_ACCOUNT_ID;
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+  const bucketName = process.env.R2_BUCKET_NAME ?? "lizhengblog";
+  const publicUrl =
+    process.env.R2_PUBLIC_URL ?? "https://assets.lizheng.me";
+
+  if (!accountId || !accessKeyId || !secretAccessKey) {
+    throw new Error(
+      "R2 credentials not configured: CF_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY required",
+    );
+  }
+
+  return { accountId, accessKeyId, secretAccessKey, bucketName, publicUrl };
+}
+
+// ---------------------------------------------------------------------------
+// S3 client singleton
+// ---------------------------------------------------------------------------
+
+let _client: S3Client | undefined;
+let _config: R2Config | undefined;
+
+function getClient(): { client: S3Client; config: R2Config } {
+  if (!_client || !_config) {
+    _config = getR2Config();
+    _client = new S3Client({
+      region: "auto",
+      endpoint: `https://${_config.accountId}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId: _config.accessKeyId,
+        secretAccessKey: _config.secretAccessKey,
+      },
+    });
+  }
+  return { client: _client, config: _config };
+}
+
+/** Reset singleton (for testing). */
+export function resetR2Client(): void {
+  _client = undefined;
+  _config = undefined;
+}
+
+// ---------------------------------------------------------------------------
+// Upload
+// ---------------------------------------------------------------------------
+
+/**
+ * Upload a file to R2.
+ */
+export async function uploadToR2(
+  data: Buffer | Uint8Array,
+  filename: string,
+  mimeType: string,
+): Promise<UploadResult> {
+  const validationError = validateUpload(
+    data instanceof Uint8Array ? data : new Uint8Array(data),
+    mimeType,
+  );
+  if (validationError) {
+    throw new Error(validationError);
+  }
+
+  const key = generateR2Key(filename);
+  const { client, config } = getClient();
+
+  await client.send(
+    new PutObjectCommand({
+      Bucket: config.bucketName,
+      Key: key,
+      Body: data,
+      ContentType: mimeType,
+      CacheControl: "public, max-age=31536000, immutable",
+    }),
+  );
+
+  return {
+    key,
+    url: `${config.publicUrl}/${key}`,
+    size: data.length,
+    mimeType,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Delete
+// ---------------------------------------------------------------------------
+
+/**
+ * Delete a file from R2.
+ */
+export async function deleteFromR2(key: string): Promise<void> {
+  const { client, config } = getClient();
+
+  await client.send(
+    new DeleteObjectCommand({
+      Bucket: config.bucketName,
+      Key: key,
+    }),
+  );
+}

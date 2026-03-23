@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { jsonResponse, errorResponse } from "@/lib/api";
-import { uploadToR2 } from "@/lib/r2";
+import { uploadToR2 } from "@/lib/r2-client";
 
 /**
  * POST /api/upload — upload an image to R2.

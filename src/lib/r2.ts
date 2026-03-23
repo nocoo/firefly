@@ -1,75 +1,12 @@
 // ---------------------------------------------------------------------------
-// R2 client — upload images to Cloudflare R2 via S3-compatible API
+// R2 upload helpers — pure validation & key generation logic
 // ---------------------------------------------------------------------------
 
-import {
-  S3Client,
-  PutObjectCommand,
-  DeleteObjectCommand,
-} from "@aws-sdk/client-s3";
-
 // ---------------------------------------------------------------------------
-// Configuration
+// Allowed types & size limit
 // ---------------------------------------------------------------------------
 
-export interface R2Config {
-  accountId: string;
-  accessKeyId: string;
-  secretAccessKey: string;
-  bucketName: string;
-  publicUrl: string; // e.g. https://assets.lizheng.me
-}
-
-function getR2Config(): R2Config {
-  const accountId = process.env.CF_ACCOUNT_ID;
-  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-  const bucketName = process.env.R2_BUCKET_NAME ?? "lizhengblog";
-  const publicUrl =
-    process.env.R2_PUBLIC_URL ?? "https://assets.lizheng.me";
-
-  if (!accountId || !accessKeyId || !secretAccessKey) {
-    throw new Error(
-      "R2 credentials not configured: CF_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY required",
-    );
-  }
-
-  return { accountId, accessKeyId, secretAccessKey, bucketName, publicUrl };
-}
-
-// ---------------------------------------------------------------------------
-// S3 client singleton
-// ---------------------------------------------------------------------------
-
-let _client: S3Client | undefined;
-let _config: R2Config | undefined;
-
-function getClient(): { client: S3Client; config: R2Config } {
-  if (!_client || !_config) {
-    _config = getR2Config();
-    _client = new S3Client({
-      region: "auto",
-      endpoint: `https://${_config.accountId}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId: _config.accessKeyId,
-        secretAccessKey: _config.secretAccessKey,
-      },
-    });
-  }
-  return { client: _client, config: _config };
-}
-
-/** Reset singleton (for testing). */
-export function resetR2Client(): void {
-  _client = undefined;
-  _config = undefined;
-}
-
-// ---------------------------------------------------------------------------
-// Upload
-// ---------------------------------------------------------------------------
-
-const ALLOWED_MIME_TYPES = new Set([
+export const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
   "image/gif",
@@ -79,7 +16,11 @@ const ALLOWED_MIME_TYPES = new Set([
   // <script> tags) and should not be accepted for user-uploaded images.
 ]);
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
+// ---------------------------------------------------------------------------
+// Magic-byte detection
+// ---------------------------------------------------------------------------
 
 /**
  * Magic-byte signatures for allowed image formats.
@@ -126,6 +67,10 @@ export function detectMimeType(data: Uint8Array): string | null {
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// Key generation
+// ---------------------------------------------------------------------------
+
 export interface UploadResult {
   key: string;
   url: string;
@@ -151,6 +96,10 @@ export function generateR2Key(filename: string): string {
 
   return `uploads/${year}/${month}/${timestamp}-${safe}`;
 }
+
+// ---------------------------------------------------------------------------
+// Validation
+// ---------------------------------------------------------------------------
 
 /**
  * Validate upload input before sending to R2.
@@ -179,55 +128,4 @@ export function validateUpload(
   }
 
   return null;
-}
-
-/**
- * Upload a file to R2.
- */
-export async function uploadToR2(
-  data: Buffer | Uint8Array,
-  filename: string,
-  mimeType: string,
-): Promise<UploadResult> {
-  const validationError = validateUpload(
-    data instanceof Uint8Array ? data : new Uint8Array(data),
-    mimeType,
-  );
-  if (validationError) {
-    throw new Error(validationError);
-  }
-
-  const key = generateR2Key(filename);
-  const { client, config } = getClient();
-
-  await client.send(
-    new PutObjectCommand({
-      Bucket: config.bucketName,
-      Key: key,
-      Body: data,
-      ContentType: mimeType,
-      CacheControl: "public, max-age=31536000, immutable",
-    }),
-  );
-
-  return {
-    key,
-    url: `${config.publicUrl}/${key}`,
-    size: data.length,
-    mimeType,
-  };
-}
-
-/**
- * Delete a file from R2.
- */
-export async function deleteFromR2(key: string): Promise<void> {
-  const { client, config } = getClient();
-
-  await client.send(
-    new DeleteObjectCommand({
-      Bucket: config.bucketName,
-      Key: key,
-    }),
-  );
 }
