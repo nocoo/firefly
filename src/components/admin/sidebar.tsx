@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -12,11 +13,12 @@ import {
   LogOut,
   PanelLeft,
   Layers,
+  ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-// ── Navigation items ──
+// ── Navigation data model ──
 
 interface NavItem {
   title: string;
@@ -27,18 +29,21 @@ interface NavItem {
 interface NavGroup {
   label: string;
   items: NavItem[];
+  defaultOpen?: boolean;
 }
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: "OVERVIEW",
+    label: "Overview",
+    defaultOpen: true,
     items: [
       { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
       { title: "Analytics", href: "/admin/analytics", icon: BarChart3 },
     ],
   },
   {
-    label: "CONTENT",
+    label: "Content",
+    defaultOpen: true,
     items: [
       { title: "Posts", href: "/admin/posts", icon: FileText },
       { title: "Categories", href: "/admin/categories", icon: FolderOpen },
@@ -48,6 +53,67 @@ const NAV_GROUPS: NavGroup[] = [
 ];
 
 const ALL_NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
+
+// ── Collapsible nav group (matches basalt NavGroupSection) ──
+
+function NavGroupSection({
+  group,
+  isActive,
+}: {
+  group: NavGroup;
+  isActive: (href: string) => boolean;
+}) {
+  const [open, setOpen] = useState(group.defaultOpen ?? true);
+
+  return (
+    <div className="mt-2">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between px-3 py-2.5"
+      >
+        <span className="text-sm font-normal text-muted-foreground">
+          {group.label}
+        </span>
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center">
+          <ChevronUp
+            className={cn(
+              "h-4 w-4 text-muted-foreground transition-transform duration-200",
+              !open && "rotate-180",
+            )}
+            strokeWidth={1.5}
+          />
+        </span>
+      </button>
+      <div
+        className="grid overflow-hidden"
+        style={{
+          gridTemplateRows: open ? "1fr" : "0fr",
+          transition: "grid-template-rows 200ms ease-out",
+        }}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="flex flex-col gap-0.5">
+            {group.items.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-normal transition-colors",
+                  isActive(item.href)
+                    ? "bg-accent text-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                )}
+              >
+                <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+                <span>{item.title}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ── Sidebar ──
 
@@ -166,34 +232,14 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
             </div>
           </div>
 
-          {/* Navigation */}
+          {/* Navigation — collapsible groups */}
           <nav className="flex-1 overflow-y-auto px-3 pt-1">
             {NAV_GROUPS.map((group) => (
-              <div key={group.label} className="mt-2">
-                <span className="block px-3 py-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                  {group.label}
-                </span>
-                <div className="flex flex-col gap-0.5">
-                  {group.items.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-normal transition-colors",
-                        isActive(item.href)
-                          ? "bg-accent text-foreground"
-                          : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                      )}
-                    >
-                      <item.icon
-                        className="h-4 w-4 shrink-0"
-                        strokeWidth={1.5}
-                      />
-                      <span>{item.title}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
+              <NavGroupSection
+                key={group.label}
+                group={group}
+                isActive={isActive}
+              />
             ))}
           </nav>
 
