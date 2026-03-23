@@ -303,8 +303,9 @@
 }
 
 .blog-max-width {
+  --blog-max-width: 1340px;
   position: relative;
-  max-width: 1340px;
+  max-width: var(--blog-max-width);
   margin: 0 auto;
 }
 
@@ -586,9 +587,9 @@
     position: fixed;
     top: 0;
     left: 50%;
-    transform: translateX(-670px);
+    transform: translateX(calc(-1 * var(--blog-max-width) / 2));
     width: 25%;
-    max-width: calc(1340px * 0.25);
+    max-width: calc(var(--blog-max-width) * 0.25);
     height: 100vh;
     padding: 2.5em 2em;
     overflow-y: auto;
