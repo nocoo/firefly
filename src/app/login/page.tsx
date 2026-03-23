@@ -29,7 +29,7 @@ export default async function LoginPage() {
       <div className="relative w-full max-w-[420px]">
         {/* Logo / Brand */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-[var(--radius-card)] bg-primary">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-card bg-primary">
             <Lock
               className="h-5 w-5 text-primary-foreground"
               strokeWidth={1.5}
