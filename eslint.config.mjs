@@ -18,6 +18,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: [".next/", "node_modules/", "worker/", "dist/", "coverage/"],
+    ignores: [".next/", "node_modules/", "worker/", "dist/", "coverage/", "scripts/"],
   },
 );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, Github } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -40,9 +40,14 @@ export function AdminShell({ user, children }: AdminShellProps) {
     )?.[1] ??
     "Admin";
 
-  // Close mobile sidebar on route change
+  // Close mobile sidebar on route change — intentional setState in effect
+  // to sync UI with navigation (external event from Next.js router).
+  const prevPathname = useRef(pathname);
   useEffect(() => {
-    setMobileOpen(false);
+    if (prevPathname.current !== pathname) {
+      prevPathname.current = pathname;
+      setMobileOpen(false); // eslint-disable-line react-hooks/set-state-in-effect
+    }
   }, [pathname]);
 
   // Prevent body scroll when mobile sidebar is open
