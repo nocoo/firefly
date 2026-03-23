@@ -32,7 +32,7 @@ interface AdminShellProps {
 export function AdminShell({ user, children }: AdminShellProps) {
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(isTablet);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const { t } = useLocale();
