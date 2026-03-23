@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, Github } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LocaleToggle } from "@/components/locale-toggle";
@@ -30,11 +30,17 @@ interface AdminShellProps {
 }
 
 export function AdminShell({ user, children }: AdminShellProps) {
-  const [collapsed, setCollapsed] = useState(false);
   const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
+  const [collapsed, setCollapsed] = useState(isTablet);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const { t } = useLocale();
+
+  // Auto-collapse sidebar on tablet breakpoint
+  useEffect(() => {
+    if (isTablet) setCollapsed(true);
+  }, [isTablet]);
 
   // Resolve page title from pathname
   const titleKey =

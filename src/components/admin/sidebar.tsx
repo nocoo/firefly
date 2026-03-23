@@ -149,7 +149,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
   return (
     <aside
       className={cn(
-        "sticky top-0 flex h-screen shrink-0 flex-col bg-background transition-all duration-300 ease-in-out overflow-hidden",
+        "sticky top-0 flex h-screen shrink-0 flex-col bg-background transition-[width] duration-300 ease-in-out overflow-hidden",
         collapsed ? "w-[68px]" : "w-[260px]",
       )}
     >
