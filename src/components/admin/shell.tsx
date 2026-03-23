@@ -32,15 +32,13 @@ interface AdminShellProps {
 export function AdminShell({ user, children }: AdminShellProps) {
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
-  const [collapsed, setCollapsed] = useState(isTablet);
+  const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const { t } = useLocale();
 
-  // Auto-collapse sidebar on tablet breakpoint
-  useEffect(() => {
-    if (isTablet) setCollapsed(true);
-  }, [isTablet]);
+  // On tablet, default to collapsed (user can still toggle)
+  const sidebarCollapsed = isTablet ? !collapsed : collapsed;
 
   // Resolve page title from pathname
   const titleKey =
@@ -78,7 +76,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
       {/* Desktop sidebar */}
       {!isMobile && (
         <AdminSidebar
-          collapsed={collapsed}
+          collapsed={sidebarCollapsed}
           onToggle={() => setCollapsed(!collapsed)}
           user={user}
         />
