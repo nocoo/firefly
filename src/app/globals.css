@@ -300,6 +300,31 @@
   background: var(--blog-surface);
   margin: 0 auto;
   padding: 2em 6%;
+  position: relative;
+}
+
+/* Theme toggle — top-right of main area */
+.blog-theme-toggle {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5em 0;
+  margin: -0.5em 0 0.5em;
+}
+
+.blog-theme-toggle button {
+  color: var(--blog-muted);
+  background: none;
+  border: none;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.blog-theme-toggle button:hover {
+  color: var(--blog-text);
+  background: var(--blog-separator);
 }
 
 /* Site title */

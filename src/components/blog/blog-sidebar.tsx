@@ -1,9 +1,6 @@
-"use client";
-
 import Link from "next/link";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/posts";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 // ─── Social links config ───
 const SOCIAL_LINKS = [
@@ -80,7 +77,7 @@ export function BlogSidebar({ categories, tags, archives }: BlogSidebarProps) {
           Personal blog by Li Zheng — technology, design, and life.
         </p>
 
-        {/* Social links + Theme toggle */}
+        {/* Social links */}
         <div className="blog-social">
           {SOCIAL_LINKS.map((link) => (
             <a
@@ -93,7 +90,6 @@ export function BlogSidebar({ categories, tags, archives }: BlogSidebarProps) {
               {link.icon}
             </a>
           ))}
-          <ThemeToggle />
         </div>
 
         {/* Categories */}

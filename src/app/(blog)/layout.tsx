@@ -4,6 +4,7 @@ import { listTags } from "@/data/tags";
 import { listMonthlyArchives } from "@/data/posts";
 import { BlogSidebar } from "@/components/blog/blog-sidebar";
 import { BlogFooter } from "@/components/blog/blog-footer";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default async function BlogLayout({
   children,
@@ -30,6 +31,9 @@ export default async function BlogLayout({
           archives={archives}
         />
         <main className="blog-main">
+          <div className="blog-theme-toggle">
+            <ThemeToggle />
+          </div>
           {children}
           <BlogFooter />
         </main>
