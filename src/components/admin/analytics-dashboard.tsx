@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useLocale } from "@/i18n/context";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import {
   AreaChart,
   Area,
@@ -163,21 +164,11 @@ export function AnalyticsDashboard() {
             {t("admin.analytics.recentViews", { n: data.recentViews })}
           </p>
         </div>
-        <div className="flex rounded-[var(--radius-widget)] border border-border bg-secondary p-0.5">
-          {[7, 30, 90].map((d) => (
-            <button
-              key={d}
-              onClick={() => setDays(d)}
-              className={`rounded-[calc(var(--radius-widget)-2px)] px-3 py-1 text-xs font-medium transition-colors ${
-                days === d
-                  ? "bg-background text-foreground shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {d}d
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          options={[7, 30, 90].map((d) => ({ value: d, label: `${d}d` }))}
+          value={days}
+          onChange={setDays}
+        />
       </div>
 
       {/* Overview cards */}

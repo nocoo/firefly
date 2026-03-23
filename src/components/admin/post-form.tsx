@@ -7,6 +7,7 @@ import { slugify } from "@/models/post";
 import { renderMarkdown } from "@/models/markdown";
 import { ImageUpload } from "./image-upload";
 import { MarkdownPreview } from "./markdown-preview";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useLocale } from "@/i18n/context";
 
 interface PostFormProps {
@@ -182,30 +183,15 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             {t("admin.postForm.content")}
           </label>
           {/* Tab switcher — hidden on lg+ where preview is side-by-side */}
-          <div className="flex rounded-[var(--radius-widget)] border border-border bg-secondary p-0.5 lg:hidden">
-            <button
-              type="button"
-              onClick={() => setPreviewMode(false)}
-              className={`rounded-[calc(var(--radius-widget)-2px)] px-3 py-1 text-xs font-medium transition-colors ${
-                !previewMode
-                  ? "bg-background text-foreground shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t("admin.postForm.write")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setPreviewMode(true)}
-              className={`rounded-[calc(var(--radius-widget)-2px)] px-3 py-1 text-xs font-medium transition-colors ${
-                previewMode
-                  ? "bg-background text-foreground shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t("admin.postForm.preview")}
-            </button>
-          </div>
+          <SegmentedControl
+            options={[
+              { value: "write", label: t("admin.postForm.write") },
+              { value: "preview", label: t("admin.postForm.preview") },
+            ]}
+            value={previewMode ? "preview" : "write"}
+            onChange={(v) => setPreviewMode(v === "preview")}
+            className="lg:hidden"
+          />
         </div>
         {/* Mobile: tab-based preview */}
         <div className="lg:hidden">
