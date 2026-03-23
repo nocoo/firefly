@@ -37,6 +37,7 @@ const samplePost: Post = {
   title: "Test Post",
   slug: "test-post",
   content: "# Hello\n\nWorld",
+  content_html: null,
   excerpt: "Hello World",
   status: "published",
   category_id: "cat-1",

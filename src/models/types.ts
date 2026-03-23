@@ -45,6 +45,7 @@ export interface Post {
   title: string;
   slug: string;
   content: string;
+  content_html: string | null;
   excerpt: string | null;
   status: PostStatus;
   category_id: string | null;

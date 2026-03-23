@@ -5,6 +5,7 @@
 import type { Db } from "@/lib/db";
 import type { Post, PostWithCategory, PostStatus } from "@/models/types";
 import { readingTime, excerptFromContent } from "@/models/post";
+import { renderMarkdown } from "@/models/markdown";
 import { createCache } from "@/lib/cache";
 import { invalidateCategoriesCache } from "./categories";
 import { invalidateTagsCache } from "./tags";
@@ -237,6 +238,7 @@ export async function createPost(
 
   const computedReadingTime = readingTime(input.content);
   const computedExcerpt = input.excerpt ?? excerptFromContent(input.content);
+  const contentHtml = renderMarkdown(input.content);
 
   // Set published_at if publishing and not explicitly provided
   const publishedAt =
@@ -245,10 +247,10 @@ export async function createPost(
 
   const sql = `
     INSERT INTO posts (
-      id, title, slug, content, excerpt, status,
+      id, title, slug, content, content_html, excerpt, status,
       category_id, featured_image, comment_enabled,
       reading_time, published_at, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   await db.execute(sql, [
@@ -256,6 +258,7 @@ export async function createPost(
     input.title,
     input.slug,
     input.content,
+    contentHtml,
     computedExcerpt,
     input.status,
     input.category_id ?? null,
@@ -313,9 +316,12 @@ export async function updatePost(
     setClauses.push("content = ?");
     params.push(input.content);
 
-    // Recompute reading time and excerpt when content changes
+    // Recompute reading time, excerpt, and pre-rendered HTML when content changes
     setClauses.push("reading_time = ?");
     params.push(readingTime(input.content));
+
+    setClauses.push("content_html = ?");
+    params.push(renderMarkdown(input.content));
 
     if (input.excerpt === undefined) {
       setClauses.push("excerpt = ?");

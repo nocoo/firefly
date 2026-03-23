@@ -84,7 +84,7 @@ export default async function PostPage({ params }: PostPageProps) {
     commentTree = buildCommentTree(comments);
   }
 
-  const html = renderMarkdown(post.content);
+  const html = post.content_html || renderMarkdown(post.content);
   const date = post.published_at
     ? formatDateDisplay(post.published_at)
     : t(locale, "blog.post.draft");
