@@ -35,9 +35,11 @@ export function buildCommentTree(comments: Comment[]): CommentTree[] {
 
   // Second pass: build parent-child relationships
   for (const c of comments) {
-    const node = map.get(c.id)!;
-    if (c.parent_id && map.has(c.parent_id)) {
-      map.get(c.parent_id)!.children.push(node);
+    const node = map.get(c.id);
+    if (!node) continue;
+    const parent = c.parent_id ? map.get(c.parent_id) : undefined;
+    if (parent) {
+      parent.children.push(node);
     } else {
       roots.push(node);
     }

@@ -106,8 +106,9 @@ export async function createCategory(
   ]);
 
   const category = await getCategoryById(db, id);
+  if (!category) throw new Error(`Failed to retrieve category ${id} after creation`);
   invalidateCategoriesCache();
-  return category!;
+  return category;
 }
 
 // ---------------------------------------------------------------------------

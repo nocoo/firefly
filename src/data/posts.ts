@@ -283,7 +283,8 @@ export async function createPost(
   }
 
   invalidateCountCache();
-  return post!;
+  if (!post) throw new Error(`Failed to retrieve post ${id} after creation`);
+  return post;
 }
 
 // ---------------------------------------------------------------------------

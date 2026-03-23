@@ -94,8 +94,9 @@ export async function createTag(
   await db.execute(sql, [id, input.name, input.slug, now, now]);
 
   const tag = await getTagById(db, id);
+  if (!tag) throw new Error(`Failed to retrieve tag ${id} after creation`);
   invalidateTagsCache();
-  return tag!;
+  return tag;
 }
 
 // ---------------------------------------------------------------------------
