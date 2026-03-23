@@ -108,19 +108,51 @@ export function BlogSidebar({ locale, categories, tags, archives }: BlogSidebarP
           </nav>
         )}
 
-        {/* Monthly archives */}
+        {/* Archives — recent 2 years by month, older years aggregated */}
         {archives.length > 0 && (
           <nav className="blog-sidebar-section">
             <h3 className="blog-sidebar-heading">{t(locale, "blog.sidebar.archives")}</h3>
             <ul className="blog-sidebar-list">
-              {archives.map((a) => (
-                <li key={`${a.year}-${a.month}`}>
-                  <Link href={`/?archive=${a.year}-${String(a.month).padStart(2, "0")}`}>
-                    <span>{a.year} {t(locale, "blog.sidebar.yearSuffix")} {a.month} {t(locale, "blog.sidebar.monthSuffix")}</span>
-                    <span className="blog-sidebar-count">({a.count})</span>
-                  </Link>
-                </li>
-              ))}
+              {(() => {
+                const now = new Date();
+                const cutoffYear = now.getFullYear() - 1; // current year and previous year = recent 2 years
+
+                // Split into recent (by month) and older (aggregate by year)
+                const recent: MonthlyArchive[] = [];
+                const olderByYear = new Map<number, number>();
+
+                for (const a of archives) {
+                  if (a.year >= cutoffYear) {
+                    recent.push(a);
+                  } else {
+                    olderByYear.set(a.year, (olderByYear.get(a.year) ?? 0) + a.count);
+                  }
+                }
+
+                // Older years sorted descending
+                const olderEntries = [...olderByYear.entries()].sort((a, b) => b[0] - a[0]);
+
+                return (
+                  <>
+                    {recent.map((a) => (
+                      <li key={`${a.year}-${a.month}`}>
+                        <Link href={`/?archive=${a.year}-${String(a.month).padStart(2, "0")}`}>
+                          <span>{a.year} {t(locale, "blog.sidebar.yearSuffix")} {a.month} {t(locale, "blog.sidebar.monthSuffix")}</span>
+                          <span className="blog-sidebar-count">({a.count})</span>
+                        </Link>
+                      </li>
+                    ))}
+                    {olderEntries.map(([year, count]) => (
+                      <li key={year}>
+                        <Link href={`/?archive=${year}`}>
+                          <span>{year} {t(locale, "blog.sidebar.yearSuffix")}</span>
+                          <span className="blog-sidebar-count">({count})</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </>
+                );
+              })()}
             </ul>
           </nav>
         )}
