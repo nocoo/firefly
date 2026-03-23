@@ -1,3 +1,4 @@
 bun run test
 bun run lint
+bun run test:e2e:api
 bun run security
