@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { PostWithCategory } from "@/models/types";
 import { postPath, formatDateDisplay } from "@/lib/seo";
 import { t, type Locale } from "@/i18n/translations";
@@ -39,9 +40,11 @@ export function PostCard({ post, locale }: PostCardProps) {
       {post.featured_image && (
         <div className="blog-featured-image">
           <Link href={href}>
-            <img
+            <Image
               src={post.featured_image}
-              alt={post.title}
+              alt={`Featured image for ${post.title}`}
+              fill
+              sizes="(max-width: 900px) 100vw, 75vw"
             />
           </Link>
         </div>

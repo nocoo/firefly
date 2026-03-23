@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { getDb } from "@/lib/db";
 import { getPostBySlug, getPostTags } from "@/data/posts";
 import { listCommentsByPost, buildCommentTree } from "@/data/comments";
@@ -136,9 +137,12 @@ export default async function PostPage({ params }: PostPageProps) {
         {/* Featured image */}
         {post.featured_image && (
           <div className="blog-featured-image">
-            <img
+            <Image
               src={post.featured_image}
-              alt={post.title}
+              alt={`Featured image for ${post.title}`}
+              fill
+              sizes="(max-width: 900px) 100vw, 75vw"
+              priority
             />
           </div>
         )}
