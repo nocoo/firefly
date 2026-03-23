@@ -13,6 +13,8 @@ import {
 } from "@/lib/seo";
 import { blogPostingJsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { Comments } from "@/components/blog/comments";
+import { getLocale } from "@/i18n/server";
+import { t } from "@/i18n/translations";
 
 interface PostPageProps {
   params: Promise<{ year: string; month: string; slug: string }>;
@@ -65,6 +67,7 @@ export default async function PostPage({ params }: PostPageProps) {
     }
   }
 
+  const locale = await getLocale();
   const tags = await getPostTags(db, post.id);
 
   // Load comments only for posts with comments enabled
@@ -77,7 +80,7 @@ export default async function PostPage({ params }: PostPageProps) {
   const html = renderMarkdown(post.content);
   const date = post.published_at
     ? formatDateDisplay(post.published_at)
-    : "Draft";
+    : t(locale, "blog.post.draft");
 
   const breadcrumbs = [
     { name: "Home", href: "/" },
@@ -87,7 +90,7 @@ export default async function PostPage({ params }: PostPageProps) {
     { name: post.title, href: postPath(post.slug, post.published_at) },
   ];
 
-  const tagNames = tags.map((t) => t.name);
+  const tagNames = tags.map((tg) => tg.name);
 
   return (
     <>
@@ -125,7 +128,7 @@ export default async function PostPage({ params }: PostPageProps) {
               </>
             )}
             {post.reading_time && (
-              <> · {post.reading_time} min read</>
+              <> · {t(locale, "blog.post.minRead", { n: post.reading_time })}</>
             )}
           </div>
         </header>
@@ -163,14 +166,14 @@ export default async function PostPage({ params }: PostPageProps) {
         )}
       </article>
 
-      <Comments comments={commentTree} />
+      <Comments comments={commentTree} locale={locale} />
 
       <nav className="mt-8 border-t border-blog-separator pt-6">
         <Link
           href="/"
           className="text-sm text-blog-muted transition-colors hover:text-blog-text"
         >
-          &larr; Back to all posts
+          {t(locale, "blog.post.backToAll")}
         </Link>
       </nav>
     </>

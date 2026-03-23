@@ -1,12 +1,14 @@
 import Link from "next/link";
+import { t, type Locale } from "@/i18n/translations";
 
 interface PaginationProps {
   currentPage: number;
   hasMore: boolean;
   basePath: string;
+  locale: Locale;
 }
 
-export function Pagination({ currentPage, hasMore, basePath }: PaginationProps) {
+export function Pagination({ currentPage, hasMore, basePath, locale }: PaginationProps) {
   if (currentPage <= 1 && !hasMore) return null;
 
   const prevHref = currentPage === 2
@@ -21,7 +23,7 @@ export function Pagination({ currentPage, hasMore, basePath }: PaginationProps) 
           href={prevHref}
           className="text-sm text-blog-muted transition-colors hover:text-blog-text"
         >
-          &larr; Newer posts
+          {t(locale, "blog.pagination.newer")}
         </Link>
       ) : (
         <span />
@@ -32,7 +34,7 @@ export function Pagination({ currentPage, hasMore, basePath }: PaginationProps) 
           href={nextHref}
           className="text-sm text-blog-muted transition-colors hover:text-blog-text"
         >
-          Older posts &rarr;
+          {t(locale, "blog.pagination.older")}
         </Link>
       ) : (
         <span />

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/posts";
+import { t, type Locale } from "@/i18n/translations";
 
 // ─── Social links config ───
 const SOCIAL_LINKS = [
@@ -52,19 +53,14 @@ const SOCIAL_LINKS = [
   },
 ];
 
-// ─── Month name helper ───
-const MONTH_NAMES = [
-  "", "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
-
 interface BlogSidebarProps {
+  locale: Locale;
   categories: Category[];
   tags: Tag[];
   archives: MonthlyArchive[];
 }
 
-export function BlogSidebar({ categories, tags, archives }: BlogSidebarProps) {
+export function BlogSidebar({ locale, categories, tags, archives }: BlogSidebarProps) {
   return (
     <aside className="blog-sidebar">
       <div className="blog-sidebar-inner">
@@ -72,9 +68,9 @@ export function BlogSidebar({ categories, tags, archives }: BlogSidebarProps) {
         <div className="blog-site-title">
           <Link href="/">LIZHENG.ME</Link>
         </div>
-        <p className="blog-tagline">知白守黑，不语万千算</p>
+        <p className="blog-tagline">{t(locale, "blog.sidebar.tagline")}</p>
         <p className="blog-tagline" style={{ marginTop: "0.15em", fontSize: "0.75em" }}>
-          Personal blog by Li Zheng — technology, design, and life.
+          {t(locale, "blog.sidebar.subtitle")}
         </p>
 
         {/* Social links */}
@@ -95,7 +91,7 @@ export function BlogSidebar({ categories, tags, archives }: BlogSidebarProps) {
         {/* Categories */}
         {categories.length > 0 && (
           <nav className="blog-sidebar-section">
-            <h3 className="blog-sidebar-heading">Categories</h3>
+            <h3 className="blog-sidebar-heading">{t(locale, "blog.sidebar.categories")}</h3>
             <ul className="blog-sidebar-list">
               {categories.map((cat) => (
                 <li key={cat.id}>
@@ -112,7 +108,7 @@ export function BlogSidebar({ categories, tags, archives }: BlogSidebarProps) {
         {/* Tags */}
         {tags.length > 0 && (
           <nav className="blog-sidebar-section">
-            <h3 className="blog-sidebar-heading">Tags</h3>
+            <h3 className="blog-sidebar-heading">{t(locale, "blog.sidebar.tags")}</h3>
             <div className="blog-tag-cloud">
               {tags.map((tag) => (
                 <Link key={tag.id} href={`/tag/${tag.slug}`}>
@@ -126,12 +122,12 @@ export function BlogSidebar({ categories, tags, archives }: BlogSidebarProps) {
         {/* Monthly archives */}
         {archives.length > 0 && (
           <nav className="blog-sidebar-section">
-            <h3 className="blog-sidebar-heading">Archives</h3>
+            <h3 className="blog-sidebar-heading">{t(locale, "blog.sidebar.archives")}</h3>
             <ul className="blog-sidebar-list">
               {archives.map((a) => (
                 <li key={`${a.year}-${a.month}`}>
                   <Link href={`/?archive=${a.year}-${String(a.month).padStart(2, "0")}`}>
-                    <span>{MONTH_NAMES[a.month]} {a.year}</span>
+                    <span>{t(locale, `blog.month.${a.month}`)} {a.year}</span>
                     <span className="blog-sidebar-count">{a.count}</span>
                   </Link>
                 </li>

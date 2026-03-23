@@ -6,6 +6,8 @@ import { listPosts } from "@/data/posts";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { buildPageMeta } from "@/lib/seo";
+import { getLocale } from "@/i18n/server";
+import { t } from "@/i18n/translations";
 
 const PAGE_SIZE = 20;
 
@@ -37,6 +39,7 @@ export default async function CategoryPage({
   const { slug } = await params;
   const sp = await searchParams;
   const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
+  const locale = await getLocale();
 
   const db = getDb();
   const category = await getCategoryBySlug(db, slug);
@@ -65,18 +68,18 @@ export default async function CategoryPage({
           </p>
         )}
         <p className="mt-1 text-xs text-blog-muted">
-          {category.post_count} post{category.post_count !== 1 ? "s" : ""}
+          {t(locale, "blog.category.postCount", { n: category.post_count })}
         </p>
       </header>
 
       <section>
         {displayPosts.length === 0 ? (
           <p className="py-12 text-center text-blog-muted">
-            No posts in this category.
+            {t(locale, "blog.category.noPosts")}
           </p>
         ) : (
           displayPosts.map((post) => (
-            <PostCard key={post.id} post={post} />
+            <PostCard key={post.id} post={post} locale={locale} />
           ))
         )}
       </section>
@@ -85,6 +88,7 @@ export default async function CategoryPage({
         currentPage={page}
         hasMore={hasMore}
         basePath={`/category/${slug}`}
+        locale={locale}
       />
     </>
   );

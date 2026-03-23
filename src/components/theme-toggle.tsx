@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Sun, Moon, Monitor } from "lucide-react";
+import { useLocale } from "@/i18n/context";
 
 type Theme = "light" | "dark" | "system";
 
@@ -49,6 +50,7 @@ function getOsDarkServerSnapshot(): boolean {
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>(getStoredTheme);
+  const { t } = useLocale();
 
   // Re-apply when OS preference changes
   const osDark = useSyncExternalStore(
@@ -70,13 +72,17 @@ export function ThemeToggle() {
   };
 
   const label =
-    theme === "system" ? "System" : theme === "light" ? "Light" : "Dark";
+    theme === "system"
+      ? t("theme.system")
+      : theme === "light"
+        ? t("theme.light")
+        : t("theme.dark");
 
   return (
     <button
       onClick={cycleTheme}
       className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-      aria-label={`Toggle theme (current: ${label})`}
+      aria-label={t("theme.toggle", { label })}
     >
       {theme === "system" ? (
         <Monitor {...ICON_PROPS} />

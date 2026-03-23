@@ -1,5 +1,6 @@
 import type { CommentTree } from "@/models/types";
 import { formatDateDisplay } from "@/lib/seo";
+import { t, type Locale } from "@/i18n/translations";
 
 interface CommentItemProps {
   comment: CommentTree;
@@ -57,15 +58,16 @@ function CommentItem({ comment, depth = 0 }: CommentItemProps) {
 
 interface CommentsProps {
   comments: CommentTree[];
+  locale: Locale;
 }
 
-export function Comments({ comments }: CommentsProps) {
+export function Comments({ comments, locale }: CommentsProps) {
   if (comments.length === 0) return null;
 
   return (
     <section className="mt-12 border-t border-blog-separator pt-6">
       <h2 className="mb-4 text-lg font-semibold text-blog-text">
-        Comments
+        {t(locale, "blog.comments.title")}
       </h2>
       <div className="divide-y divide-blog-separator">
         {comments.map((comment) => (

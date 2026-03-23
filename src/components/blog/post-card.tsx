@@ -1,14 +1,18 @@
 import Link from "next/link";
 import type { PostWithCategory } from "@/models/types";
 import { postPath, formatDateDisplay } from "@/lib/seo";
+import { t, type Locale } from "@/i18n/translations";
 
 interface PostCardProps {
   post: PostWithCategory;
+  locale: Locale;
 }
 
-export function PostCard({ post }: PostCardProps) {
+export function PostCard({ post, locale }: PostCardProps) {
   const href = postPath(post.slug, post.published_at);
-  const date = post.published_at ? formatDateDisplay(post.published_at) : "Draft";
+  const date = post.published_at
+    ? formatDateDisplay(post.published_at)
+    : t(locale, "blog.post.draft");
 
   return (
     <article className="blog-entry">
@@ -36,7 +40,7 @@ export function PostCard({ post }: PostCardProps) {
           </>
         )}
         {post.reading_time && (
-          <> · {post.reading_time} min read</>
+          <> · {t(locale, "blog.post.minRead", { n: post.reading_time })}</>
         )}
       </div>
 
