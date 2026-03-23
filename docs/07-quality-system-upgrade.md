@@ -17,7 +17,7 @@
 | L2 Integration | ❌ | No API E2E tests, no `run-e2e.ts` script |
 | G2 Security | ❌ | No osv-scanner, no gitleaks |
 | L3 System | ❌ | No Playwright tests |
-| D1 Isolation | ⚠️ | `CF_D1_TEST_DATABASE_ID` exists in `.env` but no scripts use it |
+| D1 Isolation | ⚠️ | `CF_D1_TEST_DATABASE_ID` exists in `.env`; `scripts/migrations/apply-migration.ts` supports `--test` flag but no E2E runner uses the test DB yet |
 
 ### API Endpoints to Cover (L2)
 
@@ -36,7 +36,10 @@
 | POST | `/api/analytics` | No | Track pageview |
 | GET | `/api/settings` | Yes | Get site settings |
 | PUT | `/api/settings` | Yes | Update settings |
-| POST | `/api/upload` | Yes | Upload image to R2 |
+
+> **Scope decision**: `/api/upload` (POST) is excluded from L2. It requires R2 and has no test
+> bucket. Upload is covered by L3 admin flow (Playwright) or marked N/A if no test R2 exists.
+> L2 coverage target: **13/14 endpoints** (all except upload). This is the binding pass criteria.
 
 ### Key Files to Modify
 
@@ -45,6 +48,7 @@ eslint.config.mjs              ← G1: upgrade to strict + max-warnings=0
 package.json                   ← G1/G2/L2/L3: add scripts + devDependencies
 .husky/pre-commit              ← G1: add tsc --noEmit + eslint
 .husky/pre-push                ← G2: add security scan; L2: add e2e
+src/proxy.ts                   ← D1: add E2E_SKIP_AUTH bypass for test env
 vitest.config.ts               ← (no change, L1 already solid)
 scripts/run-e2e.ts             ← L2: new — auto start/stop dev server + test D1
 scripts/run-security.ts        ← G2: new — osv-scanner + gitleaks wrapper
@@ -68,11 +72,11 @@ worker/wrangler.toml           ← D1: add [env.test] with test database binding
 + ...tseslint.configs.strict,
 ```
 
-Add `no-restricted-syntax` to ban `.skip` / `.only` in test files:
+Add `no-restricted-syntax` to ban `.skip` / `.only` in all test files (both `*.test.ts` and `*.spec.ts`):
 
 ```javascript
 {
-  files: ["**/*.test.ts"],
+  files: ["**/*.test.ts", "**/*.spec.ts"],
   rules: {
     "no-restricted-syntax": [
       "error",
@@ -224,7 +228,30 @@ database_name = "lizhengme-db-test"
 database_id = "ae2356d2-xxxx"  # from CF_D1_TEST_DATABASE_ID in .env
 ```
 
-### 3.2 Create Test Environment File
+### 3.2 Implement E2E_SKIP_AUTH Bypass in Proxy
+
+**File**: `src/proxy.ts`
+
+The current proxy has no auth bypass mechanism. L2/L3 tests cannot reach auth-gated endpoints
+(POST/PUT/DELETE, GET `/api/analytics`, GET/PUT `/api/settings`) without this.
+
+Add at the top of the auth guard block in `proxy()`:
+
+```typescript
+// E2E auth bypass — only active when E2E_SKIP_AUTH is explicitly set
+if (process.env.E2E_SKIP_AUTH === "true") {
+  return NextResponse.next();
+}
+```
+
+This goes inside the `if (isProtectedRoute || isProtectedApiRoute)` branch, **before** `auth()` is called.
+
+**Safety constraints**:
+- Only reads `process.env.E2E_SKIP_AUTH` — never set in production `.env`
+- `.env.test` sets it; production Railway deployment has no such var
+- The bypass skips auth entirely — acceptable for single-user personal blog
+
+### 3.3 Create Test Environment File
 
 **File**: `.env.test` (new, gitignored)
 
@@ -235,24 +262,33 @@ WORKER_SECRET=test-secret
 E2E_SKIP_AUTH=true
 ```
 
-### 3.3 Create Schema Sync Script
+### 3.4 Apply Schema to Test DB Using Existing Migration Script
 
-**File**: `scripts/sync-test-schema.ts` (new)
+The project already has `scripts/migrations/apply-migration.ts` which supports `--test` flag
+to target `lizhengme-db-test` via `CF_D1_TEST_DATABASE_ID`. No new script needed.
 
-Applies the same D1 schema to the test database, ensuring parity with production.
+**Workflow**: before first L2 run, apply all migrations to test DB:
+
+```bash
+# Apply schema to test database (uses CF_D1_TEST_DATABASE_ID from .env)
+bun scripts/migrations/apply-migration.ts scripts/migrations/schema.sql --test
+```
+
+The `run-e2e.ts` script (Step 4) will document this as a prerequisite and verify test DB
+connectivity before running tests.
 
 ### Atomic Commits
 
 | # | Commit | Description |
 |---|--------|-------------|
 | 6 | `feat: add D1 test environment to worker config` | `[env.test]` binding in `worker/wrangler.toml` |
-| 7 | `chore: add .env.test and schema sync script` | Test env config + `scripts/sync-test-schema.ts` |
+| 7 | `feat: add E2E_SKIP_AUTH bypass to proxy` | Auth bypass in `src/proxy.ts`, `.env.test` with test worker config |
 
 ---
 
 ## Step 4: L2 — Integration/API E2E Tests
 
-**Goal**: 100% API endpoint coverage with real HTTP calls against `lizhengme-db-test`.
+**Goal**: 13/14 API endpoints covered with real HTTP calls against `lizhengme-db-test` (upload excluded, see scope decision above).
 
 ### 4.1 Create E2E Runner
 
@@ -282,14 +318,13 @@ Port convention:
 | `tags.test.ts` | GET `/api/tags`, GET `/api/tags/[slug]` | List, get, 404 |
 | `analytics.test.ts` | GET/POST `/api/analytics` | Track pageview, get stats |
 | `settings.test.ts` | GET/PUT `/api/settings` | Get, update |
-| `upload.test.ts` | POST `/api/upload` | Upload image (mock R2 or skip if no test bucket) |
-| `auth.test.ts` | Auth-gated endpoints without token | 401 responses |
+| `auth.test.ts` | Auth-gated endpoints without token (E2E_SKIP_AUTH=false) | 401 responses |
 
 ### 4.3 E2E Vitest Config
 
 **File**: `e2e/vitest.config.ts` (new)
 
-Separate vitest config for E2E tests — no coverage thresholds, longer timeouts, `E2E_SKIP_AUTH=true`.
+Separate vitest config for E2E tests — no coverage thresholds, longer timeouts. Loads `.env.test` via `dotenv` (which sets `E2E_SKIP_AUTH=true` + test worker URL).
 
 ### 4.4 Add Script
 
@@ -425,7 +460,7 @@ bun run test:e2e:browser
 |-----------|---------|---------------|
 | L1 | `bun run test:coverage` | ≥90% all metrics, 0 failures |
 | G1 | `bun run typecheck && bun run lint` | 0 errors, 0 warnings |
-| L2 | `bun run test:e2e:api` | All API endpoints covered, 0 failures |
+| L2 | `bun run test:e2e:api` | 13/14 endpoints covered (upload excluded), 0 failures |
 | G2 | `bun run security` | osv-scanner 0 vulns, gitleaks no leaks |
 | L3 | `bun run test:e2e:browser` | Core journeys pass |
 | D1 | Worker `[env.test]` + `.env.test` | E2E uses `lizhengme-db-test` only |
@@ -449,7 +484,7 @@ bun run test:e2e:browser
 | 4 | feat | `feat: add G2 security gate script` | G2 |
 | 5 | chore | `chore: update pre-push hook for G2 gate` | G2 |
 | 6 | feat | `feat: add D1 test environment to worker config` | D1 |
-| 7 | chore | `chore: add .env.test and schema sync script` | D1 |
+| 7 | feat | `feat: add E2E_SKIP_AUTH bypass to proxy` | D1 |
 | 8 | feat | `feat: add E2E runner script with auto server lifecycle` | L2 |
 | 9 | feat | `feat: add L2 API E2E tests for posts endpoints` | L2 |
 | 10 | feat | `feat: add L2 API E2E tests for categories and tags` | L2 |
@@ -478,7 +513,6 @@ bun run test:e2e:browser
 ## Risk Notes
 
 - **osv-scanner v2+ required** — v1 does not support `bun.lock`. Verify with `osv-scanner --version`.
-- **Worker test deployment** — `wrangler dev --env test` binds to local D1 test instance. Need to run schema migration on test DB first.
-- **R2 test bucket** — Upload E2E test may need a separate `lizhengblog-test` R2 bucket, or mock R2 in test. Decision: skip upload E2E in L2 (tested via L3 admin flow instead), or mark R2 as N/A for D1 if no separate test bucket.
-- **Auth bypass** — L2 tests use `E2E_SKIP_AUTH=true` to bypass Google OAuth. L3 admin tests need the same mechanism.
+- **Worker test deployment** — `wrangler dev --env test` binds to local D1 test instance. Run `bun scripts/migrations/apply-migration.ts scripts/migrations/schema.sql --test` before first L2 run.
+- **R2 test bucket** — No separate R2 test bucket exists. Upload endpoint is excluded from L2 scope (tested only through L3 admin flow if Playwright is configured with a mock upload, or marked N/A).
 - **CI pipeline** — No GitHub Actions yet. L3 is manual/CI trigger. Consider adding `.github/workflows/quality.yml` in a future pass.
