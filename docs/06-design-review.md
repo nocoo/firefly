@@ -241,6 +241,7 @@ Admin shell inner content uses `p-3 md:p-5` with `rounded-[16px] md:rounded-[20p
 
 > Verified 2026-03-23: Each commit touches one logical concern, passes build + tests independently.
 > C-05 retracted after code verification — `editorFields` is actively used, not dead code.
+> **Execution completed 2026-03-23**: 14 of 15 commits landed (Commit 6 was already implemented).
 
 ### Commit 1 — `fix: restore non-zero radius tokens for admin surface`
 | File | Change |
@@ -336,23 +337,23 @@ Admin shell inner content uses `p-3 md:p-5` with `rounded-[16px] md:rounded-[20p
 
 | Issue | Commit(s) | Status |
 |-------|-----------|--------|
-| C-01 Radius tokens 0px | #1 | Planned |
-| C-02 Dual color systems | #10 (partial — chart colors only) | Planned |
-| C-03 Raw `<img>` no optimization | #5, #6 | Planned |
-| C-04 Magic translateX | #11 | Planned |
+| C-01 Radius tokens 0px | #1 | ✅ Done |
+| C-02 Dual color systems | #10 (partial — chart colors only) | ✅ Done |
+| C-03 Raw `<img>` no optimization | #5, #6 | ✅ Done (#6 was already implemented) |
+| C-04 Magic translateX | #11 | ✅ Done |
 | C-05 PostForm dead code | — | ~~Retracted~~ (false positive) |
-| C-06 No loading skeleton | #14 | Planned |
+| C-06 No loading skeleton | #14 | ✅ Done |
 | C-07 Text-only pagination | — | Deferred (functional, low priority) |
-| C-08 ThemeToggle token mismatch | #8 (partial — via IconButton extraction) | Planned |
-| C-09 Generic alt text | #5 (improve during Image migration) | Planned |
+| C-08 ThemeToggle token mismatch | #8 (partial — via IconButton extraction) | ✅ Done |
+| C-09 Generic alt text | #5 (improve during Image migration) | ✅ Done |
 | C-10 Lone hover animation | — | Accepted (intentional micro-interaction) |
-| C-11 Sidebar transition-all | #12 | Planned |
-| C-12 Near-identical card wrappers | #7 | Planned |
-| P-05 Focus-visible outlines | #2 | Planned |
-| P-06 Skip-to-content link | #2 | Planned |
-| 4.2 Duplicate font-family | #3 | Planned |
-| 7.5 Tag cloud min size | #4 | Planned |
-| H-02 Error message leak | #15 | Planned |
+| C-11 Sidebar transition-all | #12 | ✅ Done |
+| C-12 Near-identical card wrappers | #7 | ✅ Done |
+| P-05 Focus-visible outlines | #2 | ✅ Done |
+| P-06 Skip-to-content link | #2 | ✅ Done |
+| 4.2 Duplicate font-family | #3 | ✅ Done |
+| 7.5 Tag cloud min size | #4 | ✅ Done |
+| H-02 Error message leak | #15 | ✅ Done |
 
 ### Deferred (out of scope for this pass)
 
