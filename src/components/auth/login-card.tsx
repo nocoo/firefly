@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { Github, Layers } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LocaleToggle } from "@/components/locale-toggle";
+import { useLocale } from "@/i18n/context";
 
 // ── Decorative barcode ──
 
@@ -51,6 +52,7 @@ function GoogleIcon() {
 
 function LoginContent() {
   const searchParams = useSearchParams();
+  const { t } = useLocale();
   const error = searchParams.get("error");
   const year = new Date().getFullYear();
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
@@ -147,15 +149,15 @@ function LoginContent() {
                 <Layers className="h-10 w-10 text-primary" strokeWidth={1.5} />
               </div>
 
-              <p className="mt-5 text-lg font-semibold text-foreground">Welcome back</p>
-              <p className="mt-1 text-xs text-muted-foreground">Sign in to manage your blog</p>
+              <p className="mt-5 text-lg font-semibold text-foreground">{t("auth.welcome")}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t("auth.subtitle")}</p>
 
               {/* Error message */}
               {error && (
                 <div className="mt-3 w-full rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive text-center">
                   {error === "AccessDenied"
-                    ? "Your account is not authorized to access this application."
-                    : "Sign in failed. Please try again."}
+                    ? t("auth.accessDenied")
+                    : t("auth.error")}
                 </div>
               )}
 
@@ -171,12 +173,12 @@ function LoginContent() {
                 className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-secondary px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-accent cursor-pointer"
               >
                 <GoogleIcon />
-                Sign in with Google
+                {t("auth.google")}
               </button>
 
               {/* Terms */}
               <p className="mt-3 text-center text-[10px] leading-relaxed text-muted-foreground/60">
-                Admin access only · Authorized emails
+                {t("auth.terms")}
               </p>
             </div>
 
@@ -184,7 +186,7 @@ function LoginContent() {
             <div className="mt-auto flex items-center justify-center border-t border-border bg-secondary/50 py-2.5">
               <div className="flex items-center gap-1.5">
                 <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                <span className="text-[10px] text-muted-foreground">Secure Auth</span>
+                <span className="text-[10px] text-muted-foreground">{t("auth.secureAuth")}</span>
               </div>
             </div>
           </div>
@@ -194,7 +196,7 @@ function LoginContent() {
       {/* Page footer */}
       <footer className="py-4 text-center">
         <p className="text-xs text-muted-foreground">
-          Powered by{" "}
+          {t("auth.poweredBy")}{" "}
           <a
             href="https://github.com/nocoo/firefly"
             target="_blank"
@@ -212,11 +214,13 @@ function LoginContent() {
 // ── Exported component with Suspense for useSearchParams ──
 
 export function LoginCard() {
+  const { t } = useLocale();
+
   return (
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center">
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t("auth.loading")}</p>
         </div>
       }
     >
