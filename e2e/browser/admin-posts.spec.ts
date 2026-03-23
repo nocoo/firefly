@@ -19,7 +19,7 @@ test.describe("Admin post management", () => {
   });
 
   test("admin new post page loads", async ({ page }) => {
-    await page.goto("/admin/editor");
+    await page.goto("/admin/posts/new");
     await page.waitForLoadState("networkidle");
 
     // Should show an editor form with title input or content area
@@ -27,11 +27,11 @@ test.describe("Admin post management", () => {
     await expect(formElement).toBeVisible({ timeout: 10_000 });
   });
 
-  test("admin stats page loads", async ({ page }) => {
-    await page.goto("/admin/stats");
+  test("admin analytics page loads", async ({ page }) => {
+    await page.goto("/admin/analytics");
     await page.waitForLoadState("networkidle");
 
-    // Stats page should render analytics widgets
+    // Analytics page should render stats widgets
     const heading = page.locator("h1, h2").first();
     await expect(heading).toBeVisible({ timeout: 10_000 });
   });

@@ -33,9 +33,11 @@ test.describe("Blog navigation", () => {
     }
   });
 
-  test("archives page loads", async ({ page }) => {
-    await page.goto("/archives");
-    // Archives page should list posts grouped by year/month
+  test("archive page loads", async ({ page }) => {
+    // No /archive index exists; use current year as the archive period
+    const year = new Date().getFullYear();
+    await page.goto(`/archive/${year}`);
+    // Archive page should list posts grouped by month
     await expect(page.locator("h1, h2").first()).toBeVisible();
   });
 });
