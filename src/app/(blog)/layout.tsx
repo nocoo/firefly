@@ -35,7 +35,6 @@ export default async function BlogLayout({
       <BlogGlobalBar />
       <div className="blog-max-width">
         <BlogSidebar
-          locale={locale}
           categories={activeCategories}
           tags={activeTags}
           archives={archives}

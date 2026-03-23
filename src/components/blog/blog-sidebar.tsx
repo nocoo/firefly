@@ -1,8 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { Github, Facebook, Linkedin, Mail, FileUser } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/posts";
-import { t, type Locale } from "@/i18n/translations";
+import { useLocale } from "@/i18n/context";
 import { SocialLink } from "./social-link";
 
 // ─── X (Twitter) icon — not in lucide ───
@@ -25,13 +27,13 @@ const SOCIAL_LINKS = [
 ];
 
 interface BlogSidebarProps {
-  locale: Locale;
   categories: Category[];
   tags: Tag[];
   archives: MonthlyArchive[];
 }
 
-export function BlogSidebar({ locale, categories, tags, archives }: BlogSidebarProps) {
+export function BlogSidebar({ categories, tags, archives }: BlogSidebarProps) {
+  const { t } = useLocale();
   return (
     <aside className="blog-sidebar">
       <div className="blog-sidebar-inner">
@@ -39,7 +41,7 @@ export function BlogSidebar({ locale, categories, tags, archives }: BlogSidebarP
         <div className="blog-site-title">
           <Link href="/">LIZHENG.ME</Link>
         </div>
-        <p className="blog-tagline">{t(locale, "blog.sidebar.tagline")}</p>
+        <p className="blog-tagline">{t( "blog.sidebar.tagline")}</p>
 
         {/* Social links */}
         <div className="blog-social">
@@ -58,7 +60,7 @@ export function BlogSidebar({ locale, categories, tags, archives }: BlogSidebarP
         {/* Categories */}
         {categories.length > 0 && (
           <nav className="blog-sidebar-section">
-            <h3 className="blog-sidebar-heading">{t(locale, "blog.sidebar.categories")}</h3>
+            <h3 className="blog-sidebar-heading">{t( "blog.sidebar.categories")}</h3>
             <ul className="blog-sidebar-list">
               {categories.map((cat) => (
                 <li key={cat.id}>
@@ -75,7 +77,7 @@ export function BlogSidebar({ locale, categories, tags, archives }: BlogSidebarP
         {/* Tags — weighted tag cloud */}
         {tags.length > 0 && (
           <nav className="blog-sidebar-section">
-            <h3 className="blog-sidebar-heading">{t(locale, "blog.sidebar.tags")}</h3>
+            <h3 className="blog-sidebar-heading">{t( "blog.sidebar.tags")}</h3>
             <div className="blog-tag-cloud">
               {(() => {
                 const counts = tags.map((tg) => tg.post_count ?? 0);
@@ -103,7 +105,7 @@ export function BlogSidebar({ locale, categories, tags, archives }: BlogSidebarP
         {/* Archives — recent 2 years by month, older years aggregated */}
         {archives.length > 0 && (
           <nav className="blog-sidebar-section">
-            <h3 className="blog-sidebar-heading">{t(locale, "blog.sidebar.archives")}</h3>
+            <h3 className="blog-sidebar-heading">{t( "blog.sidebar.archives")}</h3>
             <ul className="blog-sidebar-list">
               {(() => {
                 const now = new Date();
@@ -129,7 +131,7 @@ export function BlogSidebar({ locale, categories, tags, archives }: BlogSidebarP
                     {recent.map((a) => (
                       <li key={`${a.year}-${a.month}`}>
                         <Link href={`/archive/${a.year}-${String(a.month).padStart(2, "0")}`}>
-                          <span>{a.year} {t(locale, "blog.sidebar.yearSuffix")} {a.month} {t(locale, "blog.sidebar.monthSuffix")}</span>
+                          <span>{a.year} {t( "blog.sidebar.yearSuffix")} {a.month} {t( "blog.sidebar.monthSuffix")}</span>
                           <span className="blog-sidebar-count">({a.count})</span>
                         </Link>
                       </li>
@@ -137,7 +139,7 @@ export function BlogSidebar({ locale, categories, tags, archives }: BlogSidebarP
                     {olderEntries.map(([year, count]) => (
                       <li key={year}>
                         <Link href={`/archive/${year}`}>
-                          <span>{year} {t(locale, "blog.sidebar.yearSuffix")}</span>
+                          <span>{year} {t( "blog.sidebar.yearSuffix")}</span>
                           <span className="blog-sidebar-count">({count})</span>
                         </Link>
                       </li>
