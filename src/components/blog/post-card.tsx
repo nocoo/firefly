@@ -17,7 +17,7 @@ export function PostCard({ post, locale }: PostCardProps) {
   return (
     <article className="blog-entry">
       {/* Post title */}
-      <h2 className="text-lg font-semibold leading-snug md:text-xl">
+      <h2 className="text-xl font-semibold leading-snug md:text-2xl">
         <Link
           href={href}
           className="text-blog-text no-underline transition-colors hover:text-blog-accent"
@@ -28,20 +28,11 @@ export function PostCard({ post, locale }: PostCardProps) {
 
       {/* Byline */}
       <div className="blog-byline">
+        <span>{t(locale, "blog.post.published")}</span>{" "}
         <time dateTime={post.published_at ? new Date(post.published_at * 1000).toISOString() : undefined}>
           {date}
         </time>
-        {post.category_name && post.category_slug && (
-          <>
-            {" · "}
-            <Link href={`/category/${post.category_slug}`}>
-              {post.category_name}
-            </Link>
-          </>
-        )}
-        {post.reading_time && (
-          <> · {t(locale, "blog.post.minRead", { n: post.reading_time })}</>
-        )}
+        {" "}<span>{t(locale, "blog.post.byAuthor", { author: "nocoo" })}</span>
       </div>
 
       {/* Featured image */}
@@ -58,9 +49,19 @@ export function PostCard({ post, locale }: PostCardProps) {
 
       {/* Excerpt */}
       {post.excerpt && (
-        <p className="mt-2 text-base leading-relaxed text-blog-muted">
+        <p className="mt-3 text-base leading-relaxed text-blog-muted">
           {post.excerpt}
         </p>
+      )}
+
+      {/* Continue reading link */}
+      {post.excerpt && (
+        <Link
+          href={href}
+          className="blog-read-more"
+        >
+          {t(locale, "blog.post.continueReading")}
+        </Link>
       )}
     </article>
   );

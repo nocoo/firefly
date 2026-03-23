@@ -39,9 +39,6 @@ export function BlogSidebar({ locale, categories, tags, archives }: BlogSidebarP
           <Link href="/">LIZHENG.ME</Link>
         </div>
         <p className="blog-tagline">{t(locale, "blog.sidebar.tagline")}</p>
-        <p className="blog-tagline" style={{ marginTop: "0.15em", fontSize: "0.75em" }}>
-          {t(locale, "blog.sidebar.subtitle")}
-        </p>
 
         {/* Social links */}
         <div className="blog-social">
@@ -83,16 +80,30 @@ export function BlogSidebar({ locale, categories, tags, archives }: BlogSidebarP
           </nav>
         )}
 
-        {/* Tags */}
+        {/* Tags — weighted tag cloud */}
         {tags.length > 0 && (
           <nav className="blog-sidebar-section">
             <h3 className="blog-sidebar-heading">{t(locale, "blog.sidebar.tags")}</h3>
             <div className="blog-tag-cloud">
-              {tags.map((tag) => (
-                <Link key={tag.id} href={`/tag/${tag.slug}`}>
-                  {tag.name}
-                </Link>
-              ))}
+              {(() => {
+                const counts = tags.map((tg) => tg.post_count ?? 0);
+                const maxCount = Math.max(...counts, 1);
+                const minSize = 0.75;
+                const maxSize = 1.5;
+                return tags.map((tag) => {
+                  const weight = (tag.post_count ?? 0) / maxCount;
+                  const size = minSize + weight * (maxSize - minSize);
+                  return (
+                    <Link
+                      key={tag.id}
+                      href={`/tag/${tag.slug}`}
+                      style={{ fontSize: `${size}em` }}
+                    >
+                      {tag.name}
+                    </Link>
+                  );
+                });
+              })()}
             </div>
           </nav>
         )}
@@ -105,8 +116,8 @@ export function BlogSidebar({ locale, categories, tags, archives }: BlogSidebarP
               {archives.map((a) => (
                 <li key={`${a.year}-${a.month}`}>
                   <Link href={`/?archive=${a.year}-${String(a.month).padStart(2, "0")}`}>
-                    <span>{t(locale, `blog.month.${a.month}`)} {a.year}</span>
-                    <span className="blog-sidebar-count">{a.count}</span>
+                    <span>{a.year} {t(locale, "blog.sidebar.yearSuffix")} {a.month} {t(locale, "blog.sidebar.monthSuffix")}</span>
+                    <span className="blog-sidebar-count">({a.count})</span>
                   </Link>
                 </li>
               ))}
