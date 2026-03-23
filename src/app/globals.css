@@ -328,25 +328,43 @@
   position: relative;
 }
 
-/* Theme toggle — top-right of main area */
-.blog-theme-toggle {
-  position: sticky;
-  top: 0;
-  z-index: 10;
+/* Theme toggle — removed, now in blog-global-bar */
+
+/* Global bar — fixed top-right with GitHub + theme toggle */
+.blog-global-bar {
+  position: fixed;
+  top: 0.75em;
+  right: 0.75em;
+  z-index: 20;
   display: flex;
-  justify-content: flex-end;
-  padding: 0.5em 0;
-  margin: -0.5em 0 0.5em;
+  align-items: center;
+  gap: 0.25em;
 }
 
-.blog-theme-toggle button {
+.blog-global-bar-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2em;
+  height: 2em;
+  border-radius: 0.5em;
+  color: var(--blog-muted);
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.blog-global-bar-link:hover {
+  color: var(--blog-text);
+  background: var(--blog-separator);
+}
+
+.blog-global-bar button {
   color: var(--blog-muted);
   background: none;
   border: none;
   transition: color 0.15s;
 }
 
-.blog-theme-toggle button:hover {
+.blog-global-bar button:hover {
   color: var(--blog-text);
   background: var(--blog-separator);
 }
@@ -431,15 +449,48 @@
   border-radius: 50%;
   border: 1px solid var(--blog-separator);
   color: var(--blog-muted);
-  transition: color 0.25s ease, border-color 0.25s ease, transform 0.25s ease, background-color 0.25s ease;
+  transition: color 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
 }
 
-.blog-social-link:hover {
-  color: var(--blog-text);
-  border-color: var(--blog-muted);
-  background: var(--blog-separator);
-  transform: translateY(-2px);
+/* Brand colors for social links on hover */
+.blog-social-link[data-brand="x"]:hover {
+  background: #000;
+  border-color: #000;
+  color: #fff;
 }
+
+.blog-social-link[data-brand="facebook"]:hover {
+  background: linear-gradient(135deg, #1877f2, #0d65d9);
+  border-color: #1877f2;
+  color: #fff;
+}
+
+.blog-social-link[data-brand="linkedin"]:hover {
+  background: linear-gradient(135deg, #0a66c2, #004182);
+  border-color: #0a66c2;
+  color: #fff;
+}
+
+.blog-social-link[data-brand="github"]:hover {
+  background: linear-gradient(135deg, #333, #24292e);
+  border-color: #333;
+  color: #fff;
+}
+
+.blog-social-link[data-brand="email"]:hover {
+  background: linear-gradient(135deg, #ea4335, #c5221f);
+  border-color: #ea4335;
+  color: #fff;
+}
+
+.blog-social-link[data-brand="resume"]:hover {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  border-color: #8b5cf6;
+  color: #fff;
+}
+
+/* Fill variant for icons on hover — handled by component */
+
 
 .blog-social-icon {
   width: 0.9em;

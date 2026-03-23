@@ -4,7 +4,7 @@ import { listTags } from "@/data/tags";
 import { listMonthlyArchives } from "@/data/posts";
 import { BlogSidebar } from "@/components/blog/blog-sidebar";
 import { BlogFooter } from "@/components/blog/blog-footer";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { BlogGlobalBar } from "@/components/blog/blog-global-bar";
 import { getLocale } from "@/i18n/server";
 
 export default async function BlogLayout({
@@ -32,6 +32,7 @@ export default async function BlogLayout({
       >
         Skip to content
       </a>
+      <BlogGlobalBar />
       <div className="blog-max-width">
         <BlogSidebar
           locale={locale}
@@ -40,9 +41,6 @@ export default async function BlogLayout({
           archives={archives}
         />
         <main id="main" className="blog-main">
-          <div className="blog-theme-toggle">
-            <ThemeToggle />
-          </div>
           {children}
           <BlogFooter locale={locale} />
         </main>

@@ -3,6 +3,7 @@ import { Github, Facebook, Linkedin, Mail, FileUser } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/posts";
 import { t, type Locale } from "@/i18n/translations";
+import { SocialLink } from "./social-link";
 
 // ─── X (Twitter) icon — not in lucide ───
 function XIcon({ className }: { className?: string }) {
@@ -15,12 +16,12 @@ function XIcon({ className }: { className?: string }) {
 
 // ─── Social links config ───
 const SOCIAL_LINKS = [
-  { name: "X", href: "https://x.com/zhengli", icon: XIcon, isLucide: false },
-  { name: "Facebook", href: "https://www.facebook.com/zhengli", icon: Facebook, isLucide: true },
-  { name: "LinkedIn", href: "https://www.linkedin.com/in/nocoo/", icon: Linkedin, isLucide: true },
-  { name: "Email", href: "mailto:nicnocquee@gmail.com", icon: Mail, isLucide: true },
-  { name: "GitHub", href: "https://github.com/nocoo", icon: Github, isLucide: true },
-  { name: "Resume", href: "https://lizheng.dev/", icon: FileUser, isLucide: true },
+  { name: "X", href: "https://x.com/zhengli", icon: XIcon, isLucide: false, brand: "x" },
+  { name: "Facebook", href: "https://www.facebook.com/zhengli", icon: Facebook, isLucide: true, brand: "facebook" },
+  { name: "LinkedIn", href: "https://www.linkedin.com/in/nocoo/", icon: Linkedin, isLucide: true, brand: "linkedin" },
+  { name: "Email", href: "mailto:nicnocquee@gmail.com", icon: Mail, isLucide: true, brand: "email" },
+  { name: "GitHub", href: "https://github.com/nocoo", icon: Github, isLucide: true, brand: "github" },
+  { name: "Resume", href: "https://lizheng.dev/", icon: FileUser, isLucide: true, brand: "resume" },
 ];
 
 interface BlogSidebarProps {
@@ -42,25 +43,16 @@ export function BlogSidebar({ locale, categories, tags, archives }: BlogSidebarP
 
         {/* Social links */}
         <div className="blog-social">
-          {SOCIAL_LINKS.map((link) => {
-            const Icon = link.icon;
-            return (
-              <a
-                key={link.name}
-                href={link.href}
-                title={link.name}
-                target={link.href.startsWith("mailto:") ? undefined : "_blank"}
-                rel={link.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
-                className="blog-social-link"
-              >
-                {link.isLucide ? (
-                  <Icon className="blog-social-icon" strokeWidth={1.5} />
-                ) : (
-                  <Icon className="blog-social-icon" />
-                )}
-              </a>
-            );
-          })}
+          {SOCIAL_LINKS.map((link) => (
+            <SocialLink
+              key={link.name}
+              href={link.href}
+              name={link.name}
+              brand={link.brand}
+              icon={link.icon}
+              isLucide={link.isLucide}
+            />
+          ))}
         </div>
 
         {/* Categories */}
