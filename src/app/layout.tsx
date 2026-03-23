@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from "@/lib/seo";
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR } from "@/lib/seo";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -9,14 +9,28 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
+  authors: [{ name: SITE_AUTHOR, url: SITE_URL }],
+  creator: SITE_AUTHOR,
+  publisher: SITE_AUTHOR,
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-snippet": -1,
+      "max-image-preview": "large",
+      "max-video-preview": -1,
+    },
   },
   alternates: {
     types: {
       "application/rss+xml": "/feed.xml",
     },
+  },
+  other: {
+    "theme-color-light": "#FAF8F5",
+    "theme-color-dark": "#1C1A17",
   },
 };
 
@@ -41,6 +55,8 @@ export default function RootLayout({
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <meta name="theme-color" content="#FAF8F5" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#1C1A17" media="(prefers-color-scheme: dark)" />
       </head>
       <body className="antialiased">
         {children}

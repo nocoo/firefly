@@ -23,7 +23,12 @@ export async function generateMetadata({
 }: PostPageProps): Promise<Metadata> {
   const { slug } = await params;
   const db = getDb();
-  const post = await getPostBySlug(db, slug, "published");
+  const [post, tags] = await Promise.all([
+    getPostBySlug(db, slug, "published"),
+    getPostBySlug(db, slug, "published").then((p) =>
+      p ? getPostTags(db, p.id) : [],
+    ),
+  ]);
 
   if (!post) return { title: "Not Found" };
 
@@ -39,6 +44,7 @@ export async function generateMetadata({
       ? formatDateISO(post.published_at)
       : undefined,
     modifiedTime: formatDateISO(post.updated_at),
+    keywords: tags.map((t) => t.name),
   });
 }
 
@@ -81,11 +87,13 @@ export default async function PostPage({ params }: PostPageProps) {
     { name: post.title, href: postPath(post.slug, post.published_at) },
   ];
 
+  const tagNames = tags.map((t) => t.name);
+
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: blogPostingJsonLd(post) }}
+        dangerouslySetInnerHTML={{ __html: blogPostingJsonLd(post, tagNames) }}
       />
       <script
         type="application/ld+json"

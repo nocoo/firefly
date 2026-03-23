@@ -7,8 +7,10 @@ import type { Metadata } from "next";
 const SITE_NAME = "Li Zheng";
 const SITE_URL = "https://lizheng.me";
 const SITE_DESCRIPTION = "Personal blog by Li Zheng — technology, design, and life.";
+const SITE_AUTHOR = "Li Zheng";
+const TWITTER_HANDLE = "@nicnocquee";
 
-export { SITE_NAME, SITE_URL, SITE_DESCRIPTION };
+export { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR, TWITTER_HANDLE };
 
 // ---------------------------------------------------------------------------
 // Page metadata builder
@@ -22,6 +24,7 @@ export interface PageMetaInput {
   type?: "website" | "article" | undefined;
   publishedTime?: string | undefined;
   modifiedTime?: string | undefined;
+  keywords?: string[] | undefined;
 }
 
 export function buildPageMeta(input: PageMetaInput): Metadata {
@@ -31,25 +34,32 @@ export function buildPageMeta(input: PageMetaInput): Metadata {
   return {
     title: input.title,
     description: input.description,
+    authors: [{ name: SITE_AUTHOR, url: SITE_URL }],
+    ...(input.keywords?.length ? { keywords: input.keywords } : {}),
     alternates: {
       canonical: url,
+      languages: { "zh-CN": url },
     },
     openGraph: {
       title: input.title,
       description: input.description,
       url,
       siteName: SITE_NAME,
+      locale: "zh_CN",
       type: ogType,
       ...(input.image ? { images: [{ url: input.image }] } : {}),
       ...(ogType === "article" && input.publishedTime
         ? {
             publishedTime: input.publishedTime,
             modifiedTime: input.modifiedTime,
+            authors: [SITE_AUTHOR],
           }
         : {}),
     },
     twitter: {
       card: input.image ? "summary_large_image" : "summary",
+      site: TWITTER_HANDLE,
+      creator: TWITTER_HANDLE,
       title: input.title,
       description: input.description,
       ...(input.image ? { images: [input.image] } : {}),

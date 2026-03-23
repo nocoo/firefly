@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import type { PostWithCategory } from "@/models/types";
-import { SITE_NAME, SITE_URL, postPath, formatDateISO } from "./seo";
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, postPath, formatDateISO } from "./seo";
 
 // ---------------------------------------------------------------------------
 // WebSite (home page)
@@ -15,7 +15,13 @@ export function websiteJsonLd(): string {
     "@type": "WebSite",
     name: SITE_NAME,
     url: SITE_URL,
-    description: "Personal blog by Li Zheng — technology, design, and life.",
+    description: SITE_DESCRIPTION,
+    inLanguage: "zh-CN",
+    author: {
+      "@type": "Person",
+      name: "Li Zheng",
+      url: SITE_URL,
+    },
   });
 }
 
@@ -23,7 +29,10 @@ export function websiteJsonLd(): string {
 // BlogPosting (post detail)
 // ---------------------------------------------------------------------------
 
-export function blogPostingJsonLd(post: PostWithCategory): string {
+export function blogPostingJsonLd(
+  post: PostWithCategory,
+  tagNames?: string[],
+): string {
   const url = `${SITE_URL}${postPath(post.slug, post.published_at)}`;
 
   return JSON.stringify({
@@ -36,6 +45,7 @@ export function blogPostingJsonLd(post: PostWithCategory): string {
       : formatDateISO(post.created_at),
     dateModified: formatDateISO(post.updated_at),
     description: post.excerpt ?? "",
+    inLanguage: "zh-CN",
     ...(post.featured_image ? { image: post.featured_image } : {}),
     author: {
       "@type": "Person",
@@ -56,6 +66,7 @@ export function blogPostingJsonLd(post: PostWithCategory): string {
     ...(post.category_name
       ? { articleSection: post.category_name }
       : {}),
+    ...(tagNames?.length ? { keywords: tagNames.join(", ") } : {}),
   });
 }
 

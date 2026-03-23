@@ -8,8 +8,9 @@ import { SITE_URL, postPath } from "@/lib/seo";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const db = getDb();
 
+  // Fetch all published posts (no artificial cap)
   const [{ posts }, categories, tags] = await Promise.all([
-    listPosts(db, { status: "published", pageSize: 250 }),
+    listPosts(db, { status: "published", pageSize: 50000 }),
     listCategories(db),
     listTags(db),
   ]);
@@ -21,17 +22,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  const categoryEntries: MetadataRoute.Sitemap = categories.map((cat) => ({
-    url: `${SITE_URL}/category/${cat.slug}`,
-    changeFrequency: "weekly" as const,
-    priority: 0.6,
-  }));
+  const categoryEntries: MetadataRoute.Sitemap = categories
+    .filter((cat) => cat.post_count > 0)
+    .map((cat) => ({
+      url: `${SITE_URL}/category/${cat.slug}`,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }));
 
-  const tagEntries: MetadataRoute.Sitemap = tags.map((tag) => ({
-    url: `${SITE_URL}/tag/${tag.slug}`,
-    changeFrequency: "weekly" as const,
-    priority: 0.5,
-  }));
+  const tagEntries: MetadataRoute.Sitemap = tags
+    .filter((tag) => tag.post_count > 0)
+    .map((tag) => ({
+      url: `${SITE_URL}/tag/${tag.slug}`,
+      changeFrequency: "weekly" as const,
+      priority: 0.5,
+    }));
 
   return [
     {
