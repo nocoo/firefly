@@ -14,6 +14,7 @@ import {
   PanelLeft,
   Layers,
   ChevronUp,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -50,6 +51,13 @@ const NAV_GROUPS: NavGroup[] = [
       { titleKey: "admin.nav.posts", href: "/admin/posts", icon: FileText },
       { titleKey: "admin.nav.categories", href: "/admin/categories", icon: FolderOpen },
       { titleKey: "admin.nav.tags", href: "/admin/tags", icon: Tags },
+    ],
+  },
+  {
+    labelKey: "admin.nav.system",
+    defaultOpen: true,
+    items: [
+      { titleKey: "admin.nav.settings", href: "/admin/settings", icon: Settings },
     ],
   },
 ];

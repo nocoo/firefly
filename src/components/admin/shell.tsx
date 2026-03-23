@@ -18,6 +18,7 @@ const PAGE_TITLE_KEYS: Record<string, string> = {
   "/admin/categories": "admin.nav.categories",
   "/admin/tags": "admin.nav.tags",
   "/admin/analytics": "admin.nav.analytics",
+  "/admin/settings": "admin.nav.settings",
 };
 
 interface AdminShellProps {
