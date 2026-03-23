@@ -7,6 +7,7 @@ import { slugify } from "@/models/post";
 import { renderMarkdown } from "@/models/markdown";
 import { ImageUpload } from "./image-upload";
 import { MarkdownPreview } from "./markdown-preview";
+import { useLocale } from "@/i18n/context";
 
 interface PostFormProps {
   post?: PostWithCategory & { tagIds: string[] };
@@ -16,6 +17,7 @@ interface PostFormProps {
 
 export function PostForm({ post, categories, tags }: PostFormProps) {
   const router = useRouter();
+  const { t } = useLocale();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,19 +67,19 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
 
   const handleDelete = async () => {
     if (!post) return;
-    if (!confirm(`Delete "${post.title}"? This cannot be undone.`)) return;
+    if (!confirm(t("admin.postForm.confirmDelete", { title: post.title }))) return;
 
     setSaving(true);
     try {
       const res = await fetch(`/api/posts/${post.slug}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? "Failed to delete post");
+        throw new Error(data.error ?? t("admin.postForm.failedDelete"));
       }
       router.push("/admin/posts");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete");
+      setError(err instanceof Error ? err.message : t("admin.postForm.failedDeleteGeneric"));
     } finally {
       setSaving(false);
     }
@@ -113,7 +115,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? "Failed to save post");
+        throw new Error(data.error ?? t("admin.postForm.failedSave"));
       }
 
       router.push("/admin/posts");
@@ -141,7 +143,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           htmlFor="title"
           className="text-sm font-medium text-foreground"
         >
-          Title
+          {t("admin.postForm.title")}
         </label>
         <input
           id="title"
@@ -150,7 +152,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           onChange={(e) => handleTitleChange(e.target.value)}
           required
           className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Post title"
+          placeholder={t("admin.postForm.titlePlaceholder")}
         />
       </div>
 
@@ -160,7 +162,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           htmlFor="slug"
           className="text-sm font-medium text-foreground"
         >
-          Slug
+          {t("admin.postForm.slug")}
         </label>
         <input
           id="slug"
@@ -169,7 +171,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           onChange={(e) => setSlug(e.target.value)}
           required
           className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="url-slug"
+          placeholder={t("admin.postForm.slugPlaceholder")}
         />
       </div>
 
@@ -177,7 +179,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium text-foreground">
-            Content (Markdown)
+            {t("admin.postForm.content")}
           </label>
           {/* Tab switcher — hidden on lg+ where preview is side-by-side */}
           <div className="flex rounded-[var(--radius-widget)] border border-border bg-secondary p-0.5 lg:hidden">
@@ -190,7 +192,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Write
+              {t("admin.postForm.write")}
             </button>
             <button
               type="button"
@@ -201,7 +203,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Preview
+              {t("admin.postForm.preview")}
             </button>
           </div>
         </div>
@@ -216,7 +218,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
                 />
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Nothing to preview
+                  {t("admin.postForm.nothingToPreview")}
                 </p>
               )}
             </div>
@@ -230,7 +232,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
                 required
                 rows={20}
                 className="w-full min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
-                placeholder="Write your post content in Markdown..."
+                placeholder={t("admin.postForm.contentPlaceholder")}
               />
             </>
           )}
@@ -244,7 +246,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             required
             rows={20}
             className="w-full min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
-            placeholder="Write your post content in Markdown..."
+            placeholder={t("admin.postForm.contentPlaceholder")}
           />
         </div>
       </div>
@@ -255,9 +257,9 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           htmlFor="excerpt"
           className="text-sm font-medium text-foreground"
         >
-          Excerpt{" "}
+          {t("admin.postForm.excerpt")}{" "}
           <span className="text-muted-foreground font-normal">
-            (optional, auto-generated if empty)
+            {t("admin.postForm.excerptHint")}
           </span>
         </label>
         <textarea
@@ -266,7 +268,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           onChange={(e) => setExcerpt(e.target.value)}
           rows={3}
           className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Brief description of the post..."
+          placeholder={t("admin.postForm.excerptPlaceholder")}
         />
       </div>
 
@@ -278,7 +280,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             htmlFor="status"
             className="text-sm font-medium text-foreground"
           >
-            Status
+            {t("admin.postForm.status")}
           </label>
           <select
             id="status"
@@ -286,10 +288,10 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             onChange={(e) => setStatus(e.target.value as PostStatus)}
             className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           >
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="private">Private</option>
-            <option value="archived">Archived</option>
+            <option value="draft">{t("admin.postForm.statusDraft")}</option>
+            <option value="published">{t("admin.postForm.statusPublished")}</option>
+            <option value="private">{t("admin.postForm.statusPrivate")}</option>
+            <option value="archived">{t("admin.postForm.statusArchived")}</option>
           </select>
         </div>
 
@@ -299,7 +301,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             htmlFor="category"
             className="text-sm font-medium text-foreground"
           >
-            Category
+            {t("admin.postForm.category")}
           </label>
           <select
             id="category"
@@ -307,7 +309,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             onChange={(e) => setCategoryId(e.target.value)}
             className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           >
-            <option value="">No category</option>
+            <option value="">{t("admin.postForm.noCategory")}</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
@@ -319,7 +321,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
 
       {/* Tags */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">Tags</label>
+        <label className="text-sm font-medium text-foreground">{t("admin.postForm.tags")}</label>
         <div className="flex flex-wrap gap-2">
           {tags.map((tag) => (
             <button
@@ -337,7 +339,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           ))}
           {tags.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              No tags available
+              {t("admin.postForm.noTags")}
             </p>
           )}
         </div>
@@ -349,8 +351,8 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           htmlFor="featured_image"
           className="text-sm font-medium text-foreground"
         >
-          Featured Image URL{" "}
-          <span className="text-muted-foreground font-normal">(optional)</span>
+          {t("admin.postForm.featuredImage")}{" "}
+          <span className="text-muted-foreground font-normal">{t("admin.postForm.featuredImageHint")}</span>
         </label>
         <input
           id="featured_image"
@@ -369,14 +371,14 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           disabled={saving}
           className="inline-flex items-center gap-2 rounded-[var(--radius-widget)] bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
-          {saving ? "Saving..." : isEditing ? "Update Post" : "Create Post"}
+          {saving ? t("admin.postForm.saving") : isEditing ? t("admin.postForm.updatePost") : t("admin.postForm.createPost")}
         </button>
         <button
           type="button"
           onClick={() => router.push("/admin/posts")}
           className="inline-flex items-center rounded-[var(--radius-widget)] border border-border bg-secondary px-4 py-2 text-sm text-foreground transition-colors hover:bg-accent"
         >
-          Cancel
+          {t("admin.postForm.cancel")}
         </button>
         {isEditing && (
           <button
@@ -385,7 +387,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             disabled={saving}
             className="ml-auto inline-flex items-center rounded-[var(--radius-widget)] bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50"
           >
-            Delete Post
+            {t("admin.postForm.deletePost")}
           </button>
         )}
       </div>

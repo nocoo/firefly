@@ -8,14 +8,15 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LocaleToggle } from "@/components/locale-toggle";
+import { useLocale } from "@/i18n/context";
 
-// Map admin routes to page titles
-const PAGE_TITLES: Record<string, string> = {
-  "/admin": "Dashboard",
-  "/admin/posts": "Posts",
-  "/admin/categories": "Categories",
-  "/admin/tags": "Tags",
-  "/admin/analytics": "Analytics",
+// Map admin routes to i18n title keys
+const PAGE_TITLE_KEYS: Record<string, string> = {
+  "/admin": "admin.nav.dashboard",
+  "/admin/posts": "admin.nav.posts",
+  "/admin/categories": "admin.nav.categories",
+  "/admin/tags": "admin.nav.tags",
+  "/admin/analytics": "admin.nav.analytics",
 };
 
 interface AdminShellProps {
@@ -32,14 +33,16 @@ export function AdminShell({ user, children }: AdminShellProps) {
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const { t } = useLocale();
 
   // Resolve page title from pathname
-  const title =
-    PAGE_TITLES[pathname] ??
-    Object.entries(PAGE_TITLES).find(([key]) =>
+  const titleKey =
+    PAGE_TITLE_KEYS[pathname] ??
+    Object.entries(PAGE_TITLE_KEYS).find(([key]) =>
       key !== "/admin" && pathname.startsWith(key),
     )?.[1] ??
-    "Admin";
+    "admin.pageTitle.admin";
+  const title = t(titleKey);
 
   // Close mobile sidebar on route change — intentional setState in effect
   // to sync UI with navigation (external event from Next.js router).
@@ -99,7 +102,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
             {isMobile && (
               <button
                 onClick={() => setMobileOpen(true)}
-                aria-label="Open navigation"
+                aria-label={t("admin.sidebar.openNav")}
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
               >
                 <Menu

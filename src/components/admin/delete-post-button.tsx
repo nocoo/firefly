@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useLocale } from "@/i18n/context";
 
 interface DeletePostButtonProps {
   slug: string;
@@ -11,20 +12,21 @@ interface DeletePostButtonProps {
 export function DeletePostButton({ slug, title }: DeletePostButtonProps) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
+  const { t } = useLocale();
 
   const handleDelete = async () => {
-    if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
+    if (!confirm(t("admin.deletePost.confirm", { title }))) return;
 
     setDeleting(true);
     try {
       const res = await fetch(`/api/posts/${slug}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? "Failed to delete post");
+        throw new Error(data.error ?? t("admin.deletePost.failedDelete"));
       }
       router.refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to delete");
+      alert(err instanceof Error ? err.message : t("admin.deletePost.failedGeneric"));
     } finally {
       setDeleting(false);
     }
@@ -36,7 +38,7 @@ export function DeletePostButton({ slug, title }: DeletePostButtonProps) {
       disabled={deleting}
       className="text-sm text-destructive hover:text-destructive/80 transition-colors disabled:opacity-50"
     >
-      {deleting ? "..." : "Delete"}
+      {deleting ? "..." : t("admin.deletePost.delete")}
     </button>
   );
 }

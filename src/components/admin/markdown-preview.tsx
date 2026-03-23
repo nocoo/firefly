@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { renderMarkdown } from "@/models/markdown";
+import { useLocale } from "@/i18n/context";
 
 interface MarkdownPreviewProps {
   title?: string;
@@ -20,6 +21,7 @@ export function MarkdownPreview({
     () => (content ? renderMarkdown(content) : ""),
     [content],
   );
+  const { t } = useLocale();
 
   const isEmpty = !title && !excerpt && !content && !featuredImage;
 
@@ -27,7 +29,7 @@ export function MarkdownPreview({
     return (
       <div className="flex h-full items-center justify-center">
         <p className="text-sm text-muted-foreground">
-          Start writing to see a live preview
+          {t("admin.preview.emptyState")}
         </p>
       </div>
     );
@@ -40,7 +42,7 @@ export function MarkdownPreview({
         <div className="mb-8 overflow-hidden rounded-[var(--radius-widget)]">
           <img
             src={featuredImage}
-            alt={title || "Featured image"}
+            alt={title || t("admin.preview.featuredImageAlt")}
             className="w-full object-cover"
           />
         </div>

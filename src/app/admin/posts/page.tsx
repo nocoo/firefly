@@ -6,6 +6,8 @@ import type { PostStatus } from "@/models/types";
 import { formatDateDisplay } from "@/lib/seo";
 import { PostFilters } from "@/components/admin/post-filters";
 import { DeletePostButton } from "@/components/admin/delete-post-button";
+import { getLocale } from "@/i18n/server";
+import { t } from "@/i18n/translations";
 
 interface AdminPostsPageProps {
   searchParams: Promise<{
@@ -16,11 +18,11 @@ interface AdminPostsPageProps {
   }>;
 }
 
-const STATUS_LABELS: Record<PostStatus, string> = {
-  draft: "Draft",
-  published: "Published",
-  private: "Private",
-  archived: "Archived",
+const STATUS_LABEL_KEYS: Record<PostStatus, string> = {
+  draft: "admin.posts.status.draft",
+  published: "admin.posts.status.published",
+  private: "admin.posts.status.private",
+  archived: "admin.posts.status.archived",
 };
 
 const STATUS_COLORS: Record<PostStatus, string> = {
@@ -35,6 +37,7 @@ export default async function AdminPostsPage({
 }: AdminPostsPageProps) {
   const params = await searchParams;
   const db = getDb();
+  const locale = await getLocale();
 
   const status = params.status as PostStatus | undefined;
   const categoryId = params.category || undefined;
@@ -54,16 +57,16 @@ export default async function AdminPostsPage({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Posts</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t(locale, "admin.posts.title")}</h2>
           <p className="text-sm text-muted-foreground">
-            {result.total} post{result.total !== 1 ? "s" : ""} total
+            {t(locale, "admin.posts.total", { n: result.total })}
           </p>
         </div>
         <Link
           href="/admin/posts/new"
           className="inline-flex items-center gap-2 rounded-[var(--radius-widget)] bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
-          New Post
+          {t(locale, "admin.posts.new")}
         </Link>
       </div>
 
@@ -76,19 +79,19 @@ export default async function AdminPostsPage({
           <thead>
             <tr className="border-b border-border bg-secondary/50">
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                Title
+                {t(locale, "admin.posts.table.title")}
               </th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
-                Status
+                {t(locale, "admin.posts.table.status")}
               </th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
-                Category
+                {t(locale, "admin.posts.table.category")}
               </th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden lg:table-cell">
-                Date
+                {t(locale, "admin.posts.table.date")}
               </th>
               <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                Actions
+                {t(locale, "admin.posts.table.actions")}
               </th>
             </tr>
           </thead>
@@ -99,7 +102,7 @@ export default async function AdminPostsPage({
                   colSpan={5}
                   className="px-4 py-8 text-center text-muted-foreground"
                 >
-                  No posts found
+                  {t(locale, "admin.posts.noResults")}
                 </td>
               </tr>
             ) : (
@@ -120,7 +123,7 @@ export default async function AdminPostsPage({
                     <span
                       className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[post.status as PostStatus] ?? ""}`}
                     >
-                      {STATUS_LABELS[post.status as PostStatus] ?? post.status}
+                      {t(locale, STATUS_LABEL_KEYS[post.status as PostStatus] ?? post.status)}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
@@ -137,7 +140,7 @@ export default async function AdminPostsPage({
                         href={`/admin/posts/${post.id}/edit`}
                         className="text-sm text-primary hover:text-primary/80 transition-colors"
                       >
-                        Edit
+                        {t(locale, "admin.posts.edit")}
                       </Link>
                       <DeletePostButton slug={post.slug} title={post.title} />
                     </div>
@@ -153,14 +156,14 @@ export default async function AdminPostsPage({
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
+            {t(locale, "admin.pagination.page", { page, total: totalPages })}
           </p>
           <div className="flex gap-2">
             {page > 1 && (
-              <PaginationLink page={page - 1} params={params} label="Previous" />
+              <PaginationLink page={page - 1} params={params} label={t(locale, "admin.pagination.previous")} />
             )}
             {page < totalPages && (
-              <PaginationLink page={page + 1} params={params} label="Next" />
+              <PaginationLink page={page + 1} params={params} label={t(locale, "admin.pagination.next")} />
             )}
           </div>
         </div>

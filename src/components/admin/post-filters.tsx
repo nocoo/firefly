@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import type { Category } from "@/models/types";
+import { useLocale } from "@/i18n/context";
 
 interface PostFiltersProps {
   categories: Category[];
@@ -12,6 +13,7 @@ export function PostFilters({ categories }: PostFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
+  const { t } = useLocale();
 
   const updateFilter = useCallback(
     (key: string, value: string) => {
@@ -40,7 +42,7 @@ export function PostFilters({ categories }: PostFiltersProps) {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search posts..."
+          placeholder={t("admin.filters.searchPosts")}
           className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </form>
@@ -51,11 +53,11 @@ export function PostFilters({ categories }: PostFiltersProps) {
         onChange={(e) => updateFilter("status", e.target.value)}
         className="rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       >
-        <option value="">All Status</option>
-        <option value="published">Published</option>
-        <option value="draft">Draft</option>
-        <option value="private">Private</option>
-        <option value="archived">Archived</option>
+        <option value="">{t("admin.filters.allStatus")}</option>
+        <option value="published">{t("admin.filters.published")}</option>
+        <option value="draft">{t("admin.filters.draft")}</option>
+        <option value="private">{t("admin.filters.private")}</option>
+        <option value="archived">{t("admin.filters.archived")}</option>
       </select>
 
       {/* Category filter */}
@@ -64,7 +66,7 @@ export function PostFilters({ categories }: PostFiltersProps) {
         onChange={(e) => updateFilter("category", e.target.value)}
         className="rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       >
-        <option value="">All Categories</option>
+        <option value="">{t("admin.filters.allCategories")}</option>
         {categories.map((cat) => (
           <option key={cat.id} value={cat.id}>
             {cat.name}

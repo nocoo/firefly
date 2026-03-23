@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useLocale } from "@/i18n/context";
 
 interface ImageUploadProps {
   onUpload: (url: string) => void;
@@ -15,6 +16,7 @@ export function ImageUpload({ onUpload, className }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const { t } = useLocale();
 
   const upload = useCallback(
     async (file: File) => {
@@ -32,18 +34,18 @@ export function ImageUpload({ onUpload, className }: ImageUploadProps) {
 
         if (!res.ok) {
           const data = await res.json();
-          throw new Error(data.error ?? "Upload failed");
+          throw new Error(data.error ?? t("admin.upload.failed"));
         }
 
         const data = await res.json();
         onUpload(data.url);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Upload failed");
+        setError(err instanceof Error ? err.message : t("admin.upload.failed"));
       } finally {
         setUploading(false);
       }
     },
-    [onUpload],
+    [onUpload, t],
   );
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,7 +87,7 @@ export function ImageUpload({ onUpload, className }: ImageUploadProps) {
       >
         <label className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
           <span>
-            {uploading ? "Uploading..." : "📎 Upload image"}
+            {uploading ? t("admin.upload.uploading") : t("admin.upload.uploadImage")}
           </span>
           <input
             type="file"
@@ -96,7 +98,7 @@ export function ImageUpload({ onUpload, className }: ImageUploadProps) {
           />
         </label>
         {!uploading && (
-          <span className="text-muted-foreground/60">or drag & drop</span>
+          <span className="text-muted-foreground/60">{t("admin.upload.dragDrop")}</span>
         )}
       </div>
       {error && (

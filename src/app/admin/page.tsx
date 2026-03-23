@@ -1,7 +1,10 @@
 import { getDb } from "@/lib/db";
+import { getLocale } from "@/i18n/server";
+import { t } from "@/i18n/translations";
 
 export default async function AdminDashboardPage() {
   const db = getDb();
+  const locale = await getLocale();
 
   const [postCount, categoryCount, tagCount] = await Promise.all([
     db
@@ -22,16 +25,16 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Overview</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t(locale, "admin.dashboard.overview")}</h2>
         <p className="text-sm text-muted-foreground">
-          Blog content summary
+          {t(locale, "admin.dashboard.summary")}
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Published Posts" value={postCount} />
-        <StatCard label="Categories" value={categoryCount} />
-        <StatCard label="Tags" value={tagCount} />
+        <StatCard label={t(locale, "admin.dashboard.publishedPosts")} value={postCount} />
+        <StatCard label={t(locale, "admin.dashboard.categories")} value={categoryCount} />
+        <StatCard label={t(locale, "admin.dashboard.tags")} value={tagCount} />
       </div>
     </div>
   );

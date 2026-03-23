@@ -17,44 +17,45 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useLocale } from "@/i18n/context";
 
 // ── Navigation data model ──
 
 interface NavItem {
-  title: string;
+  titleKey: string;
   href: string;
   icon: React.ElementType;
 }
 
 interface NavGroup {
-  label: string;
+  labelKey: string;
   items: NavItem[];
   defaultOpen?: boolean;
 }
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: "Overview",
+    labelKey: "admin.nav.overview",
     defaultOpen: true,
     items: [
-      { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
-      { title: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+      { titleKey: "admin.nav.dashboard", href: "/admin", icon: LayoutDashboard },
+      { titleKey: "admin.nav.analytics", href: "/admin/analytics", icon: BarChart3 },
     ],
   },
   {
-    label: "Content",
+    labelKey: "admin.nav.content",
     defaultOpen: true,
     items: [
-      { title: "Posts", href: "/admin/posts", icon: FileText },
-      { title: "Categories", href: "/admin/categories", icon: FolderOpen },
-      { title: "Tags", href: "/admin/tags", icon: Tags },
+      { titleKey: "admin.nav.posts", href: "/admin/posts", icon: FileText },
+      { titleKey: "admin.nav.categories", href: "/admin/categories", icon: FolderOpen },
+      { titleKey: "admin.nav.tags", href: "/admin/tags", icon: Tags },
     ],
   },
 ];
 
 const ALL_NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
 
-// ── Collapsible nav group (matches basalt NavGroupSection) ──
+// ── Collapsible nav group ──
 
 function NavGroupSection({
   group,
@@ -64,6 +65,7 @@ function NavGroupSection({
   isActive: (href: string) => boolean;
 }) {
   const [open, setOpen] = useState(group.defaultOpen ?? true);
+  const { t } = useLocale();
 
   return (
     <div className="mt-2">
@@ -72,7 +74,7 @@ function NavGroupSection({
         className="flex w-full items-center justify-between px-3 py-2.5"
       >
         <span className="text-sm font-normal text-muted-foreground">
-          {group.label}
+          {t(group.labelKey)}
         </span>
         <span className="flex h-7 w-7 shrink-0 items-center justify-center">
           <ChevronUp
@@ -105,7 +107,7 @@ function NavGroupSection({
                 )}
               >
                 <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-                <span>{item.title}</span>
+                <span>{t(item.titleKey)}</span>
               </Link>
             ))}
           </div>
@@ -129,6 +131,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
   const pathname = usePathname();
+  const { t } = useLocale();
 
   const isActive = (href: string) => {
     if (href === "/admin") return pathname === "/admin";
@@ -163,7 +166,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
           {/* Expand button */}
           <button
             onClick={onToggle}
-            aria-label="Expand sidebar"
+            aria-label={t("admin.sidebar.expand")}
             className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors mb-2"
           >
             <PanelLeft
@@ -179,7 +182,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                title={item.title}
+                title={t(item.titleKey)}
                 className={cn(
                   "flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
                   isActive(item.href)
@@ -212,7 +215,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
                   strokeWidth={1.5}
                 />
                 <span className="text-lg font-semibold text-foreground">
-                  Firefly
+                  {t("admin.sidebar.firefly")}
                 </span>
                 <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground leading-none">
                   v0.1
@@ -220,7 +223,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
               </div>
               <button
                 onClick={onToggle}
-                aria-label="Collapse sidebar"
+                aria-label={t("admin.sidebar.collapse")}
                 className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
               >
                 <PanelLeft
@@ -236,7 +239,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
           <nav className="flex-1 overflow-y-auto px-3 pt-1">
             {NAV_GROUPS.map((group) => (
               <NavGroupSection
-                key={group.label}
+                key={group.labelKey}
                 group={group}
                 isActive={isActive}
               />
@@ -260,7 +263,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
               </div>
               <button
                 onClick={() => signOut({ callbackUrl: "/login" })}
-                aria-label="Sign out"
+                aria-label={t("admin.sidebar.signOut")}
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shrink-0"
               >
                 <LogOut

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useLocale } from "@/i18n/context";
 
 interface TaxonomyItem {
   id: string;
@@ -23,6 +24,7 @@ export function TaxonomyManager({
   apiBase,
 }: TaxonomyManagerProps) {
   const router = useRouter();
+  const { t } = useLocale();
   const [editing, setEditing] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -33,7 +35,9 @@ export function TaxonomyManager({
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
 
-  const label = type === "category" ? "Category" : "Tag";
+  const label = type === "category"
+    ? t("admin.taxonomy.category")
+    : t("admin.taxonomy.tag");
 
   const resetForm = () => {
     setName("");
@@ -64,7 +68,7 @@ export function TaxonomyManager({
 
   const handleSave = async () => {
     if (!name.trim() || !slug.trim()) {
-      setError("Name and slug are required");
+      setError(t("admin.taxonomy.nameSlugRequired"));
       return;
     }
 
@@ -95,7 +99,7 @@ export function TaxonomyManager({
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? `Failed to save ${type}`);
+        throw new Error(data.error ?? t("admin.taxonomy.failedSave", { type }));
       }
 
       resetForm();
@@ -109,9 +113,7 @@ export function TaxonomyManager({
 
   const handleDelete = async (item: TaxonomyItem) => {
     if (
-      !confirm(
-        `Delete ${label.toLowerCase()} "${item.name}"? This cannot be undone.`,
-      )
+      !confirm(t("admin.taxonomy.confirmDelete", { type: label, name: item.name }))
     ) {
       return;
     }
@@ -123,7 +125,7 @@ export function TaxonomyManager({
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? `Failed to delete ${type}`);
+        throw new Error(data.error ?? t("admin.taxonomy.failedDelete", { type }));
       }
 
       router.refresh();
@@ -131,6 +133,10 @@ export function TaxonomyManager({
       setError(err instanceof Error ? err.message : "Unknown error");
     }
   };
+
+  const emptyMessage = type === "category"
+    ? t("admin.taxonomy.noCategories")
+    : t("admin.taxonomy.noTags");
 
   return (
     <div className="space-y-4">
@@ -146,7 +152,7 @@ export function TaxonomyManager({
           onClick={startCreate}
           className="inline-flex items-center gap-2 rounded-[var(--radius-widget)] bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
-          New {label}
+          {t("admin.taxonomy.newItem", { label })}
         </button>
       )}
 
@@ -154,21 +160,21 @@ export function TaxonomyManager({
       {(creating || editing) && (
         <div className="rounded-[var(--radius-widget)] border border-border bg-secondary/50 p-4 space-y-3">
           <h3 className="text-sm font-medium text-foreground">
-            {editing ? `Edit ${label}` : `New ${label}`}
+            {editing ? t("admin.taxonomy.editItem", { label }) : t("admin.taxonomy.newItem", { label })}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Name"
+              placeholder={t("admin.taxonomy.name")}
               className="rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <input
               type="text"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
-              placeholder="slug"
+              placeholder={t("admin.taxonomy.slug")}
               className="rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
@@ -176,7 +182,7 @@ export function TaxonomyManager({
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description (optional)"
+            placeholder={t("admin.taxonomy.description")}
             className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <div className="flex gap-2">
@@ -185,13 +191,13 @@ export function TaxonomyManager({
               disabled={saving}
               className="inline-flex items-center rounded-[var(--radius-widget)] bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
-              {saving ? "Saving..." : "Save"}
+              {saving ? t("admin.taxonomy.saving") : t("admin.taxonomy.save")}
             </button>
             <button
               onClick={resetForm}
               className="inline-flex items-center rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent"
             >
-              Cancel
+              {t("admin.taxonomy.cancel")}
             </button>
           </div>
         </div>
@@ -203,19 +209,19 @@ export function TaxonomyManager({
           <thead>
             <tr className="border-b border-border bg-secondary/50">
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                Name
+                {t("admin.taxonomy.table.name")}
               </th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
-                Slug
+                {t("admin.taxonomy.table.slug")}
               </th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
-                Description
+                {t("admin.taxonomy.table.description")}
               </th>
               <th className="px-4 py-3 text-center font-medium text-muted-foreground">
-                Posts
+                {t("admin.taxonomy.table.posts")}
               </th>
               <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                Actions
+                {t("admin.taxonomy.table.actions")}
               </th>
             </tr>
           </thead>
@@ -226,7 +232,7 @@ export function TaxonomyManager({
                   colSpan={5}
                   className="px-4 py-8 text-center text-muted-foreground"
                 >
-                  No {type === "category" ? "categories" : "tags"} found
+                  {emptyMessage}
                 </td>
               </tr>
             ) : (
@@ -253,13 +259,13 @@ export function TaxonomyManager({
                         onClick={() => startEdit(item)}
                         className="text-sm text-primary hover:text-primary/80 transition-colors"
                       >
-                        Edit
+                        {t("admin.taxonomy.edit")}
                       </button>
                       <button
                         onClick={() => handleDelete(item)}
                         className="text-sm text-destructive hover:text-destructive/80 transition-colors"
                       >
-                        Delete
+                        {t("admin.taxonomy.delete")}
                       </button>
                     </div>
                   </td>
