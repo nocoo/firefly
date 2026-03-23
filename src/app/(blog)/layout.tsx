@@ -27,6 +27,12 @@ export default async function BlogLayout({
 
   return (
     <div className="blog-shell">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-blog-bg focus:px-4 focus:py-2 focus:text-blog-text"
+      >
+        Skip to content
+      </a>
       <div className="blog-max-width">
         <BlogSidebar
           locale={locale}
@@ -34,7 +40,7 @@ export default async function BlogLayout({
           tags={activeTags}
           archives={archives}
         />
-        <main className="blog-main">
+        <main id="main" className="blog-main">
           <div className="blog-theme-toggle">
             <LocaleToggle />
             <ThemeToggle />

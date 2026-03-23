@@ -157,6 +157,10 @@
   * {
     @apply border-border;
   }
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
   body {
     @apply bg-background text-foreground;
     font-family: -apple-system, system-ui, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
