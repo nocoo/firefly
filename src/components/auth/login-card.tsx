@@ -194,10 +194,12 @@ function LoginContent() {
         <p className="text-xs text-muted-foreground">
           Powered by{" "}
           <a
-            href="https://lizheng.me"
+            href="https://github.com/nocoo/firefly"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-primary hover:text-primary/80 transition-colors"
           >
-            lizheng.me
+            Firefly
           </a>
         </p>
       </footer>
