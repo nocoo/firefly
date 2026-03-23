@@ -673,6 +673,11 @@
     padding: 0;
   }
 
+  /* Hide mobile nav in large tier */
+  .blog-mobile-nav {
+    display: none !important;
+  }
+
   .blog-sidebar {
     position: fixed;
     top: 0;
@@ -710,6 +715,11 @@
 @media all and (min-width: 48em) and (max-width: 79.99em) {
   .blog-shell {
     padding: 0;
+  }
+
+  /* Hide mobile nav button in medium tier */
+  .blog-mobile-nav {
+    display: none !important;
   }
 
   .blog-sidebar {
@@ -751,6 +761,11 @@
 
   .blog-tagline {
     font-size: 0.8125em;
+  }
+
+  /* Adjust padding for medium screens */
+  .blog-main {
+    padding: 2em 4% 1.5em;
   }
 }
 
