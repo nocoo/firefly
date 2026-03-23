@@ -54,19 +54,19 @@ export default async function TagPage({
   const displayPosts = hasMore ? posts.slice(0, PAGE_SIZE) : posts;
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-12">
-      <header className="mb-12">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+    <>
+      <header className="mb-8">
+        <h1 className="text-2xl font-bold leading-tight text-blog-text md:text-3xl">
           #{tag.name}
         </h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
+        <p className="mt-1 text-xs text-blog-muted">
           {tag.post_count} post{tag.post_count !== 1 ? "s" : ""}
         </p>
       </header>
 
       <section>
         {displayPosts.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400 py-12 text-center">
+          <p className="py-12 text-center text-blog-muted">
             No posts with this tag.
           </p>
         ) : (
@@ -81,6 +81,6 @@ export default async function TagPage({
         hasMore={hasMore}
         basePath={`/tag/${slug}`}
       />
-    </main>
+    </>
   );
 }

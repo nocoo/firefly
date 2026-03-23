@@ -91,13 +91,14 @@ export default async function PostPage({ params }: PostPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd(breadcrumbs) }}
       />
-      <main className="max-w-2xl mx-auto px-4 py-12">
+
       <article>
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+        {/* Post header */}
+        <header>
+          <h1 className="text-2xl font-bold leading-tight text-blog-text md:text-3xl">
             {post.title}
           </h1>
-          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+          <div className="blog-byline">
             <time
               dateTime={
                 post.published_at
@@ -105,41 +106,47 @@ export default async function PostPage({ params }: PostPageProps) {
                   : undefined
               }
             >
-              {date}
+              Published {date}
             </time>
             {post.category_name && post.category_slug && (
               <>
-                <span>·</span>
-                <Link
-                  href={`/category/${post.category_slug}`}
-                  className="hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-                >
+                {" in "}
+                <Link href={`/category/${post.category_slug}`}>
                   {post.category_name}
                 </Link>
               </>
             )}
             {post.reading_time && (
-              <>
-                <span>·</span>
-                <span>{post.reading_time} min read</span>
-              </>
+              <> &middot; {post.reading_time} min read</>
             )}
           </div>
         </header>
 
+        {/* Featured image */}
+        {post.featured_image && (
+          <div className="blog-featured-image">
+            <img
+              src={post.featured_image}
+              alt={post.title}
+            />
+          </div>
+        )}
+
+        {/* Post content */}
         <div
-          className="prose dark:prose-invert max-w-none"
+          className="blog-content prose-firefly prose dark:prose-invert max-w-none"
           dangerouslySetInnerHTML={{ __html: html }}
         />
 
+        {/* Tags */}
         {tags.length > 0 && (
-          <footer className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800">
+          <footer className="mt-8 border-t border-blog-separator pt-6">
             <div className="flex flex-wrap gap-2">
               {tags.map((tag) => (
                 <Link
                   key={tag.id}
                   href={`/tag/${tag.slug}`}
-                  className="inline-block px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  className="inline-block rounded-full bg-blog-separator px-3 py-1 text-xs text-blog-muted transition-colors hover:text-blog-text"
                 >
                   {tag.name}
                 </Link>
@@ -151,15 +158,14 @@ export default async function PostPage({ params }: PostPageProps) {
 
       <Comments comments={commentTree} />
 
-      <nav className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800">
+      <nav className="mt-8 border-t border-blog-separator pt-6">
         <Link
           href="/"
-          className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+          className="text-sm text-blog-muted transition-colors hover:text-blog-text"
         >
-          ← Back to all posts
+          &larr; Back to all posts
         </Link>
       </nav>
-    </main>
     </>
   );
 }

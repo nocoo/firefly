@@ -28,7 +28,7 @@ export default async function Home({ searchParams }: HomeProps) {
   const { posts } = await listPosts(db, {
     status: "published",
     page,
-    pageSize: PAGE_SIZE + 1, // fetch one extra to check if there's a next page
+    pageSize: PAGE_SIZE + 1,
   });
 
   const hasMore = posts.length > PAGE_SIZE;
@@ -40,19 +40,10 @@ export default async function Home({ searchParams }: HomeProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: websiteJsonLd() }}
       />
-      <main className="max-w-2xl mx-auto px-4 py-12">
-      <header className="mb-12">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-          {SITE_NAME}
-        </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
-          {SITE_DESCRIPTION}
-        </p>
-      </header>
 
       <section>
         {displayPosts.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400 py-12 text-center">
+          <p className="py-12 text-center text-blog-muted">
             No posts yet.
           </p>
         ) : (
@@ -67,7 +58,6 @@ export default async function Home({ searchParams }: HomeProps) {
         hasMore={hasMore}
         basePath="/"
       />
-    </main>
     </>
   );
 }
