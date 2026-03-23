@@ -147,7 +147,7 @@ export function AnalyticsDashboard() {
   if (error) {
     return (
       <div className="flex items-center justify-center py-20 text-destructive">
-        {error}
+        {t("admin.analytics.fetchError")}
       </div>
     );
   }
