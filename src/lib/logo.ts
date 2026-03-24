@@ -6,6 +6,7 @@
 // logo URLs as props from their parent server components.
 // ---------------------------------------------------------------------------
 
+import "server-only";
 import { getR2PublicUrl } from "./r2-client";
 
 const LOGO_BASE_PATH = "lizhengblog/wp-content/uploads/firefly/site";
