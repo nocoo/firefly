@@ -1,0 +1,5 @@
+# Mock token previews in test fixtures and docs (not real secrets)
+608ffef871ecd8b519095bde984a2798f25eb267:src/lib/mcp/auth.test.ts:generic-api-key:36
+15978736cbe50d78ff10e088fee171ba0a6eb05d:src/data/mcp-tokens.test.ts:generic-api-key:40
+15978736cbe50d78ff10e088fee171ba0a6eb05d:src/data/mcp-tokens.test.ts:generic-api-key:111
+7a410d1369a2dc5004bdbd1618faebd01b053953:docs/10-mcp-server.md:generic-api-key:1099
