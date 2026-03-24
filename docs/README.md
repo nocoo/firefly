@@ -13,4 +13,4 @@ Modern blog platform built with Next.js, Cloudflare D1, and R2. Migrated from Wo
 | 05 | [Implementation Roadmap](./05-implementation-roadmap.md) | ✅ |
 | 06 | [Design Review & Optimization Plan](./06-design-review.md) | ✅ |
 | 07 | [Quality System Upgrade (L1+L2+L3+G1+G2)](./07-quality-system-upgrade.md) | ✅ |
-| 08 | [Blog Sidebar Responsive Layout Fix](./08-blog-responsive-fix.md) | 🚧 |
+| 08 | [Blog Sidebar Responsive Layout Fix](./08-blog-responsive-fix.md) | ✅ |

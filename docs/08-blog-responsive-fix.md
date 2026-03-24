@@ -42,7 +42,7 @@ Breakpoint rationale: 1200px is a common blog layout threshold — below it a 25
 
 ## Implementation
 
-### Step 1: CSS — Replace fixed sidebar with grid + sticky + media query
+### Step 1: CSS — Replace fixed sidebar with grid + sticky + media query ✅
 
 **File**: `src/app/globals.css`
 
@@ -148,7 +148,7 @@ The padding values from the deleted `-mobile` class are now a media query on `.b
 }
 ```
 
-### Step 2: Simplify React components — remove JS layout branching
+### Step 2: Simplify React components — remove JS layout branching ✅
 
 **File**: `src/components/blog/blog-layout-client.tsx`
 
@@ -266,13 +266,13 @@ Changes:
 - Drawer uses `open` prop to toggle `blog-sidebar-drawer-open` class
 - `inert` + `aria-hidden` on closed drawer for accessibility
 
-### Step 3: Server layout stays unchanged
+### Step 3: Server layout stays unchanged ✅
 
 **File**: `src/app/(blog)/layout.tsx` — **no changes needed**.
 
 `blog-max-width` wrapper stays in server layout. The grid is activated by CSS media query, not by JS. This is important: the server can render the full DOM tree, and CSS handles the rest.
 
-### Step 4: Rename CSS classes for clarity
+### Step 4: Rename CSS classes for clarity ✅
 
 | Old class | New class | Reason |
 |-----------|-----------|--------|
