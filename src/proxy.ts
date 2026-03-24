@@ -36,8 +36,13 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const method = request.method;
 
-  // Skip static assets and Next.js internals
-  if (pathname.startsWith("/_next/") || pathname.includes(".")) {
+  // Skip static assets and Next.js internals.
+  // Exception: /index.php/* paths are WordPress legacy URLs that need redirect
+  // lookup, so they must NOT be short-circuited here.
+  if (
+    pathname.startsWith("/_next/") ||
+    (pathname.includes(".") && !pathname.startsWith("/index.php"))
+  ) {
     return NextResponse.next();
   }
 
@@ -67,6 +72,13 @@ export async function proxy(request: NextRequest) {
     !pathname.startsWith("/api/") &&
     !pathname.startsWith("/login")
   ) {
+    // Hard redirect: /feed → /feed.xml (RSS subscribers from WordPress era)
+    if (pathname === "/feed" || pathname === "/feed/") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/feed.xml";
+      return NextResponse.redirect(url, 301);
+    }
+
     try {
       const workerUrl = process.env.WORKER_URL;
       const workerSecret = process.env.WORKER_SECRET;
