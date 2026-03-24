@@ -86,7 +86,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
                 <div className="blog-featured-image">
                   <Image
                     src={post.featured_image}
-                    alt=""
+                    alt={post.title}
                     fill
                     sizes="(max-width: 900px) 100vw, min(75vw, 1000px)"
                     priority

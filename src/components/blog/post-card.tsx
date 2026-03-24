@@ -44,7 +44,7 @@ export function PostCard({ post, locale, priority }: PostCardProps) {
           <Link href={href} className="absolute inset-0">
             <Image
               src={post.featured_image}
-              alt=""
+              alt={post.title}
               fill
               sizes="(max-width: 900px) 100vw, min(75vw, 1000px)"
               priority={priority ?? false}
