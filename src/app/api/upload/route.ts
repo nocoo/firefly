@@ -28,7 +28,9 @@ export async function POST(request: NextRequest) {
     // Validation errors → 400, everything else → 500
     if (
       message.includes("File too large") ||
-      message.includes("Unsupported file type")
+      message.includes("Unsupported file type") ||
+      message.includes("MIME type mismatch") ||
+      message.includes("does not match any supported image format")
     ) {
       return errorResponse(message, 400);
     }
