@@ -170,58 +170,6 @@ is hardcoded to `image/jpeg` but images may be PNG or WebP.
 Do **not** simply remove the `length` attribute — a `<enclosure>` without
 `length` is equally non-compliant.
 
-### P2 — RSS `<language>` is hardcoded `zh-CN`
-
-Site supports zh/en toggle but RSS always declares `zh-CN`.
-
-**Fix**: Read locale from settings.
-
----
-
-## 2. Code Quality (non-SEO, included for completeness)
-
-> Items in this section are code health / DX improvements that surfaced during
-> the audit. They do not directly affect search engine indexing or ranking.
-
-### P2 — `escapeXml()` duplicated in two files
-
-Identical implementations in `sitemap.xml/route.ts` and `feed.xml/route.ts`.
-
-**Fix**: Extract to `src/lib/xml.ts`.
-
-### P2 — Blog color palette repeated 3–4x in `globals.css`
-
-| Location | Purpose |
-|----------|---------|
-| `:root` | Light mode (L144-162) |
-| `.dark` | Dark mode (L197-214) |
-| `.blog-preview-theme:not(.blog-preview-dark)` | Admin preview light (L548-563) |
-| `.blog-preview-dark` | Admin preview dark (L567-583) |
-
-Preview light values are identical to `:root`. Preview dark values are
-identical to `.dark`. Changing a color requires syncing 4 places.
-
-**Fix**: Preview inherits from `:root`/`.dark` by default. Only override when
-global theme ≠ preview theme using forced `data-theme` attribute.
-
-### P2 — `SocialLink` uses `useState` for hover
-
-```tsx
-const [isHovered, setIsHovered] = useState(false);
-```
-
-React state for hover triggers re-renders. Can be replaced with pure CSS
-`:hover` selector to set `fill`.
-
-**Fix**: Replace with CSS `:hover` rule, remove client state.
-
-### P2 — Duplicate GitHub link
-
-`BlogGlobalBar` (top-right fixed) and `BlogSidebar` both render a GitHub
-link.
-
-**Fix**: Remove from one location.
-
 ### P2 — Listing pages lack structured data (CollectionPage / ItemList)
 
 Category, tag, and archive pages have no JSON-LD. Search engines understand
@@ -279,6 +227,58 @@ engines, causing unnecessary re-crawls and reducing trust in the signal.
 **Fix**: Use the `updated_at` timestamp of the most recently published or
 updated post as the homepage `lastmod`.
 
+### P2 — RSS `<language>` is hardcoded `zh-CN`
+
+Site supports zh/en toggle but RSS always declares `zh-CN`.
+
+**Fix**: Read locale from settings.
+
+---
+
+## 2. Code Quality (non-SEO, included for completeness)
+
+> Items in this section are code health / DX improvements that surfaced during
+> the audit. They do not directly affect search engine indexing or ranking.
+
+### P2 — `escapeXml()` duplicated in two files
+
+Identical implementations in `sitemap.xml/route.ts` and `feed.xml/route.ts`.
+
+**Fix**: Extract to `src/lib/xml.ts`.
+
+### P2 — Blog color palette repeated 3–4x in `globals.css`
+
+| Location | Purpose |
+|----------|---------|
+| `:root` | Light mode (L144-162) |
+| `.dark` | Dark mode (L197-214) |
+| `.blog-preview-theme:not(.blog-preview-dark)` | Admin preview light (L548-563) |
+| `.blog-preview-dark` | Admin preview dark (L567-583) |
+
+Preview light values are identical to `:root`. Preview dark values are
+identical to `.dark`. Changing a color requires syncing 4 places.
+
+**Fix**: Preview inherits from `:root`/`.dark` by default. Only override when
+global theme ≠ preview theme using forced `data-theme` attribute.
+
+### P2 — `SocialLink` uses `useState` for hover
+
+```tsx
+const [isHovered, setIsHovered] = useState(false);
+```
+
+React state for hover triggers re-renders. Can be replaced with pure CSS
+`:hover` selector to set `fill`.
+
+**Fix**: Replace with CSS `:hover` rule, remove client state.
+
+### P2 — Duplicate GitHub link
+
+`BlogGlobalBar` (top-right fixed) and `BlogSidebar` both render a GitHub
+link.
+
+**Fix**: Remove from one location.
+
 ### P2 — Tag/Category/Archive page structure is repetitive
 
 All listing pages follow identical pattern: fetch → PostCard list →
@@ -288,12 +288,11 @@ Pagination. Could extract a shared `PostListPage` component.
 
 ## 3. Speed
 
-### P1 — No explicit ISR or static generation — likely fully dynamic
+### P1 — No explicit ISR or static generation configured in source
 
 No blog route exports `revalidate`, `dynamic`, or `generateStaticParams`
-(verified via grep across `src/app/`). This means Next.js treats all pages as
-dynamically rendered by default — each request triggers SSR + an HTTP
-round-trip to the Cloudflare Worker.
+(verified via grep across `src/app/`). Without these, Next.js has no
+source-level instruction to statically generate or incrementally cache pages.
 
 Some data paths do have **process-level caching** (e.g. `SiteSettings` with
 5-min TTL, `MonthlyArchives`, post count queries), which reduces repeated DB
@@ -403,7 +402,7 @@ posts with `featured_image`.
 
 | Priority | Task | Impact |
 |----------|------|--------|
-| P1 | Investigate ISR / `revalidate` — verify production caching, add if missing | TTFB reduction |
+| P1 | Add ISR / `revalidate` — source has no static generation config; verify production behavior via `next build` output or response headers | TTFB reduction |
 | P1 | RSS: use `content_html` instead of re-rendering Markdown | Reduce computation |
 | P1 | Cache redirect map in proxy | Reduce per-request latency |
 | P2 | Split `BlogLayoutClient` into smaller client islands | Reduce serialization |
