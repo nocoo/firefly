@@ -63,6 +63,7 @@
   "admin.posts.new": "新建文章",
   "admin.posts.noResults": "未找到文章",
   "admin.posts.edit": "编辑",
+  "admin.posts.editPost": "编辑文章",
   "admin.posts.table.title": "标题",
   "admin.posts.table.status": "状态",
   "admin.posts.table.category": "分类",

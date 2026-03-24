@@ -63,6 +63,7 @@
   "admin.posts.new": "New Post",
   "admin.posts.noResults": "No posts found",
   "admin.posts.edit": "Edit",
+  "admin.posts.editPost": "Edit Post",
   "admin.posts.table.title": "Title",
   "admin.posts.table.status": "Status",
   "admin.posts.table.category": "Category",
