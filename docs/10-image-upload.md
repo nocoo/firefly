@@ -51,7 +51,7 @@ Current `generateR2Key()` produces `uploads/YYYY/MM/timestamp-filename`. The new
    - `logo-192.png` — PWA icon 192×192
    - `logo-512.png` — PWA icon 512×512
 4. All variants uploaded to R2 under a **versioned path**: `lizhengblog/wp-content/uploads/firefly/site/<version>/logo-{size}.png`
-5. `<version>` is a short hash derived from `crypto.randomUUID().slice(0, 8)`, generated fresh on each upload
+5. `<version>` is a short random ID from `crypto.randomUUID().slice(0, 8)`, generated fresh on each upload
 6. All logo variants use the standard immutable cache policy (`max-age=31536000, immutable`) — cache busting is achieved by changing the version path, not by invalidating old URLs
 7. Old version files are **not deleted** immediately (R2 storage is cheap; orphan cleanup can be a future chore task)
 
@@ -80,13 +80,15 @@ When `site_logo_version` is `NULL`, the site has no custom logo and all consumer
 
 **`src/lib/logo.ts`** (new):
 ```typescript
+import { getR2PublicUrl } from "./r2-client";
+
 const LOGO_BASE_PATH = "lizhengblog/wp-content/uploads/firefly/site";
-const CDN_PREFIX = "https://assets.lizheng.me";
 
 export type LogoSize = 16 | 32 | 48 | 80 | 180 | 192 | 512;
 
 export function getLogoUrl(version: string, size: LogoSize): string {
-  return `${CDN_PREFIX}/${LOGO_BASE_PATH}/${version}/logo-${size}.png`;
+  // Reuses R2_PUBLIC_URL from r2-client config — single source of truth for CDN domain
+  return `${getR2PublicUrl()}/${LOGO_BASE_PATH}/${version}/logo-${size}.png`;
 }
 
 export function getLogoR2Key(version: string, size: LogoSize): string {
@@ -94,7 +96,7 @@ export function getLogoR2Key(version: string, size: LogoSize): string {
 }
 ```
 
-This centralizes path construction. All consumers (favicon API, login page, settings form preview) use `getLogoUrl()`.
+`getR2PublicUrl()` is a new export from `r2-client.ts` that returns the configured `R2_PUBLIC_URL` (default `https://assets.lizheng.me`). This ensures logo URL construction shares the same config source as general uploads — no hardcoded CDN domain duplication.
 
 ### Where the Uploaded Logo Appears
 
@@ -114,14 +116,16 @@ This centralizes path construction. All consumers (favicon API, login page, sett
 ### Settings Data Layer Changes
 
 **`src/data/settings.ts`**:
-- Add `siteLogoVersion: string | null` to `SiteSettings` interface
+- Add `siteLogoVersion: string | null` to `SiteSettings` interface (read-only from settings perspective)
 - Add `siteLogoVersion` to `DEFAULTS` (null)
-- Add `siteLogoVersion` to `parseRow()`, `UpdateSiteSettingsInput`
+- Add `siteLogoVersion` to `parseRow()`
+- Do **not** add `siteLogoVersion` to `UpdateSiteSettingsInput` — this field is managed exclusively by the logo upload/delete APIs, not by `PUT /api/settings`
+- New function `updateSiteLogoVersion(db, version: string | null)` — dedicated writer for logo version, calls `invalidateSettingsCache()`
 - Existing 5-minute process-level cache: acceptable for single-process deployment. Logo update calls `invalidateSettingsCache()` same as other settings. Document this as a known limitation for future multi-instance scenarios
 
 ### API Changes
 
-**`PUT /api/settings`**: accept optional `siteLogoVersion` field.
+**`PUT /api/settings`**: **no change** for logo — `siteLogoVersion` is not accepted here. Prevents writing an arbitrary/nonexistent version via the general settings endpoint.
 
 **`POST /api/upload/logo`** (new route):
 1. Accept multipart file upload
@@ -129,8 +133,15 @@ This centralizes path construction. All consumers (favicon API, login page, sett
 3. Generate version: `crypto.randomUUID().slice(0, 8)`
 4. Resize to all 7 target sizes using `sharp`, output as PNG
 5. Upload all variants to R2 under `lizhengblog/wp-content/uploads/firefly/site/{version}/`
-6. Update `site_settings.site_logo_version` to the new version string
+6. Call `updateSiteLogoVersion(db, version)` to persist the new version
 7. Return `{ version, sizes: [{ size, url }] }`
+
+**`DELETE /api/upload/logo`** (new route):
+1. Read current `site_logo_version` from settings
+2. If NULL → return 404 (no logo to remove)
+3. Call `updateSiteLogoVersion(db, null)` to clear the version
+4. Old R2 files are **not deleted** (orphan cleanup is a separate concern; immutable URLs may still be cached/referenced)
+5. Return `{ removed: true }`
 
 **`GET /api/favicon`** (new route):
 1. Read `site_logo_version` from settings
@@ -138,7 +149,7 @@ This centralizes path construction. All consumers (favicon API, login page, sett
    - Supported values: `16`, `32`, `48`, `180`, `192`, `512`
    - Default (no param or invalid value): `32`
 3. If `site_logo_version` is set → 302 redirect to `getLogoUrl(version, size)`
-4. If `site_logo_version` is NULL → serve the static `favicon.ico` (for default `32`) or return 404 for other sizes
+4. If `site_logo_version` is NULL → 302 redirect to `/favicon.ico` (the static fallback). This applies to **all** sizes — ensures no consumer ever gets a 404
 
 ### Settings Form Changes
 
@@ -147,6 +158,7 @@ This centralizes path construction. All consumers (favicon API, login page, sett
 - Upload button with file picker (click or drag)
 - Hint text: "Image must be square (1:1 ratio)"
 - On upload success: form re-fetches settings to get new `siteLogoVersion`, preview updates automatically
+- **Remove button** (shown only when a logo exists): calls `DELETE /api/upload/logo`, on success clears the preview and reverts to placeholder
 - No crop UI — server strictly rejects non-square images, front-end shows the error
 
 ### Frontend Favicon Integration
@@ -282,17 +294,17 @@ export function generateFireflyR2Key(filename: string): string {
 | File | Change |
 |------|--------|
 | `scripts/migrations/006-site-logo.sql` | **New** — add `site_logo_version` column |
-| `src/data/settings.ts` | Add `siteLogoVersion` field to types, parse, update |
+| `src/data/settings.ts` | Add `siteLogoVersion` (read-only), new `updateSiteLogoVersion()` writer |
 | `src/lib/r2.ts` | Add `generateFireflyR2Key()`, add `extractExtension()` export |
-| `src/lib/r2-client.ts` | Support custom key in upload |
-| `src/lib/logo.ts` | **New** — `getLogoUrl()`, `getLogoR2Key()` helpers |
+| `src/lib/r2-client.ts` | Support custom key in upload, export `getR2PublicUrl()` |
+| `src/lib/logo.ts` | **New** — `getLogoUrl()`, `getLogoR2Key()` helpers (uses `getR2PublicUrl()`) |
 | `src/app/api/upload/route.ts` | Use new key generator |
-| `src/app/api/upload/logo/route.ts` | **New** — logo upload with resize + version |
-| `src/app/api/favicon/route.ts` | **New** — dynamic favicon with `?size` parameter |
+| `src/app/api/upload/logo/route.ts` | **New** — logo upload (POST) with resize + version; logo remove (DELETE) |
+| `src/app/api/favicon/route.ts` | **New** — dynamic favicon with `?size`, fallback to static for all sizes |
 | `src/components/admin/image-upload-zone.tsx` | **New** — upload zone with copy buttons |
 | `src/components/admin/image-upload.tsx` | Remove `image/svg+xml` from accept; deprecate component |
 | `src/components/admin/post-form.tsx` | Use `ImageUploadZone` instead of `ImageUpload` |
-| `src/components/admin/settings-form.tsx` | Add logo upload section |
+| `src/components/admin/settings-form.tsx` | Add logo upload + remove section |
 | `src/components/auth/login-card.tsx` | Dynamic logo from `siteLogoVersion` |
 | `src/app/login/page.tsx` | Pass `siteLogoVersion` to `LoginCard` |
 | `src/app/layout.tsx` | Dynamic favicon reference |
@@ -306,13 +318,13 @@ export function generateFireflyR2Key(filename: string): string {
 | # | Commit | Description |
 |---|--------|-------------|
 | 1 | `fix: remove svg from image-upload accept attribute` | Align front-end with server-side SVG rejection |
-| 2 | `feat: add site_logo_version to site_settings` | Migration 006 + data layer + settings API |
-| 3 | `feat: add logo URL helper module` | New `src/lib/logo.ts` with `getLogoUrl()` / `getLogoR2Key()` |
+| 2 | `feat: add site_logo_version to site_settings` | Migration 006 + data layer (read-only) + `updateSiteLogoVersion()` |
+| 3 | `feat: add logo URL helper module` | New `src/lib/logo.ts`, new `getR2PublicUrl()` export from `r2-client.ts` |
 | 4 | `feat: add GUID-based R2 key generation` | `generateFireflyR2Key()` in `r2.ts`, update `r2-client.ts` |
 | 5 | `feat: update upload API to use new R2 path` | Modify `POST /api/upload` |
-| 6 | `feat: add logo upload API with multi-size resize` | New `POST /api/upload/logo` route, install `sharp` |
-| 7 | `feat: add dynamic favicon API with size parameter` | New `GET /api/favicon` with `?size=16|32|48|180|192|512` |
-| 8 | `feat: add site logo upload to settings page` | Settings form UI + logo preview |
+| 6 | `feat: add logo upload and delete API` | New `POST /api/upload/logo` (resize + version), new `DELETE /api/upload/logo` |
+| 7 | `feat: add dynamic favicon API with size parameter` | New `GET /api/favicon` with `?size`, fallback to static for all sizes |
+| 8 | `feat: add site logo upload to settings page` | Settings form UI: upload + preview + remove button |
 | 9 | `feat: integrate dynamic logo in login page` | `LoginCard` accepts `siteLogoVersion` prop |
 | 10 | `feat: integrate dynamic favicon in layout` | Update `layout.tsx` metadata |
 | 11 | `feat: add ImageUploadZone with copy actions` | New component with copy URL / copy Markdown |
