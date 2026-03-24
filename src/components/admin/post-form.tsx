@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Category, Tag, PostWithCategory, PostStatus } from "@/models/types";
 import { slugify } from "@/models/post";
 import { renderMarkdown } from "@/models/markdown";
-import { ImageUpload } from "./image-upload";
+import { ImageUploadZone } from "./image-upload-zone";
 import { MarkdownPreview } from "./markdown-preview";
 import { Select } from "@/components/ui/select";
 import { ArticleBody } from "@/components/blog/article-body";
@@ -69,12 +69,6 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
     () => (previewMode && content ? renderMarkdown(content) : ""),
     [previewMode, content],
   );
-
-  // Insert uploaded image URL as markdown at cursor (or end)
-  const handleImageUpload = useCallback((url: string) => {
-    const markdown = `![](${url})`;
-    setContent((prev) => (prev ? `${prev}\n\n${markdown}` : markdown));
-  }, []);
 
   const handleTitleChange = (value: string) => {
     setTitle(value);
@@ -233,7 +227,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             </div>
           ) : (
             <>
-              <ImageUpload onUpload={handleImageUpload} className="mb-2" />
+              <ImageUploadZone className="mb-2" />
               <textarea
                 id="content"
                 value={content}
@@ -248,7 +242,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         </div>
         {/* Desktop: always show editor (preview is in right panel) */}
         <div className="hidden lg:block">
-          <ImageUpload onUpload={handleImageUpload} className="mb-2" />
+          <ImageUploadZone className="mb-2" />
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
