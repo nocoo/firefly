@@ -146,7 +146,7 @@ export function ImageUploadZone({ className }: ImageUploadZoneProps) {
           />
 
           {/* Copy buttons */}
-          <div className="flex gap-2">
+          <div className="flex flex-1 gap-2">
             <button
               type="button"
               onClick={() => copyToClipboard(result.url, "url")}
@@ -166,6 +166,18 @@ export function ImageUploadZone({ className }: ImageUploadZoneProps) {
                 : t("admin.upload.copyMarkdown")}
             </button>
           </div>
+
+          {/* Dismiss */}
+          <button
+            type="button"
+            onClick={() => setResult(null)}
+            className="shrink-0 rounded p-1 text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"
+            aria-label="Dismiss"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       )}
     </div>
