@@ -12,7 +12,6 @@ import {
   BarChart3,
   LogOut,
   PanelLeft,
-  Layers,
   ChevronUp,
   Settings,
   ExternalLink,
@@ -169,9 +168,12 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
         <div className="flex h-screen w-[68px] flex-col items-center">
           {/* Logo */}
           <div className="flex h-14 items-center justify-center">
-            <Layers
-              className="h-5 w-5 text-primary"
-              strokeWidth={1.5}
+            <img
+              src="/logo-24.png"
+              alt="Firefly"
+              width={24}
+              height={24}
+              className="h-6 w-6"
             />
           </div>
 
@@ -234,9 +236,12 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
           <div className="px-3 h-14 flex items-center">
             <div className="flex w-full items-center justify-between px-3">
               <div className="flex items-center gap-3">
-                <Layers
-                  className="h-5 w-5 text-primary"
-                  strokeWidth={1.5}
+                <img
+                  src="/logo-24.png"
+                  alt="Firefly"
+                  width={24}
+                  height={24}
+                  className="h-6 w-6"
                 />
                 <span className="text-lg font-semibold text-foreground">
                   {t("admin.sidebar.firefly")}

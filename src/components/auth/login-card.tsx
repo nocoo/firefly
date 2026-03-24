@@ -3,7 +3,7 @@
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { Github, Layers } from "lucide-react";
+import { Github } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useLocale } from "@/i18n/context";
 
@@ -122,7 +122,7 @@ function LoginContent() {
                   }}
                 />
                 <div className="flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />
+                  <img src="/logo-24.png" alt="Firefly" width={24} height={24} className="h-5 w-5" />
                   <span className="text-sm font-semibold text-primary-foreground">Firefly</span>
                 </div>
                 <span className="text-[10px] font-medium uppercase tracking-widest text-primary-foreground/60">
@@ -144,7 +144,7 @@ function LoginContent() {
             <div className="flex flex-1 flex-col items-center px-6 pt-6 pb-5">
               {/* Avatar placeholder */}
               <div className="h-24 w-24 overflow-hidden rounded-full bg-secondary dark:bg-[#171717] ring-1 ring-border flex items-center justify-center">
-                <Layers className="h-10 w-10 text-primary" strokeWidth={1.5} />
+                <img src="/logo-80.png" alt="Firefly" width={80} height={80} className="h-20 w-20" />
               </div>
 
               <p className="mt-5 text-lg font-semibold text-foreground">{t("auth.welcome")}</p>
