@@ -35,17 +35,18 @@ export const PostGridCard = memo(function PostGridCard({
   const date = post.published_at ? formatDateDisplay(post.published_at) : "—";
 
   return (
-    <div className="group relative rounded-[var(--radius-widget)] border border-border overflow-hidden shadow-sm transition-colors hover:border-primary/50">
+    <div className="group relative flex flex-col rounded-[var(--radius-widget)] border border-border overflow-hidden shadow-sm transition-colors hover:border-primary/50">
       {/* Top area — featured image or text preview */}
       <Link href={`/admin/posts/${post.id}/edit`} className="block">
         {post.featured_image ? (
           <div className="relative h-[200px] bg-secondary">
             <Image
               src={post.featured_image}
-              alt=""
+              alt={post.title}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
               className="object-cover"
+              unoptimized
             />
           </div>
         ) : (
@@ -57,8 +58,8 @@ export const PostGridCard = memo(function PostGridCard({
         )}
       </Link>
 
-      {/* Hover overlay with action buttons */}
-      <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+      {/* Hover overlay — covers only the image area, not the info panel */}
+      <div className="absolute inset-x-0 top-0 h-[200px] flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
         <a
           href={previewUrl}
           target="_blank"
@@ -81,7 +82,7 @@ export const PostGridCard = memo(function PostGridCard({
       </div>
 
       {/* Bottom info area */}
-      <div className="border-t border-border bg-background p-2.5">
+      <div className="mt-auto border-t border-border bg-background p-2.5">
         <Link
           href={`/admin/posts/${post.id}/edit`}
           className="block text-sm font-medium text-foreground line-clamp-2 hover:text-primary transition-colors"
