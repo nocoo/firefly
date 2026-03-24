@@ -31,7 +31,8 @@ export interface UpdatePostInput {
   title?: string | undefined;
   slug?: string | undefined;
   content?: string | undefined;
-  excerpt?: string | undefined;
+  /** Pass null to clear and auto-regenerate from content. */
+  excerpt?: string | null | undefined;
   status?: PostStatus | undefined;
   category_id?: string | null | undefined;
   featured_image?: string | null | undefined;
@@ -332,7 +333,13 @@ export async function updatePost(
 
   if (input.excerpt !== undefined) {
     setClauses.push("excerpt = ?");
-    params.push(input.excerpt);
+    if (input.excerpt === null) {
+      // null means "clear and auto-regenerate from content"
+      const contentForExcerpt = input.content ?? existingPost.content;
+      params.push(excerptFromContent(contentForExcerpt));
+    } else {
+      params.push(input.excerpt);
+    }
   }
 
   if (input.status !== undefined) {

@@ -176,3 +176,51 @@ export interface PostWithTags extends PostWithCategory {
 export interface CommentTree extends Comment {
   children: CommentTree[];
 }
+
+// ---------------------------------------------------------------------------
+// MCP (Model Context Protocol) — OAuth 2.1 + tool access
+// ---------------------------------------------------------------------------
+
+/** Dynamic Client Registration (RFC 7591) */
+export interface McpClient {
+  id: string; // ULID
+  client_id: string;
+  client_name: string;
+  client_secret: string | null;
+  redirect_uris: string; // JSON array
+  grant_types: string; // JSON array
+  created_at: number;
+}
+
+/** OAuth authorization session / code */
+export interface McpAuthCode {
+  state: string; // PK, CSRF state param
+  code: string | null; // set after Google callback
+  client_id: string;
+  redirect_uri: string;
+  code_challenge: string;
+  code_challenge_method: string;
+  user_email: string | null;
+  scope: string;
+  expires_at: number;
+  consumed: number; // 0 = unused, 1 = consumed
+  created_at: number;
+}
+
+/** Persistent access & refresh token (hash-only storage) */
+export interface McpToken {
+  id: string; // ULID
+  access_token_hash: string;
+  access_token_preview: string;
+  refresh_token_hash: string | null;
+  client_id: string;
+  user_email: string;
+  scope: string;
+  client_name: string | null;
+  last_used_at: number | null;
+  expires_at: number;
+  refresh_expires_at: number | null;
+  revoked: number; // 0 = active, 1 = revoked
+  revoked_at: number | null;
+  created_at: number;
+}

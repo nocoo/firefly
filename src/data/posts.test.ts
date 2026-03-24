@@ -474,6 +474,24 @@ describe("updatePost", () => {
     expect(result?.excerpt).toBe("Custom excerpt");
   });
 
+  it("auto-regenerates excerpt when excerpt is null", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({ ...samplePostWithCategory, content: "Some long content here" })
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
+
+    await updatePost(db, "test-id", { excerpt: null });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("excerpt = ?");
+    // Should have regenerated excerpt from content, not null
+    const excerptParam = (params as unknown[]).find(
+      (p) => typeof p === "string" && p !== "test-id",
+    );
+    expect(excerptParam).toBeDefined();
+    expect(excerptParam).not.toBeNull();
+  });
+
   it("returns existing post when no fields provided", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(samplePostWithCategory);
 
