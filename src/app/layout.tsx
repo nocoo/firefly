@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR, TWITTER_HANDLE } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { LocaleProvider } from "@/i18n/context";
@@ -81,11 +80,13 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <script
+          dangerouslySetInnerHTML={{ __html: themeInitScript }}
+        />
         <meta name="theme-color" content="#FAF8F5" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#1C1A17" media="(prefers-color-scheme: dark)" />
       </head>
       <body className="antialiased">
-        <Script id="theme-init" strategy="beforeInteractive">{themeInitScript}</Script>
         <LocaleProvider locale={locale}>
           {children}
         </LocaleProvider>
