@@ -418,3 +418,37 @@ posts with `featured_image`.
 | P2 | Deduplicate GitHub link (sidebar vs global bar) | UI cleanliness |
 | P2 | CSS palette deduplication | Maintainability |
 | P2 | Extract shared `PostListPage` component | DRY |
+
+---
+
+## Implementation Status (2026-03-24)
+
+All P0 and P1 SEO/Speed items are resolved. P2 items completed where
+applicable. Items marked *deferred* require design decisions or are
+non-impactful enough to address later.
+
+| # | Priority | Task | Status |
+|---|----------|------|--------|
+| 1 | P0 | Fix `robots.txt` — single wildcard rule | ✅ Done |
+| 2 | P0 | Fix language signals — dynamic locale everywhere | ✅ Done (11 files, 20 tests) |
+| 3 | P0 | Add `generateMetadata` + canonical to all paginated routes | ✅ Done (5 routes) |
+| 4 | P1 | Tighten archive URL validation | ✅ Done (12 tests) |
+| 5 | P1 | Tag thin content — sitemap threshold ≥3 + noindex | ✅ Done |
+| 6 | P1 | Add `alt` text to featured images | ✅ Done (3 files) |
+| 7 | P1 | RSS: remove non-compliant `<enclosure>` | ✅ Done |
+| 8 | P1 | Custom 404 page | ✅ Done (i18n zh/en) |
+| 9 | P1 | RSS: use `content_html` instead of re-rendering | ✅ Done |
+| 10 | P1 | Cache redirect map in proxy (5-min TTL) | ✅ Done |
+| 11 | P2 | Add `CollectionPage`/`ItemList` JSON-LD | ✅ Done (home, category, tag, archive) |
+| 12 | P2 | Remove `WebSite` JSON-LD from paginated subpages | ✅ Done |
+| 13 | P2 | Sitemap homepage `lastmod` → latest post date | ✅ Done |
+| 14 | P2 | Sitemap `<image:image>` extension | ✅ Done |
+| 15 | P2 | Extract shared `escapeXml` to `src/lib/xml.ts` | ✅ Done (7 tests) |
+| 16 | P1 | Add ISR / `revalidate` | Deferred — requires prod behavior verification |
+| 17 | P2 | Split `BlogLayoutClient` into smaller client islands | Deferred — requires design refactor |
+| 18 | P2 | `SocialLink` hover → pure CSS | Deferred — non-SEO |
+| 19 | P2 | Deduplicate GitHub link | Deferred — non-SEO |
+| 20 | P2 | CSS palette deduplication | Deferred — non-SEO |
+| 21 | P2 | Extract shared `PostListPage` component | Deferred — non-SEO |
+
+**Test status**: 351 tests passing, 94.66% statement coverage.
