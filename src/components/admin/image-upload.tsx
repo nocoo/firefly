@@ -91,7 +91,7 @@ export function ImageUpload({ onUpload, className }: ImageUploadProps) {
           </span>
           <input
             type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/avif"
+            accept="image/jpeg,image/png,image/gif,image/webp,image/avif"
             onChange={handleFileSelect}
             disabled={uploading}
             className="sr-only"
