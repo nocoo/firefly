@@ -25,9 +25,13 @@ export async function GET() {
 
   const entries: SitemapEntry[] = [];
 
-  // Home — lastmod = most recent post update, not current time
-  const latestPostDate = posts.length > 0
-    ? new Date(posts[0].updated_at * 1000)
+  // Home — lastmod = most recently updated post (not first by published_at)
+  const maxUpdatedAt = posts.reduce(
+    (max, p) => Math.max(max, p.updated_at),
+    0,
+  );
+  const latestPostDate = maxUpdatedAt > 0
+    ? new Date(maxUpdatedAt * 1000)
     : new Date();
   entries.push({
     url: SITE_URL,
