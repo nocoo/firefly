@@ -54,9 +54,16 @@ When the site is switched to English, Google sees contradictory signals:
 **Evidence**: `src/i18n/server.ts`, `src/app/layout.tsx` (L39, L71),
 `src/lib/seo.ts` (L49), `src/lib/jsonld.ts` (L19, L48).
 
-**Fix**: Thread the locale from `getLocale()` into `buildPageMeta()`,
-`websiteJsonLd()`, `blogPostingJsonLd()`, and the RSS route. Map `zh` →
-`zh_CN` / `zh-CN`, `en` → `en_US` / `en` for each format.
+**Fix**: Two layers must change:
+
+1. **Root layout** (`src/app/layout.tsx`): The `metadata` export is a static
+   object, so `openGraph.locale` is hardcoded at build time. Convert it to
+   a `generateMetadata()` async function that reads `getLocale()` and sets
+   `locale` / `hreflang` dynamically. Without this step, the root-level OG
+   locale will remain `zh_CN` regardless of other fixes.
+2. **Downstream helpers**: Thread the locale into `buildPageMeta()`,
+   `websiteJsonLd()`, `blogPostingJsonLd()`, and the RSS feed route. Map
+   `zh` → `zh_CN` / `zh-CN`, `en` → `en_US` / `en` for each format.
 
 ### P0 — Missing `generateMetadata` on paginated/archive routes
 
@@ -146,11 +153,22 @@ back to valid pages.
 <enclosure url="..." type="image/jpeg" length="0"/>
 ```
 
-`length="0"` violates RSS spec. `type` is hardcoded `image/jpeg` but images
-may be PNG/WebP.
+`length` is a **required** attribute per the RSS 2.0 spec and must contain the
+file's actual byte size. `length="0"` is non-compliant. Additionally, `type`
+is hardcoded to `image/jpeg` but images may be PNG or WebP.
 
-**Fix**: Either fetch Content-Length from R2 or omit `length`. Detect MIME
-from URL extension.
+**Evidence**: `src/app/feed.xml/route.ts` (L29-31).
+
+**Fix**: Two valid approaches:
+1. **Provide real values**: HEAD-request the R2 URL at feed build time to get
+   `Content-Length` and `Content-Type`, then populate both attributes
+   accurately.
+2. **Remove `<enclosure>` entirely**: If fetching metadata is too expensive,
+   omit the `<enclosure>` element rather than emitting a non-compliant one.
+   The `<enclosure>` tag is optional in RSS 2.0.
+
+Do **not** simply remove the `length` attribute — a `<enclosure>` without
+`length` is equally non-compliant.
 
 ### P2 — RSS `<language>` is hardcoded `zh-CN`
 
@@ -160,15 +178,18 @@ Site supports zh/en toggle but RSS always declares `zh-CN`.
 
 ---
 
-## 2. Redundancy
+## 2. Code Quality (non-SEO, included for completeness)
 
-### P0 — `escapeXml()` duplicated in two files
+> Items in this section are code health / DX improvements that surfaced during
+> the audit. They do not directly affect search engine indexing or ranking.
+
+### P2 — `escapeXml()` duplicated in two files
 
 Identical implementations in `sitemap.xml/route.ts` and `feed.xml/route.ts`.
 
 **Fix**: Extract to `src/lib/xml.ts`.
 
-### P1 — Blog color palette repeated 3–4x in `globals.css`
+### P2 — Blog color palette repeated 3–4x in `globals.css`
 
 | Location | Purpose |
 |----------|---------|
@@ -183,7 +204,7 @@ identical to `.dark`. Changing a color requires syncing 4 places.
 **Fix**: Preview inherits from `:root`/`.dark` by default. Only override when
 global theme ≠ preview theme using forced `data-theme` attribute.
 
-### P1 — `SocialLink` uses `useState` for hover
+### P2 — `SocialLink` uses `useState` for hover
 
 ```tsx
 const [isHovered, setIsHovered] = useState(false);
@@ -194,7 +215,7 @@ React state for hover triggers re-renders. Can be replaced with pure CSS
 
 **Fix**: Replace with CSS `:hover` rule, remove client state.
 
-### P1 — Duplicate GitHub link
+### P2 — Duplicate GitHub link
 
 `BlogGlobalBar` (top-right fixed) and `BlogSidebar` both render a GitHub
 link.
@@ -267,14 +288,33 @@ Pagination. Could extract a shared `PostListPage` component.
 
 ## 3. Speed
 
-### P1 — No `generateStaticParams` or ISR — all pages are dynamic
+### P1 — No explicit ISR or static generation — likely fully dynamic
 
-Every request triggers server-side rendering + HTTP to Cloudflare Worker.
-Blog content changes infrequently.
+No blog route exports `revalidate`, `dynamic`, or `generateStaticParams`
+(verified via grep across `src/app/`). This means Next.js treats all pages as
+dynamically rendered by default — each request triggers SSR + an HTTP
+round-trip to the Cloudflare Worker.
 
-**Fix**: Add `export const revalidate = 3600` to blog pages, or implement
-`generateStaticParams` for known posts/categories/tags. This would let
-Next.js serve cached HTML and dramatically reduce TTFB.
+Some data paths do have **process-level caching** (e.g. `SiteSettings` with
+5-min TTL, `MonthlyArchives`, post count queries), which reduces repeated DB
+calls within the same process. However, the HTML itself is not cached or
+statically served — the full React render tree is re-executed per request.
+
+**Evidence**:
+- `grep -r "export const revalidate\|export const dynamic\|generateStaticParams" src/app/` → no results
+- `src/data/settings.ts` (L42-47): process-level cache exists but only for data, not page output
+- No `revalidate` segment config in any route file
+
+**Caveat**: The deployment platform may add its own response caching layer
+(e.g. Vercel's Edge cache). Without inspecting production response headers
+(`Cache-Control`, `x-vercel-cache`) or the `next build` output, we cannot
+confirm the exact caching behavior in production. The recommendation is
+based on what the source code explicitly configures.
+
+**Fix**: Add `export const revalidate = 3600` to blog page routes, or
+implement `generateStaticParams` for known posts/categories/tags. For a blog
+with infrequent updates, ISR would let Next.js serve cached HTML and
+significantly reduce TTFB.
 
 ### P1 — Proxy queries DB for redirect lookup on every request
 
@@ -342,23 +382,38 @@ posts with `featured_image`.
 
 ## Priority Matrix
 
+### SEO Impact (directly affects indexing, ranking, or crawl quality)
+
 | Priority | Task | Impact |
 |----------|------|--------|
 | P0 | Fix `robots.txt` — merge disallow into bot-specific groups | Prevent crawling private paths |
-| P0 | Fix language signals — thread locale into OG/hreflang/JSON-LD/RSS | Eliminate contradictory signals |
+| P0 | Fix language signals — convert root layout to `generateMetadata()`, thread locale everywhere | Eliminate contradictory signals |
 | P0 | Add `generateMetadata` + canonical to all paginated routes | Fix duplicate content |
-| P0 | Extract shared `escapeXml` | Code health |
 | P1 | Tighten archive URL validation (reject `2026-99`) | Eliminate duplicate URLs |
 | P1 | Tag thin content — threshold or noindex low-count tags | Reduce low-value pages |
 | P1 | Add `alt` text to featured images | Image SEO |
-| P1 | Add `revalidate` / `generateStaticParams` | TTFB reduction |
-| P1 | RSS: use `content_html` | Reduce computation |
-| P1 | Cache redirect map in proxy | Reduce per-request latency |
-| P1 | `SocialLink` hover → pure CSS | Less client JS |
+| P1 | RSS: fix `<enclosure>` (provide real length or omit element) | RSS spec compliance |
 | P1 | Custom 404 page | UX + crawl quality |
 | P2 | Add `CollectionPage`/`ItemList` JSON-LD to listing pages | Richer search understanding |
 | P2 | Remove `WebSite` JSON-LD from paginated subpages | Correct schema semantics |
 | P2 | Sitemap homepage `lastmod` → latest post date | Honest freshness signal |
+| P2 | Sitemap `<image:image>` extension | Image search exposure |
+
+### Speed (affects user experience and Core Web Vitals)
+
+| Priority | Task | Impact |
+|----------|------|--------|
+| P1 | Investigate ISR / `revalidate` — verify production caching, add if missing | TTFB reduction |
+| P1 | RSS: use `content_html` instead of re-rendering Markdown | Reduce computation |
+| P1 | Cache redirect map in proxy | Reduce per-request latency |
+| P2 | Split `BlogLayoutClient` into smaller client islands | Reduce serialization |
+
+### Code Quality (non-SEO, maintenance improvements)
+
+| Priority | Task | Impact |
+|----------|------|--------|
+| P2 | Extract shared `escapeXml` to `src/lib/xml.ts` | DRY |
+| P2 | `SocialLink` hover → pure CSS | Less client JS |
+| P2 | Deduplicate GitHub link (sidebar vs global bar) | UI cleanliness |
 | P2 | CSS palette deduplication | Maintainability |
-| P2 | Sitemap image extension | Image search exposure |
-| P2 | Split `BlogLayoutClient` | Reduce serialization |
+| P2 | Extract shared `PostListPage` component | DRY |
