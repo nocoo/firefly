@@ -131,8 +131,8 @@
 :root {
   /* Font stacks — classic preset is the default */
   --ff-body: "Times New Roman", times, "Heti Song", serif;
-  --ff-heading: "Heti Kai", serif;
-  --ff-quote: "Heti Kai", serif;
+  --ff-heading: Georgia, "Times New Roman", "Heti Kai", serif;
+  --ff-quote: Georgia, "Times New Roman", "Heti Kai", serif;
   --ff-ui: "Helvetica Neue", helvetica, arial, "Heti Hei", sans-serif;
   --ff-mono: "SFMono-Regular", consolas, "Liberation Mono", menlo, courier, monospace;
 
@@ -253,8 +253,8 @@
  */
 [data-font-style="serif"] {
   --ff-body: "Times New Roman", times, "Heti Song", serif;
-  --ff-heading: "Heti Song", serif;
-  --ff-quote: "Heti Song", serif;
+  --ff-heading: Georgia, "Times New Roman", "Heti Song", serif;
+  --ff-quote: Georgia, "Times New Roman", "Heti Song", serif;
 }
 
 [data-font-style="sans"] {
@@ -286,6 +286,7 @@
  */
 .prose-firefly {
   font-family: var(--ff-body);
+  font-size: 1.0625rem;
   line-height: 1.85;
   overflow-wrap: break-word;
 
@@ -314,7 +315,7 @@
   & blockquote {
     font-family: var(--ff-quote);
     font-style: normal;
-    border-left-color: hsl(var(--primary) / 0.3);
+    border-left-color: var(--blog-separator);
   }
 
   & blockquote p {
@@ -323,7 +324,7 @@
 
   & pre {
     font-family: var(--ff-mono);
-    border: 1px solid hsl(var(--border));
+    border: 1px solid var(--blog-separator);
     background: hsl(var(--secondary));
     font-size: 0.8125em;
   }
@@ -331,7 +332,7 @@
   & :not(pre) > code {
     font-family: var(--ff-mono);
     background: hsl(var(--secondary));
-    border: 1px solid hsl(var(--border));
+    border: 1px solid var(--blog-separator);
     padding: 0.15em 0.35em;
     font-size: 0.85em;
   }
@@ -355,22 +356,22 @@
   }
 
   & th, & td {
-    border-color: hsl(var(--border));
+    border-color: var(--blog-separator);
   }
 
   & a {
-    color: hsl(var(--primary));
-    text-decoration-color: hsl(var(--primary) / 0.3);
+    color: var(--blog-text);
+    text-decoration-color: var(--blog-accent);
     text-underline-offset: 3px;
     transition: text-decoration-color 0.15s;
   }
 
   & a:hover {
-    text-decoration-color: hsl(var(--primary));
+    text-decoration-color: var(--blog-text);
   }
 
   & hr {
-    border-color: hsl(var(--border));
+    border-color: var(--blog-separator);
   }
 }
 
