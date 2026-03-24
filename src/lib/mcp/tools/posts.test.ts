@@ -263,6 +263,7 @@ describe("handleUpdatePost", () => {
 
   it("writes tags before updating post fields", async () => {
     vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(getPostTags).mockResolvedValue(sampleTags);
     vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
     vi.mocked(setPostTags).mockResolvedValue(undefined);
 
@@ -283,6 +284,7 @@ describe("handleUpdatePost", () => {
 
   it("does not update post fields when setPostTags fails", async () => {
     vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(getPostTags).mockResolvedValue(sampleTags);
     vi.mocked(setPostTags).mockRejectedValue(new Error("FK constraint"));
 
     await expect(handleUpdatePost(ctx, {
@@ -293,6 +295,26 @@ describe("handleUpdatePost", () => {
 
     // updatePost must NOT have been called — post fields are untouched
     expect(updatePost).not.toHaveBeenCalled();
+  });
+
+  it("restores original tags when updatePost fails", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(getPostTags).mockResolvedValue([
+      { id: "old-tag-1", name: "Old", slug: "old" },
+    ]);
+    vi.mocked(setPostTags).mockResolvedValue(undefined);
+    vi.mocked(updatePost).mockRejectedValue(new Error("UNIQUE constraint failed: posts.slug"));
+
+    await expect(handleUpdatePost(ctx, {
+      slug: "test-post",
+      new_slug: "duplicate-slug",
+      tag_ids: ["new-tag-1"],
+    })).rejects.toThrow("UNIQUE constraint");
+
+    // setPostTags should be called twice: once with new tags, once to restore old
+    expect(setPostTags).toHaveBeenCalledTimes(2);
+    expect(setPostTags).toHaveBeenNthCalledWith(1, ctx.db, "post-1", ["new-tag-1"]);
+    expect(setPostTags).toHaveBeenNthCalledWith(2, ctx.db, "post-1", ["old-tag-1"]);
   });
 
   it("passes excerpt: null to data layer to trigger auto-regeneration", async () => {

@@ -160,27 +160,40 @@ export async function handleUpdatePost(
     };
   }
 
-  // Write tags first — if this fails the post fields are untouched and the
-  // caller can safely retry. This preserves atomicity: either both the tag
-  // update and the field update succeed, or neither does.
+  // Tags and post fields are two separate DB operations. To approximate
+  // atomicity we use compensating writes: save the old tag set before
+  // touching anything, update tags, then update fields. If the field
+  // update fails we restore the original tags so neither change sticks.
+  let oldTagIds: string[] | undefined;
+
   if (args.tag_ids !== undefined) {
+    const oldTags = await getPostTags(ctx.db, existing.id);
+    oldTagIds = oldTags.map((t) => t.id);
     await setPostTags(ctx.db, existing.id, args.tag_ids);
   }
 
-  const updated = await updatePost(ctx.db, existing.id, {
-    title: args.title,
-    slug: args.new_slug,
-    content: args.content,
-    status: args.status as PostStatus | undefined,
-    excerpt: args.excerpt,
-    category_id: args.category_id,
-    featured_image: args.featured_image,
-    published_at: args.published_at,
-  });
+  try {
+    const updated = await updatePost(ctx.db, existing.id, {
+      title: args.title,
+      slug: args.new_slug,
+      content: args.content,
+      status: args.status as PostStatus | undefined,
+      excerpt: args.excerpt,
+      category_id: args.category_id,
+      featured_image: args.featured_image,
+      published_at: args.published_at,
+    });
 
-  return {
-    content: [{ type: "text" as const, text: JSON.stringify(updated, null, 2) }],
-  };
+    return {
+      content: [{ type: "text" as const, text: JSON.stringify(updated, null, 2) }],
+    };
+  } catch (err) {
+    // Compensate: restore original tags so we don't leave a partial update
+    if (oldTagIds !== undefined) {
+      await setPostTags(ctx.db, existing.id, oldTagIds).catch(() => {});
+    }
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------
