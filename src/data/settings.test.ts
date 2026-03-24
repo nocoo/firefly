@@ -27,6 +27,7 @@ const sampleRow = {
   locale: "zh",
   posts_per_page: 10,
   comments_enabled: 0,
+  font_style: "classic",
   updated_at: 1700000000,
 };
 
@@ -40,6 +41,7 @@ describe("parseRow", () => {
       locale: "zh",
       postsPerPage: 10,
       commentsEnabled: false,
+      fontStyle: "classic",
       updatedAt: 1700000000,
     });
   });
@@ -51,6 +53,7 @@ describe("parseRow", () => {
       locale: "en",
       postsPerPage: 10,
       commentsEnabled: true,
+      fontStyle: "classic",
       updatedAt: 1700000000,
     });
   });
@@ -62,6 +65,16 @@ describe("parseRow", () => {
 
   it("falls back to zh for unknown locale", () => {
     expect(parseRow({ ...sampleRow, locale: "fr" }).locale).toBe("zh");
+  });
+
+  it("falls back to classic for unknown font_style", () => {
+    expect(parseRow({ ...sampleRow, font_style: "unknown" }).fontStyle).toBe("classic");
+  });
+
+  it("parses valid font_style values", () => {
+    expect(parseRow({ ...sampleRow, font_style: "serif" }).fontStyle).toBe("serif");
+    expect(parseRow({ ...sampleRow, font_style: "sans" }).fontStyle).toBe("sans");
+    expect(parseRow({ ...sampleRow, font_style: "classic" }).fontStyle).toBe("classic");
   });
 });
 
@@ -171,5 +184,19 @@ describe("updateSiteSettings", () => {
 
     await updateSiteSettings(db, {});
     expect(db.execute).not.toHaveBeenCalled();
+  });
+
+  it("updates fontStyle", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
+    vi.mocked(db.firstOrNull).mockResolvedValue({
+      ...sampleRow,
+      font_style: "serif",
+    });
+
+    const result = await updateSiteSettings(db, { fontStyle: "serif" });
+    expect(result.fontStyle).toBe("serif");
+
+    const sql = vi.mocked(db.execute).mock.calls[0][0] as string;
+    expect(sql).toContain("font_style = ?");
   });
 });

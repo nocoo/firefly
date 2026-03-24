@@ -4,6 +4,76 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
+ * Heti-inspired @font-face aliases — local() only, zero network cost.
+ * Maps abstract family names to platform-native CJK fonts.
+ */
+
+/* Hei (黑体 / Sans) — Regular */
+@font-face {
+  font-family: "Heti Hei";
+  font-weight: 400;
+  src: local("PingFang SC Regular"), local("PingFang SC"),
+       local("Heiti SC Regular"), local("Heiti SC"),
+       local("Microsoft YaHei"),
+       local("Source Han Sans CN Regular"), local("Noto Sans CJK SC Regular"),
+       local("WenQuanYi Micro Hei"), local("Droid Sans Fallback");
+}
+
+/* Hei — Bold */
+@font-face {
+  font-family: "Heti Hei";
+  font-weight: 600;
+  src: local("PingFang SC Medium"),
+       local("Heiti SC Medium"),
+       local("Microsoft YaHei Bold"),
+       local("Source Han Sans CN Bold"), local("Noto Sans CJK SC Bold");
+}
+
+/* Hei — Black */
+@font-face {
+  font-family: "Heti Hei";
+  font-weight: 800;
+  src: local("PingFang SC Semibold"),
+       local("Heiti SC Medium"),
+       local("Microsoft YaHei Bold"),
+       local("Source Han Sans CN Heavy"), local("Noto Sans CJK SC Heavy");
+}
+
+/* Song (宋体 / Serif) — Regular */
+@font-face {
+  font-family: "Heti Song";
+  font-weight: 400;
+  src: local("Songti SC Regular"), local("Songti SC"),
+       local("Songti TC Regular"), local("Songti TC"),
+       local("SimSun");
+}
+
+/* Song — Bold */
+@font-face {
+  font-family: "Heti Song";
+  font-weight: 600;
+  src: local("Songti SC Bold"), local("Songti TC Bold"),
+       local("SimSun");
+}
+
+/* Kai (楷体) — Regular */
+@font-face {
+  font-family: "Heti Kai";
+  font-weight: 400;
+  src: local("Kaiti SC Regular"), local("Kaiti SC"),
+       local("Kaiti TC Regular"), local("Kaiti TC"),
+       local("STKaiti"), local("Kaiti"), local("BiauKai");
+}
+
+/* Kai — Bold */
+@font-face {
+  font-family: "Heti Kai";
+  font-weight: 600;
+  src: local("Kaiti SC Bold"), local("Kaiti TC Bold"),
+       local("STKaiti"), local("Kaiti");
+}
+
+/*
  * Basalt design system tokens → Tailwind v4 theme mapping
  * Register --color-<name> so utilities like bg-background, text-foreground work.
  */
@@ -59,6 +129,13 @@
  * Design tokens — light (default) & dark mode
  */
 :root {
+  /* Font stacks — classic preset is the default */
+  --ff-body: "Times New Roman", times, "Heti Song", serif;
+  --ff-heading: "Heti Kai", serif;
+  --ff-quote: "Heti Kai", serif;
+  --ff-ui: "Helvetica Neue", helvetica, arial, "Heti Hei", sans-serif;
+  --ff-mono: "SFMono-Regular", consolas, "Liberation Mono", menlo, courier, monospace;
+
   /* L0 body */
   --background: 220 14% 94%;
   --foreground: 0 0% 12%;
@@ -171,6 +248,22 @@
 }
 
 /*
+ * Font style presets — driven by data-font-style on <html>
+ * "classic" is the :root default (Song body, Kai headings)
+ */
+[data-font-style="serif"] {
+  --ff-body: "Times New Roman", times, "Heti Song", serif;
+  --ff-heading: "Heti Song", serif;
+  --ff-quote: "Heti Song", serif;
+}
+
+[data-font-style="sans"] {
+  --ff-body: "Helvetica Neue", helvetica, arial, "Heti Hei", sans-serif;
+  --ff-heading: "Helvetica Neue", helvetica, arial, "Heti Hei", sans-serif;
+  --ff-quote: "Helvetica Neue", helvetica, arial, "Heti Hei", sans-serif;
+}
+
+/*
  * Base styles
  */
 @layer base {
@@ -183,35 +276,27 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: -apple-system, system-ui, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+    font-family: var(--ff-ui);
     font-size: 16px;
   }
 }
 
 /*
- * Prose typography overrides — optimized for CJK (Chinese) content
+ * Prose typography — CJK-optimized, font-style-aware via CSS custom properties
  */
 .prose-firefly {
-  /* CJK-optimized font stack */
-  font-family:
-    "Noto Serif SC",
-    "Source Han Serif SC",
-    "Songti SC",
-    "PingFang SC",
-    ui-serif,
-    Georgia,
-    serif;
-
-  /* Comfortable line height for CJK */
+  font-family: var(--ff-body);
   line-height: 1.85;
+  overflow-wrap: break-word;
 
-  /* Slightly wider paragraph spacing for readability */
   & p {
-    margin-top: 1.25em;
-    margin-bottom: 1.25em;
+    margin-block: 1.25em;
   }
 
-  /* CJK heading rhythm */
+  & h1, & h2, & h3, & h4, & h5, & h6 {
+    font-family: var(--ff-heading);
+  }
+
   & h1 {
     font-weight: 700;
     letter-spacing: 0.02em;
@@ -226,8 +311,8 @@
     font-weight: 600;
   }
 
-  /* Blockquote — subtle left accent */
   & blockquote {
+    font-family: var(--ff-quote);
     font-style: normal;
     border-left-color: hsl(var(--primary) / 0.3);
   }
@@ -236,14 +321,15 @@
     font-style: normal;
   }
 
-  /* Code block styling */
   & pre {
+    font-family: var(--ff-mono);
     border: 1px solid hsl(var(--border));
     background: hsl(var(--secondary));
     font-size: 0.8125em;
   }
 
   & :not(pre) > code {
+    font-family: var(--ff-mono);
     background: hsl(var(--secondary));
     border: 1px solid hsl(var(--border));
     padding: 0.15em 0.35em;
@@ -255,14 +341,12 @@
     content: none;
   }
 
-  /* Images: full-width */
   & img {
-    margin-left: auto;
-    margin-right: auto;
+    margin-inline: auto;
   }
 
-  /* Table alignment with design tokens */
   & table {
+    font-family: var(--ff-ui);
     font-size: 0.875em;
   }
 
@@ -270,12 +354,10 @@
     font-weight: 600;
   }
 
-  & th,
-  & td {
+  & th, & td {
     border-color: hsl(var(--border));
   }
 
-  /* Link styling */
   & a {
     color: hsl(var(--primary));
     text-decoration-color: hsl(var(--primary) / 0.3);
@@ -287,7 +369,6 @@
     text-decoration-color: hsl(var(--primary));
   }
 
-  /* Horizontal rule */
   & hr {
     border-color: hsl(var(--border));
   }
@@ -367,8 +448,6 @@
     margin-right: 0;
   }
 }
-
-/* Theme toggle — removed, now in blog-global-bar */
 
 /* Global bar — fixed top-right with GitHub + theme toggle */
 .blog-global-bar {
@@ -603,9 +682,6 @@
   border-color: #8b5cf6;
   color: #fff;
 }
-
-/* Fill variant for icons on hover — handled by component */
-
 
 .blog-social-icon {
   width: 0.9em;

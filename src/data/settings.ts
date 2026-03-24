@@ -1,6 +1,9 @@
 import type { Db } from "@/lib/db";
 import type { Locale } from "@/i18n/translations";
 
+export type FontStyle = "classic" | "serif" | "sans";
+const FONT_STYLES: FontStyle[] = ["classic", "serif", "sans"];
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -11,6 +14,7 @@ interface SiteSettingsRow {
   locale: string;
   posts_per_page: number;
   comments_enabled: number;
+  font_style: string;
   updated_at: number;
 }
 
@@ -19,6 +23,7 @@ export interface SiteSettings {
   locale: Locale;
   postsPerPage: number;
   commentsEnabled: boolean;
+  fontStyle: FontStyle;
   updatedAt: number;
 }
 
@@ -26,6 +31,7 @@ const DEFAULTS: SiteSettings = {
   locale: "zh",
   postsPerPage: 10,
   commentsEnabled: false,
+  fontStyle: "classic",
   updatedAt: 0,
 };
 
@@ -42,6 +48,9 @@ function parseRow(row: SiteSettingsRow): SiteSettings {
     locale: row.locale === "en" ? "en" : "zh",
     postsPerPage: row.posts_per_page > 0 ? row.posts_per_page : 10,
     commentsEnabled: row.comments_enabled === 1,
+    fontStyle: FONT_STYLES.includes(row.font_style as FontStyle)
+      ? (row.font_style as FontStyle)
+      : "classic",
     updatedAt: row.updated_at,
   };
 }
@@ -76,6 +85,7 @@ export interface UpdateSiteSettingsInput {
   locale?: Locale;
   postsPerPage?: number;
   commentsEnabled?: boolean;
+  fontStyle?: FontStyle;
 }
 
 export async function updateSiteSettings(
@@ -96,6 +106,10 @@ export async function updateSiteSettings(
   if (input.commentsEnabled !== undefined) {
     sets.push("comments_enabled = ?");
     params.push(input.commentsEnabled ? 1 : 0);
+  }
+  if (input.fontStyle !== undefined) {
+    sets.push("font_style = ?");
+    params.push(input.fontStyle);
   }
 
   if (sets.length === 0) {

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { SegmentedControl } from "@/components/ui/segmented-control";
-import type { SiteSettings } from "@/data/settings";
+import type { SiteSettings, FontStyle } from "@/data/settings";
 import type { Locale } from "@/i18n/translations";
 
 interface SettingsFormProps {
@@ -18,6 +18,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
   const [locale, setLocale] = useState<Locale>(settings.locale);
   const [postsPerPage, setPostsPerPage] = useState(String(settings.postsPerPage));
   const [commentsEnabled, setCommentsEnabled] = useState(settings.commentsEnabled);
+  const [fontStyle, setFontStyle] = useState<FontStyle>(settings.fontStyle);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -40,6 +41,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
           locale,
           postsPerPage: n,
           commentsEnabled,
+          fontStyle,
         }),
       });
 
@@ -110,6 +112,25 @@ export function SettingsForm({ settings }: SettingsFormProps) {
           ]}
           value={commentsEnabled ? "on" : "off"}
           onChange={(v) => setCommentsEnabled(v === "on")}
+        />
+      </div>
+
+      {/* Font style */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-foreground">
+          {t("admin.settings.fontStyle")}
+        </label>
+        <p className="text-xs text-muted-foreground">
+          {t("admin.settings.fontStyleHint")}
+        </p>
+        <SegmentedControl
+          options={[
+            { value: "classic", label: t("admin.settings.fontStyleClassic") },
+            { value: "serif", label: t("admin.settings.fontStyleSerif") },
+            { value: "sans", label: t("admin.settings.fontStyleSans") },
+          ]}
+          value={fontStyle}
+          onChange={(v) => setFontStyle(v as FontStyle)}
         />
       </div>
 

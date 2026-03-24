@@ -3,6 +3,8 @@ import Script from "next/script";
 import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR, TWITTER_HANDLE } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { LocaleProvider } from "@/i18n/context";
+import { getDb } from "@/lib/db";
+import { getSiteSettings } from "@/data/settings";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -66,10 +68,18 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const locale = await getLocale();
+  const db = getDb();
+  const [locale, settings] = await Promise.all([
+    getLocale(),
+    getSiteSettings(db),
+  ]);
 
   return (
-    <html lang={locale === "zh" ? "zh-CN" : "en"} suppressHydrationWarning>
+    <html
+      lang={locale === "zh" ? "zh-CN" : "en"}
+      data-font-style={settings.fontStyle}
+      suppressHydrationWarning
+    >
       <head>
         <meta name="theme-color" content="#FAF8F5" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#1C1A17" media="(prefers-color-scheme: dark)" />

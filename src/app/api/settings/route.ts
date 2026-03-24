@@ -5,8 +5,11 @@ import {
   getSiteSettings,
   updateSiteSettings,
   type UpdateSiteSettingsInput,
+  type FontStyle,
 } from "@/data/settings";
 import { LOCALES } from "@/i18n/translations";
+
+const FONT_STYLES: FontStyle[] = ["classic", "serif", "sans"];
 
 /**
  * GET /api/settings — return current site settings.
@@ -57,6 +60,14 @@ export async function PUT(request: NextRequest) {
         return errorResponse("commentsEnabled must be a boolean");
       }
       input.commentsEnabled = body.commentsEnabled;
+    }
+
+    // Validate fontStyle
+    if (body.fontStyle !== undefined) {
+      if (!FONT_STYLES.includes(body.fontStyle)) {
+        return errorResponse(`Invalid fontStyle. Must be one of: ${FONT_STYLES.join(", ")}`);
+      }
+      input.fontStyle = body.fontStyle;
     }
 
     const db = getDb();
