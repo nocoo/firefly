@@ -261,32 +261,38 @@ describe("handleUpdatePost", () => {
     expect(result.isError).toBe(true);
   });
 
-  it("updates tags when tag_ids provided", async () => {
+  it("writes tags before updating post fields", async () => {
     vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
     vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
     vi.mocked(setPostTags).mockResolvedValue(undefined);
 
+    const callOrder: string[] = [];
+    vi.mocked(setPostTags).mockImplementation(async () => { callOrder.push("setPostTags"); });
+    vi.mocked(updatePost).mockImplementation(async () => { callOrder.push("updatePost"); return samplePostWithCategory; });
+
     await handleUpdatePost(ctx, {
       slug: "test-post",
+      title: "New Title",
       tag_ids: ["tag-1"],
     });
 
     expect(setPostTags).toHaveBeenCalledWith(ctx.db, "post-1", ["tag-1"]);
+    expect(updatePost).toHaveBeenCalled();
+    expect(callOrder).toEqual(["setPostTags", "updatePost"]);
   });
 
-  it("reports partial failure when setPostTags fails on update", async () => {
+  it("does not update post fields when setPostTags fails", async () => {
     vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
-    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
     vi.mocked(setPostTags).mockRejectedValue(new Error("FK constraint"));
 
-    const result = await handleUpdatePost(ctx, {
+    await expect(handleUpdatePost(ctx, {
       slug: "test-post",
+      title: "New Title",
       tag_ids: ["nonexistent-tag"],
-    });
+    })).rejects.toThrow("FK constraint");
 
-    expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain("tag assignment failed");
-    expect(result.content[0].text).toContain("tags unchanged");
+    // updatePost must NOT have been called — post fields are untouched
+    expect(updatePost).not.toHaveBeenCalled();
   });
 
   it("passes excerpt: null to data layer to trigger auto-regeneration", async () => {

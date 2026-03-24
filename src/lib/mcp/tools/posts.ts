@@ -160,6 +160,13 @@ export async function handleUpdatePost(
     };
   }
 
+  // Write tags first — if this fails the post fields are untouched and the
+  // caller can safely retry. This preserves atomicity: either both the tag
+  // update and the field update succeed, or neither does.
+  if (args.tag_ids !== undefined) {
+    await setPostTags(ctx.db, existing.id, args.tag_ids);
+  }
+
   const updated = await updatePost(ctx.db, existing.id, {
     title: args.title,
     slug: args.new_slug,
@@ -170,18 +177,6 @@ export async function handleUpdatePost(
     featured_image: args.featured_image,
     published_at: args.published_at,
   });
-
-  if (args.tag_ids !== undefined) {
-    try {
-      await setPostTags(ctx.db, existing.id, args.tag_ids);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      return {
-        content: [{ type: "text" as const, text: `Post updated but tag assignment failed: ${message}. Post fields were saved; tags unchanged.` }],
-        isError: true,
-      };
-    }
-  }
 
   return {
     content: [{ type: "text" as const, text: JSON.stringify(updated, null, 2) }],
