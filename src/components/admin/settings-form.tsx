@@ -29,6 +29,7 @@ export function SettingsForm({ settings, logoUrl }: SettingsFormProps) {
   const [logoRemoving, setLogoRemoving] = useState(false);
   const [logoError, setLogoError] = useState<string | null>(null);
   const [logoDragOver, setLogoDragOver] = useState(false);
+  const logoBusy = logoUploading || logoRemoving;
 
   const uploadLogo = useCallback(
     async (file: File) => {
@@ -212,7 +213,7 @@ export function SettingsForm({ settings, logoUrl }: SettingsFormProps) {
                   type="file"
                   accept="image/jpeg,image/png,image/gif,image/webp,image/avif"
                   onChange={handleLogoFileSelect}
-                  disabled={logoUploading}
+                  disabled={logoBusy}
                   className="sr-only"
                 />
               </label>
@@ -231,7 +232,7 @@ export function SettingsForm({ settings, logoUrl }: SettingsFormProps) {
               <button
                 type="button"
                 onClick={removeLogo}
-                disabled={logoRemoving}
+                disabled={logoBusy}
                 className="self-start text-xs text-destructive hover:text-destructive/80 transition-colors disabled:opacity-50"
               >
                 {logoRemoving
