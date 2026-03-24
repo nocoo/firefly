@@ -8,6 +8,7 @@ import type { PostWithCategory, PostStatus } from "@/models/types";
 import { postPath, formatDateDisplay } from "@/lib/seo";
 import { DeletePostButton } from "./delete-post-button";
 import { useLocale } from "@/i18n/context";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
 const STATUS_COLORS: Record<PostStatus, string> = {
   draft: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
@@ -35,7 +36,7 @@ export const PostGridCard = memo(function PostGridCard({
   const date = post.published_at ? formatDateDisplay(post.published_at) : "—";
 
   return (
-    <div className="group relative flex flex-col rounded-[var(--radius-widget)] border border-border overflow-hidden shadow-sm transition-colors hover:border-primary/50">
+    <Card className="group relative overflow-hidden shadow-sm transition-colors hover:border-primary/50">
       {/* Top area — featured image or text preview */}
       <Link href={`/admin/posts/${post.id}/edit`} className="block">
         {post.featured_image ? (
@@ -58,7 +59,7 @@ export const PostGridCard = memo(function PostGridCard({
         )}
       </Link>
 
-      {/* Hover overlay — covers only the image area, not the info panel */}
+      {/* Hover overlay — covers only the image area */}
       <div className="absolute inset-x-0 top-0 h-[200px] flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
         <a
           href={previewUrl}
@@ -81,15 +82,19 @@ export const PostGridCard = memo(function PostGridCard({
         <DeletePostButton slug={post.slug} title={post.title} iconOnly />
       </div>
 
-      {/* Bottom info area — fixed height so cards align across the row */}
-      <div className="mt-auto h-[72px] overflow-hidden border-t border-border bg-background p-2.5">
+      {/* Title — flex-1 fills remaining space so footer always sits at bottom */}
+      <CardContent className="border-t border-border px-2.5 py-2">
         <Link
           href={`/admin/posts/${post.id}/edit`}
           className="block text-sm font-medium leading-snug text-foreground line-clamp-2 hover:text-primary transition-colors"
         >
           {post.title}
         </Link>
-        <div className="mt-1 flex items-center gap-1.5">
+      </CardContent>
+
+      {/* Status + date — always pinned to bottom */}
+      <CardFooter className="px-2.5 pb-2 pt-0">
+        <div className="flex items-center gap-1.5">
           <span
             className={`inline-block rounded-full px-1.5 py-0.5 text-[10px] font-medium leading-none ${STATUS_COLORS[post.status as PostStatus] ?? ""}`}
           >
@@ -97,7 +102,7 @@ export const PostGridCard = memo(function PostGridCard({
           </span>
           <span className="text-[11px] text-muted-foreground">{date}</span>
         </div>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 });
