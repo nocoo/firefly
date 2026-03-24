@@ -35,11 +35,11 @@ export const PostGridCard = memo(function PostGridCard({
   const date = post.published_at ? formatDateDisplay(post.published_at) : "—";
 
   return (
-    <div className="group relative rounded-[var(--radius-widget)] border border-border overflow-hidden transition-colors hover:border-primary/50">
+    <div className="group relative rounded-[var(--radius-widget)] border border-border overflow-hidden shadow-sm transition-colors hover:border-primary/50">
       {/* Top area — featured image or text preview */}
       <Link href={`/admin/posts/${post.id}/edit`} className="block">
         {post.featured_image ? (
-          <div className="relative aspect-[4/3] bg-secondary">
+          <div className="relative h-36 bg-secondary">
             <Image
               src={post.featured_image}
               alt=""
@@ -49,8 +49,8 @@ export const PostGridCard = memo(function PostGridCard({
             />
           </div>
         ) : (
-          <div className="aspect-[4/3] overflow-hidden bg-blog-bg p-3">
-            <p className="font-[var(--ff-body)] text-xs leading-relaxed text-blog-text line-clamp-[8]">
+          <div className="h-36 overflow-hidden bg-blog-bg p-3">
+            <p className="font-[var(--ff-body)] text-base leading-snug text-blog-text line-clamp-5">
               {post.excerpt || post.title}
             </p>
           </div>
@@ -58,7 +58,7 @@ export const PostGridCard = memo(function PostGridCard({
       </Link>
 
       {/* Hover overlay with action buttons */}
-      <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
         <a
           href={previewUrl}
           target="_blank"
