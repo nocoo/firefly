@@ -29,6 +29,15 @@ export interface R2Config {
   publicUrl: string; // e.g. https://assets.lizheng.me
 }
 
+/**
+ * Get the public URL for R2 assets.
+ * Used by server-only modules (e.g. logo.ts) to construct public URLs
+ * without importing the full S3 client.
+ */
+export function getR2PublicUrl(): string {
+  return process.env.R2_PUBLIC_URL ?? "https://assets.lizheng.me";
+}
+
 function getR2Config(): R2Config {
   const accountId = process.env.CF_ACCOUNT_ID;
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
