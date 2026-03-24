@@ -4,10 +4,22 @@ import { jsonResponse, errorResponse } from "@/lib/api";
 import { listMcpTokens, generateAccessToken, generateRefreshToken, sha256, createMcpToken } from "@/data/mcp-tokens";
 import { createMcpClient } from "@/data/mcp-clients";
 
+const E2E_EMAIL = "e2e@test.local";
+
+/** Check admin auth — returns user email or null. Bypassed in E2E. */
+async function requireAdmin(): Promise<{ email: string } | null> {
+  if (process.env.E2E_SKIP_AUTH === "true") {
+    return { email: E2E_EMAIL };
+  }
+  const session = await auth();
+  if (!session?.user?.email) return null;
+  return { email: session.user.email };
+}
+
 // GET /api/mcp/tokens — list all tokens (admin)
 export async function GET() {
-  const session = await auth();
-  if (!session?.user) {
+  const admin = await requireAdmin();
+  if (!admin) {
     return errorResponse("Unauthorized", 401);
   }
 
@@ -25,8 +37,8 @@ export async function GET() {
 
 // POST /api/mcp/tokens — manually create a token for an agent (admin)
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session?.user?.email) {
+  const admin = await requireAdmin();
+  if (!admin) {
     return errorResponse("Unauthorized", 401);
   }
 
@@ -57,7 +69,7 @@ export async function POST(request: Request) {
       access_token_preview: accessToken.slice(0, 16),
       refresh_token_hash: refreshHash,
       client_id: client.client_id,
-      user_email: session.user.email,
+      user_email: admin.email,
       scope: "mcp:full",
       client_name: body.client_name,
     });

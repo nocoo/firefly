@@ -165,7 +165,7 @@ describe("MCP Main Endpoint — Auth", () => {
         method: "tools/list",
       }),
     });
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
 
     const data = await res.json();
     expect(data.error).toContain("Authorization");
@@ -184,7 +184,7 @@ describe("MCP Main Endpoint — Auth", () => {
         method: "tools/list",
       }),
     });
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
 
     const data = await res.json();
     expect(data.error).toContain("Invalid");
@@ -192,7 +192,7 @@ describe("MCP Main Endpoint — Auth", () => {
 
   it("GET returns 405", async () => {
     const res = await fetch(`${BASE}/api/mcp`);
-    expect(res.status).toBe(400); // errorResponse defaults to 400
+    expect(res.status).toBe(405);
   });
 });
 
@@ -361,6 +361,6 @@ describe("MCP Admin Token API", () => {
       }),
     });
     // Revoked token should be rejected
-    expect(mcpRes.status).toBe(400);
+    expect(mcpRes.status).toBe(401);
   });
 });

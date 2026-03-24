@@ -7,10 +7,16 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
+/** Check admin auth — bypassed in E2E. */
+async function requireAdmin(): Promise<boolean> {
+  if (process.env.E2E_SKIP_AUTH === "true") return true;
+  const session = await auth();
+  return !!session?.user;
+}
+
 // DELETE /api/mcp/tokens/[id] — revoke a token (admin)
 export async function DELETE(_request: Request, { params }: RouteParams) {
-  const session = await auth();
-  if (!session?.user) {
+  if (!(await requireAdmin())) {
     return errorResponse("Unauthorized", 401);
   }
 
