@@ -4,5 +4,5 @@ echo "▸ G1: typecheck"
 bun run typecheck
 echo "▸ G1: lint"
 bun run lint
-echo "▸ L1: unit tests"
-bun run test
+echo "▸ L1: unit tests (coverage ≥90%)"
+bun run test:coverage
