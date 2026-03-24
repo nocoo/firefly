@@ -2,9 +2,14 @@
 /**
  * Apply SQL migration to a Cloudflare D1 database via REST API.
  *
+ * @deprecated Use `bun scripts/migrations/migrate.ts up` instead.
+ *
  * Usage: bun scripts/migrations/apply-migration.ts <sql-file> [--test]
  *   --test: apply to test database instead of prod
  */
+console.warn(
+  "⚠️  Deprecated: use `bun scripts/migrations/migrate.ts up` instead\n",
+);
 import { readFileSync } from "node:fs";
 
 const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID!;

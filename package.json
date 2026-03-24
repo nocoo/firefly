@@ -17,6 +17,10 @@
     "test:e2e": "bun scripts/run-e2e.ts",
     "test:e2e:api": "bun scripts/run-e2e.ts --api-only",
     "test:e2e:browser": "bun scripts/run-e2e.ts --browser-only",
+    "migrate": "bun scripts/migrations/migrate.ts up",
+    "migrate:status": "bun scripts/migrations/migrate.ts status",
+    "migrate:test": "bun scripts/migrations/migrate.ts up --target test",
+    "migrate:local": "bun scripts/migrations/migrate.ts up --target local",
     "prepare": "husky"
   },
   "devDependencies": {
