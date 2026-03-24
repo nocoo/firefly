@@ -82,7 +82,7 @@ export const PostGridCard = memo(function PostGridCard({
       </div>
 
       {/* Bottom info area — fixed height so cards align across the row */}
-      <div className="mt-auto h-[72px] border-t border-border bg-background p-2.5">
+      <div className="mt-auto h-[72px] overflow-hidden border-t border-border bg-background p-2.5">
         <Link
           href={`/admin/posts/${post.id}/edit`}
           className="block text-sm font-medium leading-snug text-foreground line-clamp-2 hover:text-primary transition-colors"
