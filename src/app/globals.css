@@ -299,17 +299,36 @@
   }
 
   & h1 {
+    font-size: 1.75em;
     font-weight: 700;
     letter-spacing: 0.02em;
   }
 
   & h2 {
+    font-size: 1.375em;
     font-weight: 700;
     letter-spacing: 0.01em;
   }
 
   & h3 {
+    font-size: 1.1875em;
     font-weight: 600;
+  }
+
+  & h4 {
+    font-size: 1.0625em;
+    font-weight: 600;
+  }
+
+  & h5 {
+    font-size: 1em;
+    font-weight: 600;
+  }
+
+  & h6 {
+    font-size: 0.9375em;
+    font-weight: 600;
+    color: var(--blog-muted);
   }
 
   & blockquote {
@@ -347,16 +366,32 @@
   }
 
   & table {
-    font-family: var(--ff-ui);
-    font-size: 0.875em;
+    font-family: var(--ff-body);
+    font-size: 0.9375em;
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  & thead {
+    border-bottom: 2px solid var(--blog-separator);
   }
 
   & th {
     font-weight: 600;
+    text-align: start;
+    padding: 0.625em 0.75em;
+  }
+
+  & td {
+    padding: 0.625em 0.75em;
   }
 
   & th, & td {
-    border-color: var(--blog-separator);
+    border: 1px solid var(--blog-separator);
+  }
+
+  & tbody tr {
+    border-bottom: 1px solid var(--blog-separator);
   }
 
   & a {
