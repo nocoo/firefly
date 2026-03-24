@@ -11,7 +11,7 @@
  * Auth: Bearer WORKER_SECRET on /api/query and /api/execute.
  */
 
-export const WORKER_VERSION = "1.0.0";
+const WORKER_VERSION = "1.0.0";
 
 const bootTime = Date.now();
 

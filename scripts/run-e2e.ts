@@ -11,13 +11,21 @@
  *   Dev:     7043
  *   API E2E: 17043 (10000 + dev)
  *   BDD E2E: 27043 (20000 + dev)
+ *   Worker:  8787  (wrangler default)
  */
 import { spawn, type Subprocess } from "bun";
 import { readFileSync, existsSync } from "node:fs";
 
+// Use the current bun binary path for spawning subprocesses
+const BUN = process.execPath;
+
+// Resolve wrangler binary from the worker's node_modules
+const WRANGLER = `${process.cwd()}/worker/node_modules/.bin/wrangler`;
+
 const DEV_PORT = 7043;
 const API_E2E_PORT = DEV_PORT + 10000; // 17043
 const BROWSER_E2E_PORT = DEV_PORT + 20000; // 27043
+const WORKER_PORT = 8787;
 
 const args = process.argv.slice(2);
 const apiOnly = args.includes("--api-only");
@@ -75,13 +83,35 @@ process.on("SIGINT", () => {
   process.exit(130);
 });
 
+function startWorker(): Subprocess {
+  console.log(`▸ Starting test worker on port ${WORKER_PORT}...`);
+  const proc = spawn(
+    [
+      WRANGLER,
+      "dev",
+      "--env",
+      "test",
+      "--port",
+      String(WORKER_PORT),
+    ],
+    {
+      cwd: `${process.cwd()}/worker`,
+      env: process.env,
+      stdout: "ignore",
+      stderr: "ignore",
+    },
+  );
+  procs.push(proc);
+  return proc;
+}
+
 function startNextServer(
   env: Record<string, string | undefined>,
   port: number,
 ): Subprocess {
   console.log(`▸ Starting Next.js on port ${port}...`);
   const proc = spawn(
-    ["bun", "run", "next", "dev", "--webpack", "-p", String(port)],
+    [BUN, "run", "next", "dev", "--webpack", "-p", String(port)],
     {
       cwd: process.cwd(),
       env: { ...env, PORT: String(port) },
@@ -99,6 +129,24 @@ async function main() {
 
   // Merge: prod env as base, test env overrides
   const env = { ...process.env, ...prodEnv, ...testEnv };
+
+  // --- Start test worker (wrangler dev --env test) ---
+  startWorker();
+  await waitForWorkerReady();
+
+  // --- Apply DB migrations to local D1 ---
+  console.log("▸ Applying DB migrations to local D1...");
+  try {
+    const { applyAll } = await import("./migrations/runner.ts");
+    const result = await applyAll("local");
+    console.log(
+      `▸ Migrations: ${result.applied.length} applied, ${result.skipped.length} already up-to-date`,
+    );
+  } catch (err) {
+    console.error("❌ Migration failed:", err);
+    cleanup();
+    process.exit(1);
+  }
 
   // --- Start Next.js dev server(s) ---
   // In default (all) mode, start two servers: API on 17043, browser on 27043.
@@ -125,7 +173,7 @@ async function main() {
   if (!browserOnly) {
     console.log("\n▸ Running API E2E tests (L2)...\n");
     const apiTest = spawn(
-      ["bun", "run", "vitest", "run", "--config", "e2e/vitest.config.ts"],
+      [BUN, "run", "vitest", "run", "--config", "e2e/vitest.config.ts"],
       {
         cwd: process.cwd(),
         env: { ...env, E2E_BASE_URL: `http://localhost:${apiPort}` },
@@ -140,7 +188,7 @@ async function main() {
   if (!apiOnly) {
     console.log("\n▸ Running browser E2E tests (L3)...\n");
     const browserTest = spawn(
-      ["bunx", "playwright", "test", "--config", "e2e/playwright.config.ts"],
+      [BUN, "x", "playwright", "test", "--config", "e2e/playwright.config.ts"],
       {
         cwd: process.cwd(),
         env: { ...env, E2E_BASE_URL: `http://localhost:${browserPort}` },
@@ -155,6 +203,20 @@ async function main() {
   // --- Cleanup ---
   cleanup();
   process.exit(exitCode);
+}
+
+async function waitForWorkerReady(): Promise<void> {
+  try {
+    await waitForServer(
+      `http://localhost:${WORKER_PORT}/api/live`,
+      30_000,
+    );
+    console.log(`▸ Test worker ready on port ${WORKER_PORT}`);
+  } catch {
+    console.error(`❌ Test worker failed to start on port ${WORKER_PORT}`);
+    cleanup();
+    process.exit(1);
+  }
 }
 
 async function waitForReady(port: number): Promise<void> {
