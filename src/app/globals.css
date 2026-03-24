@@ -149,6 +149,16 @@
   --blog-muted: #8C8680;
   --blog-separator: #E8E4DE;
   --blog-accent: #9DBFCF;
+
+  /* Tag pill palette — soft pastels (light) */
+  --tag-1-bg: #EDE8E1; --tag-1-fg: #6B5D4F;
+  --tag-2-bg: #E3EBE8; --tag-2-fg: #4A655B;
+  --tag-3-bg: #E8E3EE; --tag-3-fg: #5E4F6B;
+  --tag-4-bg: #E8EDE3; --tag-4-fg: #556B4A;
+  --tag-5-bg: #EDE3E3; --tag-5-fg: #6B4F4F;
+  --tag-6-bg: #E3E8ED; --tag-6-fg: #4F5D6B;
+  --tag-7-bg: #EDE8E3; --tag-7-fg: #6B5A45;
+  --tag-8-bg: #E3EDEB; --tag-8-fg: #456B63;
 }
 
 .dark {
@@ -190,6 +200,16 @@
   --blog-muted: #9B9488;
   --blog-separator: #3E3C38;
   --blog-accent: #C8BFA8;
+
+  /* Tag pill palette — muted earth tones (dark) */
+  --tag-1-bg: #3D3830; --tag-1-fg: #C8BFA8;
+  --tag-2-bg: #303A36; --tag-2-fg: #A8C8BB;
+  --tag-3-bg: #38303D; --tag-3-fg: #BBA8C8;
+  --tag-4-bg: #353D30; --tag-4-fg: #B3C8A8;
+  --tag-5-bg: #3D3030; --tag-5-fg: #C8A8A8;
+  --tag-6-bg: #30353D; --tag-6-fg: #A8B8C8;
+  --tag-7-bg: #3D3830; --tag-7-fg: #C8B8A0;
+  --tag-8-bg: #303D3A; --tag-8-fg: #A0C8C0;
 }
 
 /*
@@ -272,7 +292,7 @@
   & img { margin-inline: auto; }
 
   /* Tables */
-  & table       { font-size: 0.9375em; border-collapse: collapse; width: 100%; }
+  & table       { font-size: 0.875em; border-collapse: collapse; width: 100%; }
   & thead       { border-bottom: 2px solid var(--blog-separator); }
   & th          { font-weight: 600; text-align: start; padding: 0.625em 0.75em; }
   & td          { padding: 0.625em 0.75em; }
@@ -436,10 +456,32 @@
 .blog-social-link[data-brand="resume"]:hover   { background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-color: #8b5cf6; color: #fff; }
 .blog-social-icon { width: 0.9em; height: 0.9em; }
 
-/* Tag cloud */
+/* Tag cloud (sidebar — weighted text links) */
 .blog-tag-cloud { display: flex; flex-wrap: wrap; gap: 0.25em 0.5em; align-items: baseline; }
 .blog-tag-cloud a { font-size: 0.8125em; color: var(--blog-muted); text-decoration: none; transition: color 0.15s; }
 .blog-tag-cloud a:hover { color: var(--blog-text); }
+
+/* Tag pills (post footer — capsule badges with color palette) */
+.blog-tag-pills { display: flex; flex-wrap: wrap; gap: 0.5em; }
+.blog-tag-pill {
+  display: inline-block;
+  padding: 0.25em 0.75em;
+  font-size: 0.8125em;
+  line-height: 1.5;
+  border-radius: 9999px;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.blog-tag-pill:hover { opacity: 0.8; }
+/* Color rotation using nth-child — warm palette derived from blog tokens */
+.blog-tag-pill:nth-child(8n+1) { background: var(--tag-1-bg); color: var(--tag-1-fg); }
+.blog-tag-pill:nth-child(8n+2) { background: var(--tag-2-bg); color: var(--tag-2-fg); }
+.blog-tag-pill:nth-child(8n+3) { background: var(--tag-3-bg); color: var(--tag-3-fg); }
+.blog-tag-pill:nth-child(8n+4) { background: var(--tag-4-bg); color: var(--tag-4-fg); }
+.blog-tag-pill:nth-child(8n+5) { background: var(--tag-5-bg); color: var(--tag-5-fg); }
+.blog-tag-pill:nth-child(8n+6) { background: var(--tag-6-bg); color: var(--tag-6-fg); }
+.blog-tag-pill:nth-child(8n+7) { background: var(--tag-7-bg); color: var(--tag-7-fg); }
+.blog-tag-pill:nth-child(8n+8) { background: var(--tag-8-bg); color: var(--tag-8-fg); }
 
 /* Post entry */
 .blog-entry { position: relative; padding-bottom: 2em; margin-top: 2em; }
@@ -479,8 +521,7 @@
 
 /* Footer */
 .blog-footer {
-  padding: 1.5em 0 0; margin-top: 3em;
-  border-top: 1px solid color-mix(in srgb, var(--blog-separator) 50%, transparent);
+  padding: 1.5em 0 0; margin-top: 2em;
   font-size: 0.8125em; color: var(--blog-muted);
 }
 .blog-footer a { color: var(--blog-muted); text-decoration: none; }

@@ -155,18 +155,19 @@ export default async function PostPage({ params }: PostPageProps) {
 
         {/* Tags */}
         {tags.length > 0 && (
-          <footer className="mt-10 pt-6 border-t border-blog-separator">
-            <div className="blog-tag-cloud">
+          <div className="mt-8">
+            <div className="blog-tag-pills">
               {tags.map((tag) => (
                 <Link
                   key={tag.id}
                   href={`/tag/${tag.slug}`}
+                  className="blog-tag-pill"
                 >
                   {tag.name}
                 </Link>
               ))}
             </div>
-          </footer>
+          </div>
         )}
       </article>
 
@@ -176,7 +177,7 @@ export default async function PostPage({ params }: PostPageProps) {
         </Suspense>
       )}
 
-      <nav className="mt-8 border-t border-blog-separator pt-6">
+      <nav className="mt-10 border-t border-blog-separator pt-6">
         <Link
           href="/"
           className="text-sm text-blog-muted transition-colors hover:text-blog-text"
