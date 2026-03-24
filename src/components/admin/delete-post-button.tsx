@@ -42,7 +42,7 @@ export function DeletePostButton({ slug, title, iconOnly }: DeletePostButtonProp
       <button
         onClick={handleDelete}
         disabled={deleting}
-        className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-widget)] text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+        className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-widget)] bg-white/90 text-destructive transition-colors hover:bg-white disabled:opacity-50"
         title={t("admin.posts.delete")}
       >
         <Trash2 className="h-4 w-4" strokeWidth={1.5} />
