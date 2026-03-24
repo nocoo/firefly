@@ -35,6 +35,8 @@
   "blog.tag.noPosts": "该标签下暂无文章。",
   "blog.tag.metaDescription": "标签为 {name} 的文章",
   "blog.notFound": "未找到",
+  "blog.notFound.description": "您访问的页面不存在或已被移除。",
+  "blog.notFound.backHome": "← 返回首页",
   "admin.nav.overview": "概览",
   "admin.nav.dashboard": "仪表盘",
   "admin.nav.analytics": "数据分析",
