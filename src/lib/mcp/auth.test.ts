@@ -183,6 +183,24 @@ describe("validateOrigin", () => {
     expect(result!.error).toContain("Origin not allowed");
   });
 
+  it("rejects spoofed loopback hostname (localhost.evil.com)", () => {
+    const result = validateOrigin("http://localhost.evil.com", siteUrl);
+    expect(result).not.toBeNull();
+    expect(result!.status).toBe(403);
+  });
+
+  it("rejects spoofed 127.0.0.1 with suffix", () => {
+    const result = validateOrigin("http://127.0.0.1.evil.com", siteUrl);
+    expect(result).not.toBeNull();
+    expect(result!.status).toBe(403);
+  });
+
+  it("rejects malformed origin", () => {
+    const result = validateOrigin("not-a-url", siteUrl);
+    expect(result).not.toBeNull();
+    expect(result!.status).toBe(403);
+  });
+
   it("rejects https://localhost (not http)", () => {
     const result = validateOrigin("https://localhost:3000", siteUrl);
     expect(result).not.toBeNull();

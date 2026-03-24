@@ -91,13 +91,19 @@ export function validateOrigin(
     // Invalid siteUrl — skip check
   }
 
-  // Allow loopback origins
-  if (
-    origin.startsWith("http://localhost") ||
-    origin.startsWith("http://127.0.0.1") ||
-    origin.startsWith("http://[::1]")
-  ) {
-    return null;
+  // Allow loopback origins — parse URL and compare hostname exactly
+  try {
+    const parsed = new URL(origin);
+    if (
+      parsed.protocol === "http:" &&
+      (parsed.hostname === "localhost" ||
+        parsed.hostname === "127.0.0.1" ||
+        parsed.hostname === "[::1]")
+    ) {
+      return null;
+    }
+  } catch {
+    // Malformed origin — fall through to reject
   }
 
   return {
