@@ -6,7 +6,6 @@ import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/posts";
 import { useLocale } from "@/i18n/context";
 import { SocialLink } from "./social-link";
-import { useEffect } from "react";
 
 // ─── X (Twitter) icon — not in lucide ───
 function XIcon({ className }: { className?: string }) {
@@ -28,56 +27,47 @@ const SOCIAL_LINKS = [
 ];
 
 interface BlogSidebarProps {
+  variant: "desktop" | "drawer";
+  open?: boolean;
+  onClose?: () => void;
   categories: Category[];
   tags: Tag[];
   archives: MonthlyArchive[];
-  isMobile: boolean;
-  isMobileOpen: boolean;
-  onMobileClose: () => void;
 }
 
-export function BlogSidebar({ categories, tags, archives, isMobile, isMobileOpen, onMobileClose }: BlogSidebarProps) {
+export function BlogSidebar({ variant, open, onClose, categories, tags, archives }: BlogSidebarProps) {
   const { t } = useLocale();
 
-  // Lock body scroll when mobile sidebar is open
-  useEffect(() => {
-    if (isMobileOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isMobileOpen]);
-  return (
-    <>
-      {/* Mobile backdrop */}
-      {isMobile && isMobileOpen && (
-        <div
-          className="blog-sidebar-backdrop"
-          onClick={onMobileClose}
-          aria-hidden="true"
-        />
-      )}
+  const isDrawer = variant === "drawer";
+  const isDrawerOpen = isDrawer && open;
 
-      <aside
-        className={`blog-sidebar ${isMobile ? "blog-sidebar-mobile" : "blog-sidebar-desktop"} ${isMobileOpen ? "blog-sidebar-mobile-open" : ""}`}
-      >
-        <div className="blog-sidebar-inner">
-          {/* Mobile close button */}
-          <button
-            className="blog-sidebar-close"
-            onClick={onMobileClose}
-            aria-label="Close menu"
-          >
-            <X className="h-5 w-5" strokeWidth={1.5} />
-          </button>
+  const className = [
+    "blog-sidebar",
+    isDrawer ? "blog-sidebar-drawer" : "blog-sidebar-desktop",
+    isDrawerOpen ? "blog-sidebar-drawer-open" : "",
+  ].filter(Boolean).join(" ");
+
+  return (
+    <aside
+      className={className}
+      inert={isDrawer && !open ? true : undefined}
+      aria-hidden={isDrawer && !open ? true : undefined}
+    >
+      <div className="blog-sidebar-inner">
+        {/* Drawer close button — CSS hides this for desktop variant */}
+        <button
+          className="blog-sidebar-close"
+          onClick={onClose}
+          aria-label="Close menu"
+        >
+          <X className="h-5 w-5" strokeWidth={1.5} />
+        </button>
+
         {/* Site identity */}
         <div className="blog-site-title">
           <Link href="/">LIZHENG.ME</Link>
         </div>
-        <p className="blog-tagline">{t( "blog.sidebar.tagline")}</p>
+        <p className="blog-tagline">{t("blog.sidebar.tagline")}</p>
 
         {/* Social links */}
         <div className="blog-social">
@@ -96,7 +86,7 @@ export function BlogSidebar({ categories, tags, archives, isMobile, isMobileOpen
         {/* Categories */}
         {categories.length > 0 && (
           <nav className="blog-sidebar-section">
-            <h3 className="blog-sidebar-heading">{t( "blog.sidebar.categories")}</h3>
+            <h3 className="blog-sidebar-heading">{t("blog.sidebar.categories")}</h3>
             <ul className="blog-sidebar-list">
               {categories.map((cat) => (
                 <li key={cat.id}>
@@ -113,7 +103,7 @@ export function BlogSidebar({ categories, tags, archives, isMobile, isMobileOpen
         {/* Tags — weighted tag cloud */}
         {tags.length > 0 && (
           <nav className="blog-sidebar-section">
-            <h3 className="blog-sidebar-heading">{t( "blog.sidebar.tags")}</h3>
+            <h3 className="blog-sidebar-heading">{t("blog.sidebar.tags")}</h3>
             <div className="blog-tag-cloud">
               {(() => {
                 const counts = tags.map((tg) => tg.post_count ?? 0);
@@ -141,13 +131,12 @@ export function BlogSidebar({ categories, tags, archives, isMobile, isMobileOpen
         {/* Archives — recent 2 years by month, older years aggregated */}
         {archives.length > 0 && (
           <nav className="blog-sidebar-section">
-            <h3 className="blog-sidebar-heading">{t( "blog.sidebar.archives")}</h3>
+            <h3 className="blog-sidebar-heading">{t("blog.sidebar.archives")}</h3>
             <ul className="blog-sidebar-list">
               {(() => {
                 const now = new Date();
-                const cutoffYear = now.getFullYear() - 1; // current year and previous year = recent 2 years
+                const cutoffYear = now.getFullYear() - 1;
 
-                // Split into recent (by month) and older (aggregate by year)
                 const recent: MonthlyArchive[] = [];
                 const olderByYear = new Map<number, number>();
 
@@ -159,7 +148,6 @@ export function BlogSidebar({ categories, tags, archives, isMobile, isMobileOpen
                   }
                 }
 
-                // Older years sorted descending
                 const olderEntries = [...olderByYear.entries()].sort((a, b) => b[0] - a[0]);
 
                 return (
@@ -167,7 +155,7 @@ export function BlogSidebar({ categories, tags, archives, isMobile, isMobileOpen
                     {recent.map((a) => (
                       <li key={`${a.year}-${a.month}`}>
                         <Link href={`/archive/${a.year}-${String(a.month).padStart(2, "0")}`}>
-                          <span>{a.year} {t( "blog.sidebar.yearSuffix")} {a.month} {t( "blog.sidebar.monthSuffix")}</span>
+                          <span>{a.year} {t("blog.sidebar.yearSuffix")} {a.month} {t("blog.sidebar.monthSuffix")}</span>
                           <span className="blog-sidebar-count">({a.count})</span>
                         </Link>
                       </li>
@@ -175,7 +163,7 @@ export function BlogSidebar({ categories, tags, archives, isMobile, isMobileOpen
                     {olderEntries.map(([year, count]) => (
                       <li key={year}>
                         <Link href={`/archive/${year}`}>
-                          <span>{year} {t( "blog.sidebar.yearSuffix")}</span>
+                          <span>{year} {t("blog.sidebar.yearSuffix")}</span>
                           <span className="blog-sidebar-count">({count})</span>
                         </Link>
                       </li>
@@ -188,6 +176,5 @@ export function BlogSidebar({ categories, tags, archives, isMobile, isMobileOpen
         )}
       </div>
     </aside>
-    </>
   );
 }

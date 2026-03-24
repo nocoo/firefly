@@ -6,9 +6,10 @@ import type { MonthlyArchive } from "@/data/posts";
 import type { Locale } from "@/i18n/translations";
 import { BlogSidebar } from "./blog-sidebar";
 import { BlogFooter } from "./blog-footer";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
+
+const DESKTOP_QUERY = "(min-width: 1200px)";
 
 interface BlogLayoutClientProps {
   categories: Category[];
@@ -19,66 +20,54 @@ interface BlogLayoutClientProps {
 }
 
 export function BlogLayoutClient({ categories, tags, archives, locale, children }: BlogLayoutClientProps) {
-  const isMobile = useIsMobile();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Prevent body scroll when mobile sidebar is open
+  // State convergence: auto-close drawer when entering desktop layout.
+  // This is not a layout decision — CSS already hides the drawer at >= 1200px.
+  // This cleans up React state so backdrop and scroll-lock don't leak.
   useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
+    const mql = window.matchMedia(DESKTOP_QUERY);
+    const handler = (e: MediaQueryListEvent) => {
+      if (e.matches) setDrawerOpen(false);
     };
-  }, [isMobileMenuOpen]);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
+  // Scroll lock — single owner
+  useEffect(() => {
+    document.body.style.overflow = drawerOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [drawerOpen]);
 
   return (
     <>
-      {/* Desktop sidebar — always visible on non-mobile */}
-      {!isMobile && (
-        <BlogSidebar
-          categories={categories}
-          tags={tags}
-          archives={archives}
-          isMobile={false}
-          isMobileOpen={false}
-          onMobileClose={() => {}}
-        />
+      {/* Desktop sidebar — always in DOM, CSS shows/hides via media query */}
+      <BlogSidebar variant="desktop" categories={categories} tags={tags} archives={archives} />
+
+      {/* Hamburger — always in DOM, CSS shows/hides via media query */}
+      <div className="blog-mobile-bar">
+        <IconButton onClick={() => setDrawerOpen(true)} aria-label="Open menu">
+          <Menu className="h-5 w-5" strokeWidth={1.5} />
+        </IconButton>
+      </div>
+
+      {/* Drawer backdrop — rendered when open */}
+      {drawerOpen && (
+        <div className="blog-sidebar-backdrop" onClick={() => setDrawerOpen(false)} />
       )}
 
-      {/* Mobile: hamburger button in top bar */}
-      {isMobile && (
-        <div className="blog-mobile-bar">
-          <IconButton
-            onClick={() => setIsMobileMenuOpen(true)}
-            aria-label="Open menu"
-          >
-            <Menu className="h-5 w-5" strokeWidth={1.5} />
-          </IconButton>
-        </div>
-      )}
+      {/* Drawer sidebar — always in DOM, CSS + inert control visibility */}
+      <BlogSidebar
+        variant="drawer"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        categories={categories}
+        tags={tags}
+        archives={archives}
+      />
 
-      {/* Mobile: sidebar overlay */}
-      {isMobile && isMobileMenuOpen && (
-        <>
-          <div
-            className="blog-sidebar-backdrop"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-          <BlogSidebar
-            categories={categories}
-            tags={tags}
-            archives={archives}
-            isMobile={true}
-            isMobileOpen={true}
-            onMobileClose={() => setIsMobileMenuOpen(false)}
-          />
-        </>
-      )}
-
-      <main id="main" className={`blog-main ${isMobile ? "blog-main-mobile" : "blog-main-desktop"}`}>
+      <main id="main" className="blog-main">
         {children}
         <BlogFooter locale={locale} />
       </main>
