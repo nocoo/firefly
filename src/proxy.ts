@@ -73,7 +73,8 @@ export async function proxy(request: NextRequest) {
     !pathname.startsWith("/login")
   ) {
     // Hard redirect: /feed → /feed.xml (RSS subscribers from WordPress era)
-    if (pathname === "/feed" || pathname === "/feed/") {
+    if (pathname === "/feed" || pathname === "/feed/" ||
+        pathname === "/index.php/feed" || pathname === "/index.php/feed/") {
       const url = request.nextUrl.clone();
       url.pathname = "/feed.xml";
       return NextResponse.redirect(url, 301);
