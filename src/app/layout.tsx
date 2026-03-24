@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ThemeProvider } from "next-themes";
 import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR, TWITTER_HANDLE } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { LocaleProvider } from "@/i18n/context";
@@ -50,18 +51,6 @@ export const metadata: Metadata = {
   },
 };
 
-// Inline script to prevent dark mode FOUC — runs before paint
-const themeInitScript = `
-(function(){
-  try {
-    var t = localStorage.getItem('theme');
-    if (t === 'dark' || (!t || t === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.classList.add('dark');
-    }
-  } catch(e){}
-})();
-`;
-
 export default async function RootLayout({
   children,
 }: {
@@ -80,16 +69,20 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <script
-          dangerouslySetInnerHTML={{ __html: themeInitScript }}
-        />
         <meta name="theme-color" content="#FAF8F5" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#1C1A17" media="(prefers-color-scheme: dark)" />
       </head>
       <body className="antialiased">
-        <LocaleProvider locale={locale}>
-          {children}
-        </LocaleProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <LocaleProvider locale={locale}>
+            {children}
+          </LocaleProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

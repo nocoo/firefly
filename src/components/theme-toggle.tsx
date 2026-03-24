@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
+import { useTheme } from "next-themes";
 import { Sun, Moon, Monitor } from "lucide-react";
 import { useLocale } from "@/i18n/context";
 import { IconButton } from "@/components/ui/icon-button";
-
-type Theme = "light" | "dark" | "system";
 
 const ICON_PROPS = {
   className: "h-4 w-4",
@@ -13,83 +12,54 @@ const ICON_PROPS = {
   "aria-hidden": true as const,
 };
 
-function getStoredTheme(): Theme {
-  if (typeof window === "undefined") return "system";
-  return (localStorage.getItem("theme") as Theme) ?? "system";
-}
+const noop = () => () => {};
+const getTrue = () => true;
+const getFalse = () => false;
 
-function applyTheme(theme: Theme) {
-  const root = document.documentElement;
-  if (theme === "dark") {
-    root.classList.add("dark");
-  } else if (theme === "light") {
-    root.classList.remove("dark");
-  } else {
-    // system
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  }
-}
-
-// Subscribe to OS theme changes
-function subscribeToMediaQuery(callback: () => void) {
-  const mq = window.matchMedia("(prefers-color-scheme: dark)");
-  mq.addEventListener("change", callback);
-  return () => mq.removeEventListener("change", callback);
-}
-
-function getOsDarkSnapshot(): boolean {
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
-}
-
-function getOsDarkServerSnapshot(): boolean {
-  return false;
+/** SSR-safe mounted flag — false on server, true after hydration */
+function useMounted(): boolean {
+  return useSyncExternalStore(noop, getTrue, getFalse);
 }
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>(getStoredTheme);
+  const { theme, setTheme } = useTheme();
   const { t } = useLocale();
-
-  // Re-apply when OS preference changes
-  const osDark = useSyncExternalStore(
-    subscribeToMediaQuery,
-    getOsDarkSnapshot,
-    getOsDarkServerSnapshot,
-  );
-
-  // Apply theme whenever theme or OS preference changes
-  useEffect(() => {
-    applyTheme(theme);
-  }, [theme, osDark]);
+  const mounted = useMounted();
 
   const cycleTheme = () => {
-    const order: Theme[] = ["system", "light", "dark"];
-    const next = order[(order.indexOf(theme) + 1) % order.length];
+    const order = ["system", "light", "dark"] as const;
+    const current = theme ?? "system";
+    const next = order[(order.indexOf(current as typeof order[number]) + 1) % order.length];
     setTheme(next);
-    localStorage.setItem("theme", next);
   };
 
   const label =
-    theme === "system"
-      ? t("theme.system")
-      : theme === "light"
-        ? t("theme.light")
-        : t("theme.dark");
+    theme === "light"
+      ? t("theme.light")
+      : theme === "dark"
+        ? t("theme.dark")
+        : t("theme.system");
+
+  // Render a static placeholder until mounted to avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <IconButton aria-label={t("theme.toggle", { label: t("theme.system") })}>
+        <Monitor {...ICON_PROPS} />
+      </IconButton>
+    );
+  }
 
   return (
     <IconButton
       onClick={cycleTheme}
       aria-label={t("theme.toggle", { label })}
     >
-      {theme === "system" ? (
-        <Monitor {...ICON_PROPS} />
-      ) : theme === "dark" ? (
+      {theme === "dark" ? (
         <Moon {...ICON_PROPS} />
-      ) : (
+      ) : theme === "light" ? (
         <Sun {...ICON_PROPS} />
+      ) : (
+        <Monitor {...ICON_PROPS} />
       )}
     </IconButton>
   );
