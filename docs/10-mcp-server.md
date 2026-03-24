@@ -15,7 +15,7 @@ Phase 1 uses **stateless JSON-only** transport: each `POST /api/mcp` is independ
 
 ### Problem
 
-AI agents (Claude Code, Claude Desktop, Cursor, etc.) need programmatic access to the blog for daily collaboration: drafting posts, managing tags/categories, publishing content. The current admin UI requires browser-based Google OAuth, which agents cannot use.
+AI agents (Claude Code, opencode, and similar CLI-based MCP clients) need programmatic access to the blog for daily collaboration: drafting posts, managing tags/categories, publishing content. The current admin UI requires browser-based Google OAuth, which CLI agents cannot use.
 
 ### Solution
 
@@ -25,7 +25,7 @@ Expose a **Streamable HTTP** MCP server at `/api/mcp` with **OAuth 2.1** authent
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  AI Agent (Claude Code / Claude Desktop / Cursor)           │
+│  AI Agent (Claude Code / opencode / CLI MCP clients)        │
 │  ┌───────────────────────────────────────────────────────┐  │
 │  │  MCP Client                                           │  │
 │  │  1. Discovers OAuth metadata                          │  │
@@ -127,16 +127,17 @@ This table serves a dual purpose: (1) stores authorize request params when the f
 
 ```sql
 CREATE TABLE mcp_auth_codes (
-  state           TEXT PRIMARY KEY,                 -- CSRF state param, set at /authorize
-  code            TEXT UNIQUE,                      -- set at /callback after Google login
-  client_id       TEXT NOT NULL,
-  redirect_uri    TEXT NOT NULL,
-  code_challenge  TEXT NOT NULL,                    -- PKCE S256
-  user_email      TEXT,                             -- set at /callback
-  scope           TEXT NOT NULL DEFAULT 'mcp:full',
-  expires_at      INTEGER NOT NULL,                 -- unix epoch, 10 min TTL
-  consumed        INTEGER NOT NULL DEFAULT 0,       -- 0=unused, 1=consumed (atomic)
-  created_at      INTEGER NOT NULL DEFAULT (unixepoch())
+  state                  TEXT PRIMARY KEY,                 -- CSRF state param, set at /authorize
+  code                   TEXT UNIQUE,                      -- set at /callback after Google login
+  client_id              TEXT NOT NULL,
+  redirect_uri           TEXT NOT NULL,
+  code_challenge         TEXT NOT NULL,                    -- PKCE S256
+  code_challenge_method  TEXT NOT NULL DEFAULT 'S256',     -- always S256, stored for spec compliance
+  user_email             TEXT,                             -- set at /callback
+  scope                  TEXT NOT NULL DEFAULT 'mcp:full',
+  expires_at             INTEGER NOT NULL,                 -- unix epoch, 10 min TTL
+  consumed               INTEGER NOT NULL DEFAULT 0,       -- 0=unused, 1=consumed (atomic)
+  created_at             INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
 CREATE UNIQUE INDEX idx_mcp_auth_codes_code ON mcp_auth_codes(code);
@@ -249,7 +250,7 @@ Query params:
 Flow:
 1. Validate `client_id` exists in `mcp_clients`
 2. Validate `redirect_uri` matches registered URIs
-3. Store all params in `mcp_auth_codes` table **keyed by `state`** (not in a cookie — avoids overwrite if multiple flows run concurrently). Schema: `state` (PK), `client_id`, `redirect_uri`, `code_challenge`, `code_challenge_method`, `scope`, `expires_at` (10 min)
+3. Store all params in `mcp_auth_codes` table **keyed by `state`** (not in a cookie — avoids overwrite if multiple flows run concurrently). Columns stored: `state` (PK), `client_id`, `redirect_uri`, `code_challenge`, `code_challenge_method`, `scope`, `expires_at` (10 min)
 4. Redirect to Google OAuth (`/api/auth/signin/google`) with a custom `callbackUrl` pointing to `/api/mcp/callback?state=xxx`
 
 #### `GET /api/mcp/callback`
@@ -294,22 +295,28 @@ Response:
 }
 ```
 
-Validation (atomic — single query consumes and validates):
-1. Execute atomic consume query:
+Validation (validate-then-consume — never burns a legitimate code on bad input):
+1. Look up by `code`:
    ```sql
-   UPDATE mcp_auth_codes
-   SET consumed = 1
+   SELECT * FROM mcp_auth_codes
    WHERE code = ? AND consumed = 0 AND expires_at > unixepoch()
-   RETURNING *
    ```
-   If no row returned → reject (code invalid, expired, or already consumed)
-2. Verify `client_id` matches
-3. Verify `redirect_uri` matches
-4. Verify PKCE: `SHA256(code_verifier)` equals stored `code_challenge`
-5. Generate `access_token` (prefix `firefly_at_`, 48-char random hex)
-6. Generate `refresh_token` (prefix `firefly_rt_`, 48-char random hex)
-7. Store `SHA256(access_token)` and `SHA256(refresh_token)` in `mcp_tokens`, access TTL 30 days, refresh TTL 90 days
-8. Return plaintext tokens to client (only time they're visible)
+   If no row → reject (`invalid_grant`: code invalid, expired, or already consumed)
+2. Verify `client_id` matches the row's `client_id` → reject if mismatch (code is NOT consumed)
+3. Verify `redirect_uri` matches the row's `redirect_uri` → reject if mismatch (code is NOT consumed)
+4. Verify PKCE: `BASE64URL(SHA256(code_verifier))` equals stored `code_challenge` → reject if mismatch (code is NOT consumed)
+5. **Only after all checks pass**, atomically consume:
+   ```sql
+   UPDATE mcp_auth_codes SET consumed = 1
+   WHERE code = ? AND consumed = 0
+   ```
+   If `changes === 0` → race condition, another request consumed it first → reject
+6. Generate `access_token` (prefix `firefly_at_`, 48-char random hex)
+7. Generate `refresh_token` (prefix `firefly_rt_`, 48-char random hex)
+8. Store `SHA256(access_token)` and `SHA256(refresh_token)` in `mcp_tokens`, access TTL 30 days, refresh TTL 90 days
+9. Return plaintext tokens to client (only time they're visible)
+
+> **Design rationale**: steps 2-4 validate _before_ consuming. A request with correct `code` but wrong `client_id` or bad `code_verifier` will be rejected without consuming the code. This prevents a malicious or buggy client from burning a legitimate code by guessing part of the flow. The race window between SELECT (step 1) and UPDATE (step 5) is safe because: (a) the code is single-use so only the legitimate holder should know it, and (b) the final `WHERE consumed = 0` in step 5 prevents double-spend.
 
 **Refresh Token Exchange:**
 
@@ -1203,16 +1210,30 @@ The MCP endpoint (`/api/mcp`) handles its own Bearer token validation internally
 ```json
 {
   "@modelcontextprotocol/server": "^2.0.0",
-  "@modelcontextprotocol/node": "^2.0.0",
   "zod": "^4.0.0"
 }
 ```
 
-- `@modelcontextprotocol/server` — `McpServer` class, tool registration, JSON-RPC handling
-- `@modelcontextprotocol/node` — `NodeStreamableHTTPServerTransport` for HTTP transport in Node.js runtime
+- `@modelcontextprotocol/server` — `McpServer` class, tool registration, JSON-RPC handling, **and** `WebStandardStreamableHTTPServerTransport` for HTTP transport using Web Standard `Request`/`Response` API
 - `zod` v4 — MCP SDK v2 uses Zod for schema definition. v4 is required (not v3). Auth.js uses zod v3 indirectly, but v4 is backward compatible at runtime
 
-The Next.js App Router's `route.ts` handlers receive `Request` and return `Response`, which we adapt to the Node transport. We do NOT use `@modelcontextprotocol/express` since Next.js has its own request/response lifecycle.
+Next.js App Router `route.ts` handlers natively receive `Request` and return `Response` — this is exactly what `WebStandardStreamableHTTPServerTransport.handleRequest(req: Request)` accepts and returns. No adapter layer needed.
+
+We do **not** need `@modelcontextprotocol/node` (`NodeStreamableHTTPServerTransport`) — that wraps Node.js `IncomingMessage`/`ServerResponse` which Next.js App Router doesn't use. We also skip `@modelcontextprotocol/express` and `@modelcontextprotocol/hono` for the same reason.
+
+```typescript
+// src/app/api/mcp/route.ts — sketch
+import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/server";
+
+export async function POST(req: Request): Promise<Response> {
+  const transport = new WebStandardStreamableHTTPServerTransport({
+    sessionIdGenerator: undefined,   // stateless Phase 1
+    enableJsonResponse: true,        // JSON-only, no SSE
+  });
+  await server.connect(transport);
+  return transport.handleRequest(req);
+}
+```
 
 ---
 
@@ -1230,11 +1251,13 @@ The Next.js App Router's `route.ts` handlers receive `Request` and return `Respo
 
 6. **Loopback-only redirect URIs** — Client registration restricts `redirect_uris` to `http://localhost`, `http://127.0.0.1`, and `http://[::1]`. No arbitrary external URLs.
 
-7. **Origin validation** — MCP endpoint validates `Origin` header per spec to prevent DNS rebinding attacks.
+7. **Origin validation** — MCP endpoint validates `Origin` header per spec to prevent DNS rebinding attacks. Rules:
+   - If `Origin` is present: must match `https://lizheng.me` or be a loopback origin (`http://localhost:*`, `http://127.0.0.1:*`). Reject with 403 otherwise.
+   - If `Origin` is absent: **allow the request**. CLI-based MCP clients (Claude Code, opencode) typically do not send an `Origin` header since they're not browsers. Blocking missing Origin would break all CLI clients. The Bearer token itself is the primary authentication mechanism.
 
 8. **Rate limiting** — Token endpoint should rate-limit by client IP (5 req/min) to prevent brute-force.
 
-9. **Atomic auth code consumption** — Authorization codes are consumed and validated in a single atomic SQL query (`UPDATE ... WHERE consumed = 0 ... RETURNING *`). This prevents TOCTOU race conditions and avoids burning legitimate codes on failed validation.
+9. **Validate-then-consume auth code** — Authorization codes are validated (client_id, redirect_uri, PKCE) _before_ being consumed. A request with a valid code but wrong parameters will be rejected without consuming the code, preventing a buggy or malicious client from burning another client's legitimate code. The final `UPDATE ... WHERE consumed = 0` guards against race conditions.
 
 10. **Concurrent OAuth flows** — Authorization params are stored in DB keyed by `state` (not in cookies), so multiple simultaneous auth flows from different agents cannot overwrite each other.
 
