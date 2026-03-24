@@ -187,14 +187,14 @@ import { generateText } from "ai";
 import { getDb } from "@/lib/db";
 import { getAiSettings } from "@/data/ai-settings";
 
-export const EXCERPT_PROMPT = `You are a blog excerpt writer. Write a concise summary for the following blog post.
+export const EXCERPT_PROMPT = `You are a blog excerpt writer. Write a summary for the following blog post.
 
 Rules:
-- One or two sentences, no more
+- 5 to 6 sentences that give the reader a clear picture of the article
 - Write in the same language as the article
 - Sound natural, like a human wrote it — avoid phrases like "this article discusses", "in this post", "the author explores"
-- Capture the core insight or takeaway, not a table of contents
-- Chinese: 80-120 characters. English: 120-200 characters
+- Capture the core insight, key arguments, and takeaway — not a table of contents
+- Chinese: 200-300 characters. English: 300-500 characters
 - No markdown formatting, no quotes, just plain text`;
 
 export const MAX_EXCERPT_CONTENT_CHARS = 2000;

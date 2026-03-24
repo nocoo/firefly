@@ -21,7 +21,7 @@ No semantic understanding. A 3000-word technical post about React Server Compone
 ### Principles
 
 1. **De-AI'd output** — generated text reads like a human wrote it. No "this article explores", "in this post we discuss", or other LLM filler phrases. The prompt explicitly bans these patterns.
-2. **Length control** — Chinese: 80–120 characters, English: 120–200 characters. One or two sentences max.
+2. **Length control** — Chinese: 200–300 characters, English: 300–500 characters. Five to six sentences that give the reader a clear picture of the article.
 3. **Graceful degradation** — when AI is not configured or the call fails, the existing `excerptFromContent()` remains as fallback. The feature is additive, not a replacement.
 4. **Non-blocking** — AI generation is a user-initiated action (button click), not part of the save flow. The generated text fills the textarea; the user can edit before saving.
 5. **Content economy** — only the first 2000 characters of post content are sent to the LLM. Most articles establish their thesis early; sending the full article wastes tokens.
@@ -52,15 +52,15 @@ Add `generateExcerpt(title, content)` function:
 
 Prompt:
 ```
-You are a blog excerpt writer. Write a concise summary for the following blog post.
+You are a blog excerpt writer. Write a summary for the following blog post.
 
 Rules:
-- One or two sentences, no more
+- 5 to 6 sentences that give the reader a clear picture of the article
 - Write in the same language as the article
 - Sound natural, like a human wrote it — avoid phrases like "this article discusses",
   "in this post", "the author explores"
-- Capture the core insight or takeaway, not a table of contents
-- Chinese: 80-120 characters. English: 120-200 characters
+- Capture the core insight, key arguments, and takeaway — not a table of contents
+- Chinese: 200-300 characters. English: 300-500 characters
 - No markdown formatting, no quotes, just plain text
 
 Title: {title}
