@@ -149,6 +149,7 @@
   --blog-muted: #8C8680;
   --blog-separator: #E8E4DE;
   --blog-accent: #9DBFCF;
+  --blog-code-bg: #F2EFE9;
 
   /* Tag pill palette — soft pastels (light) */
   --tag-1-bg: #EDE8E1; --tag-1-fg: #6B5D4F;
@@ -200,6 +201,7 @@
   --blog-muted: #9B9488;
   --blog-separator: #3E3C38;
   --blog-accent: #C8BFA8;
+  --blog-code-bg: #38362F;
 
   /* Tag pill palette — muted earth tones (dark) */
   --tag-1-bg: #3D3830; --tag-1-fg: #C8BFA8;
@@ -263,6 +265,7 @@
  */
 .prose-firefly {
   font-family: var(--ff-body);
+  color: var(--blog-text);
   font-size: 1.0625rem;
   line-height: 1.85;
   overflow-wrap: break-word;
@@ -283,8 +286,8 @@
   & blockquote p  { font-style: normal; }
 
   /* Code */
-  & pre                 { font-family: var(--ff-mono); font-size: 0.8125em; border: 1px solid var(--blog-separator); background: hsl(var(--secondary)); }
-  & :not(pre) > code    { font-family: var(--ff-mono); font-size: 0.85em; padding: 0.15em 0.35em; border: 1px solid var(--blog-separator); background: hsl(var(--secondary)); }
+  & pre                 { font-family: var(--ff-mono); font-size: 0.8125em; border: 1px solid var(--blog-separator); background: var(--blog-code-bg); }
+  & :not(pre) > code    { font-family: var(--ff-mono); font-size: 0.85em; padding: 0.15em 0.35em; border: 1px solid var(--blog-separator); background: var(--blog-code-bg); }
   & :not(pre) > code::before,
   & :not(pre) > code::after { content: none; }
 
@@ -528,12 +531,76 @@
 .blog-footer a:hover { color: var(--blog-text); }
 
 /*
- * Admin preview theme bridge — applies blog palette inside admin panels
- * so the preview renders identically to the public blog.
+ * Admin preview theme bridge — scoped blog palette inside admin panels.
+ * Mirrors .blog-main padding/colors so the preview is pixel-identical
+ * to the public blog. Has its own light/dark toggle via .blog-preview-dark.
  */
 .blog-preview-theme {
   background: var(--blog-bg);
   color: var(--blog-text);
   border-radius: var(--radius-widget);
-  padding: 1.5em;
+  padding: 2em 6%;
+  min-height: 100%;
+}
+
+/* Force light blog palette when preview is in light mode,
+   even if global page is dark (overrides .dark inherited vars) */
+.blog-preview-theme:not(.blog-preview-dark) {
+  --blog-bg: #FAF8F5;
+  --blog-surface: #FAF8F5;
+  --blog-text: #2C2C2C;
+  --blog-muted: #8C8680;
+  --blog-separator: #E8E4DE;
+  --blog-accent: #9DBFCF;
+  --blog-code-bg: #F2EFE9;
+  --tag-1-bg: #EDE8E1; --tag-1-fg: #6B5D4F;
+  --tag-2-bg: #E3EBE8; --tag-2-fg: #4A655B;
+  --tag-3-bg: #E8E3EE; --tag-3-fg: #5E4F6B;
+  --tag-4-bg: #E8EDE3; --tag-4-fg: #556B4A;
+  --tag-5-bg: #EDE3E3; --tag-5-fg: #6B4F4F;
+  --tag-6-bg: #E3E8ED; --tag-6-fg: #4F5D6B;
+  --tag-7-bg: #EDE8E3; --tag-7-fg: #6B5A45;
+  --tag-8-bg: #E3EDEB; --tag-8-fg: #456B63;
+}
+
+/* Scoped dark mode — overrides blog palette when toggled */
+.blog-preview-dark {
+  --blog-bg: #2D2B28;
+  --blog-surface: #343230;
+  --blog-text: #D4CCBC;
+  --blog-muted: #9B9488;
+  --blog-separator: #3E3C38;
+  --blog-accent: #C8BFA8;
+  --blog-code-bg: #38362F;
+  --tag-1-bg: #3D3830; --tag-1-fg: #C8BFA8;
+  --tag-2-bg: #303A36; --tag-2-fg: #A8C8BB;
+  --tag-3-bg: #38303D; --tag-3-fg: #BBA8C8;
+  --tag-4-bg: #353D30; --tag-4-fg: #B3C8A8;
+  --tag-5-bg: #3D3030; --tag-5-fg: #C8A8A8;
+  --tag-6-bg: #30353D; --tag-6-fg: #A8B8C8;
+  --tag-7-bg: #3D3830; --tag-7-fg: #C8B8A0;
+  --tag-8-bg: #303D3A; --tag-8-fg: #A0C8C0;
+}
+
+/* Preview toggle button */
+.blog-preview-toggle {
+  position: absolute;
+  top: 0.75em;
+  right: 0.75em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75em;
+  height: 1.75em;
+  border-radius: 0.375em;
+  border: none;
+  background: none;
+  color: var(--blog-muted);
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s;
+  z-index: 1;
+}
+.blog-preview-toggle:hover {
+  color: var(--blog-text);
+  background: var(--blog-separator);
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
+import { Sun, Moon } from "lucide-react";
 import { renderMarkdown } from "@/models/markdown";
 import { useLocale } from "@/i18n/context";
 import { ArticleBody } from "@/components/blog/article-body";
@@ -24,6 +25,10 @@ export function MarkdownPreview({
   );
   const { t } = useLocale();
 
+  // Scoped theme toggle — independent of the global next-themes
+  const [previewDark, setPreviewDark] = useState(false);
+  const togglePreviewTheme = useCallback(() => setPreviewDark((d) => !d), []);
+
   const isEmpty = !title && !excerpt && !content && !featuredImage;
 
   if (isEmpty) {
@@ -37,12 +42,27 @@ export function MarkdownPreview({
   }
 
   return (
-    <div className="blog-preview-theme mx-auto max-w-2xl">
+    <div
+      className={`blog-preview-theme relative${previewDark ? " blog-preview-dark dark" : ""}`}
+    >
+      {/* Scoped theme toggle — top-right */}
+      <button
+        type="button"
+        onClick={togglePreviewTheme}
+        className="blog-preview-toggle"
+        aria-label={previewDark ? t("theme.light") : t("theme.dark")}
+      >
+        {previewDark ? (
+          <Sun className="h-3.5 w-3.5" strokeWidth={1.5} />
+        ) : (
+          <Moon className="h-3.5 w-3.5" strokeWidth={1.5} />
+        )}
+      </button>
+
       <ArticleBody
         html={html}
         header={
           <>
-            {/* Featured image */}
             {featuredImage && (
               <div className="mb-8 overflow-hidden rounded-[var(--radius-widget)]">
                 <img
@@ -53,21 +73,18 @@ export function MarkdownPreview({
               </div>
             )}
 
-            {/* Title */}
             {title && (
               <h1 className="text-2xl font-bold leading-tight tracking-tight md:text-3xl">
                 {title}
               </h1>
             )}
 
-            {/* Subtitle / excerpt */}
             {excerpt && (
               <p className="mt-3 text-base leading-relaxed opacity-60">
                 {excerpt}
               </p>
             )}
 
-            {/* Divider */}
             {(title || excerpt) && content && (
               <hr className="my-6 border-[var(--blog-separator)]" />
             )}

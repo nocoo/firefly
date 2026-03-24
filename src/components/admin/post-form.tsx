@@ -198,7 +198,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         {/* Mobile: tab-based preview */}
         <div className="lg:hidden">
           {previewMode ? (
-            <div className="blog-preview-theme min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-4 py-3 overflow-y-auto">
+            <div className="blog-preview-theme min-h-[480px] rounded-[var(--radius-widget)] border border-border overflow-y-auto">
               {content ? (
                 <ArticleBody html={previewHtml} />
               ) : (
@@ -388,7 +388,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       </form>
 
       {/* Right: Live preview — visible only on lg+ */}
-      <div className="sticky top-14 hidden h-[calc(100vh-56px-24px)] w-1/2 min-w-0 overflow-y-auto rounded-[var(--radius-widget)] border border-border bg-secondary p-6 lg:block">
+      <div className="sticky top-14 hidden h-[calc(100vh-56px-24px)] w-1/2 min-w-0 overflow-y-auto rounded-[var(--radius-widget)] border border-border lg:block">
         <MarkdownPreview
           title={title}
           excerpt={excerpt}

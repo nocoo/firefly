@@ -33,7 +33,7 @@ export function ArticleBody({
       {featuredImage}
       {html && (
         <div
-          className="blog-content prose-firefly prose dark:prose-invert max-w-none"
+          className="blog-content prose-firefly prose max-w-none"
           dangerouslySetInnerHTML={{ __html: html }}
         />
       )}
