@@ -81,7 +81,7 @@ function startNextServer(
 ): Subprocess {
   console.log(`▸ Starting Next.js on port ${port}...`);
   const proc = spawn(
-    ["bun", "run", "next", "dev", "--turbopack", "-p", String(port)],
+    ["bun", "run", "next", "dev", "--webpack", "-p", String(port)],
     {
       cwd: process.cwd(),
       env: { ...env, PORT: String(port) },
