@@ -90,14 +90,14 @@ export function createMcpServer(db: Db): McpServer {
 
   server.tool(
     "update_post",
-    "Update an existing post by slug. Only provided fields are updated.",
+    "Update an existing post by slug. Only provided fields are updated. Pass null for excerpt to clear and auto-regenerate.",
     {
       slug: z.string(),
       title: z.string().optional(),
       new_slug: z.string().optional(),
       content: z.string().optional(),
       status: z.enum(["draft", "published", "private", "archived"]).optional(),
-      excerpt: z.string().optional(),
+      excerpt: z.string().nullable().optional(),
       category_id: z.string().nullable().optional(),
       tag_ids: z.array(z.string()).optional(),
       featured_image: z.string().nullable().optional(),

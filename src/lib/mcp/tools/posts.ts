@@ -144,7 +144,7 @@ export async function handleUpdatePost(
     new_slug?: string;
     content?: string;
     status?: string;
-    excerpt?: string;
+    excerpt?: string | null;
     category_id?: string | null;
     tag_ids?: string[];
     featured_image?: string | null;

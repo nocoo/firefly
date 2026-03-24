@@ -281,6 +281,20 @@ describe("handleUpdatePost", () => {
     expect(result.content[0].text).toContain("tag assignment failed");
     expect(result.content[0].text).toContain("tags unchanged");
   });
+
+  it("passes excerpt: null to data layer to trigger auto-regeneration", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
+
+    await handleUpdatePost(ctx, {
+      slug: "test-post",
+      excerpt: null,
+    });
+
+    expect(updatePost).toHaveBeenCalledWith(ctx.db, "post-1", expect.objectContaining({
+      excerpt: null,
+    }));
+  });
 });
 
 describe("handleDeletePost", () => {
