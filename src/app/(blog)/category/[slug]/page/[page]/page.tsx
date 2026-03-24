@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { getCategoryBySlug } from "@/data/categories";
@@ -5,11 +6,30 @@ import { listPosts } from "@/data/posts";
 import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
+import { buildPageMeta } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 
 interface Props {
   params: Promise<{ slug: string; page: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug, page: pageStr } = await params;
+  const page = parseInt(pageStr, 10);
+  if (Number.isNaN(page) || page < 2) return { title: "Not Found" };
+
+  const db = getDb();
+  const category = await getCategoryBySlug(db, slug);
+  if (!category) return { title: "Not Found" };
+
+  const locale = await getLocale();
+  return buildPageMeta({
+    title: `${category.name} – Page ${page}`,
+    description: category.description || category.name,
+    path: `/category/${slug}/page/${page}`,
+    locale,
+  });
 }
 
 export default async function CategoryPaged({ params }: Props) {

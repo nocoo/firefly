@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { listPosts } from "@/data/posts";
@@ -5,11 +6,26 @@ import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { websiteJsonLd } from "@/lib/jsonld";
+import { buildPageMeta, SITE_NAME, SITE_DESCRIPTION } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 
 interface PageProps {
   params: Promise<{ page: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { page: pageStr } = await params;
+  const page = parseInt(pageStr, 10);
+  if (Number.isNaN(page) || page < 2) return { title: "Not Found" };
+
+  const locale = await getLocale();
+  return buildPageMeta({
+    title: `${SITE_NAME} – Page ${page}`,
+    description: `${SITE_DESCRIPTION} — Page ${page}`,
+    path: `/page/${page}`,
+    locale,
+  });
 }
 
 export default async function HomePaged({ params }: PageProps) {

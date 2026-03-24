@@ -1,9 +1,11 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { listPosts } from "@/data/posts";
 import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
+import { buildPageMeta } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 
@@ -27,6 +29,24 @@ export function parseArchivePeriod(period: string): {
     }
   }
   return { year };
+}
+
+export async function generateMetadata({ params }: ArchivePageProps): Promise<Metadata> {
+  const { period } = await params;
+  const parsed = parseArchivePeriod(period);
+  if (!parsed) return { title: "Not Found" };
+
+  const locale = await getLocale();
+  const label = parsed.month
+    ? `${parsed.year} ${t(locale, "blog.sidebar.yearSuffix")} ${parsed.month} ${t(locale, "blog.sidebar.monthSuffix")}`
+    : `${parsed.year} ${t(locale, "blog.sidebar.yearSuffix")}`;
+
+  return buildPageMeta({
+    title: label,
+    description: label,
+    path: `/archive/${period}`,
+    locale,
+  });
 }
 
 export default async function ArchivePage({ params }: ArchivePageProps) {

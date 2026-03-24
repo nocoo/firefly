@@ -1,15 +1,38 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { listPosts } from "@/data/posts";
 import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
+import { buildPageMeta } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 import { parseArchivePeriod } from "../../page";
 
 interface Props {
   params: Promise<{ period: string; page: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { period, page: pageStr } = await params;
+  const page = parseInt(pageStr, 10);
+  if (Number.isNaN(page) || page < 2) return { title: "Not Found" };
+
+  const parsed = parseArchivePeriod(period);
+  if (!parsed) return { title: "Not Found" };
+
+  const locale = await getLocale();
+  const label = parsed.month
+    ? `${parsed.year} ${t(locale, "blog.sidebar.yearSuffix")} ${parsed.month} ${t(locale, "blog.sidebar.monthSuffix")}`
+    : `${parsed.year} ${t(locale, "blog.sidebar.yearSuffix")}`;
+
+  return buildPageMeta({
+    title: `${label} – Page ${page}`,
+    description: label,
+    path: `/archive/${period}/page/${page}`,
+    locale,
+  });
 }
 
 export default async function ArchivePaged({ params }: Props) {
