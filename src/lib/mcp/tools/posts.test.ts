@@ -216,7 +216,7 @@ describe("handleUpdatePost", () => {
 
   it("updates existing post", async () => {
     vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
-    vi.mocked(updatePost).mockResolvedValue(samplePost);
+    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
 
     const result = await handleUpdatePost(ctx, {
       slug: "test-post",
@@ -239,7 +239,7 @@ describe("handleUpdatePost", () => {
 
   it("updates tags when tag_ids provided", async () => {
     vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
-    vi.mocked(updatePost).mockResolvedValue(samplePost);
+    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
     vi.mocked(setPostTags).mockResolvedValue(undefined);
 
     await handleUpdatePost(ctx, {

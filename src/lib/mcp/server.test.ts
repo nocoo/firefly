@@ -57,7 +57,7 @@ async function sendStatelessRequest(
 ): Promise<Response> {
   const server = createMcpServer(db);
   const transport = new WebStandardStreamableHTTPServerTransport({
-    sessionIdGenerator: undefined,
+    // Stateless mode (no session ID)
     enableJsonResponse: true,
   });
   await server.connect(transport);

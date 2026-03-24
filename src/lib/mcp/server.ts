@@ -1,6 +1,13 @@
 // ---------------------------------------------------------------------------
 // MCP Server — tool registration and server instance factory
 // ---------------------------------------------------------------------------
+//
+// Zod v4 ShapeOutput uses `T | undefined` for optional properties, which
+// conflicts with TypeScript's exactOptionalPropertyTypes. We cast tool
+// callbacks to `any` where needed — the Zod schema validates inputs at
+// runtime, and the handler functions have their own typed parameters.
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
@@ -54,7 +61,7 @@ export function createMcpServer(db: Db): McpServer {
       page: z.number().optional(),
       page_size: z.number().min(1).max(100).optional(),
     },
-    (args) => handleListPosts(ctx, args),
+    (args: any) => handleListPosts(ctx, args),
   );
 
   server.tool(
@@ -78,7 +85,7 @@ export function createMcpServer(db: Db): McpServer {
       featured_image: z.string().optional(),
       published_at: z.number().optional(),
     },
-    (args) => handleCreatePost(ctx, args),
+    (args: any) => handleCreatePost(ctx, args),
   );
 
   server.tool(
@@ -96,7 +103,7 @@ export function createMcpServer(db: Db): McpServer {
       featured_image: z.string().nullable().optional(),
       published_at: z.number().nullable().optional(),
     },
-    (args) => handleUpdatePost(ctx, args),
+    (args: any) => handleUpdatePost(ctx, args),
   );
 
   server.tool(
@@ -137,7 +144,7 @@ export function createMcpServer(db: Db): McpServer {
       name: z.string().optional(),
       new_slug: z.string().optional(),
     },
-    (args) => handleUpdateTag(ctx, args),
+    (args: any) => handleUpdateTag(ctx, args),
   );
 
   server.tool(
@@ -172,7 +179,7 @@ export function createMcpServer(db: Db): McpServer {
       description: z.string().optional(),
       sort_order: z.number().optional(),
     },
-    (args) => handleCreateCategory(ctx, args),
+    (args: any) => handleCreateCategory(ctx, args),
   );
 
   server.tool(
@@ -185,7 +192,7 @@ export function createMcpServer(db: Db): McpServer {
       description: z.string().nullable().optional(),
       sort_order: z.number().optional(),
     },
-    (args) => handleUpdateCategory(ctx, args),
+    (args: any) => handleUpdateCategory(ctx, args),
   );
 
   server.tool(
