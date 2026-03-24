@@ -16,6 +16,7 @@ import {
   ChevronUp,
   Settings,
   ExternalLink,
+  Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -59,6 +60,7 @@ const NAV_GROUPS: NavGroup[] = [
     defaultOpen: true,
     items: [
       { titleKey: "admin.nav.settings", href: "/admin/settings", icon: Settings },
+      { titleKey: "admin.nav.aiSettings", href: "/admin/ai-settings", icon: Bot },
     ],
   },
 ];

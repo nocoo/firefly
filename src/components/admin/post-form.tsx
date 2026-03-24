@@ -7,6 +7,7 @@ import { slugify } from "@/models/post";
 import { renderMarkdown } from "@/models/markdown";
 import { ImageUpload } from "./image-upload";
 import { MarkdownPreview } from "./markdown-preview";
+import { Select } from "@/components/ui/select";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useLocale } from "@/i18n/context";
 
@@ -268,17 +269,16 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           >
             {t("admin.postForm.status")}
           </label>
-          <select
+          <Select
             id="status"
             value={status}
             onChange={(e) => setStatus(e.target.value as PostStatus)}
-            className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="draft">{t("admin.postForm.statusDraft")}</option>
             <option value="published">{t("admin.postForm.statusPublished")}</option>
             <option value="private">{t("admin.postForm.statusPrivate")}</option>
             <option value="archived">{t("admin.postForm.statusArchived")}</option>
-          </select>
+          </Select>
         </div>
 
         {/* Category */}
@@ -289,11 +289,10 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           >
             {t("admin.postForm.category")}
           </label>
-          <select
+          <Select
             id="category"
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
-            className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="">{t("admin.postForm.noCategory")}</option>
             {categories.map((cat) => (
@@ -301,7 +300,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
                 {cat.name}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       </div>
 

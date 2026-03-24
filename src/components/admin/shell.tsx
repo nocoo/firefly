@@ -18,6 +18,7 @@ const PAGE_TITLE_KEYS: Record<string, string> = {
   "/admin/tags": "admin.nav.tags",
   "/admin/analytics": "admin.nav.analytics",
   "/admin/settings": "admin.nav.settings",
+  "/admin/ai-settings": "admin.nav.aiSettings",
 };
 
 interface AdminShellProps {
@@ -127,7 +128,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
               {title}
             </h1>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <a
               href="https://github.com/nocoo/firefly"
               target="_blank"
