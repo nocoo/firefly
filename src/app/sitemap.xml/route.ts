@@ -24,10 +24,13 @@ export async function GET() {
 
   const entries: SitemapEntry[] = [];
 
-  // Home
+  // Home — lastmod = most recent post update, not current time
+  const latestPostDate = posts.length > 0
+    ? new Date(posts[0].updated_at * 1000)
+    : new Date();
   entries.push({
     url: SITE_URL,
-    lastModified: new Date(),
+    lastModified: latestPostDate,
     changeFrequency: "daily",
     priority: 1,
   });
