@@ -273,4 +273,133 @@ describe("createMcpServer", () => {
     await transport.close();
     await server.close();
   });
+
+  // Helper: create a stateful session and return tools for calling
+  async function createSession(db: Db) {
+    const server = createMcpServer(db);
+    const transport = new WebStandardStreamableHTTPServerTransport({
+      sessionIdGenerator: () => `sess-${Math.random()}`,
+      enableJsonResponse: true,
+    });
+    await server.connect(transport);
+
+    // Initialize
+    const initRes = await transport.handleRequest(
+      new Request("http://localhost/mcp", {
+        method: "POST",
+        headers: MCP_HEADERS,
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "initialize",
+          params: {
+            protocolVersion: "2025-03-26",
+            capabilities: {},
+            clientInfo: { name: "test", version: "0.0.1" },
+          },
+        }),
+      }),
+    );
+    const sessionId = initRes.headers.get("mcp-session-id")!;
+
+    // Initialized notification
+    await transport.handleRequest(
+      new Request("http://localhost/mcp", {
+        method: "POST",
+        headers: { ...MCP_HEADERS, "mcp-session-id": sessionId },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "notifications/initialized",
+        }),
+      }),
+    );
+
+    const callTool = async (name: string, args: Record<string, unknown> = {}) => {
+      const res = await transport.handleRequest(
+        new Request("http://localhost/mcp", {
+          method: "POST",
+          headers: { ...MCP_HEADERS, "mcp-session-id": sessionId },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: Math.random(),
+            method: "tools/call",
+            params: { name, arguments: args },
+          }),
+        }),
+      );
+      return res.json();
+    };
+
+    return { server, transport, callTool };
+  }
+
+  it("invokes post tools through the protocol", async () => {
+    const { server, transport, callTool } = await createSession(db);
+
+    const listResult = await callTool("list_posts");
+    expect(listResult.result?.content?.[0]?.text ?? listResult.error).toBeDefined();
+
+    const getResult = await callTool("get_post", { slug: "test" });
+    expect(getResult.result?.content?.[0]?.text ?? getResult.error).toBeDefined();
+
+    const createResult = await callTool("create_post", {
+      title: "T",
+      slug: "s",
+      content: "C",
+    });
+    expect(createResult.result?.content?.[0]?.text ?? createResult.error).toBeDefined();
+
+    const updateResult = await callTool("update_post", { slug: "s" });
+    expect(updateResult.result?.content?.[0]?.text ?? updateResult.error).toBeDefined();
+
+    const deleteResult = await callTool("delete_post", { slug: "s" });
+    expect(deleteResult.result?.content?.[0]?.text ?? deleteResult.error).toBeDefined();
+
+    await transport.close();
+    await server.close();
+  });
+
+  it("invokes tag tools through the protocol", async () => {
+    const { server, transport, callTool } = await createSession(db);
+
+    const listResult = await callTool("list_tags");
+    expect(listResult.result?.content?.[0]?.text ?? listResult.error).toBeDefined();
+
+    const getResult = await callTool("get_tag", { slug: "ts" });
+    expect(getResult.result?.content?.[0]?.text ?? getResult.error).toBeDefined();
+
+    const createResult = await callTool("create_tag", { name: "N", slug: "n" });
+    expect(createResult.result?.content?.[0]?.text ?? createResult.error).toBeDefined();
+
+    const updateResult = await callTool("update_tag", { slug: "n" });
+    expect(updateResult.result?.content?.[0]?.text ?? updateResult.error).toBeDefined();
+
+    const deleteResult = await callTool("delete_tag", { slug: "n" });
+    expect(deleteResult.result?.content?.[0]?.text ?? deleteResult.error).toBeDefined();
+
+    await transport.close();
+    await server.close();
+  });
+
+  it("invokes category tools through the protocol", async () => {
+    const { server, transport, callTool } = await createSession(db);
+
+    const listResult = await callTool("list_categories");
+    expect(listResult.result?.content?.[0]?.text ?? listResult.error).toBeDefined();
+
+    const getResult = await callTool("get_category", { slug: "tech" });
+    expect(getResult.result?.content?.[0]?.text ?? getResult.error).toBeDefined();
+
+    const createResult = await callTool("create_category", { name: "N", slug: "n" });
+    expect(createResult.result?.content?.[0]?.text ?? createResult.error).toBeDefined();
+
+    const updateResult = await callTool("update_category", { slug: "n" });
+    expect(updateResult.result?.content?.[0]?.text ?? updateResult.error).toBeDefined();
+
+    const deleteResult = await callTool("delete_category", { slug: "n" });
+    expect(deleteResult.result?.content?.[0]?.text ?? deleteResult.error).toBeDefined();
+
+    await transport.close();
+    await server.close();
+  });
 });
