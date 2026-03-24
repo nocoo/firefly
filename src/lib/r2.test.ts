@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { generateR2Key, validateUpload, detectMimeType } from "./r2";
+import { generateR2Key, generateFireflyR2Key, extractExtension, validateUpload, detectMimeType } from "./r2";
 
 // ---------------------------------------------------------------------------
 // Test helpers — real magic byte headers for each format
@@ -64,6 +64,62 @@ describe("generateR2Key", () => {
     vi.setSystemTime(new Date("2026-01-05T00:00:00Z"));
     const key = generateR2Key("test.jpg");
     expect(key).toMatch(/^uploads\/2026\/01\//);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// extractExtension
+// ---------------------------------------------------------------------------
+
+describe("extractExtension", () => {
+  it("extracts lowercase extension", () => {
+    expect(extractExtension("photo.JPG")).toBe("jpg");
+  });
+
+  it("handles multiple dots", () => {
+    expect(extractExtension("my.photo.png")).toBe("png");
+  });
+
+  it("returns empty string for no extension", () => {
+    expect(extractExtension("noext")).toBe("");
+  });
+
+  it("returns empty string for trailing dot", () => {
+    expect(extractExtension("file.")).toBe("");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// generateFireflyR2Key
+// ---------------------------------------------------------------------------
+
+describe("generateFireflyR2Key", () => {
+  it("generates key with firefly path prefix", () => {
+    const key = generateFireflyR2Key("photo.jpg");
+    expect(key).toMatch(/^lizhengblog\/wp-content\/uploads\/firefly\//);
+  });
+
+  it("uses UUID format in key", () => {
+    const key = generateFireflyR2Key("photo.jpg");
+    // UUID pattern: 8-4-4-4-12 hex chars
+    expect(key).toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/);
+  });
+
+  it("preserves lowercase extension", () => {
+    const key = generateFireflyR2Key("photo.PNG");
+    expect(key).toMatch(/\.png$/);
+  });
+
+  it("handles filename without extension", () => {
+    const key = generateFireflyR2Key("noext");
+    expect(key).toMatch(/^lizhengblog\/wp-content\/uploads\/firefly\/[0-9a-f-]+$/);
+    expect(key).not.toContain(".");
+  });
+
+  it("generates unique keys on each call", () => {
+    const key1 = generateFireflyR2Key("photo.jpg");
+    const key2 = generateFireflyR2Key("photo.jpg");
+    expect(key1).not.toBe(key2);
   });
 });
 
