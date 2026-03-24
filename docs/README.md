@@ -16,3 +16,4 @@ Modern blog platform built with Next.js, Cloudflare D1, and R2. Migrated from Wo
 | 08 | [Blog Sidebar Responsive Layout Fix](./08-blog-responsive-fix.md) | ✅ |
 | 09 | [AI Excerpt Generation](./09-ai-excerpt.md) | ✅ |
 | 10 | [MCP Server Design](./10-mcp-server.md) | 📝 |
+| 11 | [Image Upload System](./10-image-upload.md) | ✅ |

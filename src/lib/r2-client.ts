@@ -29,6 +29,15 @@ export interface R2Config {
   publicUrl: string; // e.g. https://assets.lizheng.me
 }
 
+/**
+ * Get the public URL for R2 assets.
+ * Used by server-only modules (e.g. logo.ts) to construct public URLs
+ * without importing the full S3 client.
+ */
+export function getR2PublicUrl(): string {
+  return process.env.R2_PUBLIC_URL ?? "https://assets.lizheng.me";
+}
+
 function getR2Config(): R2Config {
   const accountId = process.env.CF_ACCOUNT_ID;
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
@@ -80,11 +89,14 @@ export function resetR2Client(): void {
 
 /**
  * Upload a file to R2.
+ * If `customKey` is provided, it is used as the R2 object key instead of
+ * generating one from the filename via `generateR2Key`.
  */
 export async function uploadToR2(
   data: Buffer | Uint8Array,
   filename: string,
   mimeType: string,
+  customKey?: string,
 ): Promise<UploadResult> {
   const validationError = validateUpload(
     data instanceof Uint8Array ? data : new Uint8Array(data),
@@ -94,7 +106,7 @@ export async function uploadToR2(
     throw new Error(validationError);
   }
 
-  const key = generateR2Key(filename);
+  const key = customKey ?? generateR2Key(filename);
   const { client, config } = getClient();
 
   await client.send(
@@ -113,6 +125,31 @@ export async function uploadToR2(
     size: data.length,
     mimeType,
   };
+}
+
+/**
+ * Upload a raw buffer to R2 with a pre-determined key.
+ * Unlike `uploadToR2`, this skips validation — caller is responsible for
+ * ensuring the data is valid (used for server-generated content like resized logos).
+ */
+export async function uploadBufferToR2(
+  key: string,
+  body: Uint8Array,
+  contentType: string,
+): Promise<{ key: string; url: string }> {
+  const { client, config } = getClient();
+
+  await client.send(
+    new PutObjectCommand({
+      Bucket: config.bucketName,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+      CacheControl: "public, max-age=31536000, immutable",
+    }),
+  );
+
+  return { key, url: `${config.publicUrl}/${key}` };
 }
 
 // ---------------------------------------------------------------------------

@@ -49,7 +49,7 @@ function GoogleIcon() {
 
 // ── Login content (needs useSearchParams) ──
 
-function LoginContent() {
+function LoginContent({ logoUrl }: { logoUrl: string | null }) {
   const searchParams = useSearchParams();
   const { t } = useLocale();
   const error = searchParams.get("error");
@@ -144,7 +144,7 @@ function LoginContent() {
             <div className="flex flex-1 flex-col items-center px-6 pt-6 pb-5">
               {/* Avatar placeholder */}
               <div className="h-24 w-24 overflow-hidden rounded-full bg-secondary dark:bg-[#171717] ring-1 ring-border flex items-center justify-center">
-                <img src="/logo-80.png" alt="Firefly" width={80} height={80} className="h-20 w-20" />
+                <img src={logoUrl ?? "/logo-80.png"} alt="Firefly" width={80} height={80} className="h-20 w-20" />
               </div>
 
               <p className="mt-5 text-lg font-semibold text-foreground">{t("auth.welcome")}</p>
@@ -211,7 +211,7 @@ function LoginContent() {
 
 // ── Exported component with Suspense for useSearchParams ──
 
-export function LoginCard() {
+export function LoginCard({ logoUrl }: { logoUrl: string | null }) {
   const { t } = useLocale();
 
   return (
@@ -222,7 +222,7 @@ export function LoginCard() {
         </div>
       }
     >
-      <LoginContent />
+      <LoginContent logoUrl={logoUrl} />
     </Suspense>
   );
 }

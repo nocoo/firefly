@@ -79,6 +79,16 @@ export interface UploadResult {
 }
 
 /**
+ * Extract lowercase file extension from a filename.
+ * Returns empty string if no extension is found.
+ */
+export function extractExtension(filename: string): string {
+  const dot = filename.lastIndexOf(".");
+  if (dot === -1 || dot === filename.length - 1) return "";
+  return filename.slice(dot + 1).toLowerCase();
+}
+
+/**
  * Generate a unique R2 key for an uploaded file.
  * Format: uploads/YYYY/MM/timestamp-filename
  */
@@ -95,6 +105,17 @@ export function generateR2Key(filename: string): string {
     .replace(/[^a-z0-9.\-_]/g, "");
 
   return `uploads/${year}/${month}/${timestamp}-${safe}`;
+}
+
+/**
+ * Generate a GUID-based R2 key under the Firefly upload path.
+ * Format: lizhengblog/wp-content/uploads/firefly/{uuid}.{ext}
+ */
+export function generateFireflyR2Key(filename: string): string {
+  const ext = extractExtension(filename);
+  const uuid = crypto.randomUUID();
+  const suffix = ext ? `.${ext}` : "";
+  return `lizhengblog/wp-content/uploads/firefly/${uuid}${suffix}`;
 }
 
 // ---------------------------------------------------------------------------
