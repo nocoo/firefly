@@ -28,6 +28,7 @@ export async function generateMetadata({
     title: `#${tag.name}`,
     description: t(locale, "blog.tag.metaDescription", { name: tag.name }),
     path: `/tag/${tag.slug}`,
+    locale,
   });
 }
 

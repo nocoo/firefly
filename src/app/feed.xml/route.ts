@@ -1,7 +1,8 @@
 import { getDb } from "@/lib/db";
 import { listPosts } from "@/data/posts";
 import { renderMarkdown } from "@/models/markdown";
-import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR, postPath } from "@/lib/seo";
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR, postPath, htmlLang } from "@/lib/seo";
+import { getLocale } from "@/i18n/server";
 
 function escapeXml(str: string): string {
   return str
@@ -14,10 +15,13 @@ function escapeXml(str: string): string {
 
 export async function GET() {
   const db = getDb();
-  const { posts } = await listPosts(db, {
-    status: "published",
-    pageSize: 50,
-  });
+  const [{ posts }, locale] = await Promise.all([
+    listPosts(db, {
+      status: "published",
+      pageSize: 50,
+    }),
+    getLocale(),
+  ]);
 
   const items = posts.map((post) => {
     const url = `${SITE_URL}${postPath(post.slug, post.published_at)}`;
@@ -51,7 +55,7 @@ export async function GET() {
     <title>${escapeXml(SITE_NAME)}</title>
     <link>${SITE_URL}</link>
     <description>${escapeXml(SITE_DESCRIPTION)}</description>
-    <language>zh-CN</language>
+    <language>${htmlLang(locale)}</language>
     <managingEditor>nicnocquee@gmail.com (${SITE_AUTHOR})</managingEditor>
     <ttl>60</ttl>
     <atom:link href="${SITE_URL}/feed.xml" rel="self" type="application/rss+xml"/>

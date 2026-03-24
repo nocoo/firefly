@@ -34,7 +34,7 @@ export default async function HomePaged({ params }: PageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: websiteJsonLd() }}
+        dangerouslySetInnerHTML={{ __html: websiteJsonLd(locale) }}
       />
 
       <section>

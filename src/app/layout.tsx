@@ -1,59 +1,66 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
-import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR, TWITTER_HANDLE } from "@/lib/seo";
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR, TWITTER_HANDLE, ogLocale, htmlLang } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { LocaleProvider } from "@/i18n/context";
 import { getDb } from "@/lib/db";
 import { getSiteSettings } from "@/data/settings";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: {
-    default: `${SITE_NAME} – 知白守黑，不语万千算`,
-    template: `%s | ${SITE_NAME}`,
-  },
-  description: SITE_DESCRIPTION,
-  authors: [{ name: SITE_AUTHOR, url: SITE_URL }],
-  creator: SITE_AUTHOR,
-  publisher: SITE_AUTHOR,
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const og = ogLocale(locale);
+  const lang = htmlLang(locale);
+
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: {
+      default: `${SITE_NAME} – 知白守黑，不语万千算`,
+      template: `%s | ${SITE_NAME}`,
+    },
+    description: SITE_DESCRIPTION,
+    authors: [{ name: SITE_AUTHOR, url: SITE_URL }],
+    creator: SITE_AUTHOR,
+    publisher: SITE_AUTHOR,
+    robots: {
       index: true,
       follow: true,
-      "max-snippet": -1,
-      "max-image-preview": "large",
-      "max-video-preview": -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-snippet": -1,
+        "max-image-preview": "large",
+        "max-video-preview": -1,
+      },
     },
-  },
-  alternates: {
-    canonical: SITE_URL,
-    types: {
-      "application/rss+xml": "/feed.xml",
+    alternates: {
+      canonical: SITE_URL,
+      languages: { [lang]: SITE_URL },
+      types: {
+        "application/rss+xml": "/feed.xml",
+      },
     },
-  },
-  openGraph: {
-    type: "website",
-    locale: "zh_CN",
-    url: SITE_URL,
-    siteName: SITE_NAME,
-    title: `${SITE_NAME} – 知白守黑，不语万千算`,
-    description: SITE_DESCRIPTION,
-  },
-  twitter: {
-    card: "summary",
-    site: TWITTER_HANDLE,
-    creator: TWITTER_HANDLE,
-    title: `${SITE_NAME} – 知白守黑，不语万千算`,
-    description: SITE_DESCRIPTION,
-  },
-  icons: {
-    icon: "/api/favicon",
-    apple: "/api/favicon?size=180",
-  },
-};
+    openGraph: {
+      type: "website",
+      locale: og,
+      url: SITE_URL,
+      siteName: SITE_NAME,
+      title: `${SITE_NAME} – 知白守黑，不语万千算`,
+      description: SITE_DESCRIPTION,
+    },
+    twitter: {
+      card: "summary",
+      site: TWITTER_HANDLE,
+      creator: TWITTER_HANDLE,
+      title: `${SITE_NAME} – 知白守黑，不语万千算`,
+      description: SITE_DESCRIPTION,
+    },
+    icons: {
+      icon: "/api/favicon",
+      apple: "/api/favicon?size=180",
+    },
+  };
+}
 
 export default async function RootLayout({
   children,
@@ -68,7 +75,7 @@ export default async function RootLayout({
 
   return (
     <html
-      lang={locale === "zh" ? "zh-CN" : "en"}
+      lang={htmlLang(locale)}
       data-font-style={settings.fontStyle}
       suppressHydrationWarning
     >

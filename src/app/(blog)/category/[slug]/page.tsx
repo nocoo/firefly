@@ -28,6 +28,7 @@ export async function generateMetadata({
     title: category.name,
     description: category.description ?? t(locale, "blog.category.metaDescription", { name: category.name }),
     path: `/category/${category.slug}`,
+    locale,
   });
 }
 

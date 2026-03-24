@@ -9,11 +9,13 @@ import { websiteJsonLd } from "@/lib/jsonld";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
   return buildPageMeta({
     title: `${SITE_NAME} – 知白守黑，不语万千算`,
     description: SITE_DESCRIPTION,
     path: "/",
+    locale,
   });
 }
 
@@ -34,7 +36,7 @@ export default async function Home() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: websiteJsonLd() }}
+        dangerouslySetInnerHTML={{ __html: websiteJsonLd(locale) }}
       />
 
       <section>

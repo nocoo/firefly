@@ -3,20 +3,21 @@
 // ---------------------------------------------------------------------------
 
 import type { PostWithCategory } from "@/models/types";
-import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, postPath, formatDateISO } from "./seo";
+import type { Locale } from "@/i18n/translations";
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, postPath, formatDateISO, htmlLang } from "./seo";
 
 // ---------------------------------------------------------------------------
 // WebSite (home page)
 // ---------------------------------------------------------------------------
 
-export function websiteJsonLd(): string {
+export function websiteJsonLd(locale: Locale = "zh"): string {
   return JSON.stringify({
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: SITE_NAME,
     url: SITE_URL,
     description: SITE_DESCRIPTION,
-    inLanguage: "zh-CN",
+    inLanguage: htmlLang(locale),
     author: {
       "@type": "Person",
       name: "Li Zheng",
@@ -32,6 +33,7 @@ export function websiteJsonLd(): string {
 export function blogPostingJsonLd(
   post: PostWithCategory,
   tagNames?: string[],
+  locale: Locale = "zh",
 ): string {
   const url = `${SITE_URL}${postPath(post.slug, post.published_at)}`;
 
@@ -45,7 +47,7 @@ export function blogPostingJsonLd(
       : formatDateISO(post.created_at),
     dateModified: formatDateISO(post.updated_at),
     description: post.excerpt ?? "",
-    inLanguage: "zh-CN",
+    inLanguage: htmlLang(locale),
     ...(post.featured_image ? { image: post.featured_image } : {}),
     author: {
       "@type": "Person",

@@ -3,6 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import type { Metadata } from "next";
+import type { Locale } from "@/i18n/translations";
 
 const SITE_NAME = "LIZHENG.ME";
 const SITE_URL = "https://lizheng.me";
@@ -13,6 +14,20 @@ const TWITTER_HANDLE = "@zhengli";
 export { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR, TWITTER_HANDLE };
 
 // ---------------------------------------------------------------------------
+// Locale → SEO format mapping
+// ---------------------------------------------------------------------------
+
+/** Map internal locale to OpenGraph locale (underscore format). */
+export function ogLocale(locale: Locale): string {
+  return locale === "zh" ? "zh_CN" : "en_US";
+}
+
+/** Map internal locale to BCP 47 language tag (hyphen format). */
+export function htmlLang(locale: Locale): string {
+  return locale === "zh" ? "zh-CN" : "en";
+}
+
+// ---------------------------------------------------------------------------
 // Page metadata builder
 // ---------------------------------------------------------------------------
 
@@ -20,6 +35,7 @@ export interface PageMetaInput {
   title: string;
   description: string;
   path: string;
+  locale?: Locale | undefined;
   image?: string | undefined;
   type?: "website" | "article" | undefined;
   publishedTime?: string | undefined;
@@ -30,6 +46,8 @@ export interface PageMetaInput {
 export function buildPageMeta(input: PageMetaInput): Metadata {
   const url = `${SITE_URL}${input.path}`;
   const ogType = input.type ?? "website";
+  const locale = input.locale ?? "zh";
+  const lang = htmlLang(locale);
 
   return {
     title: input.title,
@@ -38,14 +56,14 @@ export function buildPageMeta(input: PageMetaInput): Metadata {
     ...(input.keywords?.length ? { keywords: input.keywords } : {}),
     alternates: {
       canonical: url,
-      languages: { "zh-CN": url },
+      languages: { [lang]: url },
     },
     openGraph: {
       title: input.title,
       description: input.description,
       url,
       siteName: SITE_NAME,
-      locale: "zh_CN",
+      locale: ogLocale(locale),
       type: ogType,
       ...(input.image ? { images: [{ url: input.image }] } : {}),
       ...(ogType === "article" && input.publishedTime

@@ -40,13 +40,17 @@ export async function generateMetadata({
 
   if (!post) return { title: "Not Found" };
 
-  const tags = await getPostTags(db, post.id);
+  const [tags, locale] = await Promise.all([
+    getPostTags(db, post.id),
+    getLocale(),
+  ]);
   const path = postPath(post.slug, post.published_at);
 
   return buildPageMeta({
     title: post.title,
     description: post.excerpt ?? "",
     path,
+    locale,
     image: post.featured_image ?? undefined,
     type: "article",
     publishedTime: post.published_at
@@ -98,7 +102,7 @@ export default async function PostPage({ params }: PostPageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: blogPostingJsonLd(post, tagNames) }}
+        dangerouslySetInnerHTML={{ __html: blogPostingJsonLd(post, tagNames, locale) }}
       />
       <script
         type="application/ld+json"
