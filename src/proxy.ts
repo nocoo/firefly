@@ -2,12 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { createDb } from "@/lib/db";
 import { trackPageView } from "@/lib/tracking";
+import { createCache } from "@/lib/cache";
 
 // Routes that require authentication
 const PROTECTED_PREFIXES = ["/admin"];
 
 // API routes that require authentication (write operations)
 const PROTECTED_API_METHODS = ["POST", "PUT", "DELETE", "PATCH"];
+
+// Process-level redirect cache (5-min TTL)
+interface RedirectRow {
+  id: string;
+  source_path: string;
+  target_path: string;
+  status_code: number;
+}
+const redirectCache = createCache<Map<string, RedirectRow>>(5 * 60 * 1000);
 
 function isProtectedRoute(pathname: string): boolean {
   return PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
@@ -60,18 +70,20 @@ export async function proxy(request: NextRequest) {
       const workerSecret = process.env.WORKER_SECRET;
 
       if (workerUrl && workerSecret) {
-        const db = createDb(workerUrl, workerSecret);
-        const redirect = await db.firstOrNull<{
-          id: string;
-          target_path: string;
-          status_code: number;
-        }>(
-          "SELECT id, target_path, status_code FROM redirects WHERE source_path = ?",
-          [pathname],
-        );
+        let map = redirectCache.get();
+        if (!map) {
+          const db = createDb(workerUrl, workerSecret);
+          const { results } = await db.query<RedirectRow>(
+            "SELECT id, source_path, target_path, status_code FROM redirects",
+          );
+          map = new Map(results.map((r) => [r.source_path, r]));
+          redirectCache.set(map);
+        }
 
+        const redirect = map.get(pathname);
         if (redirect) {
           // Fire-and-forget: increment hit counter
+          const db = createDb(workerUrl, workerSecret);
           db.execute(
             "UPDATE redirects SET hit_count = hit_count + 1 WHERE id = ?",
             [redirect.id],
