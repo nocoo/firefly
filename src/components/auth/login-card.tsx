@@ -143,8 +143,8 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
             {/* Badge content */}
             <div className="flex flex-1 flex-col items-center px-6 pt-6 pb-5">
               {/* Avatar placeholder */}
-              <div className="h-24 w-24 overflow-hidden rounded-full bg-secondary dark:bg-[#171717] ring-1 ring-border flex items-center justify-center">
-                <img src={logoUrl ?? "/logo-80.png"} alt="Firefly" width={80} height={80} className="h-20 w-20" />
+              <div className="h-24 w-24 overflow-hidden rounded-full bg-secondary dark:bg-[#171717] ring-1 ring-border">
+                <img src={logoUrl ?? "/logo-80.png"} alt="Firefly" width={96} height={96} className="h-full w-full object-cover" />
               </div>
 
               <p className="mt-5 text-lg font-semibold text-foreground">{t("auth.welcome")}</p>
