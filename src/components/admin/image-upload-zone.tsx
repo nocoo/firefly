@@ -172,7 +172,7 @@ export function ImageUploadZone({ className }: ImageUploadZoneProps) {
             type="button"
             onClick={() => setResult(null)}
             className="shrink-0 rounded p-1 text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"
-            aria-label="Dismiss"
+            aria-label={t("admin.upload.dismiss")}
           >
             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

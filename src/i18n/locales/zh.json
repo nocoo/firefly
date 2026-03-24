@@ -118,6 +118,7 @@
   "admin.upload.copyUrl": "复制链接",
   "admin.upload.copyMarkdown": "复制 Markdown",
   "admin.upload.copied": "已复制！",
+  "admin.upload.dismiss": "关闭",
   "admin.postForm.title": "标题",
   "admin.postForm.titlePlaceholder": "文章标题",
   "admin.postForm.slug": "别名",

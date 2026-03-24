@@ -118,6 +118,7 @@
   "admin.upload.copyUrl": "Copy URL",
   "admin.upload.copyMarkdown": "Copy Markdown",
   "admin.upload.copied": "Copied!",
+  "admin.upload.dismiss": "Dismiss",
   "admin.postForm.title": "Title",
   "admin.postForm.titlePlaceholder": "Post title",
   "admin.postForm.slug": "Slug",

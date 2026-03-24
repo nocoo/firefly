@@ -33,6 +33,7 @@ export function SettingsForm({ settings, logoUrl }: SettingsFormProps) {
 
   const uploadLogo = useCallback(
     async (file: File) => {
+      if (logoUploading || logoRemoving) return;
       setLogoUploading(true);
       setLogoError(null);
 
@@ -66,10 +67,11 @@ export function SettingsForm({ settings, logoUrl }: SettingsFormProps) {
         setLogoUploading(false);
       }
     },
-    [t],
+    [t, logoUploading, logoRemoving],
   );
 
   const removeLogo = useCallback(async () => {
+    if (logoUploading || logoRemoving) return;
     setLogoRemoving(true);
     setLogoError(null);
 
@@ -89,7 +91,7 @@ export function SettingsForm({ settings, logoUrl }: SettingsFormProps) {
     } finally {
       setLogoRemoving(false);
     }
-  }, [t]);
+  }, [t, logoUploading, logoRemoving]);
 
   const handleLogoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -100,6 +102,7 @@ export function SettingsForm({ settings, logoUrl }: SettingsFormProps) {
   const handleLogoDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setLogoDragOver(false);
+    if (logoBusy) return;
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith("image/")) {
       uploadLogo(file);
