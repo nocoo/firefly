@@ -52,9 +52,9 @@ export async function GET() {
     }
   }
 
-  // Tags
+  // Tags (exclude thin-content tags with fewer than 3 posts)
   for (const tag of tags) {
-    if (tag.post_count > 0) {
+    if (tag.post_count >= 3) {
       entries.push({
         url: `${SITE_URL}/tag/${tag.slug}`,
         changeFrequency: "weekly",

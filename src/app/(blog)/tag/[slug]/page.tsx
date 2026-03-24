@@ -24,12 +24,19 @@ export async function generateMetadata({
 
   if (!tag) return { title: "Not Found" };
 
-  return buildPageMeta({
+  const meta = buildPageMeta({
     title: `#${tag.name}`,
     description: t(locale, "blog.tag.metaDescription", { name: tag.name }),
     path: `/tag/${tag.slug}`,
     locale,
   });
+
+  // Thin-content tags: noindex to avoid low-quality pages in search index
+  if (tag.post_count < 3) {
+    return { ...meta, robots: { index: false, follow: true } };
+  }
+
+  return meta;
 }
 
 export default async function TagPage({ params }: TagPageProps) {
