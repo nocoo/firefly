@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import type { Category } from "@/models/types";
+import { Select } from "@/components/ui/select";
 import { useLocale } from "@/i18n/context";
 
 interface PostFiltersProps {
@@ -48,23 +49,23 @@ export function PostFilters({ categories }: PostFiltersProps) {
       </form>
 
       {/* Status filter */}
-      <select
+      <Select
         value={searchParams.get("status") ?? ""}
         onChange={(e) => updateFilter("status", e.target.value)}
-        className="rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        className="w-auto"
       >
         <option value="">{t("admin.filters.allStatus")}</option>
         <option value="published">{t("admin.filters.published")}</option>
         <option value="draft">{t("admin.filters.draft")}</option>
         <option value="private">{t("admin.filters.private")}</option>
         <option value="archived">{t("admin.filters.archived")}</option>
-      </select>
+      </Select>
 
       {/* Category filter */}
-      <select
+      <Select
         value={searchParams.get("category") ?? ""}
         onChange={(e) => updateFilter("category", e.target.value)}
-        className="rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        className="w-auto"
       >
         <option value="">{t("admin.filters.allCategories")}</option>
         {categories.map((cat) => (
@@ -72,7 +73,7 @@ export function PostFilters({ categories }: PostFiltersProps) {
             {cat.name}
           </option>
         ))}
-      </select>
+      </Select>
     </div>
   );
 }

@@ -127,7 +127,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
               {title}
             </h1>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <a
               href="https://github.com/nocoo/firefly"
               target="_blank"
