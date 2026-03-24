@@ -39,6 +39,30 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
 
   const isEditing = !!post;
 
+  // AI excerpt generation
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  async function handleGenerateExcerpt() {
+    if (!post?.slug) return;
+    setIsGenerating(true);
+    try {
+      const res = await fetch(`/api/posts/${post.slug}/excerpt`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || t("admin.postForm.failedSave"));
+        return;
+      }
+      const { excerpt: generated } = await res.json();
+      setExcerpt(generated);
+    } catch {
+      alert(t("admin.postForm.failedSave"));
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
   // Markdown preview — tab mode for small screens
   const [previewMode, setPreviewMode] = useState(false);
   const previewHtml = useMemo(
@@ -238,15 +262,29 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
 
       {/* Excerpt */}
       <div className="space-y-2">
-        <label
-          htmlFor="excerpt"
-          className="text-sm font-medium text-foreground"
-        >
-          {t("admin.postForm.excerpt")}{" "}
-          <span className="text-muted-foreground font-normal">
-            {t("admin.postForm.excerptHint")}
-          </span>
-        </label>
+        <div className="flex items-center gap-2">
+          <label
+            htmlFor="excerpt"
+            className="text-sm font-medium text-foreground"
+          >
+            {t("admin.postForm.excerpt")}{" "}
+            <span className="text-muted-foreground font-normal">
+              {t("admin.postForm.excerptHint")}
+            </span>
+          </label>
+          {isEditing && (
+            <button
+              type="button"
+              onClick={handleGenerateExcerpt}
+              disabled={isGenerating}
+              className="text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
+            >
+              {isGenerating
+                ? t("admin.postForm.excerptGenerating")
+                : t("admin.postForm.excerptGenerate")}
+            </button>
+          )}
+        </div>
         <textarea
           id="excerpt"
           value={excerpt}

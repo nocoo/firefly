@@ -147,6 +147,8 @@
   "admin.postForm.failedDeleteGeneric": "Failed to delete",
   "admin.postForm.failedSave": "Failed to save post",
   "admin.postForm.unknownError": "Unknown error",
+  "admin.postForm.excerptGenerate": "\u2728 AI Generate",
+  "admin.postForm.excerptGenerating": "Generating...",
   "admin.analytics.title": "Site Analytics",
   "admin.analytics.recentViews": "{n} views in the last 24 hours",
   "admin.analytics.totalViews": "Total Views",

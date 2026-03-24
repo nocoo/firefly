@@ -147,6 +147,8 @@
   "admin.postForm.failedDeleteGeneric": "删除失败",
   "admin.postForm.failedSave": "保存文章失败",
   "admin.postForm.unknownError": "未知错误",
+  "admin.postForm.excerptGenerate": "\u2728 AI 生成",
+  "admin.postForm.excerptGenerating": "生成中...",
   "admin.analytics.title": "站点分析",
   "admin.analytics.recentViews": "过去 24 小时 {n} 次访问",
   "admin.analytics.totalViews": "总浏览量",
