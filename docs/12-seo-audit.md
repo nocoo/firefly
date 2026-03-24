@@ -437,11 +437,11 @@ non-impactful enough to address later.
 | 6 | P1 | Add `alt` text to featured images | ✅ Done (3 files) |
 | 7 | P1 | RSS: remove non-compliant `<enclosure>` | ✅ Done |
 | 8 | P1 | Custom 404 page | ✅ Done (i18n zh/en) |
-| 9 | P1 | RSS: use `content_html` instead of re-rendering | ✅ Done |
+| 9 | P1 | RSS: use `content_html` with markdown fallback | ✅ Done (`content_html \|\| renderMarkdown`) |
 | 10 | P1 | Cache redirect map in proxy (5-min TTL) | ✅ Done |
-| 11 | P2 | Add `CollectionPage`/`ItemList` JSON-LD | ✅ Done (home, category, tag, archive) |
+| 11 | P2 | Add `CollectionPage`/`ItemList` JSON-LD | ✅ Done (all 8 listing routes: 4 page-1 + 4 paginated) |
 | 12 | P2 | Remove `WebSite` JSON-LD from paginated subpages | ✅ Done |
-| 13 | P2 | Sitemap homepage `lastmod` → latest post date | ✅ Done |
+| 13 | P2 | Sitemap homepage `lastmod` → latest post date | ✅ Done (MAX `updated_at` via reduce) |
 | 14 | P2 | Sitemap `<image:image>` extension | ✅ Done |
 | 15 | P2 | Extract shared `escapeXml` to `src/lib/xml.ts` | ✅ Done (7 tests) |
 | 16 | P1 | Add ISR / `revalidate` | Deferred — requires prod behavior verification |
