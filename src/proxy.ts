@@ -94,7 +94,8 @@ export async function proxy(request: NextRequest) {
           redirectCache.set(map);
         }
 
-        const redirect = map.get(pathname);
+        // Try exact match, then with trailing slash (WP URLs stored with slash)
+        const redirect = map.get(pathname) ?? map.get(pathname + "/");
         if (redirect) {
           // Fire-and-forget: increment hit counter
           const db = createDb(workerUrl, workerSecret);
