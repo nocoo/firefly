@@ -55,7 +55,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         return;
       }
       const { excerpt: generated } = await res.json();
-      setExcerpt(generated);
+      setExcerpt(generated ?? "");
     } catch {
       alert(t("admin.postForm.failedSave"));
     } finally {

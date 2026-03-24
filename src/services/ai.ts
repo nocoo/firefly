@@ -230,11 +230,35 @@ export async function generateExcerpt(
   const client = createAiClient(config);
   const truncatedContent = content.slice(0, MAX_EXCERPT_CONTENT_CHARS);
 
-  const { text } = await generateText({
+  const result = await generateText({
     model: client(config.model),
     prompt: `${EXCERPT_PROMPT}\n\nTitle: ${title}\n\nContent:\n${truncatedContent}`,
-    maxOutputTokens: 200,
+    maxOutputTokens: 1024,
   });
 
-  return text.trim();
+  // Some models (e.g. MiniMax) use extended thinking via Anthropic protocol.
+  // If all output tokens were consumed by reasoning and text is empty,
+  // extract the trailing content from the last reasoning block as fallback.
+  let excerpt = result.text.trim();
+  if (!excerpt && result.reasoning) {
+    const lastReasoning = result.reasoning.at(-1);
+    if (lastReasoning?.type === "reasoning" && lastReasoning.text) {
+      // The reasoning may contain the draft excerpt after the analysis.
+      // Look for quoted content near the end (often the model drafts the excerpt in quotes).
+      const lines = lastReasoning.text.trim().split("\n");
+      // Take the last non-empty line(s) that look like the actual excerpt
+      for (let i = lines.length - 1; i >= 0; i--) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        // Strip surrounding quotes if present
+        const unquoted = line.replace(/^["「『]|["」』]$/g, "").trim();
+        if (unquoted.length >= 20) {
+          excerpt = unquoted;
+          break;
+        }
+      }
+    }
+  }
+
+  return excerpt;
 }
