@@ -49,6 +49,10 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} – 知白守黑，不语万千算`,
     description: SITE_DESCRIPTION,
   },
+  icons: {
+    icon: "/api/favicon",
+    apple: "/api/favicon?size=180",
+  },
 };
 
 export default async function RootLayout({
