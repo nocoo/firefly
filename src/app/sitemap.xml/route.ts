@@ -3,6 +3,7 @@ import { listPosts, listMonthlyArchives } from "@/data/posts";
 import { listCategories } from "@/data/categories";
 import { listTags } from "@/data/tags";
 import { SITE_URL, postPath } from "@/lib/seo";
+import { escapeXml } from "@/lib/xml";
 
 interface SitemapEntry {
   url: string;
@@ -107,11 +108,3 @@ function buildSitemapXml(entries: SitemapEntry[]): string {
   return lines.join("\n");
 }
 
-function escapeXml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-}

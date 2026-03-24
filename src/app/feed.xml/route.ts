@@ -2,15 +2,7 @@ import { getDb } from "@/lib/db";
 import { listPosts } from "@/data/posts";
 import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR, postPath, htmlLang } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
-
-function escapeXml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-}
+import { escapeXml } from "@/lib/xml";
 
 export async function GET() {
   const db = getDb();
