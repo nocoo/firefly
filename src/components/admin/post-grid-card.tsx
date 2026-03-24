@@ -39,7 +39,7 @@ export const PostGridCard = memo(function PostGridCard({
       {/* Top area — featured image or text preview */}
       <Link href={`/admin/posts/${post.id}/edit`} className="block">
         {post.featured_image ? (
-          <div className="relative h-36 bg-secondary">
+          <div className="relative h-[200px] bg-secondary">
             <Image
               src={post.featured_image}
               alt=""
@@ -49,7 +49,7 @@ export const PostGridCard = memo(function PostGridCard({
             />
           </div>
         ) : (
-          <div className="h-36 overflow-hidden bg-blog-bg p-3">
+          <div className="h-[200px] overflow-hidden bg-blog-bg p-3">
             <p className="font-[var(--ff-body)] text-base leading-snug text-blog-text line-clamp-5">
               {post.excerpt || post.title}
             </p>
