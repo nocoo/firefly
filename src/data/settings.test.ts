@@ -3,6 +3,7 @@ import type { Db } from "@/lib/db";
 import {
   getSiteSettings,
   updateSiteSettings,
+  updateSiteLogoVersion,
   invalidateSettingsCache,
   _testHelpers,
 } from "./settings";
@@ -28,6 +29,7 @@ const sampleRow = {
   posts_per_page: 10,
   comments_enabled: 0,
   font_style: "pingfang",
+  site_logo_version: null as string | null,
   updated_at: 1700000000,
 };
 
@@ -42,6 +44,7 @@ describe("parseRow", () => {
       postsPerPage: 10,
       commentsEnabled: false,
       fontStyle: "pingfang",
+      siteLogoVersion: null,
       updatedAt: 1700000000,
     });
   });
@@ -54,6 +57,7 @@ describe("parseRow", () => {
       postsPerPage: 10,
       commentsEnabled: true,
       fontStyle: "pingfang",
+      siteLogoVersion: null,
       updatedAt: 1700000000,
     });
   });
@@ -76,6 +80,14 @@ describe("parseRow", () => {
     expect(parseRow({ ...sampleRow, font_style: "serif" }).fontStyle).toBe("serif");
     expect(parseRow({ ...sampleRow, font_style: "sans" }).fontStyle).toBe("sans");
     expect(parseRow({ ...sampleRow, font_style: "classic" }).fontStyle).toBe("classic");
+  });
+
+  it("parses site_logo_version when set", () => {
+    expect(parseRow({ ...sampleRow, site_logo_version: "a1b2c3d4" }).siteLogoVersion).toBe("a1b2c3d4");
+  });
+
+  it("parses site_logo_version as null when absent", () => {
+    expect(parseRow({ ...sampleRow, site_logo_version: null }).siteLogoVersion).toBeNull();
   });
 });
 
@@ -199,5 +211,60 @@ describe("updateSiteSettings", () => {
 
     const sql = vi.mocked(db.execute).mock.calls[0][0] as string;
     expect(sql).toContain("font_style = ?");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// updateSiteLogoVersion
+// ---------------------------------------------------------------------------
+
+describe("updateSiteLogoVersion", () => {
+  let db: Db;
+
+  beforeEach(() => {
+    db = createMockDb();
+    invalidateSettingsCache();
+  });
+
+  it("sets logo version", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
+    vi.mocked(db.firstOrNull).mockResolvedValue({
+      ...sampleRow,
+      site_logo_version: "a1b2c3d4",
+    });
+
+    const result = await updateSiteLogoVersion(db, "a1b2c3d4");
+    expect(result.siteLogoVersion).toBe("a1b2c3d4");
+
+    const sql = vi.mocked(db.execute).mock.calls[0][0] as string;
+    expect(sql).toContain("site_logo_version = ?");
+    expect(sql).toContain("updated_at = unixepoch()");
+    expect(vi.mocked(db.execute).mock.calls[0][1]).toEqual(["a1b2c3d4"]);
+  });
+
+  it("clears logo version with null", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
+    vi.mocked(db.firstOrNull).mockResolvedValue({
+      ...sampleRow,
+      site_logo_version: null,
+    });
+
+    const result = await updateSiteLogoVersion(db, null);
+    expect(result.siteLogoVersion).toBeNull();
+    expect(vi.mocked(db.execute).mock.calls[0][1]).toEqual([null]);
+  });
+
+  it("invalidates cache after update", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
+    vi.mocked(db.firstOrNull).mockResolvedValue(sampleRow);
+
+    // Prime cache
+    await getSiteSettings(db);
+    expect(db.firstOrNull).toHaveBeenCalledOnce();
+
+    // Update logo version — should invalidate cache
+    await updateSiteLogoVersion(db, "newver01");
+    // getSiteSettings is called inside updateSiteLogoVersion, re-fetching from DB
+    expect(db.firstOrNull).toHaveBeenCalledTimes(2);
   });
 });
