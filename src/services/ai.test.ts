@@ -5,7 +5,7 @@
  * Covers both built-in providers and the "custom" provider type.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   AI_PROVIDERS,
   ALL_PROVIDER_IDS,
@@ -14,6 +14,8 @@ import {
   isValidProvider,
   resolveAiConfig,
   createAiClient,
+  EXCERPT_PROMPT,
+  MAX_EXCERPT_CONTENT_CHARS,
   type AiProvider,
   type AiConfig,
 } from "./ai";
@@ -281,5 +283,122 @@ describe("createAiClient", () => {
     const client = createAiClient(config);
     expect(client).toBeDefined();
     expect(typeof client).toBe("function");
+  });
+});
+
+// ── generateExcerpt tests ──
+
+// Mock dependencies before importing generateExcerpt
+vi.mock("ai", () => ({
+  generateText: vi.fn(),
+}));
+
+vi.mock("@/lib/db", () => ({
+  getDb: vi.fn(() => ({})),
+}));
+
+vi.mock("@/data/ai-settings", () => ({
+  getAiSettings: vi.fn(),
+}));
+
+// Must import after mocks are defined
+const { generateText } = await import("ai");
+const { getAiSettings } = await import("@/data/ai-settings");
+const { generateExcerpt } = await import("./ai");
+
+const mockedGenerateText = vi.mocked(generateText);
+const mockedGetAiSettings = vi.mocked(getAiSettings);
+
+describe("generateExcerpt", () => {
+  const mockSettings = {
+    provider: "anthropic" as const,
+    apiKey: "sk-test-key",
+    model: "claude-sonnet-4-20250514",
+    baseURL: "",
+    sdkType: "" as const,
+  };
+
+  it("returns trimmed AI-generated text", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: "  A concise summary of the post.  ",
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await generateExcerpt("Test Title", "Test content here");
+    expect(result).toBe("A concise summary of the post.");
+  });
+
+  it("passes title and content in the prompt", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: "Summary",
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    await generateExcerpt("My Title", "My content body");
+
+    expect(mockedGenerateText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining("My Title"),
+        maxOutputTokens: 200,
+      }),
+    );
+    expect(mockedGenerateText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining("My content body"),
+      }),
+    );
+  });
+
+  it("includes the excerpt prompt template", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: "Summary",
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    await generateExcerpt("Title", "Content");
+
+    expect(mockedGenerateText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining(EXCERPT_PROMPT),
+      }),
+    );
+  });
+
+  it("truncates content to MAX_EXCERPT_CONTENT_CHARS", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: "Summary",
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const longContent = "x".repeat(5000);
+    await generateExcerpt("Title", longContent);
+
+    const call = mockedGenerateText.mock.calls.at(-1)!;
+    const prompt = (call[0] as { prompt: string }).prompt;
+    // The prompt should contain at most MAX_EXCERPT_CONTENT_CHARS of the content
+    const contentInPrompt = prompt.split("Content:\n")[1];
+    expect(contentInPrompt.length).toBe(MAX_EXCERPT_CONTENT_CHARS);
+  });
+
+  it("throws 'AI not configured' when provider is empty", async () => {
+    mockedGetAiSettings.mockResolvedValue({
+      ...mockSettings,
+      provider: "" as const,
+    });
+
+    await expect(generateExcerpt("Title", "Content")).rejects.toThrow(
+      "AI not configured",
+    );
+  });
+
+  it("throws 'AI not configured' when apiKey is empty", async () => {
+    mockedGetAiSettings.mockResolvedValue({
+      ...mockSettings,
+      apiKey: "",
+    });
+
+    await expect(generateExcerpt("Title", "Content")).rejects.toThrow(
+      "AI not configured",
+    );
   });
 });
