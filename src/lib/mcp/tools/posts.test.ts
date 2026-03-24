@@ -7,6 +7,7 @@ import {
   handleCreatePost,
   handleUpdatePost,
   handleDeletePost,
+  handleGenerateExcerpt,
   type ToolContext,
 } from "./posts";
 
@@ -24,6 +25,10 @@ vi.mock("@/data/posts", () => ({
   setPostTags: vi.fn(),
 }));
 
+vi.mock("@/services/ai", () => ({
+  generateExcerpt: vi.fn(),
+}));
+
 import {
   listPosts,
   getPostBySlug,
@@ -33,6 +38,8 @@ import {
   getPostTags,
   setPostTags,
 } from "@/data/posts";
+
+import { generateExcerpt } from "@/services/ai";
 
 function createMockDb(): Db {
   return {
@@ -322,5 +329,56 @@ describe("handleDeletePost", () => {
     const result = await handleDeletePost(ctx, { slug: "missing" });
 
     expect(result.isError).toBe(true);
+  });
+});
+
+describe("handleGenerateExcerpt", () => {
+  let ctx: ToolContext;
+  beforeEach(() => {
+    ctx = { db: createMockDb() };
+    vi.mocked(getPostBySlug).mockReset();
+    vi.mocked(generateExcerpt).mockReset();
+  });
+
+  it("generates excerpt for existing post", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(generateExcerpt).mockResolvedValue("AI generated excerpt");
+
+    const result = await handleGenerateExcerpt(ctx, { slug: "test-post" });
+
+    expect(generateExcerpt).toHaveBeenCalledWith("Test Post", "# Hello");
+    const data = JSON.parse(result.content[0].text);
+    expect(data.excerpt).toBe("AI generated excerpt");
+    expect(data.slug).toBe("test-post");
+  });
+
+  it("returns error for missing post", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue(null);
+
+    const result = await handleGenerateExcerpt(ctx, { slug: "missing" });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("not found");
+  });
+
+  it("returns error when AI is not configured", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(generateExcerpt).mockRejectedValue(new Error("AI not configured"));
+
+    const result = await handleGenerateExcerpt(ctx, { slug: "test-post" });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("AI provider not configured");
+  });
+
+  it("returns error on LLM failure", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(generateExcerpt).mockRejectedValue(new Error("API timeout"));
+
+    const result = await handleGenerateExcerpt(ctx, { slug: "test-post" });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("Excerpt generation failed");
+    expect(result.content[0].text).toContain("API timeout");
   });
 });

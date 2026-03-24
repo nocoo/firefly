@@ -13,6 +13,7 @@ import {
   getPostTags,
   setPostTags,
 } from "@/data/posts";
+import { generateExcerpt } from "@/services/ai";
 
 // ---------------------------------------------------------------------------
 // Tool handler types
@@ -208,4 +209,40 @@ export async function handleDeletePost(
   return {
     content: [{ type: "text" as const, text: JSON.stringify({ deleted: true }) }],
   };
+}
+
+// ---------------------------------------------------------------------------
+// generate_excerpt
+// ---------------------------------------------------------------------------
+
+export async function handleGenerateExcerpt(
+  ctx: ToolContext,
+  args: { slug: string },
+) {
+  const post = await getPostBySlug(ctx.db, args.slug);
+  if (!post) {
+    return {
+      content: [{ type: "text" as const, text: `Post not found: ${args.slug}` }],
+      isError: true,
+    };
+  }
+
+  try {
+    const excerpt = await generateExcerpt(post.title, post.content);
+    return {
+      content: [{ type: "text" as const, text: JSON.stringify({ slug: post.slug, excerpt }, null, 2) }],
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message === "AI not configured") {
+      return {
+        content: [{ type: "text" as const, text: "AI provider not configured. Go to Settings > AI to set it up." }],
+        isError: true,
+      };
+    }
+    return {
+      content: [{ type: "text" as const, text: `Excerpt generation failed: ${message}` }],
+      isError: true,
+    };
+  }
 }

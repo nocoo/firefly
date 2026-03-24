@@ -19,6 +19,7 @@ import {
   handleCreatePost,
   handleUpdatePost,
   handleDeletePost,
+  handleGenerateExcerpt,
 } from "@/lib/mcp/tools/posts";
 import {
   handleListTags,
@@ -111,6 +112,13 @@ export function createMcpServer(db: Db): McpServer {
     "Permanently delete a post by slug. Irreversible.",
     { slug: z.string() },
     (args) => handleDeletePost(ctx, args),
+  );
+
+  server.tool(
+    "generate_excerpt",
+    "Generate an AI-powered excerpt for a post by slug. Requires AI provider to be configured.",
+    { slug: z.string() },
+    (args) => handleGenerateExcerpt(ctx, args),
   );
 
   // ----- Tag tools -----

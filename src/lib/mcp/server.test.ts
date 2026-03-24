@@ -13,6 +13,7 @@ vi.mock("@/lib/mcp/tools/posts", () => ({
   handleCreatePost: vi.fn().mockResolvedValue({ content: [{ type: "text", text: "{}" }] }),
   handleUpdatePost: vi.fn().mockResolvedValue({ content: [{ type: "text", text: "{}" }] }),
   handleDeletePost: vi.fn().mockResolvedValue({ content: [{ type: "text", text: "{}" }] }),
+  handleGenerateExcerpt: vi.fn().mockResolvedValue({ content: [{ type: "text", text: "{}" }] }),
 }));
 
 vi.mock("@/lib/mcp/tools/tags", () => ({
@@ -110,7 +111,7 @@ describe("createMcpServer", () => {
     expect(body.result.serverInfo.name).toBe("firefly");
   });
 
-  it("registers exactly 15 tools", async () => {
+  it("registers exactly 16 tools", async () => {
     // First initialize, then list tools in a batch
     // Or use a stateful session for multi-request testing
     const server = createMcpServer(db);
@@ -169,7 +170,7 @@ describe("createMcpServer", () => {
 
     expect(listResponse.status).toBe(200);
     const body = await listResponse.json();
-    expect(body.result.tools).toHaveLength(15);
+    expect(body.result.tools).toHaveLength(16);
 
     // Verify all expected tool names
     const names = body.result.tools.map((t: { name: string }) => t.name).sort();
@@ -180,6 +181,7 @@ describe("createMcpServer", () => {
       "delete_category",
       "delete_post",
       "delete_tag",
+      "generate_excerpt",
       "get_category",
       "get_post",
       "get_tag",
