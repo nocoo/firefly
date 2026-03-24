@@ -81,11 +81,11 @@ export const PostGridCard = memo(function PostGridCard({
         <DeletePostButton slug={post.slug} title={post.title} iconOnly />
       </div>
 
-      {/* Bottom info area */}
-      <div className="mt-auto border-t border-border bg-background p-2.5">
+      {/* Bottom info area — fixed height so cards align across the row */}
+      <div className="mt-auto h-[72px] border-t border-border bg-background p-2.5">
         <Link
           href={`/admin/posts/${post.id}/edit`}
-          className="block text-sm font-medium text-foreground line-clamp-2 hover:text-primary transition-colors"
+          className="block text-sm font-medium leading-snug text-foreground line-clamp-2 hover:text-primary transition-colors"
         >
           {post.title}
         </Link>
