@@ -17,6 +17,8 @@ function isProtectedApiRoute(pathname: string, method: string): boolean {
   if (!pathname.startsWith("/api/")) return false;
   // Auth API routes are never protected (they handle auth themselves)
   if (pathname.startsWith("/api/auth/")) return false;
+  // MCP has its own Bearer token auth — exempt both /api/mcp and /api/mcp/*
+  if (pathname === "/api/mcp" || pathname.startsWith("/api/mcp/")) return false;
   return PROTECTED_API_METHODS.includes(method);
 }
 
