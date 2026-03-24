@@ -4,18 +4,12 @@ import { SITE_URL } from "@/lib/seo";
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
-      // AI bots — explicitly allowed
-      { userAgent: "GPTBot", allow: "/" },
-      { userAgent: "ChatGPT-User", allow: "/" },
-      { userAgent: "ClaudeBot", allow: "/" },
-      { userAgent: "CCBot", allow: "/" },
-
-      // Search engine bots — explicitly allowed
-      { userAgent: "Googlebot", allow: "/" },
-      { userAgent: "Bingbot", allow: "/" },
-      { userAgent: "Applebot", allow: "/" },
-
-      // All others — allow public, block private paths
+      // Single wildcard rule covers all bots (search engines + AI bots).
+      // Per the robots.txt spec, a bot-specific group *replaces* the
+      // wildcard group — it does not inherit from it. Separate groups for
+      // Googlebot/Bingbot/etc. with only `allow: "/"` would remove the
+      // disallow directives for those bots, so we intentionally rely on
+      // the wildcard rule only.
       {
         userAgent: "*",
         allow: "/",
