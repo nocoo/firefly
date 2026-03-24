@@ -1,4 +1,4 @@
-# 10 — MCP Server Design
+# 11 — MCP Server Design
 
 Firefly MCP (Model Context Protocol) server — allows AI agents to authenticate via OAuth and perform full CRUD operations on blog content (posts, tags, categories).
 
