@@ -203,6 +203,23 @@ describe("handleCreatePost", () => {
 
     expect(setPostTags).not.toHaveBeenCalled();
   });
+
+  it("rolls back post when setPostTags fails", async () => {
+    vi.mocked(createPost).mockResolvedValue(samplePost);
+    vi.mocked(setPostTags).mockRejectedValue(new Error("FK constraint"));
+    vi.mocked(deletePost).mockResolvedValue(true);
+
+    const result = await handleCreatePost(ctx, {
+      title: "Bad Tags",
+      slug: "bad-tags",
+      content: "Content",
+      tag_ids: ["nonexistent-tag"],
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("rolled back");
+    expect(deletePost).toHaveBeenCalledWith(ctx.db, "post-1");
+  });
 });
 
 describe("handleUpdatePost", () => {
@@ -248,6 +265,21 @@ describe("handleUpdatePost", () => {
     });
 
     expect(setPostTags).toHaveBeenCalledWith(ctx.db, "post-1", ["tag-1"]);
+  });
+
+  it("reports partial failure when setPostTags fails on update", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(setPostTags).mockRejectedValue(new Error("FK constraint"));
+
+    const result = await handleUpdatePost(ctx, {
+      slug: "test-post",
+      tag_ids: ["nonexistent-tag"],
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("tag assignment failed");
+    expect(result.content[0].text).toContain("tags unchanged");
   });
 });
 

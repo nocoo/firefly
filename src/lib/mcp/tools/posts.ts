@@ -114,7 +114,17 @@ export async function handleCreatePost(
   });
 
   if (args.tag_ids && args.tag_ids.length > 0) {
-    await setPostTags(ctx.db, post.id, args.tag_ids);
+    try {
+      await setPostTags(ctx.db, post.id, args.tag_ids);
+    } catch (err) {
+      // Rollback: delete the orphaned post so we don't leave half-committed data
+      await deletePost(ctx.db, post.id).catch(() => {});
+      const message = err instanceof Error ? err.message : String(err);
+      return {
+        content: [{ type: "text" as const, text: `Post created but tag assignment failed (rolled back): ${message}` }],
+        isError: true,
+      };
+    }
   }
 
   return {
@@ -161,7 +171,15 @@ export async function handleUpdatePost(
   });
 
   if (args.tag_ids !== undefined) {
-    await setPostTags(ctx.db, existing.id, args.tag_ids);
+    try {
+      await setPostTags(ctx.db, existing.id, args.tag_ids);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return {
+        content: [{ type: "text" as const, text: `Post updated but tag assignment failed: ${message}. Post fields were saved; tags unchanged.` }],
+        isError: true,
+      };
+    }
   }
 
   return {
