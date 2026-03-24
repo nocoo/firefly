@@ -2,6 +2,15 @@
 
 Firefly MCP (Model Context Protocol) server — allows AI agents to authenticate via OAuth and perform full CRUD operations on blog content (posts, tags, categories).
 
+## Scope & Phasing
+
+| Phase | Scope | Status |
+|-------|-------|--------|
+| **Phase 1** | OAuth metadata, register, authorize, callback, token exchange, stateless `POST /api/mcp` (JSON-only, no session), 16 tools, admin token management page | 📝 This document |
+| **Phase 2** | `GET /api/mcp` SSE stream, `DELETE /api/mcp` session termination, `Mcp-Session-Id` stateful sessions, server-initiated notifications | Future |
+
+Phase 1 uses **stateless JSON-only** transport: each `POST /api/mcp` is independent, authenticated by Bearer token, and returns `application/json`. This avoids session stickiness issues on Railway (multiple instances, restarts). SSE and session management are deferred to Phase 2.
+
 ## Overview
 
 ### Problem
@@ -112,46 +121,58 @@ CREATE TABLE mcp_clients (
 CREATE UNIQUE INDEX idx_mcp_clients_client_id ON mcp_clients(client_id);
 ```
 
-#### `mcp_auth_codes` — Temporary Authorization Codes
+#### `mcp_auth_codes` — OAuth Authorization Sessions & Codes
+
+This table serves a dual purpose: (1) stores authorize request params when the flow begins (keyed by `state`), and (2) upgrades to hold the `code` once Google OAuth completes. This avoids cookie-based state that would break with concurrent authorization flows.
 
 ```sql
 CREATE TABLE mcp_auth_codes (
-  code            TEXT PRIMARY KEY,
+  state           TEXT PRIMARY KEY,                 -- CSRF state param, set at /authorize
+  code            TEXT UNIQUE,                      -- set at /callback after Google login
   client_id       TEXT NOT NULL,
   redirect_uri    TEXT NOT NULL,
   code_challenge  TEXT NOT NULL,                    -- PKCE S256
-  user_email      TEXT NOT NULL,
+  user_email      TEXT,                             -- set at /callback
   scope           TEXT NOT NULL DEFAULT 'mcp:full',
   expires_at      INTEGER NOT NULL,                 -- unix epoch, 10 min TTL
-  used            INTEGER NOT NULL DEFAULT 0,       -- 0=unused, 1=consumed
+  consumed        INTEGER NOT NULL DEFAULT 0,       -- 0=unused, 1=consumed (atomic)
   created_at      INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
+CREATE UNIQUE INDEX idx_mcp_auth_codes_code ON mcp_auth_codes(code);
 CREATE INDEX idx_mcp_auth_codes_expires ON mcp_auth_codes(expires_at);
 ```
 
 #### `mcp_tokens` — Persistent Access & Refresh Tokens
 
+**Security**: tokens are **never stored in plaintext**. Only a SHA-256 hash is persisted for validation. A short preview (first 16 chars) is stored separately for admin display.
+
 ```sql
 CREATE TABLE mcp_tokens (
-  id              TEXT PRIMARY KEY,  -- ULID
-  access_token    TEXT NOT NULL UNIQUE,
-  refresh_token   TEXT UNIQUE,
-  client_id       TEXT NOT NULL,
-  user_email      TEXT NOT NULL,
-  scope           TEXT NOT NULL DEFAULT 'mcp:full',
-  client_name     TEXT,                             -- denormalized for admin display
-  last_used_at    INTEGER,
-  expires_at      INTEGER NOT NULL,                 -- access token TTL: 30 days
-  refresh_expires_at INTEGER,                       -- refresh token TTL: 90 days
-  revoked         INTEGER NOT NULL DEFAULT 0,       -- 0=active, 1=revoked
-  created_at      INTEGER NOT NULL DEFAULT (unixepoch())
+  id                    TEXT PRIMARY KEY,  -- ULID
+  access_token_hash     TEXT NOT NULL UNIQUE,        -- SHA-256 of full access token
+  access_token_preview  TEXT NOT NULL,               -- first 16 chars, e.g. "firefly_at_a1b2"
+  refresh_token_hash    TEXT UNIQUE,                 -- SHA-256 of full refresh token
+  client_id             TEXT NOT NULL,
+  user_email            TEXT NOT NULL,
+  scope                 TEXT NOT NULL DEFAULT 'mcp:full',
+  client_name           TEXT,                        -- denormalized for admin display
+  last_used_at          INTEGER,
+  expires_at            INTEGER NOT NULL,            -- access token TTL: 30 days
+  refresh_expires_at    INTEGER,                     -- refresh token TTL: 90 days
+  revoked               INTEGER NOT NULL DEFAULT 0,  -- 0=active, 1=revoked
+  revoked_at            INTEGER,                     -- unix epoch, set when revoked
+  created_at            INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
-CREATE UNIQUE INDEX idx_mcp_tokens_access ON mcp_tokens(access_token);
-CREATE UNIQUE INDEX idx_mcp_tokens_refresh ON mcp_tokens(refresh_token);
+CREATE UNIQUE INDEX idx_mcp_tokens_access ON mcp_tokens(access_token_hash);
+CREATE UNIQUE INDEX idx_mcp_tokens_refresh ON mcp_tokens(refresh_token_hash);
 CREATE INDEX idx_mcp_tokens_user ON mcp_tokens(user_email);
 ```
+
+**Token validation flow**: on each MCP request, compute `SHA256(bearer_token)` and look up `access_token_hash`. This means the plaintext token only exists in the agent's local storage, never in our database.
+
+**Token generation**: the full token (`firefly_at_` + 48 random hex chars) is returned **once** in the `/api/mcp/token` response. The server stores only `SHA256(token)` and `token[:16]` as preview.
 
 ### 1.3 OAuth Endpoints
 
@@ -171,8 +192,7 @@ Returns OAuth metadata per RFC 8414:
   "grant_types_supported": ["authorization_code", "refresh_token"],
   "code_challenge_methods_supported": ["S256"],
   "token_endpoint_auth_methods_supported": ["none"],
-  "scopes_supported": ["mcp:full"],
-  "service_documentation": "https://lizheng.me/docs/mcp"
+  "scopes_supported": ["mcp:full"]
 }
 ```
 
@@ -206,7 +226,7 @@ Response:
 
 Validation:
 - `client_name` required, max 255 chars
-- `redirect_uris` required, at least 1, each must be valid URL
+- `redirect_uris` required, at least 1. **Restricted to loopback addresses only**: must start with `http://localhost`, `http://127.0.0.1`, or `http://[::1]`. This prevents open-redirect attacks — agents always redirect to their own local callback. Custom URI schemes (e.g. `vscode://`) may be allowed in Phase 2 via an explicit allowlist.
 - Store in `mcp_clients` table
 
 #### `GET /api/mcp/authorize`
@@ -229,8 +249,8 @@ Query params:
 Flow:
 1. Validate `client_id` exists in `mcp_clients`
 2. Validate `redirect_uri` matches registered URIs
-3. Store params in encrypted session cookie
-4. Redirect to Google OAuth (`/api/auth/signin/google`) with a custom `callbackUrl` pointing back to `/api/mcp/callback`
+3. Store all params in `mcp_auth_codes` table **keyed by `state`** (not in a cookie — avoids overwrite if multiple flows run concurrently). Schema: `state` (PK), `client_id`, `redirect_uri`, `code_challenge`, `code_challenge_method`, `scope`, `expires_at` (10 min)
+4. Redirect to Google OAuth (`/api/auth/signin/google`) with a custom `callbackUrl` pointing to `/api/mcp/callback?state=xxx`
 
 #### `GET /api/mcp/callback`
 
@@ -241,9 +261,9 @@ Internal callback — Google OAuth redirects here after login success.
 Flow:
 1. Verify user session via `auth()` (Auth.js)
 2. Verify email is in whitelist via `isEmailAllowed()`
-3. Read OAuth params from session cookie
+3. Read OAuth params from `mcp_auth_codes` table by `state` query param (verify not expired)
 4. Generate random `authorization_code` (64-char hex)
-5. Store in `mcp_auth_codes` with 10-min TTL
+5. Upgrade the row: set `code`, mark with 10-min TTL
 6. Redirect to agent's `redirect_uri` with `?code=xxx&state=yyy`
 
 #### `POST /api/mcp/token`
@@ -274,16 +294,22 @@ Response:
 }
 ```
 
-Validation:
-1. Look up `code` in `mcp_auth_codes`
-2. Verify not expired (`expires_at > now`)
-3. Verify not already used (`used = 0`), then mark `used = 1`
-4. Verify `client_id` matches
-5. Verify `redirect_uri` matches
-6. Verify PKCE: `SHA256(code_verifier)` equals stored `code_challenge`
-7. Generate `access_token` (prefix `firefly_at_`, 48-char random hex)
-8. Generate `refresh_token` (prefix `firefly_rt_`, 48-char random hex)
-9. Store in `mcp_tokens`, access TTL 30 days, refresh TTL 90 days
+Validation (atomic — single query consumes and validates):
+1. Execute atomic consume query:
+   ```sql
+   UPDATE mcp_auth_codes
+   SET consumed = 1
+   WHERE code = ? AND consumed = 0 AND expires_at > unixepoch()
+   RETURNING *
+   ```
+   If no row returned → reject (code invalid, expired, or already consumed)
+2. Verify `client_id` matches
+3. Verify `redirect_uri` matches
+4. Verify PKCE: `SHA256(code_verifier)` equals stored `code_challenge`
+5. Generate `access_token` (prefix `firefly_at_`, 48-char random hex)
+6. Generate `refresh_token` (prefix `firefly_rt_`, 48-char random hex)
+7. Store `SHA256(access_token)` and `SHA256(refresh_token)` in `mcp_tokens`, access TTL 30 days, refresh TTL 90 days
+8. Return plaintext tokens to client (only time they're visible)
 
 **Refresh Token Exchange:**
 
@@ -312,17 +338,23 @@ The long TTL for access tokens (30 days) is intentional for a single-user blog �
 
 ## 2. MCP Server Endpoint
 
-### 2.1 Transport
+### 2.1 Transport (Phase 1 — Stateless JSON-only)
 
-**Streamable HTTP** (MCP spec 2025-03-26) at `POST /api/mcp` and `GET /api/mcp`.
+**Streamable HTTP** (MCP spec 2025-03-26) at `POST /api/mcp`.
 
 File: `src/app/api/mcp/route.ts`
 
-- `POST` — receives JSON-RPC messages, returns `application/json` or `text/event-stream`
-- `GET` — SSE stream for server-initiated notifications (optional, phase 2)
-- `DELETE` — session termination
+- `POST` — receives JSON-RPC messages, returns `application/json` only (no SSE)
+- Phase 1 is **stateless**: no `Mcp-Session-Id`, no `GET` endpoint, no `DELETE` session termination
+- Each request is independently authenticated via Bearer token and processed in isolation
+- This is safe on Railway where instances can restart or scale without breaking sessions
 
-Authentication: every request must include `Authorization: Bearer <access_token>`. Validate against `mcp_tokens` table (not revoked, not expired). Update `last_used_at` on each valid call.
+**Phase 2 additions** (future):
+- `GET /api/mcp` — SSE stream for server-initiated notifications
+- `DELETE /api/mcp` — session termination
+- `Mcp-Session-Id` header for stateful session management (requires sticky sessions or external session store)
+
+Authentication: every request must include `Authorization: Bearer <access_token>`. Validate by computing `SHA256(token)` and looking up `access_token_hash` in `mcp_tokens` table (not revoked, not expired). Update `last_used_at` on each valid call.
 
 ### 2.2 Server Identity
 
@@ -335,7 +367,9 @@ const server = new McpServer({
 
 ### 2.3 Session Management
 
-Stateful mode with `Mcp-Session-Id` header. Session maps to a single authenticated user.
+**Phase 1**: Stateless. No `Mcp-Session-Id` header. The `sessionIdGenerator` is set to `undefined` in the transport config. Each request is self-contained.
+
+**Phase 2**: Stateful mode with `Mcp-Session-Id` header backed by an external store (D1 or Redis). Requires sticky sessions or session lookup on every request.
 
 ---
 
@@ -350,14 +384,14 @@ List blog posts with optional filters.
 ```typescript
 {
   name: "list_posts",
-  description: "List blog posts. Returns paginated results with category info. Defaults to published posts, but can filter by any status.",
+  description: "List blog posts. Returns paginated results with category info. Unlike the public API which only shows published posts, authenticated MCP access returns all statuses when no filter is set. Pass status to narrow results.",
   inputSchema: {
     type: "object",
     properties: {
       status: {
         type: "string",
         enum: ["draft", "published", "private", "archived"],
-        description: "Filter by post status. Omit to list all statuses."
+        description: "Filter by post status. Omit to list all statuses (draft, published, private, archived)."
       },
       category_id: {
         type: "string",
@@ -600,7 +634,7 @@ Generate AI excerpt for a post.
 ```typescript
 {
   name: "generate_excerpt",
-  description: "Generate an AI-powered excerpt for an existing post. Uses the configured AI provider (Anthropic, MiniMax, GLM, etc.). Saves the excerpt to the post automatically.",
+  description: "Generate an AI-powered excerpt for an existing post. Uses the configured AI provider (Anthropic, MiniMax, GLM, etc.). Returns the generated excerpt but does NOT save it — call update_post to persist. This matches the existing API behavior at POST /api/posts/[slug]/excerpt.",
   inputSchema: {
     type: "object",
     properties: {
@@ -1018,14 +1052,14 @@ The page displays all issued MCP tokens with management controls:
 │                                                              │
 │  ┌────────────────────────────────────────────────────────┐  │
 │  │  ● Active    Claude Code                               │  │
-│  │  Token:      firefly_at_a1b2...****                    │  │
+│  │  Token:      firefly_at_a1b2...                    │  │
 │  │  Created:    2026-03-20                                │  │
 │  │  Last used:  2 hours ago                               │  │
 │  │  Expires:    2026-04-19                                │  │
 │  │                                          [Revoke]      │  │
 │  ├────────────────────────────────────────────────────────┤  │
 │  │  ○ Revoked   Cursor                                    │  │
-│  │  Token:      firefly_at_c3d4...****                    │  │
+│  │  Token:      firefly_at_c3d4...                    │  │
 │  │  Created:    2026-03-15                                │  │
 │  │  Revoked:    2026-03-18                                │  │
 │  │                                                        │  │
@@ -1062,11 +1096,12 @@ Response:
     {
       "id": "01JQ...",
       "client_name": "Claude Code",
-      "access_token_preview": "firefly_at_a1b2...****",
+      "access_token_preview": "firefly_at_a1b2",
       "scope": "mcp:full",
       "last_used_at": 1711234567,
       "expires_at": 1713826567,
       "revoked": false,
+      "revoked_at": null,
       "created_at": 1711234567
     }
   ]
@@ -1077,7 +1112,7 @@ Response:
 
 File: `src/app/api/mcp/tokens/[id]/route.ts`
 
-Revoke a token. Sets `revoked = 1` on both access and refresh tokens.
+Revoke a token. Sets `revoked = 1` and `revoked_at = unixepoch()` on both access and refresh tokens.
 
 ---
 
@@ -1131,9 +1166,12 @@ src/
 Files to modify:
 
 ```
-src/proxy.ts                                # Exempt /api/mcp/* from Auth.js guard
-src/components/admin/sidebar.tsx            # Add "MCP Tokens" nav item
-supabase/ or migrations/                    # New D1 migration for mcp_* tables
+src/proxy.ts                                # Exempt /api/mcp and /api/mcp/* from Auth.js guard
+src/components/admin/sidebar.tsx            # Add "MCP Tokens" nav item to System group
+src/components/admin/shell.tsx              # Add /admin/mcp to PAGE_TITLE_KEYS map
+src/i18n/locales/en.json                   # Add "admin.nav.mcpTokens": "MCP Tokens"
+src/i18n/locales/zh.json                   # Add "admin.nav.mcpTokens": "MCP 令牌"
+scripts/migrations/006-mcp.sql             # New D1 migration for mcp_* tables
 docs/README.md                              # Add this doc to index
 ```
 
@@ -1148,12 +1186,15 @@ docs/README.md                              # Add this doc to index
 function isProtectedApiRoute(pathname: string, method: string): boolean {
   if (!pathname.startsWith("/api/")) return false;
   if (pathname.startsWith("/api/auth/")) return false;
-  if (pathname.startsWith("/api/mcp/")) return false;   // ← new: MCP has its own auth
+  // MCP has its own Bearer token auth — exempt both /api/mcp and /api/mcp/*
+  if (pathname === "/api/mcp" || pathname.startsWith("/api/mcp/")) return false;
   return PROTECTED_API_METHODS.includes(method);
 }
 ```
 
 The MCP endpoint (`/api/mcp`) handles its own Bearer token validation internally. The OAuth endpoints (`/api/mcp/register`, `/api/mcp/authorize`, `/api/mcp/token`) are public by design per the OAuth spec. The admin endpoints (`/api/mcp/tokens`) will check Auth.js session internally.
+
+> **Note**: The exact-match `pathname === "/api/mcp"` is critical — `startsWith("/api/mcp/")` alone would miss `POST /api/mcp` (no trailing slash), causing Auth.js to block the main MCP endpoint.
 
 ---
 
@@ -1162,13 +1203,16 @@ The MCP endpoint (`/api/mcp`) handles its own Bearer token validation internally
 ```json
 {
   "@modelcontextprotocol/server": "^2.0.0",
-  "zod": "^3.24.0"
+  "@modelcontextprotocol/node": "^2.0.0",
+  "zod": "^4.0.0"
 }
 ```
 
-Note: `zod` is already used by Auth.js indirectly, but should be added as a direct dependency for MCP tool schema definitions.
+- `@modelcontextprotocol/server` — `McpServer` class, tool registration, JSON-RPC handling
+- `@modelcontextprotocol/node` — `NodeStreamableHTTPServerTransport` for HTTP transport in Node.js runtime
+- `zod` v4 — MCP SDK v2 uses Zod for schema definition. v4 is required (not v3). Auth.js uses zod v3 indirectly, but v4 is backward compatible at runtime
 
-The MCP SDK v2 uses Zod for schema definition. Since Firefly runs on Next.js (Node.js runtime on Railway), the `@modelcontextprotocol/server` package provides the `McpServer` class. We handle the HTTP transport ourselves within Next.js API routes rather than using `@modelcontextprotocol/express`, since Next.js App Router has its own request/response handling.
+The Next.js App Router's `route.ts` handlers receive `Request` and return `Response`, which we adapt to the Node transport. We do NOT use `@modelcontextprotocol/express` since Next.js has its own request/response lifecycle.
 
 ---
 
@@ -1178,17 +1222,23 @@ The MCP SDK v2 uses Zod for schema definition. Since Firefly runs on Next.js (No
 
 2. **PKCE mandatory** — All authorization code grants require S256 code challenge. No plain method.
 
-3. **Token prefix** — `firefly_at_` / `firefly_rt_` prefixes enable easy scanning for leaked tokens in logs/commits.
+3. **Token hashing** — Only `SHA256(token)` is stored in DB. Plaintext tokens are returned once at issuance and never persisted server-side. A 16-char preview is stored separately for admin display.
 
-4. **Token rotation** — Refresh always invalidates the previous pair, preventing token reuse after refresh.
+4. **Token prefix** — `firefly_at_` / `firefly_rt_` prefixes enable easy scanning for leaked tokens in logs/commits (e.g. GitHub secret scanning).
 
-5. **Origin validation** — MCP endpoint validates `Origin` header per spec to prevent DNS rebinding attacks.
+5. **Token rotation** — Refresh always invalidates the previous pair, preventing token reuse after refresh.
 
-6. **Rate limiting** — Token endpoint should rate-limit by client IP (5 req/min) to prevent brute-force.
+6. **Loopback-only redirect URIs** — Client registration restricts `redirect_uris` to `http://localhost`, `http://127.0.0.1`, and `http://[::1]`. No arbitrary external URLs.
 
-7. **Auth code single-use** — Authorization codes are marked `used = 1` immediately on consumption, preventing replay.
+7. **Origin validation** — MCP endpoint validates `Origin` header per spec to prevent DNS rebinding attacks.
 
-8. **Admin token page** — Protected by existing Auth.js session (Google OAuth), not by MCP tokens.
+8. **Rate limiting** — Token endpoint should rate-limit by client IP (5 req/min) to prevent brute-force.
+
+9. **Atomic auth code consumption** — Authorization codes are consumed and validated in a single atomic SQL query (`UPDATE ... WHERE consumed = 0 ... RETURNING *`). This prevents TOCTOU race conditions and avoids burning legitimate codes on failed validation.
+
+10. **Concurrent OAuth flows** — Authorization params are stored in DB keyed by `state` (not in cookies), so multiple simultaneous auth flows from different agents cannot overwrite each other.
+
+11. **Admin token page** — Protected by existing Auth.js session (Google OAuth), not by MCP tokens.
 
 ---
 
@@ -1196,10 +1246,10 @@ The MCP SDK v2 uses Zod for schema definition. Since Firefly runs on Next.js (No
 
 | # | Commit | Files |
 |---|--------|-------|
-| 1 | `feat: add mcp database tables migration` | D1 migration file |
+| 1 | `feat: add mcp database tables migration` | `scripts/migrations/006-mcp.sql` |
 | 2 | `feat: add mcp type definitions` | `src/models/types.ts` |
 | 3 | `feat: add mcp data layer (clients, auth codes, tokens)` | `src/data/mcp-*.ts` |
-| 4 | `feat: add oauth metadata endpoint` | `.well-known/oauth-authorization-server/route.ts` |
+| 4 | `feat: add oauth metadata endpoint` | `src/app/.well-known/oauth-authorization-server/route.ts` |
 | 5 | `feat: add mcp client registration endpoint` | `src/app/api/mcp/register/route.ts` |
 | 6 | `feat: add mcp oauth authorize and callback` | `src/app/api/mcp/authorize/route.ts`, `callback/route.ts` |
 | 7 | `feat: add mcp token exchange endpoint` | `src/app/api/mcp/token/route.ts` |
@@ -1207,11 +1257,12 @@ The MCP SDK v2 uses Zod for schema definition. Since Firefly runs on Next.js (No
 | 9 | `feat: add mcp post tools` | `src/lib/mcp/tools/posts.ts` |
 | 10 | `feat: add mcp tag tools` | `src/lib/mcp/tools/tags.ts` |
 | 11 | `feat: add mcp category tools` | `src/lib/mcp/tools/categories.ts` |
-| 12 | `feat: add mcp server and streamable http endpoint` | `src/lib/mcp/server.ts`, `src/app/api/mcp/route.ts` |
+| 12 | `feat: add mcp server and stateless http endpoint` | `src/lib/mcp/server.ts`, `src/app/api/mcp/route.ts` |
 | 13 | `feat: exempt mcp routes from auth.js middleware` | `src/proxy.ts` |
-| 14 | `feat: add admin mcp token management page` | `src/app/admin/mcp/page.tsx`, components |
-| 15 | `feat: add admin mcp token api endpoints` | `src/app/api/mcp/tokens/route.ts` |
-| 16 | `docs: add mcp server design document` | `docs/10-mcp-server.md`, `docs/README.md` |
+| 14 | `feat: add admin mcp token management page` | `src/app/admin/mcp/page.tsx`, `src/components/admin/mcp-tokens.tsx` |
+| 15 | `feat: add admin mcp token api endpoints` | `src/app/api/mcp/tokens/route.ts`, `[id]/route.ts` |
+| 16 | `feat: add mcp nav to admin sidebar and i18n` | `src/components/admin/sidebar.tsx`, `shell.tsx`, `en.json`, `zh.json` |
+| 17 | `docs: add mcp server design document` | `docs/10-mcp-server.md`, `docs/README.md` |
 
 ---
 
