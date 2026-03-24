@@ -180,3 +180,61 @@ export function createAiClient(config: AiConfig) {
     apiKey: config.apiKey,
   });
 }
+
+// ── Excerpt generation ──
+
+import { generateText } from "ai";
+import { getDb } from "@/lib/db";
+import { getAiSettings } from "@/data/ai-settings";
+
+export const EXCERPT_PROMPT = `You are a blog excerpt writer. Write a concise summary for the following blog post.
+
+Rules:
+- One or two sentences, no more
+- Write in the same language as the article
+- Sound natural, like a human wrote it — avoid phrases like "this article discusses", "in this post", "the author explores"
+- Capture the core insight or takeaway, not a table of contents
+- Chinese: 80-120 characters. English: 120-200 characters
+- No markdown formatting, no quotes, just plain text`;
+
+export const MAX_EXCERPT_CONTENT_CHARS = 2000;
+
+/**
+ * Generate a blog post excerpt using the configured AI provider.
+ *
+ * Reads AI settings from DB, resolves provider config, and calls
+ * generateText() with a prompt designed to produce a human-sounding,
+ * length-controlled summary.
+ *
+ * @throws Error("AI not configured") when provider or API key is missing
+ */
+export async function generateExcerpt(
+  title: string,
+  content: string,
+): Promise<string> {
+  const db = getDb();
+  const settings = await getAiSettings(db);
+
+  if (!settings.provider || !settings.apiKey) {
+    throw new Error("AI not configured");
+  }
+
+  const config = resolveAiConfig({
+    provider: settings.provider as AiProvider,
+    apiKey: settings.apiKey,
+    model: settings.model,
+    baseURL: settings.baseURL || undefined,
+    sdkType: (settings.sdkType || undefined) as SdkType | undefined,
+  });
+
+  const client = createAiClient(config);
+  const truncatedContent = content.slice(0, MAX_EXCERPT_CONTENT_CHARS);
+
+  const { text } = await generateText({
+    model: client(config.model),
+    prompt: `${EXCERPT_PROMPT}\n\nTitle: ${title}\n\nContent:\n${truncatedContent}`,
+    maxOutputTokens: 200,
+  });
+
+  return text.trim();
+}
