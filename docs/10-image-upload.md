@@ -339,18 +339,18 @@ export function generateFireflyR2Key(filename: string): string {
 
 ## Atomic Commits
 
-| # | Commit | Description |
-|---|--------|-------------|
-| 1 | `fix: remove svg from image-upload accept attribute` | Align front-end with server-side SVG rejection |
-| 2 | `feat: add site_logo_version to site_settings` | Migration 006 + data layer (read-only) + `updateSiteLogoVersion()` |
-| 3 | `feat: add logo URL helper module` | New server-only `src/lib/logo.ts`, new `getR2PublicUrl()` export from `r2-client.ts` |
-| 4 | `feat: add GUID-based R2 key generation` | `generateFireflyR2Key()` in `r2.ts`, update `r2-client.ts` |
-| 5 | `feat: update upload API to use new R2 path` | Modify `POST /api/upload` |
-| 6 | `feat: add logo upload and delete API` | New `POST /api/upload/logo` (resize + version), new `DELETE /api/upload/logo` |
-| 7 | `feat: add dynamic favicon API with size parameter` | New `GET /api/favicon` with `?size`, fallback to static for all sizes |
-| 8 | `feat: add site logo upload to settings page` | Settings page computes `logoUrl`, form accepts prop; upload + preview + remove |
-| 9 | `feat: integrate dynamic logo in login page` | Login page computes `logoUrl`, `LoginCard` accepts prop |
-| 10 | `feat: integrate dynamic favicon in layout` | Update `layout.tsx` metadata |
-| 11 | `feat: add ImageUploadZone with copy actions` | New component with copy URL / copy Markdown |
-| 12 | `refactor: replace ImageUpload with ImageUploadZone in PostForm` | Swap component, remove auto-append |
-| 13 | `feat: add i18n keys for image upload` | en.json + zh.json |
+| # | Commit | Description | Status |
+|---|--------|-------------|--------|
+| 1 | `fix: remove svg from image-upload accept attribute` | Align front-end with server-side SVG rejection | ✅ |
+| 2 | `feat: add site_logo_version to site_settings` | Migration 006 + data layer (read-only) + `updateSiteLogoVersion()` | ✅ |
+| 3 | `feat: add logo URL helper module` | New server-only `src/lib/logo.ts`, new `getR2PublicUrl()` export from `r2-client.ts` | ✅ |
+| 4 | `feat: add GUID-based R2 key generation` | `generateFireflyR2Key()` in `r2.ts`, update `r2-client.ts` | ✅ |
+| 5 | `feat: update upload API to use new R2 path` | Modify `POST /api/upload` | ✅ |
+| 6 | `feat: add logo upload and delete API` | New `POST /api/upload/logo` (resize + version), new `DELETE /api/upload/logo` | ✅ |
+| 7 | `feat: add dynamic favicon API with size parameter` | New `GET /api/favicon` with `?size`, fallback to static for all sizes | ✅ |
+| 8 | `feat: add site logo upload to settings page` | Settings page computes `logoUrl`, form accepts prop; upload + preview + remove | ✅ |
+| 9 | `feat: integrate dynamic logo in login page` | Login page computes `logoUrl`, `LoginCard` accepts prop | ✅ |
+| 10 | `feat: integrate dynamic favicon in layout` | Update `layout.tsx` metadata | ✅ |
+| 11 | `feat: add ImageUploadZone with copy actions` | New component with copy URL / copy Markdown | ✅ |
+| 12 | `refactor: replace ImageUpload with ImageUploadZone in PostForm` | Swap component, remove auto-append | ✅ |
+| 13 | `feat: add i18n keys for image upload` | en.json + zh.json | ✅ |
