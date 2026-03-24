@@ -247,7 +247,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
                   {t("admin.sidebar.firefly")}
                 </span>
                 <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground leading-none">
-                  v0.1
+                  v0.2
                 </span>
               </div>
               <IconButton
