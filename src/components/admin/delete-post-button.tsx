@@ -2,19 +2,24 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { useLocale } from "@/i18n/context";
 
 interface DeletePostButtonProps {
   slug: string;
   title: string;
+  /** Render icon-only (no label text). Used inside grid card overlays. */
+  iconOnly?: boolean;
 }
 
-export function DeletePostButton({ slug, title }: DeletePostButtonProps) {
+export function DeletePostButton({ slug, title, iconOnly }: DeletePostButtonProps) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const { t } = useLocale();
 
-  const handleDelete = async () => {
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (!confirm(t("admin.deletePost.confirm", { title }))) return;
 
     setDeleting(true);
@@ -32,13 +37,27 @@ export function DeletePostButton({ slug, title }: DeletePostButtonProps) {
     }
   };
 
+  if (iconOnly) {
+    return (
+      <button
+        onClick={handleDelete}
+        disabled={deleting}
+        className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-widget)] text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+        title={t("admin.posts.delete")}
+      >
+        <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+      </button>
+    );
+  }
+
   return (
     <button
       onClick={handleDelete}
       disabled={deleting}
-      className="text-sm text-destructive hover:text-destructive/80 transition-colors disabled:opacity-50"
+      className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
     >
-      {deleting ? "..." : t("admin.deletePost.delete")}
+      <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+      {deleting ? "..." : t("admin.posts.delete")}
     </button>
   );
 }
