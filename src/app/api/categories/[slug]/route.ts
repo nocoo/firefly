@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getDb } from "@/lib/db";
+import { getDb, DbError } from "@/lib/db";
 import { jsonResponse, errorResponse, notFoundResponse } from "@/lib/api";
 import {
   getCategoryBySlug,
@@ -10,6 +10,14 @@ import {
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
+}
+
+function handleError(error: unknown) {
+  if (error instanceof DbError) {
+    return errorResponse(error.message, error.status ?? 500);
+  }
+  console.error("Categories API error:", error);
+  return errorResponse("Internal server error", 500);
 }
 
 // GET /api/categories/[slug]
@@ -23,10 +31,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
     return jsonResponse(category);
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return handleError(error);
   }
 }
 
@@ -39,17 +44,20 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const existing = await getCategoryBySlug(db, slug);
     if (!existing) return notFoundResponse("Category");
 
-    const body = (await request.json()) as UpdateCategoryInput;
+    let body: UpdateCategoryInput;
+    try {
+      body = (await request.json()) as UpdateCategoryInput;
+    } catch {
+      return errorResponse("Invalid JSON body");
+    }
+
     const updated = await updateCategory(db, existing.id, body);
 
     if (!updated) return notFoundResponse("Category");
 
     return jsonResponse(updated);
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return handleError(error);
   }
 }
 
@@ -67,9 +75,6 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
 
     return jsonResponse({ deleted: true });
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return handleError(error);
   }
 }

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getDb } from "@/lib/db";
+import { getDb, DbError } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
 import {
   getSiteSettings,
@@ -7,9 +7,17 @@ import {
   type UpdateSiteSettingsInput,
   type FontStyle,
 } from "@/data/settings";
-import { LOCALES } from "@/i18n/translations";
+import { LOCALES, type Locale } from "@/i18n/translations";
 
 const FONT_STYLES: FontStyle[] = ["pingfang", "classic", "serif", "sans"];
+
+function handleError(error: unknown) {
+  if (error instanceof DbError) {
+    return errorResponse(error.message, error.status ?? 500);
+  }
+  console.error("Settings API error:", error);
+  return errorResponse("Internal server error", 500);
+}
 
 /**
  * GET /api/settings — return current site settings.
@@ -21,10 +29,7 @@ export async function GET() {
     const settings = await getSiteSettings(db);
     return jsonResponse(settings);
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return handleError(error);
   }
 }
 
@@ -34,15 +39,21 @@ export async function GET() {
  */
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body: Record<string, unknown>;
+    try {
+      body = await request.json();
+    } catch {
+      return errorResponse("Invalid JSON body");
+    }
+
     const input: UpdateSiteSettingsInput = {};
 
     // Validate locale
     if (body.locale !== undefined) {
-      if (!LOCALES.includes(body.locale)) {
+      if (!LOCALES.includes(body.locale as Locale)) {
         return errorResponse(`Invalid locale. Must be one of: ${LOCALES.join(", ")}`);
       }
-      input.locale = body.locale;
+      input.locale = body.locale as Locale;
     }
 
     // Validate postsPerPage
@@ -64,19 +75,16 @@ export async function PUT(request: NextRequest) {
 
     // Validate fontStyle
     if (body.fontStyle !== undefined) {
-      if (!FONT_STYLES.includes(body.fontStyle)) {
+      if (!FONT_STYLES.includes(body.fontStyle as FontStyle)) {
         return errorResponse(`Invalid fontStyle. Must be one of: ${FONT_STYLES.join(", ")}`);
       }
-      input.fontStyle = body.fontStyle;
+      input.fontStyle = body.fontStyle as FontStyle;
     }
 
     const db = getDb();
     const settings = await updateSiteSettings(db, input);
     return jsonResponse(settings);
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return handleError(error);
   }
 }
