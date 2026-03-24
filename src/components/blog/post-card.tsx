@@ -48,6 +48,7 @@ export function PostCard({ post, locale, priority }: PostCardProps) {
               fill
               sizes="(max-width: 900px) 100vw, min(75vw, 1000px)"
               priority={priority ?? false}
+              {...(priority ? { fetchPriority: "high" as const } : {})}
             />
           </Link>
         </div>
