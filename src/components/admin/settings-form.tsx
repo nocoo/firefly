@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useLocale } from "@/i18n/context";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -14,6 +14,13 @@ interface SettingsFormProps {
   logoUrl: string | null;
 }
 
+const internalUrls = [
+  { label: "Sitemap", path: "/sitemap.xml" },
+  { label: "Robots.txt", path: "/robots.txt" },
+  { label: "RSS Feed", path: "/feed.xml" },
+  { label: "LLMs.txt", path: "/llms.txt" },
+];
+
 export function SettingsForm({ settings, logoUrl }: SettingsFormProps) {
   const { t } = useLocale();
   const [locale, setLocale] = useState<Locale>(settings.locale);
@@ -22,6 +29,22 @@ export function SettingsForm({ settings, logoUrl }: SettingsFormProps) {
   const [fontStyle, setFontStyle] = useState<FontStyle>(settings.fontStyle);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Copy-to-clipboard for internal URLs
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [origin, setOrigin] = useState("");
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  const copyUrl = useCallback(async (url: string) => {
+    await navigator.clipboard.writeText(url);
+    setCopiedUrl(url);
+    if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    copyTimeoutRef.current = setTimeout(() => setCopiedUrl(null), 800);
+  }, []);
 
   // Logo state
   const [currentLogoUrl, setCurrentLogoUrl] = useState<string | null>(logoUrl);
@@ -321,6 +344,61 @@ export function SettingsForm({ settings, logoUrl }: SettingsFormProps) {
           value={fontStyle}
           onChange={(v) => setFontStyle(v as FontStyle)}
         />
+      </div>
+
+      {/* Internal URLs */}
+      <div className="space-y-2">
+        <label className="text-base font-medium text-foreground">
+          {t("admin.settings.internalUrls")}
+        </label>
+        <p className="text-sm text-muted-foreground">
+          {t("admin.settings.internalUrlsHint")}
+        </p>
+        <div className="space-y-1.5">
+          {internalUrls.map(({ label, path }) => {
+            const fullUrl = `${origin}${path}`;
+            const isCopied = copiedUrl === fullUrl;
+            return (
+              <div
+                key={path}
+                className="flex items-center gap-2 rounded-[var(--radius-widget)] border border-border px-3 py-2"
+              >
+                <span className="min-w-0 flex-1 truncate font-mono text-xs text-foreground">
+                  {fullUrl}
+                </span>
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {label}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => copyUrl(fullUrl)}
+                  className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+                  title={t("admin.upload.copyUrl")}
+                >
+                  {isCopied ? (
+                    <svg className="h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  )}
+                </button>
+                <a
+                  href={fullUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Status message */}

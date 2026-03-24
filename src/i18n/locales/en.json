@@ -208,6 +208,8 @@
   "admin.settings.siteLogoUpload": "Upload Logo",
   "admin.settings.siteLogoRemove": "Remove",
   "admin.settings.siteLogoRequireSquare": "Image must be square (1:1 ratio).",
+  "admin.settings.internalUrls": "Internal URLs",
+  "admin.settings.internalUrlsHint": "Use these links to submit to search engines or subscribe via RSS. Click to copy.",
   "admin.ai.title": "AI Settings",
   "admin.ai.provider": "AI Provider",
   "admin.ai.providerHint": "Select an AI provider. Built-in providers auto-fill URL and protocol.",
