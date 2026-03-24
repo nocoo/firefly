@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { websiteJsonLd, blogPostingJsonLd, breadcrumbJsonLd } from "./jsonld";
+import { websiteJsonLd, blogPostingJsonLd, breadcrumbJsonLd, collectionPageJsonLd } from "./jsonld";
 import type { PostWithCategory } from "@/models/types";
 
 describe("websiteJsonLd", () => {
@@ -90,5 +90,33 @@ describe("breadcrumbJsonLd", () => {
     expect(result.itemListElement).toHaveLength(3);
     expect(result.itemListElement[0].position).toBe(1);
     expect(result.itemListElement[2].name).toBe("My Post");
+  });
+});
+
+describe("collectionPageJsonLd", () => {
+  it("generates CollectionPage with ItemList", () => {
+    const items = [
+      { url: "https://lizheng.me/2026/03/post-1", name: "Post 1" },
+      { url: "https://lizheng.me/2026/03/post-2", name: "Post 2" },
+    ];
+    const result = JSON.parse(collectionPageJsonLd("Tech", "/category/tech", items));
+
+    expect(result["@type"]).toBe("CollectionPage");
+    expect(result.name).toBe("Tech");
+    expect(result.mainEntity["@type"]).toBe("ItemList");
+    expect(result.mainEntity.numberOfItems).toBe(2);
+    expect(result.mainEntity.itemListElement).toHaveLength(2);
+    expect(result.mainEntity.itemListElement[0].position).toBe(1);
+    expect(result.mainEntity.itemListElement[1].name).toBe("Post 2");
+  });
+
+  it("uses zh-CN inLanguage by default", () => {
+    const result = JSON.parse(collectionPageJsonLd("Test", "/test", []));
+    expect(result.inLanguage).toBe("zh-CN");
+  });
+
+  it("uses en inLanguage when locale is en", () => {
+    const result = JSON.parse(collectionPageJsonLd("Test", "/test", [], "en"));
+    expect(result.inLanguage).toBe("en");
   });
 });

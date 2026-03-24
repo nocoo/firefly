@@ -6,7 +6,8 @@ import { listPosts } from "@/data/posts";
 import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
-import { buildPageMeta } from "@/lib/seo";
+import { buildPageMeta, SITE_URL, postPath } from "@/lib/seo";
+import { collectionPageJsonLd } from "@/lib/jsonld";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 
@@ -53,6 +54,21 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: collectionPageJsonLd(
+            category.name,
+            `/category/${slug}`,
+            posts.map((p) => ({
+              url: `${SITE_URL}${postPath(p.slug, p.published_at)}`,
+              name: p.title,
+            })),
+            locale,
+          ),
+        }}
+      />
+
       <header className="mb-8">
         <h1 className="text-2xl font-bold leading-tight text-blog-text md:text-3xl">
           {category.name}

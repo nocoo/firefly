@@ -5,7 +5,6 @@ import { listPosts } from "@/data/posts";
 import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
-import { websiteJsonLd } from "@/lib/jsonld";
 import { buildPageMeta, SITE_NAME, SITE_DESCRIPTION } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
@@ -48,11 +47,6 @@ export default async function HomePaged({ params }: PageProps) {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: websiteJsonLd(locale) }}
-      />
-
       <section>
         {posts.length === 0 ? (
           <p className="py-12 text-center text-blog-muted">

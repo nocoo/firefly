@@ -93,3 +93,37 @@ export function breadcrumbJsonLd(items: BreadcrumbItem[]): string {
     })),
   });
 }
+
+// ---------------------------------------------------------------------------
+// CollectionPage + ItemList (listing pages: category, tag, archive, home)
+// ---------------------------------------------------------------------------
+
+export interface CollectionItem {
+  url: string;
+  name: string;
+}
+
+export function collectionPageJsonLd(
+  name: string,
+  path: string,
+  items: CollectionItem[],
+  locale: Locale = "zh",
+): string {
+  return JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name,
+    url: `${SITE_URL}${path}`,
+    inLanguage: htmlLang(locale),
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: items.length,
+      itemListElement: items.map((item, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: item.url,
+        name: item.name,
+      })),
+    },
+  });
+}

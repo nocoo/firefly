@@ -4,8 +4,8 @@ import { listPosts } from "@/data/posts";
 import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
-import { SITE_NAME, SITE_DESCRIPTION, buildPageMeta } from "@/lib/seo";
-import { websiteJsonLd } from "@/lib/jsonld";
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, buildPageMeta, postPath } from "@/lib/seo";
+import { websiteJsonLd, collectionPageJsonLd } from "@/lib/jsonld";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 
@@ -37,6 +37,20 @@ export default async function Home() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: websiteJsonLd(locale) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: collectionPageJsonLd(
+            SITE_NAME,
+            "/",
+            posts.map((p) => ({
+              url: `${SITE_URL}${postPath(p.slug, p.published_at)}`,
+              name: p.title,
+            })),
+            locale,
+          ),
+        }}
       />
 
       <section>
