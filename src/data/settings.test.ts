@@ -27,7 +27,7 @@ const sampleRow = {
   locale: "zh",
   posts_per_page: 10,
   comments_enabled: 0,
-  font_style: "classic",
+  font_style: "pingfang",
   updated_at: 1700000000,
 };
 
@@ -41,7 +41,7 @@ describe("parseRow", () => {
       locale: "zh",
       postsPerPage: 10,
       commentsEnabled: false,
-      fontStyle: "classic",
+      fontStyle: "pingfang",
       updatedAt: 1700000000,
     });
   });
@@ -53,7 +53,7 @@ describe("parseRow", () => {
       locale: "en",
       postsPerPage: 10,
       commentsEnabled: true,
-      fontStyle: "classic",
+      fontStyle: "pingfang",
       updatedAt: 1700000000,
     });
   });
@@ -67,11 +67,12 @@ describe("parseRow", () => {
     expect(parseRow({ ...sampleRow, locale: "fr" }).locale).toBe("zh");
   });
 
-  it("falls back to classic for unknown font_style", () => {
-    expect(parseRow({ ...sampleRow, font_style: "unknown" }).fontStyle).toBe("classic");
+  it("falls back to pingfang for unknown font_style", () => {
+    expect(parseRow({ ...sampleRow, font_style: "unknown" }).fontStyle).toBe("pingfang");
   });
 
   it("parses valid font_style values", () => {
+    expect(parseRow({ ...sampleRow, font_style: "pingfang" }).fontStyle).toBe("pingfang");
     expect(parseRow({ ...sampleRow, font_style: "serif" }).fontStyle).toBe("serif");
     expect(parseRow({ ...sampleRow, font_style: "sans" }).fontStyle).toBe("sans");
     expect(parseRow({ ...sampleRow, font_style: "classic" }).fontStyle).toBe("classic");

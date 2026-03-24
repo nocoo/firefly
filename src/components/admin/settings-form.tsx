@@ -125,6 +125,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
         </p>
         <SegmentedControl
           options={[
+            { value: "pingfang", label: t("admin.settings.fontStylePingfang") },
             { value: "classic", label: t("admin.settings.fontStyleClassic") },
             { value: "serif", label: t("admin.settings.fontStyleSerif") },
             { value: "sans", label: t("admin.settings.fontStyleSans") },

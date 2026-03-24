@@ -4,111 +4,66 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Heti-inspired @font-face aliases — local() only, zero network cost.
- * Maps abstract family names to platform-native CJK fonts.
+ * ==========================================================================
+ * @font-face — local() aliases for CJK serif/kai fonts.
+ * Sans (PingFang SC / system) needs no alias — used directly in font stacks.
+ * ==========================================================================
  */
 
-/* Hei (黑体 / Sans) — Regular */
-@font-face {
-  font-family: "Heti Hei";
-  font-weight: 400;
-  src: local("PingFang SC Regular"), local("PingFang SC"),
-       local("Heiti SC Regular"), local("Heiti SC"),
-       local("Microsoft YaHei"),
-       local("Source Han Sans CN Regular"), local("Noto Sans CJK SC Regular"),
-       local("WenQuanYi Micro Hei"), local("Droid Sans Fallback");
-}
-
-/* Hei — Bold */
-@font-face {
-  font-family: "Heti Hei";
-  font-weight: 600;
-  src: local("PingFang SC Medium"),
-       local("Heiti SC Medium"),
-       local("Microsoft YaHei Bold"),
-       local("Source Han Sans CN Bold"), local("Noto Sans CJK SC Bold");
-}
-
-/* Hei — Black */
-@font-face {
-  font-family: "Heti Hei";
-  font-weight: 800;
-  src: local("PingFang SC Semibold"),
-       local("Heiti SC Medium"),
-       local("Microsoft YaHei Bold"),
-       local("Source Han Sans CN Heavy"), local("Noto Sans CJK SC Heavy");
-}
-
-/* Song (宋体 / Serif) — Regular */
+/* Song (宋体) — Regular + Bold */
 @font-face {
   font-family: "Heti Song";
   font-weight: 400;
-  src: local("Songti SC Regular"), local("Songti SC"),
-       local("Songti TC Regular"), local("Songti TC"),
-       local("SimSun");
+  src: local("Songti SC"), local("Songti TC"), local("SimSun");
 }
-
-/* Song — Bold */
 @font-face {
   font-family: "Heti Song";
   font-weight: 600;
-  src: local("Songti SC Bold"), local("Songti TC Bold"),
-       local("SimSun");
+  src: local("Songti SC Bold"), local("Songti TC Bold"), local("SimSun");
 }
 
-/* Kai (楷体) — Regular */
+/* Kai (楷体) — Regular + Bold */
 @font-face {
   font-family: "Heti Kai";
   font-weight: 400;
-  src: local("Kaiti SC Regular"), local("Kaiti SC"),
-       local("Kaiti TC Regular"), local("Kaiti TC"),
-       local("STKaiti"), local("Kaiti"), local("BiauKai");
+  src: local("Kaiti SC"), local("Kaiti TC"), local("STKaiti"), local("BiauKai");
 }
-
-/* Kai — Bold */
 @font-face {
   font-family: "Heti Kai";
   font-weight: 600;
-  src: local("Kaiti SC Bold"), local("Kaiti TC Bold"),
-       local("STKaiti"), local("Kaiti");
+  src: local("Kaiti SC Bold"), local("Kaiti TC Bold"), local("STKaiti");
 }
 
 /*
- * Basalt design system tokens → Tailwind v4 theme mapping
- * Register --color-<name> so utilities like bg-background, text-foreground work.
+ * ==========================================================================
+ * Design tokens → Tailwind v4 theme bridge
+ * ==========================================================================
  */
 @theme inline {
+  /* Core palette */
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
-
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
-
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
-
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
-
   --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
-
   --color-accent: hsl(var(--accent));
   --color-accent-foreground: hsl(var(--accent-foreground));
-
   --color-popover: hsl(var(--popover));
   --color-popover-foreground: hsl(var(--popover-foreground));
-
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
-
   --color-success: hsl(var(--success));
   --color-success-foreground: hsl(var(--success-foreground));
 
-  /* Blog (CeleRev) palette */
+  /* Blog palette */
   --color-blog-bg: var(--blog-bg);
   --color-blog-surface: var(--blog-surface);
   --color-blog-sidebar: var(--blog-sidebar);
@@ -117,6 +72,7 @@
   --color-blog-separator: var(--blog-separator);
   --color-blog-accent: var(--blog-accent);
 
+  /* Radii */
   --radius-card: 14px;
   --radius-widget: 10px;
   --radius-island: 20px;
@@ -126,63 +82,66 @@
 }
 
 /*
- * Design tokens — light (default) & dark mode
+ * ==========================================================================
+ * :root — shared font stacks, color tokens (light), blog palette
+ *
+ * Font architecture:
+ *   --ff-sans   System sans-serif (PingFang SC → fallbacks). UI + default body.
+ *   --ff-serif  Western serif + CJK Song. For serif/classic presets.
+ *   --ff-kai    Western serif + CJK Kai. For classic headings/quotes.
+ *   --ff-mono   Monospace for code.
+ *   --ff-body   Body text — points to one of the above per preset.
+ *   --ff-heading Headings — points to one of the above per preset.
+ *   --ff-quote  Blockquotes — points to one of the above per preset.
+ * ==========================================================================
  */
 :root {
-  /* Font stacks — classic preset is the default */
-  --ff-body: "Times New Roman", times, "Heti Song", serif;
-  --ff-heading: Georgia, "Times New Roman", "Heti Kai", serif;
-  --ff-quote: Georgia, "Times New Roman", "Heti Kai", serif;
-  --ff-ui: "Helvetica Neue", helvetica, arial, "Heti Hei", sans-serif;
+  /* Base font stacks (immutable — presets compose from these) */
+  --ff-sans: "PingFang SC", "Helvetica Neue", helvetica, arial, "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --ff-serif: Georgia, "Times New Roman", "Heti Song", serif;
+  --ff-kai: Georgia, "Times New Roman", "Heti Kai", serif;
   --ff-mono: "SFMono-Regular", consolas, "Liberation Mono", menlo, courier, monospace;
 
-  /* L0 body */
+  /* Active font roles — default preset: pingfang (all sans) */
+  --ff-body: var(--ff-sans);
+  --ff-heading: var(--ff-sans);
+  --ff-quote: var(--ff-sans);
+
+  /* Admin / system colors — light */
   --background: 220 14% 94%;
   --foreground: 0 0% 12%;
-
-  /* L1 content panel */
   --card: 220 14% 97%;
   --card-foreground: 0 0% 12%;
-
-  /* L2 inner cards */
   --secondary: 0 0% 100%;
   --secondary-foreground: 0 0% 12%;
-
   --popover: 0 0% 100%;
   --popover-foreground: 0 0% 12%;
-
   --primary: 217 91% 60%;
   --primary-foreground: 0 0% 100%;
-
   --muted: 220 14% 92%;
   --muted-foreground: 0 0% 45%;
-
   --accent: 220 14% 92%;
   --accent-foreground: 0 0% 12%;
-
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
-
   --border: 220 13% 88%;
   --input: 220 13% 88%;
   --ring: 217 91% 60%;
-
   --radius: 0.5rem;
-
   --success: 142 71% 45%;
   --success-foreground: 0 0% 100%;
 
   /* Chart palette */
-  --chart-1: 217 91% 60%;   /* blue — #3b82f6 */
-  --chart-2: 160 60% 45%;   /* emerald — #10b981 */
-  --chart-3: 38 92% 50%;    /* amber — #f59e0b */
-  --chart-4: 0 72% 51%;     /* red — #ef4444 */
-  --chart-5: 258 90% 66%;   /* violet — #8b5cf6 */
-  --chart-6: 330 81% 60%;   /* pink — #ec4899 */
-  --chart-7: 189 94% 43%;   /* cyan — #06b6d4 */
-  --chart-8: 220 9% 46%;    /* gray — #6b7280 */
+  --chart-1: 217 91% 60%;
+  --chart-2: 160 60% 45%;
+  --chart-3: 38 92% 50%;
+  --chart-4: 0 72% 51%;
+  --chart-5: 258 90% 66%;
+  --chart-6: 330 81% 60%;
+  --chart-7: 189 94% 43%;
+  --chart-8: 220 9% 46%;
 
-  /* Blog — warm parchment palette */
+  /* Blog — warm parchment (light) */
   --blog-bg: #FAF8F5;
   --blog-surface: #FAF8F5;
   --blog-sidebar: #FAF8F5;
@@ -193,41 +152,28 @@
 }
 
 .dark {
-  /* L0 body: #171717 */
   --background: 0 0% 9%;
   --foreground: 0 0% 93%;
-
-  /* L1 content panel: #1b1b1b */
   --card: 0 0% 10.6%;
   --card-foreground: 0 0% 93%;
-
-  /* L2 inner cards: #1f1f1f */
   --secondary: 0 0% 12.2%;
   --secondary-foreground: 0 0% 93%;
-
   --popover: 0 0% 10.6%;
   --popover-foreground: 0 0% 93%;
-
   --primary: 217 91% 60%;
   --primary-foreground: 0 0% 100%;
-
   --muted: 0 0% 12.2%;
   --muted-foreground: 0 0% 48%;
-
   --accent: 0 0% 14%;
   --accent-foreground: 0 0% 93%;
-
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
-
   --border: 0 0% 16%;
   --input: 0 0% 12%;
   --ring: 217 91% 60%;
-
   --success: 142 71% 45%;
   --success-foreground: 0 0% 100%;
 
-  /* Chart palette — slightly lighter for dark backgrounds */
   --chart-1: 217 91% 65%;
   --chart-2: 160 60% 50%;
   --chart-3: 38 92% 55%;
@@ -237,7 +183,6 @@
   --chart-7: 189 94% 48%;
   --chart-8: 220 9% 55%;
 
-  /* Blog — warm dark palette (matched to screenshot) */
   --blog-bg: #2D2B28;
   --blog-surface: #343230;
   --blog-sidebar: #2D2B28;
@@ -248,23 +193,33 @@
 }
 
 /*
- * Font style presets — driven by data-font-style on <html>
- * "classic" is the :root default (Song body, Kai headings)
+ * ==========================================================================
+ * Font presets — driven by data-font-style on <html>
+ * Default (pingfang) uses :root values, no override needed.
+ * ==========================================================================
  */
+[data-font-style="classic"] {
+  --ff-body: var(--ff-serif);
+  --ff-heading: var(--ff-kai);
+  --ff-quote: var(--ff-kai);
+}
+
 [data-font-style="serif"] {
-  --ff-body: "Times New Roman", times, "Heti Song", serif;
-  --ff-heading: Georgia, "Times New Roman", "Heti Song", serif;
-  --ff-quote: Georgia, "Times New Roman", "Heti Song", serif;
+  --ff-body: var(--ff-serif);
+  --ff-heading: var(--ff-serif);
+  --ff-quote: var(--ff-serif);
 }
 
 [data-font-style="sans"] {
-  --ff-body: "Helvetica Neue", helvetica, arial, "Heti Hei", sans-serif;
-  --ff-heading: "Helvetica Neue", helvetica, arial, "Heti Hei", sans-serif;
-  --ff-quote: "Helvetica Neue", helvetica, arial, "Heti Hei", sans-serif;
+  --ff-body: var(--ff-sans);
+  --ff-heading: var(--ff-sans);
+  --ff-quote: var(--ff-sans);
 }
 
 /*
+ * ==========================================================================
  * Base styles
+ * ==========================================================================
  */
 @layer base {
   * {
@@ -276,13 +231,15 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--ff-ui);
+    font-family: var(--ff-sans);
     font-size: 16px;
   }
 }
 
 /*
- * Prose typography — CJK-optimized, font-style-aware via CSS custom properties
+ * ==========================================================================
+ * Prose typography — CJK-optimized, driven by --ff-body/heading/quote
+ * ==========================================================================
  */
 .prose-firefly {
   font-family: var(--ff-body);
@@ -290,128 +247,49 @@
   line-height: 1.85;
   overflow-wrap: break-word;
 
-  & p {
-    margin-block: 1.25em;
-  }
+  & p { margin-block: 1.25em; }
 
-  & h1, & h2, & h3, & h4, & h5, & h6 {
-    font-family: var(--ff-heading);
-  }
+  /* Headings */
+  & :is(h1, h2, h3, h4, h5, h6) { font-family: var(--ff-heading); }
+  & h1 { font-size: 1.75em; font-weight: 700; letter-spacing: 0.02em; }
+  & h2 { font-size: 1.375em; font-weight: 700; letter-spacing: 0.01em; }
+  & h3 { font-size: 1.1875em; font-weight: 600; }
+  & h4 { font-size: 1.0625em; font-weight: 600; }
+  & h5 { font-size: 1em; font-weight: 600; }
+  & h6 { font-size: 0.9375em; font-weight: 600; color: var(--blog-muted); }
 
-  & h1 {
-    font-size: 1.75em;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-  }
+  /* Blockquote */
+  & blockquote    { font-family: var(--ff-quote); font-style: normal; border-left-color: var(--blog-separator); }
+  & blockquote p  { font-style: normal; }
 
-  & h2 {
-    font-size: 1.375em;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-  }
-
-  & h3 {
-    font-size: 1.1875em;
-    font-weight: 600;
-  }
-
-  & h4 {
-    font-size: 1.0625em;
-    font-weight: 600;
-  }
-
-  & h5 {
-    font-size: 1em;
-    font-weight: 600;
-  }
-
-  & h6 {
-    font-size: 0.9375em;
-    font-weight: 600;
-    color: var(--blog-muted);
-  }
-
-  & blockquote {
-    font-family: var(--ff-quote);
-    font-style: normal;
-    border-left-color: var(--blog-separator);
-  }
-
-  & blockquote p {
-    font-style: normal;
-  }
-
-  & pre {
-    font-family: var(--ff-mono);
-    border: 1px solid var(--blog-separator);
-    background: hsl(var(--secondary));
-    font-size: 0.8125em;
-  }
-
-  & :not(pre) > code {
-    font-family: var(--ff-mono);
-    background: hsl(var(--secondary));
-    border: 1px solid var(--blog-separator);
-    padding: 0.15em 0.35em;
-    font-size: 0.85em;
-  }
-
+  /* Code */
+  & pre                 { font-family: var(--ff-mono); font-size: 0.8125em; border: 1px solid var(--blog-separator); background: hsl(var(--secondary)); }
+  & :not(pre) > code    { font-family: var(--ff-mono); font-size: 0.85em; padding: 0.15em 0.35em; border: 1px solid var(--blog-separator); background: hsl(var(--secondary)); }
   & :not(pre) > code::before,
-  & :not(pre) > code::after {
-    content: none;
-  }
+  & :not(pre) > code::after { content: none; }
 
-  & img {
-    margin-inline: auto;
-  }
+  /* Images */
+  & img { margin-inline: auto; }
 
-  & table {
-    font-family: var(--ff-body);
-    font-size: 0.9375em;
-    border-collapse: collapse;
-    width: 100%;
-  }
+  /* Tables */
+  & table       { font-size: 0.9375em; border-collapse: collapse; width: 100%; }
+  & thead       { border-bottom: 2px solid var(--blog-separator); }
+  & th          { font-weight: 600; text-align: start; padding: 0.625em 0.75em; }
+  & td          { padding: 0.625em 0.75em; }
+  & :is(th, td) { border: 1px solid var(--blog-separator); }
 
-  & thead {
-    border-bottom: 2px solid var(--blog-separator);
-  }
+  /* Links */
+  & a       { color: var(--blog-text); text-decoration-color: var(--blog-accent); text-underline-offset: 3px; transition: text-decoration-color 0.15s; }
+  & a:hover { text-decoration-color: var(--blog-text); }
 
-  & th {
-    font-weight: 600;
-    text-align: start;
-    padding: 0.625em 0.75em;
-  }
-
-  & td {
-    padding: 0.625em 0.75em;
-  }
-
-  & th, & td {
-    border: 1px solid var(--blog-separator);
-  }
-
-  & tbody tr {
-    border-bottom: 1px solid var(--blog-separator);
-  }
-
-  & a {
-    color: var(--blog-text);
-    text-decoration-color: var(--blog-accent);
-    text-underline-offset: 3px;
-    transition: text-decoration-color 0.15s;
-  }
-
-  & a:hover {
-    text-decoration-color: var(--blog-text);
-  }
-
-  & hr {
-    border-color: var(--blog-separator);
-  }
+  /* Dividers */
+  & hr { border-color: var(--blog-separator); }
 }
 
 /*
- * Blog layout — minimal warm-paper aesthetic
+ * ==========================================================================
+ * Blog layout
+ * ==========================================================================
  */
 .blog-shell {
   min-height: 100vh;
@@ -426,23 +304,13 @@
 }
 
 @media (min-width: 1200px) {
-  .blog-max-width {
-    display: grid;
-    grid-template-columns: 25% 1fr;
-  }
+  .blog-max-width { display: grid; grid-template-columns: 25% 1fr; }
 }
 
 /* Sidebar */
-.blog-sidebar {
-  background: var(--blog-sidebar);
-  padding: 2em 6%;
-}
+.blog-sidebar { background: var(--blog-sidebar); padding: 2em 6%; }
 
-/* Desktop sidebar — visible only >= 1200px via media query */
-.blog-sidebar-desktop {
-  display: none;
-}
-
+.blog-sidebar-desktop { display: none; }
 @media (min-width: 1200px) {
   .blog-sidebar-desktop {
     display: block;
@@ -455,10 +323,7 @@
     border-right: 1px solid var(--blog-separator);
   }
 }
-
-.blog-sidebar-desktop .blog-sidebar-inner {
-  padding: 0;
-}
+.blog-sidebar-desktop .blog-sidebar-inner { padding: 0; }
 
 /* Main content */
 .blog-main {
@@ -470,14 +335,11 @@
   min-height: 100vh;
   overflow-x: clip;
 }
-
 @media (max-width: 1199px) {
-  .blog-main {
-    padding: 3.5em 5% 2em;
-  }
+  .blog-main { padding: 3.5em 5% 2em; }
 }
 
-/* Magazine bleed — image extends left into sidebar (desktop only) */
+/* Magazine bleed (desktop) */
 @media (min-width: 1200px) {
   .blog-main .blog-featured-image {
     margin-left: calc(-1 * var(--blog-main-px, 6%) - 3em);
@@ -485,372 +347,141 @@
   }
 }
 
-/* Global bar — fixed top-right with GitHub + theme toggle */
+/* Global bar */
 .blog-global-bar {
-  position: fixed;
-  top: 0.75em;
-  right: 0.75em;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  gap: 0.25em;
+  position: fixed; top: 0.75em; right: 0.75em; z-index: 20;
+  display: flex; align-items: center; gap: 0.25em;
 }
-
 .blog-global-bar-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2em;
-  height: 2em;
-  border-radius: 0.5em;
+  display: flex; align-items: center; justify-content: center;
+  width: 2em; height: 2em; border-radius: 0.5em;
   color: var(--blog-muted);
   transition: color 0.15s, background-color 0.15s;
 }
+.blog-global-bar-link:hover    { color: var(--blog-text); background: var(--blog-separator); }
+.blog-global-bar button        { color: var(--blog-muted); background: none; border: none; transition: color 0.15s; }
+.blog-global-bar button:hover  { color: var(--blog-text); background: var(--blog-separator); }
 
-.blog-global-bar-link:hover {
-  color: var(--blog-text);
-  background: var(--blog-separator);
-}
+/* Mobile bar */
+.blog-mobile-bar { position: fixed; top: 0.75em; left: 0.75em; z-index: 21; }
+@media (min-width: 1200px) { .blog-mobile-bar { display: none; } }
 
-.blog-global-bar button {
-  color: var(--blog-muted);
-  background: none;
-  border: none;
-  transition: color 0.15s;
-}
-
-.blog-global-bar button:hover {
-  color: var(--blog-text);
-  background: var(--blog-separator);
-}
-
-/* Mobile nav bar — contains hamburger button */
-.blog-mobile-bar {
-  position: fixed;
-  top: 0.75em;
-  left: 0.75em;
-  z-index: 21;
-  display: block;
-}
-
-@media (min-width: 1200px) {
-  .blog-mobile-bar {
-    display: none;
-  }
-}
-
-/* Mobile sidebar backdrop */
+/* Mobile backdrop */
 .blog-sidebar-backdrop {
-  position: fixed;
-  inset: 0;
+  position: fixed; inset: 0; z-index: 20;
   background: rgba(0, 0, 0, 0.4);
-  z-index: 20;
   animation: fade-in 200ms ease-out;
 }
+@keyframes fade-in { from { opacity: 0 } to { opacity: 1 } }
 
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* Sidebar close button (drawer only) */
-.blog-sidebar-close {
-  display: none;
-}
-
+/* Sidebar close (drawer) */
+.blog-sidebar-close { display: none; }
 .blog-sidebar-drawer .blog-sidebar-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25em;
-  height: 2.25em;
-  margin-bottom: 1em;
-  color: var(--blog-muted);
-  background: none;
-  border: 1px solid var(--blog-separator);
-  border-radius: 0.5em;
-  cursor: pointer;
-  transition: color 0.15s, background-color 0.15s;
+  display: flex; align-items: center; justify-content: center;
+  width: 2.25em; height: 2.25em; margin-bottom: 1em;
+  color: var(--blog-muted); background: none;
+  border: 1px solid var(--blog-separator); border-radius: 0.5em;
+  cursor: pointer; transition: color 0.15s, background-color 0.15s;
 }
+.blog-sidebar-drawer .blog-sidebar-close:hover { color: var(--blog-text); background: var(--blog-separator); }
 
-.blog-sidebar-drawer .blog-sidebar-close:hover {
-  color: var(--blog-text);
-  background: var(--blog-separator);
-}
-
-/* Drawer sidebar state */
+/* Drawer */
 .blog-sidebar-drawer {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 80%;
-  max-width: 320px;
-  height: 100vh;
+  position: fixed; top: 0; left: 0; z-index: 21;
+  width: 80%; max-width: 320px; height: 100vh;
   background: var(--blog-sidebar);
-  transform: translateX(-100%);
-  transition: transform 300ms ease-out;
-  z-index: 21;
-  overflow-y: auto;
   border-right: 1px solid var(--blog-separator);
   padding: 1.25em 1.5em 2em;
+  transform: translateX(-100%);
+  transition: transform 300ms ease-out;
+  overflow-y: auto;
 }
-
-.blog-sidebar-drawer-open {
-  transform: translateX(0) !important;
-}
+.blog-sidebar-drawer-open { transform: translateX(0) !important; }
 
 /* Site title */
-.blog-site-title {
-  font-size: 1.5em;
-  line-height: 1.2;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
+.blog-site-title { font-size: 1.5em; line-height: 1.2; font-weight: 700; letter-spacing: 0.04em; }
+.blog-site-title a { color: var(--blog-text); text-decoration: none; }
 
-.blog-site-title a {
-  color: var(--blog-text);
-  text-decoration: none;
-}
+/* Tagline */
+.blog-tagline { color: var(--blog-muted); margin: 0.35em 0 0; font-size: 0.875em; line-height: 1.6; }
 
-.blog-tagline {
-  color: var(--blog-muted);
-  margin: 0.35em 0 0;
-  font-size: 0.875em;
-  line-height: 1.6;
-}
+/* Sidebar sections */
+.blog-sidebar-section { margin-top: 2.5em; }
+.blog-sidebar-heading { font-size: 1em; font-weight: 700; color: var(--blog-text); margin-bottom: 0.75em; }
 
-/* Sidebar nav sections */
-.blog-sidebar-section {
-  margin-top: 2.5em;
-}
-
-.blog-sidebar-heading {
-  font-size: 1em;
-  font-weight: 700;
-  letter-spacing: 0;
-  color: var(--blog-text);
-  margin-bottom: 0.75em;
-}
-
-.blog-sidebar-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.blog-sidebar-list li {
-  margin: 0;
-}
-
+.blog-sidebar-list { list-style: none; padding: 0; margin: 0; }
+.blog-sidebar-list li { margin: 0; }
 .blog-sidebar-list a {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.35em 0;
-  font-size: 0.9375em;
-  color: var(--blog-text);
-  text-decoration: none;
-  transition: color 0.15s;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.35em 0; font-size: 0.9375em;
+  color: var(--blog-text); text-decoration: none; transition: color 0.15s;
 }
+.blog-sidebar-list a:hover { color: var(--blog-accent); }
 
-.blog-sidebar-list a:hover {
-  color: var(--blog-accent);
-}
+.blog-sidebar-count { font-size: 0.85em; color: var(--blog-muted); font-variant-numeric: tabular-nums; }
 
-.blog-sidebar-count {
-  font-size: 0.85em;
-  color: var(--blog-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-/* Social links row */
-.blog-social {
-  display: flex;
-  gap: 0.5em;
-  margin-top: 1em;
-}
-
+/* Social links */
+.blog-social { display: flex; gap: 0.5em; margin-top: 1em; }
 .blog-social-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25em;
-  height: 2.25em;
-  border-radius: 50%;
-  border: 1px solid var(--blog-separator);
-  color: var(--blog-muted);
-  transition: color 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
+  display: flex; align-items: center; justify-content: center;
+  width: 2.25em; height: 2.25em; border-radius: 50%;
+  border: 1px solid var(--blog-separator); color: var(--blog-muted);
+  transition: color 0.25s, border-color 0.25s, background-color 0.25s;
 }
+.blog-social-link[data-brand="x"]:hover       { background: #000; border-color: #000; color: #fff; }
+.blog-social-link[data-brand="facebook"]:hover { background: linear-gradient(135deg, #1877f2, #0d65d9); border-color: #1877f2; color: #fff; }
+.blog-social-link[data-brand="linkedin"]:hover { background: linear-gradient(135deg, #0a66c2, #004182); border-color: #0a66c2; color: #fff; }
+.blog-social-link[data-brand="github"]:hover   { background: linear-gradient(135deg, #333, #24292e); border-color: #333; color: #fff; }
+.blog-social-link[data-brand="email"]:hover    { background: linear-gradient(135deg, #ea4335, #c5221f); border-color: #ea4335; color: #fff; }
+.blog-social-link[data-brand="resume"]:hover   { background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-color: #8b5cf6; color: #fff; }
+.blog-social-icon { width: 0.9em; height: 0.9em; }
 
-/* Brand colors for social links on hover */
-.blog-social-link[data-brand="x"]:hover {
-  background: #000;
-  border-color: #000;
-  color: #fff;
-}
+/* Tag cloud */
+.blog-tag-cloud { display: flex; flex-wrap: wrap; gap: 0.25em 0.5em; align-items: baseline; }
+.blog-tag-cloud a { font-size: 0.8125em; color: var(--blog-muted); text-decoration: none; transition: color 0.15s; }
+.blog-tag-cloud a:hover { color: var(--blog-text); }
 
-.blog-social-link[data-brand="facebook"]:hover {
-  background: linear-gradient(135deg, #1877f2, #0d65d9);
-  border-color: #1877f2;
-  color: #fff;
-}
-
-.blog-social-link[data-brand="linkedin"]:hover {
-  background: linear-gradient(135deg, #0a66c2, #004182);
-  border-color: #0a66c2;
-  color: #fff;
-}
-
-.blog-social-link[data-brand="github"]:hover {
-  background: linear-gradient(135deg, #333, #24292e);
-  border-color: #333;
-  color: #fff;
-}
-
-.blog-social-link[data-brand="email"]:hover {
-  background: linear-gradient(135deg, #ea4335, #c5221f);
-  border-color: #ea4335;
-  color: #fff;
-}
-
-.blog-social-link[data-brand="resume"]:hover {
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-  border-color: #8b5cf6;
-  color: #fff;
-}
-
-.blog-social-icon {
-  width: 0.9em;
-  height: 0.9em;
-}
-
-/* Tag cloud in sidebar */
-.blog-tag-cloud {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25em 0.5em;
-  align-items: baseline;
-}
-
-.blog-tag-cloud a {
-  font-size: 0.8125em;
-  color: var(--blog-muted);
-  text-decoration: none;
-  transition: color 0.15s;
-}
-
-.blog-tag-cloud a:hover {
-  color: var(--blog-text);
-}
-
-/* Post entry in list */
-.blog-entry {
-  position: relative;
-  padding-bottom: 2em;
-  margin-top: 2em;
-}
-
-.blog-entry:first-child {
-  margin-top: 0;
-}
-
-.blog-entry + .blog-entry {
-  padding-top: 2em;
-}
-
-/* Full-width separator between posts — bleeds to edges */
+/* Post entry */
+.blog-entry { position: relative; padding-bottom: 2em; margin-top: 2em; }
+.blog-entry:first-child { margin-top: 0; }
+.blog-entry + .blog-entry { padding-top: 2em; }
 .blog-entry + .blog-entry::before {
-  content: "";
-  display: block;
-  position: absolute;
-  top: 0;
+  content: ""; display: block; position: absolute; top: 0;
   left: calc(-1 * var(--blog-main-px, 6%));
   right: calc(-1 * var(--blog-main-px, 6%));
-  height: 1px;
-  background: var(--blog-separator);
-  opacity: 0.5;
+  height: 1px; background: var(--blog-separator); opacity: 0.5;
 }
 
-/* Featured image in list — magazine bleed */
+/* Featured image */
 .blog-featured-image {
-  position: relative;
-  height: 0;
-  padding-bottom: 56%;
-  margin: 1.5em 0;
-  overflow: hidden;
-  margin-left: calc(-1 * var(--blog-main-px, 6%));
-  margin-right: 0;
+  position: relative; height: 0; padding-bottom: 56%; margin: 1.5em 0; overflow: hidden;
+  margin-left: calc(-1 * var(--blog-main-px, 6%)); margin-right: 0;
 }
+.blog-featured-image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
-.blog-featured-image img {
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: 100%;
-  object-fit: cover;
-}
+/* Byline */
+.blog-byline { color: var(--blog-muted); font-size: 0.8125em; margin-top: 0.4em; }
+.blog-byline a { color: var(--blog-muted); text-decoration: none; transition: color 0.15s; }
+.blog-byline a:hover { color: var(--blog-text); }
 
-/* Post byline */
-.blog-byline {
-  color: var(--blog-muted);
-  font-size: 0.8125em;
-  margin-top: 0.4em;
-}
+/* Read more */
+.blog-read-more { display: inline-block; margin-top: 1em; font-size: 0.875em; color: var(--blog-accent); text-decoration: none; transition: color 0.15s; }
+.blog-read-more:hover { color: var(--blog-text); }
 
-.blog-byline a {
-  color: var(--blog-muted);
-  text-decoration: none;
-  transition: color 0.15s;
-}
-
-.blog-byline a:hover {
-  color: var(--blog-text);
-}
-
-/* Continue reading link */
-.blog-read-more {
-  display: inline-block;
-  margin-top: 1em;
-  font-size: 0.875em;
-  color: var(--blog-accent);
-  text-decoration: none;
-  transition: color 0.15s;
-}
-
-.blog-read-more:hover {
-  color: var(--blog-text);
-}
-
-/* Post content links — subtle bottom underline */
+/* Content links */
 .blog-content a {
-  color: var(--blog-text);
-  text-decoration: none;
+  color: var(--blog-text); text-decoration: none;
   background-image: linear-gradient(var(--blog-accent), var(--blog-accent));
-  background-size: 100% 1px;
-  background-position: 0 100%;
-  background-repeat: no-repeat;
+  background-size: 100% 1px; background-position: 0 100%; background-repeat: no-repeat;
   transition: background-size 0.15s ease-in-out;
 }
-
-.blog-content a:hover {
-  background-size: 100% 2px;
-}
+.blog-content a:hover { background-size: 100% 2px; }
 
 /* Footer */
 .blog-footer {
-  padding: 1.5em 0 0;
-  margin-top: 3em;
+  padding: 1.5em 0 0; margin-top: 3em;
   border-top: 1px solid color-mix(in srgb, var(--blog-separator) 50%, transparent);
-  font-size: 0.8125em;
-  color: var(--blog-muted);
+  font-size: 0.8125em; color: var(--blog-muted);
 }
-
-.blog-footer a {
-  color: var(--blog-muted);
-  text-decoration: none;
-}
-
-.blog-footer a:hover {
-  color: var(--blog-text);
-}
+.blog-footer a { color: var(--blog-muted); text-decoration: none; }
+.blog-footer a:hover { color: var(--blog-text); }

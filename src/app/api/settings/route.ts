@@ -9,7 +9,7 @@ import {
 } from "@/data/settings";
 import { LOCALES } from "@/i18n/translations";
 
-const FONT_STYLES: FontStyle[] = ["classic", "serif", "sans"];
+const FONT_STYLES: FontStyle[] = ["pingfang", "classic", "serif", "sans"];
 
 /**
  * GET /api/settings — return current site settings.

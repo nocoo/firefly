@@ -4,4 +4,4 @@
 -- so validation is handled at the application layer.
 
 ALTER TABLE site_settings
-  ADD COLUMN font_style TEXT NOT NULL DEFAULT 'classic';
+  ADD COLUMN font_style TEXT NOT NULL DEFAULT 'pingfang';

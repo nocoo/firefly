@@ -1,8 +1,8 @@
 import type { Db } from "@/lib/db";
 import type { Locale } from "@/i18n/translations";
 
-export type FontStyle = "classic" | "serif" | "sans";
-const FONT_STYLES: FontStyle[] = ["classic", "serif", "sans"];
+export type FontStyle = "pingfang" | "classic" | "serif" | "sans";
+const FONT_STYLES: FontStyle[] = ["pingfang", "classic", "serif", "sans"];
 
 // ---------------------------------------------------------------------------
 // Types
@@ -31,7 +31,7 @@ const DEFAULTS: SiteSettings = {
   locale: "zh",
   postsPerPage: 10,
   commentsEnabled: false,
-  fontStyle: "classic",
+  fontStyle: "pingfang",
   updatedAt: 0,
 };
 
@@ -50,7 +50,7 @@ function parseRow(row: SiteSettingsRow): SiteSettings {
     commentsEnabled: row.comments_enabled === 1,
     fontStyle: FONT_STYLES.includes(row.font_style as FontStyle)
       ? (row.font_style as FontStyle)
-      : "classic",
+      : "pingfang",
     updatedAt: row.updated_at,
   };
 }
