@@ -10,6 +10,7 @@ interface SitemapEntry {
   lastModified?: Date;
   changeFrequency?: string;
   priority: number;
+  image?: { url: string; title: string };
 }
 
 export async function GET() {
@@ -42,6 +43,9 @@ export async function GET() {
       lastModified: new Date(post.updated_at * 1000),
       changeFrequency: "monthly",
       priority: 0.8,
+      ...(post.featured_image
+        ? { image: { url: post.featured_image, title: post.title } }
+        : {}),
     });
   }
 
@@ -91,7 +95,8 @@ function buildSitemapXml(entries: SitemapEntry[]): string {
   const lines = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"',
+    '        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
   ];
 
   for (const entry of entries) {
@@ -104,6 +109,12 @@ function buildSitemapXml(entries: SitemapEntry[]): string {
       lines.push(`    <changefreq>${entry.changeFrequency}</changefreq>`);
     }
     lines.push(`    <priority>${entry.priority.toFixed(1)}</priority>`);
+    if (entry.image) {
+      lines.push("    <image:image>");
+      lines.push(`      <image:loc>${escapeXml(entry.image.url)}</image:loc>`);
+      lines.push(`      <image:title>${escapeXml(entry.image.title)}</image:title>`);
+      lines.push("    </image:image>");
+    }
     lines.push("  </url>");
   }
 
