@@ -36,10 +36,13 @@
     "vitest": "^4.1.0"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.49",
+    "@ai-sdk/openai": "^3.0.36",
     "@aws-sdk/client-s3": "^3.1014.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@tailwindcss/postcss": "^4.2.2",
     "@tailwindcss/typography": "^0.5.19",
+    "ai": "^6.0.104",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.577.0",
