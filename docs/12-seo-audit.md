@@ -296,8 +296,10 @@ source-level instruction to statically generate or incrementally cache pages.
 
 Some data paths do have **process-level caching** (e.g. `SiteSettings` with
 5-min TTL, `MonthlyArchives`, post count queries), which reduces repeated DB
-calls within the same process. However, the HTML itself is not cached or
-statically served — the full React render tree is re-executed per request.
+calls within the same process. At the source level, however, no page-output
+caching or static serving is configured. Whether the production runtime
+actually re-executes the full render tree per request depends on deployment
+platform behavior that the source code alone cannot confirm.
 
 **Evidence**:
 - `grep -r "export const revalidate\|export const dynamic\|generateStaticParams" src/app/` → no results
