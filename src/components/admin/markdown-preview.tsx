@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { renderMarkdown } from "@/models/markdown";
 import { useLocale } from "@/i18n/context";
+import { ArticleBody } from "@/components/blog/article-body";
 
 interface MarkdownPreviewProps {
   title?: string;
@@ -36,44 +37,43 @@ export function MarkdownPreview({
   }
 
   return (
-    <article className="mx-auto max-w-2xl">
-      {/* Featured image */}
-      {featuredImage && (
-        <div className="mb-8 overflow-hidden rounded-[var(--radius-widget)]">
-          <img
-            src={featuredImage}
-            alt={title || t("admin.preview.featuredImageAlt")}
-            className="w-full object-cover"
-          />
-        </div>
-      )}
+    <div className="blog-preview-theme mx-auto max-w-2xl">
+      <ArticleBody
+        html={html}
+        header={
+          <>
+            {/* Featured image */}
+            {featuredImage && (
+              <div className="mb-8 overflow-hidden rounded-[var(--radius-widget)]">
+                <img
+                  src={featuredImage}
+                  alt={title || t("admin.preview.featuredImageAlt")}
+                  className="w-full object-cover"
+                />
+              </div>
+            )}
 
-      {/* Title */}
-      {title && (
-        <h1 className="text-2xl font-bold leading-tight tracking-tight text-foreground md:text-3xl">
-          {title}
-        </h1>
-      )}
+            {/* Title */}
+            {title && (
+              <h1 className="text-2xl font-bold leading-tight tracking-tight md:text-3xl">
+                {title}
+              </h1>
+            )}
 
-      {/* Subtitle / excerpt */}
-      {excerpt && (
-        <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-          {excerpt}
-        </p>
-      )}
+            {/* Subtitle / excerpt */}
+            {excerpt && (
+              <p className="mt-3 text-base leading-relaxed opacity-60">
+                {excerpt}
+              </p>
+            )}
 
-      {/* Divider */}
-      {(title || excerpt) && content && (
-        <hr className="my-6 border-border" />
-      )}
-
-      {/* Content */}
-      {content && (
-        <div
-          className="prose-firefly prose dark:prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
-      )}
-    </article>
+            {/* Divider */}
+            {(title || excerpt) && content && (
+              <hr className="my-6 border-[var(--blog-separator)]" />
+            )}
+          </>
+        }
+      />
+    </div>
   );
 }

@@ -526,3 +526,14 @@
 }
 .blog-footer a { color: var(--blog-muted); text-decoration: none; }
 .blog-footer a:hover { color: var(--blog-text); }
+
+/*
+ * Admin preview theme bridge — applies blog palette inside admin panels
+ * so the preview renders identically to the public blog.
+ */
+.blog-preview-theme {
+  background: var(--blog-bg);
+  color: var(--blog-text);
+  border-radius: var(--radius-widget);
+  padding: 1.5em;
+}

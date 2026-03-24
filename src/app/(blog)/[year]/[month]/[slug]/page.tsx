@@ -16,6 +16,7 @@ import {
 } from "@/lib/seo";
 import { blogPostingJsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { Comments } from "@/components/blog/comments";
+import { ArticleBody } from "@/components/blog/article-body";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 
@@ -104,72 +105,68 @@ export default async function PostPage({ params }: PostPageProps) {
         dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd(breadcrumbs) }}
       />
 
-      <article>
-        {/* Post header */}
-        <header>
-          <h1 className="text-2xl font-bold leading-tight text-blog-text md:text-3xl">
-            {post.title}
-          </h1>
-          <div className="blog-byline">
-            <time
-              dateTime={
-                post.published_at
-                  ? new Date(post.published_at * 1000).toISOString()
-                  : undefined
-              }
-            >
-              {date}
-            </time>
-            {post.category_name && post.category_slug && (
-              <>
-                {" · "}
-                <Link href={`/category/${post.category_slug}`}>
-                  {post.category_name}
-                </Link>
-              </>
-            )}
-            {post.reading_time && (
-              <> · {t(locale, "blog.post.minRead", { n: post.reading_time })}</>
-            )}
-          </div>
-        </header>
-
-        {/* Featured image */}
-        {post.featured_image && (
-          <div className="blog-featured-image">
-            <Image
-              src={post.featured_image}
-              alt=""
-              fill
-              sizes="(max-width: 900px) 100vw, min(75vw, 1000px)"
-              priority
-            />
-          </div>
-        )}
-
-        {/* Post content */}
-        <div
-          className="blog-content prose-firefly prose dark:prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
-
-        {/* Tags */}
-        {tags.length > 0 && (
-          <div className="mt-8">
-            <div className="blog-tag-pills">
-              {tags.map((tag) => (
-                <Link
-                  key={tag.id}
-                  href={`/tag/${tag.slug}`}
-                  className="blog-tag-pill"
-                >
-                  {tag.name}
-                </Link>
-              ))}
+      <ArticleBody
+        html={html}
+        header={
+          <header>
+            <h1 className="text-2xl font-bold leading-tight text-blog-text md:text-3xl">
+              {post.title}
+            </h1>
+            <div className="blog-byline">
+              <time
+                dateTime={
+                  post.published_at
+                    ? new Date(post.published_at * 1000).toISOString()
+                    : undefined
+                }
+              >
+                {date}
+              </time>
+              {post.category_name && post.category_slug && (
+                <>
+                  {" · "}
+                  <Link href={`/category/${post.category_slug}`}>
+                    {post.category_name}
+                  </Link>
+                </>
+              )}
+              {post.reading_time && (
+                <> · {t(locale, "blog.post.minRead", { n: post.reading_time })}</>
+              )}
             </div>
-          </div>
-        )}
-      </article>
+          </header>
+        }
+        featuredImage={
+          post.featured_image ? (
+            <div className="blog-featured-image">
+              <Image
+                src={post.featured_image}
+                alt=""
+                fill
+                sizes="(max-width: 900px) 100vw, min(75vw, 1000px)"
+                priority
+              />
+            </div>
+          ) : undefined
+        }
+        footer={
+          tags.length > 0 ? (
+            <div className="mt-8">
+              <div className="blog-tag-pills">
+                {tags.map((tag) => (
+                  <Link
+                    key={tag.id}
+                    href={`/tag/${tag.slug}`}
+                    className="blog-tag-pill"
+                  >
+                    {tag.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : undefined
+        }
+      />
 
       {showComments && (
         <Suspense>

@@ -8,6 +8,7 @@ import { renderMarkdown } from "@/models/markdown";
 import { ImageUpload } from "./image-upload";
 import { MarkdownPreview } from "./markdown-preview";
 import { Select } from "@/components/ui/select";
+import { ArticleBody } from "@/components/blog/article-body";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useLocale } from "@/i18n/context";
 
@@ -197,12 +198,9 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         {/* Mobile: tab-based preview */}
         <div className="lg:hidden">
           {previewMode ? (
-            <div className="min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-4 py-3 overflow-y-auto">
+            <div className="blog-preview-theme min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-4 py-3 overflow-y-auto">
               {content ? (
-                <div
-                  className="prose-firefly prose dark:prose-invert max-w-none text-sm"
-                  dangerouslySetInnerHTML={{ __html: previewHtml }}
-                />
+                <ArticleBody html={previewHtml} />
               ) : (
                 <p className="text-sm text-muted-foreground">
                   {t("admin.postForm.nothingToPreview")}
