@@ -15,3 +15,4 @@ Modern blog platform built with Next.js, Cloudflare D1, and R2. Migrated from Wo
 | 07 | [Quality System Upgrade (L1+L2+L3+G1+G2)](./07-quality-system-upgrade.md) | ✅ |
 | 08 | [Blog Sidebar Responsive Layout Fix](./08-blog-responsive-fix.md) | ✅ |
 | 09 | [AI Excerpt Generation](./09-ai-excerpt.md) | ✅ |
+| 10 | [Image Upload System](./10-image-upload.md) | 🚧 |

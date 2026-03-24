@@ -15,6 +15,7 @@ interface SiteSettingsRow {
   posts_per_page: number;
   comments_enabled: number;
   font_style: string;
+  site_logo_version: string | null;
   updated_at: number;
 }
 
@@ -24,6 +25,7 @@ export interface SiteSettings {
   postsPerPage: number;
   commentsEnabled: boolean;
   fontStyle: FontStyle;
+  siteLogoVersion: string | null;
   updatedAt: number;
 }
 
@@ -32,6 +34,7 @@ const DEFAULTS: SiteSettings = {
   postsPerPage: 10,
   commentsEnabled: false,
   fontStyle: "pingfang",
+  siteLogoVersion: null,
   updatedAt: 0,
 };
 
@@ -51,6 +54,7 @@ function parseRow(row: SiteSettingsRow): SiteSettings {
     fontStyle: FONT_STYLES.includes(row.font_style as FontStyle)
       ? (row.font_style as FontStyle)
       : "pingfang",
+    siteLogoVersion: row.site_logo_version ?? null,
     updatedAt: row.updated_at,
   };
 }
@@ -86,6 +90,8 @@ export interface UpdateSiteSettingsInput {
   postsPerPage?: number;
   commentsEnabled?: boolean;
   fontStyle?: FontStyle;
+  // Note: siteLogoVersion is intentionally NOT here.
+  // It is managed exclusively by updateSiteLogoVersion().
 }
 
 export async function updateSiteSettings(
@@ -121,6 +127,28 @@ export async function updateSiteSettings(
   await db.execute(
     `UPDATE site_settings SET ${sets.join(", ")} WHERE id = 1`,
     params,
+  );
+
+  invalidateSettingsCache();
+  return getSiteSettings(db);
+}
+
+// ---------------------------------------------------------------------------
+// Site logo version (dedicated writer)
+// ---------------------------------------------------------------------------
+
+/**
+ * Update the site logo version. Pass null to remove the custom logo.
+ * This is the only way to change `site_logo_version` — the general
+ * `updateSiteSettings()` does not accept it.
+ */
+export async function updateSiteLogoVersion(
+  db: Db,
+  version: string | null,
+): Promise<SiteSettings> {
+  await db.execute(
+    "UPDATE site_settings SET site_logo_version = ?, updated_at = unixepoch() WHERE id = 1",
+    [version],
   );
 
   invalidateSettingsCache();
