@@ -262,3 +262,108 @@ export async function generateExcerpt(
 
   return excerpt;
 }
+
+// ── Unfurl metadata summarization ──
+
+export const UNFURL_PROMPT = `You are a bookmark metadata writer. Given a web page's metadata, write a clean title and description.
+
+Rules:
+- Title: ≤50 characters, the project/article name — no site name suffix
+- Description: ≤150 characters, one-sentence summary of what it is/does
+- If the original content is in English, translate both title and description to Chinese
+- If the original is already in Chinese, keep it as-is
+- Output format: exactly two lines — first line is title, second line is description
+- No quotes, no labels, no markdown`;
+
+/**
+ * Summarize unfurled URL metadata using the configured AI provider.
+ *
+ * **Never throws** — returns null on any failure:
+ * - AI not configured (no provider/key) → null
+ * - Model timeout / rate limit / network error → null
+ * - Response format unexpected → best-effort parse, fall through to null
+ *
+ * This is the key difference from generateExcerpt() which throws on failure.
+ * Unfurl treats AI as best-effort enhancement.
+ */
+export async function summarizeUnfurl(
+  ogTitle: string | null,
+  ogDescription: string | null,
+  bodyText: string,
+): Promise<{ title: string; description: string } | null> {
+  try {
+    const db = getDb();
+    const settings = await getAiSettings(db);
+
+    if (!settings.provider || !settings.apiKey) {
+      return null;
+    }
+
+    const config = resolveAiConfig({
+      provider: settings.provider as AiProvider,
+      apiKey: settings.apiKey,
+      model: settings.model,
+      baseURL: settings.baseURL || undefined,
+      sdkType: (settings.sdkType || undefined) as SdkType | undefined,
+    });
+
+    const client = createAiClient(config);
+
+    const contextParts: string[] = [];
+    if (ogTitle) contextParts.push(`OG Title: ${ogTitle}`);
+    if (ogDescription) contextParts.push(`OG Description: ${ogDescription}`);
+    if (bodyText) contextParts.push(`Page Content:\n${bodyText}`);
+
+    if (contextParts.length === 0) return null;
+
+    const result = await generateText({
+      model: client(config.model),
+      prompt: `${UNFURL_PROMPT}\n\n${contextParts.join("\n\n")}`,
+      maxOutputTokens: 256,
+    });
+
+    let text = result.text.trim();
+
+    // Reasoning fallback (same pattern as generateExcerpt)
+    if (!text && result.reasoning) {
+      const lastReasoning = result.reasoning.at(-1);
+      if (lastReasoning?.type === "reasoning" && lastReasoning.text) {
+        const lines = lastReasoning.text.trim().split("\n");
+        for (let i = lines.length - 1; i >= 0; i--) {
+          const line = lines[i].trim();
+          if (!line) continue;
+          const unquoted = line.replace(/^["「『]|["」』]$/g, "").trim();
+          if (unquoted.length >= 5) {
+            text = unquoted;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!text) return null;
+
+    // Parse two-line format: title\ndescription
+    const lines = text.split("\n").filter((l) => l.trim());
+    if (lines.length >= 2) {
+      return {
+        title: lines[0].trim(),
+        description: lines[1].trim(),
+      };
+    }
+
+    // Best-effort: single line → use as title, empty description
+    if (lines.length === 1) {
+      return {
+        title: lines[0].trim(),
+        description: "",
+      };
+    }
+
+    return null;
+  } catch (err) {
+    // Never throw — AI failure is not an error
+    console.warn("[summarizeUnfurl] AI enhancement failed:", err);
+    return null;
+  }
+}
