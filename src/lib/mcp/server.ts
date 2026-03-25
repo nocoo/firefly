@@ -21,6 +21,7 @@ import {
   handleUpdatePost,
   handleDeletePost,
   handleGenerateExcerpt,
+  handleUnfurlReference,
 } from "@/lib/mcp/tools/posts";
 import {
   handleListTags,
@@ -104,6 +105,10 @@ export function createMcpServer(db: Db): McpServer {
       tag_ids: z.array(z.string()).optional(),
       featured_image: z.string().nullable().optional(),
       published_at: z.number().nullable().optional(),
+      reference_url: z.string().nullable().optional(),
+      reference_title: z.string().nullable().optional(),
+      reference_description: z.string().nullable().optional(),
+      reference_image: z.string().nullable().optional(),
     },
     (args: any) => handleUpdatePost(ctx, args),
   );
@@ -120,6 +125,16 @@ export function createMcpServer(db: Db): McpServer {
     "Generate an AI-powered excerpt for a post by slug. Requires AI provider to be configured.",
     { slug: z.string() },
     (args) => handleGenerateExcerpt(ctx, args),
+  );
+
+  server.tool(
+    "unfurl_reference",
+    "Unfurl a URL to extract title, description, and image for a reference bookmark. Pass url alone to preview, or slug (with optional url) to unfurl and save to a post.",
+    {
+      url: z.string().optional(),
+      slug: z.string().optional(),
+    },
+    (args: any) => handleUnfurlReference(ctx, args),
   );
 
   // ----- Tag tools -----
