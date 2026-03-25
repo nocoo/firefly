@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/lib/api";
+import { auth } from "@/lib/auth";
 import { getMcpClientByClientId } from "@/data/mcp-clients";
 import { createAuthSession, AUTH_CODE_TTL } from "@/data/mcp-auth-codes";
 
@@ -55,12 +56,20 @@ export async function GET(request: Request) {
       expires_at: now + AUTH_CODE_TTL,
     });
 
-    // Redirect to Google OAuth via NextAuth
+    // Build the MCP callback URL
     const siteUrl = process.env.AUTH_URL ?? "http://localhost:3000";
     const callbackUrl = `${siteUrl}/api/mcp/callback?state=${encodeURIComponent(state)}`;
-    const googleSignInUrl = `${siteUrl}/api/auth/signin/google?callbackUrl=${encodeURIComponent(callbackUrl)}`;
 
-    return NextResponse.redirect(googleSignInUrl);
+    // If user already has a session, go straight to callback
+    const session = await auth();
+    if (session?.user?.email) {
+      return NextResponse.redirect(callbackUrl);
+    }
+
+    // Otherwise, redirect to login page which handles Google OAuth.
+    // After login, NextAuth will redirect back to callbackUrl.
+    const loginUrl = `${siteUrl}/login?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+    return NextResponse.redirect(loginUrl);
   } catch (error) {
     return errorResponse(
       error instanceof Error ? error.message : "Internal server error",

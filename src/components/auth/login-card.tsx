@@ -56,8 +56,13 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
   const year = new Date().getFullYear();
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
 
+  const rawCallback = searchParams.get("callbackUrl");
+  // Only allow same-origin relative paths to prevent open-redirect attacks
+  const callbackUrl =
+    rawCallback && rawCallback.startsWith("/") ? rawCallback : "/admin";
+
   const handleGoogleLogin = () => {
-    signIn("google", { callbackUrl: "/admin" });
+    signIn("google", { callbackUrl });
   };
 
   return (
