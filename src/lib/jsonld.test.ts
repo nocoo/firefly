@@ -49,6 +49,10 @@ describe("blogPostingJsonLd", () => {
     reading_time: 5,
     wp_id: null,
     wp_permalink: null,
+    reference_url: null,
+    reference_title: null,
+    reference_description: null,
+    reference_image: null,
     published_at: 1711238400, // 2024-03-24
     created_at: 1711238400,
     updated_at: 1711324800,

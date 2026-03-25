@@ -8,6 +8,7 @@ import {
   handleUpdatePost,
   handleDeletePost,
   handleGenerateExcerpt,
+  handleUnfurlReference,
   type ToolContext,
 } from "./posts";
 
@@ -27,6 +28,19 @@ vi.mock("@/data/posts", () => ({
 
 vi.mock("@/services/ai", () => ({
   generateExcerpt: vi.fn(),
+  summarizeUnfurl: vi.fn(),
+}));
+
+vi.mock("@/services/unfurl", () => ({
+  unfurlUrl: vi.fn(),
+  UnfurlError: class UnfurlError extends Error {
+    statusCode: number;
+    constructor(message: string, statusCode: number) {
+      super(message);
+      this.name = "UnfurlError";
+      this.statusCode = statusCode;
+    }
+  },
 }));
 
 import {
@@ -40,6 +54,8 @@ import {
 } from "@/data/posts";
 
 import { generateExcerpt } from "@/services/ai";
+import { summarizeUnfurl } from "@/services/ai";
+import { unfurlUrl } from "@/services/unfurl";
 
 function createMockDb(): Db {
   return {
@@ -68,6 +84,10 @@ const samplePost: Post = {
   reading_time: 1,
   wp_id: null,
   wp_permalink: null,
+  reference_url: null,
+  reference_title: null,
+  reference_description: null,
+  reference_image: null,
   published_at: now,
   created_at: now,
   updated_at: now,
@@ -408,5 +428,266 @@ describe("handleGenerateExcerpt", () => {
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain("Excerpt generation failed");
     expect(result.content[0].text).toContain("API timeout");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// handleUnfurlReference
+// ---------------------------------------------------------------------------
+
+describe("handleUnfurlReference", () => {
+  let ctx: ToolContext;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    ctx = { db: createMockDb() };
+  });
+
+  it("returns error when neither url nor slug is provided", async () => {
+    const result = await handleUnfurlReference(ctx, {});
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("Either url or slug is required");
+  });
+
+  it("unfurls a URL without slug (preview mode)", async () => {
+    vi.mocked(unfurlUrl).mockResolvedValue({
+      url: "https://example.com",
+      ogTitle: "Example",
+      ogDescription: "Example site",
+      ogImage: "https://example.com/img.jpg",
+      pageTitle: "Example Page",
+      bodyText: "Body text",
+      readmeImage: null,
+    });
+    vi.mocked(summarizeUnfurl).mockResolvedValue({
+      title: "AI Title",
+      description: "AI Description",
+    });
+
+    const result = await handleUnfurlReference(ctx, { url: "https://example.com" });
+
+    expect(result.isError).toBeUndefined();
+    const data = JSON.parse(result.content[0].text);
+    expect(data.url).toBe("https://example.com");
+    expect(data.title).toBe("AI Title");
+    expect(data.description).toBe("AI Description");
+    expect(data.image).toBe("https://example.com/img.jpg");
+    expect(data.ai_enhanced).toBe(true);
+  });
+
+  it("falls back to OG data when AI returns null", async () => {
+    vi.mocked(unfurlUrl).mockResolvedValue({
+      url: "https://example.com",
+      ogTitle: "OG Title",
+      ogDescription: "OG Description",
+      ogImage: null,
+      pageTitle: null,
+      bodyText: "Body",
+      readmeImage: null,
+    });
+    vi.mocked(summarizeUnfurl).mockResolvedValue(null);
+
+    const result = await handleUnfurlReference(ctx, { url: "https://example.com" });
+
+    const data = JSON.parse(result.content[0].text);
+    expect(data.title).toBe("OG Title");
+    expect(data.description).toBe("OG Description");
+    expect(data.ai_enhanced).toBe(false);
+  });
+
+  it("unfurls and saves to post when slug is provided", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue({
+      ...samplePostWithCategory,
+      reference_url: "https://example.com",
+    });
+    vi.mocked(unfurlUrl).mockResolvedValue({
+      url: "https://example.com",
+      ogTitle: "Example",
+      ogDescription: "Desc",
+      ogImage: null,
+      pageTitle: null,
+      bodyText: "Body",
+      readmeImage: null,
+    });
+    vi.mocked(summarizeUnfurl).mockResolvedValue(null);
+    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
+
+    const result = await handleUnfurlReference(ctx, { slug: "test-post" });
+
+    expect(result.isError).toBeUndefined();
+    const data = JSON.parse(result.content[0].text);
+    expect(data.saved).toBe(true);
+    expect(updatePost).toHaveBeenCalledWith(
+      ctx.db,
+      samplePost.id,
+      expect.objectContaining({
+        reference_url: "https://example.com",
+        reference_title: "Example",
+      }),
+    );
+  });
+
+  it("returns error when slug provided but post not found", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue(null);
+
+    const result = await handleUnfurlReference(ctx, { slug: "nonexistent" });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("Post not found");
+  });
+
+  it("returns error when slug provided but no URL anywhere", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue({
+      ...samplePostWithCategory,
+      reference_url: null,
+    });
+
+    const result = await handleUnfurlReference(ctx, { slug: "test-post" });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("No reference URL on post");
+  });
+
+  it("uses provided url over post's reference_url when both exist", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue({
+      ...samplePostWithCategory,
+      reference_url: "https://old.example.com",
+    });
+    vi.mocked(unfurlUrl).mockResolvedValue({
+      url: "https://new.example.com",
+      ogTitle: "New",
+      ogDescription: "New desc",
+      ogImage: null,
+      pageTitle: null,
+      bodyText: "Body",
+      readmeImage: null,
+    });
+    vi.mocked(summarizeUnfurl).mockResolvedValue(null);
+    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
+
+    const result = await handleUnfurlReference(ctx, {
+      slug: "test-post",
+      url: "https://new.example.com",
+    });
+
+    const data = JSON.parse(result.content[0].text);
+    expect(data.url).toBe("https://new.example.com");
+    expect(updatePost).toHaveBeenCalledWith(
+      ctx.db,
+      samplePost.id,
+      expect.objectContaining({
+        reference_url: "https://new.example.com",
+      }),
+    );
+  });
+
+  it("returns error when unfurl fails with UnfurlError (preview mode)", async () => {
+    const { UnfurlError } = await import("@/services/unfurl");
+    vi.mocked(unfurlUrl).mockRejectedValue(new UnfurlError("URL not allowed: private network", 400));
+
+    const result = await handleUnfurlReference(ctx, { url: "http://localhost" });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("private network");
+  });
+
+  it("returns error when unfurl fails with generic error (preview mode)", async () => {
+    vi.mocked(unfurlUrl).mockRejectedValue(new Error("Network timeout"));
+
+    const result = await handleUnfurlReference(ctx, { url: "https://example.com" });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("Unfurl failed");
+    expect(result.content[0].text).toContain("Network timeout");
+  });
+
+  it("returns error when unfurl fails with UnfurlError (slug mode)", async () => {
+    const { UnfurlError } = await import("@/services/unfurl");
+    vi.mocked(getPostBySlug).mockResolvedValue({
+      ...samplePostWithCategory,
+      reference_url: "http://localhost",
+    });
+    vi.mocked(unfurlUrl).mockRejectedValue(new UnfurlError("URL not allowed: private network", 400));
+
+    const result = await handleUnfurlReference(ctx, { slug: "test-post" });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("private network");
+  });
+
+  it("returns error when unfurl fails with generic error (slug mode)", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue({
+      ...samplePostWithCategory,
+      reference_url: "https://example.com",
+    });
+    vi.mocked(unfurlUrl).mockRejectedValue(new Error("Connection refused"));
+
+    const result = await handleUnfurlReference(ctx, { slug: "test-post" });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("Unfurl failed");
+    expect(result.content[0].text).toContain("Connection refused");
+  });
+
+  it("falls back to hostname when no ogTitle/pageTitle (preview mode)", async () => {
+    vi.mocked(unfurlUrl).mockResolvedValue({
+      url: "https://example.com",
+      ogTitle: null,
+      ogDescription: null,
+      ogImage: null,
+      pageTitle: null,
+      bodyText: "Body",
+      readmeImage: null,
+    });
+    vi.mocked(summarizeUnfurl).mockResolvedValue(null);
+
+    const result = await handleUnfurlReference(ctx, { url: "https://example.com" });
+
+    const data = JSON.parse(result.content[0].text);
+    expect(data.title).toBe("example.com");
+    expect(data.description).toBe("");
+  });
+
+  it("falls back to readmeImage when ogImage is null (preview mode)", async () => {
+    vi.mocked(unfurlUrl).mockResolvedValue({
+      url: "https://github.com/owner/repo",
+      ogTitle: "Repo",
+      ogDescription: "Desc",
+      ogImage: null,
+      pageTitle: null,
+      bodyText: "Body",
+      readmeImage: "https://raw.githubusercontent.com/owner/repo/main/img.png",
+    });
+    vi.mocked(summarizeUnfurl).mockResolvedValue(null);
+
+    const result = await handleUnfurlReference(ctx, { url: "https://github.com/owner/repo" });
+
+    const data = JSON.parse(result.content[0].text);
+    expect(data.image).toBe("https://raw.githubusercontent.com/owner/repo/main/img.png");
+  });
+
+  it("returns error with non-Error throw (preview mode)", async () => {
+    vi.mocked(unfurlUrl).mockRejectedValue("string thrown");
+
+    const result = await handleUnfurlReference(ctx, { url: "https://example.com" });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("Unfurl failed");
+    expect(result.content[0].text).toContain("string thrown");
+  });
+
+  it("returns error with non-Error throw (slug mode)", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue({
+      ...samplePostWithCategory,
+      reference_url: "https://example.com",
+    });
+    vi.mocked(unfurlUrl).mockRejectedValue("string thrown");
+
+    const result = await handleUnfurlReference(ctx, { slug: "test-post" });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("Unfurl failed");
+    expect(result.content[0].text).toContain("string thrown");
   });
 });

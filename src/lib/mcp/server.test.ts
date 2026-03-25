@@ -170,7 +170,7 @@ describe("createMcpServer", () => {
 
     expect(listResponse.status).toBe(200);
     const body = await listResponse.json();
-    expect(body.result.tools).toHaveLength(16);
+    expect(body.result.tools).toHaveLength(17);
 
     // Verify all expected tool names
     const names = body.result.tools.map((t: { name: string }) => t.name).sort();
@@ -188,6 +188,7 @@ describe("createMcpServer", () => {
       "list_categories",
       "list_posts",
       "list_tags",
+      "unfurl_reference",
       "update_category",
       "update_post",
       "update_tag",
