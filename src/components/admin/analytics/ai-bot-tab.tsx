@@ -51,11 +51,15 @@ export function AiBotTab({ data }: AiBotTabProps) {
 
         <Panel title={t("admin.analytics.topCrawledPages")}>
           <RankedTable
-            rows={data.topPages.map((p) => ({
-              label: p.title,
-              value: p.views,
-              muted: !p.isPost,
-            }))}
+            rows={data.topPages.map((p) => {
+              const row: { label: string; value: number; muted?: boolean; href?: string } = {
+                label: p.title,
+                value: p.views,
+                muted: !p.isPost,
+              };
+              if (p.isPost) row.href = p.path;
+              return row;
+            })}
             valueLabel={t("admin.analytics.tableViews")}
             nameLabel={t("admin.analytics.tablePage")}
             noData={t("admin.analytics.noData")}
@@ -158,7 +162,7 @@ function RankedTable({
   nameLabel,
   noData,
 }: {
-  rows: { label: string; value: number; muted?: boolean }[];
+  rows: { label: string; value: number; muted?: boolean; href?: string }[];
   valueLabel: string;
   nameLabel: string;
   noData: string;
@@ -179,7 +183,18 @@ function RankedTable({
             <td
               className={`py-2 pr-4 truncate max-w-[200px] ${row.muted ? "text-muted-foreground" : ""}`}
             >
-              {row.label}
+              {row.href ? (
+                <a
+                  href={row.href}
+                  className="hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {row.label}
+                </a>
+              ) : (
+                row.label
+              )}
             </td>
             <td className="py-2 text-right tabular-nums font-medium">
               {formatNumber(row.value)}
