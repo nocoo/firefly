@@ -8,6 +8,13 @@ const FONT_STYLES: FontStyle[] = ["pingfang", "classic", "serif", "sans"];
 // Types
 // ---------------------------------------------------------------------------
 
+/** A social link entry stored as JSON in the DB. */
+export interface SocialLink {
+  name: string;
+  url: string;
+  brand: string;
+}
+
 /** Raw row shape from the DB */
 interface SiteSettingsRow {
   id: number;
@@ -16,6 +23,13 @@ interface SiteSettingsRow {
   comments_enabled: number;
   font_style: string;
   site_logo_version: string | null;
+  site_name: string;
+  site_tagline: string;
+  site_description: string;
+  site_author: string;
+  author_email: string;
+  twitter_handle: string;
+  social_links: string;
   updated_at: number;
 }
 
@@ -26,6 +40,13 @@ export interface SiteSettings {
   commentsEnabled: boolean;
   fontStyle: FontStyle;
   siteLogoVersion: string | null;
+  siteName: string;
+  siteTagline: string;
+  siteDescription: string;
+  siteAuthor: string;
+  authorEmail: string;
+  twitterHandle: string;
+  socialLinks: SocialLink[];
   updatedAt: number;
 }
 
@@ -35,6 +56,13 @@ const DEFAULTS: SiteSettings = {
   commentsEnabled: false,
   fontStyle: "pingfang",
   siteLogoVersion: null,
+  siteName: "My Blog",
+  siteTagline: "",
+  siteDescription: "",
+  siteAuthor: "",
+  authorEmail: "",
+  twitterHandle: "",
+  socialLinks: [],
   updatedAt: 0,
 };
 
@@ -46,6 +74,23 @@ let cached: SiteSettings | null = null;
 let cachedAt = 0;
 const TTL = 5 * 60 * 1000;
 
+function parseSocialLinks(raw: string): SocialLink[] {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (item): item is SocialLink =>
+        typeof item === "object" &&
+        item !== null &&
+        typeof (item as SocialLink).name === "string" &&
+        typeof (item as SocialLink).url === "string" &&
+        typeof (item as SocialLink).brand === "string",
+    );
+  } catch {
+    return [];
+  }
+}
+
 function parseRow(row: SiteSettingsRow): SiteSettings {
   return {
     locale: row.locale === "en" ? "en" : "zh",
@@ -55,6 +100,13 @@ function parseRow(row: SiteSettingsRow): SiteSettings {
       ? (row.font_style as FontStyle)
       : "pingfang",
     siteLogoVersion: row.site_logo_version ?? null,
+    siteName: row.site_name || "My Blog",
+    siteTagline: row.site_tagline ?? "",
+    siteDescription: row.site_description ?? "",
+    siteAuthor: row.site_author ?? "",
+    authorEmail: row.author_email ?? "",
+    twitterHandle: row.twitter_handle ?? "",
+    socialLinks: parseSocialLinks(row.social_links),
     updatedAt: row.updated_at,
   };
 }
@@ -90,6 +142,13 @@ export interface UpdateSiteSettingsInput {
   postsPerPage?: number;
   commentsEnabled?: boolean;
   fontStyle?: FontStyle;
+  siteName?: string;
+  siteTagline?: string;
+  siteDescription?: string;
+  siteAuthor?: string;
+  authorEmail?: string;
+  twitterHandle?: string;
+  socialLinks?: SocialLink[];
   // Note: siteLogoVersion is intentionally NOT here.
   // It is managed exclusively by updateSiteLogoVersion().
 }
@@ -116,6 +175,34 @@ export async function updateSiteSettings(
   if (input.fontStyle !== undefined) {
     sets.push("font_style = ?");
     params.push(input.fontStyle);
+  }
+  if (input.siteName !== undefined) {
+    sets.push("site_name = ?");
+    params.push(input.siteName.slice(0, 255));
+  }
+  if (input.siteTagline !== undefined) {
+    sets.push("site_tagline = ?");
+    params.push(input.siteTagline.slice(0, 500));
+  }
+  if (input.siteDescription !== undefined) {
+    sets.push("site_description = ?");
+    params.push(input.siteDescription.slice(0, 1000));
+  }
+  if (input.siteAuthor !== undefined) {
+    sets.push("site_author = ?");
+    params.push(input.siteAuthor.slice(0, 255));
+  }
+  if (input.authorEmail !== undefined) {
+    sets.push("author_email = ?");
+    params.push(input.authorEmail.slice(0, 255));
+  }
+  if (input.twitterHandle !== undefined) {
+    sets.push("twitter_handle = ?");
+    params.push(input.twitterHandle.slice(0, 50));
+  }
+  if (input.socialLinks !== undefined) {
+    sets.push("social_links = ?");
+    params.push(JSON.stringify(input.socialLinks));
   }
 
   if (sets.length === 0) {
@@ -162,5 +249,6 @@ export async function updateSiteLogoVersion(
 /** @internal — exposed for unit tests only */
 export const _testHelpers = {
   parseRow,
+  parseSocialLinks,
   DEFAULTS,
 };

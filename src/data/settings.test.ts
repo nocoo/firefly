@@ -8,7 +8,7 @@ import {
   _testHelpers,
 } from "./settings";
 
-const { parseRow, DEFAULTS } = _testHelpers;
+const { parseRow, parseSocialLinks, DEFAULTS } = _testHelpers;
 
 // ---------------------------------------------------------------------------
 // Mock DB
@@ -30,6 +30,13 @@ const sampleRow = {
   comments_enabled: 0,
   font_style: "pingfang",
   site_logo_version: null as string | null,
+  site_name: "My Blog",
+  site_tagline: "",
+  site_description: "",
+  site_author: "",
+  author_email: "",
+  twitter_handle: "",
+  social_links: "[]",
   updated_at: 1700000000,
 };
 
@@ -45,6 +52,13 @@ describe("parseRow", () => {
       commentsEnabled: false,
       fontStyle: "pingfang",
       siteLogoVersion: null,
+      siteName: "My Blog",
+      siteTagline: "",
+      siteDescription: "",
+      siteAuthor: "",
+      authorEmail: "",
+      twitterHandle: "",
+      socialLinks: [],
       updatedAt: 1700000000,
     });
   });
@@ -58,6 +72,13 @@ describe("parseRow", () => {
       commentsEnabled: true,
       fontStyle: "pingfang",
       siteLogoVersion: null,
+      siteName: "My Blog",
+      siteTagline: "",
+      siteDescription: "",
+      siteAuthor: "",
+      authorEmail: "",
+      twitterHandle: "",
+      socialLinks: [],
       updatedAt: 1700000000,
     });
   });
@@ -88,6 +109,75 @@ describe("parseRow", () => {
 
   it("parses site_logo_version as null when absent", () => {
     expect(parseRow({ ...sampleRow, site_logo_version: null }).siteLogoVersion).toBeNull();
+  });
+
+  it("parses site identity fields", () => {
+    const row = {
+      ...sampleRow,
+      site_name: "LIZHENG.ME",
+      site_tagline: "知白守黑",
+      site_description: "A personal blog",
+      site_author: "Li Zheng",
+      author_email: "test@example.com",
+      twitter_handle: "@test",
+    };
+    const result = parseRow(row);
+    expect(result.siteName).toBe("LIZHENG.ME");
+    expect(result.siteTagline).toBe("知白守黑");
+    expect(result.siteDescription).toBe("A personal blog");
+    expect(result.siteAuthor).toBe("Li Zheng");
+    expect(result.authorEmail).toBe("test@example.com");
+    expect(result.twitterHandle).toBe("@test");
+  });
+
+  it("falls back to 'My Blog' for empty site_name", () => {
+    expect(parseRow({ ...sampleRow, site_name: "" }).siteName).toBe("My Blog");
+  });
+
+  it("parses valid social_links JSON", () => {
+    const links = [{ name: "GitHub", url: "https://github.com/test", brand: "github" }];
+    const result = parseRow({ ...sampleRow, social_links: JSON.stringify(links) });
+    expect(result.socialLinks).toEqual(links);
+  });
+
+  it("falls back to empty array for invalid social_links JSON", () => {
+    expect(parseRow({ ...sampleRow, social_links: "not json" }).socialLinks).toEqual([]);
+  });
+
+  it("filters out invalid entries in social_links array", () => {
+    const raw = JSON.stringify([
+      { name: "GitHub", url: "https://github.com", brand: "github" },
+      { name: 123, url: "bad" },
+      "string entry",
+      null,
+    ]);
+    const result = parseRow({ ...sampleRow, social_links: raw });
+    expect(result.socialLinks).toEqual([
+      { name: "GitHub", url: "https://github.com", brand: "github" },
+    ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseSocialLinks
+// ---------------------------------------------------------------------------
+
+describe("parseSocialLinks", () => {
+  it("parses valid JSON array", () => {
+    const links = [{ name: "X", url: "https://x.com/test", brand: "x" }];
+    expect(parseSocialLinks(JSON.stringify(links))).toEqual(links);
+  });
+
+  it("returns empty array for non-array JSON", () => {
+    expect(parseSocialLinks('{"not":"array"}')).toEqual([]);
+  });
+
+  it("returns empty array for invalid JSON", () => {
+    expect(parseSocialLinks("broken")).toEqual([]);
+  });
+
+  it("returns empty array for empty string", () => {
+    expect(parseSocialLinks("")).toEqual([]);
   });
 });
 
@@ -211,6 +301,37 @@ describe("updateSiteSettings", () => {
 
     const sql = vi.mocked(db.execute).mock.calls[0][0] as string;
     expect(sql).toContain("font_style = ?");
+  });
+
+  it("updates site identity fields", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
+    vi.mocked(db.firstOrNull).mockResolvedValue({
+      ...sampleRow,
+      site_name: "Test Blog",
+      site_author: "Test Author",
+    });
+
+    const result = await updateSiteSettings(db, {
+      siteName: "Test Blog",
+      siteAuthor: "Test Author",
+    });
+    expect(result.siteName).toBe("Test Blog");
+    expect(result.siteAuthor).toBe("Test Author");
+
+    const sql = vi.mocked(db.execute).mock.calls[0][0] as string;
+    expect(sql).toContain("site_name = ?");
+    expect(sql).toContain("site_author = ?");
+  });
+
+  it("serializes socialLinks as JSON", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
+    vi.mocked(db.firstOrNull).mockResolvedValue(sampleRow);
+
+    const links = [{ name: "GitHub", url: "https://github.com/test", brand: "github" }];
+    await updateSiteSettings(db, { socialLinks: links });
+
+    const params = vi.mocked(db.execute).mock.calls[0][1] as unknown[];
+    expect(params).toContain(JSON.stringify(links));
   });
 });
 
