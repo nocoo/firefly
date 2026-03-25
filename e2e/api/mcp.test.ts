@@ -190,9 +190,9 @@ describe("MCP Main Endpoint — Auth", () => {
     expect(data.error).toContain("Invalid");
   });
 
-  it("GET returns 405", async () => {
+  it("GET without auth returns 401", async () => {
     const res = await fetch(`${BASE}/api/mcp`);
-    expect(res.status).toBe(405);
+    expect(res.status).toBe(401);
   });
 });
 

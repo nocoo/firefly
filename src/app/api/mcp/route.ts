@@ -4,7 +4,16 @@ import { validateMcpToken, validateOrigin } from "@/lib/mcp/auth";
 import { createMcpServer } from "@/lib/mcp/server";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 
-export async function POST(request: Request) {
+/**
+ * Shared handler for all MCP methods.
+ *
+ * The MCP SDK's WebStandardStreamableHTTPServerTransport.handleRequest()
+ * already routes by HTTP method internally:
+ *   POST  → JSON-RPC messages (Streamable HTTP)
+ *   GET   → SSE stream (legacy SSE transport fallback)
+ *   DELETE → session termination (stateful mode)
+ */
+async function handleMcp(request: Request) {
   const siteUrl = process.env.AUTH_URL ?? "http://localhost:3000";
 
   // Step 1: Validate Origin header (DNS rebinding prevention)
@@ -26,10 +35,10 @@ export async function POST(request: Request) {
     return errorResponse(authResult.error, authResult.status);
   }
 
-  // Step 3: Create MCP server and handle request via stateless transport
+  // Step 3: Create MCP server and handle request via transport
   const server = createMcpServer(db);
   const transport = new WebStandardStreamableHTTPServerTransport({
-    enableJsonResponse: true, // JSON-only, no SSE — stateless Phase 1
+    enableJsonResponse: true,
   });
 
   try {
@@ -41,10 +50,14 @@ export async function POST(request: Request) {
   }
 }
 
-export function GET() {
-  return errorResponse("SSE not supported in Phase 1. Use POST for MCP requests.", 405);
+export async function POST(request: Request) {
+  return handleMcp(request);
 }
 
-export function DELETE() {
-  return errorResponse("Session termination not supported in Phase 1.", 405);
+export async function GET(request: Request) {
+  return handleMcp(request);
+}
+
+export async function DELETE(request: Request) {
+  return handleMcp(request);
 }
