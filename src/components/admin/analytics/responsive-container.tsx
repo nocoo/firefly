@@ -11,7 +11,16 @@ type DashboardResponsiveContainerProps = ComponentProps<
 
 export function DashboardResponsiveContainer({
   debounce = CHART_RESIZE_DEBOUNCE_MS,
+  minWidth = 0,
+  minHeight = 0,
   ...props
 }: DashboardResponsiveContainerProps) {
-  return <RechartsResponsiveContainer debounce={debounce} {...props} />;
+  return (
+    <RechartsResponsiveContainer
+      debounce={debounce}
+      minWidth={minWidth}
+      minHeight={minHeight}
+      {...props}
+    />
+  );
 }
