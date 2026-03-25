@@ -1,5 +1,7 @@
 // ---------------------------------------------------------------------------
 // Shared chart helpers and constants for analytics dashboard
+// Follows pew project visual language: hidden axis/tick lines, subtle grid,
+// custom tooltip components, gradient fills, --chart-axis/--chart-muted tokens.
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
@@ -11,53 +13,96 @@ export type SourceType = "human" | "search" | "ai" | "other";
 export const SOURCE_TYPES: SourceType[] = ["human", "search", "ai", "other"];
 
 // ---------------------------------------------------------------------------
+// Palette — CSS custom property helpers (pew palette.ts pattern)
+// ---------------------------------------------------------------------------
+
+/** Wraps a CSS custom property name for inline style usage */
+const v = (token: string) => `hsl(var(--${token}))`;
+
+/**
+ * Returns a CSS color string with alpha from a CSS custom property.
+ * Usage: `withAlpha("chart-1", 0.3)` → `"hsl(var(--chart-1) / 0.3)"`
+ */
+export const withAlpha = (token: string, alpha: number) =>
+  `hsl(var(--${token}) / ${alpha})`;
+
+// ---------------------------------------------------------------------------
 // Colors — use CSS custom properties for dark/light mode support
 // ---------------------------------------------------------------------------
 
+/** Semantic: neutral gray for axis text, grid lines, tick labels */
+export const chartAxis = v("chart-axis");
+
+/** Semantic: muted/weakened elements */
+export const chartMuted = v("chart-muted");
+
 export const SOURCE_COLORS: Record<SourceType, string> = {
-  human: "hsl(var(--chart-1))",
-  search: "hsl(var(--chart-2))",
-  ai: "hsl(var(--chart-5))",
-  other: "hsl(var(--chart-4))",
+  human: v("chart-1"),
+  search: v("chart-2"),
+  ai: v("chart-5"),
+  other: v("chart-4"),
+};
+
+/** CSS variable tokens (without --) matching SOURCE_COLORS — for withAlpha() */
+export const SOURCE_TOKENS: Record<SourceType, string> = {
+  human: "chart-1",
+  search: "chart-2",
+  ai: "chart-5",
+  other: "chart-4",
 };
 
 export const CHART_COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-  "hsl(var(--chart-6))",
-  "hsl(var(--chart-7))",
-  "hsl(var(--chart-8))",
+  v("chart-1"),
+  v("chart-2"),
+  v("chart-3"),
+  v("chart-4"),
+  v("chart-5"),
+  v("chart-6"),
+  v("chart-7"),
+  v("chart-8"),
 ];
+
+/** CSS variable tokens (without --) matching CHART_COLORS — for withAlpha() */
+export const CHART_TOKENS = Array.from(
+  { length: 8 },
+  (_, i) => `chart-${i + 1}`,
+) as readonly string[];
 
 export const PIE_COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
+  v("chart-1"),
+  v("chart-2"),
+  v("chart-3"),
+  v("chart-4"),
+  v("chart-5"),
 ];
 
 // ---------------------------------------------------------------------------
-// Shared tooltip style
+// Chart layout constants
 // ---------------------------------------------------------------------------
 
-export const TOOLTIP_STYLE: React.CSSProperties = {
-  background: "var(--color-card)",
-  border: "1px solid var(--color-border)",
-  borderRadius: "8px",
-  fontSize: "12px",
-};
+/** Standard chart margin (pew convention) */
+export const CHART_MARGIN = { top: 4, right: 4, left: 0, bottom: 0 };
+
+/** Standard horizontal bar chart margin */
+export const H_BAR_MARGIN = { top: 0, right: 4, left: 0, bottom: 0 };
 
 // ---------------------------------------------------------------------------
 // Formatters
 // ---------------------------------------------------------------------------
 
-/** Format date string "YYYY-MM-DD" → "MM-DD" for chart X-axis */
+/** Format date string "YYYY-MM-DD" → "Mar 25" for chart X-axis (pew convention) */
+export function formatDateLabel(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00Z");
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+/** @deprecated Use formatDateLabel instead */
 export function formatDateShort(date: string): string {
-  return date.slice(5); // "03-25"
+  return date.slice(5);
 }
 
 /** Format a large number with locale separators */
@@ -85,6 +130,18 @@ export function formatReferrer(url: string): string {
     return url;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Shared tooltip style (deprecated — use custom tooltip components instead)
+// ---------------------------------------------------------------------------
+
+/** @deprecated Use custom tooltip React components with Tailwind classes */
+export const TOOLTIP_STYLE: React.CSSProperties = {
+  background: "var(--color-card)",
+  border: "1px solid var(--color-border)",
+  borderRadius: "8px",
+  fontSize: "12px",
+};
 
 // ---------------------------------------------------------------------------
 // Period options
