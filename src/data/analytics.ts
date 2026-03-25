@@ -208,10 +208,20 @@ export async function getTopReferrers(
 ): Promise<TopReferrer[]> {
   const since = Math.floor(Date.now() / 1000) - days * 86400;
   const result = await db.query<{ referrer: string; views: number }>(
-    `SELECT referrer, COUNT(*) AS views
+    `SELECT
+       REPLACE(
+         CASE
+           WHEN INSTR(SUBSTR(referrer, INSTR(referrer, '://') + 3), '/') > 0
+           THEN SUBSTR(referrer, INSTR(referrer, '://') + 3,
+                       INSTR(SUBSTR(referrer, INSTR(referrer, '://') + 3), '/') - 1)
+           ELSE SUBSTR(referrer, INSTR(referrer, '://') + 3)
+         END,
+         'www.', ''
+       ) AS referrer,
+       COUNT(*) AS views
      FROM page_views
      WHERE viewed_at >= ? AND is_bot = 0 AND referrer IS NOT NULL AND referrer != ''
-     GROUP BY referrer
+     GROUP BY 1
      ORDER BY views DESC
      LIMIT ?`,
     [since, limit],
@@ -682,11 +692,21 @@ export async function getHumanDetail(
         [days],
       ),
       db.query<{ referrer: string; views: number }>(
-        `SELECT referrer, COUNT(*) AS views
+        `SELECT
+           REPLACE(
+             CASE
+               WHEN INSTR(SUBSTR(referrer, INSTR(referrer, '://') + 3), '/') > 0
+               THEN SUBSTR(referrer, INSTR(referrer, '://') + 3,
+                           INSTR(SUBSTR(referrer, INSTR(referrer, '://') + 3), '/') - 1)
+               ELSE SUBSTR(referrer, INSTR(referrer, '://') + 3)
+             END,
+             'www.', ''
+           ) AS referrer,
+           COUNT(*) AS views
          FROM page_views
          WHERE ${TIME_WINDOW_WHERE} AND ${sourceCondition("human")}
            AND referrer IS NOT NULL AND referrer != ''
-         GROUP BY referrer
+         GROUP BY 1
          ORDER BY views DESC
          LIMIT 20`,
         [days],
