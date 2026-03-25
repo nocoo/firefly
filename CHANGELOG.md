@@ -1,5 +1,28 @@
 # Changelog
 
+## v1.2.0 (2026-03-25)
+
+- Merge pull request #4 from nocoo/violet-waxflower
+- merge: resolve conflicts with main (analytics + reference-url coexist)
+- refactor: split unfurl into two-step flow with optional AI enhancement
+- fix: switch unfurl AI to JSON output format, drop reasoning fallback
+- test: add success path and method check to unfurl E2E
+- test: add success path and method check to unfurl E2E
+- fix: clear orphan reference metadata when URL is emptied
+- fix: handle quoted OG content and resolve relative og:image URLs
+- fix: add DNS resolution to SSRF protection in unfurl service
+- test: update MCP E2E to expect 17 tools after unfurl_reference
+- test: add unit and E2E tests for reference URL feature
+- feat: add unfurl_reference MCP tool
+- feat: add ReferenceCard component and blog display
+- feat: add reference URL editor section to post form
+- feat: add /api/unfurl endpoint with graceful AI fallback
+- feat: add AI summarization for unfurled metadata
+- feat: add URL unfurl service with SSRF protection
+- feat: add reference URL columns migration and data layer
+- docs: add 14-reference-url feature spec
+
+
 ## v1.1.0 (2026-03-25)
 
 - fix: mock SITE_URL in sitemap and feed tests to isolate from .env
