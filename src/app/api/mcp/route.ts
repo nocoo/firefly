@@ -4,16 +4,7 @@ import { validateMcpToken, validateOrigin } from "@/lib/mcp/auth";
 import { createMcpServer } from "@/lib/mcp/server";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 
-/**
- * Shared handler for all MCP methods.
- *
- * The MCP SDK's WebStandardStreamableHTTPServerTransport.handleRequest()
- * already routes by HTTP method internally:
- *   POST  → JSON-RPC messages (Streamable HTTP)
- *   GET   → SSE stream (legacy SSE transport fallback)
- *   DELETE → session termination (stateful mode)
- */
-async function handleMcp(request: Request) {
+export async function POST(request: Request) {
   const siteUrl = process.env.AUTH_URL ?? "http://localhost:3000";
 
   // Step 1: Validate Origin header (DNS rebinding prevention)
@@ -35,10 +26,10 @@ async function handleMcp(request: Request) {
     return errorResponse(authResult.error, authResult.status);
   }
 
-  // Step 3: Create MCP server and handle request via transport
+  // Step 3: Create MCP server and handle request via stateless transport
   const server = createMcpServer(db);
   const transport = new WebStandardStreamableHTTPServerTransport({
-    enableJsonResponse: true,
+    enableJsonResponse: true, // JSON-only, no SSE — stateless Phase 1
   });
 
   try {
@@ -50,14 +41,15 @@ async function handleMcp(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
-  return handleMcp(request);
+/**
+ * GET SSE stream is not supported in stateless mode.
+ * Per MCP spec, return 405 so Streamable HTTP clients know to use POST only.
+ * Clients must be configured with type "streamable-http" (not "sse").
+ */
+export function GET() {
+  return errorResponse("SSE transport not supported. Use Streamable HTTP (POST).", 405);
 }
 
-export async function GET(request: Request) {
-  return handleMcp(request);
-}
-
-export async function DELETE(request: Request) {
-  return handleMcp(request);
+export function DELETE() {
+  return errorResponse("Session termination not supported in stateless mode.", 405);
 }
