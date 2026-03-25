@@ -56,6 +56,10 @@ export interface Post {
   reading_time: number | null;
   wp_id: number | null;
   wp_permalink: string | null;
+  reference_url: string | null;
+  reference_title: string | null;
+  reference_description: string | null;
+  reference_image: string | null;
   published_at: number | null;
   created_at: number;
   updated_at: number;
