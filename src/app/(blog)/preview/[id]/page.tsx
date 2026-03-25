@@ -7,6 +7,7 @@ import { getDb } from "@/lib/db";
 import { getPostById, getPostTags } from "@/data/posts";
 import { renderMarkdown } from "@/models/markdown";
 import { ArticleBody } from "@/components/blog/article-body";
+import { ReferenceCard } from "@/components/blog/reference-card";
 import { formatDateDisplay } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
@@ -90,6 +91,16 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
                 priority
               />
             </div>
+          ) : undefined
+        }
+        referenceCard={
+          post.reference_url ? (
+            <ReferenceCard
+              url={post.reference_url}
+              title={post.reference_title}
+              description={post.reference_description}
+              image={post.reference_image}
+            />
           ) : undefined
         }
         footer={

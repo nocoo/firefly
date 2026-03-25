@@ -7,6 +7,8 @@ interface ArticleBodyProps {
   header?: ReactNode;
   /** Optional featured image element */
   featuredImage?: ReactNode;
+  /** Optional reference URL card — renders between featured image and content */
+  referenceCard?: ReactNode;
   /** Optional footer to render below content (tags, etc.) */
   footer?: ReactNode;
   /** Extra class names on the outermost wrapper */
@@ -24,6 +26,7 @@ export function ArticleBody({
   html,
   header,
   featuredImage,
+  referenceCard,
   footer,
   className,
 }: ArticleBodyProps) {
@@ -31,6 +34,7 @@ export function ArticleBody({
     <article className={className}>
       {header}
       {featuredImage}
+      {referenceCard}
       {html && (
         <div
           className="blog-content prose-firefly prose max-w-none"
