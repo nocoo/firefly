@@ -255,6 +255,24 @@ describe("extractOgMetadata", () => {
     const result = extractOgMetadata(html);
     expect(result.ogTitle).toBe("Single Quoted");
   });
+
+  it("preserves apostrophes in double-quoted content", () => {
+    const html = `<meta property="og:title" content="Tom's Repo">`;
+    const result = extractOgMetadata(html);
+    expect(result.ogTitle).toBe("Tom's Repo");
+  });
+
+  it("preserves double quotes in single-quoted content", () => {
+    const html = `<meta property='og:description' content='She said "hello" to everyone'>`;
+    const result = extractOgMetadata(html);
+    expect(result.ogDescription).toBe('She said "hello" to everyone');
+  });
+
+  it("preserves apostrophes in double-quoted meta name content", () => {
+    const html = `<meta name="description" content="It's a great project">`;
+    const result = extractOgMetadata(html);
+    expect(result.ogDescription).toBe("It's a great project");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -719,5 +737,59 @@ describe("unfurlUrl", () => {
     expect(result.readmeImage).toBe(
       "https://raw.githubusercontent.com/owner/repo/main/docs/screen.png",
     );
+  });
+
+  it("resolves relative og:image to absolute URL", async () => {
+    const html = `<meta property="og:image" content="/images/og.jpg">`;
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers({ "content-type": "text/html" }),
+      body: new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode(html));
+          controller.close();
+        },
+      }),
+    } as unknown as Response);
+
+    const result = await unfurlUrl("https://example.com/page");
+    expect(result.ogImage).toBe("https://example.com/images/og.jpg");
+  });
+
+  it("resolves protocol-relative og:image", async () => {
+    const html = `<meta property="og:image" content="//cdn.example.com/img.jpg">`;
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers({ "content-type": "text/html" }),
+      body: new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode(html));
+          controller.close();
+        },
+      }),
+    } as unknown as Response);
+
+    const result = await unfurlUrl("https://example.com");
+    expect(result.ogImage).toBe("https://cdn.example.com/img.jpg");
+  });
+
+  it("keeps absolute og:image unchanged", async () => {
+    const html = `<meta property="og:image" content="https://cdn.example.com/og.jpg">`;
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers({ "content-type": "text/html" }),
+      body: new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode(html));
+          controller.close();
+        },
+      }),
+    } as unknown as Response);
+
+    const result = await unfurlUrl("https://example.com");
+    expect(result.ogImage).toBe("https://cdn.example.com/og.jpg");
   });
 });

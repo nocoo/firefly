@@ -259,16 +259,25 @@ interface OgMetadata {
 
 export function extractOgMetadata(html: string): OgMetadata {
   const getOgContent = (property: string): string | null => {
-    // Handle both attribute orders:
-    // <meta property="og:title" content="...">
-    // <meta content="..." property="og:title">
+    // Handle both attribute orders and both quote types:
+    // <meta property="og:title" content="...">  (double-quoted)
+    // <meta property='og:title' content='...'>  (single-quoted)
+    // <meta content="..." property="og:title">  (reversed)
     const patterns = [
       new RegExp(
-        `<meta[^>]+property=["']${property}["'][^>]+content=["']([^"']*)["']`,
+        `<meta[^>]+property=["']${property}["'][^>]+content="([^"]*)"`,
         "i",
       ),
       new RegExp(
-        `<meta[^>]+content=["']([^"']*)["'][^>]+property=["']${property}["']`,
+        `<meta[^>]+property=["']${property}["'][^>]+content='([^']*)'`,
+        "i",
+      ),
+      new RegExp(
+        `<meta[^>]+content="([^"]*)"[^>]+property=["']${property}["']`,
+        "i",
+      ),
+      new RegExp(
+        `<meta[^>]+content='([^']*)'[^>]+property=["']${property}["']`,
         "i",
       ),
     ];
@@ -284,11 +293,19 @@ export function extractOgMetadata(html: string): OgMetadata {
   const getMetaName = (name: string): string | null => {
     const patterns = [
       new RegExp(
-        `<meta[^>]+name=["']${name}["'][^>]+content=["']([^"']*)["']`,
+        `<meta[^>]+name=["']${name}["'][^>]+content="([^"]*)"`,
         "i",
       ),
       new RegExp(
-        `<meta[^>]+content=["']([^"']*)["'][^>]+name=["']${name}["']`,
+        `<meta[^>]+name=["']${name}["'][^>]+content='([^']*)'`,
+        "i",
+      ),
+      new RegExp(
+        `<meta[^>]+content="([^"]*)"[^>]+name=["']${name}["']`,
+        "i",
+      ),
+      new RegExp(
+        `<meta[^>]+content='([^']*)'[^>]+name=["']${name}["']`,
         "i",
       ),
     ];
@@ -417,9 +434,12 @@ export async function unfurlUrl(url: string): Promise<UnfurlRawResult> {
   const og = extractOgMetadata(html);
   const bodyText = extractBodyText(html);
 
+  // Resolve relative og:image to absolute URL
+  const ogImage = og.ogImage ? new URL(og.ogImage, url).href : null;
+
   // Best-effort GitHub README image
   let readmeImage: string | null = null;
-  if (!og.ogImage) {
+  if (!ogImage) {
     readmeImage = await fetchGitHubReadmeImage(url);
   }
 
@@ -427,7 +447,7 @@ export async function unfurlUrl(url: string): Promise<UnfurlRawResult> {
     url,
     ogTitle: og.ogTitle,
     ogDescription: og.ogDescription,
-    ogImage: og.ogImage,
+    ogImage,
     pageTitle: og.pageTitle,
     bodyText,
     readmeImage,
