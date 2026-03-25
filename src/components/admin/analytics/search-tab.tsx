@@ -5,22 +5,63 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
   LineChart,
   Line,
   CartesianGrid,
 } from "recharts";
 import {
   CHART_COLORS,
-  TOOLTIP_STYLE,
-  formatDateShort,
+  chartAxis,
+  formatDateLabel,
   formatNumber,
+  CHART_MARGIN,
 } from "./chart-helpers";
+import { DashboardResponsiveContainer } from "./responsive-container";
 import { useLocale } from "@/i18n/context";
 
 interface SearchTabProps {
   data: SearchDetailResponse;
 }
+
+// ---------------------------------------------------------------------------
+// Custom tooltip
+// ---------------------------------------------------------------------------
+
+function BotTimelineTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: Array<{ dataKey: string; value: number; color: string; name: string }>;
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+
+  return (
+    <div className="rounded-[var(--radius-widget)] border border-border bg-card p-2.5 shadow-sm">
+      <p className="mb-1 text-xs font-medium text-foreground">
+        {label ? formatDateLabel(label) : ""}
+      </p>
+      {payload.map((entry) => (
+        <div key={entry.dataKey} className="flex items-center gap-2 text-xs">
+          <div
+            className="h-2 w-2 rounded-full"
+            style={{ backgroundColor: entry.color }}
+          />
+          <span className="text-muted-foreground">{entry.name}</span>
+          <span className="ml-auto font-medium text-foreground">
+            {formatNumber(entry.value)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export function SearchTab({ data }: SearchTabProps) {
   const { t } = useLocale();
@@ -70,40 +111,58 @@ export function SearchTab({ data }: SearchTabProps) {
       {/* Crawl Timeline */}
       {timelineData.length > 0 && botNames.length > 0 && (
         <Panel title={t("admin.analytics.crawlTimeline")}>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={timelineData}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="var(--color-border)"
-              />
-              <XAxis
-                dataKey="date"
-                tick={{
-                  fontSize: 11,
-                  fill: "var(--color-muted-foreground)",
-                }}
-                tickFormatter={formatDateShort}
-              />
-              <YAxis
-                tick={{
-                  fontSize: 11,
-                  fill: "var(--color-muted-foreground)",
-                }}
-              />
-              <Tooltip contentStyle={TOOLTIP_STYLE} />
-              {botNames.map((name, i) => (
-                <Line
-                  key={name}
-                  type="monotone"
-                  dataKey={name}
-                  name={name}
-                  stroke={CHART_COLORS[i % CHART_COLORS.length]}
-                  strokeWidth={1.5}
-                  dot={false}
+          {/* Inline legend */}
+          <div className="mb-3 flex flex-wrap items-center gap-3">
+            {botNames.map((name, i) => (
+              <div key={name} className="flex items-center gap-1.5">
+                <div
+                  className="h-2 w-2 rounded-full"
+                  style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
                 />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
+                <span className="text-xs text-muted-foreground">{name}</span>
+              </div>
+            ))}
+          </div>
+          <div className="h-[250px]">
+            <DashboardResponsiveContainer width="100%" height="100%">
+              <LineChart data={timelineData} margin={CHART_MARGIN}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke={chartAxis}
+                  strokeOpacity={0.15}
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={formatDateLabel}
+                  tick={{ fill: chartAxis, fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fill: chartAxis, fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={40}
+                />
+                <Tooltip
+                  content={<BotTimelineTooltip />}
+                  isAnimationActive={false}
+                />
+                {botNames.map((name, i) => (
+                  <Line
+                    key={name}
+                    type="monotone"
+                    dataKey={name}
+                    name={name}
+                    stroke={CHART_COLORS[i % CHART_COLORS.length]}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                ))}
+              </LineChart>
+            </DashboardResponsiveContainer>
+          </div>
         </Panel>
       )}
 
