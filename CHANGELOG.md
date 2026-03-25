@@ -1,5 +1,49 @@
 # Changelog
 
+## v1.1.0 (2026-03-25)
+
+- fix: mock SITE_URL in sitemap and feed tests to isolate from .env
+- fix: handle null return from execSync with inherited stdio in release script
+- fix: aggregate referrers by hostname instead of full URL to eliminate duplicates
+- fix: prevent recharts negative dimension warning with minWidth/minHeight defaults
+- style: apply pew chart styling to aggregates panel and remove dead chart helpers
+- style: apply pew chart styling to search and AI bot timeline charts
+- style: apply pew chart styling to human tab charts
+- style: apply pew chart styling to traffic trend area chart
+- refactor: overhaul chart-helpers with pew-style palette and formatters
+- style: add chart-axis/chart-muted CSS vars and recharts focus fix
+- test: strengthen analytics E2E coverage with period, delta, and schema tests
+- fix: add clickable links for article pages in search and AI bot tabs
+- fix: await view_count UPDATE to reduce drift within fire-and-forget tracking
+- fix: show NEW instead of — when previous period has zero data
+- fix: add is_bot=1 to search/ai source conditions for strict mutual exclusivity
+- fix: re-fetch active tab instead of hardcoded human on period change
+- fix: prevent date key from being overwritten by numeric 0 in timeline data
+- docs: mark analytics redesign as complete in README
+- docs: mark all analytics redesign commits as complete
+- feat: rewrite analytics dashboard with four-source tabs and i18n
+- feat: add shared chart helpers and summary-level analytics components
+- feat: add /api/analytics/source detail endpoint
+- feat: rewrite /api/analytics as four-source summary endpoint
+- feat: add analytics summary + source query functions
+- feat: increment posts.view_count on human page view
+- feat: resolve post_id from path in tracking
+- fix: protect analytics GET endpoints with admin auth
+- chore: update next-env.d.ts type reference path
+- fix: read cf-ipcity header in proxy for city-level geo tracking
+- docs: add analytics dashboard redesign design document
+- fix: translate taxonomy page headers, show post stats, and restyle action buttons
+- feat: add i18n keys for taxonomy page titles and post stats
+- feat: add listCategoriesWithPostStats query for admin category page
+- fix: revert GET handler to 405 — SSE transport not supported
+- fix: support GET/SSE connections on MCP endpoint
+- fix: allow desktop/IDE client Origin headers in MCP endpoint
+- fix: resolve MCP OAuth login failure with Auth.js v5
+- refactor: rename /admin/mcp-tokens to /admin/mcp
+- feat: add MCP setup guide to admin tokens page
+- fix: add revalidate=300 to root layout and description fallback
+
+
 ## v1.0.0 (2026-03-25)
 
 Version management upgrade — centralized version infrastructure.

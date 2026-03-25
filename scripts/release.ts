@@ -27,11 +27,13 @@ import { resolve } from "node:path";
 // ---------------------------------------------------------------------------
 
 function run(cmd: string, opts?: { stdio?: "pipe" | "inherit" }): string {
-  return execSync(cmd, {
+  const result = execSync(cmd, {
     cwd: ROOT,
     encoding: "utf-8",
     stdio: opts?.stdio ?? "pipe",
-  }).trim();
+  });
+  // execSync returns null when stdio is "inherit"
+  return (result ?? "").trim();
 }
 
 function fail(msg: string): never {

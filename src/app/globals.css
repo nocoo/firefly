@@ -141,6 +141,10 @@
   --chart-7: 189 94% 43%;
   --chart-8: 220 9% 46%;
 
+  /* Chart utility tokens */
+  --chart-axis: 0 0% 40%;
+  --chart-muted: 0 0% 70%;
+
   /* Blog — warm parchment (light) */
   --blog-bg: #FAF8F5;
   --blog-surface: #FAF8F5;
@@ -193,6 +197,10 @@
   --chart-6: 330 81% 65%;
   --chart-7: 189 94% 48%;
   --chart-8: 220 9% 55%;
+
+  /* Chart utility tokens */
+  --chart-axis: 0 0% 50%;
+  --chart-muted: 0 0% 35%;
 
   --blog-bg: #2D2B28;
   --blog-surface: #343230;
@@ -699,4 +707,9 @@
     min-height: 160px;
     max-height: 200px;
   }
+}
+
+/* Recharts — suppress focus outline on click */
+.recharts-wrapper *:focus {
+  outline: none;
 }
