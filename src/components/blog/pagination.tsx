@@ -81,10 +81,14 @@ export function Pagination({
 
 /**
  * Build an array of page numbers and "..." ellipsis markers.
- * Always includes first page, last page, and pages around current.
+ * Always includes first page, last page, and pages around current (±2).
+ * Ensures at least 4 consecutive pages at edges.
  *
- * Examples (current=6, total=20):
- *   [1, "...", 5, 6, 7, "...", 20]
+ * Examples (current=1, total=20):
+ *   [1, 2, 3, 4, "...", 20]
+ *
+ * (current=6, total=20):
+ *   [1, "...", 4, 5, 6, 7, 8, "...", 20]
  *
  * (current=1, total=5):
  *   [1, 2, 3, 4, 5]
@@ -102,9 +106,16 @@ function buildPageSlots(
   // Always include first and last
   slots.add(1);
   slots.add(total);
-  // Current and neighbors
-  for (let i = current - 1; i <= current + 1; i++) {
+  // Current and neighbors ±2
+  for (let i = current - 2; i <= current + 2; i++) {
     if (i >= 1 && i <= total) slots.add(i);
+  }
+  // Ensure at least 4 consecutive pages at edges
+  if (current <= 3) {
+    for (let i = 1; i <= Math.min(4, total); i++) slots.add(i);
+  }
+  if (current >= total - 2) {
+    for (let i = Math.max(1, total - 3); i <= total; i++) slots.add(i);
   }
 
   const sorted = [...slots].sort((a, b) => a - b);

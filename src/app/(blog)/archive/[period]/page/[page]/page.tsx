@@ -9,7 +9,8 @@ import { buildPageMeta, SITE_URL, postPath } from "@/lib/seo";
 import { collectionPageJsonLd } from "@/lib/jsonld";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
-import { parseArchivePeriod } from "../../page";
+import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
+import { parseArchivePeriod } from "../../parse-archive-period";
 
 interface Props {
   params: Promise<{ period: string; page: string }>;
@@ -70,6 +71,7 @@ export default async function ArchivePaged({ params }: Props) {
 
   return (
     <>
+      <ListOriginTracker />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

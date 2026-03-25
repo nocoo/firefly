@@ -16,7 +16,7 @@ interface PostCardProps {
 export function PostCard({ post, locale, author, priority }: PostCardProps) {
   const href = postPath(post.slug, post.published_at);
   const date = post.published_at
-    ? formatDateDisplay(post.published_at)
+    ? formatDateDisplay(post.published_at, locale)
     : t(locale, "blog.post.draft");
 
   return (
@@ -58,9 +58,9 @@ export function PostCard({ post, locale, author, priority }: PostCardProps) {
 
       {/* Excerpt */}
       {post.excerpt && (
-        <p className="mt-3 text-base leading-relaxed text-blog-muted">
+        <Link href={href} className="mt-3 block text-base leading-relaxed text-blog-text no-underline">
           {post.excerpt}
-        </p>
+        </Link>
       )}
 
       {/* Continue reading link */}

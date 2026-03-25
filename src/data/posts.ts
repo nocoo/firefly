@@ -614,3 +614,55 @@ export async function listMonthlyArchives(
   archivesCache.set(results);
   return results;
 }
+
+// ---------------------------------------------------------------------------
+// Adjacent posts (prev / next) for keyboard navigation
+// ---------------------------------------------------------------------------
+
+export interface AdjacentPost {
+  slug: string;
+  title: string;
+  published_at: number;
+}
+
+export interface AdjacentPosts {
+  prev: AdjacentPost | null;
+  next: AdjacentPost | null;
+}
+
+/**
+ * Get the previous and next published posts relative to the given post.
+ * Ordered by published_at DESC (blog order).
+ * - prev = the post published immediately BEFORE (older) the current one
+ * - next = the post published immediately AFTER (newer) the current one
+ */
+export async function getAdjacentPosts(
+  db: Db,
+  publishedAt: number,
+  postId: string,
+): Promise<AdjacentPosts> {
+  const prevSql = `
+    SELECT slug, title, published_at
+    FROM posts
+    WHERE status = 'published'
+      AND (published_at < ? OR (published_at = ? AND id < ?))
+    ORDER BY published_at DESC, id DESC
+    LIMIT 1
+  `;
+
+  const nextSql = `
+    SELECT slug, title, published_at
+    FROM posts
+    WHERE status = 'published'
+      AND (published_at > ? OR (published_at = ? AND id > ?))
+    ORDER BY published_at ASC, id ASC
+    LIMIT 1
+  `;
+
+  const [prev, next] = await Promise.all([
+    db.firstOrNull<AdjacentPost>(prevSql, [publishedAt, publishedAt, postId]),
+    db.firstOrNull<AdjacentPost>(nextSql, [publishedAt, publishedAt, postId]),
+  ]);
+
+  return { prev, next };
+}

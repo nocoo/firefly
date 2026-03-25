@@ -8,6 +8,7 @@ import { SITE_URL, ogLocale, htmlLang, postPath } from "@/lib/seo";
 import { websiteJsonLd, collectionPageJsonLd } from "@/lib/jsonld";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
+import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
 
 export async function generateMetadata(): Promise<Metadata> {
   const db = getDb();
@@ -67,6 +68,7 @@ export default async function Home() {
 
   return (
     <>
+      <ListOriginTracker />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: websiteJsonLd(settings, locale) }}

@@ -10,6 +10,7 @@ import { buildPageMeta, SITE_URL, postPath } from "@/lib/seo";
 import { collectionPageJsonLd } from "@/lib/jsonld";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
+import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
 
 interface TagPageProps {
   params: Promise<{ slug: string }>;
@@ -63,6 +64,7 @@ export default async function TagPage({ params }: TagPageProps) {
 
   return (
     <>
+      <ListOriginTracker />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

@@ -37,7 +37,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
   const tags = await getPostTags(db, post.id);
   const html = post.content_html || renderMarkdown(post.content);
   const date = post.published_at
-    ? formatDateDisplay(post.published_at)
+    ? formatDateDisplay(post.published_at, locale)
     : t(locale, "blog.post.draft");
 
   return (

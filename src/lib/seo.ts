@@ -113,13 +113,15 @@ export function formatDate(epoch: number): string {
 }
 
 /**
- * Format a unix epoch timestamp to a display string like "Mar 22, 2026".
+ * Format a unix epoch timestamp to a display string.
+ * zh → "2026年3月22日", en → "Mar 22, 2026".
  */
-export function formatDateDisplay(epoch: number): string {
+export function formatDateDisplay(epoch: number, locale?: Locale): string {
   const d = new Date(epoch * 1000);
-  return d.toLocaleDateString("en-US", {
+  const bcp47 = locale === "zh" ? "zh-CN" : "en-US";
+  return d.toLocaleDateString(bcp47, {
     year: "numeric",
-    month: "short",
+    month: locale === "zh" ? "long" : "short",
     day: "numeric",
   });
 }

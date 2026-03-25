@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseArchivePeriod } from "./page";
+import { parseArchivePeriod } from "./parse-archive-period";
 
 describe("parseArchivePeriod", () => {
   it("parses year-only period", () => {

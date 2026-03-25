@@ -4,7 +4,7 @@ import { Suspense, cache } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { getDb } from "@/lib/db";
-import { getPostBySlug, getPostTags } from "@/data/posts";
+import { getPostBySlug, getPostTags, getAdjacentPosts } from "@/data/posts";
 import { getSiteSettings } from "@/data/settings";
 import { listCommentsByPost, buildCommentTree } from "@/data/comments";
 import { renderMarkdown } from "@/models/markdown";
@@ -18,6 +18,7 @@ import { blogPostingJsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { Comments } from "@/components/blog/comments";
 import { ArticleBody } from "@/components/blog/article-body";
 import { ReferenceCard } from "@/components/blog/reference-card";
+import { ArticleNav } from "@/components/blog/article-nav";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 
@@ -85,9 +86,20 @@ export default async function PostPage({ params }: PostPageProps) {
   const settings = await getSiteSettings(db);
   const showComments = settings.commentsEnabled && !!post.comment_enabled;
 
+  // Adjacent posts for keyboard navigation
+  const adjacent = post.published_at
+    ? await getAdjacentPosts(db, post.published_at, post.id)
+    : { prev: null, next: null };
+  const prevHref = adjacent.prev
+    ? postPath(adjacent.prev.slug, adjacent.prev.published_at)
+    : null;
+  const nextHref = adjacent.next
+    ? postPath(adjacent.next.slug, adjacent.next.published_at)
+    : null;
+
   const html = post.content_html || renderMarkdown(post.content);
   const date = post.published_at
-    ? formatDateDisplay(post.published_at)
+    ? formatDateDisplay(post.published_at, locale)
     : t(locale, "blog.post.draft");
 
   const breadcrumbs = [
@@ -190,14 +202,13 @@ export default async function PostPage({ params }: PostPageProps) {
         </Suspense>
       )}
 
-      <nav className="mt-10 border-t border-blog-separator pt-6">
-        <Link
-          href="/"
-          className="text-sm text-blog-muted transition-colors hover:text-blog-text"
-        >
-          {t(locale, "blog.post.backToAll")}
-        </Link>
-      </nav>
+      <ArticleNav
+        prevHref={prevHref}
+        prevTitle={adjacent.prev?.title ?? null}
+        nextHref={nextHref}
+        nextTitle={adjacent.next?.title ?? null}
+        locale={locale}
+      />
     </>
   );
 }

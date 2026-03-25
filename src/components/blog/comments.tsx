@@ -4,10 +4,11 @@ import { t, type Locale } from "@/i18n/translations";
 
 interface CommentItemProps {
   comment: CommentTree;
+  locale: Locale;
   depth?: number;
 }
 
-function CommentItem({ comment, depth = 0 }: CommentItemProps) {
+function CommentItem({ comment, locale, depth = 0 }: CommentItemProps) {
   const maxNestingDepth = 3;
   const effectiveDepth = Math.min(depth, maxNestingDepth);
 
@@ -16,7 +17,7 @@ function CommentItem({ comment, depth = 0 }: CommentItemProps) {
       className={effectiveDepth > 0 ? "ml-6 border-l-2 border-blog-separator pl-4" : ""}
     >
       <div className="py-4">
-        <div className="mb-2 flex items-center gap-2 text-sm text-blog-muted">
+        <div className="mb-2 flex items-center gap-2 text-sm text-blog-text">
           <span className="font-medium text-blog-text">
             {comment.author_url ? (
               <a
@@ -33,7 +34,7 @@ function CommentItem({ comment, depth = 0 }: CommentItemProps) {
           </span>
           <span>&middot;</span>
           <time dateTime={new Date(comment.created_at * 1000).toISOString()}>
-            {formatDateDisplay(comment.created_at)}
+            {formatDateDisplay(comment.created_at, locale)}
           </time>
         </div>
         <div className="text-sm leading-relaxed text-blog-text">
@@ -47,6 +48,7 @@ function CommentItem({ comment, depth = 0 }: CommentItemProps) {
             <CommentItem
               key={child.id}
               comment={child}
+              locale={locale}
               depth={depth + 1}
             />
           ))}
@@ -71,7 +73,7 @@ export function Comments({ comments, locale }: CommentsProps) {
       </h2>
       <div className="divide-y divide-blog-separator">
         {comments.map((comment) => (
-          <CommentItem key={comment.id} comment={comment} />
+          <CommentItem key={comment.id} comment={comment} locale={locale} />
         ))}
       </div>
     </section>
