@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/posts";
+import type { SocialLink } from "@/data/settings";
 import type { Locale } from "@/i18n/translations";
 import { BlogSidebar } from "./blog-sidebar";
 import { BlogFooter } from "./blog-footer";
@@ -16,10 +17,15 @@ interface BlogLayoutClientProps {
   tags: Tag[];
   archives: MonthlyArchive[];
   locale: Locale;
+  siteName: string;
+  siteTagline: string;
+  socialLinks: SocialLink[];
   children: React.ReactNode;
 }
 
-export function BlogLayoutClient({ categories, tags, archives, locale, children }: BlogLayoutClientProps) {
+export function BlogLayoutClient({
+  categories, tags, archives, locale, siteName, siteTagline, socialLinks, children,
+}: BlogLayoutClientProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // State convergence: auto-close drawer when entering desktop layout.
@@ -43,7 +49,15 @@ export function BlogLayoutClient({ categories, tags, archives, locale, children 
   return (
     <>
       {/* Desktop sidebar — always in DOM, CSS shows/hides via media query */}
-      <BlogSidebar variant="desktop" categories={categories} tags={tags} archives={archives} />
+      <BlogSidebar
+        variant="desktop"
+        categories={categories}
+        tags={tags}
+        archives={archives}
+        siteName={siteName}
+        siteTagline={siteTagline}
+        socialLinks={socialLinks}
+      />
 
       {/* Hamburger — always in DOM, CSS shows/hides via media query */}
       <div className="blog-mobile-bar">
@@ -65,11 +79,14 @@ export function BlogLayoutClient({ categories, tags, archives, locale, children 
         categories={categories}
         tags={tags}
         archives={archives}
+        siteName={siteName}
+        siteTagline={siteTagline}
+        socialLinks={socialLinks}
       />
 
       <main id="main" className="blog-main">
         {children}
-        <BlogFooter locale={locale} />
+        <BlogFooter locale={locale} siteName={siteName} />
       </main>
     </>
   );

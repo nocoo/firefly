@@ -1,6 +1,6 @@
 {
-  "blog.sidebar.tagline": "知白守黑，不语万千算",
-  "blog.sidebar.subtitle": "李铮的个人博客 — 技术、设计与生活。",
+  "blog.sidebar.tagline": "",
+  "blog.sidebar.subtitle": "",
   "blog.sidebar.categories": "分类",
   "blog.sidebar.tags": "标签",
   "blog.sidebar.archives": "归档",
@@ -18,7 +18,7 @@
   "blog.month.10": "十月",
   "blog.month.11": "十一月",
   "blog.month.12": "十二月",
-  "blog.footer.copyright": "© {year} lizheng.me. 保留所有权利。",
+  "blog.footer.copyright": "© {year} {siteName}. 保留所有权利。",
   "blog.post.draft": "草稿",
   "blog.post.published": "Published",
   "blog.post.byAuthor": "by {author}",

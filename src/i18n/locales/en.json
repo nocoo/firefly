@@ -1,6 +1,6 @@
 {
-  "blog.sidebar.tagline": "知白守黑，不语万千算",
-  "blog.sidebar.subtitle": "Personal blog by Li Zheng — technology, design, and life.",
+  "blog.sidebar.tagline": "",
+  "blog.sidebar.subtitle": "",
   "blog.sidebar.categories": "Categories",
   "blog.sidebar.tags": "Tags",
   "blog.sidebar.archives": "Archives",
@@ -18,7 +18,7 @@
   "blog.month.10": "October",
   "blog.month.11": "November",
   "blog.month.12": "December",
-  "blog.footer.copyright": "© {year} lizheng.me. All rights reserved.",
+  "blog.footer.copyright": "© {year} {siteName}. All rights reserved.",
   "blog.post.draft": "Draft",
   "blog.post.published": "Published",
   "blog.post.byAuthor": "by {author}",

@@ -4,8 +4,9 @@ import Link from "next/link";
 import { Github, Facebook, Linkedin, Mail, FileUser, X } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/posts";
+import type { SocialLink } from "@/data/settings";
 import { useLocale } from "@/i18n/context";
-import { SocialLink } from "./social-link";
+import { SocialLink as SocialLinkComponent } from "./social-link";
 
 // ─── X (Twitter) icon — not in lucide ───
 function XIcon({ className }: { className?: string }) {
@@ -16,15 +17,15 @@ function XIcon({ className }: { className?: string }) {
   );
 }
 
-// ─── Social links config ───
-const SOCIAL_LINKS = [
-  { name: "X", href: "https://x.com/zhengli", icon: XIcon, isLucide: false, brand: "x" },
-  { name: "Facebook", href: "https://www.facebook.com/zhengli", icon: Facebook, isLucide: true, brand: "facebook" },
-  { name: "LinkedIn", href: "https://www.linkedin.com/in/nocoo/", icon: Linkedin, isLucide: true, brand: "linkedin" },
-  { name: "Email", href: "mailto:nicnocquee@gmail.com", icon: Mail, isLucide: true, brand: "email" },
-  { name: "GitHub", href: "https://github.com/nocoo", icon: Github, isLucide: true, brand: "github" },
-  { name: "Resume", href: "https://lizheng.dev/", icon: FileUser, isLucide: true, brand: "resume" },
-];
+// ─── Brand → icon mapping ───
+const BRAND_ICONS: Record<string, { icon: React.ComponentType<{ className?: string }>; isLucide: boolean }> = {
+  x: { icon: XIcon, isLucide: false },
+  facebook: { icon: Facebook, isLucide: true },
+  linkedin: { icon: Linkedin, isLucide: true },
+  email: { icon: Mail, isLucide: true },
+  github: { icon: Github, isLucide: true },
+  resume: { icon: FileUser, isLucide: true },
+};
 
 interface BlogSidebarProps {
   variant: "desktop" | "drawer";
@@ -33,9 +34,15 @@ interface BlogSidebarProps {
   categories: Category[];
   tags: Tag[];
   archives: MonthlyArchive[];
+  siteName: string;
+  siteTagline: string;
+  socialLinks: SocialLink[];
 }
 
-export function BlogSidebar({ variant, open, onClose, categories, tags, archives }: BlogSidebarProps) {
+export function BlogSidebar({
+  variant, open, onClose, categories, tags, archives,
+  siteName, siteTagline, socialLinks,
+}: BlogSidebarProps) {
   const { t } = useLocale();
 
   const isDrawer = variant === "drawer";
@@ -65,23 +72,29 @@ export function BlogSidebar({ variant, open, onClose, categories, tags, archives
 
         {/* Site identity */}
         <div className="blog-site-title">
-          <Link href="/">LIZHENG.ME</Link>
+          <Link href="/">{siteName}</Link>
         </div>
-        <p className="blog-tagline">{t("blog.sidebar.tagline")}</p>
+        {siteTagline && <p className="blog-tagline">{siteTagline}</p>}
 
         {/* Social links */}
-        <div className="blog-social">
-          {SOCIAL_LINKS.map((link) => (
-            <SocialLink
-              key={link.name}
-              href={link.href}
-              name={link.name}
-              brand={link.brand}
-              icon={link.icon}
-              isLucide={link.isLucide}
-            />
-          ))}
-        </div>
+        {socialLinks.length > 0 && (
+          <div className="blog-social">
+            {socialLinks.map((link) => {
+              const brandInfo = BRAND_ICONS[link.brand];
+              if (!brandInfo) return null;
+              return (
+                <SocialLinkComponent
+                  key={link.url}
+                  href={link.brand === "email" ? `mailto:${link.url}` : link.url}
+                  name={link.name}
+                  brand={link.brand}
+                  icon={brandInfo.icon}
+                  isLucide={brandInfo.isLucide}
+                />
+              );
+            })}
+          </div>
+        )}
 
         {/* Categories */}
         {categories.length > 0 && (
