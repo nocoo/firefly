@@ -5,12 +5,17 @@ import { Sun, Moon } from "lucide-react";
 import { renderMarkdown } from "@/models/markdown";
 import { useLocale } from "@/i18n/context";
 import { ArticleBody } from "@/components/blog/article-body";
+import { ReferenceCard } from "@/components/blog/reference-card";
 
 interface MarkdownPreviewProps {
   title?: string;
   excerpt?: string;
   content: string;
   featuredImage?: string;
+  referenceUrl?: string;
+  referenceTitle?: string;
+  referenceDescription?: string;
+  referenceImage?: string;
 }
 
 export function MarkdownPreview({
@@ -18,6 +23,10 @@ export function MarkdownPreview({
   excerpt,
   content,
   featuredImage,
+  referenceUrl,
+  referenceTitle,
+  referenceDescription,
+  referenceImage,
 }: MarkdownPreviewProps) {
   const html = useMemo(
     () => (content ? renderMarkdown(content) : ""),
@@ -29,7 +38,7 @@ export function MarkdownPreview({
   const [previewDark, setPreviewDark] = useState(false);
   const togglePreviewTheme = useCallback(() => setPreviewDark((d) => !d), []);
 
-  const isEmpty = !title && !excerpt && !content && !featuredImage;
+  const isEmpty = !title && !excerpt && !content && !featuredImage && !referenceUrl;
 
   if (isEmpty) {
     return (
@@ -61,6 +70,16 @@ export function MarkdownPreview({
 
       <ArticleBody
         html={html}
+        referenceCard={
+          referenceUrl ? (
+            <ReferenceCard
+              url={referenceUrl}
+              title={referenceTitle}
+              description={referenceDescription}
+              image={referenceImage}
+            />
+          ) : undefined
+        }
         header={
           <>
             {featuredImage && (
