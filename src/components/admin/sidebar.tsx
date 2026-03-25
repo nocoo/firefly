@@ -17,6 +17,7 @@ import {
   ExternalLink,
   Bot,
   KeyRound,
+  Fingerprint,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -59,6 +60,7 @@ const NAV_GROUPS: NavGroup[] = [
     labelKey: "admin.nav.system",
     defaultOpen: true,
     items: [
+      { titleKey: "admin.nav.siteIdentity", href: "/admin/site-identity", icon: Fingerprint },
       { titleKey: "admin.nav.settings", href: "/admin/settings", icon: Settings },
       { titleKey: "admin.nav.aiSettings", href: "/admin/ai-settings", icon: Bot },
       { titleKey: "admin.nav.mcpTokens", href: "/admin/mcp-tokens", icon: KeyRound },

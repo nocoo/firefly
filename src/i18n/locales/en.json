@@ -45,6 +45,7 @@
   "admin.nav.categories": "Categories",
   "admin.nav.tags": "Tags",
   "admin.nav.system": "System",
+  "admin.nav.siteIdentity": "Site Identity",
   "admin.nav.settings": "Settings",
   "admin.sidebar.firefly": "Firefly",
   "admin.sidebar.signOut": "Sign out",
