@@ -88,10 +88,10 @@ export function AnalyticsDashboard() {
     [t],
   );
 
-  // Initial load: summary + default tab
+  // Initial load & period change: summary + active tab
   useEffect(() => {
     fetchSummary(days);
-    fetchSourceDetail("human", days);
+    fetchSourceDetail(activeTab, days);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days]);
 
