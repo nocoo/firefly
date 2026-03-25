@@ -130,7 +130,7 @@ export async function proxy(request: NextRequest) {
         request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
       referrer: request.headers.get("referer"),
       country: request.headers.get("cf-ipcountry") ?? null,
-      city: null,
+      city: request.headers.get("cf-ipcity") ?? null,
     }).catch(() => {
       // Never let analytics break the response
     });
