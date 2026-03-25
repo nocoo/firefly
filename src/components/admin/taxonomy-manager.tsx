@@ -2,14 +2,21 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useLocale } from "@/i18n/context";
 
-interface TaxonomyItem {
+export interface TaxonomyItem {
   id: string;
   name: string;
   slug: string;
   description?: string | null;
   post_count: number;
+  /** Total posts (all statuses). Only present for categories. */
+  total_posts?: number;
+  /** Published posts. Only present for categories. */
+  published_posts?: number;
+  /** Draft posts. Only present for categories. */
+  draft_posts?: number;
 }
 
 interface TaxonomyManagerProps {
@@ -38,6 +45,14 @@ export function TaxonomyManager({
   const label = type === "category"
     ? t("admin.taxonomy.category")
     : t("admin.taxonomy.tag");
+
+  const pageTitle = type === "category"
+    ? t("admin.taxonomy.title.categories")
+    : t("admin.taxonomy.title.tags");
+
+  const totalText = type === "category"
+    ? t("admin.taxonomy.total.categories", { n: items.length })
+    : t("admin.taxonomy.total.tags", { n: items.length });
 
   const resetForm = () => {
     setName("");
@@ -138,8 +153,18 @@ export function TaxonomyManager({
     ? t("admin.taxonomy.noCategories")
     : t("admin.taxonomy.noTags");
 
+  /** Show enriched post stats (total / published / draft) when available, otherwise fall back to post_count. */
+  const hasStats = type === "category" && items.some((i) => i.total_posts !== undefined);
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Page header */}
+      <div>
+        <h2 className="text-lg font-semibold text-foreground">{pageTitle}</h2>
+        <p className="text-sm text-muted-foreground">{totalText}</p>
+      </div>
+
+      <div className="space-y-4">
       {error && (
         <div className="rounded-[var(--radius-widget)] border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
@@ -251,20 +276,31 @@ export function TaxonomyManager({
                     {item.description ?? "—"}
                   </td>
                   <td className="px-4 py-3 text-center text-muted-foreground">
-                    {item.post_count}
+                    {hasStats ? (
+                      <span title={`${t("admin.taxonomy.statsPublished")}: ${item.published_posts ?? 0}, ${t("admin.taxonomy.statsDraft")}: ${item.draft_posts ?? 0}`}>
+                        {item.total_posts ?? 0}
+                        <span className="text-xs text-muted-foreground/60 ml-1">
+                          ({item.published_posts ?? 0}/{item.draft_posts ?? 0})
+                        </span>
+                      </span>
+                    ) : (
+                      item.post_count
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-1">
                       <button
                         onClick={() => startEdit(item)}
-                        className="text-sm text-primary hover:text-primary/80 transition-colors"
+                        className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                       >
+                        <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
                         {t("admin.taxonomy.edit")}
                       </button>
                       <button
                         onClick={() => handleDelete(item)}
-                        className="text-sm text-destructive hover:text-destructive/80 transition-colors"
+                        className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
                       >
+                        <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
                         {t("admin.taxonomy.delete")}
                       </button>
                     </div>
@@ -274,6 +310,7 @@ export function TaxonomyManager({
             )}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   );
