@@ -753,17 +753,17 @@ function handlePeriodChange(newDays: number) {
 | 5 | feat: add analytics summary + source query functions | `src/data/analytics.ts`, `src/models/types.ts` | ✅ |
 | 6 | feat: rewrite /api/analytics as summary endpoint | `src/app/api/analytics/route.ts` | ✅ |
 | 7 | feat: add /api/analytics/source detail endpoint | `src/app/api/analytics/source/route.ts` | ✅ |
-| 8 | feat: chart helpers and shared constants | `src/components/admin/analytics/chart-helpers.ts` |
-| 9 | feat: analytics overview cards with delta | `src/components/admin/analytics/overview-cards.tsx` |
-| 10 | feat: stacked area traffic trend chart | `src/components/admin/analytics/traffic-trend.tsx` |
-| 11 | feat: human visitor detail tab | `src/components/admin/analytics/human-tab.tsx` |
-| 12 | feat: search engine detail tab | `src/components/admin/analytics/search-tab.tsx` |
-| 13 | feat: AI bot detail tab | `src/components/admin/analytics/ai-bot-tab.tsx` |
-| 14 | feat: other bot detail tab | `src/components/admin/analytics/other-bot-tab.tsx` |
-| 15 | feat: aggregates panel (countries/platforms/browsers) | `src/components/admin/analytics/aggregates-panel.tsx` |
-| 16 | feat: rewrite analytics dashboard orchestrator | `src/components/admin/analytics-dashboard.tsx` |
-| 17 | feat: add i18n keys for analytics redesign | `src/i18n/locales/{en,zh}.json` |
-| 18 | test: add unit + e2e tests for analytics redesign | tests |
+| 8 | feat: chart helpers and shared constants | `src/components/admin/analytics/chart-helpers.ts` | ✅ |
+| 9 | feat: analytics overview cards with delta | `src/components/admin/analytics/overview-cards.tsx` | ✅ |
+| 10 | feat: stacked area traffic trend chart | `src/components/admin/analytics/traffic-trend.tsx` | ✅ |
+| 11 | feat: human visitor detail tab | `src/components/admin/analytics/human-tab.tsx` | ✅ |
+| 12 | feat: search engine detail tab | `src/components/admin/analytics/search-tab.tsx` | ✅ |
+| 13 | feat: AI bot detail tab | `src/components/admin/analytics/ai-bot-tab.tsx` | ✅ |
+| 14 | feat: other bot detail tab | `src/components/admin/analytics/other-bot-tab.tsx` | ✅ |
+| 15 | feat: aggregates panel (countries/platforms/browsers) | `src/components/admin/analytics/aggregates-panel.tsx` | ✅ |
+| 16 | feat: rewrite analytics dashboard orchestrator | `src/components/admin/analytics-dashboard.tsx` | ✅ |
+| 17 | feat: add i18n keys for analytics redesign | `src/i18n/locales/{en,zh}.json` | ✅ |
+| 18 | test: add unit + e2e tests for analytics redesign | tests | ✅ |
 
 ## 9. Testing
 
