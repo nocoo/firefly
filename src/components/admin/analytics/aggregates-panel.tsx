@@ -7,14 +7,55 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
+  CartesianGrid,
 } from "recharts";
-import { CHART_COLORS, TOOLTIP_STYLE } from "./chart-helpers";
+import {
+  CHART_COLORS,
+  chartAxis,
+  formatNumber,
+  H_BAR_MARGIN,
+} from "./chart-helpers";
+import { DashboardResponsiveContainer } from "./responsive-container";
 import { useLocale } from "@/i18n/context";
 
 interface AggregatesPanelProps {
   aggregates: AnalyticsAggregates;
 }
+
+// ---------------------------------------------------------------------------
+// Custom tooltip
+// ---------------------------------------------------------------------------
+
+function BarTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ dataKey: string; value: number; color: string; payload?: { name: string } }>;
+}) {
+  if (!active || !payload?.length) return null;
+  const entry = payload[0] as (typeof payload)[number];
+  const name = entry.payload?.name ?? "";
+
+  return (
+    <div className="rounded-[var(--radius-widget)] border border-border bg-card p-2.5 shadow-sm">
+      <div className="flex items-center gap-2 text-xs">
+        <div
+          className="h-2 w-2 rounded-full"
+          style={{ backgroundColor: entry.color }}
+        />
+        <span className="text-muted-foreground">{name}</span>
+        <span className="ml-auto font-medium text-foreground">
+          {formatNumber(entry.value)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export function AggregatesPanel({ aggregates }: AggregatesPanelProps) {
   const { t } = useLocale();
@@ -96,22 +137,38 @@ function HorizontalBar({
   data: { name: string; value: number }[];
   color: string;
 }) {
+  const barHeight = 28;
+  const chartHeight = Math.max(data.length * barHeight + 40, 100);
+
   return (
-    <ResponsiveContainer width="100%" height={Math.max(data.length * 28, 100)}>
-      <BarChart data={data} layout="vertical" margin={{ left: 60 }}>
-        <XAxis
-          type="number"
-          tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
-        />
-        <YAxis
-          type="category"
-          dataKey="name"
-          tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
-          width={55}
-        />
-        <Tooltip contentStyle={TOOLTIP_STYLE} />
-        <Bar dataKey="value" fill={color} radius={[0, 4, 4, 0]} />
-      </BarChart>
-    </ResponsiveContainer>
+    <div style={{ height: chartHeight }}>
+      <DashboardResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} layout="vertical" margin={H_BAR_MARGIN}>
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke={chartAxis}
+            strokeOpacity={0.15}
+            horizontal={false}
+          />
+          <XAxis
+            type="number"
+            tick={{ fill: chartAxis, fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            allowDecimals={false}
+          />
+          <YAxis
+            type="category"
+            dataKey="name"
+            tick={{ fill: chartAxis, fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            width={60}
+          />
+          <Tooltip content={<BarTooltip />} isAnimationActive={false} />
+          <Bar dataKey="value" fill={color} radius={[0, 4, 4, 0]} />
+        </BarChart>
+      </DashboardResponsiveContainer>
+    </div>
   );
 }

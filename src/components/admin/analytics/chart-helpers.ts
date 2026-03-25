@@ -100,11 +100,6 @@ export function formatDateLabel(dateStr: string): string {
   });
 }
 
-/** @deprecated Use formatDateLabel instead */
-export function formatDateShort(date: string): string {
-  return date.slice(5);
-}
-
 /** Format a large number with locale separators */
 export function formatNumber(n: number): string {
   return n.toLocaleString();
@@ -130,18 +125,6 @@ export function formatReferrer(url: string): string {
     return url;
   }
 }
-
-// ---------------------------------------------------------------------------
-// Shared tooltip style (deprecated — use custom tooltip components instead)
-// ---------------------------------------------------------------------------
-
-/** @deprecated Use custom tooltip React components with Tailwind classes */
-export const TOOLTIP_STYLE: React.CSSProperties = {
-  background: "var(--color-card)",
-  border: "1px solid var(--color-border)",
-  borderRadius: "8px",
-  fontSize: "12px",
-};
 
 // ---------------------------------------------------------------------------
 // Period options
