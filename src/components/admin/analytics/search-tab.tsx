@@ -29,7 +29,7 @@ export function SearchTab({ data }: SearchTabProps) {
   const botNames = [...new Set(data.dailyByBot.map((r) => r.botName))];
   const dailyMap = new Map<string, Record<string, number>>();
   for (const row of data.dailyByBot) {
-    if (!dailyMap.has(row.date)) dailyMap.set(row.date, { date: 0 });
+    if (!dailyMap.has(row.date)) dailyMap.set(row.date, {});
     const entry = dailyMap.get(row.date) ?? {};
     entry[row.botName] = row.count;
   }
