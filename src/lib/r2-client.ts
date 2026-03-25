@@ -34,7 +34,7 @@ export interface R2Config {
  * Used by server-only modules (e.g. logo.ts) to construct public URLs
  * without importing the full S3 client.
  *
- * Requires the R2_PUBLIC_URL environment variable to be set.
+ * Requires R2_PUBLIC_URL in .env (or Railway env vars for prod).
  */
 export function getR2PublicUrl(): string {
   const url = process.env.R2_PUBLIC_URL;
