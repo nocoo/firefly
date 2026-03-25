@@ -67,7 +67,7 @@ export async function recordPageView(
   // Increment posts.view_count for human visitors (cache-type field, eventual consistency)
   // UPDATE failure does not affect the page_view INSERT above.
   if (input.postId && !input.isBot) {
-    db.execute(
+    await db.execute(
       "UPDATE posts SET view_count = view_count + 1 WHERE id = ?",
       [input.postId],
     ).catch(() => {
