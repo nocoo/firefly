@@ -1,6 +1,6 @@
 "use client";
 
-import type { AnalyticsOverview } from "@/models/analytics-types";
+import type { AnalyticsOverview, DeltaValue } from "@/models/analytics-types";
 import { formatNumber, formatDelta } from "./chart-helpers";
 import { useLocale } from "@/i18n/context";
 
@@ -48,7 +48,7 @@ function StatCard({
 }: {
   label: string;
   value: number;
-  delta: number | null;
+  delta: DeltaValue;
 }) {
   const d = formatDelta(delta);
   return (

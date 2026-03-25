@@ -543,8 +543,8 @@ export async function getAnalyticsOverview(
     ),
   ]);
 
-  function delta(curr: number, prev: number): number | null {
-    if (prev === 0) return null;
+  function delta(curr: number, prev: number): number | "new" | null {
+    if (prev === 0) return curr > 0 ? "new" : null;
     return Math.round(((curr - prev) / prev) * 100);
   }
 

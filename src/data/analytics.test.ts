@@ -489,15 +489,17 @@ describe("getAnalyticsOverview", () => {
     expect(result.humanDelta).toBe(100); // (70-35)/35 = 100%
   });
 
-  it("returns null delta when previous period is zero", async () => {
+  it("returns 'new' delta when previous period is zero but current has data", async () => {
     vi.mocked(db.firstOrNull)
       .mockResolvedValueOnce({ total: 10, human: 10, search: 0, ai: 0, other_bot: 0 })
       .mockResolvedValueOnce({ total: 0, human: 0, search: 0, ai: 0, other_bot: 0 });
 
     const result = await getAnalyticsOverview(db, 7);
 
-    expect(result.totalDelta).toBeNull();
-    expect(result.humanDelta).toBeNull();
+    expect(result.totalDelta).toBe("new");
+    expect(result.humanDelta).toBe("new");
+    // search/ai/other have 0 in both periods → null
+    expect(result.searchDelta).toBeNull();
   });
 
   it("returns all zeros when no data", async () => {

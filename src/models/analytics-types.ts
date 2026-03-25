@@ -7,17 +7,20 @@
 // Summary endpoint response (GET /api/analytics?days=N)
 // ---------------------------------------------------------------------------
 
+/** Delta percentage: number = % change, "new" = first appearance (prev=0, curr>0), null = no data */
+export type DeltaValue = number | "new" | null;
+
 export interface AnalyticsOverview {
   total: number;
   human: number;
   search: number;
   ai: number;
   otherBot: number;
-  totalDelta: number | null;
-  humanDelta: number | null;
-  searchDelta: number | null;
-  aiDelta: number | null;
-  otherBotDelta: number | null;
+  totalDelta: DeltaValue;
+  humanDelta: DeltaValue;
+  searchDelta: DeltaValue;
+  aiDelta: DeltaValue;
+  otherBotDelta: DeltaValue;
 }
 
 export interface AnalyticsDailyTrend {
