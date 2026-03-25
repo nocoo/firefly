@@ -7,6 +7,13 @@ import { getDb } from "@/lib/db";
 import { getSiteSettings } from "@/data/settings";
 import "./globals.css";
 
+/**
+ * Revalidate every 5 minutes so metadata changes (site name, description,
+ * tagline) propagate without a full redeploy. Without this, Next.js sets
+ * s-maxage=31536000 and CDN caches the pre-rendered HTML indefinitely.
+ */
+export const revalidate = 300;
+
 export async function generateMetadata(): Promise<Metadata> {
   const db = getDb();
   const [locale, settings] = await Promise.all([
@@ -19,13 +26,18 @@ export async function generateMetadata(): Promise<Metadata> {
     ? `${settings.siteName} – ${settings.siteTagline}`
     : settings.siteName;
 
+  // Prefer siteDescription; fall back to siteTagline; omit if both empty
+  // so Next.js does not render an empty <meta name="description"> tag.
+  const description =
+    settings.siteDescription || settings.siteTagline || undefined;
+
   return {
     metadataBase: new URL(SITE_URL),
     title: {
       default: fullTitle,
       template: `%s | ${settings.siteName}`,
     },
-    description: settings.siteDescription,
+    description,
     authors: [{ name: settings.siteAuthor, url: SITE_URL }],
     creator: settings.siteAuthor,
     publisher: settings.siteAuthor,
@@ -53,14 +65,14 @@ export async function generateMetadata(): Promise<Metadata> {
       url: SITE_URL,
       siteName: settings.siteName,
       title: fullTitle,
-      description: settings.siteDescription,
+      description,
     },
     twitter: {
       card: "summary",
       ...(settings.twitterHandle ? { site: settings.twitterHandle } : {}),
       ...(settings.twitterHandle ? { creator: settings.twitterHandle } : {}),
       title: fullTitle,
-      description: settings.siteDescription,
+      description,
     },
     icons: {
       icon: "/api/favicon",

@@ -25,15 +25,18 @@ export async function generateMetadata(): Promise<Metadata> {
     ? `${settings.siteName} – ${settings.siteTagline}`
     : settings.siteName;
 
+  const description =
+    settings.siteDescription || settings.siteTagline || undefined;
+
   return {
-    description: settings.siteDescription,
+    description,
     alternates: {
       canonical: SITE_URL,
       languages: { [lang]: SITE_URL },
     },
     openGraph: {
       title: fullTitle,
-      description: settings.siteDescription,
+      description,
       url: SITE_URL,
       siteName: settings.siteName,
       locale: ogLocale(locale),
@@ -44,7 +47,7 @@ export async function generateMetadata(): Promise<Metadata> {
       ...(settings.twitterHandle ? { site: settings.twitterHandle } : {}),
       ...(settings.twitterHandle ? { creator: settings.twitterHandle } : {}),
       title: fullTitle,
-      description: settings.siteDescription,
+      description,
     },
   };
 }
