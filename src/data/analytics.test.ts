@@ -47,13 +47,19 @@ describe("recordPageView", () => {
       sessionId: "sess1",
     });
 
-    expect(db.execute).toHaveBeenCalledOnce();
+    // INSERT page_view + UPDATE posts.view_count (human + postId)
+    expect(db.execute).toHaveBeenCalledTimes(2);
     const [sql, params] = vi.mocked(db.execute).mock.calls[0];
     expect(sql).toContain("INSERT INTO page_views");
     expect(params).toHaveLength(15);
     expect(params![1]).toBe("p1"); // post_id
     expect(params![2]).toBe("/test"); // path
     expect(params![11]).toBe(0); // is_bot = false → 0
+
+    // view_count increment
+    const [updateSql, updateParams] = vi.mocked(db.execute).mock.calls[1];
+    expect(updateSql).toContain("UPDATE posts SET view_count");
+    expect(updateParams).toEqual(["p1"]);
   });
 
   it("records bot views with is_bot = 1", async () => {
@@ -66,6 +72,8 @@ describe("recordPageView", () => {
       botCategory: "search",
     });
 
+    // Only INSERT, no view_count update for bots
+    expect(db.execute).toHaveBeenCalledOnce();
     const [, params] = vi.mocked(db.execute).mock.calls[0];
     expect(params![11]).toBe(1); // is_bot = true → 1
     expect(params![12]).toBe("Googlebot");
@@ -77,9 +85,41 @@ describe("recordPageView", () => {
 
     await recordPageView(db, { path: "/minimal" });
 
+    // Only INSERT, no view_count update (no postId)
+    expect(db.execute).toHaveBeenCalledOnce();
     const [, params] = vi.mocked(db.execute).mock.calls[0];
     expect(params![1]).toBeNull(); // post_id
     expect(params![3]).toBeNull(); // referrer
+  });
+
+  it("does not increment view_count for bot with postId", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });
+
+    await recordPageView(db, {
+      path: "/test",
+      postId: "p1",
+      isBot: true,
+      botName: "GPTBot",
+      botCategory: "ai",
+    });
+
+    // Only INSERT, no view_count update for bots even with postId
+    expect(db.execute).toHaveBeenCalledOnce();
+  });
+
+  it("does not throw when view_count update fails", async () => {
+    vi.mocked(db.execute)
+      .mockResolvedValueOnce({ changes: 1, duration: 1 }) // INSERT succeeds
+      .mockRejectedValueOnce(new Error("UPDATE failed")); // UPDATE fails
+
+    // Should not throw
+    await expect(
+      recordPageView(db, {
+        path: "/test",
+        postId: "p1",
+        isBot: false,
+      }),
+    ).resolves.toBeUndefined();
   });
 });
 

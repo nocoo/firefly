@@ -53,6 +53,17 @@ export async function recordPageView(
       input.sessionId ?? null,
     ],
   );
+
+  // Increment posts.view_count for human visitors (cache-type field, eventual consistency)
+  // UPDATE failure does not affect the page_view INSERT above.
+  if (input.postId && !input.isBot) {
+    db.execute(
+      "UPDATE posts SET view_count = view_count + 1 WHERE id = ?",
+      [input.postId],
+    ).catch(() => {
+      // Silently ignore — view_count is a denormalized cache field
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------
