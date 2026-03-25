@@ -21,7 +21,7 @@ export const LOGO_SIZES: LogoSize[] = [16, 32, 48, 80, 180, 192, 512];
  * Build the public CDN URL for a logo variant.
  *
  * @example getLogoUrl("a1b2c3d4", 32)
- * // → "https://assets.lizheng.me/lizhengblog/wp-content/uploads/firefly/site/a1b2c3d4/logo-32.png"
+ * // → "https://cdn.example.com/uploads/firefly/site/a1b2c3d4/logo-32.png"
  */
 export function getLogoUrl(version: string, size: LogoSize): string {
   return `${getR2PublicUrl()}/${getLogoBasePath()}/${version}/logo-${size}.png`;
