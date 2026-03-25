@@ -7,11 +7,13 @@ import { t, type Locale } from "@/i18n/translations";
 interface PostCardProps {
   post: PostWithCategory;
   locale: Locale;
+  /** Author name for the byline */
+  author?: string;
   /** Mark the featured image as high-priority (LCP) */
   priority?: boolean;
 }
 
-export function PostCard({ post, locale, priority }: PostCardProps) {
+export function PostCard({ post, locale, author, priority }: PostCardProps) {
   const href = postPath(post.slug, post.published_at);
   const date = post.published_at
     ? formatDateDisplay(post.published_at)
@@ -35,7 +37,7 @@ export function PostCard({ post, locale, priority }: PostCardProps) {
         <time dateTime={post.published_at ? new Date(post.published_at * 1000).toISOString() : undefined}>
           {date}
         </time>
-        {" "}<span>{t(locale, "blog.post.byAuthor", { author: "nocoo" })}</span>
+        {" "}<span>{t(locale, "blog.post.byAuthor", { author: author || "" })}</span>
       </div>
 
       {/* Featured image */}

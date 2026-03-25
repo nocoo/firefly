@@ -1,19 +1,21 @@
 import { getDb } from "@/lib/db";
 import { listPosts } from "@/data/posts";
 import { listCategories } from "@/data/categories";
+import { getSiteSettings } from "@/data/settings";
 import { SITE_URL, postPath } from "@/lib/seo";
 
 export async function GET() {
   const db = getDb();
-  const [{ posts }, categories] = await Promise.all([
+  const [{ posts }, categories, settings] = await Promise.all([
     listPosts(db, { status: "published", pageSize: 250 }),
     listCategories(db),
+    getSiteSettings(db),
   ]);
 
   const lines = [
-    "# Li Zheng",
+    `# ${settings.siteAuthor || settings.siteName}`,
     "",
-    "> Personal blog by Li Zheng — technology, design, and life.",
+    settings.siteDescription ? `> ${settings.siteDescription}` : "",
     "",
     `This site is a personal blog at ${SITE_URL}.`,
     "",
@@ -35,7 +37,7 @@ export async function GET() {
     `- RSS: ${SITE_URL}/feed.xml`,
     `- Sitemap: ${SITE_URL}/sitemap.xml`,
     "",
-  ];
+  ].filter((line) => line !== undefined);
 
   return new Response(lines.join("\n"), {
     headers: {

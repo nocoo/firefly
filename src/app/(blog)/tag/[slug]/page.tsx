@@ -25,12 +25,13 @@ export async function generateMetadata({
 
   if (!tag) return { title: "Not Found" };
 
+  const settings = await getSiteSettings(db);
   const meta = buildPageMeta({
     title: `#${tag.name}`,
     description: t(locale, "blog.tag.metaDescription", { name: tag.name }),
     path: `/tag/${tag.slug}`,
     locale,
-  });
+  }, settings);
 
   // Thin-content tags: noindex to avoid low-quality pages in search index
   if (tag.post_count < 3) {
@@ -49,7 +50,8 @@ export default async function TagPage({ params }: TagPageProps) {
 
   if (!tag) notFound();
 
-  const { postsPerPage } = await getSiteSettings(db);
+  const settings = await getSiteSettings(db);
+  const { postsPerPage } = settings;
   const { posts, total } = await listPosts(db, {
     status: "published",
     tagId: tag.id,
@@ -96,6 +98,7 @@ export default async function TagPage({ params }: TagPageProps) {
               key={post.id}
               post={post}
               locale={locale}
+              author={settings.siteAuthor}
               priority={i === 0 && !!post.featured_image}
             />
           ))

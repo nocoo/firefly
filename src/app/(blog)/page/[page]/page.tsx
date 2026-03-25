@@ -5,7 +5,7 @@ import { listPosts } from "@/data/posts";
 import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
-import { buildPageMeta, SITE_NAME, SITE_URL, SITE_DESCRIPTION, postPath } from "@/lib/seo";
+import { buildPageMeta, SITE_URL, postPath } from "@/lib/seo";
 import { collectionPageJsonLd } from "@/lib/jsonld";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
@@ -19,13 +19,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const page = parseInt(pageStr, 10);
   if (Number.isNaN(page) || page < 2) return { title: "Not Found" };
 
-  const locale = await getLocale();
+  const db = getDb();
+  const [locale, settings] = await Promise.all([
+    getLocale(),
+    getSiteSettings(db),
+  ]);
   return buildPageMeta({
-    title: `${SITE_NAME} – Page ${page}`,
-    description: `${SITE_DESCRIPTION} — Page ${page}`,
+    title: `${settings.siteName} – Page ${page}`,
+    description: `${settings.siteDescription} — Page ${page}`,
     path: `/page/${page}`,
     locale,
-  });
+  }, settings);
 }
 
 export default async function HomePaged({ params }: PageProps) {
@@ -36,14 +40,14 @@ export default async function HomePaged({ params }: PageProps) {
   const locale = await getLocale();
 
   const db = getDb();
-  const { postsPerPage } = await getSiteSettings(db);
+  const settings = await getSiteSettings(db);
   const { posts, total } = await listPosts(db, {
     status: "published",
     page,
-    pageSize: postsPerPage,
+    pageSize: settings.postsPerPage,
   });
 
-  const totalPages = Math.ceil(total / postsPerPage);
+  const totalPages = Math.ceil(total / settings.postsPerPage);
   if (page > totalPages) notFound();
 
   return (
@@ -52,7 +56,7 @@ export default async function HomePaged({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: collectionPageJsonLd(
-            `${SITE_NAME} – Page ${page}`,
+            `${settings.siteName} – Page ${page}`,
             `/page/${page}`,
             posts.map((p) => ({
               url: `${SITE_URL}${postPath(p.slug, p.published_at)}`,
@@ -74,6 +78,7 @@ export default async function HomePaged({ params }: PageProps) {
               key={post.id}
               post={post}
               locale={locale}
+              author={settings.siteAuthor}
               priority={i === 0 && !!post.featured_image}
             />
           ))

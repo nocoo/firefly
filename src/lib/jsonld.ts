@@ -4,23 +4,24 @@
 
 import type { PostWithCategory } from "@/models/types";
 import type { Locale } from "@/i18n/translations";
-import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, postPath, formatDateISO, htmlLang } from "./seo";
+import type { SiteIdentity } from "./seo";
+import { SITE_URL, postPath, formatDateISO, htmlLang } from "./seo";
 
 // ---------------------------------------------------------------------------
 // WebSite (home page)
 // ---------------------------------------------------------------------------
 
-export function websiteJsonLd(locale: Locale = "zh"): string {
+export function websiteJsonLd(site: SiteIdentity, locale: Locale = "zh"): string {
   return JSON.stringify({
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: SITE_NAME,
+    name: site.siteName,
     url: SITE_URL,
-    description: SITE_DESCRIPTION,
+    description: site.siteDescription,
     inLanguage: htmlLang(locale),
     author: {
       "@type": "Person",
-      name: "Li Zheng",
+      name: site.siteAuthor,
       url: SITE_URL,
     },
   });
@@ -32,6 +33,7 @@ export function websiteJsonLd(locale: Locale = "zh"): string {
 
 export function blogPostingJsonLd(
   post: PostWithCategory,
+  site: SiteIdentity,
   tagNames?: string[],
   locale: Locale = "zh",
 ): string {
@@ -51,12 +53,12 @@ export function blogPostingJsonLd(
     ...(post.featured_image ? { image: post.featured_image } : {}),
     author: {
       "@type": "Person",
-      name: "Li Zheng",
+      name: site.siteAuthor,
       url: SITE_URL,
     },
     publisher: {
       "@type": "Person",
-      name: "Li Zheng",
+      name: site.siteAuthor,
     },
     mainEntityOfPage: {
       "@type": "WebPage",

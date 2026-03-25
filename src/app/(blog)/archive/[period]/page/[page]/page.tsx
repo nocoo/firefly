@@ -23,7 +23,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const parsed = parseArchivePeriod(period);
   if (!parsed) return { title: "Not Found" };
 
-  const locale = await getLocale();
+  const db = getDb();
+  const [settings, locale] = await Promise.all([
+    getSiteSettings(db),
+    getLocale(),
+  ]);
   const label = parsed.month
     ? `${parsed.year} ${t(locale, "blog.sidebar.yearSuffix")} ${parsed.month} ${t(locale, "blog.sidebar.monthSuffix")}`
     : `${parsed.year} ${t(locale, "blog.sidebar.yearSuffix")}`;
@@ -33,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: label,
     path: `/archive/${period}/page/${page}`,
     locale,
-  });
+  }, settings);
 }
 
 export default async function ArchivePaged({ params }: Props) {
@@ -47,7 +51,8 @@ export default async function ArchivePaged({ params }: Props) {
   const locale = await getLocale();
   const db = getDb();
 
-  const { postsPerPage } = await getSiteSettings(db);
+  const settings = await getSiteSettings(db);
+  const { postsPerPage } = settings;
   const { posts, total } = await listPosts(db, {
     status: "published",
     archiveYear: parsed.year,
@@ -100,6 +105,7 @@ export default async function ArchivePaged({ params }: Props) {
               key={post.id}
               post={post}
               locale={locale}
+              author={settings.siteAuthor}
               priority={i === 0 && !!post.featured_image}
             />
           ))

@@ -38,7 +38,11 @@ export async function generateMetadata({ params }: ArchivePageProps): Promise<Me
   const parsed = parseArchivePeriod(period);
   if (!parsed) return { title: "Not Found" };
 
-  const locale = await getLocale();
+  const db = getDb();
+  const [settings, locale] = await Promise.all([
+    getSiteSettings(db),
+    getLocale(),
+  ]);
   const label = parsed.month
     ? `${parsed.year} ${t(locale, "blog.sidebar.yearSuffix")} ${parsed.month} ${t(locale, "blog.sidebar.monthSuffix")}`
     : `${parsed.year} ${t(locale, "blog.sidebar.yearSuffix")}`;
@@ -48,7 +52,7 @@ export async function generateMetadata({ params }: ArchivePageProps): Promise<Me
     description: label,
     path: `/archive/${period}`,
     locale,
-  });
+  }, settings);
 }
 
 export default async function ArchivePage({ params }: ArchivePageProps) {
@@ -59,7 +63,8 @@ export default async function ArchivePage({ params }: ArchivePageProps) {
   const locale = await getLocale();
   const db = getDb();
 
-  const { postsPerPage } = await getSiteSettings(db);
+  const settings = await getSiteSettings(db);
+  const { postsPerPage } = settings;
   const { posts, total } = await listPosts(db, {
     status: "published",
     archiveYear: parsed.year,
@@ -111,6 +116,7 @@ export default async function ArchivePage({ params }: ArchivePageProps) {
               key={post.id}
               post={post}
               locale={locale}
+              author={settings.siteAuthor}
               priority={i === 0 && !!post.featured_image}
             />
           ))

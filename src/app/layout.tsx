@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
-import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR, TWITTER_HANDLE, ogLocale, htmlLang } from "@/lib/seo";
+import { SITE_URL, ogLocale, htmlLang } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { LocaleProvider } from "@/i18n/context";
 import { getDb } from "@/lib/db";
@@ -8,20 +8,27 @@ import { getSiteSettings } from "@/data/settings";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getLocale();
+  const db = getDb();
+  const [locale, settings] = await Promise.all([
+    getLocale(),
+    getSiteSettings(db),
+  ]);
   const og = ogLocale(locale);
   const lang = htmlLang(locale);
+  const fullTitle = settings.siteTagline
+    ? `${settings.siteName} – ${settings.siteTagline}`
+    : settings.siteName;
 
   return {
     metadataBase: new URL(SITE_URL),
     title: {
-      default: `${SITE_NAME} – 知白守黑，不语万千算`,
-      template: `%s | ${SITE_NAME}`,
+      default: fullTitle,
+      template: `%s | ${settings.siteName}`,
     },
-    description: SITE_DESCRIPTION,
-    authors: [{ name: SITE_AUTHOR, url: SITE_URL }],
-    creator: SITE_AUTHOR,
-    publisher: SITE_AUTHOR,
+    description: settings.siteDescription,
+    authors: [{ name: settings.siteAuthor, url: SITE_URL }],
+    creator: settings.siteAuthor,
+    publisher: settings.siteAuthor,
     robots: {
       index: true,
       follow: true,
@@ -44,16 +51,16 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       locale: og,
       url: SITE_URL,
-      siteName: SITE_NAME,
-      title: `${SITE_NAME} – 知白守黑，不语万千算`,
-      description: SITE_DESCRIPTION,
+      siteName: settings.siteName,
+      title: fullTitle,
+      description: settings.siteDescription,
     },
     twitter: {
       card: "summary",
-      site: TWITTER_HANDLE,
-      creator: TWITTER_HANDLE,
-      title: `${SITE_NAME} – 知白守黑，不语万千算`,
-      description: SITE_DESCRIPTION,
+      ...(settings.twitterHandle ? { site: settings.twitterHandle } : {}),
+      ...(settings.twitterHandle ? { creator: settings.twitterHandle } : {}),
+      title: fullTitle,
+      description: settings.siteDescription,
     },
     icons: {
       icon: "/api/favicon",

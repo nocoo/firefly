@@ -25,12 +25,13 @@ export async function generateMetadata({
 
   if (!category) return { title: "Not Found" };
 
+  const settings = await getSiteSettings(db);
   return buildPageMeta({
     title: category.name,
     description: category.description ?? t(locale, "blog.category.metaDescription", { name: category.name }),
     path: `/category/${category.slug}`,
     locale,
-  });
+  }, settings);
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
@@ -42,7 +43,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   if (!category) notFound();
 
-  const { postsPerPage } = await getSiteSettings(db);
+  const settings = await getSiteSettings(db);
+  const { postsPerPage } = settings;
   const { posts, total } = await listPosts(db, {
     status: "published",
     categoryId: category.id,
@@ -94,6 +96,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               key={post.id}
               post={post}
               locale={locale}
+              author={settings.siteAuthor}
               priority={i === 0 && !!post.featured_image}
             />
           ))

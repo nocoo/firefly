@@ -1,18 +1,20 @@
 import { getDb } from "@/lib/db";
 import { listPosts } from "@/data/posts";
+import { getSiteSettings } from "@/data/settings";
 import { renderMarkdown } from "@/models/markdown";
-import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR, postPath, htmlLang } from "@/lib/seo";
+import { SITE_URL, postPath, htmlLang } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { escapeXml } from "@/lib/xml";
 
 export async function GET() {
   const db = getDb();
-  const [{ posts }, locale] = await Promise.all([
+  const [{ posts }, locale, settings] = await Promise.all([
     listPosts(db, {
       status: "published",
       pageSize: 50,
     }),
     getLocale(),
+    getSiteSettings(db),
   ]);
 
   const items = posts.map((post) => {
@@ -27,12 +29,16 @@ export async function GET() {
       <link>${url}</link>
       <guid isPermaLink="true">${url}</guid>
       <pubDate>${pubDate}</pubDate>
-      <dc:creator><![CDATA[${SITE_AUTHOR}]]></dc:creator>
+      <dc:creator><![CDATA[${settings.siteAuthor}]]></dc:creator>
       <description><![CDATA[${post.excerpt ?? ""}]]></description>
       <content:encoded><![CDATA[${html}]]></content:encoded>
       ${post.category_name ? `<category><![CDATA[${post.category_name}]]></category>` : ""}
     </item>`;
   });
+
+  const managingEditor = settings.authorEmail
+    ? `<managingEditor>${escapeXml(settings.authorEmail)} (${escapeXml(settings.siteAuthor)})</managingEditor>`
+    : "";
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"
@@ -40,11 +46,11 @@ export async function GET() {
   xmlns:dc="http://purl.org/dc/elements/1.1/"
   xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>${escapeXml(SITE_NAME)}</title>
+    <title>${escapeXml(settings.siteName)}</title>
     <link>${SITE_URL}</link>
-    <description>${escapeXml(SITE_DESCRIPTION)}</description>
+    <description>${escapeXml(settings.siteDescription)}</description>
     <language>${htmlLang(locale)}</language>
-    <managingEditor>nicnocquee@gmail.com (${SITE_AUTHOR})</managingEditor>
+    ${managingEditor}
     <ttl>60</ttl>
     <atom:link href="${SITE_URL}/feed.xml" rel="self" type="application/rss+xml"/>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>

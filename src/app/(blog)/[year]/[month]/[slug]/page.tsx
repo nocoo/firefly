@@ -40,8 +40,9 @@ export async function generateMetadata({
 
   if (!post) return { title: "Not Found" };
 
-  const [tags, locale] = await Promise.all([
+  const [tags, settings, locale] = await Promise.all([
     getPostTags(db, post.id),
+    getSiteSettings(db),
     getLocale(),
   ]);
   const path = postPath(post.slug, post.published_at);
@@ -58,7 +59,7 @@ export async function generateMetadata({
       : undefined,
     modifiedTime: formatDateISO(post.updated_at),
     keywords: tags.map((t) => t.name),
-  });
+  }, settings);
 }
 
 export default async function PostPage({ params }: PostPageProps) {
@@ -102,7 +103,7 @@ export default async function PostPage({ params }: PostPageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: blogPostingJsonLd(post, tagNames, locale) }}
+        dangerouslySetInnerHTML={{ __html: blogPostingJsonLd(post, settings, tagNames, locale) }}
       />
       <script
         type="application/ld+json"

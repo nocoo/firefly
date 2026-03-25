@@ -24,13 +24,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const category = await getCategoryBySlug(db, slug);
   if (!category) return { title: "Not Found" };
 
-  const locale = await getLocale();
+  const [settings, locale] = await Promise.all([
+    getSiteSettings(db),
+    getLocale(),
+  ]);
   return buildPageMeta({
     title: `${category.name} – Page ${page}`,
     description: category.description || category.name,
     path: `/category/${slug}/page/${page}`,
     locale,
-  });
+  }, settings);
 }
 
 export default async function CategoryPaged({ params }: Props) {
@@ -45,7 +48,8 @@ export default async function CategoryPaged({ params }: Props) {
 
   if (!category) notFound();
 
-  const { postsPerPage } = await getSiteSettings(db);
+  const settings = await getSiteSettings(db);
+  const { postsPerPage } = settings;
   const { posts, total } = await listPosts(db, {
     status: "published",
     categoryId: category.id,
@@ -98,6 +102,7 @@ export default async function CategoryPaged({ params }: Props) {
               key={post.id}
               post={post}
               locale={locale}
+              author={settings.siteAuthor}
               priority={i === 0 && !!post.featured_image}
             />
           ))

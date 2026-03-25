@@ -5,13 +5,25 @@
 import type { Metadata } from "next";
 import type { Locale } from "@/i18n/translations";
 
-const SITE_NAME = "LIZHENG.ME";
-const SITE_URL = "https://lizheng.me";
-const SITE_DESCRIPTION = "知白守黑，不语万千算 — Li Zheng's personal blog on technology, design, and life.";
-const SITE_AUTHOR = "Li Zheng";
-const TWITTER_HANDLE = "@zhengli";
+/**
+ * Site URL — read from AUTH_URL env var (deployment-level config).
+ * This is the only site identity value that stays as an env var rather
+ * than in the DB, because it must be available at build/start time.
+ */
+export const SITE_URL = process.env.AUTH_URL ?? "http://localhost:3000";
 
-export { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_AUTHOR, TWITTER_HANDLE };
+/**
+ * Subset of SiteSettings needed by SEO helpers.
+ * Avoids circular dependency with data layer.
+ */
+export interface SiteIdentity {
+  siteName: string;
+  siteTagline: string;
+  siteDescription: string;
+  siteAuthor: string;
+  authorEmail: string;
+  twitterHandle: string;
+}
 
 // ---------------------------------------------------------------------------
 // Locale → SEO format mapping
@@ -43,7 +55,10 @@ export interface PageMetaInput {
   keywords?: string[] | undefined;
 }
 
-export function buildPageMeta(input: PageMetaInput): Metadata {
+export function buildPageMeta(
+  input: PageMetaInput,
+  site: SiteIdentity,
+): Metadata {
   const url = `${SITE_URL}${input.path}`;
   const ogType = input.type ?? "website";
   const locale = input.locale ?? "zh";
@@ -52,7 +67,7 @@ export function buildPageMeta(input: PageMetaInput): Metadata {
   return {
     title: input.title,
     description: input.description,
-    authors: [{ name: SITE_AUTHOR, url: SITE_URL }],
+    authors: [{ name: site.siteAuthor, url: SITE_URL }],
     ...(input.keywords?.length ? { keywords: input.keywords } : {}),
     alternates: {
       canonical: url,
@@ -62,7 +77,7 @@ export function buildPageMeta(input: PageMetaInput): Metadata {
       title: input.title,
       description: input.description,
       url,
-      siteName: SITE_NAME,
+      siteName: site.siteName,
       locale: ogLocale(locale),
       type: ogType,
       ...(input.image ? { images: [{ url: input.image }] } : {}),
@@ -70,14 +85,14 @@ export function buildPageMeta(input: PageMetaInput): Metadata {
         ? {
             publishedTime: input.publishedTime,
             modifiedTime: input.modifiedTime,
-            authors: [SITE_AUTHOR],
+            authors: [site.siteAuthor],
           }
         : {}),
     },
     twitter: {
       card: input.image ? "summary_large_image" : "summary",
-      site: TWITTER_HANDLE,
-      creator: TWITTER_HANDLE,
+      ...(site.twitterHandle ? { site: site.twitterHandle } : {}),
+      ...(site.twitterHandle ? { creator: site.twitterHandle } : {}),
       title: input.title,
       description: input.description,
       ...(input.image ? { images: [input.image] } : {}),
