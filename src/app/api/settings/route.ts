@@ -81,6 +81,93 @@ export async function PUT(request: NextRequest) {
       input.fontStyle = body.fontStyle as FontStyle;
     }
 
+    // Validate siteName
+    if (body.siteName !== undefined) {
+      if (typeof body.siteName !== "string" || body.siteName.length === 0) {
+        return errorResponse("siteName must be a non-empty string");
+      }
+      if (body.siteName.length > 255) {
+        return errorResponse("siteName must be at most 255 characters");
+      }
+      input.siteName = body.siteName;
+    }
+
+    // Validate siteTagline
+    if (body.siteTagline !== undefined) {
+      if (typeof body.siteTagline !== "string") {
+        return errorResponse("siteTagline must be a string");
+      }
+      if (body.siteTagline.length > 500) {
+        return errorResponse("siteTagline must be at most 500 characters");
+      }
+      input.siteTagline = body.siteTagline;
+    }
+
+    // Validate siteDescription
+    if (body.siteDescription !== undefined) {
+      if (typeof body.siteDescription !== "string") {
+        return errorResponse("siteDescription must be a string");
+      }
+      if (body.siteDescription.length > 1000) {
+        return errorResponse("siteDescription must be at most 1000 characters");
+      }
+      input.siteDescription = body.siteDescription;
+    }
+
+    // Validate siteAuthor
+    if (body.siteAuthor !== undefined) {
+      if (typeof body.siteAuthor !== "string") {
+        return errorResponse("siteAuthor must be a string");
+      }
+      if (body.siteAuthor.length > 255) {
+        return errorResponse("siteAuthor must be at most 255 characters");
+      }
+      input.siteAuthor = body.siteAuthor;
+    }
+
+    // Validate authorEmail
+    if (body.authorEmail !== undefined) {
+      if (typeof body.authorEmail !== "string") {
+        return errorResponse("authorEmail must be a string");
+      }
+      if (body.authorEmail.length > 255) {
+        return errorResponse("authorEmail must be at most 255 characters");
+      }
+      input.authorEmail = body.authorEmail;
+    }
+
+    // Validate twitterHandle
+    if (body.twitterHandle !== undefined) {
+      if (typeof body.twitterHandle !== "string") {
+        return errorResponse("twitterHandle must be a string");
+      }
+      if (body.twitterHandle.length > 50) {
+        return errorResponse("twitterHandle must be at most 50 characters");
+      }
+      input.twitterHandle = body.twitterHandle;
+    }
+
+    // Validate socialLinks
+    if (body.socialLinks !== undefined) {
+      if (!Array.isArray(body.socialLinks)) {
+        return errorResponse("socialLinks must be an array");
+      }
+      for (const link of body.socialLinks) {
+        if (
+          typeof link !== "object" ||
+          link === null ||
+          typeof link.name !== "string" ||
+          typeof link.url !== "string" ||
+          typeof link.brand !== "string"
+        ) {
+          return errorResponse(
+            "Each social link must have name, url, and brand as strings",
+          );
+        }
+      }
+      input.socialLinks = body.socialLinks;
+    }
+
     const db = getDb();
     const settings = await updateSiteSettings(db, input);
     return jsonResponse(settings);

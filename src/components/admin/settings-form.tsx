@@ -6,8 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { SegmentedControl } from "@/components/ui/segmented-control";
-import type { SiteSettings, FontStyle } from "@/data/settings";
+import type { SiteSettings, FontStyle, SocialLink } from "@/data/settings";
 import type { Locale } from "@/i18n/translations";
+
+const BRAND_OPTIONS = [
+  { value: "github", label: "GitHub" },
+  { value: "x", label: "X (Twitter)" },
+  { value: "facebook", label: "Facebook" },
+  { value: "linkedin", label: "LinkedIn" },
+  { value: "email", label: "Email" },
+  { value: "resume", label: "Resume" },
+];
 
 interface SettingsFormProps {
   settings: SiteSettings;
@@ -27,6 +36,13 @@ export function SettingsForm({ settings, logoUrl }: SettingsFormProps) {
   const [postsPerPage, setPostsPerPage] = useState(String(settings.postsPerPage));
   const [commentsEnabled, setCommentsEnabled] = useState(settings.commentsEnabled);
   const [fontStyle, setFontStyle] = useState<FontStyle>(settings.fontStyle);
+  const [siteName, setSiteName] = useState(settings.siteName);
+  const [siteTagline, setSiteTagline] = useState(settings.siteTagline);
+  const [siteDescription, setSiteDescription] = useState(settings.siteDescription);
+  const [siteAuthor, setSiteAuthor] = useState(settings.siteAuthor);
+  const [authorEmail, setAuthorEmail] = useState(settings.authorEmail);
+  const [twitterHandle, setTwitterHandle] = useState(settings.twitterHandle);
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(settings.socialLinks);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -161,6 +177,13 @@ export function SettingsForm({ settings, logoUrl }: SettingsFormProps) {
           postsPerPage: n,
           commentsEnabled,
           fontStyle,
+          siteName,
+          siteTagline,
+          siteDescription,
+          siteAuthor,
+          authorEmail,
+          twitterHandle,
+          socialLinks,
         }),
       });
 
@@ -273,6 +296,183 @@ export function SettingsForm({ settings, logoUrl }: SettingsFormProps) {
           <p className="text-xs text-destructive">{logoError}</p>
         )}
       </div>
+
+      {/* Site Identity */}
+      <fieldset className="space-y-6 rounded-lg border border-border p-4">
+        <legend className="px-2 text-base font-semibold text-foreground">
+          {t("admin.settings.siteIdentity")}
+        </legend>
+
+        {/* Site Name */}
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-foreground">
+            {t("admin.settings.siteName")}
+          </label>
+          <p className="text-xs text-muted-foreground">
+            {t("admin.settings.siteNameHint")}
+          </p>
+          <Input
+            value={siteName}
+            onChange={(e) => setSiteName(e.target.value)}
+            placeholder={t("admin.settings.siteNamePlaceholder")}
+            maxLength={255}
+          />
+        </div>
+
+        {/* Site Tagline */}
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-foreground">
+            {t("admin.settings.siteTagline")}
+          </label>
+          <p className="text-xs text-muted-foreground">
+            {t("admin.settings.siteTaglineHint")}
+          </p>
+          <Input
+            value={siteTagline}
+            onChange={(e) => setSiteTagline(e.target.value)}
+            placeholder={t("admin.settings.siteTaglinePlaceholder")}
+            maxLength={500}
+          />
+        </div>
+
+        {/* Site Description */}
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-foreground">
+            {t("admin.settings.siteDescription")}
+          </label>
+          <p className="text-xs text-muted-foreground">
+            {t("admin.settings.siteDescriptionHint")}
+          </p>
+          <textarea
+            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            value={siteDescription}
+            onChange={(e) => setSiteDescription(e.target.value)}
+            placeholder={t("admin.settings.siteDescriptionPlaceholder")}
+            maxLength={1000}
+            rows={3}
+          />
+        </div>
+
+        {/* Author Name */}
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-foreground">
+            {t("admin.settings.siteAuthor")}
+          </label>
+          <p className="text-xs text-muted-foreground">
+            {t("admin.settings.siteAuthorHint")}
+          </p>
+          <Input
+            value={siteAuthor}
+            onChange={(e) => setSiteAuthor(e.target.value)}
+            placeholder={t("admin.settings.siteAuthorPlaceholder")}
+            maxLength={255}
+          />
+        </div>
+
+        {/* Author Email */}
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-foreground">
+            {t("admin.settings.authorEmail")}
+          </label>
+          <p className="text-xs text-muted-foreground">
+            {t("admin.settings.authorEmailHint")}
+          </p>
+          <Input
+            type="email"
+            value={authorEmail}
+            onChange={(e) => setAuthorEmail(e.target.value)}
+            placeholder={t("admin.settings.authorEmailPlaceholder")}
+            maxLength={255}
+          />
+        </div>
+
+        {/* Twitter Handle */}
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-foreground">
+            {t("admin.settings.twitterHandle")}
+          </label>
+          <p className="text-xs text-muted-foreground">
+            {t("admin.settings.twitterHandleHint")}
+          </p>
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-muted-foreground">@</span>
+            <Input
+              value={twitterHandle}
+              onChange={(e) => setTwitterHandle(e.target.value.replace(/^@/, ""))}
+              placeholder={t("admin.settings.twitterHandlePlaceholder")}
+              maxLength={50}
+            />
+          </div>
+        </div>
+
+        {/* Social Links */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">
+            {t("admin.settings.socialLinks")}
+          </label>
+          <p className="text-xs text-muted-foreground">
+            {t("admin.settings.socialLinksHint")}
+          </p>
+
+          {socialLinks.map((link, idx) => (
+            <div key={idx} className="flex items-start gap-2">
+              <Select
+                value={link.brand}
+                onChange={(e) => {
+                  const next = [...socialLinks];
+                  next[idx] = { ...next[idx], brand: e.target.value };
+                  setSocialLinks(next);
+                }}
+                className="w-32 shrink-0"
+              >
+                {BRAND_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </Select>
+              <Input
+                value={link.name}
+                onChange={(e) => {
+                  const next = [...socialLinks];
+                  next[idx] = { ...next[idx], name: e.target.value };
+                  setSocialLinks(next);
+                }}
+                placeholder={t("admin.settings.socialLinkName")}
+                className="w-28 shrink-0"
+              />
+              <Input
+                value={link.url}
+                onChange={(e) => {
+                  const next = [...socialLinks];
+                  next[idx] = { ...next[idx], url: e.target.value };
+                  setSocialLinks(next);
+                }}
+                placeholder={t("admin.settings.socialLinkUrl")}
+                className="flex-1"
+              />
+              <button
+                type="button"
+                onClick={() => setSocialLinks(socialLinks.filter((_, i) => i !== idx))}
+                className="shrink-0 rounded px-2 py-2 text-xs text-destructive hover:text-destructive/80 transition-colors"
+                title={t("admin.settings.socialLinkRemove")}
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={() =>
+              setSocialLinks([...socialLinks, { name: "", url: "", brand: "github" }])
+            }
+            className="text-xs text-primary hover:text-primary/80 transition-colors"
+          >
+            + {t("admin.settings.socialLinkAdd")}
+          </button>
+        </div>
+      </fieldset>
 
       {/* Locale */}
       <div className="space-y-2">
