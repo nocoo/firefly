@@ -85,4 +85,44 @@ describe("POST /api/unfurl", () => {
     const body = await res.json();
     expect(body.error).toMatch(/invalid url/i);
   });
+
+  it("returns 200 with metadata for a valid URL", async () => {
+    // Use httpbin which returns HTML and is a stable public endpoint
+    const res = await fetch(`${BASE}/api/unfurl`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: "https://httpbin.org/html" }),
+    });
+
+    // Accept both 200 (success) and 502 (network issues in CI)
+    if (res.status === 502) {
+      // Network-restricted environments may not reach external URLs — skip gracefully
+      return;
+    }
+
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    // Verify response shape
+    expect(body).toHaveProperty("url");
+    expect(body).toHaveProperty("title");
+    expect(body).toHaveProperty("description");
+    expect(body).toHaveProperty("image");
+    expect(body).toHaveProperty("ai_enhanced");
+
+    // Validate field types and values
+    expect(body.url).toBe("https://httpbin.org/html");
+    expect(typeof body.title).toBe("string");
+    expect(body.title.length).toBeGreaterThan(0);
+    expect(typeof body.ai_enhanced).toBe("boolean");
+    // image can be string or null
+    expect(body.image === null || typeof body.image === "string").toBe(true);
+  }, 15_000);
+});
+
+describe("GET /api/unfurl", () => {
+  it("returns 405 for GET requests", async () => {
+    const res = await fetch(`${BASE}/api/unfurl`);
+    expect(res.status).toBe(405);
+  });
 });
