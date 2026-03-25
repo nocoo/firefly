@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useCallback } from "react";
 import { Sun, Moon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { renderMarkdown } from "@/models/markdown";
 import { useLocale } from "@/i18n/context";
 import { ArticleBody } from "@/components/blog/article-body";
@@ -34,8 +35,9 @@ export function MarkdownPreview({
   );
   const { t } = useLocale();
 
-  // Scoped theme toggle — independent of the global next-themes
-  const [previewDark, setPreviewDark] = useState(false);
+  // Sync preview theme with global dark mode on mount
+  const { resolvedTheme } = useTheme();
+  const [previewDark, setPreviewDark] = useState(resolvedTheme === "dark");
   const togglePreviewTheme = useCallback(() => setPreviewDark((d) => !d), []);
 
   const isEmpty = !title && !excerpt && !content && !featuredImage && !referenceUrl;
