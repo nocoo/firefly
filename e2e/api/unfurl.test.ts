@@ -4,8 +4,14 @@
  * Covers: POST /api/unfurl
  *
  * Tests SSRF protection (400 errors), missing/invalid URL (400),
- * and validates the successful unfurl response shape.
+ * success path (200 with response shape), and method guard (405).
+ *
+ * The success test requires outbound HTTP **from the server**.
+ * If the server cannot reach example.com, the test is marked as
+ * `skip` so CI reports surface the gap (not silently passing).
  */
+import { it, expect, describe } from "vitest";
+
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17043";
 
 describe("POST /api/unfurl", () => {
@@ -86,21 +92,28 @@ describe("POST /api/unfurl", () => {
     expect(body.error).toMatch(/invalid url/i);
   });
 
-  it("returns 200 with metadata for a valid URL", async () => {
-    // Use httpbin which returns HTML and is a stable public endpoint
+  it("returns 200 with metadata for a valid URL (requires server outbound HTTP)", async (ctx) => {
     const res = await fetch(`${BASE}/api/unfurl`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: "https://httpbin.org/html" }),
+      body: JSON.stringify({ url: "https://example.com" }),
     });
 
-    // Accept both 200 (success) and 502 (network issues in CI)
-    if (res.status === 502) {
-      // Network-restricted environments may not reach external URLs — skip gracefully
-      return;
+    // Only skip when the *server* genuinely cannot reach the external URL
+    // (outbound network failure). Any other non-200 is a real regression.
+    if (res.status !== 200) {
+      const body = await res.json();
+      const isOutboundFailure =
+        res.status === 502 &&
+        /failed to fetch url|dns resolution failed/i.test(body.error ?? "");
+      if (isOutboundFailure) {
+        // eslint-disable-next-line no-restricted-syntax -- runtime conditional skip, not a forgotten .only/.skip
+        ctx.skip();
+        return;
+      }
+      // Any other non-200 (400, 403, 500, …) is unexpected → fail loudly
+      expect.fail(`Expected 200 but got ${res.status}: ${JSON.stringify(body)}`);
     }
-
-    expect(res.status).toBe(200);
 
     const body = await res.json();
     // Verify response shape
@@ -111,7 +124,7 @@ describe("POST /api/unfurl", () => {
     expect(body).toHaveProperty("ai_enhanced");
 
     // Validate field types and values
-    expect(body.url).toBe("https://httpbin.org/html");
+    expect(body.url).toBe("https://example.com");
     expect(typeof body.title).toBe("string");
     expect(body.title.length).toBeGreaterThan(0);
     expect(typeof body.ai_enhanced).toBe("boolean");

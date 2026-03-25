@@ -120,43 +120,59 @@ describe("resolveAndValidateHostname", () => {
   });
 
   it("passes for public IP resolution", async () => {
-    mockedLookup.mockResolvedValue({ address: "93.184.216.34", family: 4 });
+    mockedLookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }] as never);
     await expect(resolveAndValidateHostname("example.com")).resolves.toBeUndefined();
   });
 
   it("rejects domain resolving to 127.0.0.1", async () => {
-    mockedLookup.mockResolvedValue({ address: "127.0.0.1", family: 4 });
+    mockedLookup.mockResolvedValue([{ address: "127.0.0.1", family: 4 }] as never);
     await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
   });
 
   it("rejects domain resolving to 10.x.x.x", async () => {
-    mockedLookup.mockResolvedValue({ address: "10.0.0.1", family: 4 });
+    mockedLookup.mockResolvedValue([{ address: "10.0.0.1", family: 4 }] as never);
     await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
   });
 
   it("rejects domain resolving to 192.168.x.x", async () => {
-    mockedLookup.mockResolvedValue({ address: "192.168.1.1", family: 4 });
+    mockedLookup.mockResolvedValue([{ address: "192.168.1.1", family: 4 }] as never);
     await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
   });
 
   it("rejects domain resolving to 172.16.x.x", async () => {
-    mockedLookup.mockResolvedValue({ address: "172.16.0.1", family: 4 });
+    mockedLookup.mockResolvedValue([{ address: "172.16.0.1", family: 4 }] as never);
     await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
   });
 
   it("rejects IPv4-mapped IPv6 resolving to private IP", async () => {
-    mockedLookup.mockResolvedValue({ address: "::ffff:192.168.1.1", family: 6 });
+    mockedLookup.mockResolvedValue([{ address: "::ffff:192.168.1.1", family: 6 }] as never);
     await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
   });
 
   it("rejects domain resolving to IPv6 loopback", async () => {
-    mockedLookup.mockResolvedValue({ address: "::1", family: 6 });
+    mockedLookup.mockResolvedValue([{ address: "::1", family: 6 }] as never);
     await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
   });
 
   it("rejects domain resolving to fc00::/7 range", async () => {
-    mockedLookup.mockResolvedValue({ address: "fd12::1", family: 6 });
+    mockedLookup.mockResolvedValue([{ address: "fd12::1", family: 6 }] as never);
     await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
+  });
+
+  it("rejects when any resolved address is private (mixed results)", async () => {
+    mockedLookup.mockResolvedValue([
+      { address: "93.184.216.34", family: 4 },
+      { address: "127.0.0.1", family: 4 },
+    ] as never);
+    await expect(resolveAndValidateHostname("dual.example.com")).rejects.toThrow("resolves to private network");
+  });
+
+  it("passes when all resolved addresses are public", async () => {
+    mockedLookup.mockResolvedValue([
+      { address: "93.184.216.34", family: 4 },
+      { address: "2606:2800:220:1:248:1893:25c8:1946", family: 6 },
+    ] as never);
+    await expect(resolveAndValidateHostname("example.com")).resolves.toBeUndefined();
   });
 
   it("throws on DNS resolution failure", async () => {
@@ -342,7 +358,7 @@ describe("fetchHtml", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     // Re-establish DNS mock after restoreAllMocks (returns public IP by default)
-    mockedLookup.mockResolvedValue({ address: "93.184.216.34", family: 4 });
+    mockedLookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }] as never);
   });
 
   afterAll(() => {
@@ -637,7 +653,7 @@ describe("unfurlUrl", () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
-    mockedLookup.mockResolvedValue({ address: "93.184.216.34", family: 4 });
+    mockedLookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }] as never);
   });
 
   afterAll(() => {

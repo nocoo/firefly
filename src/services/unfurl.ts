@@ -100,8 +100,11 @@ const DNS_TIMEOUT_MS = 5_000;
 const IP_LITERAL_RE = /^[\d.]+$|^\[/; // IPv4 literal or bracketed IPv6
 
 /**
- * Resolve a hostname via DNS and verify the resolved IP is not private.
+ * Resolve a hostname via DNS and verify **all** resolved IPs are not private.
  * IP-literal hostnames are skipped (already checked by validateUrl).
+ *
+ * Uses `all: true` so that dual-stacked domains that mix public and private
+ * addresses (e.g. a public A record + a private AAAA record) are still caught.
  */
 export async function resolveAndValidateHostname(
   hostname: string,
@@ -109,31 +112,33 @@ export async function resolveAndValidateHostname(
   // IP literals are already validated by validateUrl — no DNS needed
   if (IP_LITERAL_RE.test(hostname)) return;
 
-  let address: string;
+  let addresses: dns.LookupAddress[];
   try {
     const result = await Promise.race([
-      dns.promises.lookup(hostname, { family: 0 }),
+      dns.promises.lookup(hostname, { family: 0, all: true }),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("DNS timeout")), DNS_TIMEOUT_MS),
       ),
     ]);
-    address = result.address;
+    addresses = result;
   } catch (err) {
     const msg = err instanceof Error ? err.message : "DNS resolution failed";
     throw new UnfurlError(`DNS resolution failed: ${msg}`, 400);
   }
 
-  // Normalize IPv4-mapped IPv6 (e.g. ::ffff:127.0.0.1 → 127.0.0.1)
-  const normalized = address.startsWith("::ffff:")
-    ? address.slice(7)
-    : address;
+  for (const entry of addresses) {
+    // Normalize IPv4-mapped IPv6 (e.g. ::ffff:127.0.0.1 → 127.0.0.1)
+    const normalized = entry.address.startsWith("::ffff:")
+      ? entry.address.slice(7)
+      : entry.address;
 
-  if (
-    normalized === "localhost" ||
-    isPrivateIPv4(normalized) ||
-    isPrivateIPv6(normalized)
-  ) {
-    throw new UnfurlError("URL not allowed: resolves to private network", 400);
+    if (
+      normalized === "localhost" ||
+      isPrivateIPv4(normalized) ||
+      isPrivateIPv6(normalized)
+    ) {
+      throw new UnfurlError("URL not allowed: resolves to private network", 400);
+    }
   }
 }
 
