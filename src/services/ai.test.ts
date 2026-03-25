@@ -414,10 +414,10 @@ describe("summarizeUnfurl", () => {
     sdkType: "" as const,
   };
 
-  it("returns parsed title and description from two-line AI output", async () => {
+  it("returns parsed title and description from JSON output", async () => {
     mockedGetAiSettings.mockResolvedValue(mockSettings);
     mockedGenerateText.mockResolvedValue({
-      text: "AI生成的标题\n这是一句描述内容",
+      text: '{"title":"AI生成的标题","description":"这是一句描述内容"}',
     } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
 
     const result = await summarizeUnfurl("OG Title", "OG Desc", "Body text");
@@ -430,7 +430,7 @@ describe("summarizeUnfurl", () => {
   it("includes the unfurl prompt template", async () => {
     mockedGetAiSettings.mockResolvedValue(mockSettings);
     mockedGenerateText.mockResolvedValue({
-      text: "Title\nDescription",
+      text: '{"title":"Title","description":"Description"}',
     } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
 
     await summarizeUnfurl("OG Title", null, "Body");
@@ -446,7 +446,7 @@ describe("summarizeUnfurl", () => {
   it("includes OG metadata and body text in prompt", async () => {
     mockedGetAiSettings.mockResolvedValue(mockSettings);
     mockedGenerateText.mockResolvedValue({
-      text: "Title\nDescription",
+      text: '{"title":"Title","description":"Description"}',
     } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
 
     await summarizeUnfurl("My Title", "My Description", "Page content");
@@ -485,10 +485,10 @@ describe("summarizeUnfurl", () => {
     expect(result).toBeNull();
   });
 
-  it("returns title with empty description for single-line output", async () => {
+  it("returns title with empty description when description is empty string", async () => {
     mockedGetAiSettings.mockResolvedValue(mockSettings);
     mockedGenerateText.mockResolvedValue({
-      text: "Just a title",
+      text: '{"title":"Just a title","description":""}',
     } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
 
     const result = await summarizeUnfurl("OG Title", null, "Body");
@@ -516,106 +516,51 @@ describe("summarizeUnfurl", () => {
     expect(result).toBeNull();
   });
 
-  // ── Reasoning fallback tests ──
+  // ── JSON parsing edge cases ──
 
-  it("extracts text from reasoning when result.text is empty", async () => {
+  it("extracts JSON from markdown code fence", async () => {
     mockedGetAiSettings.mockResolvedValue(mockSettings);
     mockedGenerateText.mockResolvedValue({
-      text: "",
-      reasoning: [
-        {
-          type: "reasoning" as const,
-          text: "Let me think about this...\n\nProject Title\nA great description",
-        },
-      ],
-    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
-
-    const result = await summarizeUnfurl("Title", null, "Body");
-    // Should extract the last line >= 5 chars from reasoning
-    expect(result).toEqual({
-      title: "A great description",
-      description: "",
-    });
-  });
-
-  it("skips reasoning lines shorter than 5 chars", async () => {
-    mockedGetAiSettings.mockResolvedValue(mockSettings);
-    mockedGenerateText.mockResolvedValue({
-      text: "",
-      reasoning: [
-        {
-          type: "reasoning" as const,
-          text: "hi\nok\n\nThis is a valid fallback line",
-        },
-      ],
+      text: '```json\n{"title":"Raven","description":"Copilot代理"}\n```',
     } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
 
     const result = await summarizeUnfurl("Title", null, "Body");
     expect(result).toEqual({
-      title: "This is a valid fallback line",
-      description: "",
+      title: "Raven",
+      description: "Copilot代理",
     });
   });
 
-  it("returns null when reasoning has only short lines", async () => {
+  it("returns null when response has no JSON object", async () => {
     mockedGetAiSettings.mockResolvedValue(mockSettings);
     mockedGenerateText.mockResolvedValue({
-      text: "",
-      reasoning: [
-        {
-          type: "reasoning" as const,
-          text: "hi\nok\nno\n",
-        },
-      ],
+      text: "Just some plain text without JSON",
     } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
 
     const result = await summarizeUnfurl("Title", null, "Body");
     expect(result).toBeNull();
   });
 
-  it("strips surrounding quotes from reasoning fallback", async () => {
+  it("returns null when JSON has empty title", async () => {
     mockedGetAiSettings.mockResolvedValue(mockSettings);
     mockedGenerateText.mockResolvedValue({
-      text: "",
-      reasoning: [
-        {
-          type: "reasoning" as const,
-          text: "analysis...\n「Extracted Title」",
-        },
-      ],
-    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
-
-    const result = await summarizeUnfurl("Title", null, "Body");
-    expect(result).toEqual({
-      title: "Extracted Title",
-      description: "",
-    });
-  });
-
-  it("ignores reasoning blocks with wrong type", async () => {
-    mockedGetAiSettings.mockResolvedValue(mockSettings);
-    mockedGenerateText.mockResolvedValue({
-      text: "",
-      reasoning: [
-        {
-          type: "other" as unknown as "reasoning",
-          text: "This should not match because type is wrong",
-        },
-      ],
+      text: '{"title":"","description":"some desc"}',
     } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
 
     const result = await summarizeUnfurl("Title", null, "Body");
     expect(result).toBeNull();
   });
 
-  it("returns null when reasoning exists but text field is empty", async () => {
+  // ── Reasoning is ignored (JSON output only) ──
+
+  it("returns null when result.text is empty even with reasoning present", async () => {
     mockedGetAiSettings.mockResolvedValue(mockSettings);
     mockedGenerateText.mockResolvedValue({
       text: "",
       reasoning: [
         {
           type: "reasoning" as const,
-          text: "",
+          text: 'Let me think...\n{"title":"Should Not Be Used","description":"From reasoning"}',
         },
       ],
     } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);

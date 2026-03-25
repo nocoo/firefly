@@ -272,8 +272,7 @@ Rules:
 - Description: ≤150 characters, one-sentence summary of what it is/does
 - If the original content is in English, translate both title and description to Chinese
 - If the original is already in Chinese, keep it as-is
-- Output format: exactly two lines — first line is title, second line is description
-- No quotes, no labels, no markdown`;
+- Respond with ONLY a JSON object, no other text: {"title":"...","description":"..."}`;
 
 /**
  * Summarize unfurled URL metadata using the configured AI provider.
@@ -281,10 +280,9 @@ Rules:
  * **Never throws** — returns null on any failure:
  * - AI not configured (no provider/key) → null
  * - Model timeout / rate limit / network error → null
- * - Response format unexpected → best-effort parse, fall through to null
+ * - Response not valid JSON → null
  *
- * This is the key difference from generateExcerpt() which throws on failure.
- * Unfurl treats AI as best-effort enhancement.
+ * Uses strict JSON output format so reasoning-model content is ignored.
  */
 export async function summarizeUnfurl(
   ogTitle: string | null,
@@ -322,45 +320,21 @@ export async function summarizeUnfurl(
       maxOutputTokens: 256,
     });
 
-    let text = result.text.trim();
-
-    // Reasoning fallback (same pattern as generateExcerpt)
-    if (!text && result.reasoning) {
-      const lastReasoning = result.reasoning.at(-1);
-      if (lastReasoning?.type === "reasoning" && lastReasoning.text) {
-        const lines = lastReasoning.text.trim().split("\n");
-        for (let i = lines.length - 1; i >= 0; i--) {
-          const line = lines[i].trim();
-          if (!line) continue;
-          const unquoted = line.replace(/^["「『]|["」』]$/g, "").trim();
-          if (unquoted.length >= 5) {
-            text = unquoted;
-            break;
-          }
-        }
-      }
-    }
+    const text = result.text.trim();
 
     if (!text) return null;
 
-    // Parse two-line format: title\ndescription
-    const lines = text.split("\n").filter((l) => l.trim());
-    if (lines.length >= 2) {
-      return {
-        title: lines[0].trim(),
-        description: lines[1].trim(),
-      };
-    }
+    // Extract JSON from response (tolerates markdown fences and surrounding text)
+    const jsonMatch = text.match(/\{[\s\S]*?\}/);
+    if (!jsonMatch) return null;
 
-    // Best-effort: single line → use as title, empty description
-    if (lines.length === 1) {
-      return {
-        title: lines[0].trim(),
-        description: "",
-      };
-    }
+    const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+    const title = typeof parsed.title === "string" ? parsed.title.trim() : "";
+    const description = typeof parsed.description === "string" ? parsed.description.trim() : "";
 
-    return null;
+    if (!title) return null;
+
+    return { title, description };
   } catch (err) {
     // Never throw — AI failure is not an error
     console.warn("[summarizeUnfurl] AI enhancement failed:", err);
