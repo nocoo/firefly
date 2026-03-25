@@ -25,6 +25,10 @@ export interface CreatePostInput {
   featured_image?: string | undefined;
   comment_enabled?: number | undefined;
   published_at?: number | undefined;
+  reference_url?: string | undefined;
+  reference_title?: string | undefined;
+  reference_description?: string | undefined;
+  reference_image?: string | undefined;
 }
 
 export interface UpdatePostInput {
@@ -38,6 +42,10 @@ export interface UpdatePostInput {
   featured_image?: string | null | undefined;
   comment_enabled?: number | undefined;
   published_at?: number | null | undefined;
+  reference_url?: string | null | undefined;
+  reference_title?: string | null | undefined;
+  reference_description?: string | null | undefined;
+  reference_image?: string | null | undefined;
 }
 
 export interface ListPostsOptions {
@@ -250,8 +258,10 @@ export async function createPost(
     INSERT INTO posts (
       id, title, slug, content, content_html, excerpt, status,
       category_id, featured_image, comment_enabled,
-      reading_time, published_at, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      reading_time, published_at,
+      reference_url, reference_title, reference_description, reference_image,
+      created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   await db.execute(sql, [
@@ -267,6 +277,10 @@ export async function createPost(
     input.comment_enabled ?? 0,
     computedReadingTime,
     publishedAt,
+    input.reference_url ?? null,
+    input.reference_title ?? null,
+    input.reference_description ?? null,
+    input.reference_image ?? null,
     now,
     now,
   ]);
@@ -355,6 +369,43 @@ export async function updatePost(
   if (input.featured_image !== undefined) {
     setClauses.push("featured_image = ?");
     params.push(input.featured_image);
+  }
+
+  if (input.reference_url !== undefined) {
+    setClauses.push("reference_url = ?");
+    params.push(input.reference_url);
+  }
+
+  // Defense-in-depth: when reference_url is explicitly cleared, also clear
+  // orphan metadata fields that weren't explicitly set by the caller.
+  if (input.reference_url === null) {
+    if (input.reference_title === undefined) {
+      setClauses.push("reference_title = ?");
+      params.push(null);
+    }
+    if (input.reference_description === undefined) {
+      setClauses.push("reference_description = ?");
+      params.push(null);
+    }
+    if (input.reference_image === undefined) {
+      setClauses.push("reference_image = ?");
+      params.push(null);
+    }
+  }
+
+  if (input.reference_title !== undefined) {
+    setClauses.push("reference_title = ?");
+    params.push(input.reference_title);
+  }
+
+  if (input.reference_description !== undefined) {
+    setClauses.push("reference_description = ?");
+    params.push(input.reference_description);
+  }
+
+  if (input.reference_image !== undefined) {
+    setClauses.push("reference_image = ?");
+    params.push(input.reference_image);
   }
 
   if (input.comment_enabled !== undefined) {

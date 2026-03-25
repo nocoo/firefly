@@ -37,6 +37,16 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
     post?.featured_image ?? "",
   );
 
+  // Reference URL state
+  const [referenceUrl, setReferenceUrl] = useState(post?.reference_url ?? "");
+  const [referenceTitle, setReferenceTitle] = useState(post?.reference_title ?? "");
+  const [referenceDescription, setReferenceDescription] = useState(post?.reference_description ?? "");
+  const [referenceImage, setReferenceImage] = useState(post?.reference_image ?? "");
+  const [isUnfurling, setIsUnfurling] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [bodyText, setBodyText] = useState("");
+  const [hasFetched, setHasFetched] = useState(!!(post?.reference_title || post?.reference_description));
+
   const isEditing = !!post;
 
   // AI excerpt generation
@@ -60,6 +70,71 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       alert(t("admin.postForm.failedSave"));
     } finally {
       setIsGenerating(false);
+    }
+  }
+
+  // Reference URL unfurl
+  async function handleUnfurl() {
+    if (!referenceUrl.trim()) return;
+    setIsUnfurling(true);
+    try {
+      const res = await fetch("/api/unfurl", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: referenceUrl.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || t("admin.postForm.failedSave"));
+        return;
+      }
+      const data = await res.json();
+      setReferenceTitle(data.title ?? "");
+      setReferenceDescription(data.description ?? "");
+      setReferenceImage(data.image ?? "");
+      setBodyText(data.bodyText ?? "");
+      setHasFetched(true);
+    } catch {
+      alert(t("admin.postForm.failedSave"));
+    } finally {
+      setIsUnfurling(false);
+    }
+  }
+
+  function handleClearReference() {
+    setReferenceUrl("");
+    setReferenceTitle("");
+    setReferenceDescription("");
+    setReferenceImage("");
+    setBodyText("");
+    setHasFetched(false);
+  }
+
+  // AI-enhance reference title + description
+  async function handleEnhanceReference() {
+    setIsEnhancing(true);
+    try {
+      const res = await fetch("/api/unfurl/enhance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: referenceTitle,
+          description: referenceDescription,
+          bodyText,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || t("admin.postForm.failedSave"));
+        return;
+      }
+      const data = await res.json();
+      if (data.title) setReferenceTitle(data.title);
+      if (data.description) setReferenceDescription(data.description);
+    } catch {
+      alert(t("admin.postForm.failedSave"));
+    } finally {
+      setIsEnhancing(false);
     }
   }
 
@@ -121,6 +196,22 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         category_id: categoryId || undefined,
         featured_image: featuredImage || undefined,
         tag_ids: selectedTags,
+        ...(isEditing
+          ? {
+              // Update: null clears, undefined omits.
+              // When URL is empty, clear all 4 reference fields to avoid orphan metadata.
+              reference_url: referenceUrl || null,
+              reference_title: referenceUrl ? (referenceTitle || null) : null,
+              reference_description: referenceUrl ? (referenceDescription || null) : null,
+              reference_image: referenceUrl ? (referenceImage || null) : null,
+            }
+          : {
+              // Create: undefined omits (defaults to NULL in DB)
+              reference_url: referenceUrl || undefined,
+              reference_title: referenceUrl ? (referenceTitle || undefined) : undefined,
+              reference_description: referenceUrl ? (referenceDescription || undefined) : undefined,
+              reference_image: referenceUrl ? (referenceImage || undefined) : undefined,
+            }),
       };
 
       const url = isEditing
@@ -379,6 +470,88 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         />
       </div>
 
+      {/* Reference URL */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-foreground">
+          {t("admin.postForm.referenceUrl")}{" "}
+          <span className="text-muted-foreground font-normal">{t("admin.postForm.referenceUrlHint")}</span>
+        </label>
+        <div className="flex gap-2">
+          <input
+            type="url"
+            value={referenceUrl}
+            onChange={(e) => setReferenceUrl(e.target.value)}
+            className="flex-1 rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            placeholder="https://github.com/..."
+          />
+          <button
+            type="button"
+            onClick={handleUnfurl}
+            disabled={isUnfurling || !referenceUrl.trim()}
+            className="inline-flex items-center rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent disabled:opacity-50"
+          >
+            {isUnfurling
+              ? t("admin.postForm.fetching")
+              : hasFetched
+                ? t("admin.postForm.refetch")
+                : t("admin.postForm.fetch")}
+          </button>
+          {(referenceUrl || hasFetched) && (
+            <button
+              type="button"
+              onClick={handleClearReference}
+              className="inline-flex items-center rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
+            >
+              {t("admin.postForm.clear")}
+            </button>
+          )}
+        </div>
+        {hasFetched && (
+          <div className="space-y-2 rounded-[var(--radius-widget)] border border-border p-3">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label className="text-xs text-muted-foreground">{t("admin.postForm.referenceTitle")}</label>
+                <button
+                  type="button"
+                  onClick={handleEnhanceReference}
+                  disabled={isEnhancing}
+                  className="text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
+                >
+                  {isEnhancing
+                    ? t("admin.postForm.enhancing")
+                    : t("admin.postForm.aiEnhance")}
+                </button>
+              </div>
+              <input
+                type="text"
+                value={referenceTitle}
+                onChange={(e) => setReferenceTitle(e.target.value)}
+                className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">{t("admin.postForm.referenceDescription")}</label>
+              <textarea
+                value={referenceDescription}
+                onChange={(e) => setReferenceDescription(e.target.value)}
+                rows={2}
+                className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            {referenceImage && (
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">{t("admin.postForm.referenceImage")}</label>
+                <img
+                  src={referenceImage}
+                  alt={referenceTitle || "Reference"}
+                  className="h-20 w-auto rounded object-cover"
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Actions */}
       <div className="flex items-center gap-3 pt-4 border-t border-border">
         <button
@@ -426,6 +599,10 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           excerpt={excerpt}
           content={content}
           featuredImage={featuredImage}
+          referenceUrl={referenceUrl}
+          referenceTitle={referenceTitle}
+          referenceDescription={referenceDescription}
+          referenceImage={referenceImage}
         />
       </div>
     </div>

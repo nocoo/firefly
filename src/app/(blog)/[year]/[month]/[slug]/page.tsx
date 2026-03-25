@@ -17,6 +17,7 @@ import {
 import { blogPostingJsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { Comments } from "@/components/blog/comments";
 import { ArticleBody } from "@/components/blog/article-body";
+import { ReferenceCard } from "@/components/blog/reference-card";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 
@@ -152,6 +153,16 @@ export default async function PostPage({ params }: PostPageProps) {
                 priority
               />
             </div>
+          ) : undefined
+        }
+        referenceCard={
+          post.reference_url ? (
+            <ReferenceCard
+              url={post.reference_url}
+              title={post.reference_title}
+              description={post.reference_description}
+              image={post.reference_image}
+            />
           ) : undefined
         }
         footer={

@@ -262,3 +262,95 @@ export async function generateExcerpt(
 
   return excerpt;
 }
+
+// ── Unfurl metadata summarization ──
+
+export const UNFURL_PROMPT = `You are a bookmark metadata writer. Given a web page's metadata, write a clean title and description.
+
+Rules:
+- Title: ≤50 characters, the project/article name — no site name suffix
+- Description: ≤150 characters, one-sentence summary of what it is/does
+- If the original content is in English, translate both title and description to Chinese
+- If the original is already in Chinese, keep it as-is
+- Respond with ONLY a JSON object, no other text: {"title":"...","description":"..."}`;
+
+/**
+ * Summarize unfurled URL metadata using the configured AI provider.
+ *
+ * **Never throws** — returns null on any failure:
+ * - AI not configured (no provider/key) → null
+ * - Model timeout / rate limit / network error → null
+ * - Response not valid JSON → null
+ *
+ * Uses strict JSON output format so reasoning-model content is ignored.
+ */
+export async function summarizeUnfurl(
+  ogTitle: string | null,
+  ogDescription: string | null,
+  bodyText: string,
+): Promise<{ title: string; description: string } | null> {
+  try {
+    const db = getDb();
+    const settings = await getAiSettings(db);
+
+    if (!settings.provider || !settings.apiKey) {
+      return null;
+    }
+
+    const config = resolveAiConfig({
+      provider: settings.provider as AiProvider,
+      apiKey: settings.apiKey,
+      model: settings.model,
+      baseURL: settings.baseURL || undefined,
+      sdkType: (settings.sdkType || undefined) as SdkType | undefined,
+    });
+
+    const client = createAiClient(config);
+
+    const contextParts: string[] = [];
+    if (ogTitle) contextParts.push(`OG Title: ${ogTitle}`);
+    if (ogDescription) contextParts.push(`OG Description: ${ogDescription}`);
+    if (bodyText) contextParts.push(`Page Content:\n${bodyText}`);
+
+    if (contextParts.length === 0) return null;
+
+    const result = await generateText({
+      model: client(config.model),
+      prompt: `${UNFURL_PROMPT}\n\n${contextParts.join("\n\n")}`,
+      maxOutputTokens: 1024,
+    });
+
+    // Prefer result.text; for thinking models (e.g. MiniMax-M2.1) that put
+    // output in reasoning blocks and return empty text, try extracting from reasoning.
+    let text = result.text.trim();
+    if (!text && result.reasoning) {
+      const reasoningText = result.reasoning
+        .filter((r): r is { type: "reasoning"; text: string } => r.type === "reasoning" && !!r.text)
+        .map((r) => r.text)
+        .join("\n");
+      // Look for JSON in reasoning output
+      const reasoningJson = reasoningText.match(/\{[\s\S]*?"title"[\s\S]*?"description"[\s\S]*?\}/);
+      if (reasoningJson) {
+        text = reasoningJson[0];
+      }
+    }
+
+    if (!text) return null;
+
+    // Extract JSON from response (tolerates markdown fences and surrounding text)
+    const jsonMatch = text.match(/\{[\s\S]*?\}/);
+    if (!jsonMatch) return null;
+
+    const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+    const title = typeof parsed.title === "string" ? parsed.title.trim() : "";
+    const description = typeof parsed.description === "string" ? parsed.description.trim() : "";
+
+    if (!title) return null;
+
+    return { title, description };
+  } catch (err) {
+    // Never throw — AI failure is not an error
+    console.warn("[summarizeUnfurl] AI enhancement failed:", err);
+    return null;
+  }
+}

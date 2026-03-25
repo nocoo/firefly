@@ -304,7 +304,7 @@ vi.mock("@/data/ai-settings", () => ({
 // Must import after mocks are defined
 const { generateText } = await import("ai");
 const { getAiSettings } = await import("@/data/ai-settings");
-const { generateExcerpt } = await import("./ai");
+const { generateExcerpt, summarizeUnfurl, UNFURL_PROMPT } = await import("./ai");
 
 const mockedGenerateText = vi.mocked(generateText);
 const mockedGetAiSettings = vi.mocked(getAiSettings);
@@ -400,5 +400,275 @@ describe("generateExcerpt", () => {
     await expect(generateExcerpt("Title", "Content")).rejects.toThrow(
       "AI not configured",
     );
+  });
+});
+
+// ── summarizeUnfurl tests ──
+
+describe("summarizeUnfurl", () => {
+  const mockSettings = {
+    provider: "anthropic" as const,
+    apiKey: "sk-test-key",
+    model: "claude-sonnet-4-20250514",
+    baseURL: "",
+    sdkType: "" as const,
+  };
+
+  it("returns parsed title and description from JSON output", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: '{"title":"AI生成的标题","description":"这是一句描述内容"}',
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await summarizeUnfurl("OG Title", "OG Desc", "Body text");
+    expect(result).toEqual({
+      title: "AI生成的标题",
+      description: "这是一句描述内容",
+    });
+  });
+
+  it("includes the unfurl prompt template", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: '{"title":"Title","description":"Description"}',
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    await summarizeUnfurl("OG Title", null, "Body");
+
+    expect(mockedGenerateText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining(UNFURL_PROMPT),
+        maxOutputTokens: 1024,
+      }),
+    );
+  });
+
+  it("includes OG metadata and body text in prompt", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: '{"title":"Title","description":"Description"}',
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    await summarizeUnfurl("My Title", "My Description", "Page content");
+
+    const call = mockedGenerateText.mock.calls.at(-1)!;
+    const prompt = (call[0] as { prompt: string }).prompt;
+    expect(prompt).toContain("OG Title: My Title");
+    expect(prompt).toContain("OG Description: My Description");
+    expect(prompt).toContain("Page Content:\nPage content");
+  });
+
+  it("returns null when AI is not configured", async () => {
+    mockedGetAiSettings.mockResolvedValue({
+      ...mockSettings,
+      provider: "" as const,
+    });
+
+    const result = await summarizeUnfurl("Title", "Desc", "Body");
+    expect(result).toBeNull();
+  });
+
+  it("returns null when apiKey is empty", async () => {
+    mockedGetAiSettings.mockResolvedValue({
+      ...mockSettings,
+      apiKey: "",
+    });
+
+    const result = await summarizeUnfurl("Title", "Desc", "Body");
+    expect(result).toBeNull();
+  });
+
+  it("returns null when all context parts are empty", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+
+    const result = await summarizeUnfurl(null, null, "");
+    expect(result).toBeNull();
+  });
+
+  it("returns title with empty description when description is empty string", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: '{"title":"Just a title","description":""}',
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await summarizeUnfurl("OG Title", null, "Body");
+    expect(result).toEqual({
+      title: "Just a title",
+      description: "",
+    });
+  });
+
+  it("returns null and does not throw when AI call fails", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockRejectedValue(new Error("Network error"));
+
+    const result = await summarizeUnfurl("Title", "Desc", "Body");
+    expect(result).toBeNull();
+  });
+
+  it("returns null when AI returns empty text", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: "",
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await summarizeUnfurl("Title", "Desc", "Body");
+    expect(result).toBeNull();
+  });
+
+  // ── JSON parsing edge cases ──
+
+  it("extracts JSON from markdown code fence", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: '```json\n{"title":"Raven","description":"Copilot代理"}\n```',
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await summarizeUnfurl("Title", null, "Body");
+    expect(result).toEqual({
+      title: "Raven",
+      description: "Copilot代理",
+    });
+  });
+
+  it("returns null when response has no JSON object", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: "Just some plain text without JSON",
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await summarizeUnfurl("Title", null, "Body");
+    expect(result).toBeNull();
+  });
+
+  it("returns null when JSON has empty title", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: '{"title":"","description":"some desc"}',
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await summarizeUnfurl("Title", null, "Body");
+    expect(result).toBeNull();
+  });
+
+  // ── Reasoning fallback for thinking models ──
+
+  it("extracts JSON from reasoning when result.text is empty", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: "",
+      reasoning: [
+        {
+          type: "reasoning" as const,
+          text: 'Let me think...\n{"title":"From Reasoning","description":"Extracted from thinking"}',
+        },
+      ],
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await summarizeUnfurl("Title", null, "Body");
+    expect(result).toEqual({
+      title: "From Reasoning",
+      description: "Extracted from thinking",
+    });
+  });
+
+  it("returns null when reasoning has no JSON", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: "",
+      reasoning: [
+        {
+          type: "reasoning" as const,
+          text: "Just some thinking without any JSON output",
+        },
+      ],
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await summarizeUnfurl("Title", null, "Body");
+    expect(result).toBeNull();
+  });
+});
+
+// ── generateExcerpt reasoning fallback tests ──
+
+describe("generateExcerpt reasoning fallback", () => {
+  const mockSettings = {
+    provider: "anthropic" as const,
+    apiKey: "sk-test-key",
+    model: "claude-sonnet-4-20250514",
+    baseURL: "",
+    sdkType: "" as const,
+  };
+
+  it("extracts excerpt from reasoning when text is empty", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: "",
+      reasoning: [
+        {
+          type: "reasoning" as const,
+          text: "Let me analyze...\n\n\"This is a long enough excerpt line that should be extracted from reasoning\"",
+        },
+      ],
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await generateExcerpt("Title", "Content");
+    expect(result).toBe(
+      "This is a long enough excerpt line that should be extracted from reasoning",
+    );
+  });
+
+  it("skips reasoning lines shorter than 20 chars", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: "",
+      reasoning: [
+        {
+          type: "reasoning" as const,
+          text: "short\nstill short\nThis line is definitely long enough to be an excerpt",
+        },
+      ],
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await generateExcerpt("Title", "Content");
+    expect(result).toBe(
+      "This line is definitely long enough to be an excerpt",
+    );
+  });
+
+  it("returns empty when reasoning has no long lines", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: "",
+      reasoning: [
+        {
+          type: "reasoning" as const,
+          text: "short\ntoo small",
+        },
+      ],
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await generateExcerpt("Title", "Content");
+    expect(result).toBe("");
+  });
+
+  it("uses last reasoning block, not first", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: "",
+      reasoning: [
+        {
+          type: "reasoning" as const,
+          text: "first block should be ignored if last block is used",
+        },
+        {
+          type: "reasoning" as const,
+          text: "「This is the actual last block excerpt content」",
+        },
+      ],
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await generateExcerpt("Title", "Content");
+    expect(result).toBe("This is the actual last block excerpt content");
   });
 });
