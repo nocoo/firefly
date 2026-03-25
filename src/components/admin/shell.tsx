@@ -20,7 +20,7 @@ const PAGE_TITLE_KEYS: Record<string, string> = {
   "/admin/site-identity": "admin.nav.siteIdentity",
   "/admin/settings": "admin.nav.settings",
   "/admin/ai-settings": "admin.nav.aiSettings",
-  "/admin/mcp-tokens": "admin.nav.mcpTokens",
+  "/admin/mcp": "admin.nav.mcpTokens",
 };
 
 interface AdminShellProps {

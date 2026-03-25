@@ -64,7 +64,7 @@ const NAV_GROUPS: NavGroup[] = [
       { titleKey: "admin.nav.settings", href: "/admin/settings", icon: Settings },
       { titleKey: "admin.nav.siteIdentity", href: "/admin/site-identity", icon: Fingerprint },
       { titleKey: "admin.nav.aiSettings", href: "/admin/ai-settings", icon: Bot },
-      { titleKey: "admin.nav.mcpTokens", href: "/admin/mcp-tokens", icon: KeyRound },
+      { titleKey: "admin.nav.mcpTokens", href: "/admin/mcp", icon: KeyRound },
     ],
   },
 ];
