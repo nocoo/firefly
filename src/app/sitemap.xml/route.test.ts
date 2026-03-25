@@ -9,6 +9,11 @@ vi.mock("@/lib/db", () => ({
   getDb: () => ({} as never),
 }));
 
+vi.mock("@/lib/seo", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/seo")>();
+  return { ...actual, SITE_URL: "http://localhost:3000" };
+});
+
 vi.mock("@/data/posts", () => ({
   listPosts: vi.fn().mockResolvedValue({
     posts: [
