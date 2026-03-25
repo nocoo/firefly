@@ -206,4 +206,15 @@ describe("validateOrigin", () => {
     expect(result).not.toBeNull();
     expect(result!.status).toBe(403);
   });
+
+  it("allows non-web protocol origins (desktop/IDE clients)", () => {
+    // VSCode
+    expect(validateOrigin("vscode-file://vscode-app", siteUrl)).toBeNull();
+    // Electron
+    expect(validateOrigin("electron://app", siteUrl)).toBeNull();
+    // Tauri
+    expect(validateOrigin("tauri://localhost", siteUrl)).toBeNull();
+    // Custom app
+    expect(validateOrigin("my-app://callback", siteUrl)).toBeNull();
+  });
 });

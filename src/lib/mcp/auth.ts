@@ -76,7 +76,13 @@ export async function validateMcpToken(
 // validateOrigin
 // ---------------------------------------------------------------------------
 
-/** Validate Origin header per MCP security spec. */
+/**
+ * Validate Origin header per MCP security spec.
+ *
+ * The check prevents DNS-rebinding attacks from browser-based origins.
+ * Non-web protocols (e.g. vscode-file://, electron://, tauri://) are
+ * sent by desktop clients and are not susceptible — allow them through.
+ */
 export function validateOrigin(
   origin: string | null,
   siteUrl: string,
@@ -91,19 +97,33 @@ export function validateOrigin(
     // Invalid siteUrl — skip check
   }
 
-  // Allow loopback origins — parse URL and compare hostname exactly
+  // Only enforce restrictions on http(s) web origins.
+  // Non-web protocols (vscode-file://, electron://, tauri://, etc.)
+  // come from desktop/IDE clients and cannot perform DNS-rebinding.
+  let parsed: URL;
   try {
-    const parsed = new URL(origin);
-    if (
-      parsed.protocol === "http:" &&
-      (parsed.hostname === "localhost" ||
-        parsed.hostname === "127.0.0.1" ||
-        parsed.hostname === "[::1]")
-    ) {
-      return null;
-    }
+    parsed = new URL(origin);
   } catch {
-    // Malformed origin — fall through to reject
+    // Malformed origin — reject
+    return {
+      valid: false,
+      status: 403,
+      error: "Origin not allowed",
+    };
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    return null; // Non-web protocol — allow (desktop/IDE client)
+  }
+
+  // Allow loopback origins — parse URL and compare hostname exactly
+  if (
+    parsed.protocol === "http:" &&
+    (parsed.hostname === "localhost" ||
+      parsed.hostname === "127.0.0.1" ||
+      parsed.hostname === "[::1]")
+  ) {
+    return null;
   }
 
   return {
