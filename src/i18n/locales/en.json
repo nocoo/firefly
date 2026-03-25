@@ -172,6 +172,8 @@
   "admin.postForm.refetch": "Re-fetch",
   "admin.postForm.fetching": "Fetching...",
   "admin.postForm.clear": "Clear",
+  "admin.postForm.aiEnhance": "\u2728 AI Translate",
+  "admin.postForm.enhancing": "Translating...",
   "admin.analytics.title": "Site Analytics",
   "admin.analytics.recentViews": "{n} views in the last 24 hours",
   "admin.analytics.totalViews": "Total Views",

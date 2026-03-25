@@ -121,13 +121,13 @@ describe("POST /api/unfurl", () => {
     expect(body).toHaveProperty("title");
     expect(body).toHaveProperty("description");
     expect(body).toHaveProperty("image");
-    expect(body).toHaveProperty("ai_enhanced");
+    expect(body).toHaveProperty("bodyText");
 
     // Validate field types and values
     expect(body.url).toBe("https://example.com");
     expect(typeof body.title).toBe("string");
     expect(body.title.length).toBeGreaterThan(0);
-    expect(typeof body.ai_enhanced).toBe("boolean");
+    expect(typeof body.bodyText).toBe("string");
     // image can be string or null
     expect(body.image === null || typeof body.image === "string").toBe(true);
   }, 15_000);

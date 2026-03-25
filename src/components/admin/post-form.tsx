@@ -43,6 +43,8 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
   const [referenceDescription, setReferenceDescription] = useState(post?.reference_description ?? "");
   const [referenceImage, setReferenceImage] = useState(post?.reference_image ?? "");
   const [isUnfurling, setIsUnfurling] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [bodyText, setBodyText] = useState("");
   const [hasFetched, setHasFetched] = useState(!!(post?.reference_title || post?.reference_description));
 
   const isEditing = !!post;
@@ -90,6 +92,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       setReferenceTitle(data.title ?? "");
       setReferenceDescription(data.description ?? "");
       setReferenceImage(data.image ?? "");
+      setBodyText(data.bodyText ?? "");
       setHasFetched(true);
     } catch {
       alert(t("admin.postForm.failedSave"));
@@ -103,7 +106,36 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
     setReferenceTitle("");
     setReferenceDescription("");
     setReferenceImage("");
+    setBodyText("");
     setHasFetched(false);
+  }
+
+  // AI-enhance reference title + description
+  async function handleEnhanceReference() {
+    setIsEnhancing(true);
+    try {
+      const res = await fetch("/api/unfurl/enhance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: referenceTitle,
+          description: referenceDescription,
+          bodyText,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || t("admin.postForm.failedSave"));
+        return;
+      }
+      const data = await res.json();
+      if (data.title) setReferenceTitle(data.title);
+      if (data.description) setReferenceDescription(data.description);
+    } catch {
+      alert(t("admin.postForm.failedSave"));
+    } finally {
+      setIsEnhancing(false);
+    }
   }
 
   // Markdown preview — tab mode for small screens
@@ -477,7 +509,19 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         {hasFetched && (
           <div className="space-y-2 rounded-[var(--radius-widget)] border border-border p-3">
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">{t("admin.postForm.referenceTitle")}</label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs text-muted-foreground">{t("admin.postForm.referenceTitle")}</label>
+                <button
+                  type="button"
+                  onClick={handleEnhanceReference}
+                  disabled={isEnhancing}
+                  className="text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
+                >
+                  {isEnhancing
+                    ? t("admin.postForm.enhancing")
+                    : t("admin.postForm.aiEnhance")}
+                </button>
+              </div>
               <input
                 type="text"
                 value={referenceTitle}

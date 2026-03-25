@@ -438,7 +438,7 @@ describe("summarizeUnfurl", () => {
     expect(mockedGenerateText).toHaveBeenCalledWith(
       expect.objectContaining({
         prompt: expect.stringContaining(UNFURL_PROMPT),
-        maxOutputTokens: 256,
+        maxOutputTokens: 1024,
       }),
     );
   });
@@ -551,16 +551,35 @@ describe("summarizeUnfurl", () => {
     expect(result).toBeNull();
   });
 
-  // ── Reasoning is ignored (JSON output only) ──
+  // ── Reasoning fallback for thinking models ──
 
-  it("returns null when result.text is empty even with reasoning present", async () => {
+  it("extracts JSON from reasoning when result.text is empty", async () => {
     mockedGetAiSettings.mockResolvedValue(mockSettings);
     mockedGenerateText.mockResolvedValue({
       text: "",
       reasoning: [
         {
           type: "reasoning" as const,
-          text: 'Let me think...\n{"title":"Should Not Be Used","description":"From reasoning"}',
+          text: 'Let me think...\n{"title":"From Reasoning","description":"Extracted from thinking"}',
+        },
+      ],
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await summarizeUnfurl("Title", null, "Body");
+    expect(result).toEqual({
+      title: "From Reasoning",
+      description: "Extracted from thinking",
+    });
+  });
+
+  it("returns null when reasoning has no JSON", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: "",
+      reasoning: [
+        {
+          type: "reasoning" as const,
+          text: "Just some thinking without any JSON output",
         },
       ],
     } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);

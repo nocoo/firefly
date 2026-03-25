@@ -317,10 +317,23 @@ export async function summarizeUnfurl(
     const result = await generateText({
       model: client(config.model),
       prompt: `${UNFURL_PROMPT}\n\n${contextParts.join("\n\n")}`,
-      maxOutputTokens: 256,
+      maxOutputTokens: 1024,
     });
 
-    const text = result.text.trim();
+    // Prefer result.text; for thinking models (e.g. MiniMax-M2.1) that put
+    // output in reasoning blocks and return empty text, try extracting from reasoning.
+    let text = result.text.trim();
+    if (!text && result.reasoning) {
+      const reasoningText = result.reasoning
+        .filter((r): r is { type: "reasoning"; text: string } => r.type === "reasoning" && !!r.text)
+        .map((r) => r.text)
+        .join("\n");
+      // Look for JSON in reasoning output
+      const reasoningJson = reasoningText.match(/\{[\s\S]*?"title"[\s\S]*?"description"[\s\S]*?\}/);
+      if (reasoningJson) {
+        text = reasoningJson[0];
+      }
+    }
 
     if (!text) return null;
 

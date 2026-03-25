@@ -172,6 +172,8 @@
   "admin.postForm.refetch": "重新获取",
   "admin.postForm.fetching": "获取中...",
   "admin.postForm.clear": "清除",
+  "admin.postForm.aiEnhance": "\u2728 AI 翻译",
+  "admin.postForm.enhancing": "翻译中...",
   "admin.analytics.title": "站点分析",
   "admin.analytics.recentViews": "过去 24 小时 {n} 次访问",
   "admin.analytics.totalViews": "总浏览量",
