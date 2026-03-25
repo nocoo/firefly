@@ -8,14 +8,79 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
 } from "recharts";
-import { SOURCE_COLORS, TOOLTIP_STYLE, formatDateShort } from "./chart-helpers";
+import {
+  SOURCE_COLORS,
+  chartAxis,
+  formatDateLabel,
+  formatNumber,
+  CHART_MARGIN,
+} from "./chart-helpers";
+import { DashboardResponsiveContainer } from "./responsive-container";
 import { useLocale } from "@/i18n/context";
 
 interface TrafficTrendProps {
   daily: AnalyticsDailyTrend[];
 }
+
+// ---------------------------------------------------------------------------
+// Custom tooltip
+// ---------------------------------------------------------------------------
+
+function TrafficTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: Array<{ dataKey: string; value: number; color: string; name: string }>;
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+
+  const total = payload.reduce((sum, e) => sum + e.value, 0);
+
+  return (
+    <div className="rounded-[var(--radius-widget)] border border-border bg-card p-2.5 shadow-sm">
+      <p className="mb-1 text-xs font-medium text-foreground">
+        {label ? formatDateLabel(label) : ""}
+      </p>
+      <div className="mb-1 border-b border-border/50 pb-1 flex items-center gap-2 text-xs">
+        <span className="text-muted-foreground">Total</span>
+        <span className="ml-auto font-medium text-foreground">
+          {formatNumber(total)}
+        </span>
+      </div>
+      {payload.map((entry) => (
+        <div key={entry.dataKey} className="flex items-center gap-2 text-xs">
+          <div
+            className="h-2 w-2 rounded-full"
+            style={{ backgroundColor: entry.color }}
+          />
+          <span className="text-muted-foreground">{entry.name}</span>
+          <span className="ml-auto font-medium text-foreground">
+            {formatNumber(entry.value)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Legend items for inline legend above chart
+// ---------------------------------------------------------------------------
+
+const LEGEND_ITEMS: { key: string; label: string; color: string }[] = [
+  { key: "human", label: "Human", color: SOURCE_COLORS.human },
+  { key: "search", label: "Search", color: SOURCE_COLORS.search },
+  { key: "ai", label: "AI", color: SOURCE_COLORS.ai },
+  { key: "otherBot", label: "Other", color: SOURCE_COLORS.other },
+];
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export function TrafficTrend({ daily }: TrafficTrendProps) {
   const { t } = useLocale();
@@ -32,66 +97,102 @@ export function TrafficTrend({ daily }: TrafficTrendProps) {
 
   return (
     <DataCard title={t("admin.analytics.trafficOverTime")}>
-      <ResponsiveContainer width="100%" height={300}>
-        <AreaChart data={daily}>
-          <CartesianGrid
-            strokeDasharray="3 3"
-            stroke="var(--color-border)"
-          />
-          <XAxis
-            dataKey="date"
-            tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
-            tickFormatter={formatDateShort}
-          />
-          <YAxis
-            tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
-          />
-          <Tooltip contentStyle={TOOLTIP_STYLE} />
-          <Area
-            type="monotone"
-            dataKey="human"
-            name={t("admin.analytics.humanVisitors")}
-            stroke={SOURCE_COLORS.human}
-            fill={SOURCE_COLORS.human}
-            fillOpacity={0.15}
-            strokeWidth={2}
-            stackId="1"
-          />
-          <Area
-            type="monotone"
-            dataKey="search"
-            name={t("admin.analytics.searchEngines")}
-            stroke={SOURCE_COLORS.search}
-            fill={SOURCE_COLORS.search}
-            fillOpacity={0.1}
-            strokeWidth={1.5}
-            strokeDasharray="4 4"
-            stackId="1"
-          />
-          <Area
-            type="monotone"
-            dataKey="ai"
-            name={t("admin.analytics.aiBots")}
-            stroke={SOURCE_COLORS.ai}
-            fill={SOURCE_COLORS.ai}
-            fillOpacity={0.1}
-            strokeWidth={1.5}
-            strokeDasharray="4 4"
-            stackId="1"
-          />
-          <Area
-            type="monotone"
-            dataKey="otherBot"
-            name={t("admin.analytics.otherBots")}
-            stroke={SOURCE_COLORS.other}
-            fill={SOURCE_COLORS.other}
-            fillOpacity={0.05}
-            strokeWidth={1}
-            strokeDasharray="2 2"
-            stackId="1"
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+      {/* Inline legend */}
+      <div className="mb-3 flex items-center gap-4">
+        {LEGEND_ITEMS.map(({ key, label, color }) => (
+          <div key={key} className="flex items-center gap-1.5">
+            <div
+              className="h-2 w-2 rounded-full"
+              style={{ background: color }}
+            />
+            <span className="text-xs text-muted-foreground">{label}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="h-[260px] md:h-[300px]">
+        <DashboardResponsiveContainer width="100%" height="100%">
+          <AreaChart data={daily} margin={CHART_MARGIN}>
+            <defs>
+              <linearGradient id="gradHuman" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={SOURCE_COLORS.human} stopOpacity={0.3} />
+                <stop offset="100%" stopColor={SOURCE_COLORS.human} stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="gradSearch" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={SOURCE_COLORS.search} stopOpacity={0.3} />
+                <stop offset="100%" stopColor={SOURCE_COLORS.search} stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="gradAi" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={SOURCE_COLORS.ai} stopOpacity={0.3} />
+                <stop offset="100%" stopColor={SOURCE_COLORS.ai} stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="gradOther" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={SOURCE_COLORS.other} stopOpacity={0.3} />
+                <stop offset="100%" stopColor={SOURCE_COLORS.other} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke={chartAxis}
+              strokeOpacity={0.15}
+              vertical={false}
+            />
+            <XAxis
+              dataKey="date"
+              tickFormatter={formatDateLabel}
+              tick={{ fill: chartAxis, fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              tick={{ fill: chartAxis, fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+              width={48}
+            />
+            <Tooltip
+              content={<TrafficTooltip />}
+              isAnimationActive={false}
+            />
+            <Area
+              type="monotone"
+              dataKey="human"
+              name={t("admin.analytics.humanVisitors")}
+              stroke={SOURCE_COLORS.human}
+              strokeWidth={2}
+              fill="url(#gradHuman)"
+              stackId="1"
+            />
+            <Area
+              type="monotone"
+              dataKey="search"
+              name={t("admin.analytics.searchEngines")}
+              stroke={SOURCE_COLORS.search}
+              strokeWidth={2}
+              fill="url(#gradSearch)"
+              stackId="1"
+            />
+            <Area
+              type="monotone"
+              dataKey="ai"
+              name={t("admin.analytics.aiBots")}
+              stroke={SOURCE_COLORS.ai}
+              strokeWidth={2}
+              fill="url(#gradAi)"
+              stackId="1"
+            />
+            <Area
+              type="monotone"
+              dataKey="otherBot"
+              name={t("admin.analytics.otherBots")}
+              stroke={SOURCE_COLORS.other}
+              strokeWidth={2}
+              fill="url(#gradOther)"
+              stackId="1"
+            />
+          </AreaChart>
+        </DashboardResponsiveContainer>
+      </div>
     </DataCard>
   );
 }
