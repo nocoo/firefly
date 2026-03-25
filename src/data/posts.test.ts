@@ -506,6 +506,59 @@ describe("updatePost", () => {
     expect(result?.title).toBe("Test Post");
   });
 
+  it("clears orphan reference metadata when reference_url is set to null", async () => {
+    const existingWithRef: PostWithCategory = {
+      ...samplePostWithCategory,
+      reference_url: "https://example.com",
+      reference_title: "Old Title",
+      reference_description: "Old Desc",
+      reference_image: "https://example.com/old.jpg",
+    };
+
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(existingWithRef)
+      .mockResolvedValueOnce({
+        ...existingWithRef,
+        reference_url: null,
+        reference_title: null,
+        reference_description: null,
+        reference_image: null,
+      });
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
+
+    await updatePost(db, "test-id", { reference_url: null });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    // All 4 reference fields should be in the SET clause
+    expect(sql).toContain("reference_url = ?");
+    expect(sql).toContain("reference_title = ?");
+    expect(sql).toContain("reference_description = ?");
+    expect(sql).toContain("reference_image = ?");
+
+    // All reference values should be null (4 nulls for url + title + desc + image)
+    const nullParams = (params as unknown[]).filter((p) => p === null);
+    expect(nullParams.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it("does not clear reference metadata when reference_url is not null", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
+
+    await updatePost(db, "test-id", {
+      reference_url: "https://new-example.com",
+      reference_title: "New Title",
+    });
+
+    const [sql] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("reference_url = ?");
+    expect(sql).toContain("reference_title = ?");
+    // Should NOT auto-null description/image when URL is being set (not cleared)
+    expect(sql).not.toContain("reference_description = ?");
+    expect(sql).not.toContain("reference_image = ?");
+  });
+
   it("refreshes both categories when category changes", async () => {
     vi.mocked(db.firstOrNull)
       .mockResolvedValueOnce({ ...samplePostWithCategory, category_id: "cat-old" })

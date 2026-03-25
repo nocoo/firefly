@@ -166,18 +166,19 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         tag_ids: selectedTags,
         ...(isEditing
           ? {
-              // Update: null clears, undefined omits
+              // Update: null clears, undefined omits.
+              // When URL is empty, clear all 4 reference fields to avoid orphan metadata.
               reference_url: referenceUrl || null,
-              reference_title: referenceTitle || null,
-              reference_description: referenceDescription || null,
-              reference_image: referenceImage || null,
+              reference_title: referenceUrl ? (referenceTitle || null) : null,
+              reference_description: referenceUrl ? (referenceDescription || null) : null,
+              reference_image: referenceUrl ? (referenceImage || null) : null,
             }
           : {
               // Create: undefined omits (defaults to NULL in DB)
               reference_url: referenceUrl || undefined,
-              reference_title: referenceTitle || undefined,
-              reference_description: referenceDescription || undefined,
-              reference_image: referenceImage || undefined,
+              reference_title: referenceUrl ? (referenceTitle || undefined) : undefined,
+              reference_description: referenceUrl ? (referenceDescription || undefined) : undefined,
+              reference_image: referenceUrl ? (referenceImage || undefined) : undefined,
             }),
       };
 

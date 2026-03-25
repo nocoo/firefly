@@ -376,6 +376,23 @@ export async function updatePost(
     params.push(input.reference_url);
   }
 
+  // Defense-in-depth: when reference_url is explicitly cleared, also clear
+  // orphan metadata fields that weren't explicitly set by the caller.
+  if (input.reference_url === null) {
+    if (input.reference_title === undefined) {
+      setClauses.push("reference_title = ?");
+      params.push(null);
+    }
+    if (input.reference_description === undefined) {
+      setClauses.push("reference_description = ?");
+      params.push(null);
+    }
+    if (input.reference_image === undefined) {
+      setClauses.push("reference_image = ?");
+      params.push(null);
+    }
+  }
+
   if (input.reference_title !== undefined) {
     setClauses.push("reference_title = ?");
     params.push(input.reference_title);
