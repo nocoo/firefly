@@ -52,3 +52,65 @@ describe("GET /api/analytics", () => {
     expect(body.period.days).toBeGreaterThanOrEqual(1);
   });
 });
+
+describe("GET /api/analytics/source", () => {
+  it("returns human detail data", async () => {
+    const res = await fetch(`${BASE}/api/analytics/source?type=human&days=7`);
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.type).toBe("human");
+    expect(body).toHaveProperty("topPages");
+    expect(body).toHaveProperty("topReferrers");
+    expect(body).toHaveProperty("devices");
+    expect(body).toHaveProperty("browsers");
+    expect(body).toHaveProperty("os");
+    expect(body).toHaveProperty("countries");
+    expect(body).toHaveProperty("recent24h");
+  });
+
+  it("returns search detail data", async () => {
+    const res = await fetch(`${BASE}/api/analytics/source?type=search&days=7`);
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.type).toBe("search");
+    expect(body).toHaveProperty("bots");
+    expect(body).toHaveProperty("topPages");
+    expect(body).toHaveProperty("dailyByBot");
+    expect(body).toHaveProperty("crawlerVsPage");
+  });
+
+  it("returns AI bot detail data", async () => {
+    const res = await fetch(`${BASE}/api/analytics/source?type=ai&days=7`);
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.type).toBe("ai");
+    expect(body).toHaveProperty("bots");
+    expect(body).toHaveProperty("topPages");
+    expect(body).toHaveProperty("dailyByBot");
+  });
+
+  it("returns other bot detail data", async () => {
+    const res = await fetch(`${BASE}/api/analytics/source?type=other&days=7`);
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.type).toBe("other");
+    expect(body).toHaveProperty("byCategory");
+    expect(body).toHaveProperty("socialBots");
+    expect(body).toHaveProperty("monitorBots");
+    expect(body).toHaveProperty("unknownBots");
+  });
+
+  it("returns 400 for missing type param", async () => {
+    const res = await fetch(`${BASE}/api/analytics/source`);
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 for invalid type param", async () => {
+    const res = await fetch(`${BASE}/api/analytics/source?type=invalid`);
+    expect(res.status).toBe(400);
+  });
+});
