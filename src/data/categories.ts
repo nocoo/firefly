@@ -165,3 +165,35 @@ export async function deleteCategory(db: Db, id: string): Promise<boolean> {
   if (meta.changes > 0) invalidateCategoriesCache();
   return meta.changes > 0;
 }
+
+// ---------------------------------------------------------------------------
+// listCategoriesWithPostStats (admin only)
+// ---------------------------------------------------------------------------
+
+export interface CategoryWithPostStats extends Category {
+  total_posts: number;
+  published_posts: number;
+  draft_posts: number;
+}
+
+/**
+ * Return all categories enriched with per-status post counts.
+ * Used on admin pages — not cached (always fresh).
+ */
+export async function listCategoriesWithPostStats(
+  db: Db,
+): Promise<CategoryWithPostStats[]> {
+  const sql = `
+    SELECT
+      c.*,
+      COUNT(p.id) AS total_posts,
+      SUM(CASE WHEN p.status = 'published' THEN 1 ELSE 0 END) AS published_posts,
+      SUM(CASE WHEN p.status = 'draft' THEN 1 ELSE 0 END) AS draft_posts
+    FROM categories c
+    LEFT JOIN posts p ON p.category_id = c.id
+    GROUP BY c.id
+    ORDER BY c.sort_order ASC, c.name ASC
+  `;
+  const result = await db.query<CategoryWithPostStats>(sql);
+  return result.results;
+}
