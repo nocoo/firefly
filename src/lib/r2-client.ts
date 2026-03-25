@@ -26,30 +26,41 @@ export interface R2Config {
   accessKeyId: string;
   secretAccessKey: string;
   bucketName: string;
-  publicUrl: string; // e.g. https://assets.lizheng.me
+  publicUrl: string;
 }
 
 /**
  * Get the public URL for R2 assets.
  * Used by server-only modules (e.g. logo.ts) to construct public URLs
  * without importing the full S3 client.
+ *
+ * Requires the R2_PUBLIC_URL environment variable to be set.
  */
 export function getR2PublicUrl(): string {
-  return process.env.R2_PUBLIC_URL ?? "https://assets.lizheng.me";
+  const url = process.env.R2_PUBLIC_URL;
+  if (!url) {
+    throw new Error("R2_PUBLIC_URL environment variable is not configured");
+  }
+  return url;
 }
 
 function getR2Config(): R2Config {
   const accountId = process.env.CF_ACCOUNT_ID;
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-  const bucketName = process.env.R2_BUCKET_NAME ?? "lizhengblog";
-  const publicUrl =
-    process.env.R2_PUBLIC_URL ?? "https://assets.lizheng.me";
+  const bucketName = process.env.R2_BUCKET_NAME;
+  const publicUrl = process.env.R2_PUBLIC_URL;
 
   if (!accountId || !accessKeyId || !secretAccessKey) {
     throw new Error(
       "R2 credentials not configured: CF_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY required",
     );
+  }
+  if (!bucketName) {
+    throw new Error("R2_BUCKET_NAME environment variable is not configured");
+  }
+  if (!publicUrl) {
+    throw new Error("R2_PUBLIC_URL environment variable is not configured");
   }
 
   return { accountId, accessKeyId, secretAccessKey, bucketName, publicUrl };

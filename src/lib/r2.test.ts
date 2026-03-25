@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { generateR2Key, generateFireflyR2Key, extractExtension, validateUpload, detectMimeType } from "./r2";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { generateR2Key, generateFireflyR2Key, getR2KeyPrefix, extractExtension, validateUpload, detectMimeType } from "./r2";
 
 // ---------------------------------------------------------------------------
 // Test helpers — real magic byte headers for each format
@@ -90,11 +90,54 @@ describe("extractExtension", () => {
 });
 
 // ---------------------------------------------------------------------------
+// getR2KeyPrefix
+// ---------------------------------------------------------------------------
+
+describe("getR2KeyPrefix", () => {
+  const origEnv = process.env.R2_KEY_PREFIX;
+
+  afterEach(() => {
+    if (origEnv !== undefined) {
+      process.env.R2_KEY_PREFIX = origEnv;
+    } else {
+      delete process.env.R2_KEY_PREFIX;
+    }
+  });
+
+  it("returns default prefix when env var is not set", () => {
+    delete process.env.R2_KEY_PREFIX;
+    expect(getR2KeyPrefix()).toBe("uploads/firefly/");
+  });
+
+  it("returns custom prefix from env var", () => {
+    process.env.R2_KEY_PREFIX = "custom/path/";
+    expect(getR2KeyPrefix()).toBe("custom/path/");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // generateFireflyR2Key
 // ---------------------------------------------------------------------------
 
 describe("generateFireflyR2Key", () => {
-  it("generates key with firefly path prefix", () => {
+  const origEnv = process.env.R2_KEY_PREFIX;
+
+  afterEach(() => {
+    if (origEnv !== undefined) {
+      process.env.R2_KEY_PREFIX = origEnv;
+    } else {
+      delete process.env.R2_KEY_PREFIX;
+    }
+  });
+
+  it("generates key with default prefix when env var is not set", () => {
+    delete process.env.R2_KEY_PREFIX;
+    const key = generateFireflyR2Key("photo.jpg");
+    expect(key).toMatch(/^uploads\/firefly\//);
+  });
+
+  it("generates key with custom prefix from env var", () => {
+    process.env.R2_KEY_PREFIX = "lizhengblog/wp-content/uploads/firefly/";
     const key = generateFireflyR2Key("photo.jpg");
     expect(key).toMatch(/^lizhengblog\/wp-content\/uploads\/firefly\//);
   });
@@ -111,8 +154,9 @@ describe("generateFireflyR2Key", () => {
   });
 
   it("handles filename without extension", () => {
+    delete process.env.R2_KEY_PREFIX;
     const key = generateFireflyR2Key("noext");
-    expect(key).toMatch(/^lizhengblog\/wp-content\/uploads\/firefly\/[0-9a-f-]+$/);
+    expect(key).toMatch(/^uploads\/firefly\/[0-9a-f-]+$/);
     expect(key).not.toContain(".");
   });
 

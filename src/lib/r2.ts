@@ -108,14 +108,23 @@ export function generateR2Key(filename: string): string {
 }
 
 /**
+ * Get the R2 key prefix for Firefly uploads.
+ * Defaults to "uploads/firefly/" for new deployments.
+ * Existing deployments can set R2_KEY_PREFIX to preserve legacy paths.
+ */
+export function getR2KeyPrefix(): string {
+  return process.env.R2_KEY_PREFIX ?? "uploads/firefly/";
+}
+
+/**
  * Generate a GUID-based R2 key under the Firefly upload path.
- * Format: lizhengblog/wp-content/uploads/firefly/{uuid}.{ext}
+ * Format: {R2_KEY_PREFIX}{uuid}.{ext}
  */
 export function generateFireflyR2Key(filename: string): string {
   const ext = extractExtension(filename);
   const uuid = crypto.randomUUID();
   const suffix = ext ? `.${ext}` : "";
-  return `lizhengblog/wp-content/uploads/firefly/${uuid}${suffix}`;
+  return `${getR2KeyPrefix()}${uuid}${suffix}`;
 }
 
 // ---------------------------------------------------------------------------

@@ -8,8 +8,11 @@
 
 import "server-only";
 import { getR2PublicUrl } from "./r2-client";
+import { getR2KeyPrefix } from "./r2";
 
-const LOGO_BASE_PATH = "lizhengblog/wp-content/uploads/firefly/site";
+function getLogoBasePath(): string {
+  return `${getR2KeyPrefix()}site`;
+}
 
 export type LogoSize = 16 | 32 | 48 | 80 | 180 | 192 | 512;
 export const LOGO_SIZES: LogoSize[] = [16, 32, 48, 80, 180, 192, 512];
@@ -21,12 +24,12 @@ export const LOGO_SIZES: LogoSize[] = [16, 32, 48, 80, 180, 192, 512];
  * // → "https://assets.lizheng.me/lizhengblog/wp-content/uploads/firefly/site/a1b2c3d4/logo-32.png"
  */
 export function getLogoUrl(version: string, size: LogoSize): string {
-  return `${getR2PublicUrl()}/${LOGO_BASE_PATH}/${version}/logo-${size}.png`;
+  return `${getR2PublicUrl()}/${getLogoBasePath()}/${version}/logo-${size}.png`;
 }
 
 /**
  * Build the R2 object key for a logo variant (no CDN prefix).
  */
 export function getLogoR2Key(version: string, size: LogoSize): string {
-  return `${LOGO_BASE_PATH}/${version}/logo-${size}.png`;
+  return `${getLogoBasePath()}/${version}/logo-${size}.png`;
 }

@@ -8,12 +8,17 @@ vi.mock("./r2-client", () => ({
   getR2PublicUrl: vi.fn(() => "https://test-cdn.example.com"),
 }));
 
+// Mock r2 to provide a stable key prefix for tests
+vi.mock("./r2", () => ({
+  getR2KeyPrefix: vi.fn(() => "uploads/firefly/"),
+}));
+
 import { getLogoUrl, getLogoR2Key, LOGO_SIZES, type LogoSize } from "./logo";
 
 describe("getLogoUrl", () => {
   it("builds correct URL for a given version and size", () => {
     expect(getLogoUrl("a1b2c3d4", 32)).toBe(
-      "https://test-cdn.example.com/lizhengblog/wp-content/uploads/firefly/site/a1b2c3d4/logo-32.png",
+      "https://test-cdn.example.com/uploads/firefly/site/a1b2c3d4/logo-32.png",
     );
   });
 
@@ -31,14 +36,14 @@ describe("getLogoUrl", () => {
 describe("getLogoR2Key", () => {
   it("builds R2 key without CDN prefix", () => {
     expect(getLogoR2Key("a1b2c3d4", 32)).toBe(
-      "lizhengblog/wp-content/uploads/firefly/site/a1b2c3d4/logo-32.png",
+      "uploads/firefly/site/a1b2c3d4/logo-32.png",
     );
   });
 
   it("does not include protocol or domain", () => {
     const key = getLogoR2Key("ver123", 512);
     expect(key).not.toContain("https://");
-    expect(key).toMatch(/^lizhengblog\//);
+    expect(key).toMatch(/^uploads\/firefly\//);
   });
 });
 
