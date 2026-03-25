@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.3.0 (2026-03-25)
+
+- chore: update tsbuildinfo
+- feat: blog UX improvements — localization, navigation, theming
+
+
 ## v1.2.2 (2026-03-25)
 
 - chore: update tsbuildinfo
