@@ -509,6 +509,22 @@ describe("getAnalyticsOverview", () => {
     expect(result.human).toBe(0);
     expect(result.totalDelta).toBeNull();
   });
+
+  it("uses strict is_bot=1 for search and ai partitioning in SQL", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue({
+      total: 0,
+      human: 0,
+      search: 0,
+      ai: 0,
+      other_bot: 0,
+    });
+
+    await getAnalyticsOverview(db, 30);
+
+    const sql = vi.mocked(db.firstOrNull).mock.calls[0][0] as string;
+    expect(sql).toContain("is_bot = 1 AND bot_category = 'search'");
+    expect(sql).toContain("is_bot = 1 AND bot_category = 'ai'");
+  });
 });
 
 describe("getAnalyticsDailyTrend", () => {

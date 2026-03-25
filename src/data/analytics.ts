@@ -340,9 +340,9 @@ function sourceCondition(type: SourceType): string {
     case "human":
       return "is_bot = 0";
     case "search":
-      return "bot_category = 'search'";
+      return "is_bot = 1 AND bot_category = 'search'";
     case "ai":
-      return "bot_category = 'ai'";
+      return "is_bot = 1 AND bot_category = 'ai'";
     case "other":
       return "is_bot = 1 AND COALESCE(bot_category, 'other') NOT IN ('search', 'ai')";
   }
@@ -517,8 +517,8 @@ export async function getAnalyticsOverview(
       `SELECT
          COUNT(*) AS total,
          SUM(CASE WHEN is_bot = 0 THEN 1 ELSE 0 END) AS human,
-         SUM(CASE WHEN bot_category = 'search' THEN 1 ELSE 0 END) AS search,
-         SUM(CASE WHEN bot_category = 'ai' THEN 1 ELSE 0 END) AS ai,
+         SUM(CASE WHEN is_bot = 1 AND bot_category = 'search' THEN 1 ELSE 0 END) AS search,
+         SUM(CASE WHEN is_bot = 1 AND bot_category = 'ai' THEN 1 ELSE 0 END) AS ai,
          SUM(CASE WHEN is_bot = 1 AND COALESCE(bot_category, 'other') NOT IN ('search', 'ai') THEN 1 ELSE 0 END) AS other_bot
        FROM page_views
        WHERE ${TIME_WINDOW_WHERE}`,
@@ -534,8 +534,8 @@ export async function getAnalyticsOverview(
       `SELECT
          COUNT(*) AS total,
          SUM(CASE WHEN is_bot = 0 THEN 1 ELSE 0 END) AS human,
-         SUM(CASE WHEN bot_category = 'search' THEN 1 ELSE 0 END) AS search,
-         SUM(CASE WHEN bot_category = 'ai' THEN 1 ELSE 0 END) AS ai,
+         SUM(CASE WHEN is_bot = 1 AND bot_category = 'search' THEN 1 ELSE 0 END) AS search,
+         SUM(CASE WHEN is_bot = 1 AND bot_category = 'ai' THEN 1 ELSE 0 END) AS ai,
          SUM(CASE WHEN is_bot = 1 AND COALESCE(bot_category, 'other') NOT IN ('search', 'ai') THEN 1 ELSE 0 END) AS other_bot
        FROM page_views
        WHERE ${PREV_WINDOW_WHERE}`,
@@ -595,8 +595,8 @@ export async function getAnalyticsDailyTrend(
     `SELECT
        date(viewed_at, 'unixepoch') AS date,
        SUM(CASE WHEN is_bot = 0 THEN 1 ELSE 0 END) AS human,
-       SUM(CASE WHEN bot_category = 'search' THEN 1 ELSE 0 END) AS search,
-       SUM(CASE WHEN bot_category = 'ai' THEN 1 ELSE 0 END) AS ai,
+       SUM(CASE WHEN is_bot = 1 AND bot_category = 'search' THEN 1 ELSE 0 END) AS search,
+       SUM(CASE WHEN is_bot = 1 AND bot_category = 'ai' THEN 1 ELSE 0 END) AS ai,
        SUM(CASE WHEN is_bot = 1 AND COALESCE(bot_category, 'other') NOT IN ('search', 'ai') THEN 1 ELSE 0 END) AS other_bot
      FROM page_views
      WHERE ${TIME_WINDOW_WHERE}
