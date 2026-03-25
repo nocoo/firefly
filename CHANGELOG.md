@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.2 (2026-03-25)
+
+- chore: update tsbuildinfo
+- fix: redirect HTTP to HTTPS via x-forwarded-proto in proxy
+
+
 ## v1.2.1 (2026-03-25)
 
 - fix: sync preview theme with global dark mode on mount
