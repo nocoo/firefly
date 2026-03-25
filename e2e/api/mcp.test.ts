@@ -242,7 +242,7 @@ describe("MCP Main Endpoint — Tool Calls", () => {
     expect(listRes.status).toBe(200);
 
     const listData = await listRes.json();
-    expect(listData.result.tools).toHaveLength(16);
+    expect(listData.result.tools).toHaveLength(17);
 
     const toolNames = listData.result.tools.map(
       (t: { name: string }) => t.name,
