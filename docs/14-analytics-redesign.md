@@ -746,11 +746,11 @@ function handlePeriodChange(newDays: number) {
 
 | # | Commit | Scope |
 |---|--------|-------|
-| 1 | fix: read cf-ipcity header in proxy | `src/proxy.ts` |
-| 2 | fix: protect analytics GET endpoints with admin auth | `src/proxy.ts` |
-| 3 | feat: resolve post_id from path in tracking | `src/lib/tracking.ts` |
-| 4 | feat: increment posts.view_count on human page view | `src/data/analytics.ts` |
-| 5 | feat: add analytics summary + source query functions | `src/data/analytics.ts`, `src/models/types.ts` |
+| 1 | fix: read cf-ipcity header in proxy | `src/proxy.ts` | ✅ |
+| 2 | fix: protect analytics GET endpoints with admin auth | `src/proxy.ts` | ✅ |
+| 3 | feat: resolve post_id from path in tracking | `src/lib/tracking.ts` | ✅ |
+| 4 | feat: increment posts.view_count on human page view | `src/data/analytics.ts` | ✅ |
+| 5 | feat: add analytics summary + source query functions | `src/data/analytics.ts`, `src/models/types.ts` | |
 | 6 | feat: rewrite /api/analytics as summary endpoint | `src/app/api/analytics/route.ts` |
 | 7 | feat: add /api/analytics/source detail endpoint | `src/app/api/analytics/source/route.ts` |
 | 8 | feat: chart helpers and shared constants | `src/components/admin/analytics/chart-helpers.ts` |
