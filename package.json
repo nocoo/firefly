@@ -1,6 +1,6 @@
 {
   "name": "firefly",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -21,7 +21,8 @@
     "migrate:status": "bun scripts/migrations/migrate.ts status",
     "migrate:test": "bun scripts/migrations/migrate.ts up --target test",
     "migrate:local": "bun scripts/migrations/migrate.ts up --target local",
-    "prepare": "husky"
+    "prepare": "husky",
+    "release": "bun scripts/release.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

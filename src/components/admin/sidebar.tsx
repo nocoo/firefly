@@ -1,5 +1,6 @@
 "use client";
 
+import { APP_VERSION } from "@/lib/version";
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -250,8 +251,8 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
                 <span className="text-lg font-semibold text-foreground">
                   {t("admin.sidebar.firefly")}
                 </span>
-                <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground leading-none">
-                  v0.2
+                <span className="rounded-md bg-secondary px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground leading-none">
+                  v{APP_VERSION}
                 </span>
               </div>
               <IconButton

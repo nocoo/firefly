@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.0.0 (2026-03-25)
+
+Version management upgrade — centralized version infrastructure.
+
+### Changes
+
+- **Version SSOT** — `package.json` version injected at build time via `NEXT_PUBLIC_APP_VERSION`
+- **Version module** — New `src/lib/version.ts` as the single import point for all version consumers
+- **Sidebar pill** — Dynamic version display with monospace font (`v1.0.0`)
+- **Health endpoint** — New `GET /api/live` returning `{ status, version, timestamp }`
+- **MCP server** — Version now reads from centralized module instead of hardcoded string
+- **Release automation** — New `scripts/release.ts` supporting patch/minor/major/exact/dry-run
+
 ## v0.2.0 (2026-03-24)
 
 First public release of Firefly — a Next.js 16 blog platform backed by Cloudflare D1.

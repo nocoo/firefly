@@ -11,6 +11,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { APP_VERSION } from "@/lib/version";
 import type { Db } from "@/lib/db";
 import type { ToolContext } from "@/lib/mcp/tools/posts";
 import {
@@ -44,7 +45,7 @@ import {
 export function createMcpServer(db: Db): McpServer {
   const server = new McpServer({
     name: "firefly",
-    version: "0.2.0",
+    version: APP_VERSION,
   });
 
   const ctx: ToolContext = { db };
