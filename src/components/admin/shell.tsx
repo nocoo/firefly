@@ -16,7 +16,6 @@ const PAGE_TITLE_KEYS: Record<string, string> = {
   "/admin/posts": "admin.nav.posts",
   "/admin/categories": "admin.nav.categories",
   "/admin/tags": "admin.nav.tags",
-  "/admin/analytics": "admin.nav.analytics",
   "/admin/site-identity": "admin.nav.siteIdentity",
   "/admin/settings": "admin.nav.settings",
   "/admin/ai-settings": "admin.nav.aiSettings",

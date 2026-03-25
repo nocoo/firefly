@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { FileText, FolderOpen, Tags } from "lucide-react";
 import { useLocale } from "@/i18n/context";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import type {
@@ -35,7 +36,17 @@ const TAB_KEYS: Record<SourceType, string> = {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function AnalyticsDashboard() {
+export interface ContentStats {
+  postCount: number;
+  categoryCount: number;
+  tagCount: number;
+}
+
+export function AnalyticsDashboard({
+  contentStats,
+}: {
+  contentStats?: ContentStats;
+} = {}) {
   const { t } = useLocale();
   const [days, setDays] = useState(30);
   const [summary, setSummary] = useState<AnalyticsSummaryResponse | null>(null);
@@ -146,6 +157,27 @@ export function AnalyticsDashboard() {
           onChange={handlePeriodChange}
         />
       </div>
+
+      {/* Content stats (from server) */}
+      {contentStats && (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <ContentStatCard
+            icon={FileText}
+            label={t("admin.dashboard.publishedPosts")}
+            value={contentStats.postCount}
+          />
+          <ContentStatCard
+            icon={FolderOpen}
+            label={t("admin.dashboard.categories")}
+            value={contentStats.categoryCount}
+          />
+          <ContentStatCard
+            icon={Tags}
+            label={t("admin.dashboard.tags")}
+            value={contentStats.tagCount}
+          />
+        </div>
+      )}
 
       {/* Overview cards */}
       <OverviewCards overview={summary.overview} />
@@ -266,6 +298,32 @@ function TabSkeleton() {
             ))}
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Content stat card (server-provided counts)
+// ---------------------------------------------------------------------------
+
+function ContentStatCard({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: number;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-[var(--radius-widget)] bg-secondary p-4">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-background">
+        <Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+      </div>
+      <div>
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="text-xl font-semibold text-foreground">{value}</p>
       </div>
     </div>
   );

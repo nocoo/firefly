@@ -10,7 +10,6 @@ import {
   FileText,
   FolderOpen,
   Tags,
-  BarChart3,
   LogOut,
   PanelLeft,
   ChevronUp,
@@ -45,7 +44,6 @@ const NAV_GROUPS: NavGroup[] = [
     defaultOpen: true,
     items: [
       { titleKey: "admin.nav.dashboard", href: "/admin", icon: LayoutDashboard },
-      { titleKey: "admin.nav.analytics", href: "/admin/analytics", icon: BarChart3 },
     ],
   },
   {
