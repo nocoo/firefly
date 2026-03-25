@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.1 (2026-03-25)
+
+- fix: sync preview theme with global dark mode on mount
+- fix: use fixed dark foreground on grid card hover buttons for dark mode visibility
+- refactor: merge analytics into dashboard page
+
+
 ## v1.2.0 (2026-03-25)
 
 - Merge pull request #4 from nocoo/violet-waxflower
