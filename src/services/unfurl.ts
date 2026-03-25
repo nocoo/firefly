@@ -2,6 +2,8 @@
 // URL unfurl service — fetch + extract OG metadata with SSRF protection
 // ---------------------------------------------------------------------------
 
+import dns from "node:dns";
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -90,6 +92,52 @@ export function validateUrl(url: string): URL {
 }
 
 // ---------------------------------------------------------------------------
+// DNS resolution validation (prevents DNS rebinding attacks)
+// ---------------------------------------------------------------------------
+
+const DNS_TIMEOUT_MS = 5_000;
+
+const IP_LITERAL_RE = /^[\d.]+$|^\[/; // IPv4 literal or bracketed IPv6
+
+/**
+ * Resolve a hostname via DNS and verify the resolved IP is not private.
+ * IP-literal hostnames are skipped (already checked by validateUrl).
+ */
+export async function resolveAndValidateHostname(
+  hostname: string,
+): Promise<void> {
+  // IP literals are already validated by validateUrl — no DNS needed
+  if (IP_LITERAL_RE.test(hostname)) return;
+
+  let address: string;
+  try {
+    const result = await Promise.race([
+      dns.promises.lookup(hostname, { family: 0 }),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("DNS timeout")), DNS_TIMEOUT_MS),
+      ),
+    ]);
+    address = result.address;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "DNS resolution failed";
+    throw new UnfurlError(`DNS resolution failed: ${msg}`, 400);
+  }
+
+  // Normalize IPv4-mapped IPv6 (e.g. ::ffff:127.0.0.1 → 127.0.0.1)
+  const normalized = address.startsWith("::ffff:")
+    ? address.slice(7)
+    : address;
+
+  if (
+    normalized === "localhost" ||
+    isPrivateIPv4(normalized) ||
+    isPrivateIPv6(normalized)
+  ) {
+    throw new UnfurlError("URL not allowed: resolves to private network", 400);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Custom error
 // ---------------------------------------------------------------------------
 
@@ -112,6 +160,7 @@ export async function fetchHtml(url: string): Promise<string> {
 
   for (let i = 0; i <= MAX_REDIRECTS; i++) {
     const parsed = validateUrl(currentUrl);
+    await resolveAndValidateHostname(parsed.hostname);
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);

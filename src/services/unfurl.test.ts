@@ -8,6 +8,7 @@
 import { describe, expect, it, vi, beforeEach, afterAll } from "vitest";
 import {
   validateUrl,
+  resolveAndValidateHostname,
   extractOgMetadata,
   extractBodyText,
   fetchHtml,
@@ -95,6 +96,87 @@ describe("validateUrl", () => {
       expect(err).toBeInstanceOf(UnfurlError);
       expect((err as UnfurlError).statusCode).toBe(400);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// resolveAndValidateHostname — DNS rebinding protection
+// ---------------------------------------------------------------------------
+
+vi.mock("node:dns", () => ({
+  default: {
+    promises: {
+      lookup: vi.fn(),
+    },
+  },
+}));
+
+import dns from "node:dns";
+const mockedLookup = vi.mocked(dns.promises.lookup);
+
+describe("resolveAndValidateHostname", () => {
+  beforeEach(() => {
+    mockedLookup.mockReset();
+  });
+
+  it("passes for public IP resolution", async () => {
+    mockedLookup.mockResolvedValue({ address: "93.184.216.34", family: 4 });
+    await expect(resolveAndValidateHostname("example.com")).resolves.toBeUndefined();
+  });
+
+  it("rejects domain resolving to 127.0.0.1", async () => {
+    mockedLookup.mockResolvedValue({ address: "127.0.0.1", family: 4 });
+    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
+  });
+
+  it("rejects domain resolving to 10.x.x.x", async () => {
+    mockedLookup.mockResolvedValue({ address: "10.0.0.1", family: 4 });
+    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
+  });
+
+  it("rejects domain resolving to 192.168.x.x", async () => {
+    mockedLookup.mockResolvedValue({ address: "192.168.1.1", family: 4 });
+    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
+  });
+
+  it("rejects domain resolving to 172.16.x.x", async () => {
+    mockedLookup.mockResolvedValue({ address: "172.16.0.1", family: 4 });
+    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
+  });
+
+  it("rejects IPv4-mapped IPv6 resolving to private IP", async () => {
+    mockedLookup.mockResolvedValue({ address: "::ffff:192.168.1.1", family: 6 });
+    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
+  });
+
+  it("rejects domain resolving to IPv6 loopback", async () => {
+    mockedLookup.mockResolvedValue({ address: "::1", family: 6 });
+    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
+  });
+
+  it("rejects domain resolving to fc00::/7 range", async () => {
+    mockedLookup.mockResolvedValue({ address: "fd12::1", family: 6 });
+    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
+  });
+
+  it("throws on DNS resolution failure", async () => {
+    mockedLookup.mockRejectedValue(new Error("ENOTFOUND"));
+    await expect(resolveAndValidateHostname("nonexistent.invalid")).rejects.toThrow("DNS resolution failed");
+  });
+
+  it("throws on DNS timeout", async () => {
+    mockedLookup.mockImplementation(() => new Promise(() => {})); // never resolves
+    await expect(resolveAndValidateHostname("slow.example.com")).rejects.toThrow("DNS resolution failed");
+  }, 10_000);
+
+  it("skips DNS for IPv4 literal hostname", async () => {
+    await expect(resolveAndValidateHostname("93.184.216.34")).resolves.toBeUndefined();
+    expect(mockedLookup).not.toHaveBeenCalled();
+  });
+
+  it("skips DNS for bracketed IPv6 literal hostname", async () => {
+    await expect(resolveAndValidateHostname("[2001:db8::1]")).resolves.toBeUndefined();
+    expect(mockedLookup).not.toHaveBeenCalled();
   });
 });
 
@@ -241,6 +323,8 @@ describe("fetchHtml", () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    // Re-establish DNS mock after restoreAllMocks (returns public IP by default)
+    mockedLookup.mockResolvedValue({ address: "93.184.216.34", family: 4 });
   });
 
   afterAll(() => {
@@ -535,6 +619,7 @@ describe("unfurlUrl", () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    mockedLookup.mockResolvedValue({ address: "93.184.216.34", family: 4 });
   });
 
   afterAll(() => {
