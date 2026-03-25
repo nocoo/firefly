@@ -4,7 +4,7 @@ import { listPosts } from "@/data/posts";
 import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
-import { SITE_URL, buildPageMeta, postPath } from "@/lib/seo";
+import { SITE_URL, ogLocale, htmlLang, postPath } from "@/lib/seo";
 import { websiteJsonLd, collectionPageJsonLd } from "@/lib/jsonld";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
@@ -15,15 +15,38 @@ export async function generateMetadata(): Promise<Metadata> {
     getLocale(),
     getSiteSettings(db),
   ]);
+  const lang = htmlLang(locale);
+
+  // Do NOT set a page-level title here — the root layout defines
+  // title.default = "SiteName – Tagline" which is used automatically.
+  // Setting a title here would cause duplication via the template
+  // "%s | SiteName".
   const fullTitle = settings.siteTagline
     ? `${settings.siteName} – ${settings.siteTagline}`
     : settings.siteName;
-  return buildPageMeta({
-    title: fullTitle,
+
+  return {
     description: settings.siteDescription,
-    path: "/",
-    locale,
-  }, settings);
+    alternates: {
+      canonical: SITE_URL,
+      languages: { [lang]: SITE_URL },
+    },
+    openGraph: {
+      title: fullTitle,
+      description: settings.siteDescription,
+      url: SITE_URL,
+      siteName: settings.siteName,
+      locale: ogLocale(locale),
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      ...(settings.twitterHandle ? { site: settings.twitterHandle } : {}),
+      ...(settings.twitterHandle ? { creator: settings.twitterHandle } : {}),
+      title: fullTitle,
+      description: settings.siteDescription,
+    },
+  };
 }
 
 export default async function Home() {

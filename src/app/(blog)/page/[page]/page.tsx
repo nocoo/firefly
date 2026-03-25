@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     getSiteSettings(db),
   ]);
   return buildPageMeta({
-    title: `${settings.siteName} – Page ${page}`,
+    title: `Page ${page}`,
     description: `${settings.siteDescription} — Page ${page}`,
     path: `/page/${page}`,
     locale,

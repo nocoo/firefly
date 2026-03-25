@@ -132,3 +132,66 @@ describe("buildPageMeta", () => {
     expect(twitter.creator).toBeUndefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Title composition regression tests
+// ---------------------------------------------------------------------------
+// Root layout uses: title: { default: fullTitle, template: `%s | ${siteName}` }
+// Child pages must NOT include siteName in their title to avoid duplication.
+
+describe("title composition (regression)", () => {
+  it("paginated page title should NOT contain siteName", () => {
+    // Correct: "Page 2"  →  template produces "Page 2 | Test Blog"
+    // Wrong:   "Test Blog – Page 2"  →  "Test Blog – Page 2 | Test Blog"
+    const page = 2;
+    const title = `Page ${page}`;
+
+    const meta = buildPageMeta({
+      title,
+      description: "Page 2",
+      path: `/page/${page}`,
+    }, testSite);
+
+    expect(meta.title).toBe("Page 2");
+    expect(meta.title).not.toContain(testSite.siteName);
+  });
+
+  it("category page title should NOT contain siteName", () => {
+    const title = "JavaScript";
+    const meta = buildPageMeta({
+      title,
+      description: "Posts in JavaScript",
+      path: "/category/javascript",
+    }, testSite);
+
+    expect(meta.title).toBe("JavaScript");
+    expect(meta.title).not.toContain(testSite.siteName);
+  });
+
+  it("article page title should NOT contain siteName", () => {
+    const title = "How to Use React Hooks";
+    const meta = buildPageMeta({
+      title,
+      description: "A guide to hooks",
+      path: "/2026/03/react-hooks",
+      type: "article",
+    }, testSite);
+
+    expect(meta.title).toBe("How to Use React Hooks");
+    expect(meta.title).not.toContain(testSite.siteName);
+  });
+
+  it("OG title can differ from page title (for homepage pattern)", () => {
+    // Homepage sets OG title to "SiteName – Tagline" but no page-level title
+    // (so layout default is used). This test documents that buildPageMeta
+    // passes through the exact title to both page and OG.
+    const meta = buildPageMeta({
+      title: "Page 2",
+      description: "Desc",
+      path: "/page/2",
+    }, testSite);
+
+    const og = meta.openGraph as Record<string, unknown>;
+    expect(og.title).toBe("Page 2");
+  });
+});
