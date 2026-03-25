@@ -76,6 +76,10 @@ export async function POST(request: NextRequest) {
       featured_image: body.featured_image,
       comment_enabled: body.comment_enabled,
       published_at: body.published_at,
+      reference_url: body.reference_url,
+      reference_title: body.reference_title,
+      reference_description: body.reference_description,
+      reference_image: body.reference_image,
     });
 
     // Set tags if provided
