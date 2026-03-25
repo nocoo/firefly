@@ -7,26 +7,102 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
+  CartesianGrid,
 } from "recharts";
 import {
   CHART_COLORS,
   PIE_COLORS,
-  TOOLTIP_STYLE,
+  chartAxis,
   formatReferrer,
   formatNumber,
+  H_BAR_MARGIN,
 } from "./chart-helpers";
+import { DashboardResponsiveContainer } from "./responsive-container";
 import { useLocale } from "@/i18n/context";
 
 interface HumanTabProps {
   data: HumanDetailResponse;
 }
 
+// ---------------------------------------------------------------------------
+// Custom tooltips
+// ---------------------------------------------------------------------------
+
+function DonutTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{
+    name: string;
+    value: number;
+    payload: { fill: string; percent: number };
+  }>;
+}) {
+  if (!active || !payload?.length) return null;
+  const item = payload[0] as (typeof payload)[number];
+
+  return (
+    <div className="rounded-[var(--radius-widget)] border border-border bg-card p-2.5 shadow-sm">
+      <div className="flex items-center gap-2">
+        <div
+          className="h-3 w-3 rounded-full"
+          style={{ backgroundColor: item.payload.fill }}
+        />
+        <span className="text-sm font-medium text-foreground">{item.name}</span>
+      </div>
+      <div className="text-sm text-muted-foreground">
+        {formatNumber(item.value)} ({(item.payload.percent * 100).toFixed(1)}%)
+      </div>
+    </div>
+  );
+}
+
+function BarTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ dataKey: string; value: number; color: string; payload?: { name: string } }>;
+}) {
+  if (!active || !payload?.length) return null;
+  const entry = payload[0] as (typeof payload)[number];
+  const name = entry.payload?.name ?? "";
+
+  return (
+    <div className="rounded-[var(--radius-widget)] border border-border bg-card p-2.5 shadow-sm">
+      <div className="flex items-center gap-2 text-xs">
+        <div
+          className="h-2 w-2 rounded-full"
+          style={{ backgroundColor: entry.color }}
+        />
+        <span className="text-muted-foreground">{name}</span>
+        <span className="ml-auto font-medium text-foreground">
+          {formatNumber(entry.value)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
 export function HumanTab({ data }: HumanTabProps) {
   const { t } = useLocale();
+
+  // Pre-compute donut data with fill + percent
+  const deviceTotal = data.devices.reduce((s, d) => s + d.count, 0);
+  const donutData = data.devices.map((d, i) => ({
+    name: d.deviceType,
+    value: d.count,
+    fill: PIE_COLORS[i % PIE_COLORS.length],
+    percent: deviceTotal > 0 ? d.count / deviceTotal : 0,
+  }));
 
   return (
     <div className="space-y-4">
@@ -75,41 +151,53 @@ export function HumanTab({ data }: HumanTabProps) {
       {/* Three-column: Devices, Browsers, OS */}
       <div className="grid gap-4 lg:grid-cols-3">
         <Panel title={t("admin.analytics.devices")}>
-          {data.devices.length === 0 ? (
+          {donutData.length === 0 ? (
             <NoData text={t("admin.analytics.noData")} />
           ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={data.devices}
-                  dataKey="count"
-                  nameKey="deviceType"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={70}
-                  innerRadius={40}
-                  paddingAngle={2}
-                  label={({
-                    name,
-                    percent,
-                  }: {
-                    name?: string | number;
-                    percent?: number;
-                  }) =>
-                    `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`
-                  }
-                  labelLine={false}
-                >
-                  {data.devices.map((_, i) => (
-                    <Cell
-                      key={i}
-                      fill={PIE_COLORS[i % PIE_COLORS.length]}
+            <div className="flex flex-col items-center">
+              <div className="w-full max-w-[200px] min-h-[140px]">
+                <DashboardResponsiveContainer width="100%" height={160}>
+                  <PieChart>
+                    <Pie
+                      data={donutData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius="50%"
+                      outerRadius="80%"
+                      strokeWidth={0}
+                      paddingAngle={2}
+                    >
+                      {donutData.map((entry) => (
+                        <Cell key={entry.name} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      content={<DonutTooltip />}
+                      isAnimationActive={false}
                     />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={TOOLTIP_STYLE} />
-              </PieChart>
-            </ResponsiveContainer>
+                  </PieChart>
+                </DashboardResponsiveContainer>
+              </div>
+              {/* Legend */}
+              <div className="mt-2 grid w-full grid-cols-2 gap-x-4 gap-y-1.5">
+                {donutData.map((item) => (
+                  <div key={item.name} className="flex items-center gap-2">
+                    <div
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ background: item.fill }}
+                    />
+                    <span className="text-xs text-muted-foreground truncate">
+                      {item.name}
+                    </span>
+                    <span className="ml-auto text-xs font-medium text-foreground">
+                      {formatNumber(item.value)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </Panel>
 
@@ -246,22 +334,38 @@ function HorizontalBarList({
   data: { name: string; value: number }[];
   color: string;
 }) {
+  const barHeight = 28;
+  const chartHeight = Math.max(data.length * barHeight + 40, 100);
+
   return (
-    <ResponsiveContainer width="100%" height={Math.max(data.length * 28, 100)}>
-      <BarChart data={data} layout="vertical" margin={{ left: 60 }}>
-        <XAxis
-          type="number"
-          tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
-        />
-        <YAxis
-          type="category"
-          dataKey="name"
-          tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
-          width={55}
-        />
-        <Tooltip contentStyle={TOOLTIP_STYLE} />
-        <Bar dataKey="value" fill={color} radius={[0, 4, 4, 0]} />
-      </BarChart>
-    </ResponsiveContainer>
+    <div style={{ height: chartHeight }}>
+      <DashboardResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} layout="vertical" margin={H_BAR_MARGIN}>
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke={chartAxis}
+            strokeOpacity={0.15}
+            horizontal={false}
+          />
+          <XAxis
+            type="number"
+            tick={{ fill: chartAxis, fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            allowDecimals={false}
+          />
+          <YAxis
+            type="category"
+            dataKey="name"
+            tick={{ fill: chartAxis, fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            width={60}
+          />
+          <Tooltip content={<BarTooltip />} isAnimationActive={false} />
+          <Bar dataKey="value" fill={color} radius={[0, 4, 4, 0]} />
+        </BarChart>
+      </DashboardResponsiveContainer>
+    </div>
   );
 }
