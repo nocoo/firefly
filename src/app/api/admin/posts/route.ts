@@ -27,6 +27,12 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get("q");
     if (query) options.query = query;
 
+    const year = searchParams.get("year");
+    if (year) options.archiveYear = parseInt(year, 10);
+
+    const month = searchParams.get("month");
+    if (month) options.archiveMonth = parseInt(month, 10);
+
     const page = searchParams.get("page");
     if (page) options.page = parseInt(page, 10);
 

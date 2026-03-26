@@ -304,10 +304,11 @@ function Pagination({
 
   const buildHref = (page: number) => {
     const sp = new URLSearchParams();
-    if (currentParams.status) sp.set("status", currentParams.status);
-    if (currentParams.category) sp.set("category", currentParams.category);
-    if (currentParams.q) sp.set("q", currentParams.q);
+    for (const [key, value] of Object.entries(currentParams)) {
+      if (value) sp.set(key, value);
+    }
     if (page > 1) sp.set("page", String(page));
+    else sp.delete("page");
     const qs = sp.toString();
     return `/admin/posts${qs ? `?${qs}` : ""}`;
   };
@@ -366,6 +367,8 @@ function GridView({
         if (currentParams.status) sp.set("status", currentParams.status);
         if (currentParams.category) sp.set("category", currentParams.category);
         if (currentParams.q) sp.set("q", currentParams.q);
+        if (currentParams.year) sp.set("year", currentParams.year);
+        if (currentParams.month) sp.set("month", currentParams.month);
 
         const res = await fetch(`/api/admin/posts?${sp.toString()}`);
         if (!res.ok) throw new Error("Failed to fetch posts");
@@ -386,7 +389,7 @@ function GridView({
         loadingRef.current = false;
       }
     },
-    [currentParams.status, currentParams.category, currentParams.q],
+    [currentParams.status, currentParams.category, currentParams.q, currentParams.year, currentParams.month],
   );
 
   // Reset when filters change

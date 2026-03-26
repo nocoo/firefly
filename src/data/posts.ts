@@ -130,8 +130,11 @@ export async function listPosts(
   }
 
   if (query) {
-    conditions.push("p.title LIKE ?");
-    params.push(`%${query}%`);
+    conditions.push(
+      "(p.title LIKE ? OR p.slug LIKE ? OR p.content LIKE ? OR p.excerpt LIKE ?)",
+    );
+    const like = `%${query}%`;
+    params.push(like, like, like, like);
   }
 
   if (archiveYear != null) {

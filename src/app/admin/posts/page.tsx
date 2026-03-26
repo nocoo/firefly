@@ -10,6 +10,8 @@ interface AdminPostsPageProps {
     category?: string;
     q?: string;
     page?: string;
+    year?: string;
+    month?: string;
   }>;
 }
 
@@ -25,9 +27,11 @@ export default async function AdminPostsPage({
   const categoryId = params.category || undefined;
   const query = params.q || undefined;
   const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
+  const archiveYear = params.year ? parseInt(params.year, 10) || undefined : undefined;
+  const archiveMonth = params.month ? parseInt(params.month, 10) || undefined : undefined;
 
   const [result, categories] = await Promise.all([
-    listPosts(db, { status, categoryId, query, page, pageSize: PAGE_SIZE }),
+    listPosts(db, { status, categoryId, query, archiveYear, archiveMonth, page, pageSize: PAGE_SIZE }),
     listCategories(db),
   ]);
 
@@ -40,6 +44,8 @@ export default async function AdminPostsPage({
         status: params.status,
         category: params.category,
         q: params.q,
+        year: params.year,
+        month: params.month,
       }}
       currentPage={page}
       pageSize={PAGE_SIZE}
