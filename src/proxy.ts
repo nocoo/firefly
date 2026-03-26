@@ -31,6 +31,14 @@ function isProtectedApiRoute(pathname: string, method: string): boolean {
   if (pathname === "/api/mcp" || pathname.startsWith("/api/mcp/")) return false;
   // Analytics endpoints require admin auth for all methods (including GET)
   if (pathname.startsWith("/api/analytics")) return true;
+  // Backup endpoints require admin auth for all methods (including GET),
+  // except the exact /api/backup/pull path which uses its own X-Webhook-Key auth.
+  // IMPORTANT: Must NOT use startsWith("/api/backup/pull") — that would also
+  // exempt /api/backup/pull-key, leaking the pull key to unauthenticated requests.
+  if (pathname.startsWith("/api/backup")) {
+    if (pathname === "/api/backup/pull") return false; // M2M, own auth
+    return true;
+  }
   return PROTECTED_API_METHODS.includes(method);
 }
 
@@ -159,4 +167,14 @@ export const config = {
     // Match all routes except static files
     "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
+};
+
+// ---------------------------------------------------------------------------
+// Test helpers
+// ---------------------------------------------------------------------------
+
+/** @internal — exposed for unit tests only */
+export const _testHelpers = {
+  isProtectedRoute,
+  isProtectedApiRoute,
 };
