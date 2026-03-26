@@ -19,3 +19,7 @@ name = "lizhengme-test"
 binding = "DB"
 database_name = "lizhengme-db-test"
 database_id = "ae2356d2-bb21-45aa-9fb2-55184fcc7826"
+
+[[env.test.r2_buckets]]
+binding = "BUCKET"
+bucket_name = "lizhengme-test"
