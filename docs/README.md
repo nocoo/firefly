@@ -18,7 +18,8 @@ Modern blog platform built with Next.js, Cloudflare D1, and R2. Migrated from Wo
 | 10 | [Image Upload System](./10-image-upload.md) | ✅ |
 | 11 | [MCP Server Design](./11-mcp-server.md) | 📝 |
 | 12 | [SEO Audit](./12-seo-audit.md) | ✅ |
-| 13 | [Quality Hardening: S-Tier Gaps Closure](./13-quality-hardening.md) | 📝 |
+| 13 | [Quality Hardening: S-Tier Gaps Closure](./13-quality-hardening.md) | ✅ |
 | 14 | [Analytics Dashboard Redesign](./14-analytics-redesign.md) | ✅ |
 | 15 | [Reference URL (Link Bookmark)](./14-reference-url.md) | 📝 |
 | 16 | [Backy Backup Integration](./16-backy-backup.md) | ✅ |
+| 17 | [Quality Upgrade: S-Tier Hardening (L1+L2+L3+G1+G2)](./17-quality-upgrade-l1l2l3g1g2.md) | 📝 |
