@@ -3,9 +3,9 @@
  *
  * Covers: POST /api/upload
  *
- * Note: This test requires R2 test bucket (lizhengme-test) to be configured.
- * Environment variables R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME,
- * R2_PUBLIC_URL, and CF_ACCOUNT_ID must be set in .env.test for the test server.
+ * Note: This test requires R2 test bucket (lizhengblog-test) to be configured.
+ * .env.test overrides R2_BUCKET_NAME to point to the test bucket;
+ * CF_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY are inherited from .env.
  */
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17043";
 
