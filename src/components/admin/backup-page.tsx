@@ -144,7 +144,10 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
       const res = await fetch("/api/backup", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ webhookUrl: editUrl, apiKey: editKey }),
+        body: JSON.stringify({
+          webhookUrl: editUrl,
+          ...(editKey ? { apiKey: editKey } : {}),
+        }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -337,7 +340,7 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
               />
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleSave} disabled={saving || !editUrl || !editKey}>
+              <Button onClick={handleSave} disabled={saving || !editUrl || (!configured && !editKey)}>
                 {saving ? t("admin.backup.saving") : t("admin.backup.save")}
               </Button>
               {configured && (

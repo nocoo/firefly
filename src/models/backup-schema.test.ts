@@ -52,9 +52,8 @@ describe("nullableEpochToIso", () => {
     expect(nullableEpochToIso(null)).toBeNull();
   });
 
-  it("returns null for epoch 0 (falsy)", () => {
-    // epoch 0 is falsy in JS — treated as null per design
-    expect(nullableEpochToIso(0)).toBeNull();
+  it("converts epoch 0 to 1970-01-01 instead of null", () => {
+    expect(nullableEpochToIso(0)).toBe("1970-01-01T00:00:00.000Z");
   });
 });
 

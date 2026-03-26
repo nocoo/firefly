@@ -19,7 +19,7 @@ export function epochToIso(epoch: number): string {
 
 /** Convert a nullable Unix epoch (seconds) to an ISO 8601 string or null */
 export function nullableEpochToIso(epoch: number | null): string | null {
-  return epoch ? new Date(epoch * 1000).toISOString() : null;
+  return epoch === null ? null : new Date(epoch * 1000).toISOString();
 }
 
 // ---------------------------------------------------------------------------

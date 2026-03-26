@@ -70,11 +70,12 @@ export async function POST() {
       } as Record<string, number>,
     };
 
-    // Push to Backy
+    // Push to Backy (30s timeout to prevent hanging on network issues)
     const res = await fetch(config.webhookUrl, {
       method: "POST",
       headers: { Authorization: `Bearer ${config.apiKey}` },
       body: form,
+      signal: AbortSignal.timeout(30_000),
     });
 
     const durationMs = Date.now() - start;

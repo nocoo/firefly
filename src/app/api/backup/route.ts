@@ -43,15 +43,27 @@ export async function PUT(request: NextRequest) {
       return errorResponse("Invalid JSON body");
     }
 
-    const validation = validateBackyConfig(body);
+    const db = getDb();
+    const existing = await getBackyConfig(db);
+    const isUpdate = !!existing;
+
+    // When updating, apiKey can be omitted to keep the existing one
+    const validation = validateBackyConfig(body, !isUpdate);
     if (!validation.valid) {
       return errorResponse(validation.error);
     }
 
-    const db = getDb();
+    const apiKey = body.apiKey?.trim()
+      ? (body.apiKey as string)
+      : existing?.apiKey;
+
+    if (!apiKey) {
+      return errorResponse("API Key is required");
+    }
+
     await saveBackyConfig(db, {
       webhookUrl: body.webhookUrl as string,
-      apiKey: body.apiKey as string,
+      apiKey,
     });
 
     return jsonResponse({ saved: true });

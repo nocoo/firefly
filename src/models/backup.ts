@@ -74,9 +74,16 @@ export function isValidWebhookUrl(url: string): boolean {
   }
 }
 
-/** Validate Backy config (both fields must be non-empty, URL must be valid) */
+/**
+ * Validate Backy config.
+ *
+ * @param config      Partial config to validate
+ * @param requireApiKey  When false, apiKey may be omitted (update scenario).
+ *                       Defaults to true (create scenario).
+ */
 export function validateBackyConfig(
   config: Partial<BackyConfig>,
+  requireApiKey = true,
 ): ValidationResult {
   if (!config.webhookUrl?.trim()) {
     return { valid: false, error: "Webhook URL is required" };
@@ -84,7 +91,7 @@ export function validateBackyConfig(
   if (!isValidWebhookUrl(config.webhookUrl)) {
     return { valid: false, error: "Webhook URL is not a valid URL" };
   }
-  if (!config.apiKey?.trim()) {
+  if (requireApiKey && !config.apiKey?.trim()) {
     return { valid: false, error: "API Key is required" };
   }
   return { valid: true };

@@ -70,7 +70,7 @@ describe("validateBackyConfig", () => {
     if (!result.valid) expect(result.error).toContain("valid URL");
   });
 
-  it("rejects missing apiKey", () => {
+  it("rejects missing apiKey when requireApiKey is true (default)", () => {
     const result = validateBackyConfig({
       webhookUrl: "https://example.com",
     });
@@ -78,12 +78,34 @@ describe("validateBackyConfig", () => {
     if (!result.valid) expect(result.error).toContain("API Key");
   });
 
-  it("rejects empty apiKey", () => {
+  it("rejects empty apiKey when requireApiKey is true", () => {
     const result = validateBackyConfig({
       webhookUrl: "https://example.com",
       apiKey: "   ",
     });
     expect(result.valid).toBe(false);
+  });
+
+  it("allows missing apiKey when requireApiKey is false (update mode)", () => {
+    const result = validateBackyConfig(
+      { webhookUrl: "https://example.com" },
+      false,
+    );
+    expect(result).toEqual({ valid: true });
+  });
+
+  it("allows empty apiKey when requireApiKey is false", () => {
+    const result = validateBackyConfig(
+      { webhookUrl: "https://example.com", apiKey: "" },
+      false,
+    );
+    expect(result).toEqual({ valid: true });
+  });
+
+  it("still validates webhookUrl when requireApiKey is false", () => {
+    const result = validateBackyConfig({ webhookUrl: "not-valid" }, false);
+    expect(result.valid).toBe(false);
+    if (!result.valid) expect(result.error).toContain("valid URL");
   });
 });
 

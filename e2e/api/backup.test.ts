@@ -68,7 +68,10 @@ describe("PUT /api/backup", () => {
     expect(res.status).toBe(400);
   });
 
-  it("rejects missing apiKey", async () => {
+  it("rejects missing apiKey on initial setup (no existing config)", async () => {
+    // Ensure clean state — no existing config
+    await fetch(`${BASE}/api/backup`, { method: "DELETE" });
+
     const res = await fetch(`${BASE}/api/backup`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -77,6 +80,41 @@ describe("PUT /api/backup", () => {
       }),
     });
     expect(res.status).toBe(400);
+  });
+
+  it("allows omitting apiKey when updating existing config", async () => {
+    // Set up initial config
+    await fetch(`${BASE}/api/backup`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        webhookUrl: "https://backy.dev.hexly.ai/api/webhook/test-project",
+        apiKey: "test-api-key-1234567890abcdef",
+      }),
+    });
+
+    // Update only the URL, omit apiKey
+    const res = await fetch(`${BASE}/api/backup`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        webhookUrl: "https://backy.dev.hexly.ai/api/webhook/updated-project",
+      }),
+    });
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.saved).toBe(true);
+
+    // Verify URL was updated and key was preserved
+    const getRes = await fetch(`${BASE}/api/backup`);
+    const getBody = await getRes.json();
+    expect(getBody.configured).toBe(true);
+    expect(getBody.webhookUrl).toBe(
+      "https://backy.dev.hexly.ai/api/webhook/updated-project",
+    );
+    // Key should still be masked (preserved from before)
+    expect(getBody.apiKey).toContain("\u2022");
   });
 
   it("rejects invalid JSON body", async () => {
