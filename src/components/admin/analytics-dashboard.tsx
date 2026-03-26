@@ -15,7 +15,6 @@ import {
 } from "./analytics/chart-helpers";
 import { OverviewCards } from "./analytics/overview-cards";
 import { TrafficTrend } from "./analytics/traffic-trend";
-import { AggregatesPanel } from "./analytics/aggregates-panel";
 import { HumanTab } from "./analytics/human-tab";
 import { SearchTab } from "./analytics/search-tab";
 import { AiBotTab } from "./analytics/ai-bot-tab";
@@ -212,9 +211,6 @@ export function AnalyticsDashboard({
           <SourceTabContent data={currentTabData} />
         ) : null}
       </div>
-
-      {/* Cross-source aggregates */}
-      <AggregatesPanel aggregates={summary.aggregates} />
     </div>
   );
 }
