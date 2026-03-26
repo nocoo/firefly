@@ -1,4 +1,4 @@
-import { nanoid } from "nanoid";
+import { randomBytes } from "node:crypto";
 import { getDb, DbError } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
 import { APP_VERSION } from "@/lib/version";
@@ -31,7 +31,7 @@ export async function POST() {
     const { buffer, envelope } = await serializeBackup(db);
 
     // Build tag and filename
-    const rand = nanoid(4);
+    const rand = randomBytes(3).toString("base64url").slice(0, 4);
     const datetime = new Date()
       .toISOString()
       .slice(0, 19)
