@@ -8,6 +8,7 @@ import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { IconButton } from "@/components/ui/icon-button";
+import { Toaster } from "@/components/ui/sonner";
 import { useLocale } from "@/i18n/context";
 
 // Map admin routes to i18n title keys
@@ -154,6 +155,9 @@ export function AdminShell({ user, children }: AdminShellProps) {
           </div>
         </div>
       </main>
+
+      {/* Global toast notifications */}
+      <Toaster />
     </div>
   );
 }
