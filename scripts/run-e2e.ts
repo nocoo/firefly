@@ -109,9 +109,27 @@ function startNextServer(
   env: Record<string, string | undefined>,
   port: number,
 ): Subprocess {
-  console.log(`▸ Starting Next.js on port ${port}...`);
+  // Build first, then start in production mode.
+  // Next.js 16 refuses to run two `next dev` instances in the same directory,
+  // so we use `next build` + `next start` which has no such restriction and
+  // better matches production behavior.
+  console.log(`▸ Building Next.js for E2E...`);
+  const build = Bun.spawnSync([BUN, "run", "next", "build"], {
+    cwd: process.cwd(),
+    env,
+    stdout: "ignore",
+    stderr: "pipe",
+  });
+  if (build.exitCode !== 0) {
+    console.error(
+      `❌ Next.js build failed:\n${build.stderr.toString().slice(-500)}`,
+    );
+    cleanup();
+    process.exit(1);
+  }
+  console.log(`▸ Starting Next.js (production) on port ${port}...`);
   const proc = spawn(
-    [BUN, "run", "next", "dev", "--webpack", "-p", String(port)],
+    [BUN, "run", "next", "start", "-p", String(port)],
     {
       cwd: process.cwd(),
       env: { ...env, PORT: String(port) },

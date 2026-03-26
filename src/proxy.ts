@@ -36,8 +36,13 @@ function isProtectedApiRoute(pathname: string, method: string): boolean {
 
 export async function proxy(request: NextRequest) {
   // --- HTTPS redirect: force HTTP → HTTPS in production ---
+  // Skip when running locally (no x-forwarded-proto) or in E2E/dev mode.
   const proto = request.headers.get("x-forwarded-proto");
-  if (proto === "http") {
+  if (
+    proto === "http" &&
+    process.env.NODE_ENV === "production" &&
+    process.env.E2E_SKIP_AUTH !== "true"
+  ) {
     const url = request.nextUrl.clone();
     url.protocol = "https";
     return NextResponse.redirect(url, 301);
