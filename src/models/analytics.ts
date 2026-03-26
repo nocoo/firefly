@@ -27,6 +27,8 @@ const BOT_PATTERNS: [RegExp, string, BotCategory][] = [
   [/yandexbot/i, "YandexBot", "search"],
   [/baiduspider/i, "Baiduspider", "search"],
   [/duckduckbot/i, "DuckDuckBot", "search"],
+  [/sogou/i, "Sogou", "search"],
+  [/yisou/i, "YisouSpider", "search"],
   [/slurp/i, "Yahoo! Slurp", "search"],
 
   // AI crawlers

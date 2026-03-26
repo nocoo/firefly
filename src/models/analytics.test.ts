@@ -70,6 +70,22 @@ describe("detectBot", () => {
     expect(result.botCategory).toBe("monitor");
   });
 
+  it("detects Sogou spider as search bot", () => {
+    const result = detectBot(
+      "Sogou web spider/4.0(+http://www.sogou.com/docs/help/webmasters.htm#07)",
+    );
+    expect(result.isBot).toBe(true);
+    expect(result.botName).toBe("Sogou");
+    expect(result.botCategory).toBe("search");
+  });
+
+  it("detects YisouSpider as search bot", () => {
+    const result = detectBot("YisouSpider");
+    expect(result.isBot).toBe(true);
+    expect(result.botName).toBe("YisouSpider");
+    expect(result.botCategory).toBe("search");
+  });
+
   it("detects generic bot pattern", () => {
     const result = detectBot("SomeRandomBot/1.0");
     expect(result.isBot).toBe(true);
