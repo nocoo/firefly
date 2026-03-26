@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import type { Category, Tag, PostWithCategory, PostStatus } from "@/models/types";
 import { slugify } from "@/models/post";
 import { renderMarkdown } from "@/models/markdown";
-import { postPath } from "@/lib/seo";
 import { ImageUploadZone } from "./image-upload-zone";
 import { MarkdownPreview } from "./markdown-preview";
 import { ConfirmDialog } from "./confirm-dialog";
@@ -51,11 +50,6 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
   const [hasFetched, setHasFetched] = useState(!!(post?.reference_title || post?.reference_description));
 
   const isEditing = !!post;
-
-  // Frontend URL for "View Post" link
-  const frontendUrl = isEditing && post.published_at
-    ? postPath(post.slug, post.published_at)
-    : null;
 
   // AI excerpt generation
   const [isGenerating, setIsGenerating] = useState(false);
@@ -249,17 +243,17 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
     }
   };
 
-  // ── Main content column (Title + Content editor) ──
+  // ── Shared form fields ──
 
-  const mainColumn = (
-    <div className="space-y-4">
+  const editorFields = (
+    <>
       {error && (
         <div className="rounded-[var(--radius-widget)] border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
-      {/* Title with View Post button */}
+      {/* Title */}
       <div className="space-y-2">
         <label
           htmlFor="title"
@@ -267,31 +261,34 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         >
           {t("admin.postForm.title")}
         </label>
-        <div className="flex gap-2">
-          <input
-            id="title"
-            type="text"
-            value={title}
-            onChange={(e) => handleTitleChange(e.target.value)}
-            required
-            className="flex-1 rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder={t("admin.postForm.titlePlaceholder")}
-          />
-          {isEditing && frontendUrl && (
-            <a
-              href={frontendUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-4">
-                <path d="M8.914 2.586a2 2 0 1 1 2.828 2.828l-3 3a2 2 0 0 1-2.828 0 .75.75 0 0 0-1.06 1.06 3.5 3.5 0 0 0 4.95 0l3-3a3.5 3.5 0 0 0-4.95-4.95l-1.5 1.5a.75.75 0 1 0 1.06 1.06l1.5-1.5Z" />
-                <path d="M7.086 13.414a2 2 0 1 1-2.828-2.828l3-3a2 2 0 0 1 2.828 0 .75.75 0 0 0 1.06-1.06 3.5 3.5 0 0 0-4.95 0l-3 3a3.5 3.5 0 0 0 4.95 4.95l1.5-1.5a.75.75 0 0 0-1.06-1.06l-1.5 1.5Z" />
-              </svg>
-              <span className="hidden sm:inline">{t("admin.postForm.viewPost")}</span>
-            </a>
-          )}
-        </div>
+        <input
+          id="title"
+          type="text"
+          value={title}
+          onChange={(e) => handleTitleChange(e.target.value)}
+          required
+          className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder={t("admin.postForm.titlePlaceholder")}
+        />
+      </div>
+
+      {/* Slug */}
+      <div className="space-y-2">
+        <label
+          htmlFor="slug"
+          className="text-sm font-medium text-foreground"
+        >
+          {t("admin.postForm.slug")}
+        </label>
+        <input
+          id="slug"
+          type="text"
+          value={slug}
+          onChange={(e) => setSlug(e.target.value)}
+          required
+          className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder={t("admin.postForm.slugPlaceholder")}
+        />
       </div>
 
       {/* Content — Write / Preview tabs (mobile) or always-write (desktop) */}
@@ -338,110 +335,17 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             </>
           )}
         </div>
-        {/* Desktop: always show editor (preview is in separate panel) */}
+        {/* Desktop: always show editor (preview is in right panel) */}
         <div className="hidden lg:block">
           <ImageUploadZone className="mb-2" />
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             required
-            rows={24}
-            className="w-full min-h-[560px] rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
+            rows={20}
+            className="w-full min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
             placeholder={t("admin.postForm.contentPlaceholder")}
           />
-        </div>
-      </div>
-    </div>
-  );
-
-  // ── Sidebar column (metadata + actions) ──
-
-  const sidebarColumn = (
-    <div className="space-y-5">
-      {/* Slug */}
-      <div className="space-y-2">
-        <label
-          htmlFor="slug"
-          className="text-sm font-medium text-foreground"
-        >
-          {t("admin.postForm.slug")}
-        </label>
-        <input
-          id="slug"
-          type="text"
-          value={slug}
-          onChange={(e) => setSlug(e.target.value)}
-          required
-          className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder={t("admin.postForm.slugPlaceholder")}
-        />
-      </div>
-
-      {/* Status */}
-      <div className="space-y-2">
-        <label
-          htmlFor="status"
-          className="text-sm font-medium text-foreground"
-        >
-          {t("admin.postForm.status")}
-        </label>
-        <Select
-          id="status"
-          value={status}
-          onChange={(e) => setStatus(e.target.value as PostStatus)}
-        >
-          <option value="draft">{t("admin.postForm.statusDraft")}</option>
-          <option value="published">{t("admin.postForm.statusPublished")}</option>
-          <option value="private">{t("admin.postForm.statusPrivate")}</option>
-          <option value="archived">{t("admin.postForm.statusArchived")}</option>
-        </Select>
-      </div>
-
-      {/* Category */}
-      <div className="space-y-2">
-        <label
-          htmlFor="category"
-          className="text-sm font-medium text-foreground"
-        >
-          {t("admin.postForm.category")}
-        </label>
-        <Select
-          id="category"
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-        >
-          <option value="">{t("admin.postForm.noCategory")}</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </Select>
-      </div>
-
-      {/* Tags */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">{t("admin.postForm.tags")}</label>
-        <div className="flex flex-wrap gap-1.5">
-          {tags.map((tag) => (
-            <button
-              key={tag.id}
-              type="button"
-              onClick={() => toggleTag(tag.id)}
-              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
-                selectedTags.includes(tag.id)
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-muted-foreground hover:bg-accent hover:text-foreground"
-              }`}
-            >
-              {tag.name}
-            </button>
-          ))}
-          {tags.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              {t("admin.postForm.noTags")}
-            </p>
-          )}
         </div>
       </div>
 
@@ -480,6 +384,77 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         />
       </div>
 
+      {/* Row: Status + Category */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {/* Status */}
+        <div className="space-y-2">
+          <label
+            htmlFor="status"
+            className="text-sm font-medium text-foreground"
+          >
+            {t("admin.postForm.status")}
+          </label>
+          <Select
+            id="status"
+            value={status}
+            onChange={(e) => setStatus(e.target.value as PostStatus)}
+          >
+            <option value="draft">{t("admin.postForm.statusDraft")}</option>
+            <option value="published">{t("admin.postForm.statusPublished")}</option>
+            <option value="private">{t("admin.postForm.statusPrivate")}</option>
+            <option value="archived">{t("admin.postForm.statusArchived")}</option>
+          </Select>
+        </div>
+
+        {/* Category */}
+        <div className="space-y-2">
+          <label
+            htmlFor="category"
+            className="text-sm font-medium text-foreground"
+          >
+            {t("admin.postForm.category")}
+          </label>
+          <Select
+            id="category"
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+          >
+            <option value="">{t("admin.postForm.noCategory")}</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+      </div>
+
+      {/* Tags */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-foreground">{t("admin.postForm.tags")}</label>
+        <div className="flex flex-wrap gap-2">
+          {tags.map((tag) => (
+            <button
+              key={tag.id}
+              type="button"
+              onClick={() => toggleTag(tag.id)}
+              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                selectedTags.includes(tag.id)
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-muted-foreground hover:bg-accent hover:text-foreground"
+              }`}
+            >
+              {tag.name}
+            </button>
+          ))}
+          {tags.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              {t("admin.postForm.noTags")}
+            </p>
+          )}
+        </div>
+      </div>
+
       {/* Featured Image */}
       <div className="space-y-2">
         <label
@@ -510,14 +485,14 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             type="url"
             value={referenceUrl}
             onChange={(e) => setReferenceUrl(e.target.value)}
-            className="flex-1 min-w-0 rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="https://..."
+            className="flex-1 rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            placeholder="https://github.com/..."
           />
           <button
             type="button"
             onClick={handleUnfurl}
             disabled={isUnfurling || !referenceUrl.trim()}
-            className="shrink-0 inline-flex items-center rounded-[var(--radius-widget)] border border-border bg-secondary px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-accent disabled:opacity-50"
+            className="inline-flex items-center rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent disabled:opacity-50"
           >
             {isUnfurling
               ? t("admin.postForm.fetching")
@@ -529,7 +504,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             <button
               type="button"
               onClick={handleClearReference}
-              className="shrink-0 inline-flex items-center rounded-[var(--radius-widget)] border border-border bg-secondary px-2.5 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
+              className="inline-flex items-center rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
             >
               {t("admin.postForm.clear")}
             </button>
@@ -581,34 +556,32 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         )}
       </div>
 
-      {/* Actions — pinned at bottom of sidebar */}
-      <div className="space-y-3 pt-4 border-t border-border">
+      {/* Actions */}
+      <div className="flex items-center gap-3 pt-4 border-t border-border">
         <button
           type="submit"
           disabled={saving}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-[var(--radius-widget)] bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-[var(--radius-widget)] bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
           {saving ? t("admin.postForm.saving") : isEditing ? t("admin.postForm.updatePost") : t("admin.postForm.createPost")}
         </button>
-        <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => router.push("/admin/posts")}
+          className="inline-flex items-center rounded-[var(--radius-widget)] border border-border bg-secondary px-4 py-2 text-sm text-foreground transition-colors hover:bg-accent"
+        >
+          {t("admin.postForm.cancel")}
+        </button>
+        {isEditing && (
           <button
             type="button"
-            onClick={() => router.push("/admin/posts")}
-            className="flex-1 inline-flex items-center justify-center rounded-[var(--radius-widget)] border border-border bg-secondary px-4 py-2 text-sm text-foreground transition-colors hover:bg-accent"
+            onClick={() => setDeleteConfirmOpen(true)}
+            disabled={saving}
+            className="ml-auto inline-flex items-center rounded-[var(--radius-widget)] bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50"
           >
-            {t("admin.postForm.cancel")}
+            {t("admin.postForm.deletePost")}
           </button>
-          {isEditing && (
-            <button
-              type="button"
-              onClick={() => setDeleteConfirmOpen(true)}
-              disabled={saving}
-              className="flex-1 inline-flex items-center justify-center rounded-[var(--radius-widget)] bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50"
-            >
-              {t("admin.postForm.deletePost")}
-            </button>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Delete confirmation dialog */}
@@ -624,45 +597,32 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           onConfirm={handleDelete}
         />
       )}
-    </div>
+    </>
   );
 
   return (
-    <form onSubmit={handleSubmit}>
-      {/* Mobile: single column stacked */}
-      <div className="space-y-6 lg:hidden">
-        {mainColumn}
-        {sidebarColumn}
+    <div className="flex gap-6">
+      {/* Left: Editor form */}
+      <form
+        onSubmit={handleSubmit}
+        className="w-full space-y-6 lg:w-1/2 lg:min-w-0"
+      >
+        {editorFields}
+      </form>
+
+      {/* Right: Live preview — visible only on lg+ */}
+      <div className="sticky top-14 hidden h-[calc(100vh-56px-24px)] w-1/2 min-w-0 overflow-y-auto rounded-[var(--radius-widget)] border border-border lg:block">
+        <MarkdownPreview
+          title={title}
+          excerpt={excerpt}
+          content={content}
+          featuredImage={featuredImage}
+          referenceUrl={referenceUrl}
+          referenceTitle={referenceTitle}
+          referenceDescription={referenceDescription}
+          referenceImage={referenceImage}
+        />
       </div>
-
-      {/* Desktop: 3-column layout — Main (3fr) | Sidebar (2fr) | Preview */}
-      <div className="hidden lg:flex lg:gap-6">
-        {/* Main content area — 3/5 of the form space */}
-        <div className="min-w-0 flex-[3]">
-          {mainColumn}
-        </div>
-
-        {/* Settings sidebar — 2/5 of the form space */}
-        <div className="min-w-0 flex-[2]">
-          <div className="sticky top-14 max-h-[calc(100vh-56px-24px)] overflow-y-auto">
-            {sidebarColumn}
-          </div>
-        </div>
-
-        {/* Live preview — visible only on xl+ */}
-        <div className="sticky top-14 hidden h-[calc(100vh-56px-24px)] min-w-0 flex-[2] overflow-y-auto rounded-[var(--radius-widget)] border border-border xl:block">
-          <MarkdownPreview
-            title={title}
-            excerpt={excerpt}
-            content={content}
-            featuredImage={featuredImage}
-            referenceUrl={referenceUrl}
-            referenceTitle={referenceTitle}
-            referenceDescription={referenceDescription}
-            referenceImage={referenceImage}
-          />
-        </div>
-      </div>
-    </form>
+    </div>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { FileText, FolderOpen, Tags } from "lucide-react";
 import { useLocale } from "@/i18n/context";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { useSetPageSubtitle } from "@/components/admin/page-subtitle-context";
 import type {
   AnalyticsSummaryResponse,
   SourceDetailResponse,
@@ -119,6 +120,11 @@ export function AnalyticsDashboard({
     setSourceCache({}); // clear tab cache
   }
 
+  const subtitleText = summary
+    ? `${summary.period.startDate} — ${summary.period.endDate}`
+    : null;
+  useSetPageSubtitle(subtitleText);
+
   if (error && !summary) {
     return (
       <div className="flex items-center justify-center py-20 text-destructive">
@@ -138,15 +144,7 @@ export function AnalyticsDashboard({
   return (
     <div className="space-y-6">
       {/* Header + Period selector */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">
-            {t("admin.analytics.title")}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {summary.period.startDate} — {summary.period.endDate}
-          </p>
-        </div>
+      <div className="flex items-center justify-end">
         <SegmentedControl
           options={PERIOD_OPTIONS.map((o) => ({
             value: o.value,
