@@ -105,12 +105,20 @@ export function formatNumber(n: number): string {
   return n.toLocaleString();
 }
 
-/** Format a delta percentage for display: "+25%", "-10%", "NEW", or "—" for null */
-export function formatDelta(delta: number | "new" | null): {
+/** Format a delta percentage for display: "+25%", "-10%", "+42" (when new), or "—" for null */
+export function formatDelta(
+  delta: number | "new" | null,
+  absoluteValue?: number,
+): {
   text: string;
   positive: boolean | null;
 } {
-  if (delta === "new") return { text: "NEW", positive: true };
+  if (delta === "new") {
+    if (absoluteValue !== undefined) {
+      return { text: `+${formatNumber(absoluteValue)}`, positive: true };
+    }
+    return { text: "NEW", positive: true };
+  }
   if (delta === null) return { text: "—", positive: null };
   const sign = delta >= 0 ? "+" : "";
   return { text: `${sign}${delta}%`, positive: delta >= 0 };

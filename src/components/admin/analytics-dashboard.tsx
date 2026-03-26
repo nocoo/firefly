@@ -179,7 +179,7 @@ export function AnalyticsDashboard({
       )}
 
       {/* Overview cards */}
-      <OverviewCards overview={summary.overview} />
+      <OverviewCards overview={summary.overview} days={days} />
 
       {/* Traffic trend chart */}
       <TrafficTrend daily={summary.daily} />
@@ -256,8 +256,8 @@ function AnalyticsSkeleton() {
         <SkeletonPulse className="h-8 w-[120px]" />
       </div>
       {/* Stat cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {Array.from({ length: 5 }).map((_, i) => (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
             className="rounded-[var(--radius-widget)] bg-secondary p-4 space-y-2"
