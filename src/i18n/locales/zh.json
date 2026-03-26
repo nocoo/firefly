@@ -228,6 +228,7 @@
   "admin.analytics.browsers": "浏览器",
   "admin.analytics.os": "操作系统",
   "admin.analytics.countries": "国家",
+  "admin.analytics.topCities": "热门城市",
   "admin.analytics.platforms": "平台",
   "admin.analytics.botTraffic": "爬虫流量",
   "admin.analytics.botBreakdown": "爬虫分布",

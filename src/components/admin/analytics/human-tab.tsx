@@ -230,20 +230,36 @@ export function HumanTab({ data }: HumanTabProps) {
         </Panel>
       </div>
 
-      {/* Countries */}
-      <Panel title={t("admin.analytics.countries")}>
-        {data.countries.length === 0 ? (
-          <NoData text={t("admin.analytics.noData")} />
-        ) : (
-          <HorizontalBarList
-            data={data.countries.map((c) => ({
-              name: c.country,
-              value: c.count,
-            }))}
-            color={CHART_COLORS[0]}
-          />
-        )}
-      </Panel>
+      {/* Countries + Cities */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Panel title={t("admin.analytics.countries")}>
+          {data.countries.length === 0 ? (
+            <NoData text={t("admin.analytics.noData")} />
+          ) : (
+            <HorizontalBarList
+              data={data.countries.map((c) => ({
+                name: c.country,
+                value: c.count,
+              }))}
+              color={CHART_COLORS[0]}
+            />
+          )}
+        </Panel>
+
+        <Panel title={t("admin.analytics.topCities")}>
+          {data.cities.length === 0 ? (
+            <NoData text={t("admin.analytics.noData")} />
+          ) : (
+            <HorizontalBarList
+              data={data.cities.map((c) => ({
+                name: c.city,
+                value: c.count,
+              }))}
+              color={CHART_COLORS[3]}
+            />
+          )}
+        </Panel>
+      </div>
     </div>
   );
 }

@@ -16,11 +16,13 @@ export interface AnalyticsOverview {
   search: number;
   ai: number;
   otherBot: number;
+  uniqueVisitors: number;
   totalDelta: DeltaValue;
   humanDelta: DeltaValue;
   searchDelta: DeltaValue;
   aiDelta: DeltaValue;
   otherBotDelta: DeltaValue;
+  uniqueVisitorsDelta: DeltaValue;
 }
 
 export interface AnalyticsDailyTrend {
@@ -71,6 +73,7 @@ export interface HumanDetailResponse {
   browsers: { browser: string; count: number }[];
   os: { os: string; count: number }[];
   countries: { country: string; count: number }[];
+  cities: { city: string; count: number }[];
   recent24h: number;
 }
 

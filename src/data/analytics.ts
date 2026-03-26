@@ -516,7 +516,7 @@ export async function getAnalyticsOverview(
   db: Db,
   days: number,
 ): Promise<AnalyticsOverview> {
-  const [current, previous] = await Promise.all([
+  const [current, previous, uniqueCurrent, uniquePrevious] = await Promise.all([
     db.firstOrNull<{
       total: number;
       human: number;
@@ -551,6 +551,18 @@ export async function getAnalyticsOverview(
        WHERE ${PREV_WINDOW_WHERE}`,
       [days, days],
     ),
+    db.firstOrNull<{ count: number }>(
+      `SELECT COUNT(DISTINCT ip_hash) AS count
+       FROM page_views
+       WHERE ${TIME_WINDOW_WHERE} AND is_bot = 0 AND ip_hash IS NOT NULL`,
+      [days],
+    ),
+    db.firstOrNull<{ count: number }>(
+      `SELECT COUNT(DISTINCT ip_hash) AS count
+       FROM page_views
+       WHERE ${PREV_WINDOW_WHERE} AND is_bot = 0 AND ip_hash IS NOT NULL`,
+      [days, days],
+    ),
   ]);
 
   function delta(curr: number, prev: number): number | "new" | null {
@@ -573,17 +585,24 @@ export async function getAnalyticsOverview(
     otherBot: previous?.other_bot ?? 0,
   };
 
+  const uv = {
+    current: uniqueCurrent?.count ?? 0,
+    previous: uniquePrevious?.count ?? 0,
+  };
+
   return {
     total: c.total,
     human: c.human,
     search: c.search,
     ai: c.ai,
     otherBot: c.otherBot,
+    uniqueVisitors: uv.current,
     totalDelta: delta(c.total, p.total),
     humanDelta: delta(c.human, p.human),
     searchDelta: delta(c.search, p.search),
     aiDelta: delta(c.ai, p.ai),
     otherBotDelta: delta(c.otherBot, p.otherBot),
+    uniqueVisitorsDelta: delta(uv.current, uv.previous),
   };
 }
 
@@ -680,7 +699,7 @@ export async function getHumanDetail(
   db: Db,
   days: number,
 ): Promise<HumanDetailResponse> {
-  const [topPagesRaw, topReferrers, devices, browsers, os, countries, recent24h] =
+  const [topPagesRaw, topReferrers, devices, browsers, os, countries, cities, recent24h] =
     await Promise.all([
       db.query<{ path: string; views: number }>(
         `SELECT path, COUNT(*) AS views
@@ -746,6 +765,16 @@ export async function getHumanDetail(
          LIMIT 20`,
         [days],
       ),
+      db.query<{ city: string; count: number }>(
+        `SELECT city, COUNT(*) AS count
+         FROM page_views
+         WHERE ${TIME_WINDOW_WHERE} AND ${sourceCondition("human")}
+           AND city IS NOT NULL AND city != ''
+         GROUP BY city
+         ORDER BY count DESC
+         LIMIT 20`,
+        [days],
+      ),
       // Recent 24h uses rolling window (unique exception per §3.4)
       db.firstOrNull<{ count: number }>(
         `SELECT COUNT(*) AS count FROM page_views
@@ -766,6 +795,7 @@ export async function getHumanDetail(
     browsers: browsers.results,
     os: os.results,
     countries: countries.results,
+    cities: cities.results,
     recent24h: recent24h?.count ?? 0,
   };
 }

@@ -228,6 +228,7 @@
   "admin.analytics.browsers": "Browsers",
   "admin.analytics.os": "Operating Systems",
   "admin.analytics.countries": "Countries",
+  "admin.analytics.topCities": "Top Cities",
   "admin.analytics.platforms": "Platforms",
   "admin.analytics.botTraffic": "Bot Traffic",
   "admin.analytics.botBreakdown": "Bot Breakdown",

@@ -11,7 +11,7 @@ interface OverviewCardsProps {
 export function OverviewCards({ overview }: OverviewCardsProps) {
   const { t } = useLocale();
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <StatCard
         label={t("admin.analytics.totalViews")}
         value={overview.total}
@@ -21,6 +21,11 @@ export function OverviewCards({ overview }: OverviewCardsProps) {
         label={t("admin.analytics.humanVisitors")}
         value={overview.human}
         delta={overview.humanDelta}
+      />
+      <StatCard
+        label={t("admin.analytics.uniqueVisitors")}
+        value={overview.uniqueVisitors}
+        delta={overview.uniqueVisitorsDelta}
       />
       <StatCard
         label={t("admin.analytics.searchEngines")}
