@@ -1,7 +1,7 @@
 # === Quality Gate: pre-push ===
-# L2 Integration/API + G2 Security
-echo "▸ L1: unit tests"
-bun run test
+# L1 Coverage + G1 Lint + L2 Integration + G2 Security
+echo "▸ L1: unit tests (coverage ≥90%)"
+bun run test:coverage
 echo "▸ G1: lint"
 bun run lint
 echo "▸ L2: API E2E"

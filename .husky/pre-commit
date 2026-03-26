@@ -1,8 +1,8 @@
 # === Quality Gate: pre-commit ===
-# L1 Unit/Component + G1 Static Analysis
+# G1 Static Analysis + L1 Unit Tests
 echo "▸ G1: typecheck"
 bun run typecheck
 echo "▸ G1: lint"
 bun run lint
-echo "▸ L1: unit tests (coverage ≥90%)"
-bun run test:coverage
+echo "▸ L1: unit tests"
+bun run test
