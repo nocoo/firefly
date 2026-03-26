@@ -15,19 +15,17 @@ export interface ToolContext {
 
 // ---- Data layer contract ----
 
-export interface DataLayer<
-  T,
-  TCreate = Record<string, unknown>,
-  TUpdate = Record<string, unknown>,
-> {
+export interface DataLayer<T> {
   list: (
     db: Db,
     opts?: unknown,
   ) => Promise<T[] | { items: T[]; total: number }>;
   getById: (db: Db, id: string) => Promise<T | null>;
   getBySlug: (db: Db, slug: string) => Promise<T | null>;
-  create: (db: Db, input: TCreate) => Promise<T>;
-  update: (db: Db, id: string, input: TUpdate) => Promise<T | null>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  create: (db: Db, input: any) => Promise<T>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  update: (db: Db, id: string, input: any) => Promise<T | null>;
   delete: (db: Db, id: string) => Promise<boolean>;
 }
 
