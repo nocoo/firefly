@@ -468,6 +468,65 @@ export async function updatePost(
 }
 
 // ---------------------------------------------------------------------------
+// batchUpdatePosts — update status and/or category for multiple posts
+// ---------------------------------------------------------------------------
+
+export interface BatchUpdateInput {
+  status?: PostStatus | undefined;
+  category_id?: string | null | undefined;
+}
+
+export async function batchUpdatePosts(
+  db: Db,
+  ids: string[],
+  input: BatchUpdateInput,
+): Promise<number> {
+  if (ids.length === 0) return 0;
+
+  const setClauses: string[] = [];
+  const params: unknown[] = [];
+
+  if (input.status !== undefined) {
+    setClauses.push("status = ?");
+    params.push(input.status);
+  }
+
+  if (input.category_id !== undefined) {
+    setClauses.push("category_id = ?");
+    params.push(input.category_id);
+  }
+
+  if (setClauses.length === 0) return 0;
+
+  // Always bump updated_at
+  setClauses.push("updated_at = ?");
+  params.push(Math.floor(Date.now() / 1000));
+
+  // Auto-set published_at for posts transitioning to published
+  if (input.status === "published") {
+    setClauses.push("published_at = COALESCE(published_at, ?)");
+    params.push(Math.floor(Date.now() / 1000));
+  }
+
+  const placeholders = ids.map(() => "?").join(", ");
+  params.push(...ids);
+
+  const sql = `UPDATE posts SET ${setClauses.join(", ")} WHERE id IN (${placeholders})`;
+  const result = await db.execute(sql, params);
+
+  // Refresh caches — category and tag counts may have changed
+  if (input.category_id !== undefined || input.status !== undefined) {
+    // Broad invalidation since multiple posts may span categories
+    invalidateCategoriesCache();
+    await refreshAllTagPostCounts(db);
+    invalidateArchivesCache();
+  }
+  invalidateCountCache();
+
+  return result.changes;
+}
+
+// ---------------------------------------------------------------------------
 // deletePost
 // ---------------------------------------------------------------------------
 

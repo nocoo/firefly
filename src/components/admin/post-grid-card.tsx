@@ -19,6 +19,8 @@ const STATUS_COLORS: Record<PostStatus, string> = {
 
 interface PostGridCardProps {
   post: PostWithCategory;
+  selected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
 function getPreviewUrl(post: PostWithCategory): string {
@@ -30,13 +32,40 @@ function getPreviewUrl(post: PostWithCategory): string {
 
 export const PostGridCard = memo(function PostGridCard({
   post,
+  selected,
+  onToggleSelect,
 }: PostGridCardProps) {
   const { t } = useLocale();
   const previewUrl = getPreviewUrl(post);
   const date = post.published_at ? formatDateDisplay(post.published_at) : "—";
 
   return (
-    <Card className="group relative overflow-hidden shadow-sm transition-colors hover:border-primary/50">
+    <Card
+      className={`group relative overflow-hidden shadow-sm transition-colors ${
+        selected
+          ? "border-primary ring-2 ring-primary/20"
+          : "hover:border-primary/50"
+      }`}
+    >
+      {/* Selection checkbox — always visible in top-left */}
+      {onToggleSelect && (
+        <div className="absolute left-2 top-2 z-10">
+          <input
+            type="checkbox"
+            checked={selected ?? false}
+            onChange={(e) => {
+              e.stopPropagation();
+              onToggleSelect(post.id);
+            }}
+            className={`h-4 w-4 cursor-pointer rounded border-border text-primary shadow-sm focus:ring-ring ${
+              selected
+                ? "opacity-100"
+                : "opacity-0 group-hover:opacity-100"
+            } transition-opacity`}
+          />
+        </div>
+      )}
+
       {/* Top area — featured image or text preview */}
       <Link href={`/admin/posts/${post.id}/edit`} className="block">
         {post.featured_image ? (

@@ -2,12 +2,15 @@
 
 import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { LayoutList, LayoutGrid, Eye, Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { LayoutList, LayoutGrid, Eye, Pencil, X } from "lucide-react";
+import { toast } from "sonner";
 import type { PostWithCategory, PostStatus, Category } from "@/models/types";
 import { postPath, formatDateDisplay } from "@/lib/seo";
 import { PostFilters } from "@/components/admin/post-filters";
 import { DeletePostButton } from "@/components/admin/delete-post-button";
 import { PostGridCard } from "@/components/admin/post-grid-card";
+import { Select } from "@/components/ui/select";
 import { useLocale } from "@/i18n/context";
 
 // ---------------------------------------------------------------------------
@@ -99,6 +102,25 @@ export function AdminPostsClient({
 
   const totalPages = Math.ceil(total / pageSize);
 
+  // Selection state — lives at the top so it persists across view mode switches
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Clear selection when filters / page change
+  useEffect(() => {
+    setSelectedIds(new Set()); // eslint-disable-line react-hooks/set-state-in-effect
+  }, [currentParams, currentPage]);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -150,6 +172,15 @@ export function AdminPostsClient({
       {/* Filters */}
       <PostFilters categories={categories} />
 
+      {/* Bulk action bar */}
+      {selectedIds.size > 0 && (
+        <BulkActionBar
+          selectedIds={selectedIds}
+          categories={categories}
+          onClearSelection={clearSelection}
+        />
+      )}
+
       {/* View content */}
       {viewMode === "list" ? (
         <ListView
@@ -158,10 +189,158 @@ export function AdminPostsClient({
           totalPages={totalPages}
           currentPage={currentPage}
           currentParams={currentParams}
+          selectedIds={selectedIds}
+          onToggleSelect={toggleSelect}
+          onToggleAll={(allIds) => {
+            setSelectedIds((prev) => {
+              const allSelected = allIds.every((id) => prev.has(id));
+              if (allSelected) return new Set();
+              return new Set([...prev, ...allIds]);
+            });
+          }}
         />
       ) : (
-        <GridView currentParams={currentParams} />
+        <GridView
+          currentParams={currentParams}
+          selectedIds={selectedIds}
+          onToggleSelect={toggleSelect}
+        />
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Bulk Action Bar
+// ---------------------------------------------------------------------------
+
+function BulkActionBar({
+  selectedIds,
+  categories,
+  onClearSelection,
+}: {
+  selectedIds: Set<string>;
+  categories: Category[];
+  onClearSelection: () => void;
+}) {
+  const { t } = useLocale();
+  const router = useRouter();
+  const [bulkStatus, setBulkStatus] = useState("");
+  const [bulkCategory, setBulkCategory] = useState("");
+  const [applying, setApplying] = useState(false);
+
+  const handleApply = async () => {
+    const updates: Record<string, unknown> = {};
+    if (bulkStatus) updates.status = bulkStatus;
+    if (bulkCategory === "__none__") updates.category_id = null;
+    else if (bulkCategory) updates.category_id = bulkCategory;
+
+    if (Object.keys(updates).length === 0) return;
+
+    setApplying(true);
+    try {
+      const res = await fetch("/api/admin/posts/batch", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ids: [...selectedIds],
+          updates,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? t("admin.posts.bulk.failed"));
+      }
+
+      const data = await res.json();
+      onClearSelection();
+      setBulkStatus("");
+      setBulkCategory("");
+      router.refresh();
+
+      if (data.changed > 0) {
+        toast.success(t("admin.posts.bulk.success", { n: data.changed }));
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : t("admin.posts.bulk.failed"),
+      );
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  const hasUpdates = bulkStatus !== "" || bulkCategory !== "";
+
+  return (
+    <div className="sticky top-0 z-20 flex flex-wrap items-center gap-3 rounded-[var(--radius-widget)] border border-primary/30 bg-primary/5 px-4 py-3 shadow-sm backdrop-blur-sm">
+      {/* Selection count + dismiss */}
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium text-foreground">
+          {t("admin.posts.bulk.selected", { n: selectedIds.size })}
+        </span>
+        <button
+          type="button"
+          onClick={onClearSelection}
+          className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
+          aria-label={t("admin.posts.bulk.deselectAll")}
+        >
+          <X className="h-3.5 w-3.5" strokeWidth={1.5} />
+        </button>
+      </div>
+
+      <div className="h-5 w-px bg-border" />
+
+      {/* Bulk status */}
+      <div className="flex items-center gap-1.5">
+        <label className="text-xs text-muted-foreground whitespace-nowrap">
+          {t("admin.posts.bulk.setStatus")}
+        </label>
+        <Select
+          value={bulkStatus}
+          onChange={(e) => setBulkStatus(e.target.value)}
+          className="w-auto !h-8 !py-1 text-xs"
+        >
+          <option value="">—</option>
+          <option value="published">{t("admin.filters.published")}</option>
+          <option value="draft">{t("admin.filters.draft")}</option>
+          <option value="private">{t("admin.filters.private")}</option>
+          <option value="archived">{t("admin.filters.archived")}</option>
+        </Select>
+      </div>
+
+      {/* Bulk category */}
+      <div className="flex items-center gap-1.5">
+        <label className="text-xs text-muted-foreground whitespace-nowrap">
+          {t("admin.posts.bulk.setCategory")}
+        </label>
+        <Select
+          value={bulkCategory}
+          onChange={(e) => setBulkCategory(e.target.value)}
+          className="w-auto !h-8 !py-1 text-xs"
+        >
+          <option value="">—</option>
+          <option value="__none__">{t("admin.posts.bulk.noCategory")}</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </Select>
+      </div>
+
+      {/* Apply button */}
+      <button
+        type="button"
+        onClick={handleApply}
+        disabled={applying || !hasUpdates}
+        className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {applying
+          ? t("admin.posts.bulk.applying")
+          : t("admin.posts.bulk.apply")}
+      </button>
     </div>
   );
 }
@@ -175,14 +354,24 @@ function ListView({
   totalPages,
   currentPage,
   currentParams,
+  selectedIds,
+  onToggleSelect,
+  onToggleAll,
 }: {
   posts: PostWithCategory[];
   total: number;
   totalPages: number;
   currentPage: number;
   currentParams: Record<string, string | undefined>;
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string) => void;
+  onToggleAll: (allIds: string[]) => void;
 }) {
   const { t } = useLocale();
+
+  const allIds = posts.map((p) => p.id);
+  const allSelected = posts.length > 0 && allIds.every((id) => selectedIds.has(id));
+  const someSelected = posts.length > 0 && allIds.some((id) => selectedIds.has(id));
 
   return (
     <>
@@ -191,6 +380,22 @@ function ListView({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-secondary/50">
+              <th className="w-10 px-3 py-3">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = someSelected && !allSelected;
+                  }}
+                  onChange={() => onToggleAll(allIds)}
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-ring cursor-pointer"
+                  aria-label={
+                    allSelected
+                      ? t("admin.posts.bulk.deselectAll")
+                      : t("admin.posts.bulk.selectAll")
+                  }
+                />
+              </th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                 {t("admin.posts.table.title")}
               </th>
@@ -212,64 +417,79 @@ function ListView({
             {posts.length === 0 ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   className="px-4 py-8 text-center text-muted-foreground"
                 >
                   {t("admin.posts.noResults")}
                 </td>
               </tr>
             ) : (
-              posts.map((post) => (
-                <tr
-                  key={post.id}
-                  className="border-b border-border last:border-0 hover:bg-accent/50 transition-colors"
-                >
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/admin/posts/${post.id}/edit`}
-                      className="font-medium text-foreground hover:text-primary transition-colors"
-                    >
-                      {post.title}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 hidden sm:table-cell">
-                    <span
-                      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[post.status as PostStatus] ?? ""}`}
-                    >
-                      {t(STATUS_LABEL_KEYS[post.status as PostStatus] ?? post.status)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
-                    {post.category_name ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
-                    {post.published_at
-                      ? formatDateDisplay(post.published_at)
-                      : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <a
-                        href={getPreviewUrl(post)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                      >
-                        <Eye className="h-3.5 w-3.5" strokeWidth={1.5} />
-                        {t("admin.posts.preview")}
-                      </a>
+              posts.map((post) => {
+                const isSelected = selectedIds.has(post.id);
+                return (
+                  <tr
+                    key={post.id}
+                    className={`border-b border-border last:border-0 transition-colors ${
+                      isSelected
+                        ? "bg-primary/5"
+                        : "hover:bg-accent/50"
+                    }`}
+                  >
+                    <td className="w-10 px-3 py-3">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => onToggleSelect(post.id)}
+                        className="h-4 w-4 rounded border-border text-primary focus:ring-ring cursor-pointer"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
                       <Link
                         href={`/admin/posts/${post.id}/edit`}
-                        className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        className="font-medium text-foreground hover:text-primary transition-colors"
                       >
-                        <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
-                        {t("admin.posts.edit")}
+                        {post.title}
                       </Link>
-                      <DeletePostButton slug={post.slug} title={post.title} />
-                    </div>
-                  </td>
-                </tr>
-              ))
+                    </td>
+                    <td className="px-4 py-3 hidden sm:table-cell">
+                      <span
+                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[post.status as PostStatus] ?? ""}`}
+                      >
+                        {t(STATUS_LABEL_KEYS[post.status as PostStatus] ?? post.status)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                      {post.category_name ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
+                      {post.published_at
+                        ? formatDateDisplay(post.published_at)
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <a
+                          href={getPreviewUrl(post)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        >
+                          <Eye className="h-3.5 w-3.5" strokeWidth={1.5} />
+                          {t("admin.posts.preview")}
+                        </a>
+                        <Link
+                          href={`/admin/posts/${post.id}/edit`}
+                          className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        >
+                          <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
+                          {t("admin.posts.edit")}
+                        </Link>
+                        <DeletePostButton slug={post.slug} title={post.title} />
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
@@ -343,8 +563,12 @@ function Pagination({
 
 function GridView({
   currentParams,
+  selectedIds,
+  onToggleSelect,
 }: {
   currentParams: Record<string, string | undefined>;
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string) => void;
 }) {
   const { t } = useLocale();
   const [posts, setPosts] = useState<PostWithCategory[]>([]);
@@ -425,7 +649,12 @@ function GridView({
     <>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {posts.map((post) => (
-          <PostGridCard key={post.id} post={post} />
+          <PostGridCard
+            key={post.id}
+            post={post}
+            selected={selectedIds.has(post.id)}
+            onToggleSelect={onToggleSelect}
+          />
         ))}
       </div>
 
