@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.4.0 (2026-03-26)
+
+- chore: update tsbuildinfo
+- feat: add tag filter to posts page and "View All" button to taxonomy manager
+- feat: add multi-select bulk edit for posts (status and category)
+- refactor: replace native confirm/alert with ConfirmDialog and toast
+- feat: add Sonner toast, Radix AlertDialog, and ConfirmDialog components
+- feat: enhance post search with keyboard shortcut, wider matching, and date filters
+- fix: add lizheng.me HTTPS to next/image remote patterns
+- fix: resolve picomatch CVE, E2E next build+start, skip HTTPS in test
+- fix: E2E uses next build+start, skip HTTPS redirect in test mode
+
+
 ## v1.3.0 (2026-03-25)
 
 - chore: update tsbuildinfo
