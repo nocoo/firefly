@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "assets.lizheng.me",
       },
+      {
+        protocol: "https",
+        hostname: "lizheng.me",
+      },
     ],
   },
 };
