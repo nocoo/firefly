@@ -1,11 +1,15 @@
 /**
- * L2 API E2E — Backup config endpoints
+ * L2 API E2E — Backup endpoints
  *
- * Covers: GET/PUT/DELETE /api/backup, POST /api/backup/test
+ * Covers: GET/PUT/DELETE /api/backup, POST /api/backup/test,
+ *         POST /api/backup/push, GET /api/backup/history
  *
  * Note: All /api/backup/* endpoints are proxy-protected (all methods),
  * but E2E_SKIP_AUTH=true bypasses auth in the test environment.
  * Auth guard correctness is verified by L1 proxy.test.ts.
+ *
+ * Push and history tests without a real Backy server can only verify
+ * the "not configured" path — actual push tests need a running Backy.
  */
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17043";
 
@@ -152,6 +156,38 @@ describe("POST /api/backup/test (no config)", () => {
     const res = await fetch(`${BASE}/api/backup/test`, {
       method: "POST",
     });
+    expect(res.status).toBe(422);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Push endpoint
+// ---------------------------------------------------------------------------
+
+describe("POST /api/backup/push (no config)", () => {
+  beforeAll(async () => {
+    await fetch(`${BASE}/api/backup`, { method: "DELETE" });
+  });
+
+  it("returns 422 when backup is not configured", async () => {
+    const res = await fetch(`${BASE}/api/backup/push`, {
+      method: "POST",
+    });
+    expect(res.status).toBe(422);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// History endpoint
+// ---------------------------------------------------------------------------
+
+describe("GET /api/backup/history (no config)", () => {
+  beforeAll(async () => {
+    await fetch(`${BASE}/api/backup`, { method: "DELETE" });
+  });
+
+  it("returns 422 when backup is not configured", async () => {
+    const res = await fetch(`${BASE}/api/backup/history`);
     expect(res.status).toBe(422);
   });
 });
