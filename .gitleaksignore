@@ -3,3 +3,8 @@
 15978736cbe50d78ff10e088fee171ba0a6eb05d:src/data/mcp-tokens.test.ts:generic-api-key:40
 15978736cbe50d78ff10e088fee171ba0a6eb05d:src/data/mcp-tokens.test.ts:generic-api-key:111
 7a410d1369a2dc5004bdbd1618faebd01b053953:docs/10-mcp-server.md:generic-api-key:1099
+
+# Mock API keys in backup test fixtures (not real secrets)
+f52a56405bbfc598e7641aaa22d5c5e00cbed112:e2e/api/backup.test.ts:generic-api-key:37
+f52a56405bbfc598e7641aaa22d5c5e00cbed112:e2e/api/backup.test.ts:generic-api-key:96
+4ce0b0745c3aca83db2a5eeaebbbf2c2f8e01a8f:src/models/backup.test.ts:generic-api-key:48
