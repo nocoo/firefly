@@ -1,0 +1,12 @@
+title = "Firefly gitleaks config"
+
+[allowlist]
+  description = "Known non-secret patterns in test fixtures"
+
+  # Test fixtures with fake API keys / tokens
+  paths = [
+    '''e2e/.*\.test\.ts$''',
+    '''e2e/.*\.spec\.ts$''',
+    '''\.env\.test$''',
+    '''\.env\.example$''',
+  ]
