@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.5.0 (2026-03-26)
+
+- feat(backup): add Backy remote backup integration — admin page, push/pull webhooks, config & test API, history, data export
+- feat: add unique visitors card and top cities chart to analytics
+- feat: improve stat cards with period label and real delta values
+- feat(admin): redesign post editor layout with 3-column structure
+- feat(blog): add admin-only edit button to post byline
+- feat(i18n): add translation keys for post edit/view buttons
+- fix(admin): remove duplicate article title from edit page header
+- fix(admin): align preview panel top/bottom with left-side form
+- fix(backup): allow API key omission on update, add fetch timeouts, fix epoch 0
+- fix: classify Sogou and Yisou spiders as search engine bots
+- refactor: remove duplicate AggregatesPanel from analytics dashboard
+
+
 ## v1.4.0 (2026-03-26)
 
 - chore: update tsbuildinfo
