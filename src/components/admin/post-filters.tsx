@@ -3,12 +3,13 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X, RotateCcw } from "lucide-react";
-import type { Category } from "@/models/types";
+import type { Category, Tag } from "@/models/types";
 import { Select } from "@/components/ui/select";
 import { useLocale } from "@/i18n/context";
 
 interface PostFiltersProps {
   categories: Category[];
+  tags: Tag[];
 }
 
 // Generate year options from current year down to a reasonable minimum
@@ -21,7 +22,7 @@ const YEAR_OPTIONS = Array.from(
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 
-export function PostFilters({ categories }: PostFiltersProps) {
+export function PostFilters({ categories, tags }: PostFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
@@ -84,6 +85,7 @@ export function PostFilters({ categories }: PostFiltersProps) {
     searchParams.has("q") ||
     searchParams.has("status") ||
     searchParams.has("category") ||
+    searchParams.has("tag") ||
     searchParams.has("year") ||
     searchParams.has("month");
 
@@ -152,6 +154,22 @@ export function PostFilters({ categories }: PostFiltersProps) {
           </option>
         ))}
       </Select>
+
+      {/* Tag filter */}
+      {tags.length > 0 && (
+        <Select
+          value={searchParams.get("tag") ?? ""}
+          onChange={(e) => updateFilter("tag", e.target.value)}
+          className="w-auto"
+        >
+          <option value="">{t("admin.filters.allTags")}</option>
+          {tags.map((tag) => (
+            <option key={tag.id} value={tag.id}>
+              {tag.name}
+            </option>
+          ))}
+        </Select>
+      )}
 
       {/* Year filter */}
       <Select

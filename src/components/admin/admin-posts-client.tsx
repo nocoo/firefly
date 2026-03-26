@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LayoutList, LayoutGrid, Eye, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
-import type { PostWithCategory, PostStatus, Category } from "@/models/types";
+import type { PostWithCategory, PostStatus, Category, Tag } from "@/models/types";
 import { postPath, formatDateDisplay } from "@/lib/seo";
 import { PostFilters } from "@/components/admin/post-filters";
 import { DeletePostButton } from "@/components/admin/delete-post-button";
@@ -69,6 +69,7 @@ interface AdminPostsClientProps {
   posts: PostWithCategory[];
   total: number;
   categories: Category[];
+  tags: Tag[];
   /** Current URL search params for pagination links */
   currentParams: Record<string, string | undefined>;
   currentPage: number;
@@ -83,6 +84,7 @@ export function AdminPostsClient({
   posts,
   total,
   categories,
+  tags,
   currentParams,
   currentPage,
   pageSize,
@@ -170,7 +172,7 @@ export function AdminPostsClient({
       </div>
 
       {/* Filters */}
-      <PostFilters categories={categories} />
+      <PostFilters categories={categories} tags={tags} />
 
       {/* Bulk action bar */}
       {selectedIds.size > 0 && (
@@ -590,6 +592,7 @@ function GridView({
         sp.set("pageSize", String(GRID_PAGE_SIZE));
         if (currentParams.status) sp.set("status", currentParams.status);
         if (currentParams.category) sp.set("category", currentParams.category);
+        if (currentParams.tag) sp.set("tag", currentParams.tag);
         if (currentParams.q) sp.set("q", currentParams.q);
         if (currentParams.year) sp.set("year", currentParams.year);
         if (currentParams.month) sp.set("month", currentParams.month);
@@ -613,7 +616,7 @@ function GridView({
         loadingRef.current = false;
       }
     },
-    [currentParams.status, currentParams.category, currentParams.q, currentParams.year, currentParams.month],
+    [currentParams.status, currentParams.category, currentParams.tag, currentParams.q, currentParams.year, currentParams.month],
   );
 
   // Reset when filters change

@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { useLocale } from "@/i18n/context";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
@@ -293,6 +294,15 @@ export function TaxonomyManager({
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
+                      {(item.total_posts ?? item.post_count) > 0 && (
+                        <Link
+                          href={`/admin/posts?${type === "category" ? "category" : "tag"}=${item.id}`}
+                          className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.5} />
+                          {t("admin.taxonomy.viewAll")}
+                        </Link>
+                      )}
                       <button
                         onClick={() => startEdit(item)}
                         className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"

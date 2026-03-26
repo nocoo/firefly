@@ -24,6 +24,9 @@ export async function GET(request: NextRequest) {
     const categoryId = searchParams.get("category");
     if (categoryId) options.categoryId = categoryId;
 
+    const tagId = searchParams.get("tag");
+    if (tagId) options.tagId = tagId;
+
     const query = searchParams.get("q");
     if (query) options.query = query;
 
