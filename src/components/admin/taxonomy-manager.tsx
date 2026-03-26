@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { useLocale } from "@/i18n/context";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 export interface TaxonomyItem {
   id: string;
@@ -126,12 +128,11 @@ export function TaxonomyManager({
     }
   };
 
+  // Delete confirmation state
+  const [deleteTarget, setDeleteTarget] = useState<TaxonomyItem | null>(null);
+
   const handleDelete = async (item: TaxonomyItem) => {
-    if (
-      !confirm(t("admin.taxonomy.confirmDelete", { type: label, name: item.name }))
-    ) {
-      return;
-    }
+    setDeleteTarget(null);
 
     try {
       const res = await fetch(`${apiBase}/${item.slug}`, {
@@ -143,9 +144,12 @@ export function TaxonomyManager({
         throw new Error(data.error ?? t("admin.taxonomy.failedDelete", { type }));
       }
 
+      toast.success(t("admin.taxonomy.delete"), {
+        description: item.name,
+      });
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("admin.taxonomy.unknownError"));
+      toast.error(err instanceof Error ? err.message : t("admin.taxonomy.unknownError"));
     }
   };
 
@@ -297,7 +301,7 @@ export function TaxonomyManager({
                         {t("admin.taxonomy.edit")}
                       </button>
                       <button
-                        onClick={() => handleDelete(item)}
+                        onClick={() => setDeleteTarget(item)}
                         className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
                       >
                         <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -312,6 +316,18 @@ export function TaxonomyManager({
         </table>
       </div>
       </div>
+
+      {/* Delete confirmation dialog */}
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title={deleteTarget ? t("admin.taxonomy.confirmDelete", { type: label, name: deleteTarget.name }) : ""}
+        description=""
+        destructive
+        confirmLabel={t("admin.confirm.delete")}
+        cancelLabel={t("admin.confirm.cancel")}
+        onConfirm={() => { if (deleteTarget) handleDelete(deleteTarget); }}
+      />
     </div>
   );
 }

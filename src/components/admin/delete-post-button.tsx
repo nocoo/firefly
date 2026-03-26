@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { useLocale } from "@/i18n/context";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 interface DeletePostButtonProps {
   slug: string;
@@ -15,13 +17,17 @@ interface DeletePostButtonProps {
 export function DeletePostButton({ slug, title, iconOnly }: DeletePostButtonProps) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const { t } = useLocale();
 
-  const handleDelete = async (e: React.MouseEvent) => {
+  const openConfirm = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm(t("admin.deletePost.confirm", { title }))) return;
+    setConfirmOpen(true);
+  };
 
+  const handleDelete = async () => {
+    setConfirmOpen(false);
     setDeleting(true);
     try {
       const res = await fetch(`/api/posts/${slug}`, { method: "DELETE" });
@@ -29,35 +35,51 @@ export function DeletePostButton({ slug, title, iconOnly }: DeletePostButtonProp
         const data = await res.json();
         throw new Error(data.error ?? t("admin.deletePost.failedDelete"));
       }
+      toast.success(t("admin.posts.delete"), {
+        description: title,
+      });
       router.refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : t("admin.deletePost.failedGeneric"));
+      toast.error(
+        err instanceof Error ? err.message : t("admin.deletePost.failedGeneric"),
+      );
     } finally {
       setDeleting(false);
     }
   };
 
-  if (iconOnly) {
-    return (
-      <button
-        onClick={handleDelete}
-        disabled={deleting}
-        className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-widget)] bg-white/90 text-destructive transition-colors hover:bg-white disabled:opacity-50"
-        title={t("admin.posts.delete")}
-      >
-        <Trash2 className="h-4 w-4" strokeWidth={1.5} />
-      </button>
-    );
-  }
-
   return (
-    <button
-      onClick={handleDelete}
-      disabled={deleting}
-      className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
-    >
-      <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
-      {deleting ? "..." : t("admin.posts.delete")}
-    </button>
+    <>
+      {iconOnly ? (
+        <button
+          onClick={openConfirm}
+          disabled={deleting}
+          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-widget)] bg-white/90 text-destructive transition-colors hover:bg-white disabled:opacity-50"
+          title={t("admin.posts.delete")}
+        >
+          <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+        </button>
+      ) : (
+        <button
+          onClick={openConfirm}
+          disabled={deleting}
+          className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+        >
+          <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+          {deleting ? "..." : t("admin.posts.delete")}
+        </button>
+      )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={t("admin.deletePost.confirm", { title })}
+        description=""
+        destructive
+        confirmLabel={t("admin.confirm.delete")}
+        cancelLabel={t("admin.confirm.cancel")}
+        onConfirm={handleDelete}
+      />
+    </>
   );
 }

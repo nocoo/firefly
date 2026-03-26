@@ -2,11 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import type { Category, Tag, PostWithCategory, PostStatus } from "@/models/types";
 import { slugify } from "@/models/post";
 import { renderMarkdown } from "@/models/markdown";
 import { ImageUploadZone } from "./image-upload-zone";
 import { MarkdownPreview } from "./markdown-preview";
+import { ConfirmDialog } from "./confirm-dialog";
 import { Select } from "@/components/ui/select";
 import { ArticleBody } from "@/components/blog/article-body";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -61,13 +63,13 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       });
       if (!res.ok) {
         const data = await res.json();
-        alert(data.error || t("admin.postForm.failedSave"));
+        toast.error(data.error || t("admin.postForm.failedSave"));
         return;
       }
       const { excerpt: generated } = await res.json();
       setExcerpt(generated ?? "");
     } catch {
-      alert(t("admin.postForm.failedSave"));
+      toast.error(t("admin.postForm.failedSave"));
     } finally {
       setIsGenerating(false);
     }
@@ -85,7 +87,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       });
       if (!res.ok) {
         const data = await res.json();
-        alert(data.error || t("admin.postForm.failedSave"));
+        toast.error(data.error || t("admin.postForm.failedSave"));
         return;
       }
       const data = await res.json();
@@ -95,7 +97,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       setBodyText(data.bodyText ?? "");
       setHasFetched(true);
     } catch {
-      alert(t("admin.postForm.failedSave"));
+      toast.error(t("admin.postForm.failedSave"));
     } finally {
       setIsUnfurling(false);
     }
@@ -125,14 +127,14 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       });
       if (!res.ok) {
         const data = await res.json();
-        alert(data.error || t("admin.postForm.failedSave"));
+        toast.error(data.error || t("admin.postForm.failedSave"));
         return;
       }
       const data = await res.json();
       if (data.title) setReferenceTitle(data.title);
       if (data.description) setReferenceDescription(data.description);
     } catch {
-      alert(t("admin.postForm.failedSave"));
+      toast.error(t("admin.postForm.failedSave"));
     } finally {
       setIsEnhancing(false);
     }
@@ -161,9 +163,11 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
     );
   };
 
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
   const handleDelete = async () => {
     if (!post) return;
-    if (!confirm(t("admin.postForm.confirmDelete", { title: post.title }))) return;
+    setDeleteConfirmOpen(false);
 
     setSaving(true);
     try {
@@ -571,7 +575,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         {isEditing && (
           <button
             type="button"
-            onClick={handleDelete}
+            onClick={() => setDeleteConfirmOpen(true)}
             disabled={saving}
             className="ml-auto inline-flex items-center rounded-[var(--radius-widget)] bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50"
           >
@@ -579,6 +583,20 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           </button>
         )}
       </div>
+
+      {/* Delete confirmation dialog */}
+      {isEditing && (
+        <ConfirmDialog
+          open={deleteConfirmOpen}
+          onOpenChange={setDeleteConfirmOpen}
+          title={post ? t("admin.postForm.confirmDelete", { title: post.title }) : ""}
+          description=""
+          destructive
+          confirmLabel={t("admin.confirm.delete")}
+          cancelLabel={t("admin.confirm.cancel")}
+          onConfirm={handleDelete}
+        />
+      )}
     </>
   );
 

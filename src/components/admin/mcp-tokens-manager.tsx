@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound, Plus, Copy, Check, Terminal } from "lucide-react";
+import { toast } from "sonner";
 import type { McpToken } from "@/models/types";
 import { useLocale } from "@/i18n/context";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 interface McpTokensManagerProps {
   tokens: McpToken[];
@@ -195,8 +197,10 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
     return new Date(epoch * 1000).toLocaleString();
   };
 
+  const [revokeTargetId, setRevokeTargetId] = useState<string | null>(null);
+
   const handleRevoke = async (id: string) => {
-    if (!confirm(t("admin.mcpTokens.confirmRevoke"))) return;
+    setRevokeTargetId(null);
     setError(null);
     try {
       const res = await fetch(`/api/mcp/tokens/${id}`, { method: "DELETE" });
@@ -204,9 +208,10 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
         const data = await res.json();
         throw new Error(data.error ?? "Failed to revoke token");
       }
+      toast.success(t("admin.mcpTokens.revoke"));
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to revoke token");
+      toast.error(err instanceof Error ? err.message : "Failed to revoke token");
     }
   };
 
@@ -376,7 +381,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
                     <td className="px-4 py-3 text-right">
                       {!isRevoked && (
                         <button
-                          onClick={() => handleRevoke(token.id)}
+                          onClick={() => setRevokeTargetId(token.id)}
                           className="text-xs text-destructive hover:text-destructive/80 transition-colors"
                         >
                           {t("admin.mcpTokens.revoke")}
@@ -390,6 +395,18 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
           </table>
         </div>
       )}
+
+      {/* Revoke confirmation dialog */}
+      <ConfirmDialog
+        open={!!revokeTargetId}
+        onOpenChange={(open) => { if (!open) setRevokeTargetId(null); }}
+        title={t("admin.mcpTokens.confirmRevoke")}
+        description=""
+        destructive
+        confirmLabel={t("admin.mcpTokens.revoke")}
+        cancelLabel={t("admin.confirm.cancel")}
+        onConfirm={() => { if (revokeTargetId) handleRevoke(revokeTargetId); }}
+      />
     </div>
   );
 }
