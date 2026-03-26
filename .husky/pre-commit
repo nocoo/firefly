@@ -2,7 +2,7 @@
 # G1 Static Analysis + L1 Unit Tests
 echo "▸ G1: typecheck"
 bun run typecheck
-echo "▸ G1: lint"
-bun run lint
+echo "▸ G1: lint (staged files)"
+bunx lint-staged
 echo "▸ L1: unit tests"
 bun run test
