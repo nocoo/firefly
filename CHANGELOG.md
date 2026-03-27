@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.7.4 (2026-03-27)
+
+- chore: add project CLAUDE.md with retrospective
+- fix: balance EXCERPT_PROMPT between SEO and reader engagement
+- fix: rewrite EXCERPT_PROMPT for teaser-style summaries
+
+
 ## v1.7.3 (2026-03-27)
 
 - chore: add tsbuildinfo to gitignore
