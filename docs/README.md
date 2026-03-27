@@ -23,3 +23,4 @@ Modern blog platform built with Next.js, Cloudflare D1, and R2. Migrated from Wo
 | 15 | [Reference URL (Link Bookmark)](./14-reference-url.md) | 📝 |
 | 16 | [Backy Backup Integration](./16-backy-backup.md) | ✅ |
 | 17 | [Quality Upgrade: S-Tier Hardening (L1+L2+L3+G1+G2)](./17-quality-upgrade-l1l2l3g1g2.md) | 📝 |
+| 18 | [Media Library](./18-media-library.md) | ✅ |
