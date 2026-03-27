@@ -96,6 +96,7 @@ const sampleAttachment: Attachment = {
   width: 800,
   height: 600,
   alt_text: "A photo",
+  post_id: null,
   wp_id: null,
   created_at: 1774483200,
 };

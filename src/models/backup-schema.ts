@@ -97,6 +97,7 @@ export interface ExportedAttachment {
   width: number | null;
   height: number | null;
   alt_text: string | null;
+  post_id: string | null;
   wp_id: number | null;
   created_at: string;
 }

@@ -141,6 +141,7 @@ function convertAttachment(a: Attachment): ExportedAttachment {
     width: a.width,
     height: a.height,
     alt_text: a.alt_text,
+    post_id: a.post_id,
     wp_id: a.wp_id,
     created_at: epochToIso(a.created_at),
   };
