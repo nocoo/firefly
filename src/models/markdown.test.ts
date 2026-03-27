@@ -250,3 +250,94 @@ const x = 1;
     expect(html).toContain("<a ");
   });
 });
+
+// ---------------------------------------------------------------------------
+// renderMarkdown — optimizeImages option
+// ---------------------------------------------------------------------------
+
+describe("renderMarkdown with optimizeImages", () => {
+  const opts = { optimizeImages: true };
+  const internalUrl = "https://assets.lizheng.me/uploads/photo.jpg";
+  const externalUrl = "https://example.com/img.jpg";
+
+  it("default mode: image renders raw <img> without srcset", () => {
+    const html = renderMarkdown(`![Alt](${internalUrl})`);
+    expect(html).toContain(`src="${internalUrl}"`);
+    expect(html).not.toContain("srcset");
+    expect(html).not.toContain("/_next/image");
+  });
+
+  it("optimized mode: internal image gets /_next/image src", () => {
+    const html = renderMarkdown(`![Alt](${internalUrl})`, opts);
+    expect(html).toContain('src="/_next/image?url=');
+    expect(html).toContain(encodeURIComponent(internalUrl));
+    expect(html).toContain("&amp;w=1080&amp;q=75");
+  });
+
+  it("optimized mode: internal image gets srcset with multiple widths", () => {
+    const html = renderMarkdown(`![Alt](${internalUrl})`, opts);
+    expect(html).toContain("srcset=");
+    expect(html).toContain("640w");
+    expect(html).toContain("828w");
+    expect(html).toContain("1080w");
+    expect(html).toContain("1920w");
+  });
+
+  it("optimized mode: internal image gets sizes attribute", () => {
+    const html = renderMarkdown(`![Alt](${internalUrl})`, opts);
+    expect(html).toContain('sizes="(max-width: 900px) 100vw, min(75vw, 1000px)"');
+  });
+
+  it("optimized mode: data-original-src preserves original URL", () => {
+    const html = renderMarkdown(`![Alt](${internalUrl})`, opts);
+    expect(html).toContain(`data-original-src="${internalUrl}"`);
+  });
+
+  it("optimized mode: decoding=async is added", () => {
+    const html = renderMarkdown(`![Alt](${internalUrl})`, opts);
+    expect(html).toContain('decoding="async"');
+  });
+
+  it("optimized mode: external image URL is unchanged", () => {
+    const html = renderMarkdown(`![Alt](${externalUrl})`, opts);
+    expect(html).toContain(`src="${externalUrl}"`);
+    expect(html).not.toContain("/_next/image");
+    expect(html).not.toContain("srcset");
+    expect(html).toContain('loading="lazy"');
+  });
+
+  it("optimized mode: relative image URL is unchanged", () => {
+    const html = renderMarkdown("![Alt](/path/to/img.jpg)", opts);
+    expect(html).toContain('src="/path/to/img.jpg"');
+    expect(html).not.toContain("/_next/image");
+    expect(html).not.toContain("srcset");
+  });
+
+  it("optimized mode: XSS in image src still blocked", () => {
+    const html = renderMarkdown("![alt](javascript:alert(1))", opts);
+    expect(html).not.toContain("javascript:");
+    expect(html).not.toContain("src=");
+  });
+
+  it("optimized mode: only images are affected, other elements unchanged", () => {
+    const md = `# Heading\n\n[Link](https://example.com)\n\n![Img](${internalUrl})\n\n\`\`\`js\ncode\n\`\`\``;
+    const html = renderMarkdown(md, opts);
+    // Heading unchanged
+    expect(html).toContain('<h1 id="heading">Heading</h1>');
+    // Link unchanged
+    expect(html).toContain('href="https://example.com"');
+    // Image optimized
+    expect(html).toContain("/_next/image");
+    expect(html).toContain("srcset");
+    // Code unchanged
+    expect(html).toContain("<pre><code");
+  });
+
+  it("optimized mode: lizheng.me domain is also optimized", () => {
+    const url = "https://lizheng.me/some/image.png";
+    const html = renderMarkdown(`![Alt](${url})`, opts);
+    expect(html).toContain("/_next/image");
+    expect(html).toContain("srcset");
+    expect(html).toContain(`data-original-src="${url}"`);
+  });
+});
