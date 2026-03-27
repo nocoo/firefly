@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.7.5 (2026-03-27)
+
+- fix: auto-save AI excerpt to post in generate_excerpt MCP tool
+
+
 ## v1.7.4 (2026-03-27)
 
 - chore: add project CLAUDE.md with retrospective
