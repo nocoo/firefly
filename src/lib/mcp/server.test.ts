@@ -3,8 +3,9 @@
 // ---------------------------------------------------------------------------
 //
 // Verifies that createMcpServer registers all entity tools correctly and
-// that JSON-RPC round-trips work. Data layer functions are mocked — entity
-// handler logic is covered by entity-level tests.
+// that JSON-RPC round-trips produce correct success/error responses.
+// Data layer functions are mocked to return valid entities for known
+// IDs/slugs, so we can distinguish success from error paths.
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db } from "@/lib/db";
@@ -13,36 +14,59 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 
 // ---------------------------------------------------------------------------
 // Mock all data layer modules used by entity configs
+//
+// NOTE: vi.mock factories are hoisted above all imports and variable
+// declarations, so we cannot reference module-level constants here.
+// All mock data must be inlined.
 // ---------------------------------------------------------------------------
 
-vi.mock("@/data/tags", () => ({
-  listTags: vi.fn(async () => []),
-  getTagById: vi.fn(async () => null),
-  getTagBySlug: vi.fn(async () => null),
-  createTag: vi.fn(async () => ({ id: "t-1", name: "T", slug: "t", post_count: 0, created_at: 0, updated_at: 0 })),
-  updateTag: vi.fn(async () => ({ id: "t-1", name: "T", slug: "t", post_count: 0, created_at: 0, updated_at: 0 })),
-  deleteTag: vi.fn(async () => true),
-}));
+vi.mock("@/data/tags", () => {
+  const tag = { id: "t-1", name: "TypeScript", slug: "typescript", post_count: 5, created_at: 0, updated_at: 0 };
+  return {
+    listTags: vi.fn(async () => [tag]),
+    getTagById: vi.fn(async (_: unknown, id: string) => (id === "t-1" ? tag : null)),
+    getTagBySlug: vi.fn(async (_: unknown, slug: string) => (slug === "typescript" ? tag : null)),
+    createTag: vi.fn(async () => tag),
+    updateTag: vi.fn(async () => ({ ...tag, name: "TS" })),
+    deleteTag: vi.fn(async () => true),
+  };
+});
 
-vi.mock("@/data/categories", () => ({
-  listCategories: vi.fn(async () => []),
-  getCategoryById: vi.fn(async () => null),
-  getCategoryBySlug: vi.fn(async () => null),
-  createCategory: vi.fn(async () => ({ id: "c-1", name: "C", slug: "c", description: null, sort_order: 0, post_count: 0, created_at: 0, updated_at: 0 })),
-  updateCategory: vi.fn(async () => ({ id: "c-1", name: "C", slug: "c", description: null, sort_order: 0, post_count: 0, created_at: 0, updated_at: 0 })),
-  deleteCategory: vi.fn(async () => true),
-}));
+vi.mock("@/data/categories", () => {
+  const cat = { id: "c-1", name: "Tech", slug: "tech", description: "Technology", sort_order: 0, post_count: 10, created_at: 0, updated_at: 0 };
+  return {
+    listCategories: vi.fn(async () => [cat]),
+    getCategoryById: vi.fn(async (_: unknown, id: string) => (id === "c-1" ? cat : null)),
+    getCategoryBySlug: vi.fn(async (_: unknown, slug: string) => (slug === "tech" ? cat : null)),
+    createCategory: vi.fn(async () => cat),
+    updateCategory: vi.fn(async () => ({ ...cat, name: "Technology" })),
+    deleteCategory: vi.fn(async () => true),
+  };
+});
 
-vi.mock("@/data/posts", () => ({
-  listPosts: vi.fn(async () => ({ posts: [], total: 0 })),
-  getPostById: vi.fn(async () => null),
-  getPostBySlug: vi.fn(async () => null),
-  createPost: vi.fn(async () => ({ id: "p-1", title: "P", slug: "p", content: "", status: "draft", created_at: 0, updated_at: 0 })),
-  updatePost: vi.fn(async () => ({ id: "p-1", title: "P", slug: "p", content: "", status: "draft", created_at: 0, updated_at: 0 })),
-  deletePost: vi.fn(async () => true),
-  getPostTags: vi.fn(async () => []),
-  setPostTags: vi.fn(async () => {}),
-}));
+vi.mock("@/data/posts", () => {
+  const post = {
+    id: "p-1", title: "Hello World", slug: "hello-world",
+    content: "Body text", content_html: "<p>Body text</p>",
+    status: "published", excerpt: "Intro",
+    category_id: "c-1", featured_image: null,
+    published_at: 0, created_at: 0, updated_at: 0,
+    wp_id: null, wp_permalink: null, comment_enabled: true,
+    reference_url: null, reference_title: null,
+    reference_description: null, reference_image: null,
+  };
+  const tag = { id: "t-1", name: "TypeScript", slug: "typescript", post_count: 5, created_at: 0, updated_at: 0 };
+  return {
+    listPosts: vi.fn(async () => ({ posts: [post], total: 1 })),
+    getPostById: vi.fn(async (_: unknown, id: string) => (id === "p-1" ? post : null)),
+    getPostBySlug: vi.fn(async (_: unknown, slug: string) => (slug === "hello-world" ? post : null)),
+    createPost: vi.fn(async () => post),
+    updatePost: vi.fn(async () => ({ ...post, title: "Updated" })),
+    deletePost: vi.fn(async () => true),
+    getPostTags: vi.fn(async () => [tag]),
+    setPostTags: vi.fn(async () => {}),
+  };
+});;
 
 vi.mock("@/services/ai", () => ({
   generateExcerpt: vi.fn(async () => "An excerpt"),
@@ -50,7 +74,15 @@ vi.mock("@/services/ai", () => ({
 }));
 
 vi.mock("@/services/unfurl", () => ({
-  unfurlUrl: vi.fn(async () => ({})),
+  unfurlUrl: vi.fn(async () => ({
+    url: "https://example.com",
+    ogTitle: "Example",
+    ogDescription: "Desc",
+    pageTitle: "Example",
+    bodyText: "text",
+    ogImage: null,
+    readmeImage: null,
+  })),
   UnfurlError: class UnfurlError extends Error {},
 }));
 
@@ -145,7 +177,7 @@ async function createSession(db: Db) {
         headers: { ...MCP_HEADERS, "mcp-session-id": sessionId },
         body: JSON.stringify({
           jsonrpc: "2.0",
-          id: Math.random(),
+          id: Math.floor(Math.random() * 100000),
           method: "tools/call",
           params: { name, arguments: args },
         }),
@@ -170,6 +202,34 @@ async function createSession(db: Db) {
   };
 
   return { server, transport, callTool, listTools };
+}
+
+/** Parse tool result text and assert it succeeded (no isError). */
+function expectSuccess(result: Record<string, unknown>): unknown {
+  // If JSON-RPC error, fail with the error message
+  if (result.error) {
+    const err = result.error as Record<string, unknown>;
+    throw new Error(`Unexpected JSON-RPC error: ${err.message ?? JSON.stringify(err)}`);
+  }
+  const r = result.result as Record<string, unknown>;
+  expect(r.isError).toBeUndefined();
+  const text = (r.content as { type: string; text: string }[])[0].text;
+  return JSON.parse(text);
+}
+
+/** Assert tool result is an error with isError: true (tool-level, not JSON-RPC error). */
+function expectToolError(result: Record<string, unknown>, substring?: string): void {
+  // If JSON-RPC error, fail with the error message
+  if (result.error) {
+    const err = result.error as Record<string, unknown>;
+    throw new Error(`Unexpected JSON-RPC error: ${err.message ?? JSON.stringify(err)}`);
+  }
+  const r = result.result as Record<string, unknown>;
+  expect(r.isError).toBe(true);
+  if (substring) {
+    const text = (r.content as { type: string; text: string }[])[0].text;
+    expect(text).toContain(substring);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -287,108 +347,142 @@ describe("createMcpServer", () => {
     await server.close();
   });
 
-  it("invokes post tools through the protocol", async () => {
+  // ---- Post tools: success + error paths ----
+
+  it("post tools succeed with valid data", async () => {
     const { server, transport, callTool } = await createSession(db);
 
-    const listResult = await callTool("list_posts");
-    expect(
-      listResult.result?.content?.[0]?.text ?? listResult.error,
-    ).toBeDefined();
+    // list_posts → success with posts array
+    const listData = expectSuccess(await callTool("list_posts")) as Record<string, unknown>;
+    expect(listData).toHaveProperty("posts");
+    expect(listData).toHaveProperty("total");
 
-    // get_post without id or slug returns an error (validation)
-    const getResult = await callTool("get_post", { slug: "test" });
-    expect(
-      getResult.result?.content?.[0]?.text ?? getResult.error,
-    ).toBeDefined();
+    // get_post by slug → success with post data
+    const getBySlug = expectSuccess(await callTool("get_post", { slug: "hello-world" })) as Record<string, unknown>;
+    expect(getBySlug.slug).toBe("hello-world");
+    expect(getBySlug.title).toBe("Hello World");
 
-    const createResult = await callTool("create_post", {
-      title: "T",
-      slug: "s",
-      content: "C",
-    });
-    expect(
-      createResult.result?.content?.[0]?.text ?? createResult.error,
-    ).toBeDefined();
+    // get_post by id → success
+    const getById = expectSuccess(await callTool("get_post", { id: "p-1" })) as Record<string, unknown>;
+    expect(getById.id).toBe("p-1");
 
-    const updateResult = await callTool("update_post", { slug: "s" });
-    expect(
-      updateResult.result?.content?.[0]?.text ?? updateResult.error,
-    ).toBeDefined();
+    // create_post → success
+    const created = expectSuccess(await callTool("create_post", {
+      title: "T", slug: "s", content: "C",
+    })) as Record<string, unknown>;
+    expect(created.slug).toBe("hello-world");
 
-    const deleteResult = await callTool("delete_post", { slug: "s" });
-    expect(
-      deleteResult.result?.content?.[0]?.text ?? deleteResult.error,
-    ).toBeDefined();
+    // update_post by slug → success
+    const updated = expectSuccess(await callTool("update_post", { slug: "hello-world" })) as Record<string, unknown>;
+    expect(updated.title).toBe("Updated");
+
+    // delete_post by slug → success
+    const deleted = expectSuccess(await callTool("delete_post", { slug: "hello-world" })) as Record<string, unknown>;
+    expect(deleted.deleted).toBe(true);
 
     await transport.close();
     await server.close();
   });
 
-  it("invokes tag tools through the protocol", async () => {
+  it("post tools return errors for missing entities", async () => {
     const { server, transport, callTool } = await createSession(db);
 
-    const listResult = await callTool("list_tags");
-    expect(
-      listResult.result?.content?.[0]?.text ?? listResult.error,
-    ).toBeDefined();
+    // get_post with unknown slug → error
+    expectToolError(await callTool("get_post", { slug: "nonexistent" }), "not found");
 
-    const getResult = await callTool("get_tag", { slug: "ts" });
-    expect(
-      getResult.result?.content?.[0]?.text ?? getResult.error,
-    ).toBeDefined();
+    // update_post with unknown slug → error
+    expectToolError(await callTool("update_post", { slug: "nonexistent" }), "not found");
 
-    const createResult = await callTool("create_tag", {
-      name: "N",
-      slug: "n",
-    });
-    expect(
-      createResult.result?.content?.[0]?.text ?? createResult.error,
-    ).toBeDefined();
+    // delete_post with unknown slug → error
+    expectToolError(await callTool("delete_post", { slug: "nonexistent" }), "not found");
 
-    const updateResult = await callTool("update_tag", { slug: "n" });
-    expect(
-      updateResult.result?.content?.[0]?.text ?? updateResult.error,
-    ).toBeDefined();
+    // get_post with both id and slug → conflict error
+    expectToolError(await callTool("get_post", { id: "p-1", slug: "hello-world" }), "not both");
 
-    const deleteResult = await callTool("delete_tag", { slug: "n" });
-    expect(
-      deleteResult.result?.content?.[0]?.text ?? deleteResult.error,
-    ).toBeDefined();
+    // get_post with neither id nor slug → validation error
+    expectToolError(await callTool("get_post", {}), "required");
 
     await transport.close();
     await server.close();
   });
 
-  it("invokes category tools through the protocol", async () => {
+  // ---- Tag tools: success + error paths ----
+
+  it("tag tools succeed with valid data", async () => {
     const { server, transport, callTool } = await createSession(db);
 
-    const listResult = await callTool("list_categories");
-    expect(
-      listResult.result?.content?.[0]?.text ?? listResult.error,
-    ).toBeDefined();
+    // list_tags → success with tag array
+    const tags = expectSuccess(await callTool("list_tags")) as unknown[];
+    expect(Array.isArray(tags)).toBe(true);
+    expect(tags).toHaveLength(1);
 
-    const getResult = await callTool("get_category", { slug: "tech" });
-    expect(
-      getResult.result?.content?.[0]?.text ?? getResult.error,
-    ).toBeDefined();
+    // get_tag by slug → success
+    const tag = expectSuccess(await callTool("get_tag", { slug: "typescript" })) as Record<string, unknown>;
+    expect(tag.name).toBe("TypeScript");
 
-    const createResult = await callTool("create_category", {
-      name: "N",
-      slug: "n",
-    });
-    expect(
-      createResult.result?.content?.[0]?.text ?? createResult.error,
-    ).toBeDefined();
+    // create_tag → success
+    const created = expectSuccess(await callTool("create_tag", { name: "N", slug: "n" })) as Record<string, unknown>;
+    expect(created.id).toBe("t-1");
 
-    const updateResult = await callTool("update_category", { slug: "n" });
-    expect(
-      updateResult.result?.content?.[0]?.text ?? updateResult.error,
-    ).toBeDefined();
+    // update_tag by slug → success
+    const updated = expectSuccess(await callTool("update_tag", { slug: "typescript" })) as Record<string, unknown>;
+    expect(updated.name).toBe("TS");
 
-    const deleteResult = await callTool("delete_category", { slug: "n" });
-    expect(
-      deleteResult.result?.content?.[0]?.text ?? deleteResult.error,
-    ).toBeDefined();
+    // delete_tag → success
+    const deleted = expectSuccess(await callTool("delete_tag", { slug: "typescript" })) as Record<string, unknown>;
+    expect(deleted.deleted).toBe(true);
+
+    await transport.close();
+    await server.close();
+  });
+
+  it("tag tools return errors for missing entities", async () => {
+    const { server, transport, callTool } = await createSession(db);
+
+    expectToolError(await callTool("get_tag", { slug: "nonexistent" }), "not found");
+    expectToolError(await callTool("update_tag", { slug: "nonexistent" }), "not found");
+    expectToolError(await callTool("delete_tag", { slug: "nonexistent" }), "not found");
+
+    await transport.close();
+    await server.close();
+  });
+
+  // ---- Category tools: success + error paths ----
+
+  it("category tools succeed with valid data", async () => {
+    const { server, transport, callTool } = await createSession(db);
+
+    // list_categories → success
+    const cats = expectSuccess(await callTool("list_categories")) as unknown[];
+    expect(Array.isArray(cats)).toBe(true);
+    expect(cats).toHaveLength(1);
+
+    // get_category by slug → success
+    const cat = expectSuccess(await callTool("get_category", { slug: "tech" })) as Record<string, unknown>;
+    expect(cat.name).toBe("Tech");
+
+    // create_category → success
+    const created = expectSuccess(await callTool("create_category", { name: "N", slug: "n" })) as Record<string, unknown>;
+    expect(created.id).toBe("c-1");
+
+    // update_category → success
+    const updated = expectSuccess(await callTool("update_category", { slug: "tech" })) as Record<string, unknown>;
+    expect(updated.name).toBe("Technology");
+
+    // delete_category → success
+    const deleted = expectSuccess(await callTool("delete_category", { slug: "tech" })) as Record<string, unknown>;
+    expect(deleted.deleted).toBe(true);
+
+    await transport.close();
+    await server.close();
+  });
+
+  it("category tools return errors for missing entities", async () => {
+    const { server, transport, callTool } = await createSession(db);
+
+    expectToolError(await callTool("get_category", { slug: "nonexistent" }), "not found");
+    expectToolError(await callTool("update_category", { slug: "nonexistent" }), "not found");
+    expectToolError(await callTool("delete_category", { slug: "nonexistent" }), "not found");
 
     await transport.close();
     await server.close();

@@ -417,33 +417,39 @@ describe("MCP Main Endpoint — Tool Calls", () => {
       accessToken,
     );
 
-    // List posts (no include)
+    // List posts filtered by query to ensure our post is in the result
     const listRes = await mcpRequest(
       {
         jsonrpc: "2.0",
         id: 31,
         method: "tools/call",
-        params: { name: "list_posts", arguments: {} },
+        params: { name: "list_posts", arguments: { query: slug } },
       },
       accessToken,
     );
     expect(listRes.status).toBe(200);
     const listData = await listRes.json();
+    expect(listData.result.isError).toBeUndefined();
     const parsed = JSON.parse(listData.result.content[0].text);
-    // Paginated result uses plural key "posts" (from entity config)
-    const items = parsed.posts ?? parsed.items ?? parsed;
-    const post = (items as Record<string, unknown>[]).find(
+
+    // Validate paginated response shape: { posts: [...], total: N }
+    expect(parsed).toHaveProperty("posts");
+    expect(parsed).toHaveProperty("total");
+    expect(Array.isArray(parsed.posts)).toBe(true);
+
+    const post = (parsed.posts as Record<string, unknown>[]).find(
       (p) => p.slug === slug,
     );
 
-    // content and content_html should be omitted
-    if (post) {
-      expect(post).not.toHaveProperty("content");
-      expect(post).not.toHaveProperty("content_html");
-      // title and slug should still be present
-      expect(post).toHaveProperty("title");
-      expect(post).toHaveProperty("slug");
-    }
+    // Post MUST be found — fail loudly if not
+    expect(post).toBeDefined();
+
+    // content and content_html should be omitted by projection
+    expect(post).not.toHaveProperty("content");
+    expect(post).not.toHaveProperty("content_html");
+    // title and slug should still be present
+    expect(post).toHaveProperty("title");
+    expect(post).toHaveProperty("slug");
 
     // Cleanup
     await mcpRequest(
@@ -480,7 +486,7 @@ describe("MCP Main Endpoint — Tool Calls", () => {
       accessToken,
     );
 
-    // List with include: ["full"]
+    // List with include: ["full"] and query filter to find our post
     const listRes = await mcpRequest(
       {
         jsonrpc: "2.0",
@@ -488,25 +494,30 @@ describe("MCP Main Endpoint — Tool Calls", () => {
         method: "tools/call",
         params: {
           name: "list_posts",
-          arguments: { include: ["full"] },
+          arguments: { include: ["full"], query: slug },
         },
       },
       accessToken,
     );
     expect(listRes.status).toBe(200);
     const listData = await listRes.json();
+    expect(listData.result.isError).toBeUndefined();
     const parsed = JSON.parse(listData.result.content[0].text);
-    // Paginated result uses plural key "posts" (from entity config)
-    const items = parsed.posts ?? parsed.items ?? parsed;
-    const post = (items as Record<string, unknown>[]).find(
+
+    // Validate paginated response shape
+    expect(parsed).toHaveProperty("posts");
+    expect(Array.isArray(parsed.posts)).toBe(true);
+
+    const post = (parsed.posts as Record<string, unknown>[]).find(
       (p) => p.slug === slug,
     );
 
+    // Post MUST be found — fail loudly if not
+    expect(post).toBeDefined();
+
     // With "full", content should be present
-    if (post) {
-      expect(post).toHaveProperty("content");
-      expect(post.content).toBe(contentText);
-    }
+    expect(post).toHaveProperty("content");
+    expect(post!.content).toBe(contentText);
 
     // Cleanup
     await mcpRequest(
