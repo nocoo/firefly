@@ -1,5 +1,46 @@
 # Changelog
 
+## v1.6.1 (2026-03-27)
+
+- chore: add edit-post-subtitle component and update gitignore
+- refactor: migrate admin page titles to centralized subtitle context
+- fix: repair E2E test suite for full L2+L3 green
+- Merge remote-tracking branch 'origin/main'
+- fix: eliminate preload/upload race condition in PostForm media list
+- fix: show toast error on media association failure instead of swallowing
+- fix: remove redundant auth() from media routes, use proxy protection
+- Merge pull request #6 from nocoo/worktree-mcp-explore
+- docs: mark media library document as implemented
+- test: add L2 E2E tests for media API endpoints
+- feat: add R2 to DB sync script for initial media library population
+- fix: suppress eslint ignored-file warning in lint-staged
+- feat: add media link to admin sidebar and i18n keys
+- feat: add media library page with grid view and pagination
+- feat: upgrade image upload zone to support continuous uploads
+- fix(mcp): harden tests and bump version for schema change
+- feat: add media API routes for list, create, and delete
+- feat: add media data access layer with CRUD operations
+- docs: mark all 11 atomic commits as complete in doc 17
+- feat: add post_id column and indexes to attachments table
+- test(e2e): add E2E tests for ID lookup, conflict rejection, and field projection
+- refactor(mcp): delete old hand-written tools/ directory
+- refactor(mcp): replace hand-written tool registration with entity-driven framework
+- feat(mcp): add post entity definition with hooks, projection, and extras
+- feat(mcp): add category entity definition with tests
+- feat(mcp): add registration engine + tag entity definition
+- feat(mcp): add generic CRUD handler factory with tests
+- feat(mcp): add framework core with tests — types, resolve, response, projection
+- docs: add entity-driven MCP framework design (doc 17)
+- fix: point E2E to lizhengblog-test R2 bucket
+- docs: finalize quality hardening with verification results
+- feat: add L2 E2E test for upload endpoint
+- feat: add R2 test bucket binding for upload isolation
+- feat: add GitHub Actions CI for G1+L1+G2 quality gates
+- chore: add .gitleaks.toml with project-specific allowlist
+- perf: add lint-staged for incremental pre-commit linting
+- perf: move coverage enforcement from pre-commit to pre-push
+
+
 ## v1.5.0 (2026-03-26)
 
 - feat(backup): add Backy remote backup integration — admin page, push/pull webhooks, config & test API, history, data export
