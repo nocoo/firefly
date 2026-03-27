@@ -6,7 +6,7 @@ import Image from "next/image";
 import { getDb } from "@/lib/db";
 import { getPostBySlug, getPostTags, getAdjacentPosts } from "@/data/posts";
 import { getSiteSettings } from "@/data/settings";
-import { auth } from "@/lib/auth";
+import { isAdminSession } from "@/lib/auth";
 import { listCommentsByPost, buildCommentTree } from "@/data/comments";
 import { renderMarkdown } from "@/models/markdown";
 import {
@@ -85,8 +85,7 @@ export default async function PostPage({ params }: PostPageProps) {
   const locale = await getLocale();
   const tags = await getPostTags(db, post.id);
   const settings = await getSiteSettings(db);
-  const session = await auth();
-  const isAdmin = !!session?.user;
+  const isAdmin = await isAdminSession();
   const showComments = settings.commentsEnabled && !!post.comment_enabled;
 
   // Adjacent posts for keyboard navigation

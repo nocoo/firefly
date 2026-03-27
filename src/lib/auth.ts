@@ -35,3 +35,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     strategy: "jwt",
   },
 });
+
+/**
+ * Server-side helper: returns true when the current request has an
+ * authenticated admin session.  Reusable across any server component
+ * that needs a simple "is this user an admin?" check.
+ */
+export async function isAdminSession(): Promise<boolean> {
+  const session = await auth();
+  return !!session?.user;
+}
