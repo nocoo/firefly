@@ -2,16 +2,12 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Admin post management", () => {
   test("admin dashboard loads (with E2E_SKIP_AUTH)", async ({ page }) => {
-    await page.goto("/admin");
-    // With E2E_SKIP_AUTH=true, admin should be accessible
-    // It may redirect to /admin/posts or show a dashboard
-    await expect(page.url()).toMatch(/\/admin/);
-    await page.waitForLoadState("networkidle");
+    await page.goto("/admin", { waitUntil: "networkidle" });
+    await expect(page).toHaveURL(/\/admin/);
   });
 
   test("admin posts list loads", async ({ page }) => {
-    await page.goto("/admin/posts");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/admin/posts", { waitUntil: "networkidle" });
 
     // Should show a heading or table/list of posts
     const heading = page.locator("h1, h2").first();
@@ -19,17 +15,17 @@ test.describe("Admin post management", () => {
   });
 
   test("admin new post page loads", async ({ page }) => {
-    await page.goto("/admin/posts/new");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/admin/posts/new", { waitUntil: "networkidle" });
 
     // Should show an editor form with title input or content area
-    const formElement = page.locator("input, textarea, [contenteditable]").first();
+    const formElement = page
+      .locator("input, textarea, [contenteditable]")
+      .first();
     await expect(formElement).toBeVisible({ timeout: 10_000 });
   });
 
   test("admin analytics page loads", async ({ page }) => {
-    await page.goto("/admin/analytics");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/admin/analytics", { waitUntil: "networkidle" });
 
     // Analytics page should render stats widgets
     const heading = page.locator("h1, h2").first();

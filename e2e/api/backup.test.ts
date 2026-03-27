@@ -84,7 +84,7 @@ describe("PUT /api/backup", () => {
 
   it("allows omitting apiKey when updating existing config", async () => {
     // Set up initial config
-    await fetch(`${BASE}/api/backup`, {
+    const setupRes = await fetch(`${BASE}/api/backup`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -92,6 +92,7 @@ describe("PUT /api/backup", () => {
         apiKey: "test-api-key-1234567890abcdef",
       }),
     });
+    expect(setupRes.status).toBe(200);
 
     // Update only the URL, omit apiKey
     const res = await fetch(`${BASE}/api/backup`, {
