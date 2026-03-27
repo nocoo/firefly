@@ -7,6 +7,7 @@ import { Pencil, Trash2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { useLocale } from "@/i18n/context";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+import { useSetPageSubtitle } from "@/components/admin/page-subtitle-context";
 
 export interface TaxonomyItem {
   id: string;
@@ -49,13 +50,11 @@ export function TaxonomyManager({
     ? t("admin.taxonomy.category")
     : t("admin.taxonomy.tag");
 
-  const pageTitle = type === "category"
-    ? t("admin.taxonomy.title.categories")
-    : t("admin.taxonomy.title.tags");
-
   const totalText = type === "category"
     ? t("admin.taxonomy.total.categories", { n: items.length })
     : t("admin.taxonomy.total.tags", { n: items.length });
+
+  useSetPageSubtitle(totalText);
 
   const resetForm = () => {
     setName("");
@@ -162,14 +161,7 @@ export function TaxonomyManager({
   const hasStats = type === "category" && items.some((i) => i.total_posts !== undefined);
 
   return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div>
-        <h2 className="text-lg font-semibold text-foreground">{pageTitle}</h2>
-        <p className="text-sm text-muted-foreground">{totalText}</p>
-      </div>
-
-      <div className="space-y-4">
+    <div className="space-y-4">
       {error && (
         <div className="rounded-[var(--radius-widget)] border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
@@ -324,7 +316,6 @@ export function TaxonomyManager({
             )}
           </tbody>
         </table>
-      </div>
       </div>
 
       {/* Delete confirmation dialog */}

@@ -299,10 +299,6 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-foreground">
-        {t("admin.backup.title")}
-      </h1>
-
       {/* ── Card 1: Remote Backup (Push) ── */}
       <div className="rounded-lg border border-border bg-card p-6 space-y-6">
         <div className="flex items-center gap-2">

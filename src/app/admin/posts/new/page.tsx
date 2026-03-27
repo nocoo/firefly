@@ -10,15 +10,5 @@ export default async function NewPostPage() {
     listTags(db),
   ]);
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-foreground">New Post</h2>
-        <p className="text-sm text-muted-foreground">
-          Create a new blog post
-        </p>
-      </div>
-      <PostForm categories={categories} tags={tags} />
-    </div>
-  );
+  return <PostForm categories={categories} tags={tags} />;
 }

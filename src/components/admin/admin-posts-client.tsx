@@ -12,6 +12,7 @@ import { DeletePostButton } from "@/components/admin/delete-post-button";
 import { PostGridCard } from "@/components/admin/post-grid-card";
 import { Select } from "@/components/ui/select";
 import { useLocale } from "@/i18n/context";
+import { useSetPageSubtitle } from "@/components/admin/page-subtitle-context";
 
 // ---------------------------------------------------------------------------
 // Types & constants
@@ -96,6 +97,8 @@ export function AdminPostsClient({
     getViewModeServerSnapshot,
   );
 
+  useSetPageSubtitle(t("admin.posts.total", { n: total }));
+
   const handleViewModeChange = (mode: ViewMode) => {
     localStorage.setItem(VIEW_MODE_KEY, mode);
     // Force re-render by dispatching a storage event (same-tab won't trigger natively)
@@ -125,17 +128,12 @@ export function AdminPostsClient({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">
-            {t("admin.posts.title")}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {t("admin.posts.total", { n: total })}
-          </p>
+      {/* Filters + actions (single row) */}
+      <div className="flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <PostFilters categories={categories} tags={tags} />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {/* View toggle */}
           <div className="flex items-center rounded-lg border border-border bg-background p-0.5">
             <button
@@ -170,9 +168,6 @@ export function AdminPostsClient({
           </Link>
         </div>
       </div>
-
-      {/* Filters */}
-      <PostFilters categories={categories} tags={tags} />
 
       {/* Bulk action bar */}
       {selectedIds.size > 0 && (
