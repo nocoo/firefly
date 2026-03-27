@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
 import { associateMedia } from "@/data/media";
@@ -11,14 +10,9 @@ import { associateMedia } from "@/data/media";
  * because the post didn't exist yet. This endpoint associates them.
  *
  * Body: { mediaIds: string[], postId: string }
- * Auth required.
+ * Auth: protected by proxy (PATCH is a write method).
  */
 export async function PATCH(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return errorResponse("Unauthorized", 401);
-  }
-
   try {
     const body = await request.json();
     const { mediaIds, postId } = body as {

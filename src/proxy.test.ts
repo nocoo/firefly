@@ -86,6 +86,32 @@ describe("isProtectedApiRoute — backup routes", () => {
 });
 
 // ---------------------------------------------------------------------------
+// isProtectedApiRoute — media routes
+// ---------------------------------------------------------------------------
+
+describe("isProtectedApiRoute — media routes", () => {
+  it("protects GET /api/media", () => {
+    expect(isProtectedApiRoute("/api/media", "GET")).toBe(true);
+  });
+
+  it("protects POST /api/media", () => {
+    expect(isProtectedApiRoute("/api/media", "POST")).toBe(true);
+  });
+
+  it("protects GET /api/media/some-id", () => {
+    expect(isProtectedApiRoute("/api/media/some-id", "GET")).toBe(true);
+  });
+
+  it("protects DELETE /api/media/some-id", () => {
+    expect(isProtectedApiRoute("/api/media/some-id", "DELETE")).toBe(true);
+  });
+
+  it("protects PATCH /api/media/associate", () => {
+    expect(isProtectedApiRoute("/api/media/associate", "PATCH")).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // isProtectedApiRoute — existing behavior (regression tests)
 // ---------------------------------------------------------------------------
 

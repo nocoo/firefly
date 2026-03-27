@@ -31,6 +31,8 @@ function isProtectedApiRoute(pathname: string, method: string): boolean {
   if (pathname === "/api/mcp" || pathname.startsWith("/api/mcp/")) return false;
   // Analytics endpoints require admin auth for all methods (including GET)
   if (pathname.startsWith("/api/analytics")) return true;
+  // Media endpoints require admin auth for all methods (including GET)
+  if (pathname.startsWith("/api/media")) return true;
   // Backup endpoints require admin auth for all methods (including GET),
   // except the exact /api/backup/pull path which uses its own X-Webhook-Key auth.
   // IMPORTANT: Must NOT use startsWith("/api/backup/pull") — that would also

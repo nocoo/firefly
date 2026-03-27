@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
 import { uploadToR2, getR2PublicUrl } from "@/lib/r2-client";
@@ -10,13 +9,9 @@ import { listMedia, createMedia } from "@/data/media";
  * GET /api/media — list media with pagination.
  *
  * Query params: page, page_size, post_id
- * Auth required.
+ * Auth: protected by proxy (write methods) — GET is admin-only via proxy rule.
  */
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return errorResponse("Unauthorized", 401);
-  }
 
   const { searchParams } = request.nextUrl;
   const page = parseInt(searchParams.get("page") ?? "1", 10) || 1;
@@ -55,14 +50,9 @@ export async function GET(request: NextRequest) {
  * POST /api/media — upload file to R2 and create DB record.
  *
  * Accepts multipart/form-data with "file" field + optional "post_id".
- * Auth required.
+ * Auth: protected by proxy (all methods on /api/media).
  */
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return errorResponse("Unauthorized", 401);
-  }
-
   try {
     const formData = await request.formData();
     const file = formData.get("file");
