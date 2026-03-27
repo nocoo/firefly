@@ -1,0 +1,106 @@
+import { NextRequest } from "next/server";
+import { auth } from "@/lib/auth";
+import { getDb } from "@/lib/db";
+import { jsonResponse, errorResponse } from "@/lib/api";
+import { uploadToR2 } from "@/lib/r2-client";
+import { generateFireflyR2Key } from "@/lib/r2";
+import { listMedia, createMedia } from "@/data/media";
+
+/**
+ * GET /api/media — list media with pagination.
+ *
+ * Query params: page, page_size, post_id
+ * Auth required.
+ */
+export async function GET(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user) {
+    return errorResponse("Unauthorized", 401);
+  }
+
+  const { searchParams } = request.nextUrl;
+  const page = parseInt(searchParams.get("page") ?? "1", 10) || 1;
+  const pageSize =
+    parseInt(searchParams.get("page_size") ?? "24", 10) || 24;
+  const postId = searchParams.get("post_id") ?? undefined;
+
+  try {
+    const db = getDb();
+    const result = await listMedia(db, {
+      page,
+      pageSize,
+      ...(postId ? { postId } : {}),
+    });
+
+    return jsonResponse({
+      media: result.media,
+      total: result.total,
+      page,
+      pageSize,
+    });
+  } catch (err) {
+    console.error("List media error:", err);
+    return errorResponse("Failed to list media", 500);
+  }
+}
+
+/**
+ * POST /api/media — upload file to R2 and create DB record.
+ *
+ * Accepts multipart/form-data with "file" field + optional "post_id".
+ * Auth required.
+ */
+export async function POST(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user) {
+    return errorResponse("Unauthorized", 401);
+  }
+
+  try {
+    const formData = await request.formData();
+    const file = formData.get("file");
+    const postId = (formData.get("post_id") as string) ?? undefined;
+
+    if (!file || !(file instanceof File)) {
+      return errorResponse("No file provided", 400);
+    }
+
+    // Upload to R2
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const key = generateFireflyR2Key(file.name);
+    const r2Result = await uploadToR2(buffer, file.name, file.type, key);
+
+    // Create DB record
+    const db = getDb();
+    const media = await createMedia(db, {
+      filename: file.name,
+      r2Key: r2Result.key,
+      mimeType: r2Result.mimeType,
+      size: r2Result.size,
+      ...(postId ? { postId } : {}),
+    });
+
+    return jsonResponse(
+      {
+        ...media,
+        url: r2Result.url,
+      },
+      201,
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Upload failed";
+
+    // Validation errors → 400, everything else → 500
+    if (
+      message.includes("File too large") ||
+      message.includes("Unsupported file type") ||
+      message.includes("MIME type mismatch") ||
+      message.includes("does not match any supported image format")
+    ) {
+      return errorResponse(message, 400);
+    }
+
+    console.error("Media upload error:", err);
+    return errorResponse(message, 500);
+  }
+}
