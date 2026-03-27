@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Locale } from "@/i18n/translations";
@@ -15,17 +15,20 @@ interface ArticleNavProps {
   locale: Locale;
 }
 
+interface BackLink {
+  href: string;
+  labelKey: string;
+}
+
+const BACK_DEFAULT: BackLink = { href: "/", labelKey: "blog.post.backToAll" };
+
 /**
  * Resolve the "back" link from sessionStorage (written by ListOriginTracker).
  * Falls back to "/" when no origin is stored.
  */
-function resolveBackLink(): { href: string; labelKey: string } {
-  if (typeof window === "undefined") {
-    return { href: "/", labelKey: "blog.post.backToAll" };
-  }
-
+function resolveBackLink(): BackLink {
   const path = getListOrigin();
-  if (!path) return { href: "/", labelKey: "blog.post.backToAll" };
+  if (!path) return BACK_DEFAULT;
 
   if (path.startsWith("/category/")) {
     return { href: path, labelKey: "blog.post.backToCategory" };
@@ -41,7 +44,29 @@ function resolveBackLink(): { href: string; labelKey: string } {
     return { href: path, labelKey: "blog.post.backToAll" };
   }
 
-  return { href: "/", labelKey: "blog.post.backToAll" };
+  return BACK_DEFAULT;
+}
+
+// ---------------------------------------------------------------------------
+// useSyncExternalStore adapters — sessionStorage is read-once (no subscribe),
+// and the server snapshot ensures SSR ↔ hydration parity.
+// ---------------------------------------------------------------------------
+
+const noop = () => () => {};
+
+let _prevOrigin: string | null | undefined;
+let _cachedBack: BackLink = BACK_DEFAULT;
+
+function getBackLinkSnapshot(): BackLink {
+  const origin = getListOrigin();
+  if (origin !== _prevOrigin) {
+    _prevOrigin = origin;
+    _cachedBack = resolveBackLink();
+  }
+  return _cachedBack;
+}
+function getBackLinkServerSnapshot(): BackLink {
+  return BACK_DEFAULT;
 }
 
 /**
@@ -61,7 +86,11 @@ export function ArticleNav({
   locale,
 }: ArticleNavProps) {
   const router = useRouter();
-  const [back] = useState(resolveBackLink);
+  const back = useSyncExternalStore(
+    noop,
+    getBackLinkSnapshot,
+    getBackLinkServerSnapshot,
+  );
 
   // Keyboard shortcuts
   useEffect(() => {
