@@ -537,9 +537,16 @@
 .blog-featured-image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
 /* Byline */
-.blog-byline { color: var(--blog-text); font-size: 0.8125em; font-weight: 400; margin-top: 0.4em; opacity: 0.55; }
+.blog-byline {
+  color: var(--blog-text); font-size: 0.8125em; font-weight: 400; margin-top: 0.4em; opacity: 0.55;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.25em 0.75em;
+}
+.blog-byline-item { display: inline-flex; align-items: center; gap: 0.3em; }
+.blog-byline-icon { width: 0.9em; height: 0.9em; flex-shrink: 0; }
 .blog-byline a { color: var(--blog-text); text-decoration: none; transition: color 0.15s; }
 .blog-byline a:hover { color: var(--blog-accent); }
+.blog-byline-edit { color: var(--blog-accent); transition: opacity 0.15s; }
+.blog-byline-edit:hover { opacity: 0.7; }
 
 /* Keyboard shortcut hint badges */
 .blog-kbd {

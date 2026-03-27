@@ -9,6 +9,7 @@ import { getSiteSettings } from "@/data/settings";
 import { isAdminSession } from "@/lib/auth";
 import { listCommentsByPost, buildCommentTree } from "@/data/comments";
 import { renderMarkdown } from "@/models/markdown";
+import { Calendar, Folder, Clock, SquarePen } from "lucide-react";
 import {
   buildPageMeta,
   formatDateDisplay,
@@ -133,40 +134,40 @@ export default async function PostPage({ params }: PostPageProps) {
               {post.title}
             </h1>
             <div className="blog-byline">
-              <time
-                dateTime={
-                  post.published_at
-                    ? new Date(post.published_at * 1000).toISOString()
-                    : undefined
-                }
-              >
-                {date}
-              </time>
+              <span className="blog-byline-item">
+                <Calendar className="blog-byline-icon" strokeWidth={1.5} />
+                <time
+                  dateTime={
+                    post.published_at
+                      ? new Date(post.published_at * 1000).toISOString()
+                      : undefined
+                  }
+                >
+                  {date}
+                </time>
+              </span>
               {post.category_name && post.category_slug && (
-                <>
-                  {" · "}
+                <span className="blog-byline-item">
+                  <Folder className="blog-byline-icon" strokeWidth={1.5} />
                   <Link href={`/category/${post.category_slug}`}>
                     {post.category_name}
                   </Link>
-                </>
+                </span>
               )}
               {post.reading_time && (
-                <> · {t(locale, "blog.post.minRead", { n: post.reading_time })}</>
+                <span className="blog-byline-item">
+                  <Clock className="blog-byline-icon" strokeWidth={1.5} />
+                  {t(locale, "blog.post.minRead", { n: post.reading_time })}
+                </span>
               )}
               {isAdmin && (
-                <>
-                  {" · "}
-                  <Link
-                    href={`/admin/posts/${post.id}/edit`}
-                    className="inline-flex items-center gap-1 text-primary hover:text-primary/80 transition-colors"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3">
-                      <path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L6.5 7.026a.5.5 0 0 0-.127.208l-.8 2.4a.5.5 0 0 0 .632.632l2.4-.8a.5.5 0 0 0 .208-.127l4.513-4.513a1.75 1.75 0 0 0 0-2.475ZM11.72 3.22a.25.25 0 0 1 .354 0l.707.707a.25.25 0 0 1 0 .354L8.512 8.548l-1.073.358.358-1.073L11.72 3.22Z" />
-                      <path d="M4.25 3A2.25 2.25 0 0 0 2 5.25v6.5A2.25 2.25 0 0 0 4.25 14h6.5A2.25 2.25 0 0 0 13 11.75v-3a.75.75 0 0 0-1.5 0v3a.75.75 0 0 1-.75.75h-6.5a.75.75 0 0 1-.75-.75v-6.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 0 0-1.5h-3Z" />
-                    </svg>
-                    {t(locale, "blog.post.editPost")}
-                  </Link>
-                </>
+                <Link
+                  href={`/admin/posts/${post.id}/edit`}
+                  className="blog-byline-item blog-byline-edit"
+                >
+                  <SquarePen className="blog-byline-icon" strokeWidth={1.5} />
+                  {t(locale, "blog.post.editPost")}
+                </Link>
               )}
             </div>
           </header>
