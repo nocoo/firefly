@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.7.7 (2026-03-27)
+
+- feat(media): dynamic year filter with counts and file type icons
+- fix: add attachment backfill script to correct media library dates
+- docs: replace lizheng.me references with generic placeholders
+- refactor: replace lizheng.me hardcoded instances with env vars
+
+
 ## v1.7.6 (2026-03-27)
 
 - style: add icons to continue reading button and post byline
