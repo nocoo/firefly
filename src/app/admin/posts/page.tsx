@@ -34,7 +34,7 @@ export default async function AdminPostsPage({
   const archiveMonth = params.month ? parseInt(params.month, 10) || undefined : undefined;
 
   const [result, categories, tags] = await Promise.all([
-    listPosts(db, { status, categoryId, tagId, query, archiveYear, archiveMonth, page, pageSize: PAGE_SIZE }),
+    listPosts(db, { status, categoryId, tagId, query, archiveYear, archiveMonth, page, pageSize: PAGE_SIZE, sortBy: "created_at" }),
     listCategories(db),
     listTags(db),
   ]);

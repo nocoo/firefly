@@ -78,6 +78,7 @@
   "admin.posts.table.status": "Status",
   "admin.posts.table.category": "Category",
   "admin.posts.table.date": "Date",
+  "admin.posts.table.createdAt": "Created",
   "admin.posts.table.actions": "Actions",
   "admin.posts.status.draft": "Draft",
   "admin.posts.status.published": "Published",

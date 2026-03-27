@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const db = getDb();
     const { searchParams } = new URL(request.url);
 
-    const options: ListPostsOptions = {};
+    const options: ListPostsOptions = { sortBy: "created_at" };
 
     const status = searchParams.get("status") as PostStatus | null;
     if (status) options.status = status;

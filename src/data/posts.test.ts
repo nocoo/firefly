@@ -166,6 +166,27 @@ describe("listPosts", () => {
     expect(sql).toContain("post_tags WHERE tag_id = ?");
     expect(params).toContain("tag-1");
   });
+
+  it("sorts by published_at DESC by default", async () => {
+    vi.mocked(db.query).mockResolvedValue({ results: [], meta: { changes: 0, duration: 0 } });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+
+    await listPosts(db);
+
+    const [sql] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("ORDER BY p.published_at DESC");
+  });
+
+  it("sorts by created_at DESC when sortBy is 'created_at'", async () => {
+    vi.mocked(db.query).mockResolvedValue({ results: [], meta: { changes: 0, duration: 0 } });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+
+    await listPosts(db, { sortBy: "created_at" });
+
+    const [sql] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("ORDER BY p.created_at DESC");
+    expect(sql).not.toContain("published_at");
+  });
 });
 
 // ---------------------------------------------------------------------------

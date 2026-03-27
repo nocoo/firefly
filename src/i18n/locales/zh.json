@@ -78,6 +78,7 @@
   "admin.posts.table.status": "状态",
   "admin.posts.table.category": "分类",
   "admin.posts.table.date": "日期",
+  "admin.posts.table.createdAt": "创建时间",
   "admin.posts.table.actions": "操作",
   "admin.posts.status.draft": "草稿",
   "admin.posts.status.published": "已发布",

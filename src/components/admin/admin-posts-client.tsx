@@ -403,7 +403,7 @@ function ListView({
                 {t("admin.posts.table.category")}
               </th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden lg:table-cell">
-                {t("admin.posts.table.date")}
+                {t("admin.posts.table.createdAt")}
               </th>
               <th className="px-4 py-3 text-right font-medium text-muted-foreground">
                 {t("admin.posts.table.actions")}
@@ -459,9 +459,7 @@ function ListView({
                       {post.category_name ?? "—"}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
-                      {post.published_at
-                        ? formatDateDisplay(post.published_at)
-                        : "—"}
+                      {formatDateDisplay(post.created_at)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">

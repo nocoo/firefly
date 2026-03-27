@@ -59,6 +59,8 @@ export interface ListPostsOptions {
   archiveMonth?: number | undefined;
   page?: number | undefined;
   pageSize?: number | undefined;
+  /** Column to sort by. Default: "published_at". */
+  sortBy?: "published_at" | "created_at" | undefined;
 }
 
 export interface ListPostsResult {
@@ -107,6 +109,7 @@ export async function listPosts(
     archiveMonth,
     page = 1,
     pageSize = DEFAULT_PAGE_SIZE,
+    sortBy = "published_at",
   } = options;
 
   const conditions: string[] = [];
@@ -153,12 +156,17 @@ export async function listPosts(
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const offset = (page - 1) * pageSize;
 
+  const orderBy =
+    sortBy === "created_at"
+      ? "ORDER BY p.created_at DESC"
+      : "ORDER BY p.published_at DESC, p.created_at DESC";
+
   const sql = `
     SELECT p.*, c.name AS category_name, c.slug AS category_slug
     FROM posts p
     LEFT JOIN categories c ON p.category_id = c.id
     ${where}
-    ORDER BY p.published_at DESC, p.created_at DESC
+    ${orderBy}
     LIMIT ? OFFSET ?
   `;
 
