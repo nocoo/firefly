@@ -22,7 +22,7 @@ All six dimensions are green. The system was rated S-tier in the 2026-03-24 glob
 | L3 Browser E2E | ✅ A | 4 spec files, ~20 tests, Playwright, manual trigger |
 | G1 Static | ✅ S | `tseslint.configs.strict`, `--max-warnings=0`, `tsc --noEmit` |
 | G2 Security | ✅ A | osv-scanner + gitleaks, pre-push, no custom config |
-| D1 Isolation | ✅ S | `lizhengme-db-test`, `[env.test]`, auto-migration |
+| D1 Isolation | ✅ S | `firefly-db-test`, `[env.test]`, auto-migration |
 
 ---
 
@@ -216,28 +216,28 @@ jobs:
 
 ## Step 4: Add R2 Test Bucket for Upload Isolation
 
-**Goal**: Create `lizhengme-test` R2 bucket so `/api/upload` can be included in L2 coverage.
+**Goal**: Create `firefly-test` R2 bucket so `/api/upload` can be included in L2 coverage.
 
 ### 4.1 Create Test R2 Bucket
 
 ```bash
-npx wrangler r2 bucket create lizhengme-test
+npx wrangler r2 bucket create firefly-test
 ```
 
 ### 4.2 Add R2 Test Binding to `worker/wrangler.toml`
 
 ```toml
 [env.test]
-name = "lizhengme-test"
+name = "firefly-test"
 
 [[env.test.d1_databases]]
 binding = "DB"
-database_name = "lizhengme-db-test"
+database_name = "firefly-db-test"
 database_id = "ae2356d2-bb21-45aa-9fb2-55184fcc7826"
 
 [[env.test.r2_buckets]]
 binding = "BUCKET"
-bucket_name = "lizhengme-test"
+bucket_name = "firefly-test"
 ```
 
 ### 4.3 Add Upload E2E Test
@@ -391,5 +391,5 @@ bun run security
 
 - **lint-staged + tsc**: `tsc --noEmit` still runs on the full project (cannot scope to staged files). If typecheck becomes slow (>10s), consider moving it to pre-push alongside coverage.
 - **CI runner cost**: GitHub Actions free tier provides 2,000 min/month. With ~2min per run, this supports ~1,000 pushes/month — more than sufficient for a personal project.
-- **R2 test bucket cleanup**: E2E uploads accumulate in `lizhengme-test` bucket. Add periodic cleanup (e.g., `wrangler r2 object list lizhengme-test | ...`) or lifecycle rule if needed.
+- **R2 test bucket cleanup**: E2E uploads accumulate in `firefly-test` bucket. Add periodic cleanup (e.g., `wrangler r2 object list firefly-test | ...`) or lifecycle rule if needed.
 - **osv-scanner in CI**: The binary download URL in Step 3 may need version pinning for reproducibility. Consider using the official GitHub Action (`google/osv-scanner-action`) if available.

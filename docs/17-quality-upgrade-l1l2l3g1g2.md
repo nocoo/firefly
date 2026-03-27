@@ -23,7 +23,7 @@ Post doc-07 upgrade, firefly is S-tier with all 6 dimensions green. However, doc
 | L3 Browser E2E | ✅ A | 4 Playwright specs, manual trigger |
 | G1 Static | ✅ S | `tseslint.configs.strict`, `--max-warnings=0`, `tsc --noEmit` |
 | G2 Security | ✅ A | osv-scanner + gitleaks, pre-push, no project-specific config |
-| D1 Isolation | ✅ S | `lizhengme-db-test`, `[env.test]`, auto-migration |
+| D1 Isolation | ✅ S | `firefly-db-test`, `[env.test]`, auto-migration |
 
 ### Open Gaps (from doc 13, unimplemented)
 
@@ -299,13 +299,13 @@ mkdir -p .github/workflows
 
 ## Step 5: GAP-4 — Add R2 Test Bucket for Upload Isolation ✅
 
-**Goal**: Create `lizhengme-test` R2 bucket binding so `/api/upload` can be
+**Goal**: Create `firefly-test` R2 bucket binding so `/api/upload` can be
 included in L2 coverage (14/14 endpoints).
 
 ### 5.1 Create Test R2 Bucket (manual Cloudflare action)
 
 ```bash
-npx wrangler r2 bucket create lizhengme-test
+npx wrangler r2 bucket create firefly-test
 ```
 
 ### 5.2 Add R2 Test Binding to `worker/wrangler.toml`
@@ -315,7 +315,7 @@ Add to existing `[env.test]` section:
 ```toml
 [[env.test.r2_buckets]]
 binding = "BUCKET"
-bucket_name = "lizhengme-test"
+bucket_name = "firefly-test"
 ```
 
 ### 5.3 Add Upload E2E Test
@@ -432,7 +432,7 @@ bun run test:e2e:browser
   If typecheck exceeds 10s in the future, consider moving to pre-push alongside coverage.
 - **CI runner cost**: GitHub Actions free tier = 2,000 min/month. At ~2min per run,
   supports ~1,000 pushes/month — more than sufficient for a personal project.
-- **R2 test bucket cleanup**: Uploads accumulate in `lizhengme-test` bucket over time.
+- **R2 test bucket cleanup**: Uploads accumulate in `firefly-test` bucket over time.
   Add lifecycle rule or periodic cleanup if storage grows.
 - **osv-scanner-action**: Using official Google action in CI instead of manual binary download
   for better version management and reproducibility.

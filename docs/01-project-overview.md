@@ -3,7 +3,7 @@
 ## Vision
 
 Firefly is a modern, high-performance blog platform replacing a WordPress installation
-at `lizheng.me`. Goals: extreme performance, SEO-first, AI-crawler-friendly, clean
+at `your-domain.com`. Goals: extreme performance, SEO-first, AI-crawler-friendly, clean
 admin experience using the basalt design system.
 
 ## Source Analysis (WordPress @ lizheng.me)
@@ -20,10 +20,10 @@ admin experience using the basalt design system.
 | Tags (with posts) | 36 | ✅ | AI(46), GPT-4o(25), Gemini(16), etc. |
 | Tags (orphaned) | ~170 | ❌ | Nokia, jQuery, etc. — discard |
 | Comments | 595 | ✅ | All approved, all ≤2012, threaded. Discard spam/pending during migration |
-| Attachments (R2) | 2,035 files | ✅ | 529MB in `lizhengblog` R2 bucket |
+| Attachments (R2) | 2,035 files | ✅ | 529MB in `firefly` R2 bucket |
 | Revisions | 2,429 | ❌ | WordPress revision history — discard |
 | Analytics | 3,178 views | ✅ | Independent Analytics, 2025-05 ~ present |
-| Users | 1 | ✅ | nocoo / lizheng@lizheng.me |
+| Users | 1 | ✅ | admin / admin@your-domain.com |
 
 ### WordPress Plugins — Disposition
 
@@ -55,16 +55,16 @@ Core tables to extract from:
 
 **WordPress (current):**
 ```
-https://lizheng.me/index.php/YYYY/MM/slug/
-https://lizheng.me/index.php/category/diary/
-https://lizheng.me/index.php/tag/ai/
+https://your-domain.com/index.php/YYYY/MM/slug/
+https://your-domain.com/index.php/category/diary/
+https://your-domain.com/index.php/tag/ai/
 ```
 
 **Firefly (target):**
 ```
-https://lizheng.me/YYYY/MM/slug        ← posts (date-prefixed for SEO continuity)
-https://lizheng.me/category/diary
-https://lizheng.me/tag/ai
+https://your-domain.com/YYYY/MM/slug        ← posts (date-prefixed for SEO continuity)
+https://your-domain.com/category/diary
+https://your-domain.com/tag/ai
 ```
 
 301 redirects: `/index.php/YYYY/MM/slug/` → `/YYYY/MM/slug` (strip `index.php` and trailing slash).
@@ -73,7 +73,7 @@ https://lizheng.me/tag/ai
 
 **Current in post_content:**
 ```
-https://lizheng.me/wp-content/uploads/YYYY/MM/filename.ext
+https://your-domain.com/wp-content/uploads/YYYY/MM/filename.ext
 ```
 
 **R2 bucket key:**
@@ -88,8 +88,8 @@ https://assets.lizheng.me/wp-content/uploads/YYYY/MM/filename.ext
 
 During migration: keep R2 keys as-is (`wp-content/uploads/...`). Bind custom domain
 `assets.lizheng.me` to R2 bucket, serving objects at their original keys.
-Batch-replace `https://lizheng.me/wp-content/uploads/` →
-`https://assets.lizheng.me/wp-content/uploads/` in post_content.
+Batch-replace `https://your-domain.com/wp-content/uploads/` →
+`https://assets.your-domain.com/wp-content/uploads/` in post_content.
 
 ## Feature Scope
 

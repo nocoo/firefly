@@ -35,10 +35,10 @@ Commits:
 
 ### 0.2 D1 Database Setup ✅
 
-1. ✅ Create D1 databases: `lizhengme-db` (prod) + `lizhengme-db-test` (test)
+1. ✅ Create D1 databases: `firefly-db` (prod) + `firefly-db-test` (test)
 2. ✅ Write SQL migration files (`scripts/migrations/001-init.sql`)
 3. ✅ Apply schema to both databases (`scripts/migrations/apply-migration.ts`)
-4. ✅ Deploy Worker D1 proxy (`worker/`, `lizhengme.worker.hexly.ai`)
+4. ✅ Deploy Worker D1 proxy (`worker/`, `firefly.worker.dev`)
 5. ✅ Implement DB client (`src/lib/db.ts`) — 16 tests, 100% coverage
 
 Commits:

@@ -21,18 +21,18 @@ Complete image upload functionality for the blog admin, covering site logo uploa
 
 | Item | Value |
 |------|-------|
-| Bucket | `lizhengblog` |
-| Upload path prefix | `lizhengblog/wp-content/uploads/firefly/` |
+| Bucket | `firefly` |
+| Upload path prefix | `firefly/wp-content/uploads/firefly/` |
 | File naming | GUID (e.g. `a1b2c3d4-e5f6-7890-abcd-ef1234567890.png`) |
-| CDN prefix | `https://assets.lizheng.me` |
+| CDN prefix | `https://assets.your-domain.com` |
 | Env vars | `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `CF_ACCOUNT_ID` |
 
 ### Key Difference from Current Upload Logic
 
 Current `generateR2Key()` produces `uploads/YYYY/MM/timestamp-filename`. The new behavior requires:
-- **Path prefix**: `lizhengblog/wp-content/uploads/firefly/`
+- **Path prefix**: `firefly/wp-content/uploads/firefly/`
 - **File naming**: GUID-based (e.g. `{uuid}.{ext}`)
-- **Full key example**: `lizhengblog/wp-content/uploads/firefly/a1b2c3d4.png`
+- **Full key example**: `firefly/wp-content/uploads/firefly/a1b2c3d4.png`
 
 ---
 
@@ -50,7 +50,7 @@ Current `generateR2Key()` produces `uploads/YYYY/MM/timestamp-filename`. The new
    - `logo-180.png` — Apple touch icon 180×180
    - `logo-192.png` — PWA icon 192×192
    - `logo-512.png` — PWA icon 512×512
-4. All variants uploaded to R2 under a **versioned path**: `lizhengblog/wp-content/uploads/firefly/site/<version>/logo-{size}.png`
+4. All variants uploaded to R2 under a **versioned path**: `firefly/wp-content/uploads/firefly/site/<version>/logo-{size}.png`
 5. `<version>` is a short random ID from `crypto.randomUUID().slice(0, 8)`, generated fresh on each upload
 6. All logo variants use the standard immutable cache policy (`max-age=31536000, immutable`) — cache busting is achieved by changing the version path, not by invalidating old URLs
 7. Old version files are **not deleted** immediately (R2 storage is cheap; orphan cleanup can be a future chore task)
@@ -71,8 +71,8 @@ ALTER TABLE site_settings ADD COLUMN site_logo_version TEXT DEFAULT NULL;
 ```
 
 `site_logo_version` stores the version string (e.g. `"a1b2c3d4"`). From this value, consuming code derives the full R2 path:
-- Base path: `lizhengblog/wp-content/uploads/firefly/site/{version}/`
-- Full URL for a given size: `https://assets.lizheng.me/lizhengblog/wp-content/uploads/firefly/site/{version}/logo-{size}.png`
+- Base path: `firefly/wp-content/uploads/firefly/site/{version}/`
+- Full URL for a given size: `https://assets.your-domain.com/firefly/wp-content/uploads/firefly/site/{version}/logo-{size}.png`
 
 When `site_logo_version` is `NULL`, the site has no custom logo and all consumers fall back to static assets.
 
@@ -82,7 +82,7 @@ When `site_logo_version` is `NULL`, the site has no custom logo and all consumer
 ```typescript
 import { getR2PublicUrl } from "./r2-client";
 
-const LOGO_BASE_PATH = "lizhengblog/wp-content/uploads/firefly/site";
+const LOGO_BASE_PATH = "firefly/wp-content/uploads/firefly/site";
 
 export type LogoSize = 16 | 32 | 48 | 80 | 180 | 192 | 512;
 export const LOGO_SIZES: LogoSize[] = [16, 32, 48, 80, 180, 192, 512];
@@ -218,7 +218,7 @@ Replace the current `ImageUpload` component with a new `ImageUploadZone` that:
 1. **Drag-and-drop area** — sits above the content textarea (same position as current `ImageUpload`)
 2. On upload success, shows a **result card** with:
    - Thumbnail preview
-   - **Copy URL** button — copies raw URL to clipboard (e.g. `https://assets.lizheng.me/lizhengblog/.../image.png`)
+   - **Copy URL** button — copies raw URL to clipboard (e.g. `https://assets.your-domain.com/firefly/.../image.png`)
    - **Copy Markdown** button — copies `![filename](url)` to clipboard
    - Each button shows a checkmark (✓) for 800ms after copying
 3. Result card persists until user uploads another image (replaces previous) or dismisses it
@@ -227,8 +227,8 @@ Replace the current `ImageUpload` component with a new `ImageUploadZone` that:
 ### Upload Path
 
 All post images use the same R2 path convention:
-- Key: `lizhengblog/wp-content/uploads/firefly/{uuid}.{ext}`
-- URL: `https://assets.lizheng.me/lizhengblog/wp-content/uploads/firefly/{uuid}.{ext}`
+- Key: `firefly/wp-content/uploads/firefly/{uuid}.{ext}`
+- URL: `https://assets.your-domain.com/firefly/wp-content/uploads/firefly/{uuid}.{ext}`
 
 ### Component Changes
 
@@ -254,7 +254,7 @@ interface ImageUploadZoneProps {
 export function generateFireflyR2Key(filename: string): string {
   const ext = extractExtension(filename);
   const uuid = crypto.randomUUID();
-  return `lizhengblog/wp-content/uploads/firefly/${uuid}.${ext}`;
+  return `firefly/wp-content/uploads/firefly/${uuid}.${ext}`;
 }
 ```
 

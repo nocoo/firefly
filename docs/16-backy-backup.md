@@ -1,6 +1,6 @@
 # 16 — Backy Backup Integration
 
-Firefly 集成 [Backy](https://backy.dev.hexly.ai) 远程备份服务，实现博客核心数据的推送备份与历史查看。
+Firefly 集成 [Backy](https://backy.your-domain.com) 远程备份服务，实现博客核心数据的推送备份与历史查看。
 
 **状态**: ✅ 已实现
 
@@ -350,7 +350,7 @@ ALTER TABLE site_settings ADD COLUMN backy_pull_key TEXT DEFAULT '';
 
 | 列 | 类型 | 说明 |
 |----|------|------|
-| `backy_webhook_url` | TEXT | Backy webhook URL (e.g. `https://backy.dev.hexly.ai/api/webhook/{projectId}`) |
+| `backy_webhook_url` | TEXT | Backy webhook URL (e.g. `https://backy.your-domain.com/api/webhook/{projectId}`) |
 | `backy_api_key` | TEXT | Bearer token (48-char nanoid) |
 | `backy_pull_key` | TEXT | Pull webhook UUID key (Backy 回调认证) |
 
@@ -613,9 +613,9 @@ v{version}-{datetime}-{rand4}-{posts}post-{cats}cat-{tags}tag
 在 Backy 管理后台创建 Firefly 项目：
 
 1. 创建 Project: name = `Firefly`
-2. 记录 webhook URL: `https://backy.dev.hexly.ai/api/webhook/{projectId}`
+2. 记录 webhook URL: `https://backy.your-domain.com/api/webhook/{projectId}`
 3. 记录 webhook token（48 字符）
-4. 配置自动备份（可选）：interval = 24h, webhook = `https://firefly.dev.hexly.ai/api/backup/pull`
+4. 配置自动备份（可选）：interval = 24h, webhook = `https://your-domain.com/api/backup/pull`
 
 ---
 

@@ -7,8 +7,8 @@
 │                    Cloudflare Edge                       │
 │  ┌──────────┐  ┌───────────────┐  ┌──────────────────┐  │
 │  │ CDN/Cache│  │ R2 (images)   │  │ D1 (database)    │  │
-│  │          │  │ lizhengblog   │  │ lizhengme-db     │  │
-│  │          │  │ 2035 files    │  │ lizhengme-db-test│  │
+│  │          │  │ firefly       │  │ firefly-db       │  │
+│  │          │  │ 2035 files    │  │ firefly-db-test  │  │
 │  └──────────┘  └───────────────┘  └──────────────────┘  │
 └────────────────────┬────────────────────────────────────┘
                      │
@@ -72,9 +72,9 @@
 | Component | Platform | Notes |
 |-----------|----------|-------|
 | Compute | Railway | Docker (Bun build → Node runtime) |
-| Database | Cloudflare D1 | `lizhengme-db` (prod) / `lizhengme-db-test` (test) |
-| Images | Cloudflare R2 | `lizhengblog` bucket, custom domain |
-| DNS | Cloudflare | lizheng.me |
+| Database | Cloudflare D1 | `firefly-db` (prod) / `firefly-db-test` (test) |
+| Images | Cloudflare R2 | `firefly` bucket, custom domain |
+| DNS | Cloudflare | your-domain.com |
 | CI/CD | Railway auto-deploy | From GitHub main branch |
 
 ### Quality (6-dimensional) — Tier S
@@ -86,7 +86,7 @@
 | L3 System | Playwright 1.58 (chromium) | manual/CI | ✅ 15 specs |
 | G1 Static | tsc --noEmit + ESLint strict + --max-warnings=0 | pre-commit | ✅ 0 errors |
 | G2 Security | osv-scanner 2.3 + gitleaks 8.30 | pre-push | ✅ 0 vulns, 0 leaks |
-| D1 Isolation | lizhengme-db-test via worker [env.test] | E2E only | ✅ |
+| D1 Isolation | firefly-db-test via worker [env.test] | E2E only | ✅ |
 
 ## Architecture Patterns
 
@@ -123,11 +123,11 @@ src/
 
 ### D1 Access Pattern (Railway → Worker → D1)
 
-Next.js runs on Railway. D1 access goes through a Cloudflare Worker (`lizhengme`)
-with native D1 binding, deployed at `lizhengme.worker.hexly.ai`.
+Next.js runs on Railway. D1 access goes through a Cloudflare Worker (`firefly`)
+with native D1 binding, deployed at `firefly.worker.dev`.
 
 ```
-Railway (Next.js) → HTTP → Worker (lizhengme.worker.hexly.ai) → D1 native binding
+Railway (Next.js) → HTTP → Worker (firefly.worker.dev) → D1 native binding
 ```
 
 Worker endpoints:
@@ -177,8 +177,8 @@ Explicit support for AI crawlers:
 
 ### Image Handling
 
-R2 bucket `lizhengblog` already has 2,035 files (529MB).
+R2 bucket `firefly` already has 2,035 files (529MB).
 Keep original R2 keys (`wp-content/uploads/YYYY/MM/filename.ext`) unchanged.
-Bind `assets.lizheng.me` custom domain → R2 bucket to serve images directly.
+Bind `assets.your-domain.com` custom domain → R2 bucket to serve images directly.
 
 New image uploads go through admin panel → API route → R2 PUT.

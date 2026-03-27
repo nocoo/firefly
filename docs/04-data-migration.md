@@ -5,11 +5,11 @@
 Migrate WordPress MySQL → Cloudflare D1 SQLite. Run on local machine, not VPS.
 
 **Source**: WordPress MySQL database (full dump in `scripts/migrations/data/`)
-**Target**: Cloudflare D1 `lizhengme-db`
+**Target**: Cloudflare D1 `firefly-db`
 
 ## Step 0: Export MySQL Dump
 
-Full database dump already exported to `scripts/migrations/data/host_lizheng_dump.sql.gz` (61 tables).
+Full database dump already exported to `scripts/migrations/data/host_dump.sql.gz` (61 tables).
 Migration scripts read from this local dump — no live VPS access needed.
 
 ## Step 1: Image Audit (VPS vs R2)
@@ -47,7 +47,7 @@ node scripts/migrations/compare-sizes.ts vps_files.txt r2_files.txt > size_misma
 # For each file in missing_in_r2.txt:
 # Copy from server → local → wrangler r2 object put
 for file in $(cat missing_in_r2.txt); do
-  npx wrangler r2 object put lizhengblog/$file --file=/tmp/upload_staging/$(basename $file)
+  npx wrangler r2 object put firefly/$file --file=/tmp/upload_staging/$(basename $file)
 done
 ```
 
@@ -59,7 +59,7 @@ Source: `lizheng_users` (1 row)
 -- Extract
 SELECT ID, user_login, user_email, display_name, user_registered
 FROM lizheng_users;
--- Result: 1 | nocoo | lizheng@lizheng.me | nocoo | 2007-11-11
+-- Result: 1 | admin | admin@your-domain.com | admin | 2007-11-11
 ```
 
 Map to `users` table. Google OAuth ID will be linked on first login.
@@ -101,7 +101,7 @@ Source: `lizheng_posts` WHERE post_type='post' AND post_status IN ('publish', 'd
 For each post:
 1. Extract markdown from `post_content` (WordPress stores HTML/Gutenberg blocks)
 2. Convert WordPress HTML → clean Markdown (using turndown or similar)
-3. Replace image URLs: `https://lizheng.me/wp-content/uploads/` → `https://assets.lizheng.me/wp-content/uploads/`
+3. Replace image URLs: `https://your-domain.com/wp-content/uploads/` → `https://assets.your-domain.com/wp-content/uploads/`
 4. Set `wp_permalink` = `/index.php/YYYY/MM/slug/` for 301 redirect generation
 5. Parse `post_date` for the `published_at` field
 6. Generate reading time from content length

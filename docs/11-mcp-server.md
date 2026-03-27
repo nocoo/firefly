@@ -185,10 +185,10 @@ Returns OAuth metadata per RFC 8414:
 
 ```json
 {
-  "issuer": "https://lizheng.me",
-  "authorization_endpoint": "https://lizheng.me/api/mcp/authorize",
-  "token_endpoint": "https://lizheng.me/api/mcp/token",
-  "registration_endpoint": "https://lizheng.me/api/mcp/register",
+  "issuer": "https://your-domain.com",
+  "authorization_endpoint": "https://your-domain.com/api/mcp/authorize",
+  "token_endpoint": "https://your-domain.com/api/mcp/token",
+  "registration_endpoint": "https://your-domain.com/api/mcp/register",
   "response_types_supported": ["code"],
   "grant_types_supported": ["authorization_code", "refresh_token"],
   "code_challenge_methods_supported": ["S256"],
@@ -1073,14 +1073,14 @@ The page displays all issued MCP tokens with management controls:
 │  └────────────────────────────────────────────────────────┘  │
 │                                                              │
 │  MCP Server Endpoint                                         │
-│  https://lizheng.me/api/mcp                                 │
+│  https://your-domain.com/api/mcp                             │
 │                                                              │
 │  Add this to your agent's MCP configuration:                │
 │  ┌────────────────────────────────────────────────────────┐  │
 │  │  {                                                     │  │
 │  │    "mcpServers": {                                     │  │
 │  │      "firefly": {                                      │  │
-│  │        "url": "https://lizheng.me/api/mcp"            │  │
+│  │        "url": "https://your-domain.com/api/mcp"       │  │
 │  │      }                                                 │  │
 │  │    }                                                   │  │
 │  │  }                                                     │  │
@@ -1252,7 +1252,7 @@ export async function POST(req: Request): Promise<Response> {
 6. **Loopback-only redirect URIs** — Client registration restricts `redirect_uris` to `http://localhost`, `http://127.0.0.1`, and `http://[::1]`. No arbitrary external URLs.
 
 7. **Origin validation** — MCP endpoint validates `Origin` header per spec to prevent DNS rebinding attacks. Rules:
-   - If `Origin` is present: must match `https://lizheng.me` or be a loopback origin (`http://localhost:*`, `http://127.0.0.1:*`). Reject with 403 otherwise.
+   - If `Origin` is present: must match `https://your-domain.com` or be a loopback origin (`http://localhost:*`, `http://127.0.0.1:*`). Reject with 403 otherwise.
    - If `Origin` is absent: **allow the request**. CLI-based MCP clients (Claude Code, opencode) typically do not send an `Origin` header since they're not browsers. Blocking missing Origin would break all CLI clients. The Bearer token itself is the primary authentication mechanism.
 
 8. **Rate limiting** — Token endpoint should rate-limit by client IP (5 req/min) to prevent brute-force.
