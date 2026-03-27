@@ -178,7 +178,7 @@ export function BlogSidebar({
                       <li key={`${a.year}-${a.month}`}>
                         <Link href={`/archive/${a.year}-${String(a.month).padStart(2, "0")}`}>
                           <span>{a.year} {t("blog.sidebar.yearSuffix")} {a.month} {t("blog.sidebar.monthSuffix")}</span>
-                          <span className="blog-sidebar-count">({a.count})</span>
+                          <span className="blog-sidebar-count">{a.count}</span>
                         </Link>
                       </li>
                     ))}
@@ -186,7 +186,7 @@ export function BlogSidebar({
                       <li key={year}>
                         <Link href={`/archive/${year}`}>
                           <span>{year} {t("blog.sidebar.yearSuffix")}</span>
-                          <span className="blog-sidebar-count">({count})</span>
+                          <span className="blog-sidebar-count">{count}</span>
                         </Link>
                       </li>
                     ))}
