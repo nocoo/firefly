@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.7.6 (2026-03-27)
+
+- style: add icons to continue reading button and post byline
+
+
 ## v1.7.5 (2026-03-27)
 
 - fix: auto-save AI excerpt to post in generate_excerpt MCP tool
