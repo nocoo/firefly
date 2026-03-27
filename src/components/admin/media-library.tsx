@@ -2,7 +2,18 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { Trash2, Copy, FileCode2, Search, X, RotateCcw } from "lucide-react";
+import {
+  Trash2,
+  Copy,
+  FileCode2,
+  Search,
+  X,
+  RotateCcw,
+  Calendar,
+  HardDrive,
+  ImageIcon,
+  RulerIcon,
+} from "lucide-react";
 import type { Attachment } from "@/models/types";
 import { formatFileSize } from "@/models/backup";
 import { ConfirmDialog } from "./confirm-dialog";
@@ -95,6 +106,7 @@ export function MediaLibrary({
   const [fetching, setFetching] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<MediaWithUrl | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [preview, setPreview] = useState<MediaWithUrl | null>(null);
   const pageRef = useRef(1);
 
   // Filters
@@ -149,6 +161,16 @@ export function MediaLibrary({
     }
     fetchMedia(filters, 1, false);
   }, [filters, fetchMedia]);
+
+  // Close preview on Escape
+  useEffect(() => {
+    if (!preview) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPreview(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [preview]);
 
   const updateFilter = useCallback(
     (key: keyof Filters, value: string) => {
@@ -345,7 +367,8 @@ export function MediaLibrary({
           {media.map((item) => (
             <div
               key={item.id}
-              className="group relative aspect-square overflow-hidden rounded-[var(--radius-sm)] border border-border bg-secondary"
+              className="group relative aspect-square overflow-hidden rounded-[var(--radius-sm)] border border-border bg-secondary cursor-pointer"
+              onClick={() => setPreview(item)}
             >
               {/* Thumbnail */}
               <img
@@ -425,6 +448,105 @@ export function MediaLibrary({
           >
             {loading ? "..." : t("admin.media.loadMore")}
           </button>
+        </div>
+      )}
+
+      {/* ── Preview lightbox ── */}
+      {preview && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setPreview(null)}
+        >
+          {/* Content — stop propagation so clicking inside doesn't close */}
+          <div
+            className="relative flex max-h-[90vh] max-w-[90vw] flex-col overflow-hidden rounded-[var(--radius-card)] bg-card shadow-2xl md:flex-row"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={() => setPreview(null)}
+              className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white/80 transition-colors hover:bg-black/70 hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {/* Image */}
+            <div className="flex flex-1 items-center justify-center bg-black/20 p-4 md:min-w-[400px]">
+              <img
+                src={preview.url}
+                alt={preview.alt_text ?? preview.filename}
+                className="max-h-[60vh] max-w-full rounded object-contain md:max-h-[80vh]"
+              />
+            </div>
+
+            {/* Meta panel */}
+            <div className="flex w-full flex-col gap-4 border-t border-border p-5 md:w-72 md:border-l md:border-t-0">
+              <h3 className="truncate text-sm font-semibold text-foreground">
+                {preview.filename}
+              </h3>
+
+              <div className="flex flex-col gap-2.5 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <ImageIcon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{preview.mime_type}</span>
+                </div>
+                {preview.size != null && (
+                  <div className="flex items-center gap-2">
+                    <HardDrive className="h-3.5 w-3.5 shrink-0" />
+                    <span>{formatFileSize(preview.size)}</span>
+                  </div>
+                )}
+                {preview.width != null && preview.height != null && (
+                  <div className="flex items-center gap-2">
+                    <RulerIcon className="h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      {preview.width} x {preview.height}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-3.5 w-3.5 shrink-0" />
+                  <span>{formatDate(preview.created_at)}</span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="mt-auto flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(preview.url)}
+                  className="flex items-center justify-center gap-1.5 rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-xs text-foreground transition-colors hover:bg-accent"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                  {t("admin.media.copyUrl")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    copyToClipboard(
+                      `![${preview.filename}](${preview.url})`,
+                    )
+                  }
+                  className="flex items-center justify-center gap-1.5 rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-xs text-foreground transition-colors hover:bg-accent"
+                >
+                  <FileCode2 className="h-3.5 w-3.5" />
+                  {t("admin.media.copyMarkdown")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPreview(null);
+                    setDeleteTarget(preview);
+                  }}
+                  className="flex items-center justify-center gap-1.5 rounded-[var(--radius-widget)] border border-destructive/30 px-3 py-2 text-xs text-destructive transition-colors hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  {t("admin.media.delete")}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
