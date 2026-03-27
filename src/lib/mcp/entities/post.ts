@@ -267,7 +267,8 @@ export const postEntity: EntityConfig<Post> = {
             resolved.title,
             resolved.content,
           );
-          return ok({ slug: resolved.slug, excerpt });
+          await updatePost(ctx.db, resolved.id, { excerpt });
+          return ok({ slug: resolved.slug, excerpt, saved: true });
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           if (msg === "AI not configured") {

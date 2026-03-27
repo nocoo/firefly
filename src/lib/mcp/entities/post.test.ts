@@ -392,28 +392,33 @@ describe("generate_excerpt extra tool", () => {
     vi.mocked(getPostById).mockReset();
     vi.mocked(getPostBySlug).mockReset();
     vi.mocked(generateExcerpt).mockReset();
+    vi.mocked(updatePost).mockReset();
   });
 
   const excerptTool = postEntity.extraTools!.find(
     (t) => t.name === "generate_excerpt",
   )!;
 
-  it("generates excerpt by slug", async () => {
+  it("generates excerpt by slug and saves to DB", async () => {
     vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
     vi.mocked(generateExcerpt).mockResolvedValue("AI excerpt");
+    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
 
     const result = await excerptTool.handler(ctx, { slug: "test-post" });
     const data = parseToolResult(result);
-    expect(data).toEqual({ slug: "test-post", excerpt: "AI excerpt" });
+    expect(data).toEqual({ slug: "test-post", excerpt: "AI excerpt", saved: true });
+    expect(updatePost).toHaveBeenCalledWith(ctx.db, "post-1", { excerpt: "AI excerpt" });
   });
 
-  it("generates excerpt by id", async () => {
+  it("generates excerpt by id and saves to DB", async () => {
     vi.mocked(getPostById).mockResolvedValue(samplePostWithCategory);
     vi.mocked(generateExcerpt).mockResolvedValue("AI excerpt");
+    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
 
     const result = await excerptTool.handler(ctx, { id: "post-1" });
     const data = parseToolResult(result);
-    expect(data).toEqual({ slug: "test-post", excerpt: "AI excerpt" });
+    expect(data).toEqual({ slug: "test-post", excerpt: "AI excerpt", saved: true });
+    expect(updatePost).toHaveBeenCalledWith(ctx.db, "post-1", { excerpt: "AI excerpt" });
   });
 
   it("returns error for missing post", async () => {
