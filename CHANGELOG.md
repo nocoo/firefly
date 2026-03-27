@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.7.3 (2026-03-27)
+
+- chore: add tsbuildinfo to gitignore
+- refactor: unify AI excerpt prompts with author-first-person style
+
+
 ## v1.7.2 (2026-03-27)
 
 - chore: update auto-generated type files
