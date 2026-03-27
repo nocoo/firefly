@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { toast } from "sonner";
+import Image from "next/image";
 import {
   Trash2,
   Copy,
@@ -362,11 +363,12 @@ export function MediaLibrary({
               onClick={() => setPreview(item)}
             >
               {/* Thumbnail */}
-              <img
+              <Image
                 src={item.url}
                 alt={item.alt_text ?? item.filename}
-                className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                loading="lazy"
+                fill
+                sizes="(max-width: 640px) 33vw, (max-width: 768px) 20vw, (max-width: 1024px) 12.5vw, (max-width: 1280px) 10vw, (max-width: 1536px) 8.3vw, 6.25vw"
+                className="object-cover transition-transform group-hover:scale-105"
               />
 
               {/* Hover overlay */}
