@@ -1,7 +1,7 @@
 /**
  * Database client for Firefly.
  *
- * Communicates with the lizhengme Cloudflare Worker which proxies
+ * Communicates with the firefly Cloudflare Worker which proxies
  * to D1 via native binding. All SQL goes through HTTP.
  *
  * Read queries → POST /api/query (write-guarded by Worker)

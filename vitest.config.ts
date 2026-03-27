@@ -4,6 +4,10 @@ export default defineConfig({
   test: {
     globals: true,
     exclude: ["e2e/**", "node_modules/**", "worker/**", ".claude/**"],
+    env: {
+      NEXT_PUBLIC_SITE_HOSTNAME: "lizheng.me",
+      NEXT_PUBLIC_ASSETS_HOSTNAME: "assets.lizheng.me",
+    },
     coverage: {
       provider: "v8",
       include: ["src/**/*.ts"],

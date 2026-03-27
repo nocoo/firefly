@@ -1,5 +1,5 @@
 -- Migration 001: Initial schema
--- Applied to: lizhengme-db (prod) + lizhengme-db-test (test)
+-- Applied to: firefly-db (prod) + firefly-db-test (test)
 -- Source: docs/02-database-schema.md
 
 -- ============================================================

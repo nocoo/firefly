@@ -21,7 +21,7 @@ const BASE = process.env.E2E_BASE_URL ?? "http://localhost:27043";
 
 const SLUG = `e2e-img-opt-${Date.now()}`;
 const NOW_EPOCH = Math.floor(Date.now() / 1000);
-const IMAGE_URL = "https://assets.lizheng.me/wp-content/uploads/test-e2e.jpg";
+const IMAGE_URL = `https://${process.env.NEXT_PUBLIC_ASSETS_HOSTNAME ?? "assets.lizheng.me"}/wp-content/uploads/test-e2e.jpg`;
 const LINK_HREF = "https://example.com";
 
 const CONTENT = [

@@ -45,7 +45,7 @@ describe("createDb", () => {
 
 describe("db.query", () => {
   let db: Db;
-  const url = "https://lizhengme.worker.hexly.ai";
+  const url = process.env.WORKER_URL ?? "https://firefly.worker.dev";
   const secret = "test_secret";
 
   beforeEach(() => {

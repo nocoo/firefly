@@ -158,10 +158,12 @@ async function integrityChecks() {
   );
 
   // Image URLs transformed
+  const OLD_DOMAIN = process.env.MIGRATION_OLD_DOMAIN ?? "your-old-domain.com";
+  const NEW_DOMAIN = process.env.MIGRATION_NEW_DOMAIN ?? "assets.your-new-domain.com";
   const oldUrls = await db.firstOrNull<{ count: number }>(
     `SELECT COUNT(*) as count FROM posts
-     WHERE content LIKE '%lizheng.me/wp-content/uploads/%'
-       AND content NOT LIKE '%assets.lizheng.me/wp-content/uploads/%'`,
+     WHERE content LIKE '%${OLD_DOMAIN}/wp-content/uploads/%'
+       AND content NOT LIKE '%${NEW_DOMAIN}/wp-content/uploads/%'`,
   );
   check(
     "Image URL rewrite",

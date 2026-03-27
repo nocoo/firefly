@@ -15,11 +15,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "assets.lizheng.me",
+        hostname: process.env.NEXT_PUBLIC_ASSETS_HOSTNAME ?? "localhost",
       },
       {
         protocol: "https",
-        hostname: "lizheng.me",
+        hostname: process.env.NEXT_PUBLIC_SITE_HOSTNAME ?? "localhost",
       },
     ],
   },

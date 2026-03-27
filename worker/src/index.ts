@@ -1,5 +1,5 @@
 /**
- * lizhengme Worker — Cloudflare Worker with native D1 binding.
+ * firefly Worker — Cloudflare Worker with native D1 binding.
  *
  * Single Worker handling both reads and writes for the Firefly blog.
  *

@@ -137,9 +137,10 @@ describe("generateFireflyR2Key", () => {
   });
 
   it("generates key with custom prefix from env var", () => {
-    process.env.R2_KEY_PREFIX = "lizhengblog/wp-content/uploads/firefly/";
+    const prefix = "firefly/wp-content/uploads/firefly/";
+    process.env.R2_KEY_PREFIX = prefix;
     const key = generateFireflyR2Key("photo.jpg");
-    expect(key).toMatch(/^lizhengblog\/wp-content\/uploads\/firefly\//);
+    expect(key).toMatch(/^firefly\/wp-content\/uploads\/firefly\//);
   });
 
   it("uses UUID format in key", () => {

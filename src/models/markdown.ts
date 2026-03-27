@@ -21,7 +21,13 @@ export interface RenderMarkdownOptions {
 // ---------------------------------------------------------------------------
 
 /** Domains whose images are safe to proxy through /_next/image. */
-const OPTIMIZABLE_HOSTS = ["assets.lizheng.me", "lizheng.me"];
+const OPTIMIZABLE_HOSTS = (() => {
+  const hosts = [
+    process.env.NEXT_PUBLIC_ASSETS_HOSTNAME,
+    process.env.NEXT_PUBLIC_SITE_HOSTNAME,
+  ].filter(Boolean) as string[];
+  return hosts.length > 0 ? hosts : [];
+})();
 
 /** Subset of Next.js default deviceSizes suitable for blog content. */
 const SRCSET_WIDTHS = [640, 828, 1080, 1920];

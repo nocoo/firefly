@@ -32,7 +32,7 @@ if (!CF_ACCOUNT_ID || !CF_API_TOKEN) {
 }
 
 const dbId = useTest ? CF_D1_TEST_DATABASE_ID : CF_D1_DATABASE_ID;
-const dbName = useTest ? "lizhengme-db-test" : "lizhengme-db";
+const dbName = useTest ? "firefly-db-test" : "firefly-db";
 
 console.log(`Applying ${sqlFile} to ${dbName} (${dbId})`);
 

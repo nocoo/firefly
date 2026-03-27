@@ -20,7 +20,7 @@ const DATA_DIR = resolve(dirname(new URL(import.meta.url).pathname), "data");
 const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID!;
 const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID!;
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY!;
-const BUCKET_NAME = process.env.R2_BUCKET_NAME ?? "lizhengblog";
+const BUCKET_NAME = process.env.R2_BUCKET_NAME ?? "firefly";
 
 if (!CF_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
   console.error(

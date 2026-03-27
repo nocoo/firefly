@@ -284,7 +284,9 @@ const x = 1;
 
 describe("renderMarkdown with optimizeImages", () => {
   const opts = { optimizeImages: true };
-  const internalUrl = "https://assets.lizheng.me/uploads/photo.jpg";
+  const assetsHostname = process.env.NEXT_PUBLIC_ASSETS_HOSTNAME ?? "assets.lizheng.me";
+  const siteHostname = process.env.NEXT_PUBLIC_SITE_HOSTNAME ?? "lizheng.me";
+  const internalUrl = `https://${assetsHostname}/uploads/photo.jpg`;
   const externalUrl = "https://example.com/img.jpg";
 
   it("default mode: image renders raw <img> without srcset", () => {
@@ -360,8 +362,8 @@ describe("renderMarkdown with optimizeImages", () => {
     expect(html).toContain("<pre><code");
   });
 
-  it("optimized mode: lizheng.me domain is also optimized", () => {
-    const url = "https://lizheng.me/some/image.png";
+  it("optimized mode: site domain is also optimized", () => {
+    const url = `https://${siteHostname}/some/image.png`;
     const html = renderMarkdown(`![Alt](${url})`, opts);
     expect(html).toContain("/_next/image");
     expect(html).toContain("srcset");
