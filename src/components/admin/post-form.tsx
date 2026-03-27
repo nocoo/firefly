@@ -54,7 +54,9 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
   // ── Shared upload state (controlled, shared across mobile/desktop instances) ──
   const [uploadedMedia, setUploadedMedia] = useState<UploadResult[]>([]);
 
-  // Pre-populate upload list when editing an existing post
+  // Pre-populate upload list when editing an existing post.
+  // Uses functional updater to merge with any uploads the user may have
+  // started before the preload response arrived (avoids race condition).
   useEffect(() => {
     if (!post?.id) return;
     let cancelled = false;
@@ -62,13 +64,19 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (cancelled || !data?.media) return;
-        setUploadedMedia(
-          data.media.map((m: { id: string; url: string; filename: string }) => ({
+        const preloaded: UploadResult[] = data.media.map(
+          (m: { id: string; url: string; filename: string }) => ({
             id: m.id,
             url: m.url,
             filename: m.filename,
-          })),
+          }),
         );
+        setUploadedMedia((prev) => {
+          const existingIds = new Set(prev.map((r) => r.id));
+          const newItems = preloaded.filter((r) => !existingIds.has(r.id));
+          // Keep user's recent uploads at the top, append preloaded after
+          return [...prev, ...newItems];
+        });
       })
       .catch(() => {
         // Silently ignore — preload is best-effort

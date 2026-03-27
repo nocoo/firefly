@@ -19,8 +19,8 @@ interface ImageUploadZoneProps {
   postId?: string;
   /** Controlled: current list of uploaded media. */
   results: UploadResult[];
-  /** Controlled: callback when the list changes (upload, dismiss). */
-  onResultsChange: (results: UploadResult[]) => void;
+  /** Controlled: setState-style callback (supports functional updater to avoid stale closures). */
+  onResultsChange: React.Dispatch<React.SetStateAction<UploadResult[]>>;
 }
 
 /**
@@ -71,7 +71,8 @@ export function ImageUploadZone({
           url: data.url,
           filename: file.name,
         };
-        onResultsChange([newResult, ...results]);
+        // Functional updater avoids stale closure — always sees latest state
+        onResultsChange((prev) => [newResult, ...prev]);
         setCopiedField(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : t("admin.upload.failed"));
@@ -79,7 +80,7 @@ export function ImageUploadZone({
         setUploading(false);
       }
     },
-    [t, postId, results, onResultsChange],
+    [t, postId, onResultsChange],
   );
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,9 +109,9 @@ export function ImageUploadZone({
 
   const dismiss = useCallback(
     (id: string) => {
-      onResultsChange(results.filter((r) => r.id !== id));
+      onResultsChange((prev) => prev.filter((r) => r.id !== id));
     },
-    [results, onResultsChange],
+    [onResultsChange],
   );
 
   const copyToClipboard = useCallback(
