@@ -267,13 +267,18 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         const newPostId = responseData.id as string | undefined;
         if (newPostId) {
           const mediaIds = uploadedMedia.map((r) => r.id);
-          await fetch("/api/media/associate", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ mediaIds, postId: newPostId }),
-          }).catch(() => {
-            // Best-effort — media association failure shouldn't block navigation
-          });
+          try {
+            const assocRes = await fetch("/api/media/associate", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ mediaIds, postId: newPostId }),
+            });
+            if (!assocRes.ok) {
+              toast.error(t("admin.media.associateError"));
+            }
+          } catch {
+            toast.error(t("admin.media.associateError"));
+          }
         }
       }
 

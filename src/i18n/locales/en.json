@@ -414,5 +414,6 @@
   "admin.media.copied": "Copied!",
   "admin.media.loadMore": "Load more",
   "admin.media.showing": "Showing {count} of {total}",
-  "admin.media.deleteError": "Failed to delete image"
+  "admin.media.deleteError": "Failed to delete image",
+  "admin.media.associateError": "Post saved, but failed to link uploaded images. They can be linked from the media library."
 }
