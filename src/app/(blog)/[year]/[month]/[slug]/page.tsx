@@ -101,7 +101,7 @@ export default async function PostPage({ params }: PostPageProps) {
     ? postPath(adjacent.next.slug, adjacent.next.published_at)
     : null;
 
-  const html = post.content_html || renderMarkdown(post.content);
+  const html = renderMarkdown(post.content, { optimizeImages: true });
   const date = post.published_at
     ? formatDateDisplay(post.published_at, locale)
     : t(locale, "blog.post.draft");
