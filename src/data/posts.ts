@@ -686,6 +686,30 @@ export async function listMonthlyArchives(
 }
 
 // ---------------------------------------------------------------------------
+// Post year counts (for admin filter dropdown)
+// ---------------------------------------------------------------------------
+
+export interface PostYearCount {
+  year: number;
+  count: number;
+}
+
+/**
+ * Return distinct years that contain posts, ordered descending, with counts.
+ * Uses `created_at` (not `published_at`) so drafts are included in admin view.
+ */
+export async function listPostYears(db: Db): Promise<PostYearCount[]> {
+  const { results } = await db.query<PostYearCount>(
+    `SELECT CAST(strftime('%Y', created_at, 'unixepoch') AS INTEGER) AS year,
+            COUNT(*) AS count
+       FROM posts
+      GROUP BY year
+      ORDER BY year DESC`,
+  );
+  return results;
+}
+
+// ---------------------------------------------------------------------------
 // Adjacent posts (prev / next) for keyboard navigation
 // ---------------------------------------------------------------------------
 

@@ -4,25 +4,19 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X, RotateCcw } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
+import type { PostYearCount } from "@/data/posts";
 import { Select } from "@/components/ui/select";
 import { useLocale } from "@/i18n/context";
 
 interface PostFiltersProps {
   categories: Category[];
   tags: Tag[];
+  yearCounts: PostYearCount[];
 }
-
-// Generate year options from current year down to a reasonable minimum
-const CURRENT_YEAR = new Date().getFullYear();
-const MIN_YEAR = 2005;
-const YEAR_OPTIONS = Array.from(
-  { length: CURRENT_YEAR - MIN_YEAR + 1 },
-  (_, i) => CURRENT_YEAR - i,
-);
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 
-export function PostFilters({ categories, tags }: PostFiltersProps) {
+export function PostFilters({ categories, tags, yearCounts }: PostFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
@@ -178,9 +172,9 @@ export function PostFilters({ categories, tags }: PostFiltersProps) {
         className="w-auto"
       >
         <option value="">{t("admin.filters.allYears")}</option>
-        {YEAR_OPTIONS.map((year) => (
+        {yearCounts.map(({ year, count }) => (
           <option key={year} value={String(year)}>
-            {year}
+            {year} ({count})
           </option>
         ))}
       </Select>

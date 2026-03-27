@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { LayoutList, LayoutGrid, Eye, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import type { PostWithCategory, PostStatus, Category, Tag } from "@/models/types";
+import type { PostYearCount } from "@/data/posts";
 import { postPath, formatDateDisplay } from "@/lib/seo";
 import { PostFilters } from "@/components/admin/post-filters";
 import { DeletePostButton } from "@/components/admin/delete-post-button";
@@ -71,6 +72,8 @@ interface AdminPostsClientProps {
   total: number;
   categories: Category[];
   tags: Tag[];
+  /** Year counts for dynamic year filter */
+  yearCounts: PostYearCount[];
   /** Current URL search params for pagination links */
   currentParams: Record<string, string | undefined>;
   currentPage: number;
@@ -86,6 +89,7 @@ export function AdminPostsClient({
   total,
   categories,
   tags,
+  yearCounts,
   currentParams,
   currentPage,
   pageSize,
@@ -131,7 +135,7 @@ export function AdminPostsClient({
       {/* Filters + actions (single row) */}
       <div className="flex items-center gap-3">
         <div className="flex-1 min-w-0">
-          <PostFilters categories={categories} tags={tags} />
+          <PostFilters categories={categories} tags={tags} yearCounts={yearCounts} />
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {/* View toggle */}

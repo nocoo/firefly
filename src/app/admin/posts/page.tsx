@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/db";
-import { listPosts } from "@/data/posts";
+import { listPosts, listPostYears } from "@/data/posts";
 import { listCategories } from "@/data/categories";
 import { listTags } from "@/data/tags";
 import type { PostStatus } from "@/models/types";
@@ -33,10 +33,11 @@ export default async function AdminPostsPage({
   const archiveYear = params.year ? parseInt(params.year, 10) || undefined : undefined;
   const archiveMonth = params.month ? parseInt(params.month, 10) || undefined : undefined;
 
-  const [result, categories, tags] = await Promise.all([
+  const [result, categories, tags, yearCounts] = await Promise.all([
     listPosts(db, { status, categoryId, tagId, query, archiveYear, archiveMonth, page, pageSize: PAGE_SIZE, sortBy: "created_at" }),
     listCategories(db),
     listTags(db),
+    listPostYears(db),
   ]);
 
   return (
@@ -45,6 +46,7 @@ export default async function AdminPostsPage({
       total={result.total}
       categories={categories}
       tags={tags}
+      yearCounts={yearCounts}
       currentParams={{
         status: params.status,
         category: params.category,

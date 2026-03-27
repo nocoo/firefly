@@ -3,6 +3,7 @@ import type { Db, DbQueryResult } from "@/lib/db";
 import type { Post, PostWithCategory } from "@/models/types";
 import {
   listPosts,
+  listPostYears,
   getPostBySlug,
   createPost,
   updatePost,
@@ -186,6 +187,52 @@ describe("listPosts", () => {
     const [sql] = vi.mocked(db.query).mock.calls[0];
     expect(sql).toContain("ORDER BY p.created_at DESC");
     expect(sql).not.toContain("published_at");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// listPostYears()
+// ---------------------------------------------------------------------------
+
+describe("listPostYears", () => {
+  let db: Db;
+  beforeEach(() => {
+    db = createMockDb();
+  });
+
+  it("returns year-count pairs ordered by year desc", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [
+        { year: 2026, count: 15 },
+        { year: 2009, count: 42 },
+        { year: 2007, count: 8 },
+      ],
+      meta: { changes: 0, duration: 1 },
+    } as DbQueryResult<{ year: number; count: number }>);
+
+    const result = await listPostYears(db);
+
+    expect(result).toEqual([
+      { year: 2026, count: 15 },
+      { year: 2009, count: 42 },
+      { year: 2007, count: 8 },
+    ]);
+
+    const [sql] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("strftime('%Y'");
+    expect(sql).toContain("created_at");
+    expect(sql).toContain("GROUP BY year");
+    expect(sql).toContain("ORDER BY year DESC");
+  });
+
+  it("returns empty array when no posts exist", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    } as DbQueryResult<{ year: number; count: number }>);
+
+    const result = await listPostYears(db);
+    expect(result).toEqual([]);
   });
 });
 
