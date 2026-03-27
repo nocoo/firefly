@@ -167,6 +167,30 @@ export async function deleteCategory(db: Db, id: string): Promise<boolean> {
 }
 
 // ---------------------------------------------------------------------------
+// reorderCategories
+// ---------------------------------------------------------------------------
+
+/**
+ * Batch-update sort_order for all categories based on the given ID order.
+ * The first ID gets the highest sort_order (displayed first in DESC ordering).
+ */
+export async function reorderCategories(
+  db: Db,
+  ids: string[],
+): Promise<void> {
+  if (ids.length === 0) return;
+
+  const now = Math.floor(Date.now() / 1000);
+  const statements = ids.map((id, index) => ({
+    sql: "UPDATE categories SET sort_order = ?, updated_at = ? WHERE id = ?",
+    params: [ids.length - index, now, id] as unknown[],
+  }));
+
+  await db.batch(statements);
+  invalidateCategoriesCache();
+}
+
+// ---------------------------------------------------------------------------
 // listCategoriesWithPostStats (admin only)
 // ---------------------------------------------------------------------------
 

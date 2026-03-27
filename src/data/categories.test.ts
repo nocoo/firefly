@@ -7,6 +7,7 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
+  reorderCategories,
   type CreateCategoryInput,
   type UpdateCategoryInput,
 } from "./categories";
@@ -241,5 +242,52 @@ describe("deleteCategory", () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 0, duration: 1 });
     const result = await deleteCategory(db, "nonexistent");
     expect(result).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// reorderCategories
+// ---------------------------------------------------------------------------
+
+describe("reorderCategories", () => {
+  let db: Db;
+  beforeEach(() => { db = createMockDb(); });
+
+  it("batch-updates sort_order in DESC order (first ID gets highest)", async () => {
+    vi.mocked(db.batch).mockResolvedValue([]);
+
+    await reorderCategories(db, ["cat-a", "cat-b", "cat-c"]);
+
+    expect(db.batch).toHaveBeenCalledOnce();
+    const [statements] = vi.mocked(db.batch).mock.calls[0];
+    expect(statements).toHaveLength(3);
+
+    // First ID should have the highest sort_order (3)
+    expect(statements[0].params![0]).toBe(3); // sort_order for cat-a
+    expect(statements[0].params![2]).toBe("cat-a");
+
+    // Second gets 2
+    expect(statements[1].params![0]).toBe(2); // sort_order for cat-b
+    expect(statements[1].params![2]).toBe("cat-b");
+
+    // Third gets 1
+    expect(statements[2].params![0]).toBe(1); // sort_order for cat-c
+    expect(statements[2].params![2]).toBe("cat-c");
+  });
+
+  it("does nothing for empty array", async () => {
+    await reorderCategories(db, []);
+    expect(db.batch).not.toHaveBeenCalled();
+  });
+
+  it("handles single item", async () => {
+    vi.mocked(db.batch).mockResolvedValue([]);
+
+    await reorderCategories(db, ["cat-x"]);
+
+    const [statements] = vi.mocked(db.batch).mock.calls[0];
+    expect(statements).toHaveLength(1);
+    expect(statements[0].params![0]).toBe(1); // sort_order = 1
+    expect(statements[0].params![2]).toBe("cat-x");
   });
 });
