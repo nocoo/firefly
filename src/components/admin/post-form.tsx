@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { Category, Tag, PostWithCategory, PostStatus } from "@/models/types";
 import { slugify } from "@/models/post";
 import { renderMarkdown } from "@/models/markdown";
-import { ImageUploadZone } from "./image-upload-zone";
+import { ImageUploadZone, type UploadResult } from "./image-upload-zone";
 import { MarkdownPreview } from "./markdown-preview";
 import { ConfirmDialog } from "./confirm-dialog";
 import { Select } from "@/components/ui/select";
@@ -50,6 +50,33 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
   const [hasFetched, setHasFetched] = useState(!!(post?.reference_title || post?.reference_description));
 
   const isEditing = !!post;
+
+  // ── Shared upload state (controlled, shared across mobile/desktop instances) ──
+  const [uploadedMedia, setUploadedMedia] = useState<UploadResult[]>([]);
+
+  // Pre-populate upload list when editing an existing post
+  useEffect(() => {
+    if (!post?.id) return;
+    let cancelled = false;
+    fetch(`/api/media?post_id=${post.id}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.media) return;
+        setUploadedMedia(
+          data.media.map((m: { id: string; url: string; filename: string }) => ({
+            id: m.id,
+            url: m.url,
+            filename: m.filename,
+          })),
+        );
+      })
+      .catch(() => {
+        // Silently ignore — preload is best-effort
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [post?.id]);
 
   // AI excerpt generation
   const [isGenerating, setIsGenerating] = useState(false);
@@ -230,8 +257,24 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? t("admin.postForm.failedSave"));
+        const errData = await res.json();
+        throw new Error(errData.error ?? t("admin.postForm.failedSave"));
+      }
+
+      // Backfill post_id on media uploaded during new post creation
+      if (!isEditing && uploadedMedia.length > 0) {
+        const responseData = await res.json();
+        const newPostId = responseData.id as string | undefined;
+        if (newPostId) {
+          const mediaIds = uploadedMedia.map((r) => r.id);
+          await fetch("/api/media/associate", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ mediaIds, postId: newPostId }),
+          }).catch(() => {
+            // Best-effort — media association failure shouldn't block navigation
+          });
+        }
       }
 
       router.push("/admin/posts");
@@ -322,7 +365,12 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             </div>
           ) : (
             <>
-              <ImageUploadZone className="mb-2" />
+              <ImageUploadZone
+                className="mb-2"
+                results={uploadedMedia}
+                onResultsChange={setUploadedMedia}
+                {...(post?.id ? { postId: post.id } : {})}
+              />
               <textarea
                 id="content"
                 value={content}
@@ -337,7 +385,12 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         </div>
         {/* Desktop: always show editor (preview is in right panel) */}
         <div className="hidden lg:block">
-          <ImageUploadZone className="mb-2" />
+          <ImageUploadZone
+            className="mb-2"
+            results={uploadedMedia}
+            onResultsChange={setUploadedMedia}
+            {...(post?.id ? { postId: post.id } : {})}
+          />
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}

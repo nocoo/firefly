@@ -3,25 +3,43 @@
 import { useState, useCallback, useRef } from "react";
 import { useLocale } from "@/i18n/context";
 
-interface UploadResult {
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface UploadResult {
+  id: string;
   url: string;
   filename: string;
 }
 
 interface ImageUploadZoneProps {
   className?: string;
+  /** Optional post ID — uploads will be associated with this post in the DB. */
+  postId?: string;
+  /** Controlled: current list of uploaded media. */
+  results: UploadResult[];
+  /** Controlled: callback when the list changes (upload, dismiss). */
+  onResultsChange: (results: UploadResult[]) => void;
 }
 
 /**
- * Image upload zone with drag-and-drop, thumbnail preview,
+ * Image upload zone with drag-and-drop, thumbnail previews,
  * and copy URL / copy Markdown buttons.
+ *
+ * Controlled component — parent owns the results array.
+ * Supports continuous uploads (new uploads prepend to the list).
  */
-export function ImageUploadZone({ className }: ImageUploadZoneProps) {
+export function ImageUploadZone({
+  className,
+  postId,
+  results,
+  onResultsChange,
+}: ImageUploadZoneProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
-  const [result, setResult] = useState<UploadResult | null>(null);
-  const [copiedField, setCopiedField] = useState<"url" | "markdown" | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { t } = useLocale();
 
@@ -33,8 +51,11 @@ export function ImageUploadZone({ className }: ImageUploadZoneProps) {
       try {
         const formData = new FormData();
         formData.append("file", file);
+        if (postId) {
+          formData.append("post_id", postId);
+        }
 
-        const res = await fetch("/api/upload", {
+        const res = await fetch("/api/media", {
           method: "POST",
           body: formData,
         });
@@ -45,7 +66,12 @@ export function ImageUploadZone({ className }: ImageUploadZoneProps) {
         }
 
         const data = await res.json();
-        setResult({ url: data.url, filename: file.name });
+        const newResult: UploadResult = {
+          id: data.id,
+          url: data.url,
+          filename: file.name,
+        };
+        onResultsChange([newResult, ...results]);
         setCopiedField(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : t("admin.upload.failed"));
@@ -53,7 +79,7 @@ export function ImageUploadZone({ className }: ImageUploadZoneProps) {
         setUploading(false);
       }
     },
-    [t],
+    [t, postId, results, onResultsChange],
   );
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,11 +106,18 @@ export function ImageUploadZone({ className }: ImageUploadZoneProps) {
     setDragOver(false);
   };
 
+  const dismiss = useCallback(
+    (id: string) => {
+      onResultsChange(results.filter((r) => r.id !== id));
+    },
+    [results, onResultsChange],
+  );
+
   const copyToClipboard = useCallback(
-    async (text: string, field: "url" | "markdown") => {
+    async (text: string, key: string) => {
       try {
         await navigator.clipboard.writeText(text);
-        setCopiedField(field);
+        setCopiedField(key);
 
         if (copyTimeoutRef.current) {
           clearTimeout(copyTimeoutRef.current);
@@ -135,49 +168,56 @@ export function ImageUploadZone({ className }: ImageUploadZoneProps) {
         <p className="mt-1 text-xs text-destructive">{error}</p>
       )}
 
-      {/* Result card */}
-      {result && !uploading && (
-        <div className="mt-2 flex items-center gap-3 rounded-[var(--radius-widget)] border border-border bg-secondary/50 px-3 py-2">
-          {/* Thumbnail */}
-          <img
-            src={result.url}
-            alt={result.filename}
-            className="h-10 w-10 shrink-0 rounded object-cover"
-          />
-
-          {/* Copy buttons */}
-          <div className="flex flex-1 gap-2">
-            <button
-              type="button"
-              onClick={() => copyToClipboard(result.url, "url")}
-              className="rounded px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+      {/* Results list — scrollable when >3 items */}
+      {results.length > 0 && (
+        <div className="mt-2 space-y-1.5 max-h-[200px] overflow-y-auto">
+          {results.map((result) => (
+            <div
+              key={result.id}
+              className="flex items-center gap-3 rounded-[var(--radius-widget)] border border-border bg-secondary/50 px-3 py-2"
             >
-              {copiedField === "url" ? t("admin.upload.copied") : t("admin.upload.copyUrl")}
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                copyToClipboard(`![${result.filename}](${result.url})`, "markdown")
-              }
-              className="rounded px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-            >
-              {copiedField === "markdown"
-                ? t("admin.upload.copied")
-                : t("admin.upload.copyMarkdown")}
-            </button>
-          </div>
+              {/* Thumbnail */}
+              <img
+                src={result.url}
+                alt={result.filename}
+                className="h-10 w-10 shrink-0 rounded object-cover"
+              />
 
-          {/* Dismiss */}
-          <button
-            type="button"
-            onClick={() => setResult(null)}
-            className="shrink-0 rounded p-1 text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"
-            aria-label={t("admin.upload.dismiss")}
-          >
-            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+              {/* Copy buttons */}
+              <div className="flex flex-1 gap-2">
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(result.url, `url-${result.id}`)}
+                  className="rounded px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                >
+                  {copiedField === `url-${result.id}` ? t("admin.upload.copied") : t("admin.upload.copyUrl")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    copyToClipboard(`![${result.filename}](${result.url})`, `md-${result.id}`)
+                  }
+                  className="rounded px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                >
+                  {copiedField === `md-${result.id}`
+                    ? t("admin.upload.copied")
+                    : t("admin.upload.copyMarkdown")}
+                </button>
+              </div>
+
+              {/* Dismiss */}
+              <button
+                type="button"
+                onClick={() => dismiss(result.id)}
+                className="shrink-0 rounded p-1 text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"
+                aria-label={t("admin.upload.dismiss")}
+              >
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ))}
         </div>
       )}
     </div>

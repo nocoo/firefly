@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
-import { uploadToR2 } from "@/lib/r2-client";
+import { uploadToR2, getR2PublicUrl } from "@/lib/r2-client";
 import { generateFireflyR2Key } from "@/lib/r2";
 import { listMedia, createMedia } from "@/data/media";
 
@@ -32,8 +32,15 @@ export async function GET(request: NextRequest) {
       ...(postId ? { postId } : {}),
     });
 
+    // Enrich with public URLs
+    const publicBaseUrl = getR2PublicUrl();
+    const media = result.media.map((m) => ({
+      ...m,
+      url: `${publicBaseUrl}/${m.r2_key}`,
+    }));
+
     return jsonResponse({
-      media: result.media,
+      media,
       total: result.total,
       page,
       pageSize,
