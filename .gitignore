@@ -19,3 +19,9 @@ coverage/
 
 # Migration data (contains database dumps, never commit)
 scripts/migrations/data/
+
+# Playwright
+test-results/
+
+# Claude Code worktrees
+.claude/worktrees/
