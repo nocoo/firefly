@@ -147,6 +147,7 @@
   "admin.taxonomy.statsPublished": "Published",
   "admin.taxonomy.statsDraft": "Draft",
   "admin.taxonomy.viewAll": "View All",
+  "admin.taxonomy.reorderSaved": "Order saved",
   "admin.deletePost.delete": "Delete",
   "admin.deletePost.confirm": "Delete \"{title}\"? This cannot be undone.",
   "admin.deletePost.failedDelete": "Failed to delete post",

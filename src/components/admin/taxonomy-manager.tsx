@@ -2,9 +2,25 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
-import { Pencil, Trash2, ExternalLink } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Pencil, Trash2, ExternalLink, GripVertical } from "lucide-react";
 import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useLocale } from "@/i18n/context";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { useSetPageSubtitle } from "@/components/admin/page-subtitle-context";
@@ -29,9 +45,61 @@ interface TaxonomyManagerProps {
   apiBase: string;
 }
 
+// ---------------------------------------------------------------------------
+// SortableRow — a table row with drag handle (used only for categories)
+// ---------------------------------------------------------------------------
+
+function SortableRow({
+  item,
+  children,
+}: {
+  item: TaxonomyItem;
+  children: (dragHandle: React.ReactNode) => React.ReactNode;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : undefined,
+  };
+
+  const handle = (
+    <button
+      type="button"
+      className="flex items-center justify-center rounded p-1 text-muted-foreground cursor-grab active:cursor-grabbing hover:text-foreground transition-colors"
+      {...attributes}
+      {...listeners}
+    >
+      <GripVertical className="h-4 w-4" strokeWidth={1.5} />
+    </button>
+  );
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      className="border-b border-border last:border-0 hover:bg-accent/50 transition-colors"
+    >
+      {children(handle)}
+    </tr>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// TaxonomyManager
+// ---------------------------------------------------------------------------
+
 export function TaxonomyManager({
   type,
-  items,
+  items: initialItems,
   apiBase,
 }: TaxonomyManagerProps) {
   const router = useRouter();
@@ -40,6 +108,16 @@ export function TaxonomyManager({
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Local item order (for optimistic DnD reordering)
+  const [orderedItems, setOrderedItems] = useState(initialItems);
+  // Sync when server data changes (e.g. after create/delete/edit)
+  if (initialItems !== orderedItems && initialItems.length !== orderedItems.length) {
+    setOrderedItems(initialItems);
+  }
+
+  const sortable = type === "category";
+  const colCount = sortable ? 6 : 5;
 
   // Form state
   const [name, setName] = useState("");
@@ -51,8 +129,8 @@ export function TaxonomyManager({
     : t("admin.taxonomy.tag");
 
   const totalText = type === "category"
-    ? t("admin.taxonomy.total.categories", { n: items.length })
-    : t("admin.taxonomy.total.tags", { n: items.length });
+    ? t("admin.taxonomy.total.categories", { n: initialItems.length })
+    : t("admin.taxonomy.total.tags", { n: initialItems.length });
 
   useSetPageSubtitle(totalText);
 
@@ -104,7 +182,7 @@ export function TaxonomyManager({
 
       // For edit, use the original slug to find the item
       const editItem = editing
-        ? items.find((i) => i.id === editing)
+        ? orderedItems.find((i) => i.id === editing)
         : null;
       const editUrl = editItem ? `${apiBase}/${editItem.slug}` : url;
 
@@ -158,7 +236,112 @@ export function TaxonomyManager({
     : t("admin.taxonomy.noTags");
 
   /** Show enriched post stats (total / published / draft) when available, otherwise fall back to post_count. */
-  const hasStats = type === "category" && items.some((i) => i.total_posts !== undefined);
+  const hasStats = type === "category" && orderedItems.some((i) => i.total_posts !== undefined);
+
+  // ---------------------------------------------------------------------------
+  // Drag-and-drop (categories only)
+  // ---------------------------------------------------------------------------
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor),
+  );
+
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+
+      const oldIndex = orderedItems.findIndex((i) => i.id === active.id);
+      const newIndex = orderedItems.findIndex((i) => i.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const reordered = arrayMove(orderedItems, oldIndex, newIndex);
+      setOrderedItems(reordered);
+
+      // Persist to server
+      try {
+        const res = await fetch(`${apiBase}/reorder`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: reordered.map((i) => i.id) }),
+        });
+        if (!res.ok) throw new Error("Failed to save order");
+        toast.success(t("admin.taxonomy.reorderSaved"));
+      } catch {
+        // Revert on failure
+        setOrderedItems(orderedItems);
+        toast.error(t("admin.taxonomy.unknownError"));
+      }
+    },
+    [orderedItems, apiBase, t],
+  );
+
+  // ---------------------------------------------------------------------------
+  // Render helpers
+  // ---------------------------------------------------------------------------
+
+  const renderRowContent = (item: TaxonomyItem, dragHandle?: React.ReactNode) => (
+    <>
+      {sortable && (
+        <td className="w-8 pl-2 pr-0 py-3">
+          {dragHandle}
+        </td>
+      )}
+      <td className="px-4 py-3 font-medium text-foreground">
+        {item.name}
+      </td>
+      <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+        {item.slug}
+      </td>
+      <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+        {item.description ?? "—"}
+      </td>
+      <td className="px-4 py-3 text-center text-muted-foreground">
+        {hasStats ? (
+          <span title={`${t("admin.taxonomy.statsPublished")}: ${item.published_posts ?? 0}, ${t("admin.taxonomy.statsDraft")}: ${item.draft_posts ?? 0}`}>
+            {item.total_posts ?? 0}
+            <span className="text-xs text-muted-foreground/60 ml-1">
+              ({item.published_posts ?? 0}/{item.draft_posts ?? 0})
+            </span>
+          </span>
+        ) : (
+          item.post_count
+        )}
+      </td>
+      <td className="px-4 py-3 text-right">
+        <div className="flex items-center justify-end gap-1">
+          {(item.total_posts ?? item.post_count) > 0 && (
+            <Link
+              href={`/admin/posts?${type === "category" ? "category" : "tag"}=${item.id}`}
+              className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.5} />
+              {t("admin.taxonomy.viewAll")}
+            </Link>
+          )}
+          <button
+            onClick={() => startEdit(item)}
+            className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
+            {t("admin.taxonomy.edit")}
+          </button>
+          <button
+            onClick={() => setDeleteTarget(item)}
+            className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+          >
+            <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+            {t("admin.taxonomy.delete")}
+          </button>
+        </div>
+      </td>
+    </>
+  );
+
+  // ---------------------------------------------------------------------------
+  // JSX
+  // ---------------------------------------------------------------------------
 
   return (
     <div className="space-y-4">
@@ -230,6 +413,9 @@ export function TaxonomyManager({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-secondary/50">
+              {sortable && (
+                <th className="w-8 pl-2 pr-0 py-3" />
+              )}
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                 {t("admin.taxonomy.table.name")}
               </th>
@@ -247,74 +433,54 @@ export function TaxonomyManager({
               </th>
             </tr>
           </thead>
-          <tbody>
-            {items.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={5}
-                  className="px-4 py-8 text-center text-muted-foreground"
-                >
-                  {emptyMessage}
-                </td>
-              </tr>
-            ) : (
-              items.map((item) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-border last:border-0 hover:bg-accent/50 transition-colors"
-                >
-                  <td className="px-4 py-3 font-medium text-foreground">
-                    {item.name}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
-                    {item.slug}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
-                    {item.description ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-center text-muted-foreground">
-                    {hasStats ? (
-                      <span title={`${t("admin.taxonomy.statsPublished")}: ${item.published_posts ?? 0}, ${t("admin.taxonomy.statsDraft")}: ${item.draft_posts ?? 0}`}>
-                        {item.total_posts ?? 0}
-                        <span className="text-xs text-muted-foreground/60 ml-1">
-                          ({item.published_posts ?? 0}/{item.draft_posts ?? 0})
-                        </span>
-                      </span>
-                    ) : (
-                      item.post_count
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      {(item.total_posts ?? item.post_count) > 0 && (
-                        <Link
-                          href={`/admin/posts?${type === "category" ? "category" : "tag"}=${item.id}`}
-                          className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.5} />
-                          {t("admin.taxonomy.viewAll")}
-                        </Link>
-                      )}
-                      <button
-                        onClick={() => startEdit(item)}
-                        className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                      >
-                        <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
-                        {t("admin.taxonomy.edit")}
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget(item)}
-                        className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
-                        {t("admin.taxonomy.delete")}
-                      </button>
-                    </div>
+
+          {sortable ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={orderedItems.map((i) => i.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <tbody>
+                  {orderedItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={colCount} className="px-4 py-8 text-center text-muted-foreground">
+                        {emptyMessage}
+                      </td>
+                    </tr>
+                  ) : (
+                    orderedItems.map((item) => (
+                      <SortableRow key={item.id} item={item}>
+                        {(dragHandle) => renderRowContent(item, dragHandle)}
+                      </SortableRow>
+                    ))
+                  )}
+                </tbody>
+              </SortableContext>
+            </DndContext>
+          ) : (
+            <tbody>
+              {orderedItems.length === 0 ? (
+                <tr>
+                  <td colSpan={colCount} className="px-4 py-8 text-center text-muted-foreground">
+                    {emptyMessage}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
+              ) : (
+                orderedItems.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="border-b border-border last:border-0 hover:bg-accent/50 transition-colors"
+                  >
+                    {renderRowContent(item)}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          )}
         </table>
       </div>
 
