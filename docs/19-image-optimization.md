@@ -380,7 +380,7 @@ If added:
 | 4 | `refactor: use ImageLightbox in admin media library` | `src/components/admin/media-library.tsx` | — |
 | 5 | `feat: enable optimized image rendering on blog post and preview pages` | `[slug]/page.tsx`, `preview/[id]/page.tsx` | — |
 | 6 | `perf: use next/image for admin media grid thumbnails` | `src/components/admin/media-library.tsx` | — |
-| 7 | `test: add E2E tests for image optimization and content lightbox` | `e2e/` | E2E tests 1-7 |
+| 7 | `test: add E2E tests for image optimization and content lightbox` | `e2e/` | E2E tests 1-8 |
 
 ---
 
