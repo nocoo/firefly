@@ -210,7 +210,7 @@ describe("MCP Main Endpoint — Tool Calls", () => {
     await cleanupToken(tokenId);
   });
 
-  it("initialize + tools/list returns 16 tools", async () => {
+  it("initialize + tools/list returns 17 tools", async () => {
     // Step 1: Initialize
     const initRes = await mcpRequest(
       {
@@ -315,6 +315,220 @@ describe("MCP Main Endpoint — Tool Calls", () => {
       accessToken,
     );
     expect(deleteRes.status).toBe(200);
+  });
+
+  it("get_post by ID returns the post", async () => {
+    const slug = `e2e-id-lookup-${Date.now()}`;
+
+    // Create a post
+    const createRes = await mcpRequest(
+      {
+        jsonrpc: "2.0",
+        id: 10,
+        method: "tools/call",
+        params: {
+          name: "create_post",
+          arguments: {
+            title: "E2E ID Lookup",
+            slug,
+            content: "Test content for ID lookup",
+            status: "draft",
+          },
+        },
+      },
+      accessToken,
+    );
+    const created = JSON.parse(
+      (await createRes.json()).result.content[0].text,
+    );
+    const postId = created.id;
+
+    // Get by ID
+    const getRes = await mcpRequest(
+      {
+        jsonrpc: "2.0",
+        id: 11,
+        method: "tools/call",
+        params: {
+          name: "get_post",
+          arguments: { id: postId },
+        },
+      },
+      accessToken,
+    );
+    expect(getRes.status).toBe(200);
+    const getData = await getRes.json();
+    expect(getData.result.isError).toBeUndefined();
+    const fetched = JSON.parse(getData.result.content[0].text);
+    expect(fetched.id).toBe(postId);
+    expect(fetched.slug).toBe(slug);
+
+    // Cleanup
+    await mcpRequest(
+      {
+        jsonrpc: "2.0",
+        id: 12,
+        method: "tools/call",
+        params: { name: "delete_post", arguments: { id: postId } },
+      },
+      accessToken,
+    );
+  });
+
+  it("get_post with both id and slug returns error", async () => {
+    const res = await mcpRequest(
+      {
+        jsonrpc: "2.0",
+        id: 20,
+        method: "tools/call",
+        params: {
+          name: "get_post",
+          arguments: { id: "fake-id", slug: "fake-slug" },
+        },
+      },
+      accessToken,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.result.isError).toBe(true);
+    const text = data.result.content[0].text;
+    expect(text).toContain("not both");
+  });
+
+  it("list_posts omits content by default (projection)", async () => {
+    const slug = `e2e-proj-${Date.now()}`;
+
+    // Create a post with content
+    await mcpRequest(
+      {
+        jsonrpc: "2.0",
+        id: 30,
+        method: "tools/call",
+        params: {
+          name: "create_post",
+          arguments: {
+            title: "E2E Projection Test",
+            slug,
+            content: "This content should be omitted in list",
+            status: "draft",
+          },
+        },
+      },
+      accessToken,
+    );
+
+    // List posts filtered by query to ensure our post is in the result
+    const listRes = await mcpRequest(
+      {
+        jsonrpc: "2.0",
+        id: 31,
+        method: "tools/call",
+        params: { name: "list_posts", arguments: { query: slug } },
+      },
+      accessToken,
+    );
+    expect(listRes.status).toBe(200);
+    const listData = await listRes.json();
+    expect(listData.result.isError).toBeUndefined();
+    const parsed = JSON.parse(listData.result.content[0].text);
+
+    // Validate paginated response shape: { posts: [...], total: N }
+    expect(parsed).toHaveProperty("posts");
+    expect(parsed).toHaveProperty("total");
+    expect(Array.isArray(parsed.posts)).toBe(true);
+
+    const post = (parsed.posts as Record<string, unknown>[]).find(
+      (p) => p.slug === slug,
+    );
+
+    // Post MUST be found — fail loudly if not
+    expect(post).toBeDefined();
+
+    // content and content_html should be omitted by projection
+    expect(post).not.toHaveProperty("content");
+    expect(post).not.toHaveProperty("content_html");
+    // title and slug should still be present
+    expect(post).toHaveProperty("title");
+    expect(post).toHaveProperty("slug");
+
+    // Cleanup
+    await mcpRequest(
+      {
+        jsonrpc: "2.0",
+        id: 32,
+        method: "tools/call",
+        params: { name: "delete_post", arguments: { slug } },
+      },
+      accessToken,
+    );
+  });
+
+  it("list_posts with include: ['full'] returns all fields", async () => {
+    const slug = `e2e-full-${Date.now()}`;
+    const contentText = "Full projection content here";
+
+    // Create
+    await mcpRequest(
+      {
+        jsonrpc: "2.0",
+        id: 40,
+        method: "tools/call",
+        params: {
+          name: "create_post",
+          arguments: {
+            title: "E2E Full Projection",
+            slug,
+            content: contentText,
+            status: "draft",
+          },
+        },
+      },
+      accessToken,
+    );
+
+    // List with include: ["full"] and query filter to find our post
+    const listRes = await mcpRequest(
+      {
+        jsonrpc: "2.0",
+        id: 41,
+        method: "tools/call",
+        params: {
+          name: "list_posts",
+          arguments: { include: ["full"], query: slug },
+        },
+      },
+      accessToken,
+    );
+    expect(listRes.status).toBe(200);
+    const listData = await listRes.json();
+    expect(listData.result.isError).toBeUndefined();
+    const parsed = JSON.parse(listData.result.content[0].text);
+
+    // Validate paginated response shape
+    expect(parsed).toHaveProperty("posts");
+    expect(Array.isArray(parsed.posts)).toBe(true);
+
+    const post = (parsed.posts as Record<string, unknown>[]).find(
+      (p) => p.slug === slug,
+    );
+
+    // Post MUST be found — fail loudly if not
+    expect(post).toBeDefined();
+
+    // With "full", content should be present
+    expect(post).toHaveProperty("content");
+    expect(post!.content).toBe(contentText);
+
+    // Cleanup
+    await mcpRequest(
+      {
+        jsonrpc: "2.0",
+        id: 42,
+        method: "tools/call",
+        params: { name: "delete_post", arguments: { slug } },
+      },
+      accessToken,
+    );
   });
 });
 
