@@ -58,7 +58,7 @@ describe("renderMarkdown", () => {
 
   it("renders images without alt text with empty alt attribute", () => {
     const html = renderMarkdown("![](https://example.com/img.jpg)");
-    expect(html).toContain('alt=""');
+    expect(html).toContain('alt="img"');
   });
 
   it("renders image title attribute", () => {
@@ -71,6 +71,16 @@ describe("renderMarkdown", () => {
     const html = renderMarkdown('![](https://example.com/img.jpg "Fallback title")');
     expect(html).toContain('alt="Fallback title"');
     expect(html).toContain('title="Fallback title"');
+  });
+
+  it("uses postTitle + filename as alt fallback when no alt or title", () => {
+    const html = renderMarkdown("![](https://example.com/photo.jpg)", { postTitle: "My Post" });
+    expect(html).toContain('alt="My Post - photo"');
+  });
+
+  it("uses filename only as alt fallback when no postTitle", () => {
+    const html = renderMarkdown("![](https://example.com/5D3L2883.jpg)");
+    expect(html).toContain('alt="5D3L2883"');
   });
 
   // --- Code blocks ---

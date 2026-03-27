@@ -36,7 +36,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
 
   const locale = await getLocale();
   const tags = await getPostTags(db, post.id);
-  const html = renderMarkdown(post.content, { optimizeImages: true });
+  const html = renderMarkdown(post.content, { optimizeImages: true, postTitle: post.title });
   const date = post.published_at
     ? formatDateDisplay(post.published_at, locale)
     : t(locale, "blog.post.draft");

@@ -12,6 +12,8 @@ import { Marked, type MarkedExtension, type Tokens } from "marked";
 export interface RenderMarkdownOptions {
   /** Rewrite <img> src to /_next/image proxy with srcset/sizes. Default: false */
   optimizeImages?: boolean;
+  /** Post title used as part of the alt text fallback for images without alt. */
+  postTitle?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,6 +81,24 @@ function sanitizeUrl(url: string): string | null {
   return trimmed;
 }
 
+/** Extract filename (without extension) from a URL for use as alt text fallback. */
+function filenameFromUrl(url: string): string {
+  try {
+    const pathname = new URL(url, "https://x").pathname;
+    const filename = pathname.split("/").pop() ?? "";
+    return filename.replace(/\.[^.]+$/, "");
+  } catch {
+    return "";
+  }
+}
+
+/** Build alt text fallback: "Post Title - filename" or just one of them. */
+function altFallback(url: string, postTitle?: string): string {
+  const filename = filenameFromUrl(url);
+  if (postTitle && filename) return `${postTitle} - ${filename}`;
+  return postTitle || filename || "";
+}
+
 /** Check whether a URL points to one of our optimisable domains. */
 function isOptimizableUrl(url: string): boolean {
   try {
@@ -98,7 +118,7 @@ function nextImageUrl(src: string, width: number): string {
 // Custom renderer
 // ---------------------------------------------------------------------------
 
-function createRenderer(optimizeImages: boolean): MarkedExtension {
+function createRenderer(optimizeImages: boolean, postTitle?: string): MarkedExtension {
   return {
     renderer: {
       heading({ tokens, depth }: Tokens.Heading): string {
@@ -132,8 +152,8 @@ function createRenderer(optimizeImages: boolean): MarkedExtension {
         const safeHref = sanitizeUrl(href);
         if (!safeHref) return "";
 
-        // alt falls back to title when not provided
-        const altText = text || title || "";
+        // alt: explicit text > title > filename extracted from URL
+        const altText = text || title || altFallback(safeHref, postTitle);
         const alt = ` alt="${escapeAttr(altText)}"`;
         const titleAttr = title ? ` title="${escapeAttr(title)}"` : "";
 
@@ -180,7 +200,11 @@ function createRenderer(optimizeImages: boolean): MarkedExtension {
 let defaultInstance: Marked | null = null;
 let optimizedInstance: Marked | null = null;
 
-function getMarked(optimizeImages: boolean): Marked {
+function getMarked(optimizeImages: boolean, postTitle?: string): Marked {
+  // When postTitle is provided, create a fresh instance (alt fallback is per-post)
+  if (postTitle) {
+    return new Marked(createRenderer(optimizeImages, postTitle));
+  }
   if (optimizeImages) {
     if (!optimizedInstance) {
       optimizedInstance = new Marked(createRenderer(true));
@@ -216,6 +240,6 @@ export function renderMarkdown(
   if (!markdown) return "";
 
   const optimize = options?.optimizeImages ?? false;
-  const result = getMarked(optimize).parse(markdown, { async: false });
+  const result = getMarked(optimize, options?.postTitle).parse(markdown, { async: false });
   return (typeof result === "string" ? result : "").trim();
 }
