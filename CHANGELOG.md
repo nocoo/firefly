@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.7.2 (2026-03-27)
+
+- chore: update auto-generated type files
+- fix: use postTitle + filename as image alt fallback
+- fix: ensure all images have alt attribute, add title support
+
+
 ## v1.7.1 (2026-03-27)
 
 - chore: update auto-generated type files
