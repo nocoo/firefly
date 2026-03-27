@@ -23,6 +23,32 @@ export interface CreateMediaInput {
 }
 
 // ---------------------------------------------------------------------------
+// List years that have media (with counts)
+// ---------------------------------------------------------------------------
+
+export interface YearCount {
+  year: number;
+  count: number;
+}
+
+/**
+ * Return distinct years that contain at least one attachment,
+ * ordered descending (newest first), with a count per year.
+ *
+ * Uses SQLite `strftime` on the unix epoch `created_at` column.
+ */
+export async function listMediaYears(db: Db): Promise<YearCount[]> {
+  const rows = await db.query<{ year: number; count: number }>(
+    `SELECT CAST(strftime('%Y', created_at, 'unixepoch') AS INTEGER) AS year,
+            COUNT(*) AS count
+       FROM attachments
+      GROUP BY year
+      ORDER BY year DESC`,
+  );
+  return rows.results;
+}
+
+// ---------------------------------------------------------------------------
 // List media (paginated, with filters)
 // ---------------------------------------------------------------------------
 

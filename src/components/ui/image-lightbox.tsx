@@ -18,6 +18,8 @@ interface ImageLightboxProps {
   onClose: () => void;
   /** Optional side panel content (metadata, actions, etc.) */
   children?: ReactNode;
+  /** Optional custom content to replace the default <img> in the main pane */
+  previewContent?: ReactNode;
 }
 
 // ---------------------------------------------------------------------------
@@ -30,6 +32,7 @@ export function ImageLightbox({
   open,
   onClose,
   children,
+  previewContent,
 }: ImageLightboxProps) {
   // Close on Escape key
   useEffect(() => {
@@ -86,11 +89,13 @@ export function ImageLightbox({
             (hasPanel ? " bg-black/20 md:min-w-[400px]" : "")
           }
         >
-          <img
-            src={src}
-            alt={alt ?? ""}
-            className="max-h-[60vh] max-w-full rounded object-contain md:max-h-[80vh]"
-          />
+          {previewContent ?? (
+            <img
+              src={src}
+              alt={alt ?? ""}
+              className="max-h-[60vh] max-w-full rounded object-contain md:max-h-[80vh]"
+            />
+          )}
         </div>
 
         {/* Optional side panel */}

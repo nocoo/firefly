@@ -14,8 +14,14 @@ import {
   HardDrive,
   ImageIcon,
   RulerIcon,
+  FileArchive,
+  FileText,
+  FileAudio,
+  FileVideo,
+  File,
 } from "lucide-react";
 import type { Attachment } from "@/models/types";
+import type { YearCount } from "@/data/media";
 import { formatFileSize } from "@/models/backup";
 import { ConfirmDialog } from "./confirm-dialog";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
@@ -33,6 +39,7 @@ interface MediaWithUrl extends Attachment {
 interface MediaLibraryProps {
   initialMedia: MediaWithUrl[];
   initialTotal: number;
+  initialYearCounts: YearCount[];
 }
 
 interface Filters {
@@ -55,18 +62,32 @@ const EMPTY_FILTERS: Filters = {
 
 const PAGE_SIZE = 120;
 
-const CURRENT_YEAR = new Date().getFullYear();
-const MIN_YEAR = 2005;
-const YEAR_OPTIONS = Array.from(
-  { length: CURRENT_YEAR - MIN_YEAR + 1 },
-  (_, i) => CURRENT_YEAR - i,
-);
-
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/** Whether a MIME type is a renderable image */
+function isImageMime(mime: string): boolean {
+  return mime.startsWith("image/") && !mime.includes("svg");
+}
+
+/** Return the appropriate lucide icon for a given MIME type */
+function FileTypeIcon({ mime, className }: { mime: string; className?: string }) {
+  if (mime.startsWith("image/")) return <ImageIcon className={className} />;
+  if (mime.startsWith("audio/")) return <FileAudio className={className} />;
+  if (mime.startsWith("video/")) return <FileVideo className={className} />;
+  if (mime === "application/pdf") return <FileText className={className} />;
+  if (
+    mime === "application/zip" ||
+    mime === "application/x-rar-compressed" ||
+    mime === "application/gzip" ||
+    mime === "application/x-7z-compressed" ||
+    mime === "application/x-tar"
+  ) return <FileArchive className={className} />;
+  return <File className={className} />;
+}
 
 function buildQuery(filters: Filters, page: number): string {
   const sp = new URLSearchParams();
@@ -100,6 +121,7 @@ function hasActiveFilters(f: Filters): boolean {
 export function MediaLibrary({
   initialMedia,
   initialTotal,
+  initialYearCounts,
 }: MediaLibraryProps) {
   const { t } = useLocale();
   const [media, setMedia] = useState<MediaWithUrl[]>(initialMedia);
@@ -277,9 +299,9 @@ export function MediaLibrary({
           className="w-auto"
         >
           <option value="">{t("admin.filters.allYears")}</option>
-          {YEAR_OPTIONS.map((y) => (
-            <option key={y} value={String(y)}>
-              {y}
+          {initialYearCounts.map(({ year, count }) => (
+            <option key={year} value={String(year)}>
+              {year} ({count})
             </option>
           ))}
         </Select>
@@ -363,13 +385,22 @@ export function MediaLibrary({
               onClick={() => setPreview(item)}
             >
               {/* Thumbnail */}
-              <Image
-                src={item.url}
-                alt={item.alt_text ?? item.filename}
-                fill
-                sizes="(max-width: 640px) 33vw, (max-width: 768px) 20vw, (max-width: 1024px) 12.5vw, (max-width: 1280px) 10vw, (max-width: 1536px) 8.3vw, 6.25vw"
-                className="object-cover transition-transform group-hover:scale-105"
-              />
+              {isImageMime(item.mime_type) ? (
+                <Image
+                  src={item.url}
+                  alt={item.alt_text ?? item.filename}
+                  fill
+                  sizes="(max-width: 640px) 33vw, (max-width: 768px) 20vw, (max-width: 1024px) 12.5vw, (max-width: 1280px) 10vw, (max-width: 1536px) 8.3vw, 6.25vw"
+                  className="object-cover transition-transform group-hover:scale-105"
+                />
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-muted-foreground">
+                  <FileTypeIcon mime={item.mime_type} className="h-8 w-8" />
+                  <span className="max-w-full truncate px-1.5 text-[9px]">
+                    {item.filename.split(".").pop()?.toUpperCase()}
+                  </span>
+                </div>
+              )}
 
               {/* Hover overlay */}
               <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
@@ -450,6 +481,16 @@ export function MediaLibrary({
         alt={preview?.alt_text ?? preview?.filename ?? ""}
         open={!!preview}
         onClose={() => setPreview(null)}
+        previewContent={
+          preview && !isImageMime(preview.mime_type)
+            ? (
+              <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                <FileTypeIcon mime={preview.mime_type} className="h-16 w-16" />
+                <span className="text-sm font-medium">{preview.filename}</span>
+              </div>
+            )
+            : undefined
+        }
       >
         {preview && (
           <>
@@ -459,7 +500,7 @@ export function MediaLibrary({
 
             <div className="flex flex-col gap-2.5 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
-                <ImageIcon className="h-3.5 w-3.5 shrink-0" />
+                <FileTypeIcon mime={preview.mime_type} className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">{preview.mime_type}</span>
               </div>
               {preview.size != null && (

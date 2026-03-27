@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db } from "@/lib/db";
 import {
   listMedia,
+  listMediaYears,
   getMedia,
   createMedia,
   deleteMedia,
@@ -133,6 +134,51 @@ describe("getMedia", () => {
 
     const result = await getMedia(db, "nonexistent");
     expect(result).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// listMediaYears
+// ---------------------------------------------------------------------------
+
+describe("listMediaYears", () => {
+  let db: Db;
+  beforeEach(() => {
+    db = createMockDb();
+  });
+
+  it("returns year-count pairs ordered by year desc", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [
+        { year: 2026, count: 10 },
+        { year: 2009, count: 268 },
+        { year: 2007, count: 50 },
+      ],
+      meta: { changes: 0, duration: 1 },
+    });
+
+    const result = await listMediaYears(db);
+
+    expect(result).toEqual([
+      { year: 2026, count: 10 },
+      { year: 2009, count: 268 },
+      { year: 2007, count: 50 },
+    ]);
+
+    const [sql] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("strftime('%Y'");
+    expect(sql).toContain("GROUP BY year");
+    expect(sql).toContain("ORDER BY year DESC");
+  });
+
+  it("returns empty array when no attachments exist", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+
+    const result = await listMediaYears(db);
+    expect(result).toEqual([]);
   });
 });
 
