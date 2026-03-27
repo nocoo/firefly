@@ -338,7 +338,7 @@ describe("generateExcerpt", () => {
     expect(mockedGenerateText).toHaveBeenCalledWith(
       expect.objectContaining({
         prompt: expect.stringContaining("My Title"),
-        maxOutputTokens: 2048,
+        maxOutputTokens: 1024,
       }),
     );
     expect(mockedGenerateText).toHaveBeenCalledWith(

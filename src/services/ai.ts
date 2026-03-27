@@ -187,14 +187,14 @@ import { generateText } from "ai";
 import { getDb } from "@/lib/db";
 import { getAiSettings } from "@/data/ai-settings";
 
-export const EXCERPT_PROMPT = `你是这篇文章的作者，现在要用中文写一段摘要。
+export const EXCERPT_PROMPT = `你是这篇文章的作者，用中文写一段 4 到 5 句话的摘要。
 
 规则：
-- 8 到 10 句话，忠实原文，告诉读者这篇文章为什么值得一看
-- 用第一人称视角（我），像是在和读者面对面说话
+- 目标是让读者产生共鸣并想点进去看全文，而不是复述文章内容
+- 用第一人称（我），像在跟朋友分享一个刚想明白的事
+- 说出写这篇文章的缘由或触动点，传递情绪和态度
+- 绝对不要剧透核心观点、拆解论点、罗列要点或概括段落
 - 不要用"本文探讨了""作者认为""笔者""这篇文章将"这类套话
-- 抓住核心观点和独特见解，不要罗列目录或概括每一段
-- 语言要口语化、有温度，像一个真实的人在分享自己的思考
 - 不要用 markdown 格式，不要加引号包裹，输出纯文本`;
 
 /**
@@ -230,7 +230,7 @@ export async function generateExcerpt(
   const result = await generateText({
     model: client(config.model),
     prompt: `${EXCERPT_PROMPT}\n\n标题：${title}\n\n正文：\n${content}`,
-    maxOutputTokens: 2048,
+    maxOutputTokens: 1024,
   });
 
   // Some models (e.g. MiniMax) use extended thinking via Anthropic protocol.
