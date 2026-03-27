@@ -430,7 +430,8 @@ describe("MCP Main Endpoint — Tool Calls", () => {
     expect(listRes.status).toBe(200);
     const listData = await listRes.json();
     const parsed = JSON.parse(listData.result.content[0].text);
-    const items = parsed.items ?? parsed;
+    // Paginated result uses plural key "posts" (from entity config)
+    const items = parsed.posts ?? parsed.items ?? parsed;
     const post = (items as Record<string, unknown>[]).find(
       (p) => p.slug === slug,
     );
@@ -495,7 +496,8 @@ describe("MCP Main Endpoint — Tool Calls", () => {
     expect(listRes.status).toBe(200);
     const listData = await listRes.json();
     const parsed = JSON.parse(listData.result.content[0].text);
-    const items = parsed.items ?? parsed;
+    // Paginated result uses plural key "posts" (from entity config)
+    const items = parsed.posts ?? parsed.items ?? parsed;
     const post = (items as Record<string, unknown>[]).find(
       (p) => p.slug === slug,
     );

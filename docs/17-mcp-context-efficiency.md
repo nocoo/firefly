@@ -709,19 +709,19 @@ export function expectError(result: CallToolResult, substring?: string): void { 
 
 ## Atomic Commits
 
-| # | Commit | Files | Verifiable |
-|---|--------|-------|------------|
-| 1 | Add framework core: types, resolve, response, projection | `framework/types.ts`, `resolve.ts`, `response.ts`, `projection.ts` | Type-check |
-| 2 | Add framework core tests | `framework/resolve.test.ts`, `response.test.ts`, `projection.test.ts` | `pnpm test` |
-| 3 | Add generic CRUD handler factory | `framework/handlers.ts`, `framework/test-utils.ts` | Type-check |
-| 4 | Add handler factory tests | `framework/handlers.test.ts` | `pnpm test` |
-| 5 | Add registration engine | `framework/register.ts` | Type-check |
-| 6 | Add tag entity definition and migrate from tools/tags.ts | `entities/tag.ts`, `entities/tag.test.ts` | `pnpm test` |
-| 7 | Add category entity definition and migrate from tools/categories.ts | `entities/category.ts`, `entities/category.test.ts` | `pnpm test` |
-| 8 | Add post entity definition and migrate from tools/posts.ts | `entities/post.ts`, `entities/post.test.ts` | `pnpm test` |
-| 9 | Refactor server.ts to use entity registration | `server.ts`, `server.test.ts` | `pnpm test` |
-| 10 | Delete old tools/ directory | Remove `tools/` | `pnpm test` + `pnpm type-check` |
-| 11 | Add E2E tests for ID lookup and field projection | `e2e/api/mcp.test.ts` | `pnpm e2e` |
+| # | Commit | Files | Verifiable | Status |
+|---|--------|-------|------------|--------|
+| 1 | Add framework core: types, resolve, response, projection | `framework/types.ts`, `resolve.ts`, `response.ts`, `projection.ts` | Type-check | ✅ |
+| 2 | Add framework core tests | `framework/resolve.test.ts`, `response.test.ts`, `projection.test.ts` | `pnpm test` | ✅ |
+| 3 | Add generic CRUD handler factory | `framework/handlers.ts`, `framework/test-utils.ts` | Type-check | ✅ |
+| 4 | Add handler factory tests | `framework/handlers.test.ts` | `pnpm test` | ✅ |
+| 5 | Add registration engine | `framework/register.ts` | Type-check | ✅ |
+| 6 | Add tag entity definition and migrate from tools/tags.ts | `entities/tag.ts`, `entities/tag.test.ts` | `pnpm test` | ✅ |
+| 7 | Add category entity definition and migrate from tools/categories.ts | `entities/category.ts`, `entities/category.test.ts` | `pnpm test` | ✅ |
+| 8 | Add post entity definition and migrate from tools/posts.ts | `entities/post.ts`, `entities/post.test.ts` | `pnpm test` | ✅ |
+| 9 | Refactor server.ts to use entity registration | `server.ts`, `server.test.ts` | `pnpm test` | ✅ |
+| 10 | Delete old tools/ directory | Remove `tools/` | `pnpm test` + `pnpm type-check` | ✅ |
+| 11 | Add E2E tests for ID lookup and field projection | `e2e/api/mcp.test.ts` | `pnpm e2e` | ✅ |
 
 ---
 
