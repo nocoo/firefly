@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Github, Facebook, Linkedin, Mail, FileUser, X } from "lucide-react";
+import { Github, Facebook, Linkedin, Mail, FileUser, X, Folder, Tags, Archive } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/posts";
 import type { SocialLink } from "@/data/settings";
@@ -99,7 +99,10 @@ export function BlogSidebar({
         {/* Categories */}
         {categories.length > 0 && (
           <nav className="blog-sidebar-section">
-            <h3 className="blog-sidebar-heading">{t("blog.sidebar.categories")}</h3>
+            <h3 className="blog-sidebar-heading">
+              <Folder className="blog-sidebar-heading-icon" strokeWidth={1.5} />
+              {t("blog.sidebar.categories")}
+            </h3>
             <ul className="blog-sidebar-list">
               {categories.map((cat) => (
                 <li key={cat.id}>
@@ -116,7 +119,10 @@ export function BlogSidebar({
         {/* Tags — weighted tag cloud */}
         {tags.length > 0 && (
           <nav className="blog-sidebar-section">
-            <h3 className="blog-sidebar-heading">{t("blog.sidebar.tags")}</h3>
+            <h3 className="blog-sidebar-heading">
+              <Tags className="blog-sidebar-heading-icon" strokeWidth={1.5} />
+              {t("blog.sidebar.tags")}
+            </h3>
             <div className="blog-tag-cloud">
               {(() => {
                 const counts = tags.map((tg) => tg.post_count ?? 0);
@@ -144,7 +150,10 @@ export function BlogSidebar({
         {/* Archives — recent 2 years by month, older years aggregated */}
         {archives.length > 0 && (
           <nav className="blog-sidebar-section">
-            <h3 className="blog-sidebar-heading">{t("blog.sidebar.archives")}</h3>
+            <h3 className="blog-sidebar-heading">
+              <Archive className="blog-sidebar-heading-icon" strokeWidth={1.5} />
+              {t("blog.sidebar.archives")}
+            </h3>
             <ul className="blog-sidebar-list">
               {(() => {
                 const now = new Date();
