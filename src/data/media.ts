@@ -51,7 +51,7 @@ export async function listMedia(
   opts: ListMediaOpts = {},
 ): Promise<{ media: Attachment[]; total: number }> {
   const page = Math.max(1, opts.page ?? 1);
-  const pageSize = Math.max(1, Math.min(100, opts.pageSize ?? DEFAULT_PAGE_SIZE));
+  const pageSize = Math.max(1, Math.min(250, opts.pageSize ?? DEFAULT_PAGE_SIZE));
   const offset = (page - 1) * pageSize;
 
   const conditions: string[] = [];

@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const page = parseInt(searchParams.get("page") ?? "1", 10) || 1;
   const pageSize =
-    parseInt(searchParams.get("page_size") ?? "24", 10) || 24;
+    parseInt(searchParams.get("page_size") ?? "120", 10) || 120;
   const postId = searchParams.get("post_id") ?? undefined;
   const search = searchParams.get("search") ?? undefined;
   const mimeType = searchParams.get("mime_type") ?? undefined;

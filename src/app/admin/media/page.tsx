@@ -6,7 +6,7 @@ import { MediaLibrary } from "@/components/admin/media-library";
 export default async function AdminMediaPage() {
   const db = getDb();
   const publicBaseUrl = getR2PublicUrl();
-  const { media, total } = await listMedia(db, { page: 1, pageSize: 24 });
+  const { media, total } = await listMedia(db, { page: 1, pageSize: 120 });
 
   const mediaWithUrls = media.map((m) => ({
     ...m,

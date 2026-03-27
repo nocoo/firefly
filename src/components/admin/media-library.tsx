@@ -40,7 +40,7 @@ const EMPTY_FILTERS: Filters = {
   sortOrder: "desc",
 };
 
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 120;
 
 const CURRENT_YEAR = new Date().getFullYear();
 const MIN_YEAR = 2005;
@@ -96,8 +96,6 @@ export function MediaLibrary({
   const [deleteTarget, setDeleteTarget] = useState<MediaWithUrl | null>(null);
   const [deleting, setDeleting] = useState(false);
   const pageRef = useRef(1);
-  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Filters
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
@@ -196,12 +194,9 @@ export function MediaLibrary({
   }, [deleteTarget, t]);
 
   const copyToClipboard = useCallback(
-    async (text: string, key: string) => {
+    async (text: string) => {
       try {
         await navigator.clipboard.writeText(text);
-        setCopiedKey(key);
-        if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
-        copyTimeoutRef.current = setTimeout(() => setCopiedKey(null), 800);
         toast.success(t("admin.media.copied"));
       } catch {
         // Silently ignore clipboard failures
@@ -346,71 +341,72 @@ export function MediaLibrary({
 
       {/* ── Grid ── */}
       {media.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-2 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-16">
           {media.map((item) => (
             <div
               key={item.id}
-              className="group relative overflow-hidden rounded-[var(--radius-widget)] border border-border bg-secondary/30"
+              className="group relative aspect-square overflow-hidden rounded-[var(--radius-sm)] border border-border bg-secondary"
             >
               {/* Thumbnail */}
-              <div className="aspect-square overflow-hidden bg-secondary">
-                <img
-                  src={item.url}
-                  alt={item.alt_text ?? item.filename}
-                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                  loading="lazy"
-                />
-              </div>
+              <img
+                src={item.url}
+                alt={item.alt_text ?? item.filename}
+                className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                loading="lazy"
+              />
 
-              {/* Info */}
-              <div className="p-2.5">
-                <p className="truncate text-xs font-medium text-foreground">
-                  {item.filename}
-                </p>
-                <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
-                  {item.size != null && <span>{formatFileSize(item.size)}</span>}
-                  <span>{formatDate(item.created_at)}</span>
-                </div>
+              {/* Hover overlay */}
+              <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
+                {/* Info */}
+                <div className="p-1.5">
+                  <p className="truncate text-[10px] font-medium text-white leading-tight">
+                    {item.filename}
+                  </p>
+                  <div className="mt-0.5 flex items-center gap-1.5 text-[9px] text-white/70">
+                    {item.size != null && (
+                      <span>{formatFileSize(item.size)}</span>
+                    )}
+                    <span>{formatDate(item.created_at)}</span>
+                  </div>
 
-                {/* Actions */}
-                <div className="mt-2 flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      copyToClipboard(item.url, `url-${item.id}`)
-                    }
-                    className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                    title={t("admin.media.copyUrl")}
-                  >
-                    <Copy className="h-3 w-3" />
-                    {copiedKey === `url-${item.id}`
-                      ? t("admin.media.copied")
-                      : t("admin.media.copyUrl")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      copyToClipboard(
-                        `![${item.filename}](${item.url})`,
-                        `md-${item.id}`,
-                      )
-                    }
-                    className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                    title={t("admin.media.copyMarkdown")}
-                  >
-                    <FileCode2 className="h-3 w-3" />
-                    {copiedKey === `md-${item.id}`
-                      ? t("admin.media.copied")
-                      : "MD"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeleteTarget(item)}
-                    className="ml-auto flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
-                    title={t("admin.media.delete")}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+                  {/* Actions */}
+                  <div className="mt-1 flex items-center gap-0.5">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyToClipboard(item.url);
+                      }}
+                      className="flex items-center justify-center rounded p-1 text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+                      title={t("admin.media.copyUrl")}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyToClipboard(
+                          `![${item.filename}](${item.url})`,
+                        );
+                      }}
+                      className="flex items-center justify-center rounded p-1 text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+                      title={t("admin.media.copyMarkdown")}
+                    >
+                      <FileCode2 className="h-3 w-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteTarget(item);
+                      }}
+                      className="ml-auto flex items-center justify-center rounded p-1 text-red-400 hover:text-red-300 hover:bg-white/20 transition-colors"
+                      title={t("admin.media.delete")}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

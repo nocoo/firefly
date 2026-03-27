@@ -73,6 +73,10 @@
   --color-blog-separator: var(--blog-separator);
   --color-blog-accent: var(--blog-accent);
 
+  /* Extended grid columns */
+  --grid-cols-14: repeat(14, minmax(0, 1fr));
+  --grid-cols-16: repeat(16, minmax(0, 1fr));
+
   /* Radii */
   --radius-card: 14px;
   --radius-widget: 10px;
