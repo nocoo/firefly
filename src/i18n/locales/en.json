@@ -185,6 +185,8 @@
   "admin.postForm.noTags": "No tags available",
   "admin.postForm.featuredImage": "Featured Image URL",
   "admin.postForm.featuredImageHint": "(optional)",
+  "admin.postForm.publishedAt": "Publish date",
+  "admin.postForm.publishedAtHint": "(auto-set on first publish if empty)",
   "admin.postForm.saving": "Saving...",
   "admin.postForm.updatePost": "Update Post",
   "admin.postForm.createPost": "Create Post",

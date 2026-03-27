@@ -39,6 +39,15 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
     post?.featured_image ?? "",
   );
 
+  // Published date state — stored as "YYYY-MM-DDTHH:mm" local string for datetime-local input
+  const [publishedAtLocal, setPublishedAtLocal] = useState(() => {
+    if (!post?.published_at) return "";
+    const d = new Date(post.published_at * 1000);
+    // Format as local datetime string for the input
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  });
+
   // Reference URL state
   const [referenceUrl, setReferenceUrl] = useState(post?.reference_url ?? "");
   const [referenceTitle, setReferenceTitle] = useState(post?.reference_title ?? "");
@@ -226,6 +235,11 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
     setError(null);
 
     try {
+      // Convert local datetime string to unix epoch (or null/undefined to omit)
+      const publishedAtEpoch = publishedAtLocal
+        ? Math.floor(new Date(publishedAtLocal).getTime() / 1000)
+        : undefined;
+
       const body = {
         title,
         slug,
@@ -235,6 +249,10 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         category_id: categoryId || undefined,
         featured_image: featuredImage || undefined,
         tag_ids: selectedTags,
+        // published_at: epoch when set, null to clear (edit), undefined to omit (create)
+        published_at: isEditing
+          ? (publishedAtEpoch ?? null)
+          : publishedAtEpoch,
         ...(isEditing
           ? {
               // Update: null clears, undefined omits.
@@ -493,6 +511,26 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             ))}
           </Select>
         </div>
+      </div>
+
+      {/* Publish date */}
+      <div className="space-y-2">
+        <label
+          htmlFor="published_at"
+          className="text-sm font-medium text-foreground"
+        >
+          {t("admin.postForm.publishedAt")}{" "}
+          <span className="text-muted-foreground font-normal">
+            {t("admin.postForm.publishedAtHint")}
+          </span>
+        </label>
+        <input
+          id="published_at"
+          type="datetime-local"
+          value={publishedAtLocal}
+          onChange={(e) => setPublishedAtLocal(e.target.value)}
+          className="w-full sm:w-auto rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        />
       </div>
 
       {/* Tags */}

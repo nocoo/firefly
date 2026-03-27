@@ -185,6 +185,8 @@
   "admin.postForm.noTags": "暂无标签",
   "admin.postForm.featuredImage": "封面图片 URL",
   "admin.postForm.featuredImageHint": "（可选）",
+  "admin.postForm.publishedAt": "发布日期",
+  "admin.postForm.publishedAtHint": "（留空则首次发布时自动设置）",
   "admin.postForm.saving": "保存中...",
   "admin.postForm.updatePost": "更新文章",
   "admin.postForm.createPost": "创建文章",
