@@ -7,6 +7,7 @@ import { getDb } from "@/lib/db";
 import { getPostById, getPostTags } from "@/data/posts";
 import { renderMarkdown } from "@/models/markdown";
 import { ArticleBody } from "@/components/blog/article-body";
+import { ContentImageLightbox } from "@/components/blog/content-image-lightbox";
 import { ReferenceCard } from "@/components/blog/reference-card";
 import { formatDateDisplay } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
@@ -117,6 +118,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
           ) : undefined
         }
       />
+      <ContentImageLightbox />
     </>
   );
 }

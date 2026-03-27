@@ -588,6 +588,7 @@
   transition: background-size 0.15s ease-in-out;
 }
 .blog-content a:hover { background-size: 100% 2px; }
+.blog-content img:not(a img) { cursor: pointer; }
 
 /* Footer */
 .blog-footer {

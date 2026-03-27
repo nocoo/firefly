@@ -19,6 +19,7 @@ import {
 import { blogPostingJsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { Comments } from "@/components/blog/comments";
 import { ArticleBody } from "@/components/blog/article-body";
+import { ContentImageLightbox } from "@/components/blog/content-image-lightbox";
 import { ReferenceCard } from "@/components/blog/reference-card";
 import { ArticleNav } from "@/components/blog/article-nav";
 import { getLocale } from "@/i18n/server";
@@ -213,6 +214,7 @@ export default async function PostPage({ params }: PostPageProps) {
           ) : undefined
         }
       />
+      <ContentImageLightbox />
 
       {showComments && (
         <Suspense>
