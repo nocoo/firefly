@@ -45,7 +45,7 @@ export async function listCategories(db: Db): Promise<Category[]> {
   if (cached) return cached;
 
   const result = await db.query<Category>(
-    "SELECT * FROM categories ORDER BY sort_order ASC, name ASC",
+    "SELECT * FROM categories ORDER BY sort_order DESC, name ASC",
   );
   categoriesCache.set(result.results);
   return result.results;
@@ -100,7 +100,7 @@ export async function createCategory(
     input.name,
     input.slug,
     input.description ?? null,
-    input.sort_order ?? 0,
+    input.sort_order ?? 1,
     now,
     now,
   ]);
@@ -192,7 +192,7 @@ export async function listCategoriesWithPostStats(
     FROM categories c
     LEFT JOIN posts p ON p.category_id = c.id
     GROUP BY c.id
-    ORDER BY c.sort_order ASC, c.name ASC
+    ORDER BY c.sort_order DESC, c.name ASC
   `;
   const result = await db.query<CategoryWithPostStats>(sql);
   return result.results;
