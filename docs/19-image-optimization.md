@@ -210,57 +210,80 @@ Children slot renders as the metadata/action side panel.
 
 ### 4. Blog frontend content image click → lightbox
 
-**File**: `src/components/blog/article-body.tsx`
+**Constraint**: `ArticleBody` is a server component shared by blog pages AND admin
+previews. It must not be modified to include client-side interactivity. The lightbox
+must only appear on public blog pages, not in admin preview panels.
 
-Currently a server component using `dangerouslySetInnerHTML`. To add click-to-preview,
-we need interactivity. The approach:
+**Approach**: A standalone, zero-prop client component (`ContentImageLightbox`) that
+mounts **beside** `ArticleBody` in the blog page layout. It attaches a click listener
+to `.blog-content img` via `document.querySelector` event delegation — no HTML string
+crosses the client boundary.
 
-- Extract the content `<div>` into a new **client component**: `ContentWithLightbox`
-- `ArticleBody` remains a server component, passing `html` to `ContentWithLightbox`
-- `ContentWithLightbox` uses event delegation on the container `<div>`:
-  - Listen for `click` events on `<img>` elements within `blog-content`
-  - On click, read the `data-original-src` (or `src`) and open the lightbox
-  - No need to parse HTML or replace DOM nodes — pure event delegation
+**File**: `src/components/blog/content-image-lightbox.tsx` (new, `"use client"`)
 
 ```tsx
-// src/components/blog/content-with-lightbox.tsx
 "use client";
 
-export function ContentWithLightbox({ html }: { html: string }) {
+export function ContentImageLightbox() {
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
+  const containerRef = useRef<HTMLElement | null>(null);
 
-  const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLElement;
-    if (target.tagName === "IMG") {
+  useEffect(() => {
+    const container = document.querySelector(".blog-content");
+    if (!container) return;
+    containerRef.current = container as HTMLElement;
+
+    const handleClick = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName !== "IMG") return;
+
+      // If the image is wrapped in a link <a><img></a>, let the link navigate normally
+      if (target.closest("a")) return;
+
+      e.preventDefault();
       const img = target as HTMLImageElement;
       setLightbox({
         src: img.dataset.originalSrc || img.src,
         alt: img.alt || "",
       });
-    }
+    };
+
+    container.addEventListener("click", handleClick);
+    return () => container.removeEventListener("click", handleClick);
   }, []);
 
+  if (!lightbox) return null;
+
   return (
-    <>
-      <div
-        className="blog-content prose-firefly prose max-w-none"
-        dangerouslySetInnerHTML={{ __html: html }}
-        onClick={handleClick}
-      />
-      {lightbox && (
-        <ImageLightbox
-          src={lightbox.src}
-          alt={lightbox.alt}
-          open
-          onClose={() => setLightbox(null)}
-        />
-      )}
-    </>
+    <ImageLightbox
+      src={lightbox.src}
+      alt={lightbox.alt}
+      open
+      onClose={() => setLightbox(null)}
+    />
   );
 }
 ```
 
-**CSS**: Add `cursor: pointer` to `.blog-content img` in `globals.css`.
+**Key design decisions**:
+- **Zero client boundary payload**: The component has no props — no HTML string, no
+  data passes through the RSC/client boundary. The `blog-content` DOM is rendered
+  server-side by `ArticleBody`, and this component finds it via DOM query.
+- **Link-wrapped images (`<a><img></a>`) are skipped**: `target.closest("a")` check
+  ensures that linked images navigate normally instead of opening the lightbox.
+- **Blog-only mounting**: Only `[slug]/page.tsx` and `preview/[id]/page.tsx` render
+  `<ContentImageLightbox />` alongside `<ArticleBody>`. Admin preview components
+  (`markdown-preview.tsx`, `post-form.tsx`) do NOT mount it — `ArticleBody` is
+  completely unchanged.
+
+**Usage in blog post page** (`[slug]/page.tsx`):
+```tsx
+<ArticleBody html={html} header={...} featuredImage={...} footer={...} />
+<ContentImageLightbox />
+```
+
+**CSS**: Add `cursor: pointer` to `.blog-content img:not(a img)` in `globals.css` to
+indicate clickability, excluding linked images.
 
 ### 5. Admin media library refactor
 
@@ -341,8 +364,9 @@ If added:
 | 3 | Blog post page: click inline image opens lightbox overlay | Playwright browser |
 | 4 | Blog post page: lightbox shows correct image | Playwright browser |
 | 5 | Blog post page: lightbox closes on X button / Escape / backdrop | Playwright browser |
-| 6 | RSS feed: inline images still have raw `<img>` src (no `/_next/image`) | API test |
-| 7 | Admin media library: lightbox still works with metadata panel | Playwright browser |
+| 6 | Blog post page: click linked image (`<a><img>`) navigates, no lightbox | Playwright browser |
+| 7 | RSS feed: inline images still have raw `<img>` src (no `/_next/image`) | API test |
+| 8 | Admin media library: lightbox still works with metadata panel | Playwright browser |
 
 ---
 
@@ -352,7 +376,7 @@ If added:
 |---|---------|-------|-------|
 | 1 | `feat: add optimizeImages option to renderMarkdown for next/image proxy` | `src/models/markdown.ts` | Unit tests 1-10 |
 | 2 | `feat: add shared ImageLightbox component` | `src/components/ui/image-lightbox.tsx` | — |
-| 3 | `feat: add click-to-preview lightbox for blog content images` | `src/components/blog/content-with-lightbox.tsx`, `article-body.tsx`, `globals.css` | — |
+| 3 | `feat: add click-to-preview lightbox for blog content images` | `src/components/blog/content-image-lightbox.tsx`, `[slug]/page.tsx`, `preview/[id]/page.tsx`, `globals.css` | — |
 | 4 | `refactor: use ImageLightbox in admin media library` | `src/components/admin/media-library.tsx` | — |
 | 5 | `feat: enable optimized image rendering on blog post and preview pages` | `[slug]/page.tsx`, `preview/[id]/page.tsx` | — |
 | 6 | `perf: use next/image for admin media grid thumbnails` | `src/components/admin/media-library.tsx` | — |
@@ -366,12 +390,12 @@ If added:
 src/models/markdown.ts                                ← MODIFY: add options parameter, optimized image renderer
 src/models/markdown.test.ts                           ← MODIFY: add tests for optimizeImages
 src/components/ui/image-lightbox.tsx                   ← NEW: shared lightbox component
-src/components/blog/content-with-lightbox.tsx          ← NEW: client wrapper for content + lightbox
-src/components/blog/article-body.tsx                   ← MODIFY: use ContentWithLightbox for html injection
+src/components/blog/content-image-lightbox.tsx         ← NEW: zero-prop client component, DOM event delegation
+src/components/blog/article-body.tsx                   ← UNCHANGED: remains pure server component
 src/components/admin/media-library.tsx                 ← MODIFY: use ImageLightbox, use next/image for thumbnails
-src/app/(blog)/[year]/[month]/[slug]/page.tsx         ← MODIFY: use renderMarkdown with optimizeImages
-src/app/(blog)/preview/[id]/page.tsx                  ← MODIFY: use renderMarkdown with optimizeImages
-src/app/globals.css                                   ← MODIFY: cursor:pointer on .blog-content img
+src/app/(blog)/[year]/[month]/[slug]/page.tsx         ← MODIFY: use renderMarkdown with optimizeImages, mount ContentImageLightbox
+src/app/(blog)/preview/[id]/page.tsx                  ← MODIFY: use renderMarkdown with optimizeImages, mount ContentImageLightbox
+src/app/globals.css                                   ← MODIFY: cursor:pointer on .blog-content img:not(a img)
 e2e/browser/content-images.spec.ts                    ← NEW: E2E tests for image optimization + lightbox
 ```
 
