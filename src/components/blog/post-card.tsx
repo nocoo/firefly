@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { ArrowRight, Calendar, User } from "lucide-react";
 import type { PostWithCategory } from "@/models/types";
 import { postPath, formatDateDisplay } from "@/lib/seo";
 import { t, type Locale } from "@/i18n/translations";
@@ -33,11 +34,19 @@ export function PostCard({ post, locale, author, priority }: PostCardProps) {
 
       {/* Byline */}
       <div className="blog-byline">
-        <span>{t(locale, "blog.post.published")}</span>{" "}
-        <time dateTime={post.published_at ? new Date(post.published_at * 1000).toISOString() : undefined}>
-          {date}
-        </time>
-        {" "}<span>{t(locale, "blog.post.byAuthor", { author: author || "" })}</span>
+        <span className="blog-byline-item">
+          <Calendar className="blog-byline-icon" />
+          <span>{t(locale, "blog.post.published")}</span>{" "}
+          <time dateTime={post.published_at ? new Date(post.published_at * 1000).toISOString() : undefined}>
+            {date}
+          </time>
+        </span>
+        {author && (
+          <span className="blog-byline-item">
+            <User className="blog-byline-icon" />
+            <span>{author}</span>
+          </span>
+        )}
       </div>
 
       {/* Featured image */}
@@ -71,6 +80,7 @@ export function PostCard({ post, locale, author, priority }: PostCardProps) {
           aria-label={`${t(locale, "blog.post.continueReading")} — ${post.title}`}
         >
           {t(locale, "blog.post.continueReading")}
+          <ArrowRight className="ml-1 inline h-4 w-4" />
         </Link>
       )}
     </article>
