@@ -50,6 +50,7 @@
   "admin.nav.posts": "文章",
   "admin.nav.categories": "分类",
   "admin.nav.tags": "标签",
+  "admin.nav.media": "媒体库",
   "admin.nav.system": "系统",
   "admin.nav.siteIdentity": "站点身份",
   "admin.nav.settings": "通用设置",
@@ -400,5 +401,18 @@
   "admin.backup.pull.description": "生成凭证供 Backy 定时拉取触发备份推送。",
   "admin.backup.pull.generate": "生成凭证",
   "admin.backup.pull.regenerate": "重新生成",
-  "admin.backup.pull.revoke": "撤销"
+  "admin.backup.pull.revoke": "撤销",
+
+  "admin.media.title": "媒体库",
+  "admin.media.empty": "暂无媒体文件",
+  "admin.media.emptyHint": "通过文章编辑器上传图片。",
+  "admin.media.delete": "删除",
+  "admin.media.confirmDelete": "确定删除此图片？该操作将从存储中永久移除。",
+  "admin.media.deleted": "图片已删除",
+  "admin.media.copyUrl": "复制链接",
+  "admin.media.copyMarkdown": "复制 Markdown",
+  "admin.media.copied": "已复制！",
+  "admin.media.loadMore": "加载更多",
+  "admin.media.showing": "显示 {count} / {total}",
+  "admin.media.deleteError": "删除图片失败"
 }

@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { IconButton } from "@/components/ui/icon-button";
 import { Toaster } from "@/components/ui/sonner";
 import { useLocale } from "@/i18n/context";
+import { PageSubtitleProvider, usePageSubtitle } from "@/components/admin/page-subtitle-context";
 
 // Map admin routes to i18n title keys
 const PAGE_TITLE_KEYS: Record<string, string> = {
@@ -17,10 +18,12 @@ const PAGE_TITLE_KEYS: Record<string, string> = {
   "/admin/posts": "admin.nav.posts",
   "/admin/categories": "admin.nav.categories",
   "/admin/tags": "admin.nav.tags",
+  "/admin/media": "admin.nav.media",
   "/admin/site-identity": "admin.nav.siteIdentity",
   "/admin/settings": "admin.nav.settings",
   "/admin/ai-settings": "admin.nav.aiSettings",
   "/admin/mcp": "admin.nav.mcpTokens",
+  "/admin/backup": "admin.backup.title",
 };
 
 interface AdminShellProps {
@@ -82,82 +85,110 @@ export function AdminShell({ user, children }: AdminShellProps) {
   }, [mobileOpen]);
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
-      {/* Desktop sidebar */}
-      {!isMobile && (
-        <AdminSidebar
-          collapsed={collapsed}
-          onToggle={() => setCollapsed(!collapsed)}
-          user={user}
-        />
-      )}
-
-      {/* Mobile overlay */}
-      {isMobile && mobileOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs"
-            onClick={() => setMobileOpen(false)}
+    <PageSubtitleProvider>
+      <div className="flex min-h-screen w-full bg-background">
+        {/* Desktop sidebar */}
+        {!isMobile && (
+          <AdminSidebar
+            collapsed={collapsed}
+            onToggle={() => setCollapsed(!collapsed)}
+            user={user}
           />
-          <div className="fixed inset-y-0 left-0 z-50 w-[260px]">
-            <AdminSidebar
-              collapsed={false}
-              onToggle={() => setMobileOpen(false)}
-              user={user}
+        )}
+
+        {/* Mobile overlay */}
+        {isMobile && mobileOpen && (
+          <>
+            <div
+              className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs"
+              onClick={() => setMobileOpen(false)}
             />
-          </div>
-        </>
-      )}
-
-      {/* Main content */}
-      <main className="flex-1 flex flex-col min-h-screen min-w-0">
-        {/* Top bar */}
-        <header className="flex h-14 items-center justify-between px-4 md:px-6 shrink-0">
-          <div className="flex items-center gap-3">
-            {isMobile && (
-              <IconButton
-                onClick={() => setMobileOpen(true)}
-                aria-label={t("admin.sidebar.openNav")}
-              >
-                <Menu
-                  className="h-5 w-5"
-                  aria-hidden="true"
-                  strokeWidth={1.5}
-                />
-              </IconButton>
-            )}
-            <h1 className="text-lg md:text-xl font-semibold text-foreground">
-              {title}
-            </h1>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <a
-              href="https://github.com/nocoo/firefly"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="GitHub"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-            >
-              <Github
-                className="h-[18px] w-[18px]"
-                aria-hidden="true"
-                strokeWidth={1.5}
+            <div className="fixed inset-y-0 left-0 z-50 w-[260px]">
+              <AdminSidebar
+                collapsed={false}
+                onToggle={() => setMobileOpen(false)}
+                user={user}
               />
-            </a>
-            <ThemeToggle />
-          </div>
-        </header>
+            </div>
+          </>
+        )}
 
-        {/* Page content */}
-        <div className={cn("flex-1 px-2 pb-2 md:px-3 md:pb-3")}>
-          <div className="h-full rounded-[var(--radius-island)] bg-card p-3 md:p-5 overflow-y-auto">
-            {children}
+        {/* Main content */}
+        <main className="flex-1 flex flex-col min-h-screen min-w-0">
+          {/* Top bar */}
+          <ShellHeader
+            title={title}
+            isMobile={isMobile}
+            onOpenMobile={() => setMobileOpen(true)}
+            openNavLabel={t("admin.sidebar.openNav")}
+          />
+
+          {/* Page content */}
+          <div className={cn("flex-1 px-2 pb-2 md:px-3 md:pb-3")}>
+            <div className="h-full rounded-[var(--radius-island)] bg-card p-3 md:p-5 overflow-y-auto">
+              {children}
+            </div>
           </div>
+        </main>
+
+        {/* Global toast notifications */}
+        <Toaster />
+      </div>
+    </PageSubtitleProvider>
+  );
+}
+
+// Extracted header so it can consume PageSubtitleContext
+function ShellHeader({
+  title,
+  isMobile,
+  onOpenMobile,
+  openNavLabel,
+}: {
+  title: string;
+  isMobile: boolean;
+  onOpenMobile: () => void;
+  openNavLabel: string;
+}) {
+  const { subtitle } = usePageSubtitle();
+
+  return (
+    <header className="flex h-14 items-center justify-between px-4 md:px-6 shrink-0">
+      <div className="flex items-center gap-3">
+        {isMobile && (
+          <IconButton onClick={onOpenMobile} aria-label={openNavLabel}>
+            <Menu
+              className="h-5 w-5"
+              aria-hidden="true"
+              strokeWidth={1.5}
+            />
+          </IconButton>
+        )}
+        <div className="flex items-baseline gap-2">
+          <h1 className="text-lg md:text-xl font-semibold text-foreground">
+            {title}
+          </h1>
+          {subtitle && (
+            <span className="text-sm text-muted-foreground">{subtitle}</span>
+          )}
         </div>
-      </main>
-
-      {/* Global toast notifications */}
-      <Toaster />
-    </div>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <a
+          href="https://github.com/nocoo/firefly"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="GitHub"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+        >
+          <Github
+            className="h-[18px] w-[18px]"
+            aria-hidden="true"
+            strokeWidth={1.5}
+          />
+        </a>
+        <ThemeToggle />
+      </div>
+    </header>
   );
 }

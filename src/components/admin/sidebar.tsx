@@ -10,6 +10,7 @@ import {
   FileText,
   FolderOpen,
   Tags,
+  Image,
   LogOut,
   PanelLeft,
   ChevronUp,
@@ -54,6 +55,7 @@ const NAV_GROUPS: NavGroup[] = [
       { titleKey: "admin.nav.posts", href: "/admin/posts", icon: FileText },
       { titleKey: "admin.nav.categories", href: "/admin/categories", icon: FolderOpen },
       { titleKey: "admin.nav.tags", href: "/admin/tags", icon: Tags },
+      { titleKey: "admin.nav.media", href: "/admin/media", icon: Image },
     ],
   },
   {

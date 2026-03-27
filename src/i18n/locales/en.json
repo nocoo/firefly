@@ -50,6 +50,7 @@
   "admin.nav.posts": "Posts",
   "admin.nav.categories": "Categories",
   "admin.nav.tags": "Tags",
+  "admin.nav.media": "Media",
   "admin.nav.system": "System",
   "admin.nav.siteIdentity": "Site Identity",
   "admin.nav.settings": "General",
@@ -400,5 +401,18 @@
   "admin.backup.pull.description": "Generate credentials for Backy to trigger backup pushes on a schedule.",
   "admin.backup.pull.generate": "Generate Credentials",
   "admin.backup.pull.regenerate": "Regenerate",
-  "admin.backup.pull.revoke": "Revoke"
+  "admin.backup.pull.revoke": "Revoke",
+
+  "admin.media.title": "Media Library",
+  "admin.media.empty": "No media found",
+  "admin.media.emptyHint": "Upload images through the post editor.",
+  "admin.media.delete": "Delete",
+  "admin.media.confirmDelete": "Delete this image? It will be permanently removed from storage.",
+  "admin.media.deleted": "Image deleted",
+  "admin.media.copyUrl": "Copy URL",
+  "admin.media.copyMarkdown": "Copy Markdown",
+  "admin.media.copied": "Copied!",
+  "admin.media.loadMore": "Load more",
+  "admin.media.showing": "Showing {count} of {total}",
+  "admin.media.deleteError": "Failed to delete image"
 }
