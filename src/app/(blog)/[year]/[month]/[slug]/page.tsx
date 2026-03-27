@@ -182,6 +182,7 @@ export default async function PostPage({ params }: PostPageProps) {
                 fill
                 sizes="(max-width: 900px) 100vw, min(75vw, 1000px)"
                 priority
+                fetchPriority="high"
               />
             </div>
           ) : undefined
