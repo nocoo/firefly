@@ -6,6 +6,7 @@ node_modules/
 dist/
 out/
 coverage/
+*.tsbuildinfo
 
 # Wrangler
 .wrangler/
