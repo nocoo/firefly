@@ -187,17 +187,15 @@ import { generateText } from "ai";
 import { getDb } from "@/lib/db";
 import { getAiSettings } from "@/data/ai-settings";
 
-export const EXCERPT_PROMPT = `You are a blog excerpt writer. Write a summary for the following blog post.
+export const EXCERPT_PROMPT = `你是这篇文章的作者，现在要用中文写一段摘要。
 
-Rules:
-- 5 to 6 sentences that give the reader a clear picture of the article
-- Write in the same language as the article
-- Sound natural, like a human wrote it — avoid phrases like "this article discusses", "in this post", "the author explores"
-- Capture the core insight, key arguments, and takeaway — not a table of contents
-- Chinese: 200-300 characters. English: 300-500 characters
-- No markdown formatting, no quotes, just plain text`;
-
-export const MAX_EXCERPT_CONTENT_CHARS = 2000;
+规则：
+- 8 到 10 句话，忠实原文，告诉读者这篇文章为什么值得一看
+- 用第一人称视角（我），像是在和读者面对面说话
+- 不要用"本文探讨了""作者认为""笔者""这篇文章将"这类套话
+- 抓住核心观点和独特见解，不要罗列目录或概括每一段
+- 语言要口语化、有温度，像一个真实的人在分享自己的思考
+- 不要用 markdown 格式，不要加引号包裹，输出纯文本`;
 
 /**
  * Generate a blog post excerpt using the configured AI provider.
@@ -228,12 +226,11 @@ export async function generateExcerpt(
   });
 
   const client = createAiClient(config);
-  const truncatedContent = content.slice(0, MAX_EXCERPT_CONTENT_CHARS);
 
   const result = await generateText({
     model: client(config.model),
-    prompt: `${EXCERPT_PROMPT}\n\nTitle: ${title}\n\nContent:\n${truncatedContent}`,
-    maxOutputTokens: 1024,
+    prompt: `${EXCERPT_PROMPT}\n\n标题：${title}\n\n正文：\n${content}`,
+    maxOutputTokens: 2048,
   });
 
   // Some models (e.g. MiniMax) use extended thinking via Anthropic protocol.
@@ -265,14 +262,16 @@ export async function generateExcerpt(
 
 // ── Unfurl metadata summarization ──
 
-export const UNFURL_PROMPT = `You are a bookmark metadata writer. Given a web page's metadata, write a clean title and description.
+export const UNFURL_PROMPT = `你是一个收藏者，正在为书签写标题和描述。
 
-Rules:
-- Title: ≤50 characters, the project/article name — no site name suffix
-- Description: ≤150 characters, one-sentence summary of what it is/does
-- If the original content is in English, translate both title and description to Chinese
-- If the original is already in Chinese, keep it as-is
-- Respond with ONLY a JSON object, no other text: {"title":"...","description":"..."}`;
+规则：
+- 标题：不超过 50 个字，写出项目或文章的名字，不要带网站名后缀
+- 描述：不超过 150 个字，用一句话说明它是什么、有什么价值
+- 如果原始内容是英文，把标题和描述翻译成中文
+- 如果原始内容已经是中文，保持原样
+- 用第一人称视角，像在告诉朋友「这个链接值得收藏」
+- 不要用"本文""该文""笔者"这类套话
+- 只输出 JSON，不要输出其他内容：{"title":"...","description":"..."}`;
 
 /**
  * Summarize unfurled URL metadata using the configured AI provider.

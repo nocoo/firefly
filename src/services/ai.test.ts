@@ -15,7 +15,6 @@ import {
   resolveAiConfig,
   createAiClient,
   EXCERPT_PROMPT,
-  MAX_EXCERPT_CONTENT_CHARS,
   type AiProvider,
   type AiConfig,
 } from "./ai";
@@ -339,7 +338,7 @@ describe("generateExcerpt", () => {
     expect(mockedGenerateText).toHaveBeenCalledWith(
       expect.objectContaining({
         prompt: expect.stringContaining("My Title"),
-        maxOutputTokens: 1024,
+        maxOutputTokens: 2048,
       }),
     );
     expect(mockedGenerateText).toHaveBeenCalledWith(
@@ -364,7 +363,7 @@ describe("generateExcerpt", () => {
     );
   });
 
-  it("truncates content to MAX_EXCERPT_CONTENT_CHARS", async () => {
+  it("passes full content without truncation", async () => {
     mockedGetAiSettings.mockResolvedValue(mockSettings);
     mockedGenerateText.mockResolvedValue({
       text: "Summary",
@@ -375,9 +374,8 @@ describe("generateExcerpt", () => {
 
     const call = mockedGenerateText.mock.calls.at(-1)!;
     const prompt = (call[0] as { prompt: string }).prompt;
-    // The prompt should contain at most MAX_EXCERPT_CONTENT_CHARS of the content
-    const contentInPrompt = prompt.split("Content:\n")[1];
-    expect(contentInPrompt.length).toBe(MAX_EXCERPT_CONTENT_CHARS);
+    const contentInPrompt = prompt.split("正文：\n")[1];
+    expect(contentInPrompt.length).toBe(5000);
   });
 
   it("throws 'AI not configured' when provider is empty", async () => {
