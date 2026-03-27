@@ -23,14 +23,32 @@ export interface CreateMediaInput {
 }
 
 // ---------------------------------------------------------------------------
-// List media (paginated)
+// List media (paginated, with filters)
 // ---------------------------------------------------------------------------
 
 const DEFAULT_PAGE_SIZE = 24;
 
+export interface ListMediaOpts {
+  page?: number;
+  pageSize?: number;
+  postId?: string;
+  /** Substring match against filename */
+  search?: string;
+  /** MIME type prefix, e.g. "image/png" or "image/" */
+  mimeType?: string;
+  /** Filter by year (of created_at) */
+  year?: number;
+  /** Filter by month 1-12 (requires year) */
+  month?: number;
+  /** Column to order by */
+  sortBy?: "created_at" | "size" | "filename";
+  /** Sort direction */
+  sortOrder?: "asc" | "desc";
+}
+
 export async function listMedia(
   db: Db,
-  opts: { page?: number; pageSize?: number; postId?: string } = {},
+  opts: ListMediaOpts = {},
 ): Promise<{ media: Attachment[]; total: number }> {
   const page = Math.max(1, opts.page ?? 1);
   const pageSize = Math.max(1, Math.min(100, opts.pageSize ?? DEFAULT_PAGE_SIZE));
@@ -44,7 +62,39 @@ export async function listMedia(
     params.push(opts.postId);
   }
 
+  if (opts.search) {
+    conditions.push("filename LIKE ?");
+    params.push(`%${opts.search}%`);
+  }
+
+  if (opts.mimeType) {
+    conditions.push("mime_type LIKE ?");
+    params.push(`${opts.mimeType}%`);
+  }
+
+  if (opts.year) {
+    // Convert year (+ optional month) to unix epoch range
+    const startMonth = opts.month ?? 1;
+    const endMonth = opts.month ?? 12;
+    const start = Math.floor(new Date(opts.year, startMonth - 1, 1).getTime() / 1000);
+    const end = Math.floor(new Date(
+      endMonth === 12 ? opts.year + 1 : opts.year,
+      endMonth === 12 ? 0 : endMonth,
+      1,
+    ).getTime() / 1000);
+    conditions.push("created_at >= ? AND created_at < ?");
+    params.push(start, end);
+  }
+
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  // Validate sort column to prevent SQL injection
+  const allowedSort = ["created_at", "size", "filename"] as const;
+  type AllowedSort = typeof allowedSort[number];
+  const sortBy: AllowedSort = allowedSort.includes(opts.sortBy as AllowedSort)
+    ? (opts.sortBy as AllowedSort)
+    : "created_at";
+  const sortOrder = opts.sortOrder === "asc" ? "ASC" : "DESC";
 
   const countResult = await db.firstOrNull<{ cnt: number }>(
     `SELECT COUNT(*) as cnt FROM attachments ${where}`,
@@ -53,7 +103,7 @@ export async function listMedia(
   const total = countResult?.cnt ?? 0;
 
   const rows = await db.query<Attachment>(
-    `SELECT * FROM attachments ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    `SELECT * FROM attachments ${where} ORDER BY ${sortBy} ${sortOrder} LIMIT ? OFFSET ?`,
     [...params, pageSize, offset],
   );
 

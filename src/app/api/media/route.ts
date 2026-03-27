@@ -6,10 +6,10 @@ import { generateFireflyR2Key } from "@/lib/r2";
 import { listMedia, createMedia } from "@/data/media";
 
 /**
- * GET /api/media — list media with pagination.
+ * GET /api/media — list media with pagination and filters.
  *
- * Query params: page, page_size, post_id
- * Auth: protected by proxy (write methods) — GET is admin-only via proxy rule.
+ * Query params: page, page_size, post_id, search, mime_type, year, month, sort_by, sort_order
+ * Auth: protected by proxy — GET is admin-only via proxy rule.
  */
 export async function GET(request: NextRequest) {
 
@@ -18,6 +18,14 @@ export async function GET(request: NextRequest) {
   const pageSize =
     parseInt(searchParams.get("page_size") ?? "24", 10) || 24;
   const postId = searchParams.get("post_id") ?? undefined;
+  const search = searchParams.get("search") ?? undefined;
+  const mimeType = searchParams.get("mime_type") ?? undefined;
+  const yearRaw = searchParams.get("year");
+  const monthRaw = searchParams.get("month");
+  const year = yearRaw ? parseInt(yearRaw, 10) || undefined : undefined;
+  const month = monthRaw ? parseInt(monthRaw, 10) || undefined : undefined;
+  const sortBy = (searchParams.get("sort_by") as "created_at" | "size" | "filename") ?? undefined;
+  const sortOrder = (searchParams.get("sort_order") as "asc" | "desc") ?? undefined;
 
   try {
     const db = getDb();
@@ -25,6 +33,12 @@ export async function GET(request: NextRequest) {
       page,
       pageSize,
       ...(postId ? { postId } : {}),
+      ...(search ? { search } : {}),
+      ...(mimeType ? { mimeType } : {}),
+      ...(year ? { year } : {}),
+      ...(month ? { month } : {}),
+      ...(sortBy ? { sortBy } : {}),
+      ...(sortOrder ? { sortOrder } : {}),
     });
 
     // Enrich with public URLs

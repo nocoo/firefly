@@ -222,6 +222,94 @@ describe("listMedia", () => {
     const params = vi.mocked(db.query).mock.calls[0][1] as unknown[];
     expect(params![1]).toBe(0); // offset = (1-1)*24 = 0
   });
+
+  it("filters by search (filename substring)", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue({ cnt: 2 });
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+
+    await listMedia(db, { search: "photo" });
+
+    const [sql, params] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("filename LIKE ?");
+    expect(params![0]).toBe("%photo%");
+  });
+
+  it("filters by mimeType prefix", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue({ cnt: 1 });
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+
+    await listMedia(db, { mimeType: "image/png" });
+
+    const [sql, params] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("mime_type LIKE ?");
+    expect(params![0]).toBe("image/png%");
+  });
+
+  it("filters by year with epoch range", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue({ cnt: 0 });
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+
+    await listMedia(db, { year: 2026 });
+
+    const [sql, params] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("created_at >= ? AND created_at < ?");
+    // 2026-01-01 to 2027-01-01
+    const start = params![0] as number;
+    const end = params![1] as number;
+    expect(new Date(start * 1000).getFullYear()).toBe(2026);
+    expect(new Date(end * 1000).getFullYear()).toBe(2027);
+  });
+
+  it("filters by year + month", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue({ cnt: 0 });
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+
+    await listMedia(db, { year: 2026, month: 3 });
+
+    const params = vi.mocked(db.query).mock.calls[0][1] as unknown[];
+    const start = params![0] as number;
+    const end = params![1] as number;
+    expect(new Date(start * 1000).getMonth()).toBe(2); // March = index 2
+    expect(new Date(end * 1000).getMonth()).toBe(3); // April = index 3
+  });
+
+  it("sorts by size ascending", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue({ cnt: 0 });
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+
+    await listMedia(db, { sortBy: "size", sortOrder: "asc" });
+
+    const [sql] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("ORDER BY size ASC");
+  });
+
+  it("defaults to created_at DESC when sortBy is invalid", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue({ cnt: 0 });
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+
+    await listMedia(db, { sortBy: "DROP TABLE" as "created_at" });
+
+    const [sql] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("ORDER BY created_at DESC");
+  });
 });
 
 // ---------------------------------------------------------------------------
