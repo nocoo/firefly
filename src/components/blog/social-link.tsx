@@ -20,6 +20,7 @@ export function SocialLink({ href, name, brand, icon: Icon, isLucide }: SocialLi
       title={name}
       target={href.startsWith("mailto:") ? undefined : "_blank"}
       rel={href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
+      aria-label={name}
       className="blog-social-link"
       data-brand={brand}
       onMouseEnter={() => setIsHovered(true)}

@@ -43,7 +43,7 @@ export function PostCard({ post, locale, author, priority }: PostCardProps) {
       {/* Featured image */}
       {post.featured_image && (
         <div className="blog-featured-image">
-          <Link href={href} className="absolute inset-0">
+          <Link href={href} className="absolute inset-0" aria-label={post.title}>
             <Image
               src={post.featured_image}
               alt={post.title}
@@ -68,6 +68,7 @@ export function PostCard({ post, locale, author, priority }: PostCardProps) {
         <Link
           href={href}
           className="blog-read-more"
+          aria-label={`${t(locale, "blog.post.continueReading")} — ${post.title}`}
         >
           {t(locale, "blog.post.continueReading")}
         </Link>
