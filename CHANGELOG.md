@@ -1,5 +1,31 @@
 # Changelog
 
+## v1.7.0 (2026-03-27)
+
+- chore: update auto-generated type files
+- perf: add fetchPriority="high" to featured images on post pages
+- fix: add accessible names to social links and read-more links
+- fix: resolve ArticleNav hydration mismatch with useSyncExternalStore
+- docs: mark doc 19 (image optimization) as complete
+- test: add E2E tests for image optimization and content lightbox
+- perf: use next/image for admin media grid thumbnails
+- feat: enable optimized image rendering on blog post and preview pages
+- refactor: use ImageLightbox in admin media library
+- feat: add click-to-preview lightbox for blog content images
+- feat: add shared ImageLightbox component
+- feat: add optimizeImages option to renderMarkdown for next/image proxy
+- docs: fix E2E test count in commit 7 scope (1-7 → 1-8)
+- docs: revise doc 19 — fix three review issues in lightbox design
+- docs: add design doc 19 — image optimization and content lightbox
+- feat: add image preview lightbox to media library
+- feat: responsive media grid with 16-column desktop layout and hover overlay
+- feat: add filters and sorting to media library
+- fix: remove parentheses from archive counts in sidebar for consistency
+- feat: add icons to sidebar section headings
+- feat: add lucide icons to post byline and fix edit button alignment
+- feat: replace GitHub link with admin dashboard button in global bar
+
+
 ## v1.6.1 (2026-03-27)
 
 - chore: add edit-post-subtitle component and update gitignore
