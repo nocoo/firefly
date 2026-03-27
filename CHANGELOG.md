@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.7.1 (2026-03-27)
+
+- chore: update auto-generated type files
+- feat: add published_at date picker to post editor
+- feat: sort admin post list by created_at DESC
+- feat: add drag-and-drop category reordering in admin
+- feat: add batch reorder API for categories
+- feat: change category sort order to DESC and set default ranking
+
+
 ## v1.7.0 (2026-03-27)
 
 - chore: update auto-generated type files
