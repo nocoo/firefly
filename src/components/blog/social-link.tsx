@@ -13,14 +13,15 @@ interface SocialLinkProps {
 
 export function SocialLink({ href, name, brand, icon: Icon, isLucide }: SocialLinkProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const label = name || brand;
 
   return (
     <a
       href={href}
-      title={name}
+      title={label}
       target={href.startsWith("mailto:") ? undefined : "_blank"}
       rel={href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
-      aria-label={name}
+      aria-label={label}
       className="blog-social-link"
       data-brand={brand}
       onMouseEnter={() => setIsHovered(true)}

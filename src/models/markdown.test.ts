@@ -56,6 +56,23 @@ describe("renderMarkdown", () => {
     expect(html).toContain('loading="lazy"');
   });
 
+  it("renders images without alt text with empty alt attribute", () => {
+    const html = renderMarkdown("![](https://example.com/img.jpg)");
+    expect(html).toContain('alt=""');
+  });
+
+  it("renders image title attribute", () => {
+    const html = renderMarkdown('![Alt](https://example.com/img.jpg "My title")');
+    expect(html).toContain('alt="Alt"');
+    expect(html).toContain('title="My title"');
+  });
+
+  it("uses title as alt fallback when alt text is empty", () => {
+    const html = renderMarkdown('![](https://example.com/img.jpg "Fallback title")');
+    expect(html).toContain('alt="Fallback title"');
+    expect(html).toContain('title="Fallback title"');
+  });
+
   // --- Code blocks ---
   it("renders fenced code blocks", () => {
     const md = "```js\nconst x = 1;\n```";

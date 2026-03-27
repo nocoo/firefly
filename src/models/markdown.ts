@@ -128,11 +128,14 @@ function createRenderer(optimizeImages: boolean): MarkedExtension {
         return `<a href="${escapeAttr(safeHref)}"${attrs}>${rendered}</a>`;
       },
 
-      image({ href, text }: Tokens.Image): string {
+      image({ href, text, title }: Tokens.Image): string {
         const safeHref = sanitizeUrl(href);
         if (!safeHref) return "";
 
-        const alt = text ? ` alt="${escapeAttr(text)}"` : "";
+        // alt falls back to title when not provided
+        const altText = text || title || "";
+        const alt = ` alt="${escapeAttr(altText)}"`;
+        const titleAttr = title ? ` title="${escapeAttr(title)}"` : "";
 
         // Optimised mode: rewrite internal images to /_next/image proxy
         if (optimizeImages && isOptimizableUrl(safeHref)) {
@@ -146,14 +149,14 @@ function createRenderer(optimizeImages: boolean): MarkedExtension {
             `<img src="${src}"` +
             ` srcset="${srcset}"` +
             ` sizes="${CONTENT_SIZES}"` +
-            `${alt}` +
+            `${alt}${titleAttr}` +
             ` loading="lazy"` +
             ` decoding="async"` +
             ` data-original-src="${escapedOriginal}">`
           );
         }
 
-        return `<img src="${escapeAttr(safeHref)}"${alt} loading="lazy">`;
+        return `<img src="${escapeAttr(safeHref)}"${alt}${titleAttr} loading="lazy">`;
       },
 
       code({ text, lang }: Tokens.Code): string {
