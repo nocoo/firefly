@@ -19,8 +19,8 @@ import { readFileSync, existsSync } from "node:fs";
 // Use the current bun binary path for spawning subprocesses
 const BUN = process.execPath;
 
-// Resolve wrangler binary from the worker's node_modules
-const WRANGLER = `${process.cwd()}/worker/node_modules/.bin/wrangler`;
+// Resolve wrangler binary from the worker-v2's node_modules
+const WRANGLER = `${process.cwd()}/worker-v2/node_modules/.bin/wrangler`;
 
 const DEV_PORT = 7043;
 const API_E2E_PORT = DEV_PORT + 10000; // 17043
@@ -95,7 +95,7 @@ function startWorker(): Subprocess {
       String(WORKER_PORT),
     ],
     {
-      cwd: `${process.cwd()}/worker`,
+      cwd: `${process.cwd()}/worker-v2`,
       env: process.env,
       stdout: "ignore",
       stderr: "ignore",
@@ -226,7 +226,7 @@ async function main() {
 async function waitForWorkerReady(): Promise<void> {
   try {
     await waitForServer(
-      `http://localhost:${WORKER_PORT}/api/live`,
+      `http://localhost:${WORKER_PORT}/api/v1/health`,
       30_000,
     );
     console.log(`▸ Test worker ready on port ${WORKER_PORT}`);
