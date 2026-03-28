@@ -1,0 +1,21 @@
+name = "firefly-v2"
+main = "src/index.ts"
+compatibility_date = "2026-03-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "firefly-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+# ---------- Test environment ----------
+[env.test]
+name = "firefly-v2-test"
+
+[[env.test.d1_databases]]
+binding = "DB"
+database_name = "firefly-db-test"
+database_id = "REPLACE_WITH_YOUR_TEST_D1_DATABASE_ID"
+
+[[env.test.r2_buckets]]
+binding = "BUCKET"
+bucket_name = "firefly-test"

@@ -3,7 +3,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     globals: true,
-    exclude: ["e2e/**", "node_modules/**", "worker/**", ".claude/**"],
+    exclude: ["e2e/**", "node_modules/**", "worker/**", "worker-v2/**", ".claude/**"],
     env: {
       NEXT_PUBLIC_SITE_HOSTNAME: "lizheng.me",
       NEXT_PUBLIC_ASSETS_HOSTNAME: "assets.lizheng.me",
