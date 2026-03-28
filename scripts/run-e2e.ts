@@ -19,8 +19,8 @@ import { readFileSync, existsSync } from "node:fs";
 // Use the current bun binary path for spawning subprocesses
 const BUN = process.execPath;
 
-// Resolve wrangler binary from the worker-v2's node_modules
-const WRANGLER = `${process.cwd()}/worker-v2/node_modules/.bin/wrangler`;
+// Resolve wrangler binary from the worker's node_modules
+const WRANGLER = `${process.cwd()}/worker/node_modules/.bin/wrangler`;
 
 const DEV_PORT = 7043;
 const API_E2E_PORT = DEV_PORT + 10000; // 17043
@@ -100,7 +100,7 @@ function startWorker(): Subprocess {
       String(WORKER_PORT),
     ],
     {
-      cwd: `${process.cwd()}/worker-v2`,
+      cwd: `${process.cwd()}/worker`,
       env: process.env,
       stdout: "ignore",
       stderr: "ignore",

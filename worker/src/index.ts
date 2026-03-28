@@ -1,17 +1,15 @@
 /**
  * firefly Worker — Cloudflare Worker with native D1 binding.
  *
- * Single Worker handling both reads and writes for the Firefly blog.
- *
  * Routes:
- * - GET  /api/live     — health check (no auth)
- * - POST /api/query    — execute read-only SQL (regex guards writes)
- * - POST /api/execute  — execute write SQL (INSERT/UPDATE/DELETE)
+ * - GET  /api/v1/health  — health check (no auth)
+ * - POST /api/v1/query   — execute read-only SQL (regex guards writes)
+ * - POST /api/v1/execute — execute write SQL (single + batch)
  *
- * Auth: Bearer WORKER_SECRET on /api/query and /api/execute.
+ * Auth: Bearer WORKER_SECRET on /api/v1/query and /api/v1/execute.
  */
 
-const WORKER_VERSION = "1.0.0";
+const WORKER_VERSION = "2.0.0";
 
 const bootTime = Date.now();
 
@@ -23,10 +21,34 @@ export interface Env {
 const WRITE_RE = /^\s*(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|PRAGMA)\b/i;
 
 // ---------------------------------------------------------------------------
-// GET /api/live
+// Helpers
 // ---------------------------------------------------------------------------
 
-async function handleLive(env: Env): Promise<Response> {
+function jsonResponse(
+  data: unknown,
+  status: number = 200,
+  headers?: Record<string, string>,
+): Response {
+  return Response.json(data, {
+    status,
+    headers: { ...headers },
+  });
+}
+
+function corsHeaders(): Record<string, string> {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Max-Age": "86400",
+  };
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/v1/health
+// ---------------------------------------------------------------------------
+
+async function handleHealth(env: Env): Promise<Response> {
   let dbStatus: { connected: boolean; latencyMs?: number; error?: string };
 
   try {
@@ -46,7 +68,7 @@ async function handleLive(env: Env): Promise<Response> {
 
   const isHealthy = dbStatus.connected;
 
-  return Response.json(
+  return jsonResponse(
     {
       status: isHealthy ? "ok" : "error",
       version: WORKER_VERSION,
@@ -54,32 +76,30 @@ async function handleLive(env: Env): Promise<Response> {
       db: dbStatus,
       timestamp: new Date().toISOString(),
     },
-    {
-      status: isHealthy ? 200 : 503,
-      headers: { "Cache-Control": "no-store" },
-    },
+    isHealthy ? 200 : 503,
+    { "Cache-Control": "no-store" },
   );
 }
 
 // ---------------------------------------------------------------------------
-// POST /api/query — read-only SQL
+// POST /api/v1/query — read-only SQL
 // ---------------------------------------------------------------------------
 
 async function handleQuery(body: unknown, env: Env): Promise<Response> {
   if (typeof body !== "object" || body === null) {
-    return Response.json({ error: "Invalid request body" }, { status: 400 });
+    return jsonResponse({ error: "Invalid request body" }, 400);
   }
 
   const { sql, params } = body as { sql?: string; params?: unknown[] };
 
   if (typeof sql !== "string" || sql.trim().length === 0) {
-    return Response.json({ error: "Missing or empty sql" }, { status: 400 });
+    return jsonResponse({ error: "Missing or empty sql" }, 400);
   }
 
   if (WRITE_RE.test(sql)) {
-    return Response.json(
-      { error: "Write queries not allowed on /api/query" },
-      { status: 403 },
+    return jsonResponse(
+      { error: "Write queries not allowed on /api/v1/query" },
+      403,
     );
   }
 
@@ -89,26 +109,23 @@ async function handleQuery(body: unknown, env: Env): Promise<Response> {
       Array.isArray(params) && params.length > 0 ? stmt.bind(...params) : stmt;
     const result = await bound.all();
 
-    return Response.json({
+    return jsonResponse({
       results: result.results ?? [],
       meta: result.meta ?? { changes: 0, duration: 0 },
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return Response.json(
-      { error: `D1 query failed: ${message}` },
-      { status: 500 },
-    );
+    return jsonResponse({ error: `D1 query failed: ${message}` }, 500);
   }
 }
 
 // ---------------------------------------------------------------------------
-// POST /api/execute — write SQL
+// POST /api/v1/execute — write SQL
 // ---------------------------------------------------------------------------
 
 async function handleExecute(body: unknown, env: Env): Promise<Response> {
   if (typeof body !== "object" || body === null) {
-    return Response.json({ error: "Invalid request body" }, { status: 400 });
+    return jsonResponse({ error: "Invalid request body" }, 400);
   }
 
   // Support single statement or batch
@@ -130,7 +147,7 @@ async function handleExecute(body: unknown, env: Env): Promise<Response> {
 
       const results = await env.DB.batch(stmts);
 
-      return Response.json({
+      return jsonResponse({
         results: results.map((r) => ({
           results: r.results ?? [],
           meta: r.meta ?? { changes: 0, duration: 0 },
@@ -140,7 +157,7 @@ async function handleExecute(body: unknown, env: Env): Promise<Response> {
 
     // Single statement mode
     if (typeof sql !== "string" || sql.trim().length === 0) {
-      return Response.json({ error: "Missing or empty sql" }, { status: 400 });
+      return jsonResponse({ error: "Missing or empty sql" }, 400);
     }
 
     const stmt = env.DB.prepare(sql);
@@ -148,16 +165,38 @@ async function handleExecute(body: unknown, env: Env): Promise<Response> {
       Array.isArray(params) && params.length > 0 ? stmt.bind(...params) : stmt;
     const result = await bound.all();
 
-    return Response.json({
+    return jsonResponse({
       results: result.results ?? [],
       meta: result.meta ?? { changes: 0, duration: 0 },
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return Response.json(
-      { error: `D1 execute failed: ${message}` },
-      { status: 500 },
-    );
+    return jsonResponse({ error: `D1 execute failed: ${message}` }, 500);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Auth helper
+// ---------------------------------------------------------------------------
+
+function authenticate(request: Request, env: Env): Response | null {
+  const authHeader = request.headers.get("Authorization");
+  const expected = `Bearer ${env.WORKER_SECRET}`;
+  if (!authHeader || authHeader !== expected) {
+    return jsonResponse({ error: "Unauthorized" }, 401);
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// JSON body parser
+// ---------------------------------------------------------------------------
+
+async function parseJsonBody(request: Request): Promise<unknown | Response> {
+  try {
+    return await request.json();
+  } catch {
+    return jsonResponse({ error: "Invalid JSON body" }, 400);
   }
 }
 
@@ -172,75 +211,39 @@ const worker: ExportedHandler<Env> = {
 
     // CORS preflight
     if (request.method === "OPTIONS") {
-      return new Response(null, {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
-          "Access-Control-Max-Age": "86400",
-        },
-      });
+      return new Response(null, { headers: corsHeaders() });
     }
 
-    // GET /api/live — no auth
-    if (path === "/api/live") {
+    // GET /api/v1/health — no auth
+    if (path === "/api/v1/health") {
       if (request.method !== "GET") {
-        return Response.json(
-          { error: "Method not allowed" },
-          { status: 405 },
-        );
+        return jsonResponse({ error: "Method not allowed" }, 405);
       }
-      return handleLive(env);
+      return handleHealth(env);
     }
 
-    // Auth: all other routes require Bearer token
-    const authHeader = request.headers.get("Authorization");
-    const expected = `Bearer ${env.WORKER_SECRET}`;
-    if (!authHeader || authHeader !== expected) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // Auth: all other /api/v1/* routes require Bearer token
+    if (path.startsWith("/api/v1/")) {
+      const authError = authenticate(request, env);
+      if (authError) return authError;
 
-    // POST /api/query
-    if (path === "/api/query") {
       if (request.method !== "POST") {
-        return Response.json(
-          { error: "Method not allowed" },
-          { status: 405 },
-        );
+        return jsonResponse({ error: "Method not allowed" }, 405);
       }
-      let body: unknown;
-      try {
-        body = await request.json();
-      } catch {
-        return Response.json(
-          { error: "Invalid JSON body" },
-          { status: 400 },
-        );
+
+      const bodyOrError = await parseJsonBody(request);
+      if (bodyOrError instanceof Response) return bodyOrError;
+
+      if (path === "/api/v1/query") {
+        return handleQuery(bodyOrError, env);
       }
-      return handleQuery(body, env);
+
+      if (path === "/api/v1/execute") {
+        return handleExecute(bodyOrError, env);
+      }
     }
 
-    // POST /api/execute
-    if (path === "/api/execute") {
-      if (request.method !== "POST") {
-        return Response.json(
-          { error: "Method not allowed" },
-          { status: 405 },
-        );
-      }
-      let body: unknown;
-      try {
-        body = await request.json();
-      } catch {
-        return Response.json(
-          { error: "Invalid JSON body" },
-          { status: 400 },
-        );
-      }
-      return handleExecute(body, env);
-    }
-
-    return Response.json({ error: "Not found" }, { status: 404 });
+    return jsonResponse({ error: "Not found" }, 404);
   },
 };
 
