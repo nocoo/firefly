@@ -1,5 +1,7 @@
 import type { Db } from "@/lib/db";
 import type { Locale } from "@/i18n/translations";
+import { buildSetClauses } from "@/data/core/sql";
+import type { FieldDef } from "@/data/core/types";
 
 export type FontStyle = "pingfang" | "classic" | "serif" | "sans";
 const FONT_STYLES: FontStyle[] = ["pingfang", "classic", "serif", "sans"];
@@ -153,66 +155,64 @@ export interface UpdateSiteSettingsInput {
   // It is managed exclusively by updateSiteLogoVersion().
 }
 
+// Field map for buildSetClauses (D5: camelCase → snake_case)
+const settingsFields: Record<string, FieldDef> = {
+  locale: { column: "locale" },
+  postsPerPage: { column: "posts_per_page" },
+  commentsEnabled: { column: "comments_enabled" },
+  fontStyle: { column: "font_style" },
+  siteName: { column: "site_name" },
+  siteTagline: { column: "site_tagline" },
+  siteDescription: { column: "site_description" },
+  siteAuthor: { column: "site_author" },
+  authorEmail: { column: "author_email" },
+  twitterHandle: { column: "twitter_handle" },
+  socialLinks: { column: "social_links" },
+};
+
+/**
+ * Normalize input values before building SET clauses.
+ * Applies clamping, slicing, bool→int, and JSON.stringify.
+ */
+function normalizeSettingsInput(
+  input: UpdateSiteSettingsInput,
+): Record<string, unknown> {
+  const normalized: Record<string, unknown> = {};
+
+  if (input.locale !== undefined) normalized.locale = input.locale;
+  if (input.postsPerPage !== undefined) {
+    normalized.postsPerPage = Math.max(1, Math.min(100, input.postsPerPage));
+  }
+  if (input.commentsEnabled !== undefined) {
+    normalized.commentsEnabled = input.commentsEnabled ? 1 : 0;
+  }
+  if (input.fontStyle !== undefined) normalized.fontStyle = input.fontStyle;
+  if (input.siteName !== undefined) normalized.siteName = input.siteName.slice(0, 255);
+  if (input.siteTagline !== undefined) normalized.siteTagline = input.siteTagline.slice(0, 500);
+  if (input.siteDescription !== undefined) normalized.siteDescription = input.siteDescription.slice(0, 1000);
+  if (input.siteAuthor !== undefined) normalized.siteAuthor = input.siteAuthor.slice(0, 255);
+  if (input.authorEmail !== undefined) normalized.authorEmail = input.authorEmail.slice(0, 255);
+  if (input.twitterHandle !== undefined) normalized.twitterHandle = input.twitterHandle.slice(0, 50);
+  if (input.socialLinks !== undefined) normalized.socialLinks = JSON.stringify(input.socialLinks);
+
+  return normalized;
+}
+
 export async function updateSiteSettings(
   db: Db,
   input: UpdateSiteSettingsInput,
 ): Promise<SiteSettings> {
-  const sets: string[] = [];
-  const params: unknown[] = [];
+  const normalized = normalizeSettingsInput(input);
+  const { setClauses, params } = buildSetClauses(normalized, settingsFields);
 
-  if (input.locale !== undefined) {
-    sets.push("locale = ?");
-    params.push(input.locale);
-  }
-  if (input.postsPerPage !== undefined) {
-    sets.push("posts_per_page = ?");
-    params.push(Math.max(1, Math.min(100, input.postsPerPage)));
-  }
-  if (input.commentsEnabled !== undefined) {
-    sets.push("comments_enabled = ?");
-    params.push(input.commentsEnabled ? 1 : 0);
-  }
-  if (input.fontStyle !== undefined) {
-    sets.push("font_style = ?");
-    params.push(input.fontStyle);
-  }
-  if (input.siteName !== undefined) {
-    sets.push("site_name = ?");
-    params.push(input.siteName.slice(0, 255));
-  }
-  if (input.siteTagline !== undefined) {
-    sets.push("site_tagline = ?");
-    params.push(input.siteTagline.slice(0, 500));
-  }
-  if (input.siteDescription !== undefined) {
-    sets.push("site_description = ?");
-    params.push(input.siteDescription.slice(0, 1000));
-  }
-  if (input.siteAuthor !== undefined) {
-    sets.push("site_author = ?");
-    params.push(input.siteAuthor.slice(0, 255));
-  }
-  if (input.authorEmail !== undefined) {
-    sets.push("author_email = ?");
-    params.push(input.authorEmail.slice(0, 255));
-  }
-  if (input.twitterHandle !== undefined) {
-    sets.push("twitter_handle = ?");
-    params.push(input.twitterHandle.slice(0, 50));
-  }
-  if (input.socialLinks !== undefined) {
-    sets.push("social_links = ?");
-    params.push(JSON.stringify(input.socialLinks));
-  }
-
-  if (sets.length === 0) {
+  if (setClauses.length === 0) {
     return getSiteSettings(db);
   }
 
-  sets.push("updated_at = unixepoch()");
+  setClauses.push("updated_at = unixepoch()");
 
   await db.execute(
-    `UPDATE site_settings SET ${sets.join(", ")} WHERE id = 1`,
+    `UPDATE site_settings SET ${setClauses.join(", ")} WHERE id = 1`,
     params,
   );
 

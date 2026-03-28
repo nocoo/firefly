@@ -1,5 +1,7 @@
 import type { Db } from "@/lib/db";
 import type { AiProvider, SdkType } from "@/services/ai";
+import { buildSetClauses } from "@/data/core/sql";
+import type { FieldDef } from "@/data/core/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -29,6 +31,18 @@ const DEFAULTS: AiSettings = {
   model: "",
   baseURL: "",
   sdkType: "",
+};
+
+// ---------------------------------------------------------------------------
+// Field map (D5: camelCase → snake_case)
+// ---------------------------------------------------------------------------
+
+const fields: Record<string, FieldDef> = {
+  provider: { column: "ai_provider" },
+  apiKey: { column: "ai_api_key" },
+  model: { column: "ai_model" },
+  baseURL: { column: "ai_base_url" },
+  sdkType: { column: "ai_sdk_type" },
 };
 
 // ---------------------------------------------------------------------------
@@ -72,38 +86,16 @@ export async function updateAiSettings(
   db: Db,
   input: UpdateAiSettingsInput,
 ): Promise<AiSettings> {
-  const sets: string[] = [];
-  const params: unknown[] = [];
+  const { setClauses, params } = buildSetClauses(input, fields);
 
-  if (input.provider !== undefined) {
-    sets.push("ai_provider = ?");
-    params.push(input.provider);
-  }
-  if (input.apiKey !== undefined) {
-    sets.push("ai_api_key = ?");
-    params.push(input.apiKey);
-  }
-  if (input.model !== undefined) {
-    sets.push("ai_model = ?");
-    params.push(input.model);
-  }
-  if (input.baseURL !== undefined) {
-    sets.push("ai_base_url = ?");
-    params.push(input.baseURL);
-  }
-  if (input.sdkType !== undefined) {
-    sets.push("ai_sdk_type = ?");
-    params.push(input.sdkType);
-  }
-
-  if (sets.length === 0) {
+  if (setClauses.length === 0) {
     return getAiSettings(db);
   }
 
-  sets.push("updated_at = unixepoch()");
+  setClauses.push("updated_at = unixepoch()");
 
   await db.execute(
-    `UPDATE site_settings SET ${sets.join(", ")} WHERE id = 1`,
+    `UPDATE site_settings SET ${setClauses.join(", ")} WHERE id = 1`,
     params,
   );
 
