@@ -3,13 +3,15 @@
  *
  * Covers: POST /api/posts/[slug]/excerpt
  *
- * Since E2E environment has no AI provider configured by default,
- * we test the error paths (400 AI not configured, 404 not found).
+ * The AI provider may or may not be configured in the E2E environment.
+ * - If configured: 200 with { excerpt }
+ * - If not configured: 400 with "AI provider not configured"
+ * Both are valid outcomes; the test asserts correct response shapes.
  */
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17043";
 
 describe("POST /api/posts/[slug]/excerpt", () => {
-  it("returns 400 when AI is not configured", async () => {
+  it("returns 200 with excerpt or 400 when AI is not configured", async () => {
     const slug = `excerpt-test-${Date.now()}`;
 
     // Create a test post
@@ -26,16 +28,22 @@ describe("POST /api/posts/[slug]/excerpt", () => {
     expect(createRes.status).toBe(201);
 
     try {
-      // Try to generate excerpt — should fail because AI is not configured
       const res = await fetch(`${BASE}/api/posts/${slug}/excerpt`, {
         method: "POST",
       });
-      expect(res.status).toBe(400);
-
       const body = await res.json();
-      expect(body.error).toMatch(/AI provider not configured/i);
+
+      if (res.status === 200) {
+        // AI configured — should return generated excerpt
+        expect(body).toHaveProperty("excerpt");
+        expect(typeof body.excerpt).toBe("string");
+        expect(body.excerpt.length).toBeGreaterThan(0);
+      } else {
+        // AI not configured — should return 400
+        expect(res.status).toBe(400);
+        expect(body.error).toMatch(/AI provider not configured/i);
+      }
     } finally {
-      // Cleanup regardless of test result
       await fetch(`${BASE}/api/posts/${slug}`, { method: "DELETE" });
     }
   });
