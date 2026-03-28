@@ -150,7 +150,7 @@ export default async function PostPage({ params }: PostPageProps) {
               {post.category_name && post.category_slug && (
                 <span className="blog-byline-item">
                   <Folder className="blog-byline-icon" strokeWidth={1.5} />
-                  <Link href={`/category/${post.category_slug}`}>
+                  <Link href={`/category/${post.category_slug}`} prefetch={false}>
                     {post.category_name}
                   </Link>
                 </span>

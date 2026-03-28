@@ -26,6 +26,7 @@ export function PostCard({ post, locale, author, priority }: PostCardProps) {
       <h2 className="text-xl font-semibold leading-snug md:text-2xl">
         <Link
           href={href}
+          prefetch={false}
           className="text-blog-text no-underline transition-colors hover:text-blog-accent"
         >
           {post.title}
@@ -52,7 +53,7 @@ export function PostCard({ post, locale, author, priority }: PostCardProps) {
       {/* Featured image */}
       {post.featured_image && (
         <div className="blog-featured-image">
-          <Link href={href} className="absolute inset-0" aria-label={post.title}>
+          <Link href={href} prefetch={false} className="absolute inset-0" aria-label={post.title}>
             <Image
               src={post.featured_image}
               alt={post.title}
@@ -67,7 +68,7 @@ export function PostCard({ post, locale, author, priority }: PostCardProps) {
 
       {/* Excerpt */}
       {post.excerpt && (
-        <Link href={href} className="mt-3 block text-base leading-relaxed text-blog-text no-underline">
+        <Link href={href} prefetch={false} className="mt-3 block text-base leading-relaxed text-blog-text no-underline">
           {post.excerpt}
         </Link>
       )}
@@ -76,6 +77,7 @@ export function PostCard({ post, locale, author, priority }: PostCardProps) {
       {post.excerpt && (
         <Link
           href={href}
+          prefetch={false}
           className="blog-read-more"
           aria-label={`${t(locale, "blog.post.continueReading")} — ${post.title}`}
         >

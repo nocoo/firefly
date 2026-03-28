@@ -18,6 +18,7 @@ export function BlogGlobalBar({ isAdmin }: BlogGlobalBarProps) {
       {isAdmin && (
         <Link
           href="/admin"
+          prefetch={false}
           className="blog-global-bar-link"
           aria-label="Dashboard"
         >

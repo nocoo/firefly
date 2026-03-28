@@ -137,6 +137,7 @@ export function ArticleNav({
         {/* Left: back to list */}
         <Link
           href={back.href}
+          prefetch={false}
           className="text-sm text-blog-text transition-colors hover:text-blog-accent"
         >
           {t(locale, back.labelKey)}{" "}
@@ -148,6 +149,7 @@ export function ArticleNav({
           {prevHref ? (
             <Link
               href={prevHref}
+              prefetch={false}
               className="text-blog-text transition-colors hover:text-blog-accent"
               title={prevTitle ?? undefined}
             >
@@ -164,6 +166,7 @@ export function ArticleNav({
           {nextHref ? (
             <Link
               href={nextHref}
+              prefetch={false}
               className="text-blog-text transition-colors hover:text-blog-accent"
               title={nextTitle ?? undefined}
             >

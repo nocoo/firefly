@@ -39,7 +39,7 @@ export function Pagination({
     >
       {/* Previous */}
       {currentPage > 1 ? (
-        <Link href={href(currentPage - 1)} className={`${linkClass} ${inactiveClass}`}>
+        <Link href={href(currentPage - 1)} prefetch={false} className={`${linkClass} ${inactiveClass}`}>
           «
         </Link>
       ) : (
@@ -61,7 +61,7 @@ export function Pagination({
             {slot}
           </span>
         ) : (
-          <Link key={slot} href={href(slot)} className={`${linkClass} ${inactiveClass}`}>
+          <Link key={slot} href={href(slot)} prefetch={false} className={`${linkClass} ${inactiveClass}`}>
             {slot}
           </Link>
         ),
@@ -69,7 +69,7 @@ export function Pagination({
 
       {/* Next */}
       {currentPage < totalPages ? (
-        <Link href={href(currentPage + 1)} className={`${linkClass} ${inactiveClass}`}>
+        <Link href={href(currentPage + 1)} prefetch={false} className={`${linkClass} ${inactiveClass}`}>
           »
         </Link>
       ) : (

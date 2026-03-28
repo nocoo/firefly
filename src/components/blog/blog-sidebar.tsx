@@ -72,7 +72,7 @@ export function BlogSidebar({
 
         {/* Site identity */}
         <div className="blog-site-title">
-          <Link href="/">{siteName}</Link>
+          <Link href="/" prefetch={false}>{siteName}</Link>
         </div>
         {siteTagline && <p className="blog-tagline">{siteTagline}</p>}
 
@@ -106,7 +106,7 @@ export function BlogSidebar({
             <ul className="blog-sidebar-list">
               {categories.map((cat) => (
                 <li key={cat.id}>
-                  <Link href={`/category/${cat.slug}`}>
+                  <Link href={`/category/${cat.slug}`} prefetch={false}>
                     <span>{cat.name}</span>
                     <span className="blog-sidebar-count">{cat.post_count}</span>
                   </Link>
@@ -136,6 +136,7 @@ export function BlogSidebar({
                     <Link
                       key={tag.id}
                       href={`/tag/${tag.slug}`}
+                      prefetch={false}
                       style={{ fontSize: `${size}em` }}
                     >
                       {tag.name}
@@ -176,7 +177,7 @@ export function BlogSidebar({
                   <>
                     {recent.map((a) => (
                       <li key={`${a.year}-${a.month}`}>
-                        <Link href={`/archive/${a.year}-${String(a.month).padStart(2, "0")}`}>
+                        <Link href={`/archive/${a.year}-${String(a.month).padStart(2, "0")}`} prefetch={false}>
                           <span>{a.year} {t("blog.sidebar.yearSuffix")} {a.month} {t("blog.sidebar.monthSuffix")}</span>
                           <span className="blog-sidebar-count">{a.count}</span>
                         </Link>
@@ -184,7 +185,7 @@ export function BlogSidebar({
                     ))}
                     {olderEntries.map(([year, count]) => (
                       <li key={year}>
-                        <Link href={`/archive/${year}`}>
+                        <Link href={`/archive/${year}`} prefetch={false}>
                           <span>{year} {t("blog.sidebar.yearSuffix")}</span>
                           <span className="blog-sidebar-count">{count}</span>
                         </Link>
