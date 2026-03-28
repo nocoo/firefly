@@ -620,8 +620,9 @@ const postConfig: EntityConfig<PostWithCategory> = {
 - `getPostTags(db, postId)` — M:N join query (read-only)
 - `setPostTags(db, postId, tagIds)` — atomic batch DELETE + INSERT via `db.batch()`. **No count refresh** (was: called `refreshAllTagPostCounts`, now lifted to Service)
 - `batchUpdatePosts(db, ids, updates)` — bulk UPDATE. **No side effects** (was: refreshed categories/tags/archives/count, now lifted to Service)
-- `refreshCategoryPostCount(db, categoryId)` — idempotent count recalc (called by Service, not internally)
-- `refreshAllTagPostCounts(db)` — idempotent global count recalc (called by Service, not internally)
+- `refreshCategoryPostCount(db, categoryId)` — idempotent single-category count recalc: `UPDATE categories SET post_count = (SELECT COUNT(*) FROM posts WHERE category_id = ? AND status = 'published') WHERE id = ?`
+- `refreshAllCategoryPostCounts(db)` — idempotent **global** category count recalc: runs `refreshCategoryPostCount` for every category in a single batch. Needed by `PostService.batchUpdate` which can affect multiple categories in one call.
+- `refreshAllTagPostCounts(db)` — idempotent global tag count recalc (called by Service, not internally)
 - `listMonthlyArchives(db)` — aggregation (cached)
 - `listPostYears(db)` — aggregation
 - `getAdjacentPosts(db, post)` — prev/next
@@ -745,7 +746,9 @@ interface UpdatePostInput {
 
 **`PostService.batchUpdate(db, ids, updates)`:**
 1. `postData.batchUpdatePosts(db, ids, updates)` — pure bulk UPDATE
-2. Broad refresh: all category counts, all tag counts, archives, post caches
+2. `postData.refreshAllCategoryPostCounts(db)` — broad refresh, batch can span categories
+3. `postData.refreshAllTagPostCounts(db)` — same
+4. `postData.invalidatePostCaches()` + invalidate archives
 
 **`PostService.getWithTags(db, id)`:**
 1. `postData.getById(db, id)`
@@ -852,7 +855,26 @@ Keep:
 
 ### 7.3 Tag/Category MCP Entities
 
-Minimal changes — `dataLayer` imports point to new paths, `mapUpdateInput` stays (for `new_slug` → `slug` mapping). No business hooks existed before for these, so nothing to remove.
+**Tag MCP entity:** `dataLayer` imports point to new paths. `mapUpdateInput` stays (for `new_slug` → `slug` mapping). No business hooks existed before, nothing to remove. Tag schemas only use `name`/`slug` — both already camelCase, no boundary mapping change.
+
+**Category MCP entity:** `dataLayer` imports point to new paths. `mapUpdateInput` stays (for `new_slug` → `slug`) **and gains** `sort_order` → `sortOrder` mapping. `mapCreateInput` added for the same `sort_order` → `sortOrder` mapping. MCP schema stays `sort_order` (external-facing, backward compatible) — the mapping happens in hooks, same pattern as `new_slug` → `slug`.
+
+```ts
+// Category MCP entity — after migration
+hooks: {
+  mapCreateInput: (args) => {
+    const { sort_order, ...rest } = args;
+    return sort_order !== undefined ? { ...rest, sortOrder: sort_order } : rest;
+  },
+  mapUpdateInput: (args) => {
+    const { new_slug, sort_order, ...rest } = args;
+    const mapped = { ...rest };
+    if (new_slug !== undefined) mapped.slug = new_slug;
+    if (sort_order !== undefined) mapped.sortOrder = sort_order;
+    return mapped;
+  },
+},
+```
 
 ---
 
@@ -911,14 +933,16 @@ const executeUrl = `${workerUrl}/api/v1/execute`;
 
 ### 9.2 Route Changes by Entity
 
-**Tags** — Import path change only:
+**Tags** — Import path change + input type migration (D5):
 - `src/app/api/tags/route.ts` → import from `@/data/entities/tag`
 - `src/app/api/tags/[slug]/route.ts` → same
+- Tag's current input types (`CreateTagInput`, `UpdateTagInput`) only have `name` and `slug` — both already match camelCase. **No boundary mapping needed** for tags.
 
-**Categories** — Import path change only:
+**Categories** — Import path change + boundary mapping for `sort_order` → `sortOrder` (D5):
 - `src/app/api/categories/route.ts` → import from `@/data/entities/category`
 - `src/app/api/categories/[slug]/route.ts` → same
 - `src/app/api/categories/reorder/route.ts` → same
+- **Boundary mapping:** Current input types use `sort_order` (snake_case). New `CreateCategoryInput` / `UpdateCategoryInput` use `sortOrder` (camelCase per D5). Route handlers add a one-line mapping at the boundary: `{ ...body, sortOrder: body.sort_order }`. External API request shape stays `sort_order` for backward compatibility.
 
 **Posts** — Import source changes from data layer to PostService:
 - `POST /api/posts` → calls `PostService.create(db, input)` instead of `createPost` + `setPostTags`
@@ -1101,7 +1125,7 @@ Stage 3 已完成 MCP entity config 的 import 切换。Stage 4 专注于 MCP **
 - `update` with status change: refreshes all tag counts + archives
 - `update` with neither changed: no count refresh
 - `delete`: refreshes category + tags + archives
-- `batchUpdate`: broad invalidation
+- `batchUpdate`: calls refreshAllCategoryPostCounts + refreshAllTagPostCounts
 
 **MCP entity (post):**
 - `afterGet` enriches with tags
