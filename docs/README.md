@@ -25,3 +25,4 @@ Modern blog platform built with Next.js, Cloudflare D1, and R2. Migrated from Wo
 | 17 | [Entity-Driven MCP Framework](./17-mcp-context-efficiency.md) | 📝 |
 | 18 | [Media Library](./18-media-library.md) | ✅ |
 | 19 | [Image Optimization & Content Lightbox](./19-image-optimization.md) | 📝 |
+| 20 | [Entity Data Layer Refactoring](./20-entity-data-layer.md) | 📝 |
