@@ -86,11 +86,11 @@ export class WorkerHttpAdapter implements DbAdapter {
   }
 
   async execute(sql: string): Promise<void> {
-    await this.post("/api/execute", sql);
+    await this.post("/api/v1/execute", sql);
   }
 
   async query<T = Record<string, unknown>>(sql: string): Promise<T[]> {
-    return this.post("/api/query", sql) as Promise<T[]>;
+    return this.post("/api/v1/query", sql) as Promise<T[]>;
   }
 
   private async post(path: string, sql: string): Promise<unknown[]> {
