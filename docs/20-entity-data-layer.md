@@ -1058,7 +1058,7 @@ const executeUrl = `${workerUrl}/api/v1/execute`;
 - `GET /api/media` → `mediaData.list(db, options)` — direct data layer read
 - `GET /api/media/years` → `mediaData.listMediaYears(db)` — direct data layer read
 - `PATCH /api/media/associate` → `mediaData.associateMedia(db, ids, postId)`
-- **D5 boundary mapping:** `post_id` → `postId` in upload and associate routes. Other media fields (`filename`, `size`, `width`, `height`) are already camelCase or no-case-difference.
+- **D5 boundary mapping:** `POST /api/media` (upload) maps `post_id` → `postId` at the route boundary. `PATCH /api/media/associate` already accepts `postId` from callers — no mapping needed. Other media fields (`filename`, `size`, `width`, `height`) are already camelCase or no-case-difference.
 
 **Server Components** — Import path changes:
 - 11 post consumers → mix of `postData` (reads) and `PostService` (getWithTags)
