@@ -1078,23 +1078,23 @@ const executeUrl = `${workerUrl}/api/v1/execute`;
 
 构建全部新代码，不删除旧代码，不修改任何现有 import。新旧并存，新代码通过 L1 单元测试验证。
 
-| Step | Deliverable | Gate |
-|------|-------------|------|
-| 1.1 | `src/data/core/types.ts` | Compiles |
-| 1.2 | `src/data/core/sql.ts` + `sql.test.ts` | 100% coverage |
-| 1.3 | `src/data/core/timestamps.ts` + test | 100% coverage |
-| 1.4 | `src/data/core/cache-manager.ts` + test | 100% coverage |
-| 1.5 | `src/data/core/base-data-layer.ts` + test | 100% coverage |
-| 1.6 | `src/data/core/test-utils.ts` | Used by all core tests |
-| 1.7 | `src/data/entities/tag.ts` + `tag.test.ts` | 95%+ coverage |
-| 1.8 | `src/data/entities/category.ts` + `category.test.ts` | 95%+ coverage |
-| 1.9 | `src/data/entities/comment.ts` + `comment.test.ts` | 95%+ coverage |
-| 1.10 | `src/data/entities/post.ts` + `post.test.ts` | 95%+ coverage |
-| 1.11 | `src/data/entities/media.ts` + `media.test.ts` | 95%+ coverage |
-| 1.12 | `src/services/post-service.ts` + `post-service.test.ts` | 95%+ coverage |
-| 1.13 | `src/services/media-service.ts` + `media-service.test.ts` | 95%+ coverage |
-| 1.14 | `src/data/settings.ts` — adopt `buildSetClauses` from `core/sql` | Existing settings tests pass |
-| 1.15 | `src/data/ai-settings.ts` — adopt `buildSetClauses` from `core/sql` | Existing ai-settings tests pass |
+| Step | Deliverable | Gate | Status |
+|------|-------------|------|--------|
+| 1.1 | `src/data/core/types.ts` | Compiles | ✅ Done |
+| 1.2 | `src/data/core/sql.ts` + `sql.test.ts` | 100% coverage | ✅ Done |
+| 1.3 | `src/data/core/timestamps.ts` + test | 100% coverage | ✅ Done |
+| 1.4 | `src/data/core/cache-manager.ts` + test | 100% coverage | ✅ Done |
+| 1.5 | `src/data/core/base-data-layer.ts` + test | 100% coverage | ✅ Done |
+| 1.6 | `src/data/core/test-utils.ts` | Used by all core tests | ✅ Done |
+| 1.7 | `src/data/entities/tag.ts` + `tag.test.ts` | 95%+ coverage | ✅ Done (16 tests) |
+| 1.8 | `src/data/entities/category.ts` + `category.test.ts` | 95%+ coverage | ✅ Done (17 tests) |
+| 1.9 | `src/data/entities/comment.ts` + `comment.test.ts` | 95%+ coverage | ✅ Done (10 tests) |
+| 1.10 | `src/data/entities/post.ts` + `post.test.ts` | 95%+ coverage | ✅ Done (50 tests) |
+| 1.11 | `src/data/entities/media.ts` + `media.test.ts` | 95%+ coverage | ✅ Done (22 tests) |
+| 1.12 | `src/services/post-service.ts` + `post-service.test.ts` | 95%+ coverage | ✅ Done (20 tests) |
+| 1.13 | `src/services/media-service.ts` + `media-service.test.ts` | 95%+ coverage | ✅ Done (8 tests) |
+| 1.14 | `src/data/settings.ts` — adopt `buildSetClauses` from `core/sql` | Existing settings tests pass | ✅ Done |
+| 1.15 | `src/data/ai-settings.ts` — adopt `buildSetClauses` from `core/sql` | Existing ai-settings tests pass | ✅ Done |
 
 **Stage 1 Gate:** `bun run test` 全部通过（新测试 + 旧测试）。线上零影响——旧代码和旧 import 全部保留，新代码只有测试在调用。
 
