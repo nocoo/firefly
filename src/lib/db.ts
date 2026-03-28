@@ -4,8 +4,8 @@
  * Communicates with the firefly Cloudflare Worker which proxies
  * to D1 via native binding. All SQL goes through HTTP.
  *
- * Read queries → POST /api/query (write-guarded by Worker)
- * Write queries → POST /api/execute (single + batch)
+ * Read queries → POST /api/v1/query (write-guarded by Worker)
+ * Write queries → POST /api/v1/execute (single + batch)
  */
 
 // ---------------------------------------------------------------------------
@@ -110,7 +110,7 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
       sql: string,
       params?: unknown[],
     ): Promise<DbQueryResult<T>> {
-      return post<DbQueryResult<T>>("/api/query", {
+      return post<DbQueryResult<T>>("/api/v1/query", {
         sql,
         params: params ?? [],
       });
@@ -125,7 +125,7 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
     },
 
     async execute(sql: string, params?: unknown[]): Promise<DbMeta> {
-      const result = await post<DbQueryResult>("/api/execute", {
+      const result = await post<DbQueryResult>("/api/v1/execute", {
         sql,
         params: params ?? [],
       });
@@ -134,7 +134,7 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
 
     async batch(statements: DbBatchStatement[]): Promise<DbQueryResult[]> {
       const result = await post<{ results: DbQueryResult[] }>(
-        "/api/execute",
+        "/api/v1/execute",
         { statements },
       );
       return result.results;

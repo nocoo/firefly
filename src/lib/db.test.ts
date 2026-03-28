@@ -68,7 +68,7 @@ describe("db.query", () => {
 
     expect(fetchMock).toHaveBeenCalledOnce();
     const [reqUrl, reqInit] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(reqUrl).toBe(`${url}/api/query`);
+    expect(reqUrl).toBe(`${url}/api/v1/query`);
     expect(reqInit.method).toBe("POST");
     expect(reqInit.headers).toMatchObject({
       Authorization: `Bearer ${secret}`,
@@ -197,7 +197,7 @@ describe("db.execute", () => {
     ]);
 
     const [reqUrl] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(reqUrl).toBe("https://w.test/api/execute");
+    expect(reqUrl).toBe("https://w.test/api/v1/execute");
     expect(meta).toEqual({ changes: 1, duration: 5 });
   });
 
