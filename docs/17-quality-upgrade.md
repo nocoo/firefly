@@ -5,7 +5,7 @@
 >
 > Date: 2026-03-27
 > Prerequisite: [07-quality-system-upgrade.md](./07-quality-system-upgrade.md) (completed),
->              [13-quality-hardening.md](./13-quality-hardening.md) (design only, not implemented)
+>              [13-quality-hardening.md](./archive/13-quality-hardening.md) (design only, not implemented)
 > Current Tier: **S** (six dimensions green, but 5 known gaps open) → **S (hardened)** ✅
 > Target: **S (hardened)** — all gaps closed, CI safety net in place
 

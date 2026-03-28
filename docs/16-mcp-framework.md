@@ -1,4 +1,4 @@
-# 17 — Entity-Driven MCP Framework
+# 16 — Entity-Driven MCP Framework
 
 Refactor the 17 hand-written MCP tool handlers into a declarative, entity-driven framework. Each entity (tag, category, post) is defined as a configuration object; the framework generates all CRUD handlers, registers tools, and enforces a uniform protocol. Entity-specific logic (relations, AI extras) is expressed through lifecycle hooks.
 

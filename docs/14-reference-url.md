@@ -1,5 +1,6 @@
 # 14 — Reference URL (Link Bookmark)
 
+
 ## Problem
 
 Blog posts often reference external resources — a GitHub project that inspired the article, a thread being discussed, or a tool being reviewed. Currently there is no structured way to attach a source link. Authors either embed raw URLs in the body text (easy to miss, no visual emphasis) or skip the reference entirely.

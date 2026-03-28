@@ -1,4 +1,4 @@
-# 21 — Full-Text Search
+# 20 — Full-Text Search
 
 ## Overview
 

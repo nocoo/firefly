@@ -1,4 +1,4 @@
-# 16 — Backy Backup Integration
+# 15 — Backy Backup Integration
 
 Firefly 集成 [Backy](https://backy.your-domain.com) 远程备份服务，实现博客核心数据的推送备份与历史查看。
 

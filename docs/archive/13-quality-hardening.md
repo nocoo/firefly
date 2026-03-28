@@ -7,7 +7,7 @@
 > Prerequisite: [07-quality-system-upgrade.md](./07-quality-system-upgrade.md) (completed)
 > Current Tier: **S**
 > Target: **S (hardened)** — close all audit-identified gaps
-> **Status: ✅ Implemented in [17-quality-upgrade-l1l2l3g1g2.md](./17-quality-upgrade-l1l2l3g1g2.md) (2026-03-27)**
+> **Status: ✅ Implemented in [17-quality-upgrade.md](../17-quality-upgrade.md) (2026-03-27)**
 
 ---
 

@@ -1,4 +1,4 @@
-# 14 — Analytics Dashboard Redesign
+# 13 — Analytics Dashboard Redesign
 
 > 从"总量概览"转向"多维度分源分析"，按人类访客、搜索引擎、AI Bot、其他 Bot 四类来源独立呈现数据。
 
