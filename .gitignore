@@ -25,5 +25,10 @@ scripts/migrations/data/
 # Playwright
 test-results/
 
+# Other package manager lockfiles (project uses Bun)
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
 # Claude Code worktrees
 .claude/worktrees/

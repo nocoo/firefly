@@ -10,10 +10,10 @@ async function main() {
   console.log("=== G2: Security Gate ===\n");
   let failed = false;
 
-  // 1. osv-scanner — check pnpm-lock.yaml for known CVEs
+  // 1. osv-scanner — check bun.lock for known CVEs
   console.log("[G2] osv-scanner: checking dependencies...");
   try {
-    await $`osv-scanner --lockfile=pnpm-lock.yaml`.quiet();
+    await $`osv-scanner --lockfile=bun.lock`.quiet();
     console.log("[G2] osv-scanner: ✅ no vulnerabilities\n");
   } catch {
     console.error("[G2] osv-scanner: ❌ vulnerabilities found\n");

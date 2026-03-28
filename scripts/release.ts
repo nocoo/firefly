@@ -13,7 +13,7 @@
  * Workflow:
  *   1. Determine new version
  *   2. Update package.json
- *   3. Sync lockfile (pnpm install)
+ *   3. Sync lockfile (bun install)
  *   4. Prepend CHANGELOG.md entry (from git log)
  *   5. Commit + tag
  *   6. Push + create GitHub Release
@@ -131,9 +131,9 @@ success(`package.json → ${newVersion}`);
 // 2. Sync lockfile
 // ---------------------------------------------------------------------------
 
-info("Syncing lockfile (pnpm install)...");
+info("Syncing lockfile (bun install)...");
 if (!dryRun) {
-  run("pnpm install --no-frozen-lockfile", { stdio: "inherit" });
+  run("bun install", { stdio: "inherit" });
 }
 success("Lockfile synced");
 
@@ -212,7 +212,7 @@ if (dryRun) {
 
 info(`Creating commit and tag ${tag}...`);
 if (!dryRun) {
-  run("git add package.json pnpm-lock.yaml CHANGELOG.md");
+  run("git add package.json bun.lock CHANGELOG.md");
   run(`git commit -m "release: ${tag}"`);
   run(`git tag -a ${tag} -m "Release ${tag}"`);
 }
