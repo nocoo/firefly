@@ -2,6 +2,26 @@
 
 Personal blog platform built with Next.js + Cloudflare Workers.
 
+## Architecture
+
+### Data Layer
+- `src/data/core/` — Base data layer framework (sql builder, cache manager, timestamps)
+- `src/data/entities/` — Pure CRUD entity modules (post, tag, category, comment, media). camelCase input types, snake_case DB columns.
+- `src/services/` — Service layer for orchestration with side effects (PostService, MediaService). Best-effort secondary effects (D6 contract: primary throws, secondary logs).
+- `src/data/` (root) — Non-entity data modules (analytics, settings, backup, mcp-tokens, etc.)
+
+### MCP Framework
+- `src/lib/mcp/framework/` — Generic entity-driven MCP tool framework (handlers, projection, resolve, register)
+- `src/lib/mcp/entities/` — Entity configs (post, tag, category) with hooks for snake_case→camelCase mapping
+- Hooks: `afterGet`, `afterCreate` (best-effort), `afterUpdate` (best-effort), `mapCreateInput`, `mapUpdateInput`
+- No rollback mechanisms — all post-write hooks are best-effort (log on failure, don't roll back)
+
+### Key Conventions
+- Entity inputs: camelCase (`categoryId`, `featuredImage`, `publishedAt`)
+- DB columns: snake_case (`category_id`, `featured_image`, `published_at`)
+- MCP/REST external API: snake_case fields, mapped at boundary via hooks/route handlers
+- Test mock: `createMockDb()` from `@/data/core/test-utils` (single source, no local copies)
+
 ## Retrospective
 
 ### 2026-03-27: tsconfig.tsbuildinfo 导致 release 脚本失败
