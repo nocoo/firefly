@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.0.1 (2026-03-28)
+
+- Disable Next.js Link prefetch on all blog frontend routes
+- refactor: consolidate worker-v2 into worker, deploy as firefly
+
+
 ## v2.0.0 (2026-03-28)
 
 - chore: update next-env.d.ts for Next.js dev types path
