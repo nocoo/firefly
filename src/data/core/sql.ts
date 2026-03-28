@@ -21,8 +21,8 @@ import type { FieldDef } from "./types";
  * @param fieldMap - camelCase key → FieldDef (column mapping)
  * @returns `{ setClauses: string[], params: unknown[] }` — empty arrays for no-op
  */
-export function buildSetClauses(
-  input: Record<string, unknown>,
+export function buildSetClauses<T extends object>(
+  input: T,
   fieldMap: Record<string, FieldDef>,
 ): { setClauses: string[]; params: unknown[] } {
   const setClauses: string[] = [];
@@ -30,7 +30,7 @@ export function buildSetClauses(
 
   for (const [inputKey, fieldDef] of Object.entries(fieldMap)) {
     if (!(inputKey in input)) continue;
-    const value = input[inputKey];
+    const value = (input as Record<string, unknown>)[inputKey];
     if (value === undefined) continue;
 
     setClauses.push(`${fieldDef.column} = ?`);
