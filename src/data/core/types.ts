@@ -133,6 +133,5 @@ export interface EntityConfig<T extends BaseEntity> {
    * Custom list implementation (for complex JOINs/filters like Post, Media).
    * Only valid when listMode is "paginated". Overrides default pagination query.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- entity-specific options vary per entity
-  customList?: (db: Db, options: any) => Promise<PaginatedResult<T>>;
+  customList?: (db: Db, options: unknown) => Promise<PaginatedResult<T>>;
 }
