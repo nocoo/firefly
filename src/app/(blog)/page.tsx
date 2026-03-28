@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
-import { listPosts } from "@/data/posts";
+import { listPosts } from "@/data/entities/post";
 import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";

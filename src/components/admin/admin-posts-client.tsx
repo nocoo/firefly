@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { LayoutList, LayoutGrid, Eye, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import type { PostWithCategory, PostStatus, Category, Tag } from "@/models/types";
-import type { PostYearCount } from "@/data/posts";
+import type { PostYearCount } from "@/data/entities/post";
 import { postPath, formatDateDisplay } from "@/lib/seo";
 import { PostFilters } from "@/components/admin/post-filters";
 import { DeletePostButton } from "@/components/admin/delete-post-button";

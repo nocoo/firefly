@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { getPostById, getPostTags } from "@/data/posts";
+import { getPostById, getPostTags } from "@/data/entities/post";
 import { listCategories } from "@/data/entities/category";
 import { listTags } from "@/data/entities/tag";
 import { PostForm } from "@/components/admin/post-form";

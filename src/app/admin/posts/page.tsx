@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/db";
-import { listPosts, listPostYears } from "@/data/posts";
+import { listPosts, listPostYears } from "@/data/entities/post";
 import { listCategories } from "@/data/entities/category";
 import { listTags } from "@/data/entities/tag";
 import type { PostStatus } from "@/models/types";

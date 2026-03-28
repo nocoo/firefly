@@ -28,44 +28,44 @@ export interface CreatePostInput {
   slug: string;
   content: string;
   status: PostStatus;
-  excerpt?: string;
-  categoryId?: string;
-  featuredImage?: string;
-  commentEnabled?: number;
-  publishedAt?: number;
-  referenceUrl?: string;
-  referenceTitle?: string;
-  referenceDescription?: string;
-  referenceImage?: string;
+  excerpt?: string | undefined;
+  categoryId?: string | undefined;
+  featuredImage?: string | undefined;
+  commentEnabled?: number | undefined;
+  publishedAt?: number | undefined;
+  referenceUrl?: string | undefined;
+  referenceTitle?: string | undefined;
+  referenceDescription?: string | undefined;
+  referenceImage?: string | undefined;
 }
 
 export interface UpdatePostInput {
-  title?: string;
-  slug?: string;
-  content?: string;
+  title?: string | undefined;
+  slug?: string | undefined;
+  content?: string | undefined;
   /** Pass null to clear and auto-regenerate from content. */
-  excerpt?: string | null;
-  status?: PostStatus;
-  categoryId?: string | null;
-  featuredImage?: string | null;
-  commentEnabled?: number;
-  publishedAt?: number | null;
-  referenceUrl?: string | null;
-  referenceTitle?: string | null;
-  referenceDescription?: string | null;
-  referenceImage?: string | null;
+  excerpt?: string | null | undefined;
+  status?: PostStatus | undefined;
+  categoryId?: string | null | undefined;
+  featuredImage?: string | null | undefined;
+  commentEnabled?: number | undefined;
+  publishedAt?: number | null | undefined;
+  referenceUrl?: string | null | undefined;
+  referenceTitle?: string | null | undefined;
+  referenceDescription?: string | null | undefined;
+  referenceImage?: string | null | undefined;
 }
 
 export interface ListPostsOptions {
-  status?: PostStatus;
-  categoryId?: string;
-  tagId?: string;
-  query?: string;
-  archiveYear?: number;
-  archiveMonth?: number;
-  page?: number;
-  pageSize?: number;
-  sortBy?: "published_at" | "created_at";
+  status?: PostStatus | undefined;
+  categoryId?: string | undefined;
+  tagId?: string | undefined;
+  query?: string | undefined;
+  archiveYear?: number | undefined;
+  archiveMonth?: number | undefined;
+  page?: number | undefined;
+  pageSize?: number | undefined;
+  sortBy?: "published_at" | "created_at" | undefined;
 }
 
 export interface ListPostsResult {
@@ -74,8 +74,8 @@ export interface ListPostsResult {
 }
 
 export interface BatchUpdateInput {
-  status?: PostStatus;
-  categoryId?: string | null;
+  status?: PostStatus | undefined;
+  categoryId?: string | null | undefined;
 }
 
 // ---------------------------------------------------------------------------

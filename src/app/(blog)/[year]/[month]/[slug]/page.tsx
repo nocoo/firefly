@@ -4,7 +4,7 @@ import { Suspense, cache } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { getDb } from "@/lib/db";
-import { getPostBySlug, getPostTags, getAdjacentPosts } from "@/data/posts";
+import { getPostBySlug, getPostTags, getAdjacentPosts } from "@/data/entities/post";
 import { getSiteSettings } from "@/data/settings";
 import { isAdminSession } from "@/lib/auth";
 import { listCommentsByPost, buildCommentTree } from "@/data/entities/comment";

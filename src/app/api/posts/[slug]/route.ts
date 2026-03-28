@@ -1,13 +1,9 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse, notFoundResponse } from "@/lib/api";
-import {
-  getPostBySlug,
-  updatePost,
-  deletePost,
-  setPostTags,
-  type UpdatePostInput,
-} from "@/data/posts";
+import { getPostBySlug } from "@/data/entities/post";
+import type { PostStatus } from "@/models/types";
+import { PostService } from "@/services/post-service";
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -44,18 +40,26 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const existing = await getPostBySlug(db, slug);
     if (!existing) return notFoundResponse("Post");
 
-    const body = (await request.json()) as UpdatePostInput & {
-      tag_ids?: string[];
-    };
-    const { tag_ids, ...updateInput } = body;
-    const updated = await updatePost(db, existing.id, updateInput);
+    const body = (await request.json()) as Record<string, unknown>;
+
+    const updated = await PostService.update(db, existing.id, {
+      title: body.title as string | undefined,
+      slug: body.slug as string | undefined,
+      content: body.content as string | undefined,
+      status: body.status as PostStatus | undefined,
+      excerpt: body.excerpt as string | null | undefined,
+      categoryId: (body.categoryId ?? body.category_id) as string | null | undefined,
+      featuredImage: (body.featuredImage ?? body.featured_image) as string | null | undefined,
+      commentEnabled: (body.commentEnabled ?? body.comment_enabled) as number | undefined,
+      publishedAt: (body.publishedAt ?? body.published_at) as number | null | undefined,
+      referenceUrl: (body.referenceUrl ?? body.reference_url) as string | null | undefined,
+      referenceTitle: (body.referenceTitle ?? body.reference_title) as string | null | undefined,
+      referenceDescription: (body.referenceDescription ?? body.reference_description) as string | null | undefined,
+      referenceImage: (body.referenceImage ?? body.reference_image) as string | null | undefined,
+      tagIds: (body.tagIds ?? body.tag_ids) as string[] | undefined,
+    });
 
     if (!updated) return notFoundResponse("Post");
-
-    // Update tags if provided
-    if (tag_ids) {
-      await setPostTags(db, existing.id, tag_ids);
-    }
 
     return jsonResponse(updated);
   } catch (error) {
@@ -75,7 +79,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     const existing = await getPostBySlug(db, slug);
     if (!existing) return notFoundResponse("Post");
 
-    const deleted = await deletePost(db, existing.id);
+    const deleted = await PostService.delete(db, existing.id);
     if (!deleted) return notFoundResponse("Post");
 
     return jsonResponse({ deleted: true });

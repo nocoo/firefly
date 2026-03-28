@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { getPostById, getPostTags } from "@/data/posts";
+import { getPostById, getPostTags } from "@/data/entities/post";
 import { renderMarkdown } from "@/models/markdown";
 import { ArticleBody } from "@/components/blog/article-body";
 import { ContentImageLightbox } from "@/components/blog/content-image-lightbox";

@@ -33,11 +33,11 @@ import { invalidateTagCache } from "@/data/entities/tag";
 // ---------------------------------------------------------------------------
 
 export interface CreatePostServiceInput extends CreatePostInput {
-  tagIds?: string[];
+  tagIds?: string[] | undefined;
 }
 
 export interface UpdatePostServiceInput extends UpdatePostInput {
-  tagIds?: string[];
+  tagIds?: string[] | undefined;
 }
 
 // ---------------------------------------------------------------------------

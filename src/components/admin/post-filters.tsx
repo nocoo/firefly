@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X, RotateCcw } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
-import type { PostYearCount } from "@/data/posts";
+import type { PostYearCount } from "@/data/entities/post";
 import { Select } from "@/components/ui/select";
 import { useLocale } from "@/i18n/context";
 

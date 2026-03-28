@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/db";
-import { listPosts } from "@/data/posts";
+import { listPosts } from "@/data/entities/post";
 import { listCategories } from "@/data/entities/category";
 import { getSiteSettings } from "@/data/settings";
 import { SITE_URL, postPath } from "@/lib/seo";

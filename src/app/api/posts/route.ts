@@ -1,13 +1,9 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
-import {
-  listPosts,
-  createPost,
-  setPostTags,
-  type CreatePostInput,
-  type ListPostsOptions,
-} from "@/data/posts";
+import { listPosts, type ListPostsOptions } from "@/data/entities/post";
+import type { PostStatus } from "@/models/types";
+import { PostService } from "@/services/post-service";
 
 // GET /api/posts — list posts with optional filters
 export async function GET(request: NextRequest) {
@@ -52,40 +48,37 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const db = getDb();
-    const body = (await request.json()) as CreatePostInput & {
-      tag_ids?: string[];
-    };
+    const body = (await request.json()) as Record<string, unknown>;
 
-    if (!body.title?.trim()) {
+    const title = body.title as string | undefined;
+    const slug = body.slug as string | undefined;
+
+    if (!title?.trim()) {
       return errorResponse("title is required");
     }
-    if (!body.slug?.trim()) {
+    if (!slug?.trim()) {
       return errorResponse("slug is required");
     }
     if (!body.content && body.content !== "") {
       return errorResponse("content is required");
     }
 
-    const post = await createPost(db, {
-      title: body.title.trim(),
-      slug: body.slug.trim(),
-      content: body.content,
-      status: body.status || "draft",
-      excerpt: body.excerpt,
-      category_id: body.category_id,
-      featured_image: body.featured_image,
-      comment_enabled: body.comment_enabled,
-      published_at: body.published_at,
-      reference_url: body.reference_url,
-      reference_title: body.reference_title,
-      reference_description: body.reference_description,
-      reference_image: body.reference_image,
+    const post = await PostService.create(db, {
+      title: title.trim(),
+      slug: slug.trim(),
+      content: body.content as string,
+      status: (body.status as PostStatus) || "draft",
+      excerpt: body.excerpt as string | undefined,
+      categoryId: (body.categoryId ?? body.category_id) as string | undefined,
+      featuredImage: (body.featuredImage ?? body.featured_image) as string | undefined,
+      commentEnabled: (body.commentEnabled ?? body.comment_enabled) as number | undefined,
+      publishedAt: (body.publishedAt ?? body.published_at) as number | undefined,
+      referenceUrl: (body.referenceUrl ?? body.reference_url) as string | undefined,
+      referenceTitle: (body.referenceTitle ?? body.reference_title) as string | undefined,
+      referenceDescription: (body.referenceDescription ?? body.reference_description) as string | undefined,
+      referenceImage: (body.referenceImage ?? body.reference_image) as string | undefined,
+      tagIds: (body.tagIds ?? body.tag_ids) as string[] | undefined,
     });
-
-    // Set tags if provided
-    if (body.tag_ids && body.tag_ids.length > 0) {
-      await setPostTags(db, post.id, body.tag_ids);
-    }
 
     return jsonResponse(post, 201);
   } catch (error) {

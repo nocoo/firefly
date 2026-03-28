@@ -32,7 +32,7 @@ vi.mock("@/data/settings", () => ({
   }),
 }));
 
-vi.mock("@/data/posts", () => ({
+vi.mock("@/data/entities/post", () => ({
   listPosts: vi.fn().mockResolvedValue({
     posts: [
       {

@@ -18,7 +18,7 @@ import type { ToolContext } from "../framework/types";
 // Mock all external dependencies
 // ---------------------------------------------------------------------------
 
-vi.mock("@/data/posts", () => ({
+vi.mock("@/data/entities/post", () => ({
   listPosts: vi.fn(),
   getPostById: vi.fn(),
   getPostBySlug: vi.fn(),
@@ -55,7 +55,7 @@ import {
   deletePost,
   getPostTags,
   setPostTags,
-} from "@/data/posts";
+} from "@/data/entities/post";
 import { generateExcerpt, summarizeUnfurl } from "@/services/ai";
 import { unfurlUrl, UnfurlError } from "@/services/unfurl";
 

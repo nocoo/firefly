@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { Category, Tag } from "@/models/types";
-import type { MonthlyArchive } from "@/data/posts";
+import type { MonthlyArchive } from "@/data/entities/post";
 import type { SocialLink } from "@/data/settings";
 import type { Locale } from "@/i18n/translations";
 import { BlogSidebar } from "./blog-sidebar";

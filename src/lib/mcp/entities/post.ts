@@ -13,7 +13,7 @@ import {
   deletePost,
   getPostTags,
   setPostTags,
-} from "@/data/posts";
+} from "@/data/entities/post";
 import { generateExcerpt, summarizeUnfurl } from "@/services/ai";
 import { unfurlUrl, UnfurlError } from "@/services/unfurl";
 import type { EntityConfig, ToolContext } from "../framework/types";
@@ -68,10 +68,10 @@ async function handleUnfurlReference(
       const image = raw.ogImage ?? raw.readmeImage ?? null;
 
       await updatePost(ctx.db, resolved.id, {
-        reference_url: url,
-        reference_title: title,
-        reference_description: description,
-        reference_image: image,
+        referenceUrl: url,
+        referenceTitle: title,
+        referenceDescription: description,
+        referenceImage: image,
       });
 
       return ok({
@@ -196,8 +196,13 @@ export const postEntity: EntityConfig<Post> = {
       tags: await getPostTags(ctx.db, post.id),
     }),
     mapCreateInput: (args) => {
-      const { tag_ids: _tagIds, ...rest } = args;
-      return rest; // tag_ids handled in afterCreate
+      const { tag_ids: _tagIds, category_id, featured_image, published_at, ...rest } = args;
+      return {
+        ...rest,
+        ...(category_id !== undefined && { categoryId: category_id }),
+        ...(featured_image !== undefined && { featuredImage: featured_image }),
+        ...(published_at !== undefined && { publishedAt: published_at }),
+      };
     },
     afterCreate: async (ctx, post, args) => {
       const tagIds = args.tag_ids as string[] | undefined;
@@ -207,11 +212,29 @@ export const postEntity: EntityConfig<Post> = {
       await deletePost(ctx.db, post.id);
     },
     mapUpdateInput: (args) => {
-      const { tag_ids: _tagIds, new_slug, ...rest } = args;
-      if (new_slug !== undefined) {
-        return { ...rest, slug: new_slug };
-      }
-      return rest;
+      const {
+        tag_ids: _tagIds,
+        new_slug,
+        category_id,
+        featured_image,
+        published_at,
+        reference_url,
+        reference_title,
+        reference_description,
+        reference_image,
+        ...rest
+      } = args;
+      return {
+        ...rest,
+        ...(new_slug !== undefined && { slug: new_slug }),
+        ...(category_id !== undefined && { categoryId: category_id }),
+        ...(featured_image !== undefined && { featuredImage: featured_image }),
+        ...(published_at !== undefined && { publishedAt: published_at }),
+        ...(reference_url !== undefined && { referenceUrl: reference_url }),
+        ...(reference_title !== undefined && { referenceTitle: reference_title }),
+        ...(reference_description !== undefined && { referenceDescription: reference_description }),
+        ...(reference_image !== undefined && { referenceImage: reference_image }),
+      };
     },
     beforeUpdate: async (ctx, existing, args) => {
       if (args.tag_ids === undefined) return undefined;

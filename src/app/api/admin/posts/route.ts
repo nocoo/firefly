@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
-import { listPosts, type ListPostsOptions } from "@/data/posts";
+import { listPosts, type ListPostsOptions } from "@/data/entities/post";
 import type { PostStatus } from "@/models/types";
 
 // GET /api/admin/posts — admin-only list with all statuses

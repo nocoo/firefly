@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
-import { batchUpdatePosts, type BatchUpdateInput } from "@/data/posts";
+import { PostService } from "@/services/post-service";
 import type { PostStatus } from "@/models/types";
 
 const VALID_STATUSES = new Set<PostStatus>([
@@ -20,12 +20,10 @@ export async function PATCH(request: NextRequest) {
   }
 
   try {
-    const body = (await request.json()) as {
-      ids?: string[];
-      updates?: BatchUpdateInput;
-    };
+    const body = (await request.json()) as Record<string, unknown>;
 
-    const { ids, updates } = body;
+    const ids = body.ids as string[] | undefined;
+    const updates = body.updates as Record<string, unknown> | undefined;
 
     if (!Array.isArray(ids) || ids.length === 0) {
       return errorResponse("ids must be a non-empty array", 400);
@@ -43,11 +41,11 @@ export async function PATCH(request: NextRequest) {
       return errorResponse(`Invalid status: ${updates.status}`, 400);
     }
 
-    // Only allow known fields
-    const sanitized: BatchUpdateInput = {};
-    if (updates.status !== undefined) sanitized.status = updates.status;
-    if (updates.category_id !== undefined)
-      sanitized.category_id = updates.category_id;
+    // Only allow known fields, map snake_case → camelCase
+    const sanitized: { status?: PostStatus; categoryId?: string | null } = {};
+    if (updates.status !== undefined) sanitized.status = updates.status as PostStatus;
+    const catId = updates.categoryId ?? updates.category_id;
+    if (catId !== undefined) sanitized.categoryId = catId as string | null;
 
     if (Object.keys(sanitized).length === 0) {
       return errorResponse(
@@ -57,7 +55,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const db = getDb();
-    const changed = await batchUpdatePosts(db, ids, sanitized);
+    const changed = await PostService.batchUpdate(db, ids, sanitized);
 
     return jsonResponse({ changed });
   } catch (error) {

@@ -14,7 +14,7 @@ vi.mock("@/lib/seo", async (importOriginal) => {
   return { ...actual, SITE_URL: "http://localhost:3000" };
 });
 
-vi.mock("@/data/posts", () => ({
+vi.mock("@/data/entities/post", () => ({
   listPosts: vi.fn().mockResolvedValue({
     posts: [
       {

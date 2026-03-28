@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Github, Facebook, Linkedin, Mail, FileUser, X, Folder, Tags, Archive } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
-import type { MonthlyArchive } from "@/data/posts";
+import type { MonthlyArchive } from "@/data/entities/post";
 import type { SocialLink } from "@/data/settings";
 import { useLocale } from "@/i18n/context";
 import { SocialLink as SocialLinkComponent } from "./social-link";

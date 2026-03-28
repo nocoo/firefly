@@ -1,7 +1,7 @@
 import { getDb } from "@/lib/db";
 import { listCategories } from "@/data/entities/category";
 import { listTags } from "@/data/entities/tag";
-import { listMonthlyArchives } from "@/data/posts";
+import { listMonthlyArchives } from "@/data/entities/post";
 import { getSiteSettings } from "@/data/settings";
 import { isAdminSession } from "@/lib/auth";
 import { BlogGlobalBar } from "@/components/blog/blog-global-bar";

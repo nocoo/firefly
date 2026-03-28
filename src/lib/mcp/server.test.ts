@@ -44,7 +44,7 @@ vi.mock("@/data/entities/category", () => {
   };
 });
 
-vi.mock("@/data/posts", () => {
+vi.mock("@/data/entities/post", () => {
   const post = {
     id: "p-1", title: "Hello World", slug: "hello-world",
     content: "Body text", content_html: "<p>Body text</p>",
