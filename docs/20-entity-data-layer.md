@@ -644,7 +644,7 @@ const postConfig: EntityConfig<PostWithCategory> = {
 - `listMonthlyArchives(db)` — aggregation (cached)
 - `listPostYears(db)` — aggregation
 - `getAdjacentPosts(db, post)` — prev/next
-- `invalidatePostCaches()` — cache invalidation (called by Service after orchestration completes)
+- `invalidatePostCaches()` — invalidates **all** post-related caches: post list cache, count cache, **and** archives cache. Called by Service after orchestration completes. This is a single function that covers everything — Service methods never need to call separate archive/count invalidation.
 
 ~400 lines (was 763).
 
@@ -750,8 +750,8 @@ interface UpdatePostInput {
 4. If `tagIds` provided → `postData.setPostTags(db, id, tagIds)` — secondary, catch + log
 5. Compare old vs new (secondary, catch + log):
    - If `category_id` changed → refresh **old** + **new** category counts
-   - If `status` changed → `refreshAllTagPostCounts` + invalidate archives
-6. `postData.invalidatePostCaches()`
+   - If `status` changed → `refreshAllTagPostCounts`
+6. `postData.invalidatePostCaches()` — covers list, count, and archives caches
 7. Return updated post
 
 **`PostService.delete(db, id)`** (D6):
@@ -765,7 +765,7 @@ interface UpdatePostInput {
 1. `postData.batchUpdatePosts(db, ids, updates)` — pure bulk UPDATE
 2. `postData.refreshAllCategoryPostCounts(db)` — broad refresh, batch can span categories
 3. `postData.refreshAllTagPostCounts(db)` — same
-4. `postData.invalidatePostCaches()` + invalidate archives
+4. `postData.invalidatePostCaches()` — covers list, count, and archives caches
 
 **`PostService.getWithTags(db, id)`:**
 1. `postData.getById(db, id)`
@@ -1053,8 +1053,10 @@ const executeUrl = `${workerUrl}/api/v1/execute`;
 
 **Media** — Writes go through MediaService + D5 boundary mapping:
 - `POST /api/media` → `MediaService.upload(db, file, postId)`
+- `GET /api/media/[id]` → `mediaData.getMedia(db, id)` — direct data layer read
 - `DELETE /api/media/[id]` → `MediaService.delete(db, id)`
 - `GET /api/media` → `mediaData.list(db, options)` — direct data layer read
+- `GET /api/media/years` → `mediaData.listMediaYears(db)` — direct data layer read
 - `PATCH /api/media/associate` → `mediaData.associateMedia(db, ids, postId)`
 - **D5 boundary mapping:** `post_id` → `postId` in upload and associate routes. Other media fields (`filename`, `size`, `width`, `height`) are already camelCase or no-case-difference.
 
@@ -1139,20 +1141,21 @@ const executeUrl = `${workerUrl}/api/v1/execute`;
 | 3.14 | Update `PUT /api/posts/[slug]` → `PostService.update` | — |
 | 3.15 | Update `DELETE /api/posts/[slug]` → `PostService.delete` | — |
 | 3.16 | Update `GET /api/posts`, `GET /api/posts/[slug]` → `postData` reads | — |
-| 3.17 | Update `GET /api/admin/posts`, `PATCH /api/admin/posts/batch` → `PostService` | — |
-| 3.18 | Update `POST /api/posts/[slug]/excerpt` → `postData` read | — |
-| 3.19 | Update 11 server components (blog pages, admin pages, feed, sitemap, llms.txt) | — |
-| 3.20 | Update 4 client components (type re-exports) | — |
-| 3.21 | Update `src/lib/mcp/entities/post.ts` — writes → PostService, reads → postData, drop business hooks | Compiles |
-| 3.22 | Run L1 + L2 + L3 全量 | All pass |
-| 3.23 | Delete `src/data/posts.ts` + `posts.test.ts` | Clean, compiles |
-| **Media (4 API + 1 SC + 1 CC, no MCP entity)** | | |
-| 3.24 | Update `POST /api/media` → `MediaService.upload` | — |
-| 3.25 | Update `DELETE /api/media/[id]` → `MediaService.delete` | — |
-| 3.26 | Update `GET /api/media`, `PATCH /api/media/associate`, `GET /api/media/years` → `mediaData` | — |
-| 3.27 | Update 1 server component + 1 client component | — |
-| 3.28 | Run L1 + L2 | Pass |
-| 3.29 | Delete `src/data/media.ts` + `media.test.ts` | Clean, compiles |
+| 3.17 | Update `GET /api/admin/posts` → `postData.list` (read path, no Service) | — |
+| 3.18 | Update `PATCH /api/admin/posts/batch` → `PostService.batchUpdate` | — |
+| 3.19 | Update `POST /api/posts/[slug]/excerpt` → `postData` read | — |
+| 3.20 | Update 11 server components (blog pages, admin pages, feed, sitemap, llms.txt) | — |
+| 3.21 | Update 4 client components (type re-exports) | — |
+| 3.22 | Update `src/lib/mcp/entities/post.ts` — writes → PostService, reads → postData, drop business hooks | Compiles |
+| 3.23 | Run L1 + L2 + L3 全量 | All pass |
+| 3.24 | Delete `src/data/posts.ts` + `posts.test.ts` | Clean, compiles |
+| **Media (5 API routes in 4 files + 1 SC + 1 CC, no MCP entity)** | | |
+| 3.25 | Update `POST /api/media` → `MediaService.upload` | — |
+| 3.26 | Update `GET /api/media/[id]` → `mediaData.getMedia`, `DELETE /api/media/[id]` → `MediaService.delete` | — |
+| 3.27 | Update `GET /api/media`, `GET /api/media/years`, `PATCH /api/media/associate` → `mediaData` | — |
+| 3.28 | Update 1 server component + 1 client component | — |
+| 3.29 | Run L1 + L2 | Pass |
+| 3.30 | Delete `src/data/media.ts` + `media.test.ts` | Clean, compiles |
 
 **Stage 3 Gate:** 全部旧 data layer entity 文件已删除。MCP entity imports 已切换。L1 + L2 + L3 全量通过。仓库在每个子步骤后都可编译。
 
