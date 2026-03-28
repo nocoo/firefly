@@ -118,10 +118,11 @@ export function createCrudHandlers<T extends { id: string }>(
       : businessFields;
 
     const updated = await dataLayer.update(ctx.db, resolved.id, input);
+    if (!updated) return error(`${displayName} not found: ${resolved.id}`);
 
     if (hooks?.afterUpdate) {
       try {
-        await hooks.afterUpdate(ctx, resolved, businessFields);
+        await hooks.afterUpdate(ctx, updated, businessFields);
       } catch (err) {
         console.error(
           `[MCP] ${displayName} afterUpdate hook failed (best-effort):`,

@@ -22,11 +22,16 @@ vi.mock("@/data/entities/post", () => ({
   listPosts: vi.fn(),
   getPostById: vi.fn(),
   getPostBySlug: vi.fn(),
-  createPost: vi.fn(),
   updatePost: vi.fn(),
-  deletePost: vi.fn(),
   getPostTags: vi.fn(),
-  setPostTags: vi.fn(),
+}));
+
+vi.mock("@/services/post-service", () => ({
+  PostService: {
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  },
 }));
 
 vi.mock("@/services/ai", () => ({
@@ -50,12 +55,10 @@ import {
   listPosts,
   getPostById,
   getPostBySlug,
-  createPost,
   updatePost,
-  deletePost,
   getPostTags,
-  setPostTags,
 } from "@/data/entities/post";
+import { PostService } from "@/services/post-service";
 import { generateExcerpt, summarizeUnfurl } from "@/services/ai";
 import { unfurlUrl, UnfurlError } from "@/services/unfurl";
 
@@ -114,11 +117,11 @@ describe("post entity handlers", () => {
     vi.mocked(listPosts).mockReset();
     vi.mocked(getPostById).mockReset();
     vi.mocked(getPostBySlug).mockReset();
-    vi.mocked(createPost).mockReset();
+    vi.mocked(PostService.create).mockReset();
+    vi.mocked(PostService.update).mockReset();
+    vi.mocked(PostService.delete).mockReset();
     vi.mocked(updatePost).mockReset();
-    vi.mocked(deletePost).mockReset();
     vi.mocked(getPostTags).mockReset();
-    vi.mocked(setPostTags).mockReset();
     vi.mocked(generateExcerpt).mockReset();
     vi.mocked(summarizeUnfurl).mockReset();
     vi.mocked(unfurlUrl).mockReset();
@@ -228,12 +231,11 @@ describe("post entity handlers", () => {
     });
   });
 
-  // ---- create + afterCreate (best-effort) ----
+  // ---- create (via PostService) ----
 
   describe("handleCreate", () => {
-    it("strips tag_ids from data layer input (mapCreateInput)", async () => {
-      vi.mocked(createPost).mockResolvedValue(samplePostWithCategory);
-      vi.mocked(setPostTags).mockResolvedValue(undefined);
+    it("maps tag_ids to tagIds for PostService (mapCreateInput)", async () => {
+      vi.mocked(PostService.create).mockResolvedValue(samplePostWithCategory);
 
       await handlers.handleCreate(ctx, {
         title: "New",
@@ -242,30 +244,35 @@ describe("post entity handlers", () => {
         tag_ids: ["tag-1"],
       });
 
-      // createPost should NOT receive tag_ids
-      const createCallArgs = vi.mocked(createPost).mock.calls[0][1];
+      // PostService.create should receive tagIds, not tag_ids
+      const createCallArgs = vi.mocked(PostService.create).mock.calls[0][1];
+      expect(createCallArgs).toHaveProperty("tagIds", ["tag-1"]);
       expect(createCallArgs).not.toHaveProperty("tag_ids");
     });
 
-    it("sets tags via afterCreate", async () => {
-      vi.mocked(createPost).mockResolvedValue(samplePostWithCategory);
-      vi.mocked(setPostTags).mockResolvedValue(undefined);
+    it("maps snake_case fields to camelCase for PostService", async () => {
+      vi.mocked(PostService.create).mockResolvedValue(samplePostWithCategory);
 
       await handlers.handleCreate(ctx, {
         title: "New",
         slug: "new",
         content: "body",
-        tag_ids: ["tag-1", "tag-2"],
+        category_id: "cat-1",
+        featured_image: "img.png",
+        published_at: 1234567890,
       });
 
-      expect(setPostTags).toHaveBeenCalledWith(ctx.db, "post-1", [
-        "tag-1",
-        "tag-2",
-      ]);
+      const createCallArgs = vi.mocked(PostService.create).mock.calls[0][1];
+      expect(createCallArgs).toHaveProperty("categoryId", "cat-1");
+      expect(createCallArgs).toHaveProperty("featuredImage", "img.png");
+      expect(createCallArgs).toHaveProperty("publishedAt", 1234567890);
+      expect(createCallArgs).not.toHaveProperty("category_id");
+      expect(createCallArgs).not.toHaveProperty("featured_image");
+      expect(createCallArgs).not.toHaveProperty("published_at");
     });
 
-    it("does not call setPostTags when no tag_ids", async () => {
-      vi.mocked(createPost).mockResolvedValue(samplePostWithCategory);
+    it("omits tagIds when no tag_ids provided", async () => {
+      vi.mocked(PostService.create).mockResolvedValue(samplePostWithCategory);
 
       await handlers.handleCreate(ctx, {
         title: "New",
@@ -273,72 +280,56 @@ describe("post entity handlers", () => {
         content: "body",
       });
 
-      expect(setPostTags).not.toHaveBeenCalled();
-    });
-
-    it("returns success even when afterCreate fails (best-effort)", async () => {
-      vi.mocked(createPost).mockResolvedValue(samplePostWithCategory);
-      vi.mocked(setPostTags).mockRejectedValue(new Error("tag error"));
-
-      const result = await handlers.handleCreate(ctx, {
-        title: "New",
-        slug: "new",
-        content: "body",
-        tag_ids: ["bad-tag"],
-      });
-
-      // Should still return success — afterCreate is best-effort
-      const data = parseToolResult(result);
-      expect(data).toHaveProperty("id", "post-1");
+      const createCallArgs = vi.mocked(PostService.create).mock.calls[0][1];
+      expect(createCallArgs).not.toHaveProperty("tagIds");
+      expect(createCallArgs).not.toHaveProperty("tag_ids");
     });
   });
 
-  // ---- update + afterUpdate (best-effort) ----
+  // ---- update (via PostService) ----
 
   describe("handleUpdate", () => {
-    it("maps new_slug to slug and strips tag_ids", async () => {
+    it("maps new_slug to slug and tag_ids to tagIds", async () => {
       vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
-      vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(PostService.update).mockResolvedValue(samplePostWithCategory);
 
       await handlers.handleUpdate(ctx, {
         slug: "test-post",
         new_slug: "test-post-v2",
         title: "Updated",
+        tag_ids: ["tag-2"],
       });
 
-      expect(updatePost).toHaveBeenCalledWith(ctx.db, "post-1", {
+      expect(PostService.update).toHaveBeenCalledWith(ctx.db, "post-1", {
         slug: "test-post-v2",
         title: "Updated",
+        tagIds: ["tag-2"],
       });
     });
 
-    it("sets tags via afterUpdate", async () => {
+    it("omits tagIds when tag_ids not provided", async () => {
       vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
-      vi.mocked(setPostTags).mockResolvedValue(undefined);
-      vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
-
-      await handlers.handleUpdate(ctx, {
-        slug: "test-post",
-        tag_ids: ["tag-2", "tag-3"],
-      });
-
-      expect(setPostTags).toHaveBeenCalledWith(ctx.db, "post-1", [
-        "tag-2",
-        "tag-3",
-      ]);
-    });
-
-    it("does not touch tags when tag_ids not provided", async () => {
-      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
-      vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(PostService.update).mockResolvedValue(samplePostWithCategory);
 
       await handlers.handleUpdate(ctx, {
         slug: "test-post",
         title: "Just title",
       });
 
-      expect(getPostTags).not.toHaveBeenCalled();
-      expect(setPostTags).not.toHaveBeenCalled();
+      const updateCallArgs = vi.mocked(PostService.update).mock.calls[0][2];
+      expect(updateCallArgs).not.toHaveProperty("tagIds");
+      expect(updateCallArgs).not.toHaveProperty("tag_ids");
+    });
+
+    it("returns error when PostService.update returns null", async () => {
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(PostService.update).mockResolvedValue(null);
+
+      const result = await handlers.handleUpdate(ctx, {
+        slug: "test-post",
+        title: "Updated",
+      });
+      expectError(result, "Post not found: post-1");
     });
   });
 
@@ -347,10 +338,10 @@ describe("post entity handlers", () => {
   describe("handleDelete", () => {
     it("deletes post by slug", async () => {
       vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
-      vi.mocked(deletePost).mockResolvedValue(true);
+      vi.mocked(PostService.delete).mockResolvedValue(true);
 
       const result = await handlers.handleDelete(ctx, { slug: "test-post" });
-      expect(deletePost).toHaveBeenCalledWith(ctx.db, "post-1");
+      expect(PostService.delete).toHaveBeenCalledWith(ctx.db, "post-1");
       const data = parseToolResult(result) as { deleted: boolean };
       expect(data.deleted).toBe(true);
     });

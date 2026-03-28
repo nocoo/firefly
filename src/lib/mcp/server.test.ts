@@ -61,13 +61,30 @@ vi.mock("@/data/entities/post", () => {
     listPosts: vi.fn(async () => ({ posts: [post], total: 1 })),
     getPostById: vi.fn(async (_: unknown, id: string) => (id === "p-1" ? post : null)),
     getPostBySlug: vi.fn(async (_: unknown, slug: string) => (slug === "hello-world" ? post : null)),
-    createPost: vi.fn(async () => post),
     updatePost: vi.fn(async () => ({ ...post, title: "Updated" })),
-    deletePost: vi.fn(async () => true),
     getPostTags: vi.fn(async () => [tag]),
-    setPostTags: vi.fn(async () => {}),
   };
-});;
+});
+
+vi.mock("@/services/post-service", () => {
+  const post = {
+    id: "p-1", title: "Hello World", slug: "hello-world",
+    content: "Body text", content_html: "<p>Body text</p>",
+    status: "published", excerpt: "Intro",
+    category_id: "c-1", featured_image: null,
+    published_at: 0, created_at: 0, updated_at: 0,
+    wp_id: null, wp_permalink: null, comment_enabled: true,
+    reference_url: null, reference_title: null,
+    reference_description: null, reference_image: null,
+  };
+  return {
+    PostService: {
+      create: vi.fn(async () => post),
+      update: vi.fn(async () => ({ ...post, title: "Updated" })),
+      delete: vi.fn(async () => true),
+    },
+  };
+});
 
 vi.mock("@/services/ai", () => ({
   generateExcerpt: vi.fn(async () => "An excerpt"),

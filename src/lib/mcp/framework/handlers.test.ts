@@ -363,13 +363,45 @@ describe("handleUpdate", () => {
     });
   });
 
-  it("calls afterUpdate hook after update", async () => {
+  it("calls afterUpdate hook with post-update entity", async () => {
     const afterUpdate = vi.fn();
     const config = createMockConfig({ hooks: { afterUpdate } });
     const { handleUpdate } = createCrudHandlers(config);
 
     await handleUpdate(ctx, { id: "e-1", name: "Updated" });
-    expect(afterUpdate).toHaveBeenCalledWith(ctx, entity1, { name: "Updated" });
+    expect(afterUpdate).toHaveBeenCalledWith(
+      ctx,
+      { ...entity1, name: "Updated" },
+      { name: "Updated" },
+    );
+  });
+
+  it("returns error when dataLayer.update returns null", async () => {
+    const config = createMockConfig({
+      dataLayer: {
+        ...createMockDataLayer(),
+        update: vi.fn().mockResolvedValue(null),
+      },
+    });
+    const { handleUpdate } = createCrudHandlers(config);
+
+    const result = await handleUpdate(ctx, { id: "e-1", name: "Updated" });
+    expectError(result, "Mock not found: e-1");
+  });
+
+  it("does not call afterUpdate when dataLayer.update returns null", async () => {
+    const afterUpdate = vi.fn();
+    const config = createMockConfig({
+      hooks: { afterUpdate },
+      dataLayer: {
+        ...createMockDataLayer(),
+        update: vi.fn().mockResolvedValue(null),
+      },
+    });
+    const { handleUpdate } = createCrudHandlers(config);
+
+    await handleUpdate(ctx, { id: "e-1", name: "Updated" });
+    expect(afterUpdate).not.toHaveBeenCalled();
   });
 
   it("returns success even when afterUpdate fails (best-effort)", async () => {

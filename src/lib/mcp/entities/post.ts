@@ -8,12 +8,10 @@ import {
   listPosts,
   getPostById,
   getPostBySlug,
-  createPost,
   updatePost,
-  deletePost,
   getPostTags,
-  setPostTags,
 } from "@/data/entities/post";
+import { PostService } from "@/services/post-service";
 import { generateExcerpt, summarizeUnfurl } from "@/services/ai";
 import { unfurlUrl, UnfurlError } from "@/services/unfurl";
 import type { EntityConfig, ToolContext } from "../framework/types";
@@ -144,9 +142,9 @@ export const postEntity: EntityConfig<Post> = {
     },
     getById: getPostById,
     getBySlug: getPostBySlug,
-    create: createPost,
-    update: updatePost,
-    delete: deletePost,
+    create: (db, input) => PostService.create(db, input),
+    update: (db, id, input) => PostService.update(db, id, input),
+    delete: (db, id) => PostService.delete(db, id),
   },
   schemas: {
     list: {
@@ -196,21 +194,18 @@ export const postEntity: EntityConfig<Post> = {
       tags: await getPostTags(ctx.db, post.id),
     }),
     mapCreateInput: (args) => {
-      const { tag_ids: _tagIds, category_id, featured_image, published_at, ...rest } = args;
+      const { tag_ids, category_id, featured_image, published_at, ...rest } = args;
       return {
         ...rest,
+        ...(tag_ids !== undefined && { tagIds: tag_ids }),
         ...(category_id !== undefined && { categoryId: category_id }),
         ...(featured_image !== undefined && { featuredImage: featured_image }),
         ...(published_at !== undefined && { publishedAt: published_at }),
       };
     },
-    afterCreate: async (ctx, post, args) => {
-      const tagIds = args.tag_ids as string[] | undefined;
-      if (tagIds?.length) await setPostTags(ctx.db, post.id, tagIds);
-    },
     mapUpdateInput: (args) => {
       const {
-        tag_ids: _tagIds,
+        tag_ids,
         new_slug,
         category_id,
         featured_image,
@@ -223,6 +218,7 @@ export const postEntity: EntityConfig<Post> = {
       } = args;
       return {
         ...rest,
+        ...(tag_ids !== undefined && { tagIds: tag_ids }),
         ...(new_slug !== undefined && { slug: new_slug }),
         ...(category_id !== undefined && { categoryId: category_id }),
         ...(featured_image !== undefined && { featuredImage: featured_image }),
@@ -232,10 +228,6 @@ export const postEntity: EntityConfig<Post> = {
         ...(reference_description !== undefined && { referenceDescription: reference_description }),
         ...(reference_image !== undefined && { referenceImage: reference_image }),
       };
-    },
-    afterUpdate: async (ctx, existing, args) => {
-      if (args.tag_ids === undefined) return;
-      await setPostTags(ctx.db, existing.id, args.tag_ids as string[]);
     },
   },
   projection: {
