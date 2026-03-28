@@ -1102,14 +1102,14 @@ const executeUrl = `${workerUrl}/api/v1/execute`;
 
 部署新 Worker，切换 DB client，用 E2E 验证数据库通路完好。
 
-| Step | Deliverable | Gate |
-|------|-------------|------|
-| 2.1 | 新建 Worker 项目 with `/api/v1/health`, `/api/v1/query`, `/api/v1/execute` | Worker 部署成功 |
-| 2.2 | 更新 `src/lib/db.ts` — 使用 `/api/v1/*` paths | Compiles |
-| 2.3 | 更新 `WORKER_URL` 环境变量指向新 Worker | — |
-| 2.4 | Run L2 API E2E 全量 | 全部通过 |
-| 2.5 | Run L3 Browser E2E | 全部通过 |
-| 2.6 | 旧 Worker 保留不动（回滚备用） | — |
+| Step | Deliverable | Gate | Status |
+|------|-------------|------|--------|
+| 2.1 | 新建 Worker 项目 with `/api/v1/health`, `/api/v1/query`, `/api/v1/execute` | Worker 部署成功 | ✅ Done |
+| 2.2 | 更新 `src/lib/db.ts` — 使用 `/api/v1/*` paths | Compiles | ✅ Done |
+| 2.3 | 更新 `WORKER_URL` 环境变量指向新 Worker | — | ✅ Done |
+| 2.4 | Run L2 API E2E 全量 | 全部通过 | ✅ 13 files, 104 passed |
+| 2.5 | Run L3 Browser E2E | 全部通过 | ✅ 24 passed |
+| 2.6 | 旧 Worker 保留不动（回滚备用） | — | ✅ Done |
 
 **Stage 2 Gate:** L2 + L3 全量通过。新 Worker 跑通，旧 Worker 备用。此时线上已切换到新 Worker，但 Next.js 代码仍用旧 data layer。
 
