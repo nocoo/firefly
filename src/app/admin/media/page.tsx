@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/db";
 import { getR2PublicUrl } from "@/lib/r2-client";
-import { listMedia, listMediaYears } from "@/data/media";
+import { listMedia, listMediaYears } from "@/data/entities/media";
 import { MediaLibrary } from "@/components/admin/media-library";
 
 export default async function AdminMediaPage() {

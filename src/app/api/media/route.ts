@@ -3,7 +3,7 @@ import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
 import { uploadToR2, getR2PublicUrl } from "@/lib/r2-client";
 import { generateFireflyR2Key } from "@/lib/r2";
-import { listMedia, createMedia } from "@/data/media";
+import { listMedia, createMedia } from "@/data/entities/media";
 
 /**
  * GET /api/media — list media with pagination and filters.

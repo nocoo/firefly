@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse, notFoundResponse } from "@/lib/api";
 import { deleteFromR2 } from "@/lib/r2-client";
-import { getMedia, deleteMedia } from "@/data/media";
+import { getMediaById, deleteMedia } from "@/data/entities/media";
 
 /**
  * GET /api/media/[id] — get a single media record.
@@ -15,7 +15,7 @@ export async function GET(
   try {
     const { id } = await params;
     const db = getDb();
-    const media = await getMedia(db, id);
+    const media = await getMediaById(db, id);
 
     if (!media) {
       return notFoundResponse("Media");
@@ -39,7 +39,7 @@ export async function DELETE(
   try {
     const { id } = await params;
     const db = getDb();
-    const media = await getMedia(db, id);
+    const media = await getMediaById(db, id);
 
     if (!media) {
       return notFoundResponse("Media");

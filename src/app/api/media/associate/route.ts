@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
-import { associateMedia } from "@/data/media";
+import { associateMedia } from "@/data/entities/media";
 
 /**
  * PATCH /api/media/associate — backfill post_id on orphaned media records.

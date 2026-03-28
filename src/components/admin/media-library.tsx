@@ -21,7 +21,7 @@ import {
   File,
 } from "lucide-react";
 import type { Attachment } from "@/models/types";
-import type { YearCount } from "@/data/media";
+import type { YearCount } from "@/data/entities/media";
 import { formatFileSize } from "@/models/backup";
 import { ConfirmDialog } from "./confirm-dialog";
 import { ImageLightbox } from "@/components/ui/image-lightbox";

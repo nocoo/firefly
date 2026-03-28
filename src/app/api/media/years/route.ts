@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
-import { listMediaYears } from "@/data/media";
+import { listMediaYears } from "@/data/entities/media";
 
 /**
  * GET /api/media/years — return distinct years with attachment counts.
