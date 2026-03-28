@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/db";
 import { listPosts, listPostYears } from "@/data/posts";
-import { listCategories } from "@/data/categories";
+import { listCategories } from "@/data/entities/category";
 import { listTags } from "@/data/entities/tag";
 import type { PostStatus } from "@/models/types";
 import { AdminPostsClient } from "@/components/admin/admin-posts-client";

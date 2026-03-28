@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { getCategoryBySlug } from "@/data/categories";
+import { getCategoryBySlug } from "@/data/entities/category";
 import { listPosts } from "@/data/posts";
 import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";

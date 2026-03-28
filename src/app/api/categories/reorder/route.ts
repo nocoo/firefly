@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
-import { reorderCategories } from "@/data/categories";
+import { reorderCategories } from "@/data/entities/category";
 
 // PUT /api/categories/reorder
 export async function PUT(request: NextRequest) {

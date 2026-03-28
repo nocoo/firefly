@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/db";
-import { listCategoriesWithPostStats } from "@/data/categories";
+import { listCategoriesWithPostStats } from "@/data/entities/category";
 import { TaxonomyManager } from "@/components/admin/taxonomy-manager";
 
 export default async function AdminCategoriesPage() {

@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/db";
-import { listCategories } from "@/data/categories";
+import { listCategories } from "@/data/entities/category";
 import { listTags } from "@/data/entities/tag";
 import { listMonthlyArchives } from "@/data/posts";
 import { getSiteSettings } from "@/data/settings";

@@ -32,7 +32,7 @@ vi.mock("@/data/entities/tag", () => {
   };
 });
 
-vi.mock("@/data/categories", () => {
+vi.mock("@/data/entities/category", () => {
   const cat = { id: "c-1", name: "Tech", slug: "tech", description: "Technology", sort_order: 0, post_count: 10, created_at: 0, updated_at: 0 };
   return {
     listCategories: vi.fn(async () => [cat]),

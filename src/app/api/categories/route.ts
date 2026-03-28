@@ -4,8 +4,7 @@ import { jsonResponse, errorResponse } from "@/lib/api";
 import {
   listCategories,
   createCategory,
-  type CreateCategoryInput,
-} from "@/data/categories";
+} from "@/data/entities/category";
 
 // GET /api/categories
 export async function GET() {
@@ -25,7 +24,8 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const db = getDb();
-    const body = (await request.json()) as CreateCategoryInput;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const body = (await request.json()) as any;
 
     if (!body.name?.trim()) {
       return errorResponse("name is required");
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       name: body.name.trim(),
       slug: body.slug.trim(),
       description: body.description,
-      sort_order: body.sort_order,
+      sortOrder: body.sortOrder ?? body.sort_order,
     });
 
     return jsonResponse(category, 201);

@@ -47,7 +47,7 @@ vi.mock("@/data/posts", () => ({
   ]),
 }));
 
-vi.mock("@/data/categories", () => ({
+vi.mock("@/data/entities/category", () => ({
   listCategories: vi.fn().mockResolvedValue([
     { id: "cat-1", name: "General", slug: "general", description: null, post_count: 5 },
     { id: "cat-2", name: "Empty", slug: "empty", description: null, post_count: 0 },

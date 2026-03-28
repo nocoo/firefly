@@ -7,7 +7,7 @@ import type { Post, PostWithCategory, PostStatus } from "@/models/types";
 import { readingTime, excerptFromContent } from "@/models/post";
 import { renderMarkdown } from "@/models/markdown";
 import { createCache } from "@/lib/cache";
-import { invalidateCategoriesCache } from "./categories";
+import { invalidateCategoryCache } from "@/data/entities/category";
 import { invalidateTagCache } from "@/data/entities/tag";
 import { ulid } from "ulid";
 
@@ -525,7 +525,7 @@ export async function batchUpdatePosts(
   // Refresh caches — category and tag counts may have changed
   if (input.category_id !== undefined || input.status !== undefined) {
     // Broad invalidation since multiple posts may span categories
-    invalidateCategoriesCache();
+    invalidateCategoryCache();
     await refreshAllTagPostCounts(db);
     invalidateArchivesCache();
   }
@@ -625,7 +625,7 @@ export async function refreshCategoryPostCount(
     ) WHERE id = ?`,
     [categoryId, categoryId],
   );
-  invalidateCategoriesCache();
+  invalidateCategoryCache();
 }
 
 /**

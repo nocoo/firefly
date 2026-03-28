@@ -10,7 +10,7 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
-} from "@/data/categories";
+} from "@/data/entities/category";
 import type { Category } from "@/models/types";
 import type { EntityConfig } from "../framework/types";
 
@@ -41,12 +41,17 @@ export const categoryEntity: EntityConfig<Category> = {
     },
   },
   hooks: {
+    mapCreateInput: (args) => {
+      const { sort_order, ...rest } = args;
+      return { ...rest, ...(sort_order !== undefined && { sortOrder: sort_order }) };
+    },
     mapUpdateInput: (args) => {
-      const { new_slug, ...rest } = args;
-      if (new_slug !== undefined) {
-        return { ...rest, slug: new_slug };
-      }
-      return rest;
+      const { new_slug, sort_order, ...rest } = args;
+      return {
+        ...rest,
+        ...(new_slug !== undefined && { slug: new_slug }),
+        ...(sort_order !== undefined && { sortOrder: sort_order }),
+      };
     },
   },
   descriptions: {

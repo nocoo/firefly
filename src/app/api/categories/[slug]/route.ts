@@ -6,7 +6,7 @@ import {
   updateCategory,
   deleteCategory,
   type UpdateCategoryInput,
-} from "@/data/categories";
+} from "@/data/entities/category";
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -44,12 +44,20 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const existing = await getCategoryBySlug(db, slug);
     if (!existing) return notFoundResponse("Category");
 
-    let body: UpdateCategoryInput;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let raw: any;
     try {
-      body = (await request.json()) as UpdateCategoryInput;
+      raw = await request.json();
     } catch {
       return errorResponse("Invalid JSON body");
     }
+
+    // Map snake_case API field to camelCase entity input
+    const body: UpdateCategoryInput = {
+      ...raw,
+      ...(raw.sort_order !== undefined && { sortOrder: raw.sort_order }),
+    };
+    delete (body as Record<string, unknown>).sort_order;
 
     const updated = await updateCategory(db, existing.id, body);
 

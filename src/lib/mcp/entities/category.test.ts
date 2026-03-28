@@ -13,7 +13,7 @@ import type { ToolContext } from "../framework/types";
 // Mock the data layer
 // ---------------------------------------------------------------------------
 
-vi.mock("@/data/categories", () => ({
+vi.mock("@/data/entities/category", () => ({
   listCategories: vi.fn(),
   getCategoryById: vi.fn(),
   getCategoryBySlug: vi.fn(),
@@ -29,7 +29,7 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
-} from "@/data/categories";
+} from "@/data/entities/category";
 
 // ---------------------------------------------------------------------------
 // Test data
@@ -118,7 +118,7 @@ describe("category entity handlers", () => {
         name: "Tech",
         slug: "tech",
         description: "Technology posts",
-        sort_order: 0,
+        sortOrder: 0,
       });
       const data = parseToolResult(result) as Category;
       expect(data.name).toBe("Tech");
