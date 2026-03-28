@@ -5,7 +5,7 @@ import {
   listTags,
   createTag,
   type CreateTagInput,
-} from "@/data/tags";
+} from "@/data/entities/tag";
 
 // GET /api/tags
 export async function GET() {

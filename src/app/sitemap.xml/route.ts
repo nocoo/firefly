@@ -1,7 +1,7 @@
 import { getDb } from "@/lib/db";
 import { listPosts, listMonthlyArchives } from "@/data/posts";
 import { listCategories } from "@/data/categories";
-import { listTags } from "@/data/tags";
+import { listTags } from "@/data/entities/tag";
 import { SITE_URL, postPath } from "@/lib/seo";
 import { escapeXml } from "@/lib/xml";
 

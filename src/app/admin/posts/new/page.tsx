@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/db";
 import { listCategories } from "@/data/categories";
-import { listTags } from "@/data/tags";
+import { listTags } from "@/data/entities/tag";
 import { PostForm } from "@/components/admin/post-form";
 
 export default async function NewPostPage() {

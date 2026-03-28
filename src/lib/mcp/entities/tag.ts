@@ -10,7 +10,7 @@ import {
   createTag,
   updateTag,
   deleteTag,
-} from "@/data/tags";
+} from "@/data/entities/tag";
 import type { Tag } from "@/models/types";
 import type { EntityConfig } from "../framework/types";
 

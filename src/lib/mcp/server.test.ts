@@ -20,7 +20,7 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 // All mock data must be inlined.
 // ---------------------------------------------------------------------------
 
-vi.mock("@/data/tags", () => {
+vi.mock("@/data/entities/tag", () => {
   const tag = { id: "t-1", name: "TypeScript", slug: "typescript", post_count: 5, created_at: 0, updated_at: 0 };
   return {
     listTags: vi.fn(async () => [tag]),

@@ -54,7 +54,7 @@ vi.mock("@/data/categories", () => ({
   ]),
 }));
 
-vi.mock("@/data/tags", () => ({
+vi.mock("@/data/entities/tag", () => ({
   listTags: vi.fn().mockResolvedValue([
     { id: "t1", name: "JavaScript", slug: "javascript", post_count: 5 },
     { id: "t2", name: "CSS", slug: "css", post_count: 2 },

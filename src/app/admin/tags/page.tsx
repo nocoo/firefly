@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/db";
-import { listTags } from "@/data/tags";
+import { listTags } from "@/data/entities/tag";
 import { TaxonomyManager } from "@/components/admin/taxonomy-manager";
 
 export default async function AdminTagsPage() {

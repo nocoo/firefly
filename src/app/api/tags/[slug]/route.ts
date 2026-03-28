@@ -6,7 +6,7 @@ import {
   updateTag,
   deleteTag,
   type UpdateTagInput,
-} from "@/data/tags";
+} from "@/data/entities/tag";
 
 interface RouteParams {
   params: Promise<{ slug: string }>;

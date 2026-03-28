@@ -8,7 +8,7 @@ import { readingTime, excerptFromContent } from "@/models/post";
 import { renderMarkdown } from "@/models/markdown";
 import { createCache } from "@/lib/cache";
 import { invalidateCategoriesCache } from "./categories";
-import { invalidateTagsCache } from "./tags";
+import { invalidateTagCache } from "@/data/entities/tag";
 import { ulid } from "ulid";
 
 // ---------------------------------------------------------------------------
@@ -640,7 +640,7 @@ export async function refreshAllTagPostCounts(db: Db): Promise<void> {
       WHERE pt.tag_id = tags.id
     )`,
   );
-  invalidateTagsCache();
+  invalidateTagCache();
 }
 
 // ---------------------------------------------------------------------------

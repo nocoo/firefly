@@ -14,7 +14,7 @@ import type { ToolContext } from "../framework/types";
 // Mock the data layer
 // ---------------------------------------------------------------------------
 
-vi.mock("@/data/tags", () => ({
+vi.mock("@/data/entities/tag", () => ({
   listTags: vi.fn(),
   getTagById: vi.fn(),
   getTagBySlug: vi.fn(),
@@ -30,7 +30,7 @@ import {
   createTag,
   updateTag,
   deleteTag,
-} from "@/data/tags";
+} from "@/data/entities/tag";
 
 // ---------------------------------------------------------------------------
 // Test data
