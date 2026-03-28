@@ -4,7 +4,7 @@
 
 import type { Db } from "@/lib/db";
 import type { BaseEntity, EntityConfig, ListOptions, PaginatedResult } from "./types";
-import { buildSetClauses, buildInsert, buildPagination, buildWhere } from "./sql";
+import { buildSetClauses, buildInsert, buildPagination, buildWhere, buildOrderBy } from "./sql";
 import { nowEpoch, newId } from "./timestamps";
 
 // ---------------------------------------------------------------------------
@@ -25,9 +25,11 @@ export async function list<T extends BaseEntity>(
   config: EntityConfig<T>,
   options?: ListOptions,
 ): Promise<T[] | PaginatedResult<T>> {
+  const orderByClause = resolveOrderBy(config, options);
+
   // "all" mode — full array, no pagination
   if (config.listMode === "all") {
-    const sql = `SELECT * FROM ${config.table} ORDER BY ${config.defaultOrderBy}`;
+    const sql = `SELECT * FROM ${config.table} ${orderByClause}`;
     const result = await db.query<T>(sql);
     return result.results;
   }
@@ -42,7 +44,7 @@ export async function list<T extends BaseEntity>(
 
   const sql = [
     `SELECT * FROM ${config.table}`,
-    `ORDER BY ${config.defaultOrderBy}`,
+    orderByClause,
     pagination.clause,
   ].join(" ");
 
@@ -200,4 +202,27 @@ export async function remove<T extends BaseEntity>(
 function buildReadQuery<T extends BaseEntity>(config: EntityConfig<T>): string {
   if (config.viewQuery) return config.viewQuery;
   return `SELECT * FROM ${config.table}`;
+}
+
+/**
+ * Resolve ORDER BY clause from options + config.
+ * If options.orderBy is set and config.allowedOrderColumns includes it,
+ * use buildOrderBy for validated sorting. Otherwise fall back to defaultOrderBy.
+ */
+function resolveOrderBy<T extends BaseEntity>(
+  config: EntityConfig<T>,
+  options?: ListOptions,
+): string {
+  if (
+    options?.orderBy &&
+    config.allowedOrderColumns &&
+    config.allowedOrderColumns.length > 0
+  ) {
+    return buildOrderBy(
+      options.orderBy,
+      options.orderDirection,
+      config.allowedOrderColumns,
+    );
+  }
+  return `ORDER BY ${config.defaultOrderBy}`;
 }

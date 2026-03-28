@@ -101,6 +101,12 @@ export interface EntityConfig<T extends BaseEntity> {
    */
   defaultOrderBy: string;
   /**
+   * Whitelist of column names allowed in ListOptions.orderBy.
+   * Required for list() to accept runtime orderBy overrides.
+   * If omitted, orderBy from ListOptions is silently ignored (defaultOrderBy always used).
+   */
+  allowedOrderColumns?: string[];
+  /**
    * List mode:
    * - "all": list() returns T[] (full array, no pagination). Used by Tag, Category.
    * - "paginated": list() returns PaginatedResult<T>. Used by Post, Media.

@@ -319,8 +319,6 @@ export async function createPost(
     now,
   ]);
 
-  invalidatePostCaches();
-
   const post = await getPostById(db, id);
   if (!post) throw new Error(`Failed to retrieve Post ${id} after creation`);
   return post;
@@ -459,7 +457,6 @@ export async function updatePost(
   const sql = `UPDATE posts SET ${setClauses.join(", ")} WHERE id = ?`;
   await db.execute(sql, params);
 
-  invalidatePostCaches();
   return getPostById(db, id);
 }
 
@@ -469,7 +466,6 @@ export async function updatePost(
 
 export async function deletePost(db: Db, id: string): Promise<boolean> {
   const meta = await db.execute("DELETE FROM posts WHERE id = ?", [id]);
-  if (meta.changes > 0) invalidatePostCaches();
   return meta.changes > 0;
 }
 
@@ -562,7 +558,6 @@ export async function batchUpdatePosts(
   const sql = `UPDATE posts SET ${setClauses.join(", ")} WHERE id IN (${placeholders})`;
   const result = await db.execute(sql, params);
 
-  invalidatePostCaches();
   return result.changes;
 }
 

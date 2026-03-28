@@ -108,10 +108,10 @@ describe("MediaService.upload", () => {
     expect(createMedia).not.toHaveBeenCalled();
   });
 
-  it("still returns attachment when DB record creation fails (secondary logs)", async () => {
-    // R2 upload succeeds but DB create fails
+  it("logs orphan R2 key when DB record creation fails", async () => {
     vi.mocked(r2.upload).mockResolvedValue(undefined);
     vi.mocked(createMedia).mockRejectedValue(new Error("DB error"));
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     await expect(
       MediaService.upload(db, r2, {
@@ -121,6 +121,12 @@ describe("MediaService.upload", () => {
         data: new Uint8Array([1]),
       }),
     ).rejects.toThrow("DB error");
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("Orphan R2 key: uploads/photo.jpg"),
+      expect.any(Error),
+    );
+    errorSpy.mockRestore();
   });
 });
 

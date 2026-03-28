@@ -54,16 +54,25 @@ export const MediaService = {
     await r2.upload(input.r2Key, input.data, input.mimeType);
 
     // Create DB record — if this fails, R2 object becomes orphaned
-    // (cleaned by periodic GC). We let the error propagate.
-    const attachment = await createMedia(db, {
-      filename: input.filename,
-      r2Key: input.r2Key,
-      mimeType: input.mimeType,
-      ...(input.size != null && { size: input.size }),
-      ...(input.width != null && { width: input.width }),
-      ...(input.height != null && { height: input.height }),
-      ...(input.postId != null && { postId: input.postId }),
-    });
+    // (cleaned by periodic GC). Log the orphan key for observability.
+    let attachment: Attachment;
+    try {
+      attachment = await createMedia(db, {
+        filename: input.filename,
+        r2Key: input.r2Key,
+        mimeType: input.mimeType,
+        ...(input.size != null && { size: input.size }),
+        ...(input.width != null && { width: input.width }),
+        ...(input.height != null && { height: input.height }),
+        ...(input.postId != null && { postId: input.postId }),
+      });
+    } catch (err) {
+      console.error(
+        `[MediaService] DB record creation failed after R2 upload. Orphan R2 key: ${input.r2Key}`,
+        err,
+      );
+      throw err;
+    }
 
     return attachment;
   },

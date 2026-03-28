@@ -90,6 +90,7 @@ export const PostService = {
 
     invalidateCategoryCache();
     invalidateTagCache();
+    invalidatePostCaches();
 
     return post;
   },
@@ -157,6 +158,7 @@ export const PostService = {
       }
     }
 
+    invalidatePostCaches();
     return updated;
   },
 

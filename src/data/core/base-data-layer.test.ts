@@ -76,10 +76,58 @@ describe("list (paginated, default)", () => {
     expect(params).toContain(10); // pageSize
     expect(params).toContain(20); // offset = (3-1)*10
   });
+
+  it("uses orderBy from options when allowedOrderColumns is set", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+
+    const config: EntityConfig<TestEntity> = {
+      ...simpleConfig(),
+      allowedOrderColumns: ["name", "created_at"],
+    };
+
+    await list(db, config, { orderBy: "created_at", orderDirection: "DESC" });
+
+    const sql = vi.mocked(db.query).mock.calls[0][0] as string;
+    expect(sql).toContain("ORDER BY created_at DESC");
+  });
+
+  it("falls back to defaultOrderBy when orderBy not in allowedOrderColumns", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+
+    const config: EntityConfig<TestEntity> = {
+      ...simpleConfig(),
+      allowedOrderColumns: ["name", "created_at"],
+    };
+
+    expect(
+      list(db, config, { orderBy: "hacked_column" }),
+    ).rejects.toThrow("Invalid order by column");
+  });
+
+  it("ignores orderBy when allowedOrderColumns not configured", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+
+    await list(db, simpleConfig(), { orderBy: "created_at" });
+
+    const sql = vi.mocked(db.query).mock.calls[0][0] as string;
+    expect(sql).toContain("ORDER BY name ASC");
+  });
 });
 
 // ---------------------------------------------------------------------------
-// list — listMode: "all"
+// list — listMode: "all" + orderBy
 // ---------------------------------------------------------------------------
 
 describe("list (listMode: all)", () => {
@@ -99,6 +147,24 @@ describe("list (listMode: all)", () => {
     const result = await list(db, config);
     expect(Array.isArray(result)).toBe(true);
     expect(result).toEqual([sampleEntity]);
+  });
+
+  it("respects orderBy in all mode when allowedOrderColumns is set", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+
+    const config: EntityConfig<TestEntity> = {
+      ...simpleConfig(),
+      listMode: "all",
+      allowedOrderColumns: ["name", "created_at"],
+    };
+
+    await list(db, config, { orderBy: "created_at", orderDirection: "ASC" });
+
+    const sql = vi.mocked(db.query).mock.calls[0][0] as string;
+    expect(sql).toContain("ORDER BY created_at ASC");
   });
 });
 

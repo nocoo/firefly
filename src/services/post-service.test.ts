@@ -41,6 +41,7 @@ import {
   refreshCategoryPostCount,
   refreshAllCategoryPostCounts,
   refreshAllTagPostCounts,
+  invalidatePostCaches,
 } from "@/data/entities/post";
 
 import { invalidateCategoryCache } from "@/data/entities/category";
@@ -116,6 +117,7 @@ describe("PostService.create", () => {
     expect(refreshAllTagPostCounts).toHaveBeenCalledWith(db);
     expect(invalidateCategoryCache).toHaveBeenCalled();
     expect(invalidateTagCache).toHaveBeenCalled();
+    expect(invalidatePostCaches).toHaveBeenCalled();
     expect(result.title).toBe("Hello World");
   });
 
@@ -196,6 +198,7 @@ describe("PostService.update", () => {
     // Should refresh both old and new category
     expect(refreshCategoryPostCount).toHaveBeenCalledWith(db, "cat-1");
     expect(refreshCategoryPostCount).toHaveBeenCalledWith(db, "cat-2");
+    expect(invalidatePostCaches).toHaveBeenCalled();
     expect(result?.category_id).toBe("cat-2");
   });
 
