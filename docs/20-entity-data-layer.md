@@ -781,17 +781,56 @@ interface UpdatePostInput {
 
 Orchestrates R2 storage + DB operations. Per D5, uses camelCase input.
 
-**`MediaService.upload(db, file, postId?)`:**
+**`MediaService.upload(db, file, postId?)`** — best-effort orchestration (D6):
 1. Validate file (size, MIME type)
 2. Generate R2 key
-3. Upload to R2
-4. `mediaData.create(db, { filename, r2Key, mimeType, size, ... })` — camelCase per D5
+3. Upload to R2 — **primary write** (external storage is source of truth for the binary)
+4. `mediaData.create(db, { filename, r2Key, mimeType, size, ... })` — **secondary** (DB record)
 5. Return media with URL
 
-**`MediaService.delete(db, id)`:**
+If step 3 fails: throw, nothing was created.
+If step 4 fails: R2 object exists but no DB record. Log error, throw — caller sees failure. The orphaned R2 object is cleaned up by a periodic R2 garbage collector (list R2 keys not in DB). This is the acceptable residue because R2 objects without DB records are invisible to the app (no URL path resolves to them).
+
+**`MediaService.delete(db, id)`** — best-effort orchestration (D6):
 1. `mediaData.getMedia(db, id)` — fetch to get `r2_key` (domain type, snake_case)
-2. Delete from R2
-3. `mediaData.remove(db, id)`
+2. `mediaData.remove(db, id)` — **primary write** (DB record removal is the user-facing truth)
+3. Delete from R2 — **secondary** (storage cleanup)
+
+**Failure semantics:**
+
+| Outcome | Behavior | Residue |
+|---------|----------|---------|
+| DB delete fails | Throw — nothing changed | None |
+| DB delete succeeds, R2 delete fails | Log error, **return success** | Orphaned R2 object (invisible, GC-able) |
+| All succeed | Return success | None |
+
+**Why DB removal is primary:** The DB record is what makes the media visible in the app (URLs, media library, post associations). Once the DB record is gone, the media is effectively deleted from the user's perspective. An orphaned R2 object costs storage but is invisible — the same periodic R2 GC handles it.
+
+**Implementation pattern:**
+```ts
+async function deleteMedia(db: Db, id: string): Promise<void> {
+  const media = await mediaData.getMedia(db, id);
+  if (!media) throw new Error("Media not found");
+
+  // Primary: remove DB record (user-facing truth)
+  await mediaData.remove(db, id);
+
+  // Secondary: clean up R2 storage
+  try {
+    await r2.delete(media.r2_key);
+  } catch (e) {
+    log.error("R2 delete failed after DB removal", { id, r2Key: media.r2_key, error: e });
+    // NOT re-thrown — DB record gone = media deleted from user perspective
+    // Orphaned R2 object handled by periodic GC
+  }
+}
+```
+
+**`MediaService.upload` vs `delete` — opposite primary truth:**
+- **Upload:** R2 is primary (the binary must exist first), DB is secondary.
+- **Delete:** DB is primary (visibility removal is the user action), R2 is secondary.
+
+This asymmetry is intentional: upload's failure mode (orphan R2) and delete's failure mode (orphan R2) both converge to the same residue — an invisible R2 object that the GC handles.
 
 This moves R2 logic out of API route handlers into a testable service.
 
@@ -839,17 +878,45 @@ hooks: {
     ...post,
     tags: await postData.getPostTags(ctx.db, post.id),
   }),
-  mapCreateInput: (args) => {
-    const { new_slug, ...rest } = args;
-    return new_slug !== undefined ? { ...rest, slug: new_slug } : rest;
-  },
-  mapUpdateInput: (args) => {
-    const { new_slug, ...rest } = args;
-    return new_slug !== undefined ? { ...rest, slug: new_slug } : rest;
-  },
+  // D5 boundary: MCP schema stays snake_case, Service expects camelCase
+  mapCreateInput: (args) => mapMcpPostInput(args),
+  mapUpdateInput: (args) => mapMcpPostInput(args),
   // NO afterCreate, beforeUpdate, rollback hooks — Service handles everything
 }
 ```
+
+**`mapMcpPostInput` — shared snake→camelCase mapper for MCP:**
+```ts
+function mapMcpPostInput(args: Record<string, unknown>) {
+  const {
+    new_slug,
+    category_id,
+    tag_ids,
+    featured_image,
+    comment_enabled,
+    published_at,
+    reference_url,
+    reference_title,
+    reference_description,
+    reference_image,
+    ...rest
+  } = args;
+  const mapped: Record<string, unknown> = { ...rest };
+  if (new_slug !== undefined) mapped.slug = new_slug;
+  if (category_id !== undefined) mapped.categoryId = category_id;
+  if (tag_ids !== undefined) mapped.tagIds = tag_ids;
+  if (featured_image !== undefined) mapped.featuredImage = featured_image;
+  if (comment_enabled !== undefined) mapped.commentEnabled = comment_enabled;
+  if (published_at !== undefined) mapped.publishedAt = published_at;
+  if (reference_url !== undefined) mapped.referenceUrl = reference_url;
+  if (reference_title !== undefined) mapped.referenceTitle = reference_title;
+  if (reference_description !== undefined) mapped.referenceDescription = reference_description;
+  if (reference_image !== undefined) mapped.referenceImage = reference_image;
+  return mapped;
+}
+```
+
+MCP schemas stay snake_case (`category_id`, `tag_ids`, `featured_image`, etc.) — the external tool interface is unchanged. The mapping happens once in hooks before the Service receives input.
 
 ### 7.2 MCP Framework Core Changes (`src/lib/mcp/framework/`)
 
@@ -961,7 +1028,7 @@ const executeUrl = `${workerUrl}/api/v1/execute`;
 - `src/app/api/categories/reorder/route.ts` → same
 - **Boundary mapping:** Current input types use `sort_order` (snake_case). New `CreateCategoryInput` / `UpdateCategoryInput` use `sortOrder` (camelCase per D5). Route handlers add a one-line mapping at the boundary: `{ ...body, sortOrder: body.sort_order }`. External API request shape stays `sort_order` for backward compatibility.
 
-**Posts** — Import source changes from data layer to PostService:
+**Posts** — Import source changes from data layer to PostService + D5 boundary mapping:
 - `POST /api/posts` → calls `PostService.create(db, input)` instead of `createPost` + `setPostTags`
 - `PUT /api/posts/[slug]` → calls `PostService.update(db, id, input)` instead of `updatePost` + `setPostTags`
 - `DELETE /api/posts/[slug]` → calls `PostService.delete(db, id)` instead of `deletePost`
@@ -970,12 +1037,26 @@ const executeUrl = `${workerUrl}/api/v1/execute`;
 - `GET /api/admin/posts` → calls `postData.list(db, options)` — same data layer, no status filter
 - `PATCH /api/admin/posts/batch` → calls `PostService.batchUpdate(db, ids, updates)`
 - `POST /api/posts/[slug]/excerpt` → unchanged (AI service call)
+- **D5 boundary mapping (route handlers):** External API keeps snake_case request body. Route handler maps to camelCase before calling PostService:
+  ```
+  category_id     → categoryId
+  featured_image  → featuredImage
+  comment_enabled → commentEnabled
+  published_at    → publishedAt
+  tag_ids         → tagIds
+  reference_url   → referenceUrl
+  reference_title → referenceTitle
+  reference_description → referenceDescription
+  reference_image → referenceImage
+  ```
+  A shared `mapPostInput(body)` utility does this once — both POST and PUT routes call it.
 
-**Media** — Writes go through MediaService:
+**Media** — Writes go through MediaService + D5 boundary mapping:
 - `POST /api/media` → `MediaService.upload(db, file, postId)`
 - `DELETE /api/media/[id]` → `MediaService.delete(db, id)`
 - `GET /api/media` → `mediaData.list(db, options)` — direct data layer read
 - `PATCH /api/media/associate` → `mediaData.associateMedia(db, ids, postId)`
+- **D5 boundary mapping:** `post_id` → `postId` in upload and associate routes. Other media fields (`filename`, `size`, `width`, `height`) are already camelCase or no-case-difference.
 
 **Server Components** — Import path changes:
 - 11 post consumers → mix of `postData` (reads) and `PostService` (getWithTags)
@@ -1149,7 +1230,14 @@ Stage 3 已完成 MCP entity config 的 import 切换。Stage 4 专注于 MCP **
 **MCP entity (post):**
 - `afterGet` enriches with tags
 - `dataLayer.create` calls PostService (not raw data layer)
+- `mapCreateInput` / `mapUpdateInput` maps all snake_case MCP fields to camelCase
 - No rollback hooks exist
+
+**MediaService:**
+- `upload`: R2 upload + DB create in sequence
+- `upload` with DB create failure after R2 success: throws, orphan R2 (GC-able)
+- `delete`: DB remove + R2 delete in sequence
+- `delete` with R2 failure after DB remove: returns success (D6), orphan R2 logged
 
 ### 11.3 L2/L3 as Integration Safety Net
 
