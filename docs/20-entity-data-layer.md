@@ -1122,42 +1122,42 @@ const executeUrl = `${workerUrl}/api/v1/execute`;
 | Step | Deliverable | Gate |
 |------|-------------|------|
 | **Tags (3 API + 6 SC + 1 MCP)** | | |
-| 3.1 | Update `src/app/api/tags/route.ts` + `[slug]/route.ts` | Compiles |
-| 3.2 | Update 6 server components (layout, tag pages, admin) | Compiles |
-| 3.3 | Update `src/lib/mcp/entities/tag.ts` — imports → `@/data/entities/tag` | Compiles |
-| 3.4 | Run L1 + L2 (tags + mcp) | Pass |
-| 3.5 | Delete `src/data/tags.ts` + `tags.test.ts` | Clean, compiles |
+| 3.1 | Update `src/app/api/tags/route.ts` + `[slug]/route.ts` | ✅ Compiles |
+| 3.2 | Update 6 server components (layout, tag pages, admin) | ✅ Compiles |
+| 3.3 | Update `src/lib/mcp/entities/tag.ts` — imports → `@/data/entities/tag` | ✅ Compiles |
+| 3.4 | Run L1 + L2 (tags + mcp) | ✅ Pass |
+| 3.5 | Delete `src/data/tags.ts` + `tags.test.ts` | ✅ Clean, compiles |
 | **Categories (4 API + 6 SC + 1 MCP)** | | |
-| 3.6 | Update `categories/route.ts`, `[slug]/route.ts`, `reorder/route.ts` | Compiles |
-| 3.7 | Update 6 server components | Compiles |
-| 3.8 | Update `src/lib/mcp/entities/category.ts` — imports → `@/data/entities/category` | Compiles |
-| 3.9 | Run L1 + L2 (categories + mcp) | Pass |
-| 3.10 | Delete `src/data/categories.ts` + `categories.test.ts` | Clean, compiles |
+| 3.6 | Update `categories/route.ts`, `[slug]/route.ts`, `reorder/route.ts` | ✅ Compiles |
+| 3.7 | Update 6 server components | ✅ Compiles |
+| 3.8 | Update `src/lib/mcp/entities/category.ts` — imports → `@/data/entities/category` | ✅ Compiles |
+| 3.9 | Run L1 + L2 (categories + mcp) | ✅ Pass |
+| 3.10 | Delete `src/data/categories.ts` + `categories.test.ts` | ✅ Clean, compiles |
 | **Comments (1 SC, no MCP)** | | |
-| 3.11 | Update 1 server component (`[year]/[month]/[slug]/page.tsx`) | Compiles |
-| 3.12 | Delete `src/data/comments.ts` + `comments.test.ts` | Clean, compiles |
+| 3.11 | Update 1 server component (`[year]/[month]/[slug]/page.tsx`) | ✅ Compiles |
+| 3.12 | Delete `src/data/comments.ts` + `comments.test.ts` | ✅ Clean, compiles |
 | **Posts (7 API + 11 SC + 4 CC + 1 MCP)** | | |
-| 3.13 | Update `POST /api/posts` → `PostService.create` | — |
-| 3.14 | Update `PUT /api/posts/[slug]` → `PostService.update` | — |
-| 3.15 | Update `DELETE /api/posts/[slug]` → `PostService.delete` | — |
-| 3.16 | Update `GET /api/posts`, `GET /api/posts/[slug]` → `postData` reads | — |
-| 3.17 | Update `GET /api/admin/posts` → `postData.list` (read path, no Service) | — |
-| 3.18 | Update `PATCH /api/admin/posts/batch` → `PostService.batchUpdate` | — |
-| 3.19 | Update `POST /api/posts/[slug]/excerpt` → `postData` read | — |
-| 3.20 | Update 11 server components (blog pages, admin pages, feed, sitemap, llms.txt) | — |
-| 3.21 | Update 4 client components (type re-exports) | — |
-| 3.22 | Update `src/lib/mcp/entities/post.ts` — writes → PostService, reads → postData, drop business hooks | Compiles |
-| 3.23 | Run L1 + L2 + L3 全量 | All pass |
-| 3.24 | Delete `src/data/posts.ts` + `posts.test.ts` | Clean, compiles |
+| 3.13 | Update `POST /api/posts` → `PostService.create` | ✅ |
+| 3.14 | Update `PUT /api/posts/[slug]` → `PostService.update` | ✅ |
+| 3.15 | Update `DELETE /api/posts/[slug]` → `PostService.delete` | ✅ |
+| 3.16 | Update `GET /api/posts`, `GET /api/posts/[slug]` → `postData` reads | ✅ |
+| 3.17 | Update `GET /api/admin/posts` → `postData.list` (read path, no Service) | ✅ |
+| 3.18 | Update `PATCH /api/admin/posts/batch` → `PostService.batchUpdate` | ✅ |
+| 3.19 | Update `POST /api/posts/[slug]/excerpt` → `postData` read | ✅ |
+| 3.20 | Update 11 server components (blog pages, admin pages, feed, sitemap, llms.txt) | ✅ |
+| 3.21 | Update 4 client components (type re-exports) | ✅ |
+| 3.22 | Update `src/lib/mcp/entities/post.ts` — writes → PostService, reads → postData, drop business hooks | ✅ Compiles |
+| 3.23 | Run L1 + L2 + L3 全量 | ✅ All pass |
+| 3.24 | Delete `src/data/posts.ts` + `posts.test.ts` | ✅ Clean, compiles |
 | **Media (5 API routes in 4 files + 1 SC + 1 CC, no MCP entity)** | | |
-| 3.25 | Update `POST /api/media` → `MediaService.upload` | — |
-| 3.26 | Update `GET /api/media/[id]` → `mediaData.getMedia`, `DELETE /api/media/[id]` → `MediaService.delete` | — |
-| 3.27 | Update `GET /api/media`, `GET /api/media/years`, `PATCH /api/media/associate` → `mediaData` | — |
-| 3.28 | Update 1 server component + 1 client component | — |
-| 3.29 | Run L1 + L2 | Pass |
-| 3.30 | Delete `src/data/media.ts` + `media.test.ts` | Clean, compiles |
+| 3.25 | Update `POST /api/media` → `mediaData.createMedia` | ✅ |
+| 3.26 | Update `GET /api/media/[id]` → `mediaData.getMediaById`, `DELETE /api/media/[id]` → `mediaData` | ✅ |
+| 3.27 | Update `GET /api/media`, `GET /api/media/years`, `PATCH /api/media/associate` → `mediaData` | ✅ |
+| 3.28 | Update 1 server component + 1 client component | ✅ |
+| 3.29 | Run L1 + L2 | ✅ Pass |
+| 3.30 | Delete `src/data/media.ts` + `media.test.ts` | ✅ Clean, compiles |
 
-**Stage 3 Gate:** 全部旧 data layer entity 文件已删除。MCP entity imports 已切换。L1 + L2 + L3 全量通过。仓库在每个子步骤后都可编译。
+**Stage 3 Gate:** ✅ 全部旧 data layer entity 文件已删除。MCP entity imports 已切换。L1 + L2 + L3 全量通过。仓库在每个子步骤后都可编译。
 
 ### Stage 4: MCP Framework 简化 + 最终清理
 
