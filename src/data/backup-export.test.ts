@@ -1,6 +1,7 @@
 import { gunzipSync } from "node:zlib";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db, DbQueryResult } from "@/lib/db";
+import { createMockDb } from "@/data/core/test-utils";
 import type { Post, Category, Tag, Comment, Attachment, Redirect } from "@/models/types";
 import { BACKUP_SCHEMA_VERSION } from "@/models/backup-schema";
 import type { FireflyBackupEnvelope } from "@/models/backup-schema";
@@ -21,14 +22,6 @@ const {
 // Mock DB
 // ---------------------------------------------------------------------------
 
-function createMockDb(): Db {
-  return {
-    query: vi.fn(),
-    firstOrNull: vi.fn(),
-    execute: vi.fn(),
-    batch: vi.fn(),
-  };
-}
 
 const samplePost: Post = {
   id: "01HX1234",

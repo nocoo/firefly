@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db } from "@/lib/db";
+import { createMockDb } from "@/data/core/test-utils";
 import {
   recordPageView,
   getSiteDailyStats,
@@ -23,14 +24,6 @@ import {
   getOtherBotDetail,
 } from "./analytics";
 
-function createMockDb(): Db {
-  return {
-    query: vi.fn(),
-    firstOrNull: vi.fn(),
-    execute: vi.fn(),
-    batch: vi.fn(),
-  };
-}
 
 describe("recordPageView", () => {
   let db: Db;

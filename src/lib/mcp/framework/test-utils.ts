@@ -2,20 +2,11 @@
 // Entity-Driven MCP Framework — Shared Test Utilities
 // ---------------------------------------------------------------------------
 
-import { vi } from "vitest";
-import type { Db } from "@/lib/db";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { ToolContext } from "./types";
+import { createMockDb } from "@/data/core/test-utils";
 
-/** Create a mock Db instance for unit tests. */
-export function createMockDb(): Db {
-  return {
-    query: vi.fn(),
-    firstOrNull: vi.fn(),
-    execute: vi.fn(),
-    batch: vi.fn(),
-  };
-}
+export { createMockDb } from "@/data/core/test-utils";
 
 /** Create a ToolContext backed by a mock Db. */
 export function createMockContext(): ToolContext {

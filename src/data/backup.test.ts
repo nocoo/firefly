@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db } from "@/lib/db";
+import { createMockDb } from "@/data/core/test-utils";
 import {
   getBackyConfig,
   getBackyPullKey,
@@ -14,14 +15,6 @@ import {
 // Mock DB
 // ---------------------------------------------------------------------------
 
-function createMockDb(): Db {
-  return {
-    query: vi.fn(),
-    firstOrNull: vi.fn(),
-    execute: vi.fn(),
-    batch: vi.fn(),
-  };
-}
 
 let db: Db;
 

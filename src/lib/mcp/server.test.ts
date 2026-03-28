@@ -9,6 +9,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db } from "@/lib/db";
+import { createMockDb } from "@/data/core/test-utils";
 import { createMcpServer } from "./server";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 
@@ -90,14 +91,6 @@ vi.mock("@/services/unfurl", () => ({
 // Helpers
 // ---------------------------------------------------------------------------
 
-function createMockDb(): Db {
-  return {
-    query: vi.fn(),
-    firstOrNull: vi.fn(),
-    execute: vi.fn(),
-    batch: vi.fn(),
-  };
-}
 
 /** Common headers for MCP JSON-RPC requests. */
 const MCP_HEADERS = {

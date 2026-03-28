@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db } from "@/lib/db";
+import { createMockDb } from "@/data/core/test-utils";
 import type { Redirect } from "@/models/types";
 import { getRedirectBySource, incrementRedirectHit } from "./redirects";
 
@@ -7,14 +8,6 @@ import { getRedirectBySource, incrementRedirectHit } from "./redirects";
 // Mock DB
 // ---------------------------------------------------------------------------
 
-function createMockDb(): Db {
-  return {
-    query: vi.fn(),
-    firstOrNull: vi.fn(),
-    execute: vi.fn(),
-    batch: vi.fn(),
-  };
-}
 
 const sampleRedirect: Redirect = {
   id: "redir-1",
