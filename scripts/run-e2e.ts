@@ -48,12 +48,17 @@ function loadEnvFile(path: string): Record<string, string> {
   return env;
 }
 
-async function waitForServer(url: string, timeoutMs = 30_000): Promise<void> {
+async function waitForServer(
+  url: string,
+  timeoutMs = 30_000,
+  /** When true, only res.ok (2xx) counts as ready. Use for health endpoints. */
+  strictOk = false,
+): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(2000) });
-      if (res.ok || res.status < 500) return;
+      if (strictOk ? res.ok : res.ok || res.status < 500) return;
     } catch {
       // not ready yet
     }
@@ -228,6 +233,7 @@ async function waitForWorkerReady(): Promise<void> {
     await waitForServer(
       `http://localhost:${WORKER_PORT}/api/v1/health`,
       30_000,
+      true, // strictOk: health must return 2xx
     );
     console.log(`▸ Test worker ready on port ${WORKER_PORT}`);
   } catch {
