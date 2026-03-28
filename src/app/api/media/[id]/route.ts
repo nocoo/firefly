@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse, notFoundResponse } from "@/lib/api";
-import { deleteFromR2 } from "@/lib/r2-client";
-import { getMediaById, deleteMedia } from "@/data/entities/media";
+import { getR2ClientAdapter } from "@/lib/r2-client";
+import { getMediaById } from "@/data/entities/media";
+import { MediaService } from "@/services/media-service";
 
 /**
  * GET /api/media/[id] — get a single media record.
@@ -29,7 +30,12 @@ export async function GET(
 }
 
 /**
- * DELETE /api/media/[id] — hard delete (DB + R2).
+ * DELETE /api/media/[id] — hard delete (DB primary, R2 best-effort).
+ *
+ * DB record is the primary truth — deleted first.
+ * R2 object deletion is best-effort; if it fails, an orphan R2 key is logged
+ * for periodic cleanup (D6 contract).
+ *
  * Auth: protected by proxy (all methods on /api/media).
  */
 export async function DELETE(
@@ -39,15 +45,15 @@ export async function DELETE(
   try {
     const { id } = await params;
     const db = getDb();
-    const media = await getMediaById(db, id);
 
+    const media = await getMediaById(db, id);
     if (!media) {
       return notFoundResponse("Media");
     }
 
-    // Delete from R2 first, then DB
-    await deleteFromR2(media.r2_key);
-    await deleteMedia(db, id);
+    const r2 = getR2ClientAdapter();
+    const deleted = await MediaService.delete(db, r2, id);
+    if (!deleted) return notFoundResponse("Media");
 
     return new Response(null, { status: 204 });
   } catch (err) {

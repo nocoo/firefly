@@ -1,9 +1,10 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
-import { uploadToR2, getR2PublicUrl } from "@/lib/r2-client";
-import { generateFireflyR2Key } from "@/lib/r2";
-import { listMedia, createMedia } from "@/data/entities/media";
+import { getR2PublicUrl, getR2ClientAdapter } from "@/lib/r2-client";
+import { generateFireflyR2Key, validateUpload } from "@/lib/r2";
+import { listMedia } from "@/data/entities/media";
+import { MediaService } from "@/services/media-service";
 
 /**
  * GET /api/media — list media with pagination and filters.
@@ -76,25 +77,33 @@ export async function POST(request: NextRequest) {
       return errorResponse("No file provided", 400);
     }
 
-    // Upload to R2
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const key = generateFireflyR2Key(file.name);
-    const r2Result = await uploadToR2(buffer, file.name, file.type, key);
+    const data = new Uint8Array(await file.arrayBuffer());
 
-    // Create DB record
+    // Validate before uploading (file size, MIME type, magic bytes)
+    const validationError = validateUpload(data, file.type);
+    if (validationError) {
+      return errorResponse(validationError, 400);
+    }
+
+    const key = generateFireflyR2Key(file.name);
     const db = getDb();
-    const media = await createMedia(db, {
+    const r2 = getR2ClientAdapter();
+
+    const media = await MediaService.upload(db, r2, {
       filename: file.name,
-      r2Key: r2Result.key,
-      mimeType: r2Result.mimeType,
-      size: r2Result.size,
+      r2Key: key,
+      mimeType: file.type,
+      data,
+      size: data.length,
       ...(postId ? { postId } : {}),
     });
+
+    const publicBaseUrl = getR2PublicUrl();
 
     return jsonResponse(
       {
         ...media,
-        url: r2Result.url,
+        url: `${publicBaseUrl}/${media.r2_key}`,
       },
       201,
     );

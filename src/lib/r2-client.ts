@@ -180,3 +180,33 @@ export async function deleteFromR2(key: string): Promise<void> {
     }),
   );
 }
+
+// ---------------------------------------------------------------------------
+// R2Client adapter for MediaService
+// ---------------------------------------------------------------------------
+
+import type { R2Client } from "@/services/media-service";
+
+/**
+ * Returns an R2Client adapter backed by the S3-compatible R2 client.
+ * Suitable for injection into MediaService.upload / MediaService.delete.
+ */
+export function getR2ClientAdapter(): R2Client {
+  return {
+    async upload(key: string, data: Uint8Array, contentType: string) {
+      const { client: s3, config } = getClient();
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: config.bucketName,
+          Key: key,
+          Body: data,
+          ContentType: contentType,
+          CacheControl: "public, max-age=31536000, immutable",
+        }),
+      );
+    },
+    async delete(key: string) {
+      await deleteFromR2(key);
+    },
+  };
+}
