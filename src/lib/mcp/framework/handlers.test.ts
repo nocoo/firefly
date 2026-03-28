@@ -284,32 +284,11 @@ describe("handleCreate", () => {
     expect(afterCreate).toHaveBeenCalledWith(ctx, entity1, { name: "New" });
   });
 
-  it("rolls back on afterCreate failure", async () => {
-    const onCreateRollback = vi.fn().mockResolvedValue(undefined);
+  it("returns success even when afterCreate fails (best-effort)", async () => {
     const config = createMockConfig({
       hooks: {
         afterCreate: async () => {
           throw new Error("hook failed");
-        },
-        onCreateRollback,
-      },
-    });
-    const { handleCreate } = createCrudHandlers(config);
-    const ctx = createMockContext();
-
-    const result = await handleCreate(ctx, { name: "New" });
-    expectError(result, "afterCreate hook failed");
-    expect(onCreateRollback).toHaveBeenCalledWith(ctx, entity1);
-  });
-
-  it("returns error even if rollback also fails", async () => {
-    const config = createMockConfig({
-      hooks: {
-        afterCreate: async () => {
-          throw new Error("hook failed");
-        },
-        onCreateRollback: async () => {
-          throw new Error("rollback also failed");
         },
       },
     });
@@ -317,7 +296,9 @@ describe("handleCreate", () => {
     const ctx = createMockContext();
 
     const result = await handleCreate(ctx, { name: "New" });
-    expectError(result, "afterCreate hook failed");
+    // afterCreate is best-effort — failure is logged, entity still returned
+    const data = parseToolResult(result) as MockEntity;
+    expect(data.id).toBe("e-1");
   });
 });
 
@@ -382,66 +363,29 @@ describe("handleUpdate", () => {
     });
   });
 
-  it("calls beforeUpdate hook and passes rollback data on failure", async () => {
-    const beforeUpdate = vi
-      .fn()
-      .mockResolvedValue(["old-tag-1", "old-tag-2"]);
-    const onUpdateRollback = vi.fn().mockResolvedValue(undefined);
-    const dl = createMockDataLayer();
-    dl.update.mockRejectedValue(new Error("DB error"));
-
-    const config = createMockConfig({
-      dataLayer: dl,
-      hooks: { beforeUpdate, onUpdateRollback },
-    });
+  it("calls afterUpdate hook after update", async () => {
+    const afterUpdate = vi.fn();
+    const config = createMockConfig({ hooks: { afterUpdate } });
     const { handleUpdate } = createCrudHandlers(config);
 
-    await expect(
-      handleUpdate(ctx, { id: "e-1", name: "Fail" }),
-    ).rejects.toThrow("DB error");
-    expect(onUpdateRollback).toHaveBeenCalledWith(
-      ctx,
-      entity1,
-      ["old-tag-1", "old-tag-2"],
-    );
+    await handleUpdate(ctx, { id: "e-1", name: "Updated" });
+    expect(afterUpdate).toHaveBeenCalledWith(ctx, entity1, { name: "Updated" });
   });
 
-  it("does not call onUpdateRollback if beforeUpdate returned undefined", async () => {
-    const beforeUpdate = vi.fn().mockResolvedValue(undefined);
-    const onUpdateRollback = vi.fn().mockResolvedValue(undefined);
-    const dl = createMockDataLayer();
-    dl.update.mockRejectedValue(new Error("DB error"));
-
+  it("returns success even when afterUpdate fails (best-effort)", async () => {
     const config = createMockConfig({
-      dataLayer: dl,
-      hooks: { beforeUpdate, onUpdateRollback },
-    });
-    const { handleUpdate } = createCrudHandlers(config);
-
-    await expect(
-      handleUpdate(ctx, { id: "e-1", name: "Fail" }),
-    ).rejects.toThrow("DB error");
-    expect(onUpdateRollback).not.toHaveBeenCalled();
-  });
-
-  it("swallows rollback errors and still rethrows original error", async () => {
-    const dl = createMockDataLayer();
-    dl.update.mockRejectedValue(new Error("original"));
-
-    const config = createMockConfig({
-      dataLayer: dl,
       hooks: {
-        beforeUpdate: async () => "rollback-data",
-        onUpdateRollback: async () => {
-          throw new Error("rollback failed");
+        afterUpdate: async () => {
+          throw new Error("hook failed");
         },
       },
     });
     const { handleUpdate } = createCrudHandlers(config);
 
-    await expect(
-      handleUpdate(ctx, { id: "e-1", name: "X" }),
-    ).rejects.toThrow("original");
+    const result = await handleUpdate(ctx, { id: "e-1", name: "Updated" });
+    // afterUpdate is best-effort — failure is logged, update still returned
+    const data = parseToolResult(result) as MockEntity;
+    expect(data.name).toBe("Updated");
   });
 
   it("returns error when entity not found", async () => {

@@ -208,9 +208,6 @@ export const postEntity: EntityConfig<Post> = {
       const tagIds = args.tag_ids as string[] | undefined;
       if (tagIds?.length) await setPostTags(ctx.db, post.id, tagIds);
     },
-    onCreateRollback: async (ctx, post) => {
-      await deletePost(ctx.db, post.id);
-    },
     mapUpdateInput: (args) => {
       const {
         tag_ids: _tagIds,
@@ -236,17 +233,9 @@ export const postEntity: EntityConfig<Post> = {
         ...(reference_image !== undefined && { referenceImage: reference_image }),
       };
     },
-    beforeUpdate: async (ctx, existing, args) => {
-      if (args.tag_ids === undefined) return undefined;
-      const oldTags = await getPostTags(ctx.db, existing.id);
-      const oldTagIds = oldTags.map((t) => t.id);
+    afterUpdate: async (ctx, existing, args) => {
+      if (args.tag_ids === undefined) return;
       await setPostTags(ctx.db, existing.id, args.tag_ids as string[]);
-      return oldTagIds; // rollback data
-    },
-    onUpdateRollback: async (ctx, existing, rollbackData) => {
-      if (rollbackData) {
-        await setPostTags(ctx.db, existing.id, rollbackData as string[]);
-      }
     },
   },
   projection: {

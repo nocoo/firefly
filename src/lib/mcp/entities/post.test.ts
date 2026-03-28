@@ -228,7 +228,7 @@ describe("post entity handlers", () => {
     });
   });
 
-  // ---- create + afterCreate + rollback ----
+  // ---- create + afterCreate (best-effort) ----
 
   describe("handleCreate", () => {
     it("strips tag_ids from data layer input (mapCreateInput)", async () => {
@@ -276,10 +276,9 @@ describe("post entity handlers", () => {
       expect(setPostTags).not.toHaveBeenCalled();
     });
 
-    it("rolls back by deleting post when afterCreate fails", async () => {
+    it("returns success even when afterCreate fails (best-effort)", async () => {
       vi.mocked(createPost).mockResolvedValue(samplePostWithCategory);
       vi.mocked(setPostTags).mockRejectedValue(new Error("tag error"));
-      vi.mocked(deletePost).mockResolvedValue(true);
 
       const result = await handlers.handleCreate(ctx, {
         title: "New",
@@ -288,12 +287,13 @@ describe("post entity handlers", () => {
         tag_ids: ["bad-tag"],
       });
 
-      expectError(result, "afterCreate hook failed");
-      expect(deletePost).toHaveBeenCalledWith(ctx.db, "post-1");
+      // Should still return success — afterCreate is best-effort
+      const data = parseToolResult(result);
+      expect(data).toHaveProperty("id", "post-1");
     });
   });
 
-  // ---- update + beforeUpdate + rollback ----
+  // ---- update + afterUpdate (best-effort) ----
 
   describe("handleUpdate", () => {
     it("maps new_slug to slug and strips tag_ids", async () => {
@@ -312,9 +312,8 @@ describe("post entity handlers", () => {
       });
     });
 
-    it("saves old tags and updates them via beforeUpdate", async () => {
+    it("sets tags via afterUpdate", async () => {
       vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
-      vi.mocked(getPostTags).mockResolvedValue(sampleTags);
       vi.mocked(setPostTags).mockResolvedValue(undefined);
       vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
 
@@ -323,31 +322,9 @@ describe("post entity handlers", () => {
         tag_ids: ["tag-2", "tag-3"],
       });
 
-      // Should have called setPostTags with new tags
       expect(setPostTags).toHaveBeenCalledWith(ctx.db, "post-1", [
         "tag-2",
         "tag-3",
-      ]);
-    });
-
-    it("rolls back tags when updatePost fails", async () => {
-      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
-      vi.mocked(getPostTags).mockResolvedValue(sampleTags);
-      vi.mocked(setPostTags).mockResolvedValue(undefined);
-      vi.mocked(updatePost).mockRejectedValue(new Error("DB error"));
-
-      await expect(
-        handlers.handleUpdate(ctx, {
-          slug: "test-post",
-          tag_ids: ["tag-2"],
-          title: "fail",
-        }),
-      ).rejects.toThrow("DB error");
-
-      // Should have called setPostTags twice: first with new, then rollback
-      expect(setPostTags).toHaveBeenCalledTimes(2);
-      expect(setPostTags).toHaveBeenLastCalledWith(ctx.db, "post-1", [
-        "tag-1",
       ]);
     });
 

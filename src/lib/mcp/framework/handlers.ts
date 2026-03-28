@@ -92,12 +92,9 @@ export function createCrudHandlers<T extends { id: string }>(
       try {
         await hooks.afterCreate(ctx, entity, args);
       } catch (err) {
-        if (hooks.onCreateRollback) {
-          await hooks.onCreateRollback(ctx, entity).catch(() => {});
-        }
-        const msg = err instanceof Error ? err.message : String(err);
-        return error(
-          `${displayName} created but afterCreate hook failed (rolled back): ${msg}`,
+        console.error(
+          `[MCP] ${displayName} afterCreate hook failed (best-effort):`,
+          err,
         );
       }
     }
@@ -115,27 +112,25 @@ export function createCrudHandlers<T extends { id: string }>(
     // Strip MCP identifier fields before any hook/mapper sees the args.
     const { id: _id, slug: _slug, ...businessFields } = args;
 
-    let rollbackData: unknown;
-    if (hooks?.beforeUpdate) {
-      rollbackData = await hooks.beforeUpdate(ctx, resolved, businessFields);
-    }
+    // Map business fields for data layer (e.g., new_slug -> slug).
+    const input = hooks?.mapUpdateInput
+      ? hooks.mapUpdateInput(businessFields)
+      : businessFields;
 
-    try {
-      // Map business fields for data layer (e.g., new_slug -> slug).
-      const input = hooks?.mapUpdateInput
-        ? hooks.mapUpdateInput(businessFields)
-        : businessFields;
+    const updated = await dataLayer.update(ctx.db, resolved.id, input);
 
-      const updated = await dataLayer.update(ctx.db, resolved.id, input);
-      return ok(updated);
-    } catch (err) {
-      if (hooks?.onUpdateRollback && rollbackData !== undefined) {
-        await hooks
-          .onUpdateRollback(ctx, resolved, rollbackData)
-          .catch(() => {});
+    if (hooks?.afterUpdate) {
+      try {
+        await hooks.afterUpdate(ctx, resolved, businessFields);
+      } catch (err) {
+        console.error(
+          `[MCP] ${displayName} afterUpdate hook failed (best-effort):`,
+          err,
+        );
       }
-      throw err;
     }
+
+    return ok(updated);
   }
 
   // ---- delete ----

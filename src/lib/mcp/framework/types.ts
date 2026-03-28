@@ -34,25 +34,17 @@ export interface DataLayer<T> {
 export interface EntityHooks<T> {
   /** Transform entity after get (e.g., enrich with relations). */
   afterGet?: (ctx: ToolContext, entity: T) => Promise<unknown>;
-  /** Run after create (e.g., set relations). Throw to trigger rollback. */
+  /** Run after create (e.g., set relations). Best-effort — failure is logged, not rolled back. */
   afterCreate?: (
     ctx: ToolContext,
     entity: T,
     args: Record<string, unknown>,
   ) => Promise<void>;
-  /** Rollback create if afterCreate fails (e.g., delete orphan). */
-  onCreateRollback?: (ctx: ToolContext, entity: T) => Promise<void>;
-  /** Run before update. Returns rollback data for compensating write. */
-  beforeUpdate?: (
+  /** Run after update (e.g., set relations). Best-effort — failure is logged, not rolled back. */
+  afterUpdate?: (
     ctx: ToolContext,
-    existing: T,
+    entity: T,
     args: Record<string, unknown>,
-  ) => Promise<unknown>;
-  /** Restore pre-update state if update fails. */
-  onUpdateRollback?: (
-    ctx: ToolContext,
-    existing: T,
-    rollbackData: unknown,
   ) => Promise<void>;
   /** Transform create args before passing to data layer. */
   mapCreateInput?: (args: Record<string, unknown>) => Record<string, unknown>;
