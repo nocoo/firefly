@@ -42,7 +42,7 @@
 | Layer | Technology | Version | Rationale |
 |-------|-----------|---------|-----------|
 | Runtime | Bun | latest | Fast build, native TS, workspace support |
-| Framework | Next.js | 16.x | App Router, RSC, ISR, Turbopack |
+| Framework | Next.js | 16.x | App Router, RSC, ISR |
 | Language | TypeScript | 5.x | Strict mode, exactOptionalPropertyTypes |
 | Styling | Tailwind CSS | 4.x | @tailwindcss/postcss, CSS variables |
 | UI Components | shadcn/ui (basalt variant) | — | Copy-paste from ../basalt, Radix primitives |
@@ -81,44 +81,47 @@
 
 | Dimension | Tool | Gate | Status |
 |-----------|------|------|--------|
-| L1 Unit | Vitest 4.1, ≥90% coverage (actual: 97%+) | pre-commit | ✅ 241 tests |
-| L2 Integration | 27 API E2E tests, real HTTP vs D1-test | pre-push | ✅ 13/14 endpoints |
-| L3 System | Playwright 1.58 (chromium) | manual/CI | ✅ 15 specs |
+| L1 Unit | Vitest 4.1, ≥90% coverage (actual: 97%+) | pre-commit | ✅ 978 tests |
+| L2 Integration | API E2E tests, real HTTP vs D1-test | pre-push | ✅ |
+| L3 System | Playwright 1.58 (chromium) | manual/CI | ✅ |
 | G1 Static | tsc --noEmit + ESLint strict + --max-warnings=0 | pre-commit | ✅ 0 errors |
 | G2 Security | osv-scanner 2.3 + gitleaks 8.30 | pre-push | ✅ 0 vulns, 0 leaks |
 | D1 Isolation | firefly-db-test via worker [env.test] | E2E only | ✅ |
 
 ## Architecture Patterns
 
-### MVVM (following basalt/pew conventions)
+### Project Structure
 
 ```
 src/
 ├── models/          ← Pure types, validators, business logic (no React)
-│   ├── types.ts     ← Shared interfaces (Post, Category, Tag, Comment)
+│   ├── types.ts     ← Shared interfaces (Post, Category, Tag, Comment, Media)
 │   ├── post.ts      ← Post validation, slug generation, reading time
 │   └── analytics.ts ← Bot detection, stats aggregation
-├── viewmodels/      ← React hooks composing models + data fetching
-│   ├── usePostsViewModel.ts
-│   ├── useEditorViewModel.ts
-│   └── useAnalyticsViewModel.ts
-├── data/            ← Data access layer (D1 queries)
-│   ├── db.ts        ← D1 client setup
-│   ├── posts.ts     ← Post CRUD queries
-│   └── analytics.ts ← Analytics queries
+├── data/            ← Data access layer (D1 queries via Worker proxy)
+│   ├── core/        ← Base framework (sql builder, cache manager, timestamps)
+│   ├── entities/    ← Entity CRUD modules (post, tag, category, comment, media)
+│   └── *.ts         ← Non-entity modules (analytics, settings, backup, etc.)
+├── services/        ← Service layer for orchestration with side effects
+│   ├── post.ts      ← PostService (publish, tags, cache invalidation)
+│   └── media.ts     ← MediaService (upload, R2 integration)
+├── hooks/           ← React hooks for client-side state & data fetching
 ├── app/             ← Next.js App Router pages
 │   ├── (public)/    ← Public blog pages (SSR/ISR)
-│   ├── (admin)/     ← Admin panel (client-side, auth-gated)
+│   ├── admin/       ← Admin panel (auth-gated)
 │   └── api/         ← API routes
 ├── components/      ← React components
 │   ├── ui/          ← shadcn/ui primitives (from basalt)
 │   ├── blog/        ← Blog-specific components
 │   └── admin/       ← Admin-specific components
+├── i18n/            ← Internationalization
 └── lib/             ← Utilities
     ├── auth.ts      ← Auth.js config
+    ├── db.ts        ← D1 client (Worker proxy)
     ├── r2.ts        ← R2 client for image management
     ├── seo.ts       ← Meta tag generation
-    └── bot.ts       ← Bot/crawler detection
+    ├── bot.ts       ← Bot/crawler detection
+    └── mcp/         ← MCP framework (entity-driven tool registration)
 ```
 
 ### D1 Access Pattern (Railway → Worker → D1)
@@ -131,9 +134,9 @@ Railway (Next.js) → HTTP → Worker (firefly.worker.dev) → D1 native binding
 ```
 
 Worker endpoints:
-- `GET  /api/live`    — health check (no auth)
-- `POST /api/query`   — read-only SQL (write-guarded by regex)
-- `POST /api/execute`  — write SQL (single + batch)
+- `GET  /api/v1/health`   — health check (no auth)
+- `POST /api/v1/query`    — read-only SQL (write-guarded by regex)
+- `POST /api/v1/execute`  — write SQL (single + batch)
 
 Auth: `Authorization: Bearer WORKER_SECRET` on query/execute.
 

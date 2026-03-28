@@ -19,7 +19,7 @@ See [docs/](./docs/README.md) for architecture and design documents.
 
 ```bash
 bun install
-bun run dev          # Start dev server (Turbopack, port 7043)
+bun run dev          # Start dev server (Webpack, port 7043)
 ```
 
 ### Testing
@@ -42,9 +42,9 @@ bun run lint           # ESLint
 
 Husky hooks are checked into `.husky/` and shared across the team:
 
-| Hook        | Runs                  |
-| ----------- | --------------------- |
-| pre-commit  | `bun run test`        |
-| pre-push    | `bun run test` + `bun run lint` |
+| Hook        | Runs                                               |
+| ----------- | -------------------------------------------------- |
+| pre-commit  | G1 (typecheck + lint-staged) + L1 (unit tests)     |
+| pre-push    | L1 (coverage ≥90%) + G1 (lint) + L2 (E2E) + G2 (security) |
 
 Hooks are installed automatically via the `prepare` script on `bun install`. Do not skip hooks — all commits must pass tests, and all pushes must also pass lint.

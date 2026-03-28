@@ -539,9 +539,9 @@ Logic (reuse `01-audit-r2-images.ts` ListObjectsV2 pagination pattern):
 ```
 
 **DB access**: Uses the project's `Db` interface from `src/lib/db.ts`:
-- Read (check existing): `db.query()` via Worker `/api/query`
-- Write (insert): `db.execute()` or `db.batch()` via Worker `/api/execute`
-- **NOT** raw HTTP to `/api/query` for writes (that endpoint is read-only)
+- Read (check existing): `db.query()` via Worker `/api/v1/query`
+- Write (insert): `db.execute()` or `db.batch()` via Worker `/api/v1/execute`
+- **NOT** raw HTTP to `/api/v1/query` for writes (that endpoint is read-only)
 
 **Timestamp**: R2 `ListObjectsV2` returns `LastModified` as a JavaScript `Date`.
 The `attachments.created_at` column is `INTEGER DEFAULT (unixepoch())` — Unix epoch
@@ -663,7 +663,7 @@ e2e/api/media.test.ts                              ← NEW: E2E tests
 ## Risk Notes
 
 - **D1 batch insert limit**: D1 has a max of 100 bound parameters per query.
-  Use `db.batch()` from `src/lib/db.ts` which maps to Worker `/api/execute`
+  Use `db.batch()` from `src/lib/db.ts` which maps to Worker `/api/v1/execute`
   with `{ statements: [...] }`. Each statement is an individual INSERT with ~6 params.
   Batch in groups of 50 statements per `db.batch()` call.
 - **R2 ListObjectsV2 pagination**: ~2053 objects = 3 pages at MaxKeys=1000. Fast.
