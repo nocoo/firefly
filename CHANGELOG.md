@@ -1,5 +1,51 @@
 # Changelog
 
+## v2.0.0 (2026-03-28)
+
+- chore: update next-env.d.ts for Next.js dev types path
+- fix(mcp): wire post writes to PostService, fix afterUpdate contract
+- fix(e2e): make excerpt test resilient to AI provider being configured
+- docs: mark Stage 4 complete, add architecture section to CLAUDE.md
+- refactor(tests): consolidate createMockDb to single source in @/data/core/test-utils
+- refactor(mcp): remove rollback hooks, simplify to best-effort afterCreate/afterUpdate
+- fix(media): wire API write routes to MediaService for correct fault semantics
+- docs: mark Stage 3 complete in entity data layer plan
+- refactor(media): migrate all consumers to @/data/entities/media, delete old media.ts
+- refactor(posts): migrate all consumers to @/data/entities/post + PostService, delete old posts.ts
+- refactor(comments): migrate consumer to @/data/entities/comment, delete old comments.ts
+- refactor(categories): migrate all consumers to @/data/entities/category, delete old categories.ts
+- refactor(tags): migrate all consumers to @/data/entities/tag, delete old tags.ts
+- fix(e2e): strict health check for Worker readiness; align worker-v2 version
+- chore(worker-v2): configure production D1 binding and custom domain
+- docs: mark Stage 2 complete in entity data layer plan
+- fix(migrations): update WorkerHttpAdapter paths to /api/v1/*
+- chore(e2e): point E2E runner at worker-v2
+- refactor(db): update API paths from /api/* to /api/v1/*
+- feat(worker-v2): add new Worker project with /api/v1/* endpoints
+- fix: address Stage 1 review findings
+- docs: mark Stage 1 as complete in entity data layer plan
+- refactor(data): adopt buildSetClauses in settings and ai-settings
+- feat(services): add MediaService with R2+DB orchestration
+- feat(services): add PostService with best-effort orchestration
+- feat(data): add Media entity with CRUD, batch ops, and year listing
+- feat(data): add Post entity with CRUD, tags, batch ops, and aggregations
+- feat(data): add Comment entity with listCommentsByPost and buildCommentTree
+- feat(data): add Category entity with cache, reorder, and post stats
+- feat(data): add Tag entity with cache support
+- feat(data): add BaseDataLayer with viewQuery support
+- feat(data): add EntityCacheManager with 100% coverage
+- feat(data): add timestamps utility with 100% coverage
+- fix(data): use unknown instead of eslint-disable for customList options
+- feat(data): add core types, SQL utilities, and test-utils for entity data layer
+- docs(20): fix media/associate boundary mapping — already uses postId
+- docs(20): fix media route gap, archive cache semantics, admin posts boundary
+- docs(20): complete D5 boundary mapping for Post/Media + MediaService D6 contract
+- docs(20): add tableAlias for viewQuery and multi-column defaultOrderBy
+- docs(20): fix D5 boundary mapping and add refreshAllCategoryPostCounts
+- docs: add entity data layer refactoring design (doc 20)
+- feat(admin): dynamic year filter with counts for posts list
+
+
 ## v1.7.7 (2026-03-27)
 
 - feat(media): dynamic year filter with counts and file type icons
