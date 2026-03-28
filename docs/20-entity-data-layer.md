@@ -382,16 +382,23 @@ interface EntityConfig<T extends BaseEntity> {
   /** Column names for INSERT — uses camelCase keys matching fields (D5).
    *  id, created_at, updated_at are auto-handled by BaseDataLayer. */
   insertColumns: string[];
-  /** Default ORDER BY for list */
+  /** Default ORDER BY clause content (without the "ORDER BY" keyword).
+   *  Supports multi-column: "sort_order DESC, name ASC".
+   *  Single-column: "name ASC". */
   defaultOrderBy: string;
-  defaultOrderDirection: "ASC" | "DESC";
   /** List mode:
    *  - "all": list() returns T[] (full array, no pagination). Used by Tag, Category.
    *  - "paginated": list() returns PaginatedResult<T>. Used by Post, Media.
    *  Default: "paginated" */
   listMode?: "all" | "paginated";
-  /** Optional: SELECT statement for reads (with JOINs). Omit for "SELECT * FROM {table}" */
+  /** Optional: SELECT statement for reads (with JOINs). Omit for "SELECT * FROM {table}".
+   *  When defined, `tableAlias` MUST also be set. */
   viewQuery?: string;
+  /** Required when viewQuery is defined. The alias of the primary table in the viewQuery.
+   *  Used by getById/getBySlug/update/remove to qualify column references:
+   *  e.g., "p" → WHERE p.id = ?, WHERE p.slug = ?
+   *  Omit for simple entities (no viewQuery) — BaseDataLayer uses bare "id"/"slug". */
+  tableAlias?: string;
   /** Optional: additional WHERE conditions for getBySlug resolve.
    *  E.g., Post's public resolve needs status = 'published'.
    *  Key = condition name, Value = { clause, params } */
@@ -424,7 +431,7 @@ Behavioral spec:
 
 **`buildPagination(page, pageSize)`** → `{ clause, params }` — LIMIT + OFFSET.
 
-**`buildOrderBy(column, direction, allowedColumns)`** → string — validates against whitelist.
+**`buildOrderBy(column, direction, allowedColumns)`** → string — validates single-column runtime override against whitelist. Used only by paginated list path when caller provides `ListOptions.orderBy`. Not used for `defaultOrderBy` (which is a static SQL clause).
 
 ### 4.4 Timestamps (`core/timestamps.ts`)
 
@@ -464,7 +471,20 @@ async function remove<T>(db, config, id): Promise<boolean>;
 - `"all"` (Tag, Category): Executes `SELECT * FROM {table} ORDER BY {defaultOrderBy}`, returns `T[]`. Checks cache first if `config.cache` is defined.
 - `"paginated"` (Post, Media, default): If `config.customList` is defined, delegates to it. Otherwise builds `SELECT * FROM {table}` with pagination + ordering, returns `PaginatedResult<T>`.
 
-**`getById` / `getBySlug`:** Uses `config.viewQuery` if defined, otherwise `SELECT * FROM {table}`. Appends `WHERE id = ?` or `WHERE slug = ?`. If `resolveFilter` is provided (e.g., `"published"`), appends the corresponding filter from `config.resolveFilters`.
+**`getById` / `getBySlug`:** Uses `config.viewQuery` if defined, otherwise `SELECT * FROM {table}`. Appends WHERE clause using qualified column names:
+- If `config.tableAlias` is defined (viewQuery entities): `WHERE {alias}.id = ?` / `WHERE {alias}.slug = ?`
+- Otherwise (simple entities): `WHERE id = ?` / `WHERE slug = ?`
+
+If `resolveFilter` is provided (e.g., `"published"`), appends the corresponding filter from `config.resolveFilters`.
+
+```ts
+// Post (has viewQuery + tableAlias "p"):
+//   SELECT p.*, c.name AS ... FROM posts p LEFT JOIN categories c ON ...
+//   WHERE p.slug = ? AND p.status = ?
+//
+// Tag (no viewQuery, no tableAlias):
+//   SELECT * FROM tags WHERE slug = ?
+```
 
 **`create`:**
 1. `newId()` + `nowEpoch()` for id and timestamps
@@ -478,12 +498,12 @@ async function remove<T>(db, config, id): Promise<boolean>;
 2. `hooks.beforeUpdate` if defined (input enrichment, returns transformed input — D4)
 3. `buildSetClauses` + append `updated_at` if `hasUpdatedAt`
 4. No-op if no clauses → return existing
-5. Execute UPDATE
-6. Fetch back via `getById`
+5. Execute `UPDATE {table} SET ... WHERE id = ?` (plain table, no alias — UPDATE doesn't use viewQuery)
+6. Fetch back via `getById` (uses viewQuery for POST's JOIN read)
 7. Return updated entity
 
 **`remove`:**
-1. Execute `DELETE FROM {table} WHERE id = ?`
+1. Execute `DELETE FROM {table} WHERE id = ?` (plain table, no alias)
 2. Return `changes > 0`
 
 **Note:** No `afterCreate`, `afterUpdate`, `afterDelete`, `beforeDelete` hooks in BaseDataLayer. Per D4, all side effects (cache invalidation, count refresh, tag association) are owned by the Service layer. BaseDataLayer is a pure CRUD machine.
@@ -507,8 +527,7 @@ const tagConfig: EntityConfig<Tag> = {
     slug: { column: "slug" },
   },
   insertColumns: ["name", "slug"],
-  defaultOrderBy: "name",
-  defaultOrderDirection: "ASC",
+  defaultOrderBy: "name ASC",
   listMode: "all",
   cache: { ttl: 5 * 60 * 1000 },
 };
@@ -535,8 +554,7 @@ const categoryConfig: EntityConfig<Category> = {
     sortOrder: { column: "sort_order" },
   },
   insertColumns: ["name", "slug", "description", "sortOrder"],
-  defaultOrderBy: "sort_order",
-  defaultOrderDirection: "DESC",
+  defaultOrderBy: "sort_order DESC, name ASC",
   listMode: "all",
   cache: { ttl: 5 * 60 * 1000 },
 };
@@ -561,6 +579,7 @@ const postConfig: EntityConfig<PostWithCategory> = {
     FROM posts p
     LEFT JOIN categories c ON p.category_id = c.id
   `,
+  tableAlias: "p",
   resolveFilters: {
     published: { clause: "p.status = ?", params: ["published"] },
   },
@@ -587,8 +606,7 @@ const postConfig: EntityConfig<PostWithCategory> = {
     "publishedAt", "referenceUrl", "referenceTitle",
     "referenceDescription", "referenceImage",
   ],
-  defaultOrderBy: "published_at",
-  defaultOrderDirection: "DESC",
+  defaultOrderBy: "published_at DESC",
   customList: listPostsQuery,  // Complex WHERE builder with JOIN + filters
   hooks: {
     beforeCreate: async (db, input) => {
@@ -651,8 +669,7 @@ const mediaConfig: EntityConfig<Attachment> = {
     postId:    { column: "post_id", nullable: true },
   },
   insertColumns: ["filename", "r2Key", "mimeType", "size", "width", "height", "postId"],
-  defaultOrderBy: "created_at",
-  defaultOrderDirection: "DESC",
+  defaultOrderBy: "created_at DESC",
   customList: listMediaQuery,
 };
 ```
@@ -1111,7 +1128,9 @@ Stage 3 已完成 MCP entity config 的 import 切换。Stage 4 专注于 MCP **
 - `list` with `listMode: "paginated"`: delegates to `customList` when defined; uses default pagination query otherwise
 - `list` with `listMode: "all"` + cache: returns cached array on cache hit, queries on miss
 - `getById`: uses viewQuery when defined; falls back to `SELECT * FROM table`
+- `getById` with viewQuery + tableAlias: WHERE uses `{alias}.id = ?` (not bare `id`)
 - `getBySlug`: appends WHERE slug = ?; applies resolveFilter when provided
+- `getBySlug` with viewQuery + tableAlias: WHERE uses `{alias}.slug = ?`
 - `create`: calls newId + nowEpoch, runs beforeCreate hook (input enrichment), inserts, fetches back
 - `update`: fetches existing, runs beforeUpdate (input enrichment), builds SET clauses, no-op on empty, fetches back
 - `remove`: deletes, returns boolean
