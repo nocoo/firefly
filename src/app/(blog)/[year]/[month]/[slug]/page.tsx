@@ -7,7 +7,7 @@ import { getDb } from "@/lib/db";
 import { getPostBySlug, getPostTags, getAdjacentPosts } from "@/data/posts";
 import { getSiteSettings } from "@/data/settings";
 import { isAdminSession } from "@/lib/auth";
-import { listCommentsByPost, buildCommentTree } from "@/data/comments";
+import { listCommentsByPost, buildCommentTree } from "@/data/entities/comment";
 import { renderMarkdown } from "@/models/markdown";
 import { Calendar, Folder, Clock, SquarePen } from "lucide-react";
 import {
