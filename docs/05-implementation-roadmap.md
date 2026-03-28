@@ -17,18 +17,21 @@ firefly/
 ├── src/
 │   ├── app/                  ← Next.js App Router
 │   ├── models/               ← Pure business logic
-│   ├── viewmodels/           ← React hooks
+│   ├── hooks/                ← React hooks
 │   ├── data/                 ← D1 data access
+│   ├── services/             ← Service layer (orchestration, side effects)
 │   ├── components/           ← UI components
+│   ├── i18n/                 ← Internationalization
 │   └── lib/                  ← Utilities
+├── worker/                   ← Cloudflare Worker (D1 proxy)
 ├── scripts/migrations/       ← Migration scripts
 ├── docs/                     ← This documentation
-├── tests/                    ← E2E test scripts
+├── e2e/                      ← E2E test scripts
 └── public/                   ← Static assets
 ```
 
 Commits:
-1. ✅ `chore: initialize next.js 16 with bun and typescript strict` — Next.js 16.2.1, React 19, Turbopack
+1. ✅ `chore: initialize next.js 16 with bun and typescript strict` — Next.js 16.2.1, React 19
 2. ✅ `chore: configure tailwind 4, eslint strict, vitest` — Tailwind CSS 4, ESLint 10 + typescript-eslint
 3. `chore: setup husky pre-commit and pre-push hooks`
 4. ✅ `chore: add shadcn/ui base components from basalt` — Button, Card, Input, cn(), design tokens

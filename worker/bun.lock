@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "firefly-worker-v2",
+      "name": "firefly-worker",
       "devDependencies": {
         "@cloudflare/workers-types": "^4.20250307.0",
         "typescript": "^5.9.0",

@@ -103,8 +103,10 @@ src/
 │   ├── entities/    ← Entity CRUD modules (post, tag, category, comment, media)
 │   └── *.ts         ← Non-entity modules (analytics, settings, backup, etc.)
 ├── services/        ← Service layer for orchestration with side effects
-│   ├── post.ts      ← PostService (publish, tags, cache invalidation)
-│   └── media.ts     ← MediaService (upload, R2 integration)
+│   ├── post-service.ts  ← PostService (publish, tags, cache invalidation)
+│   ├── media-service.ts ← MediaService (upload, R2 integration)
+│   ├── ai.ts            ← AI excerpt generation
+│   └── unfurl.ts        ← URL unfurl for bookmark cards
 ├── hooks/           ← React hooks for client-side state & data fetching
 ├── app/             ← Next.js App Router pages
 │   ├── (public)/    ← Public blog pages (SSR/ISR)
@@ -120,7 +122,7 @@ src/
     ├── db.ts        ← D1 client (Worker proxy)
     ├── r2.ts        ← R2 client for image management
     ├── seo.ts       ← Meta tag generation
-    ├── bot.ts       ← Bot/crawler detection
+    ├── tracking.ts  ← Analytics tracking & bot detection
     └── mcp/         ← MCP framework (entity-driven tool registration)
 ```
 
