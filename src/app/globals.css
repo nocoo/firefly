@@ -479,7 +479,8 @@
 .blog-tagline { color: var(--blog-muted); margin: 0.35em 0 0; font-size: 0.875em; line-height: 1.6; }
 
 /* Sidebar sections */
-.blog-sidebar-section { margin-top: 2.5em; }
+.blog-sidebar-section { margin-top: 2.5em; padding-top: 2em; border-top: 1px solid var(--blog-separator); }
+.blog-sidebar-section:first-of-type { border-top: none; padding-top: 0; }
 .blog-sidebar-heading {
   font-size: 1em; font-weight: 700; color: var(--blog-text); margin-bottom: 0.75em;
   display: flex; align-items: center; gap: 0.4em;
