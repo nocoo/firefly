@@ -700,20 +700,20 @@ New keys added to `en.json` and `zh.json`:
 
 ## Atomic Commits
 
-| # | Commit | Files |
-|---|--------|-------|
-| 1 | `feat(db): add FTS5 search migration` | `scripts/migrations/013-fts5-search.sql` |
-| 2 | `feat(worker): add FTS segmentation and search endpoints` | `worker/src/index.ts`, `worker/src/fts.ts` |
-| 3 | `feat(lib): add Db.call() for custom Worker endpoints` | `src/lib/db.ts` |
-| 4 | `feat(data): add searchPosts() and getPostRowid() functions` | `src/data/entities/post.ts` |
-| 5 | `feat(service): integrate FTS sync into PostService` | `src/services/post-service.ts` |
-| 6 | `test(data): add searchPosts and FTS sync unit tests` | `src/data/entities/__tests__/post.test.ts` |
-| 7 | `feat(api): add dedicated GET /api/search endpoint` | `src/app/api/search/route.ts` |
-| 8 | `feat(ui): add snippet prop to PostCard with safe HTML rendering` | `src/components/blog/post-card.tsx` |
-| 9 | `feat(blog): add SearchInput sidebar component` | `src/components/blog/search-input.tsx`, `src/components/blog/blog-sidebar.tsx`, CSS, i18n |
-| 10 | `feat(blog): add /search results page` | `src/app/(blog)/search/page.tsx` |
-| 11 | `test(e2e): add search API E2E tests` | `e2e/api/search.test.ts` |
-| 12 | `chore: run fts-rebuild on production` | One-time migration step (manual) |
+| # | Commit | Files | Status |
+|---|--------|-------|--------|
+| 1 | `feat(db): add FTS5 search migration` | `scripts/migrations/013-fts5-search.sql` | Done |
+| 2 | `feat(worker): add FTS segmentation and search endpoints` | `worker/src/index.ts`, `worker/src/fts.ts` | Done |
+| 3 | `feat(lib): add Db.call() for custom Worker endpoints` | `src/lib/db.ts` | Done |
+| 4 | `feat(data): add searchPosts() and getPostRowid() functions` | `src/data/entities/post.ts` | Done |
+| 5 | `feat(service): integrate FTS sync into PostService` | `src/services/post-service.ts` | Done |
+| 6 | `test(data): add searchPosts and FTS sync unit tests` | `src/data/entities/post.test.ts` | Done |
+| 7 | `feat(api): add dedicated GET /api/search endpoint` | `src/app/api/search/route.ts` | Done |
+| 8 | `feat(ui): add snippet prop to PostCard with safe HTML rendering` | `src/components/blog/post-card.tsx`, `src/lib/sanitize-snippet.ts` | Done |
+| 9 | `feat(blog): add SearchInput sidebar component` | `src/components/blog/search-input.tsx`, `src/components/blog/blog-sidebar.tsx`, CSS, i18n | Done |
+| 10 | `feat(blog): add /search results page` | `src/app/(blog)/search/page.tsx`, `src/components/blog/pagination.tsx` | Done |
+| 11 | `test(e2e): add search API E2E tests` | `e2e/api/search.test.ts` | Done |
+| 12 | `chore: run fts-rebuild on production` | One-time migration step (manual) | Pending deploy |
 
 ---
 
