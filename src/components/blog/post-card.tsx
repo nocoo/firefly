@@ -4,6 +4,7 @@ import { ArrowRight, Calendar, User } from "lucide-react";
 import type { PostWithCategory } from "@/models/types";
 import { postPath, formatDateDisplay } from "@/lib/seo";
 import { t, type Locale } from "@/i18n/translations";
+import { sanitizeSnippet } from "@/lib/sanitize-snippet";
 
 interface PostCardProps {
   post: PostWithCategory;
@@ -12,9 +13,11 @@ interface PostCardProps {
   author?: string;
   /** Mark the featured image as high-priority (LCP) */
   priority?: boolean;
+  /** FTS5 HTML snippet with <mark> tags — overrides excerpt when provided */
+  snippet?: string;
 }
 
-export function PostCard({ post, locale, author, priority }: PostCardProps) {
+export function PostCard({ post, locale, author, priority, snippet }: PostCardProps) {
   const href = postPath(post.slug, post.published_at);
   const date = post.published_at
     ? formatDateDisplay(post.published_at, locale)
@@ -70,15 +73,18 @@ export function PostCard({ post, locale, author, priority }: PostCardProps) {
         </div>
       )}
 
-      {/* Excerpt */}
-      {post.excerpt && (
-        <p className="mt-3 text-base leading-relaxed text-blog-text">
-          {post.excerpt}
-        </p>
+      {/* Excerpt — snippet overrides when provided */}
+      {(snippet || post.excerpt) && (
+        snippet
+          ? <p className="mt-3 text-base leading-relaxed text-blog-text"
+               dangerouslySetInnerHTML={{ __html: sanitizeSnippet(snippet) }} />
+          : <p className="mt-3 text-base leading-relaxed text-blog-text">
+              {post.excerpt}
+            </p>
       )}
 
       {/* Continue reading link */}
-      {post.excerpt && (
+      {(snippet || post.excerpt) && (
         <Link
           href={href}
           prefetch={false}
