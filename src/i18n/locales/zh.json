@@ -220,6 +220,7 @@
   "admin.postForm.clear": "清除",
   "admin.postForm.aiEnhance": "\u2728 AI 翻译",
   "admin.postForm.enhancing": "翻译中...",
+  "admin.postForm.comments": "评论",
   "admin.analytics.title": "站点分析",
   "admin.analytics.recentViews": "过去 24 小时 {n} 次访问",
   "admin.analytics.totalViews": "总浏览量",
