@@ -41,7 +41,7 @@ const entity = createTaxonomyEntity<Category, CreateCategoryInput, UpdateCategor
   orderBy: "sort_order DESC, name ASC",
   cacheTtl: 5 * 60 * 1000,
   insertColumns: ["id", "name", "slug", "description", "sort_order", "created_at", "updated_at"],
-  buildInsertParams: (id, input, now) => [
+  buildInsertParams: (id: string, input: CreateCategoryInput, now: number) => [
     id,
     input.name,
     input.slug,

@@ -36,7 +36,7 @@ function makeEntity() {
     orderBy: "name ASC",
     cacheTtl: 5 * 60 * 1000,
     insertColumns: ["id", "name", "slug", "created_at", "updated_at"],
-    buildInsertParams: (id, input, now) => [id, input.name, input.slug, now, now],
+    buildInsertParams: (id: string, input: CreateWidgetInput, now: number) => [id, input.name, input.slug, now, now],
   });
 }
 

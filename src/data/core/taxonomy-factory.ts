@@ -13,7 +13,11 @@ import { buildSetClauses } from "@/data/core/sql";
 // Config & return types
 // ---------------------------------------------------------------------------
 
-export interface TaxonomyConfig<CreateInput> {
+// T and UpdateInput are unused here but kept so Config and Entity share the
+// same <T, CreateInput, UpdateInput> parameter list — callers only specify
+// the triple once on `createTaxonomyEntity`.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export interface TaxonomyConfig<T, CreateInput, UpdateInput> {
   /** SQL table name (e.g. "tags", "categories") */
   table: string;
   /** Human-readable name for error messages (e.g. "Tag", "Category") */
@@ -45,7 +49,7 @@ export interface TaxonomyEntity<T, CreateInput, UpdateInput> {
 // ---------------------------------------------------------------------------
 
 export function createTaxonomyEntity<T, CreateInput, UpdateInput extends object>(
-  config: TaxonomyConfig<CreateInput>,
+  config: TaxonomyConfig<T, CreateInput, UpdateInput>,
 ): TaxonomyEntity<T, CreateInput, UpdateInput> {
   const { table, entityName, fields, orderBy, cacheTtl, insertColumns, buildInsertParams } =
     config;
