@@ -40,11 +40,11 @@ export function Pagination({
     >
       {/* Previous */}
       {currentPage > 1 ? (
-        <Link href={href(currentPage - 1)} prefetch={false} className={`${linkClass} ${inactiveClass}`}>
+        <Link href={href(currentPage - 1)} prefetch={false} className={`${linkClass} ${inactiveClass}`} aria-label={t(locale, "blog.pagination.prev")}>
           <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
         </Link>
       ) : (
-        <span className={`${linkClass} ${disabledClass}`}><ChevronLeft className="h-4 w-4" strokeWidth={1.5} /></span>
+        <span className={`${linkClass} ${disabledClass}`} aria-hidden="true"><ChevronLeft className="h-4 w-4" strokeWidth={1.5} /></span>
       )}
 
       {/* Page numbers */}
@@ -70,11 +70,11 @@ export function Pagination({
 
       {/* Next */}
       {currentPage < totalPages ? (
-        <Link href={href(currentPage + 1)} prefetch={false} className={`${linkClass} ${inactiveClass}`}>
+        <Link href={href(currentPage + 1)} prefetch={false} className={`${linkClass} ${inactiveClass}`} aria-label={t(locale, "blog.pagination.next")}>
           <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
         </Link>
       ) : (
-        <span className={`${linkClass} ${disabledClass}`}><ChevronRight className="h-4 w-4" strokeWidth={1.5} /></span>
+        <span className={`${linkClass} ${disabledClass}`} aria-hidden="true"><ChevronRight className="h-4 w-4" strokeWidth={1.5} /></span>
       )}
     </nav>
   );

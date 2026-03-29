@@ -475,7 +475,7 @@
   transition: transform 300ms ease-out;
   overflow-y: auto;
 }
-.blog-sidebar-drawer-open { transform: translateX(0) !important; }
+.blog-sidebar-drawer.blog-sidebar-drawer-open { transform: translateX(0); }
 
 /* Site title */
 .blog-site-title { font-size: 1.5em; line-height: 1.2; font-weight: 700; letter-spacing: 0.04em; }

@@ -27,7 +27,10 @@ export function BlogFooter({ locale, siteName }: BlogFooterProps) {
           </Link>
           <button
             type="button"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            onClick={() => {
+              const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+              window.scrollTo({ top: 0, behavior: prefersReduced ? "auto" : "smooth" });
+            }}
             className="inline-flex items-center gap-1 text-blog-muted transition-colors hover:text-blog-text"
             aria-label={t(locale, "blog.footer.backToTop")}
           >

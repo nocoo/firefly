@@ -10,6 +10,7 @@ import { collectionPageJsonLd } from "@/lib/jsonld";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
+import { EmptyState } from "@/components/blog/empty-state";
 import { parseArchivePeriod } from "./parse-archive-period";
 import { Archive } from "lucide-react";
 
@@ -93,10 +94,7 @@ export default async function ArchivePage({ params }: ArchivePageProps) {
 
       <section>
         {posts.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 py-16 text-blog-muted">
-            <Archive className="h-8 w-8 opacity-40" strokeWidth={1.5} />
-            <p className="text-sm">{t(locale, "blog.home.noPosts")}</p>
-          </div>
+          <EmptyState icon={Archive} message={t(locale, "blog.archive.noPosts")} />
         ) : (
           posts.map((post, i) => (
             <PostCard

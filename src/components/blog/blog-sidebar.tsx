@@ -1,5 +1,6 @@
 "use client";
 
+import { forwardRef } from "react";
 import Link from "next/link";
 import { Github, Facebook, Linkedin, Mail, FileUser, X, Folder, Tags, Archive } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
@@ -39,10 +40,10 @@ interface BlogSidebarProps {
   socialLinks: SocialLink[];
 }
 
-export function BlogSidebar({
+export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function BlogSidebar({
   variant, open, onClose, categories, tags, archives,
   siteName, siteTagline, socialLinks,
-}: BlogSidebarProps) {
+}, ref) {
   const { t } = useLocale();
 
   const isDrawer = variant === "drawer";
@@ -56,6 +57,7 @@ export function BlogSidebar({
 
   return (
     <aside
+      ref={ref}
       className={className}
       inert={isDrawer && !open ? true : undefined}
       aria-hidden={isDrawer && !open ? true : undefined}
@@ -201,4 +203,4 @@ export function BlogSidebar({
       </div>
     </aside>
   );
-}
+});

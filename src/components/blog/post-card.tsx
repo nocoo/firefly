@@ -38,9 +38,13 @@ export function PostCard({ post, locale, author, priority }: PostCardProps) {
         <span className="blog-byline-item">
           <Calendar className="blog-byline-icon" />
           <span>{t(locale, "blog.post.published")}</span>{" "}
-          <time dateTime={post.published_at ? new Date(post.published_at * 1000).toISOString() : undefined}>
-            {date}
-          </time>
+          {post.published_at ? (
+            <time dateTime={new Date(post.published_at * 1000).toISOString()}>
+              {date}
+            </time>
+          ) : (
+            <span>{date}</span>
+          )}
         </span>
         {author && (
           <span className="blog-byline-item">
