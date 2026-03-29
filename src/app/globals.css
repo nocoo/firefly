@@ -98,6 +98,9 @@
 
 @utility animate-fade-up {
   animation: fade-up 0.5s ease-out both;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }
 
 @keyframes fade-up {

@@ -27,36 +27,42 @@ export function OverviewCards({ overview, days }: OverviewCardsProps) {
           value={overview.total}
           delta={overview.totalDelta}
           days={days}
+          index={0}
         />
         <StatCard
           label={t("admin.analytics.humanVisitors")}
           value={overview.human}
           delta={overview.humanDelta}
           days={days}
+          index={1}
         />
         <StatCard
           label={t("admin.analytics.uniqueVisitors")}
           value={overview.uniqueVisitors}
           delta={overview.uniqueVisitorsDelta}
           days={days}
+          index={2}
         />
         <StatCard
           label={t("admin.analytics.searchEngines")}
           value={overview.search}
           delta={overview.searchDelta}
           days={days}
+          index={3}
         />
         <StatCard
           label={t("admin.analytics.aiBots")}
           value={overview.ai}
           delta={overview.aiDelta}
           days={days}
+          index={4}
         />
         <StatCard
           label={t("admin.analytics.otherBots")}
           value={overview.otherBot}
           delta={overview.otherBotDelta}
           days={days}
+          index={5}
         />
       </div>
     </div>
@@ -68,16 +74,21 @@ function StatCard({
   value,
   delta,
   days,
+  index = 0,
 }: {
   label: string;
   value: number;
   delta: DeltaValue;
   days: number;
+  index?: number;
 }) {
   const { t } = useLocale();
   const d = formatDelta(delta, value);
   return (
-    <div className="rounded-[var(--radius-widget)] bg-secondary p-4">
+    <div
+      className="rounded-[var(--radius-widget)] bg-secondary p-4 animate-fade-up"
+      style={{ animationDelay: `${index * 60}ms` }}
+    >
       <div className="flex items-start justify-between">
         <p className="text-sm text-muted-foreground">{label}</p>
         <p className="text-[10px] text-muted-foreground/60">

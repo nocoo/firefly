@@ -162,16 +162,19 @@ export function AnalyticsDashboard({
             icon={FileText}
             label={t("admin.dashboard.publishedPosts")}
             value={contentStats.postCount}
+            index={0}
           />
           <ContentStatCard
             icon={FolderOpen}
             label={t("admin.dashboard.categories")}
             value={contentStats.categoryCount}
+            index={1}
           />
           <ContentStatCard
             icon={Tags}
             label={t("admin.dashboard.tags")}
             value={contentStats.tagCount}
+            index={2}
           />
         </div>
       )}
@@ -305,13 +308,18 @@ function ContentStatCard({
   icon: Icon,
   label,
   value,
+  index = 0,
 }: {
   icon: React.ElementType;
   label: string;
   value: number;
+  index?: number;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-[var(--radius-widget)] bg-secondary p-4">
+    <div
+      className="flex items-center gap-3 rounded-[var(--radius-widget)] bg-secondary p-4 animate-fade-up"
+      style={{ animationDelay: `${index * 60}ms` }}
+    >
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-background">
         <Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
       </div>
