@@ -713,3 +713,85 @@ export async function getAdjacentPosts(
 
   return { prev, next };
 }
+
+// ---------------------------------------------------------------------------
+// getPostRowid — get SQLite rowid for a post (needed before FTS delete)
+// ---------------------------------------------------------------------------
+
+export async function getPostRowid(
+  db: Db,
+  id: string,
+): Promise<number | null> {
+  const row = await db.firstOrNull<{ rowid: number }>(
+    "SELECT rowid FROM posts WHERE id = ?",
+    [id],
+  );
+  return row?.rowid ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// FTS search — full-text search via Worker endpoint
+// ---------------------------------------------------------------------------
+
+export interface SearchPostsOptions {
+  query: string;
+  status?: PostStatus;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface SearchResult {
+  posts: PostWithCategory[];
+  snippets: Record<string, string>;
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/**
+ * Full-text search via the Worker's FTS5 endpoint.
+ * Returns ranked results with highlighted snippets.
+ */
+export async function searchPosts(
+  db: Db,
+  options: SearchPostsOptions,
+): Promise<SearchResult> {
+  const { query, status = "published", page = 1, pageSize = 20 } = options;
+
+  return db.call<SearchResult>("/api/v1/fts-search", {
+    query,
+    status,
+    page,
+    pageSize,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// FTS sync helper — called by PostService
+// ---------------------------------------------------------------------------
+
+export interface FtsSyncUpsert {
+  action: "upsert";
+  postId: string;
+  title: string;
+  content: string;
+  excerpt?: string;
+}
+
+export interface FtsSyncDelete {
+  action: "delete";
+  rowid: number;
+}
+
+export type FtsSyncInput = FtsSyncUpsert | FtsSyncDelete;
+
+/**
+ * Sync a single post to/from the FTS index via the Worker endpoint.
+ */
+export async function ftsSync(
+  db: Db,
+  input: FtsSyncInput,
+): Promise<void> {
+  await db.call("/api/v1/fts-sync", input);
+}
+
