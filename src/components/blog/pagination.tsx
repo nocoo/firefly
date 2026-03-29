@@ -8,6 +8,9 @@ interface PaginationProps {
   /** Base path without trailing slash, e.g. "/" or "/category/tech" or "/archive/2026-02" */
   basePath: string;
   locale: Locale;
+  /** When provided, generates query-string pagination (?key=val&page=N)
+   *  instead of path-segment pagination (/basePath/page/N). */
+  searchParams?: Record<string, string>;
 }
 
 export function Pagination({
@@ -15,10 +18,19 @@ export function Pagination({
   totalPages,
   basePath,
   locale,
+  searchParams,
 }: PaginationProps) {
   if (totalPages <= 1) return null;
 
   const href = (page: number) => {
+    if (searchParams) {
+      // Query-string mode: /search?q=foo&page=2
+      const params = new URLSearchParams(searchParams);
+      if (page > 1) params.set("page", String(page));
+      const qs = params.toString();
+      return qs ? `${basePath}?${qs}` : basePath;
+    }
+    // Path-segment mode (existing behavior): /basePath/page/2
     if (page <= 1) return basePath === "/" ? "/" : basePath;
     const base = basePath === "/" ? "" : basePath;
     return `${base}/page/${page}`;
