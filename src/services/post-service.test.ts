@@ -18,6 +18,8 @@ vi.mock("@/data/entities/post", () => ({
   refreshAllCategoryPostCounts: vi.fn(),
   refreshAllTagPostCounts: vi.fn(),
   invalidatePostCaches: vi.fn(),
+  getPostRowid: vi.fn(),
+  ftsSync: vi.fn(),
 }));
 
 vi.mock("@/data/entities/category", () => ({
@@ -42,6 +44,8 @@ import {
   refreshAllCategoryPostCounts,
   refreshAllTagPostCounts,
   invalidatePostCaches,
+  getPostRowid,
+  ftsSync,
 } from "@/data/entities/post";
 
 import { invalidateCategoryCache } from "@/data/entities/category";
@@ -101,6 +105,7 @@ describe("PostService.create", () => {
     vi.mocked(setPostTags).mockResolvedValue();
     vi.mocked(refreshCategoryPostCount).mockResolvedValue();
     vi.mocked(refreshAllTagPostCounts).mockResolvedValue();
+    vi.mocked(ftsSync).mockResolvedValue();
 
     const result = await PostService.create(db, {
       title: "Hello World",
@@ -281,9 +286,11 @@ describe("PostService.delete", () => {
 
   it("deletes post and refreshes category/tag counts", async () => {
     vi.mocked(getPostById).mockResolvedValue(samplePost);
+    vi.mocked(getPostRowid).mockResolvedValue(42);
     vi.mocked(deletePost).mockResolvedValue(true);
     vi.mocked(refreshCategoryPostCount).mockResolvedValue();
     vi.mocked(refreshAllTagPostCounts).mockResolvedValue();
+    vi.mocked(ftsSync).mockResolvedValue();
 
     const result = await PostService.delete(db, "post-1");
 
@@ -292,11 +299,13 @@ describe("PostService.delete", () => {
     expect(refreshAllTagPostCounts).toHaveBeenCalledWith(db);
     expect(invalidateCategoryCache).toHaveBeenCalled();
     expect(invalidateTagCache).toHaveBeenCalled();
+    expect(ftsSync).toHaveBeenCalledWith(db, { action: "delete", rowid: 42 });
     expect(result).toBe(true);
   });
 
   it("returns false when post not found for deletion", async () => {
     vi.mocked(getPostById).mockResolvedValue(null);
+    vi.mocked(getPostRowid).mockResolvedValue(null);
     vi.mocked(deletePost).mockResolvedValue(false);
 
     const result = await PostService.delete(db, "nope");
@@ -308,8 +317,10 @@ describe("PostService.delete", () => {
       ...samplePost,
       category_id: null,
     });
+    vi.mocked(getPostRowid).mockResolvedValue(99);
     vi.mocked(deletePost).mockResolvedValue(true);
     vi.mocked(refreshAllTagPostCounts).mockResolvedValue();
+    vi.mocked(ftsSync).mockResolvedValue();
 
     await PostService.delete(db, "post-1");
 

@@ -19,6 +19,8 @@ import {
   refreshAllCategoryPostCounts,
   refreshAllTagPostCounts,
   invalidatePostCaches,
+  getPostRowid,
+  ftsSync,
 } from "@/data/entities/post";
 import type {
   CreatePostInput,
@@ -92,6 +94,17 @@ export const PostService = {
     invalidateTagCache();
     invalidatePostCaches();
 
+    // Best-effort FTS index sync
+    await bestEffort("ftsSync:create", () =>
+      ftsSync(db, {
+        action: "upsert",
+        postId: post.id,
+        title: postInput.title,
+        content: postInput.content,
+        excerpt: post.excerpt ?? undefined,
+      }),
+    );
+
     return post;
   },
 
@@ -159,6 +172,20 @@ export const PostService = {
     }
 
     invalidatePostCaches();
+
+    // Best-effort FTS index sync (re-index with latest content)
+    if (updated) {
+      await bestEffort("ftsSync:update", () =>
+        ftsSync(db, {
+          action: "upsert",
+          postId: id,
+          title: updated.title,
+          content: updated.content,
+          excerpt: updated.excerpt ?? undefined,
+        }),
+      );
+    }
+
     return updated;
   },
 
@@ -169,6 +196,9 @@ export const PostService = {
   async delete(db: Db, id: string): Promise<boolean> {
     // Fetch before deletion for side effects
     const existing = await getPostById(db, id);
+
+    // Capture rowid before deletion (needed for FTS cleanup)
+    const rowid = await getPostRowid(db, id);
 
     const deleted = await deletePost(db, id);
     if (!deleted) return false;
@@ -187,6 +217,13 @@ export const PostService = {
     invalidateCategoryCache();
     invalidateTagCache();
     invalidatePostCaches();
+
+    // Best-effort FTS cleanup — rowid captured before deletion
+    if (rowid != null) {
+      await bestEffort("ftsSync:delete", () =>
+        ftsSync(db, { action: "delete", rowid }),
+      );
+    }
 
     return true;
   },

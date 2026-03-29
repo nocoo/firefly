@@ -775,7 +775,7 @@ export interface FtsSyncUpsert {
   postId: string;
   title: string;
   content: string;
-  excerpt?: string;
+  excerpt?: string | undefined;
 }
 
 export interface FtsSyncDelete {
