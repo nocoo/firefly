@@ -419,6 +419,12 @@
   position: fixed; top: 0.75em; right: 0.75em; z-index: 20;
   display: flex; align-items: center; gap: 0.25em;
 }
+/* Override admin-palette IconButton tokens inside blog shell */
+.blog-global-bar button {
+  color: var(--blog-muted); background: none; border: none;
+  transition: color 0.15s, background-color 0.15s;
+}
+.blog-global-bar button:hover { color: var(--blog-text); background: var(--blog-separator); }
 .blog-global-bar-link {
   display: flex; align-items: center; justify-content: center;
   width: 2.5em; height: 2.5em; border-radius: 0.5em;
@@ -426,11 +432,11 @@
   transition: color 0.15s, background-color 0.15s;
 }
 .blog-global-bar-link:hover    { color: var(--blog-text); background: var(--blog-separator); }
-.blog-global-bar button        { color: var(--blog-muted); background: none; border: none; transition: color 0.15s; }
-.blog-global-bar button:hover  { color: var(--blog-text); background: var(--blog-separator); }
 
 /* Mobile bar */
 .blog-mobile-bar { position: fixed; top: 0.75em; left: 0.75em; z-index: 21; }
+.blog-mobile-bar button { color: var(--blog-muted); background: none; border: none; transition: color 0.15s, background-color 0.15s; }
+.blog-mobile-bar button:hover { color: var(--blog-text); background: var(--blog-separator); }
 @media (min-width: 1200px) { .blog-mobile-bar { display: none; } }
 
 /* Mobile backdrop */
