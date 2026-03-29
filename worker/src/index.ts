@@ -236,6 +236,11 @@ const worker: ExportedHandler<Env> = {
         return jsonResponse({ error: "Method not allowed" }, 405);
       }
 
+      // fts-rebuild requires no body — route before JSON parsing
+      if (path === "/api/v1/fts-rebuild") {
+        return handleFtsRebuild(env.DB);
+      }
+
       const bodyOrError = await parseJsonBody(request);
       if (bodyOrError instanceof Response) return bodyOrError;
 
@@ -250,10 +255,6 @@ const worker: ExportedHandler<Env> = {
       // FTS endpoints
       if (path === "/api/v1/fts-sync") {
         return handleFtsSync(bodyOrError, env.DB);
-      }
-
-      if (path === "/api/v1/fts-rebuild") {
-        return handleFtsRebuild(env.DB);
       }
 
       if (path === "/api/v1/fts-search") {

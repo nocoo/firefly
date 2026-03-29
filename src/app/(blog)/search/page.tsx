@@ -31,7 +31,8 @@ export default async function SearchPage({
   }
 
   const db = getDb();
-  const currentPage = page ? parseInt(page, 10) : 1;
+  const parsed = page ? parseInt(page, 10) : 1;
+  const currentPage = Number.isFinite(parsed) && parsed >= 1 ? parsed : 1;
 
   const result = await searchPosts(db, {
     query: q.trim(),

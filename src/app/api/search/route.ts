@@ -15,14 +15,18 @@ export async function GET(request: NextRequest) {
       return errorResponse("q query parameter is required");
     }
 
-    const page = searchParams.get("page");
-    const pageSize = searchParams.get("page_size");
+    const rawPage = searchParams.get("page");
+    const rawPageSize = searchParams.get("page_size");
+
+    // Parse and validate — NaN / non-positive fall back to undefined (use defaults)
+    const page = rawPage ? safePositiveInt(rawPage) : undefined;
+    const pageSize = rawPageSize ? safePositiveInt(rawPageSize) : undefined;
 
     const result = await searchPosts(db, {
       query: query.trim(),
       status: "published",
-      page: page ? parseInt(page, 10) : undefined,
-      pageSize: pageSize ? parseInt(pageSize, 10) : undefined,
+      page,
+      pageSize,
     });
 
     return jsonResponse(result);
@@ -32,4 +36,10 @@ export async function GET(request: NextRequest) {
       500,
     );
   }
+}
+
+/** Parse string to positive integer, return undefined for invalid input. */
+function safePositiveInt(value: string): number | undefined {
+  const n = parseInt(value, 10);
+  return Number.isFinite(n) && n >= 1 ? n : undefined;
 }

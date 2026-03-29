@@ -756,7 +756,11 @@ export async function searchPosts(
   db: Db,
   options: SearchPostsOptions,
 ): Promise<SearchResult> {
-  const { query, status = "published", page = 1, pageSize = 20 } = options;
+  const { query, status = "published" } = options;
+
+  // Clamp page/pageSize to safe positive integers
+  const page = sanitizePage(options.page, 1);
+  const pageSize = sanitizePage(options.pageSize, 20, 100);
 
   return db.call<SearchResult>("/api/v1/fts-search", {
     query,
@@ -764,6 +768,18 @@ export async function searchPosts(
     page,
     pageSize,
   });
+}
+
+/** Clamp a page/pageSize value to a safe positive integer. */
+function sanitizePage(
+  value: number | undefined,
+  fallback: number,
+  max?: number,
+): number {
+  const n = value ?? fallback;
+  if (!Number.isFinite(n) || n < 1) return fallback;
+  const clamped = Math.floor(n);
+  return max ? Math.min(clamped, max) : clamped;
 }
 
 // ---------------------------------------------------------------------------

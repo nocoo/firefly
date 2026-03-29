@@ -965,6 +965,63 @@ describe("searchPosts", () => {
       pageSize: 20,
     });
   });
+
+  it("clamps NaN page to default", async () => {
+    vi.mocked(db.call).mockResolvedValue({
+      posts: [],
+      snippets: {},
+      total: 0,
+      page: 1,
+      pageSize: 20,
+    });
+
+    await searchPosts(db, { query: "test", page: NaN });
+
+    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
+      query: "test",
+      status: "published",
+      page: 1,
+      pageSize: 20,
+    });
+  });
+
+  it("clamps negative page to default", async () => {
+    vi.mocked(db.call).mockResolvedValue({
+      posts: [],
+      snippets: {},
+      total: 0,
+      page: 1,
+      pageSize: 20,
+    });
+
+    await searchPosts(db, { query: "test", page: -1, pageSize: 0 });
+
+    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
+      query: "test",
+      status: "published",
+      page: 1,
+      pageSize: 20,
+    });
+  });
+
+  it("clamps oversized pageSize to max 100", async () => {
+    vi.mocked(db.call).mockResolvedValue({
+      posts: [],
+      snippets: {},
+      total: 0,
+      page: 1,
+      pageSize: 100,
+    });
+
+    await searchPosts(db, { query: "test", pageSize: 999 });
+
+    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
+      query: "test",
+      status: "published",
+      page: 1,
+      pageSize: 100,
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------

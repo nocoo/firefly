@@ -36,35 +36,88 @@ const FTS5_SPECIAL = /[":(){}^+\-~|]/g;
 
 /**
  * Sanitize user input into a safe FTS5 MATCH expression.
- * Each segmented token is quoted; all tokens are ANDed.
- * Preserves trailing * for prefix matching.
+ *
+ * Supports:
+ * - Plain terms: segmented then ANDed as quoted tokens
+ * - Quoted phrases: `"exact phrase"` preserved as FTS5 phrase query
+ * - Prefix matching: `cloud*` preserved as FTS5 prefix query
  */
 export function sanitizeFtsQuery(input: string): string {
   const trimmed = input.trim();
   if (!trimmed) return "";
 
-  // Segment the query (same pipeline as indexing)
-  const tokens = segmentText(trimmed).split(/\s+/).filter(Boolean);
-  if (tokens.length === 0) return "";
+  const parts: string[] = [];
 
-  // Quote each token, preserving trailing * for prefix search
-  return tokens
-    .map((token) => {
-      const hasStar = token.endsWith("*");
-      const clean = (hasStar ? token.slice(0, -1) : token).replace(
-        FTS5_SPECIAL,
-        "",
-      );
-      if (!clean) return null;
-      return hasStar ? `"${clean}"*` : `"${clean}"`;
-    })
-    .filter(Boolean)
-    .join(" ");
+  // Extract quoted phrases first, then process remaining text
+  const phraseRe = /"([^"]+)"/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = phraseRe.exec(trimmed)) !== null) {
+    // Process unquoted text before this phrase
+    const before = trimmed.slice(lastIndex, match.index).trim();
+    if (before) parts.push(...tokenizeUnquoted(before));
+
+    // Segment the phrase content, then wrap as a single FTS5 phrase
+    const phraseTokens = segmentText(match[1])
+      .split(/\s+/)
+      .filter(Boolean);
+    if (phraseTokens.length > 0) {
+      parts.push(`"${phraseTokens.join(" ")}"`);
+    }
+
+    lastIndex = phraseRe.lastIndex;
+  }
+
+  // Process remaining unquoted text after the last phrase
+  const tail = trimmed.slice(lastIndex).trim();
+  if (tail) parts.push(...tokenizeUnquoted(tail));
+
+  return parts.filter(Boolean).join(" ");
+}
+
+/**
+ * Tokenize unquoted text into FTS5 terms.
+ * Preserves trailing * on individual tokens for prefix search.
+ */
+function tokenizeUnquoted(text: string): string[] {
+  // Split on whitespace to detect per-word trailing *
+  const words = text.split(/\s+/).filter(Boolean);
+  const result: string[] = [];
+
+  for (const word of words) {
+    const hasPrefix = word.endsWith("*");
+    const raw = hasPrefix ? word.slice(0, -1) : word;
+
+    // Segment each word (handles CJK compound words)
+    const tokens = segmentText(raw).split(/\s+/).filter(Boolean);
+
+    for (let i = 0; i < tokens.length; i++) {
+      const clean = tokens[i].replace(FTS5_SPECIAL, "");
+      if (!clean) continue;
+
+      // Only the last token of a prefix word gets the *
+      if (hasPrefix && i === tokens.length - 1) {
+        result.push(`"${clean}"*`);
+      } else {
+        result.push(`"${clean}"`);
+      }
+    }
+  }
+
+  return result;
 }
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
+
+/** Clamp a numeric value to a safe positive integer with optional max. */
+function clampPositive(value: number, fallback: number, max?: number): number {
+  if (!Number.isFinite(value) || value < 1) return fallback;
+  const clamped = Math.floor(value);
+  return max ? Math.min(clamped, max) : clamped;
+}
 
 interface FtsSyncBody {
   action: "upsert" | "delete";
@@ -233,9 +286,13 @@ export async function handleFtsSearch(
   const {
     query,
     status = "published",
-    page = 1,
-    pageSize = 20,
+    page: rawPage = 1,
+    pageSize: rawPageSize = 20,
   } = body as FtsSearchBody;
+
+  // Clamp page/pageSize to safe positive integers
+  const page = clampPositive(rawPage, 1);
+  const pageSize = clampPositive(rawPageSize, 20, 100);
 
   if (!query || typeof query !== "string" || !query.trim()) {
     return Response.json({ error: "query is required" }, { status: 400 });
