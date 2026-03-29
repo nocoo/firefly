@@ -410,36 +410,35 @@ export function TaxonomyManager({
 
       {/* Table */}
       <div className="overflow-x-auto rounded-[var(--radius-widget)] border border-border">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-secondary/50">
-              {sortable && (
-                <th className="w-8 pl-2 pr-0 py-3" />
-              )}
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                {t("admin.taxonomy.table.name")}
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
-                {t("admin.taxonomy.table.slug")}
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
-                {t("admin.taxonomy.table.description")}
-              </th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground">
-                {t("admin.taxonomy.table.posts")}
-              </th>
-              <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                {t("admin.taxonomy.table.actions")}
-              </th>
-            </tr>
-          </thead>
-
-          {sortable ? (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
+        {sortable ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-secondary/50">
+                  {sortable && (
+                    <th className="w-8 pl-2 pr-0 py-3" />
+                  )}
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                    {t("admin.taxonomy.table.name")}
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
+                    {t("admin.taxonomy.table.slug")}
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
+                    {t("admin.taxonomy.table.description")}
+                  </th>
+                  <th className="px-4 py-3 text-center font-medium text-muted-foreground">
+                    {t("admin.taxonomy.table.posts")}
+                  </th>
+                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                    {t("admin.taxonomy.table.actions")}
+                  </th>
+                </tr>
+              </thead>
               <SortableContext
                 items={orderedItems.map((i) => i.id)}
                 strategy={verticalListSortingStrategy}
@@ -460,8 +459,29 @@ export function TaxonomyManager({
                   )}
                 </tbody>
               </SortableContext>
-            </DndContext>
-          ) : (
+            </table>
+          </DndContext>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-secondary/50">
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                  {t("admin.taxonomy.table.name")}
+                </th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
+                  {t("admin.taxonomy.table.slug")}
+                </th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
+                  {t("admin.taxonomy.table.description")}
+                </th>
+                <th className="px-4 py-3 text-center font-medium text-muted-foreground">
+                  {t("admin.taxonomy.table.posts")}
+                </th>
+                <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                  {t("admin.taxonomy.table.actions")}
+                </th>
+              </tr>
+            </thead>
             <tbody>
               {orderedItems.length === 0 ? (
                 <tr>
@@ -480,8 +500,8 @@ export function TaxonomyManager({
                 ))
               )}
             </tbody>
-          )}
-        </table>
+          </table>
+        )}
       </div>
 
       {/* Delete confirmation dialog */}
