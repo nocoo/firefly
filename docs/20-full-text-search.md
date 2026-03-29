@@ -477,7 +477,7 @@ Route: `src/app/(blog)/search/page.tsx` (Server Component)
 - Calls `searchPosts(db, { query, page, pageSize: 10 })`
 - Renders result count header: "{total} results for '{query}'" / "搜索 '{query}' 共 {total} 条结果"
 - Renders `PostCard` list with `snippet` prop from `snippets[post.id]`
-- Renders `Pagination` component (reuses existing)
+- Renders `Pagination` component (**requires extension** — see Pagination Changes below)
 - Empty state: no results message with search suggestions
 - SEO: `noindex` — `export const metadata = { robots: { index: false } }`
 
@@ -490,11 +490,14 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   }
 
   const db = getDb();
+  const currentPage = page ? parseInt(page, 10) : 1;
+  const pageSize = 10;
   const result = await searchPosts(db, {
     query: q.trim(),
-    page: page ? parseInt(page, 10) : 1,
-    pageSize: 10,
+    page: currentPage,
+    pageSize,
   });
+  const totalPages = Math.ceil(result.total / pageSize);
 
   return (
     <div className="blog-search-results">
@@ -511,13 +514,57 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
               snippet={result.snippets[post.id]}
             />
           ))}
-          <Pagination current={result.page} total={Math.ceil(result.total / result.pageSize)} basePath={`/search?q=${encodeURIComponent(q)}`} />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            basePath="/search"
+            locale={locale}
+            searchParams={{ q }}
+          />
         </>
       )}
     </div>
   );
 }
 ```
+
+### 2b. Pagination Component Extension
+
+The existing `Pagination` component generates path-segment URLs (`/basePath/page/2`).
+Search needs query-string URLs (`/search?q=foo&page=2`). Extend the component:
+
+```typescript
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  basePath: string;
+  locale: Locale;
+  /** When provided, generates query-string pagination (?key=val&page=N)
+   *  instead of path-segment pagination (/basePath/page/N). */
+  searchParams?: Record<string, string>;
+}
+```
+
+Update the `href` function inside `Pagination`:
+
+```typescript
+const href = (page: number) => {
+  if (searchParams) {
+    // Query-string mode: /search?q=foo&page=2
+    const params = new URLSearchParams(searchParams);
+    if (page > 1) params.set("page", String(page));
+    const qs = params.toString();
+    return qs ? `${basePath}?${qs}` : basePath;
+  }
+  // Path-segment mode (existing behavior): /basePath/page/2
+  if (page <= 1) return basePath === "/" ? "/" : basePath;
+  const base = basePath === "/" ? "" : basePath;
+  return `${base}/page/${page}`;
+};
+```
+
+This is backward-compatible — all existing callers omit `searchParams` and get the
+same path-segment behavior. Only the search page passes `searchParams={{ q }}`.
 
 ### 3. PostCard Changes
 
@@ -753,3 +800,5 @@ This confirms the application-layer segmentation approach is necessary and suffi
 9. **Stable pagination sort**: `ORDER BY bm25(...), p.published_at DESC, p.rowid DESC`. BM25 alone is not a stable sort — rows with equal scores can shift between pages under `LIMIT/OFFSET`. Adding `published_at` and `rowid` as deterministic tie-breakers guarantees consistent paging.
 
 10. **FTS5 storage mode**: Default stored mode (no `content=` parameter) instead of contentless or external content. Verified on local sqlite3: `content=''` makes snippet()/highlight() return empty; `content='posts'` fails because the external table stores original unsegmented text while the index stores segmented tokens, so highlight positions don't align. Default stored mode keeps segmented text inside FTS5 where snippet() can read it directly.
+
+11. **Pagination query-string mode**: The existing `Pagination` component uses path-segment URLs (`/basePath/page/N`), incompatible with search's query-string pagination (`/search?q=foo&page=2`). Rather than creating a separate component, extend `Pagination` with an optional `searchParams` prop. When present, `href()` builds `URLSearchParams`-based URLs. All existing callers are unaffected (no `searchParams` = existing path-segment behavior).
