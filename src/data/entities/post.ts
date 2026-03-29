@@ -110,6 +110,7 @@ export interface AdjacentPosts {
 // ---------------------------------------------------------------------------
 
 const COUNT_TTL = 5 * 60 * 1000;
+const COUNT_MAX_SIZE = 64;
 
 interface CountEntry {
   value: number;
@@ -120,6 +121,29 @@ const countCache = new Map<string, CountEntry>();
 
 function countCacheKey(where: string, params: unknown[]): string {
   return `${where}|${JSON.stringify(params)}`;
+}
+
+/** Get a count cache entry, evicting it if expired. */
+function countCacheGet(key: string): CountEntry | undefined {
+  const entry = countCache.get(key);
+  if (!entry) return undefined;
+  if (Date.now() - entry.cachedAt >= COUNT_TTL) {
+    countCache.delete(key);
+    return undefined;
+  }
+  return entry;
+}
+
+/** Set a count cache entry, evicting oldest entries when at capacity. */
+function countCacheSet(key: string, entry: CountEntry): void {
+  // Delete first so re-insert moves it to the end (Map insertion order)
+  countCache.delete(key);
+  if (countCache.size >= COUNT_MAX_SIZE) {
+    // Evict oldest entry (first in insertion order)
+    const oldest = countCache.keys().next().value;
+    if (oldest !== undefined) countCache.delete(oldest);
+  }
+  countCache.set(key, entry);
 }
 
 const archivesCache = createCache<MonthlyArchive[]>(5 * 60 * 1000);
@@ -224,10 +248,10 @@ export async function listPosts(
   // Separate COUNT query for accurate pagination total (cached)
   const countSql = `SELECT COUNT(*) AS count FROM posts p ${where}`;
   const cacheKey = countCacheKey(where, params);
-  const cachedCount = countCache.get(cacheKey);
+  const cachedCount = countCacheGet(cacheKey);
   let total: number;
 
-  if (cachedCount && Date.now() - cachedCount.cachedAt < COUNT_TTL) {
+  if (cachedCount) {
     total = cachedCount.value;
   } else {
     const countResult = await db.firstOrNull<{ count: number }>(
@@ -235,7 +259,7 @@ export async function listPosts(
       params,
     );
     total = countResult?.count ?? result.results.length;
-    countCache.set(cacheKey, { value: total, cachedAt: Date.now() });
+    countCacheSet(cacheKey, { value: total, cachedAt: Date.now() });
   }
 
   return { posts: result.results, total };

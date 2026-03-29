@@ -36,6 +36,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
 
   useEffect(() => {
     setOrigin(window.location.origin);
+    return () => { if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current); };
   }, []);
 
   const copyUrl = useCallback(async (url: string) => {

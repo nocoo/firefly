@@ -113,17 +113,20 @@ export async function resolveAndValidateHostname(
   if (IP_LITERAL_RE.test(hostname)) return;
 
   let addresses: dns.LookupAddress[];
+  let dnsTimer: ReturnType<typeof setTimeout> | undefined;
   try {
     const result = await Promise.race([
       dns.promises.lookup(hostname, { family: 0, all: true }),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("DNS timeout")), DNS_TIMEOUT_MS),
-      ),
+      new Promise<never>((_, reject) => {
+        dnsTimer = setTimeout(() => reject(new Error("DNS timeout")), DNS_TIMEOUT_MS);
+      }),
     ]);
     addresses = result;
   } catch (err) {
     const msg = err instanceof Error ? err.message : "DNS resolution failed";
     throw new UnfurlError(`DNS resolution failed: ${msg}`, 400);
+  } finally {
+    clearTimeout(dnsTimer);
   }
 
   for (const entry of addresses) {

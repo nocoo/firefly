@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useLocale } from "@/i18n/context";
 
 // ---------------------------------------------------------------------------
@@ -41,6 +41,7 @@ export function ImageUploadZone({
   const [dragOver, setDragOver] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current); }, []);
   const { t } = useLocale();
 
   const upload = useCallback(
