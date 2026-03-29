@@ -2,14 +2,19 @@
  * firefly Worker — Cloudflare Worker with native D1 binding.
  *
  * Routes:
- * - GET  /api/v1/health  — health check (no auth)
- * - POST /api/v1/query   — execute read-only SQL (regex guards writes)
- * - POST /api/v1/execute — execute write SQL (single + batch)
+ * - GET  /api/v1/health      — health check (no auth)
+ * - POST /api/v1/query       — execute read-only SQL (regex guards writes)
+ * - POST /api/v1/execute     — execute write SQL (single + batch)
+ * - POST /api/v1/fts-sync    — sync single post to FTS index
+ * - POST /api/v1/fts-rebuild — rebuild entire FTS index
+ * - POST /api/v1/fts-search  — full-text search with BM25 ranking
  *
- * Auth: Bearer WORKER_SECRET on /api/v1/query and /api/v1/execute.
+ * Auth: Bearer WORKER_SECRET on all POST /api/v1/* routes.
  */
 
-const WORKER_VERSION = "2.0.0";
+import { handleFtsSync, handleFtsRebuild, handleFtsSearch } from "./fts";
+
+const WORKER_VERSION = "2.1.0";
 
 const bootTime = Date.now();
 
@@ -240,6 +245,19 @@ const worker: ExportedHandler<Env> = {
 
       if (path === "/api/v1/execute") {
         return handleExecute(bodyOrError, env);
+      }
+
+      // FTS endpoints
+      if (path === "/api/v1/fts-sync") {
+        return handleFtsSync(bodyOrError, env.DB);
+      }
+
+      if (path === "/api/v1/fts-rebuild") {
+        return handleFtsRebuild(env.DB);
+      }
+
+      if (path === "/api/v1/fts-search") {
+        return handleFtsSearch(bodyOrError, env.DB);
       }
     }
 
