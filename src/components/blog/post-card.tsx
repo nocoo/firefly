@@ -68,9 +68,9 @@ export function PostCard({ post, locale, author, priority }: PostCardProps) {
 
       {/* Excerpt */}
       {post.excerpt && (
-        <Link href={href} prefetch={false} className="mt-3 block text-base leading-relaxed text-blog-text no-underline">
+        <p className="mt-3 text-base leading-relaxed text-blog-text">
           {post.excerpt}
-        </Link>
+        </p>
       )}
 
       {/* Continue reading link */}
