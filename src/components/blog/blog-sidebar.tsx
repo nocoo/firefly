@@ -8,6 +8,7 @@ import type { MonthlyArchive } from "@/data/entities/post";
 import type { SocialLink } from "@/data/settings";
 import { useLocale } from "@/i18n/context";
 import { SocialLink as SocialLinkComponent } from "./social-link";
+import { SearchInput } from "./search-input";
 
 // ─── X (Twitter) icon — not in lucide ───
 function XIcon({ className }: { className?: string }) {
@@ -98,6 +99,9 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
             })}
           </div>
         )}
+
+        {/* Search */}
+        <SearchInput />
 
         {/* Categories */}
         {categories.length > 0 && (

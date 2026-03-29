@@ -817,3 +817,61 @@
 .recharts-wrapper *:focus {
   outline: none;
 }
+
+/* Blog search bar (sidebar) */
+.blog-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-top: 1.5em;
+  padding: 0.5em 0.75em;
+  border: 1px solid var(--blog-separator);
+  border-radius: 0.5em;
+  transition: border-color 0.15s;
+}
+.blog-search:focus-within {
+  border-color: var(--blog-accent);
+}
+.blog-search-icon {
+  width: 1em;
+  height: 1em;
+  color: var(--blog-muted);
+  flex-shrink: 0;
+}
+.blog-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.9375em;
+  color: var(--blog-text);
+  outline: none;
+}
+.blog-search-input::placeholder {
+  color: var(--blog-muted);
+}
+.blog-search-kbd {
+  font-size: 0.75em;
+  color: var(--blog-muted);
+  border: 1px solid var(--blog-separator);
+  border-radius: 0.25em;
+  padding: 0.1em 0.4em;
+  font-family: inherit;
+  line-height: 1;
+}
+
+/* Search results page */
+.blog-search-results h1 {
+  font-size: 1.25em;
+  font-weight: 600;
+  color: var(--blog-text);
+  margin-bottom: 1.5em;
+}
+
+/* FTS snippet highlight */
+.blog-search-results mark,
+.blog-entry mark {
+  background: color-mix(in srgb, var(--blog-accent) 20%, transparent);
+  color: inherit;
+  padding: 0.1em 0.2em;
+  border-radius: 2px;
+}
