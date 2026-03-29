@@ -4,6 +4,7 @@
   "blog.sidebar.categories": "Categories",
   "blog.sidebar.tags": "Tags",
   "blog.sidebar.archives": "Archives",
+  "blog.sidebar.menuLabel": "Navigation menu",
   "blog.sidebar.yearSuffix": "",
   "blog.sidebar.monthSuffix": "",
   "blog.month.1": "January",

@@ -59,6 +59,7 @@ export function BlogSidebar({
       className={className}
       inert={isDrawer && !open ? true : undefined}
       aria-hidden={isDrawer && !open ? true : undefined}
+      {...(isDrawer ? { role: "dialog", "aria-modal": open ? true : undefined, "aria-label": t("blog.sidebar.menuLabel") } : {})}
     >
       <div className="blog-sidebar-inner">
         {/* Drawer close button — CSS hides this for desktop variant */}

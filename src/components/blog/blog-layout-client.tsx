@@ -68,7 +68,13 @@ export function BlogLayoutClient({
 
       {/* Drawer backdrop — rendered when open */}
       {drawerOpen && (
-        <div className="blog-sidebar-backdrop" onClick={() => setDrawerOpen(false)} />
+        <div
+          className="blog-sidebar-backdrop"
+          onClick={() => setDrawerOpen(false)}
+          role="button"
+          aria-label="Close menu"
+          tabIndex={-1}
+        />
       )}
 
       {/* Drawer sidebar — always in DOM, CSS + inert control visibility */}
