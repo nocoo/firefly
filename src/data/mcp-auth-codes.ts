@@ -3,6 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import type { Db } from "@/lib/db";
+import { nowEpoch } from "@/data/core/timestamps";
 import type { McpAuthCode } from "@/models/types";
 
 // ---------------------------------------------------------------------------
@@ -63,7 +64,7 @@ export async function upgradeAuthSession(
   code: string,
   userEmail: string,
 ): Promise<boolean> {
-  const now = Math.floor(Date.now() / 1000);
+  const now = nowEpoch();
   const meta = await db.execute(
     `UPDATE mcp_auth_codes
      SET code = ?, user_email = ?, expires_at = ?
@@ -82,7 +83,7 @@ export async function getAuthCodeByCode(
   db: Db,
   code: string,
 ): Promise<McpAuthCode | null> {
-  const now = Math.floor(Date.now() / 1000);
+  const now = nowEpoch();
   return db.firstOrNull<McpAuthCode>(
     `SELECT * FROM mcp_auth_codes
      WHERE code = ? AND consumed = 0 AND expires_at > ?`,
@@ -99,7 +100,7 @@ export async function getAuthSessionByState(
   db: Db,
   state: string,
 ): Promise<McpAuthCode | null> {
-  const now = Math.floor(Date.now() / 1000);
+  const now = nowEpoch();
   return db.firstOrNull<McpAuthCode>(
     `SELECT * FROM mcp_auth_codes
      WHERE state = ? AND expires_at > ?`,

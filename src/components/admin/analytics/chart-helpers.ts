@@ -19,13 +19,6 @@ export const SOURCE_TYPES: SourceType[] = ["human", "search", "ai", "other"];
 /** Wraps a CSS custom property name for inline style usage */
 const v = (token: string) => `hsl(var(--${token}))`;
 
-/**
- * Returns a CSS color string with alpha from a CSS custom property.
- * Usage: `withAlpha("chart-1", 0.3)` → `"hsl(var(--chart-1) / 0.3)"`
- */
-export const withAlpha = (token: string, alpha: number) =>
-  `hsl(var(--${token}) / ${alpha})`;
-
 // ---------------------------------------------------------------------------
 // Colors — use CSS custom properties for dark/light mode support
 // ---------------------------------------------------------------------------
@@ -33,22 +26,11 @@ export const withAlpha = (token: string, alpha: number) =>
 /** Semantic: neutral gray for axis text, grid lines, tick labels */
 export const chartAxis = v("chart-axis");
 
-/** Semantic: muted/weakened elements */
-export const chartMuted = v("chart-muted");
-
 export const SOURCE_COLORS: Record<SourceType, string> = {
   human: v("chart-1"),
   search: v("chart-2"),
   ai: v("chart-5"),
   other: v("chart-4"),
-};
-
-/** CSS variable tokens (without --) matching SOURCE_COLORS — for withAlpha() */
-export const SOURCE_TOKENS: Record<SourceType, string> = {
-  human: "chart-1",
-  search: "chart-2",
-  ai: "chart-5",
-  other: "chart-4",
 };
 
 export const CHART_COLORS = [
@@ -61,12 +43,6 @@ export const CHART_COLORS = [
   v("chart-7"),
   v("chart-8"),
 ];
-
-/** CSS variable tokens (without --) matching CHART_COLORS — for withAlpha() */
-export const CHART_TOKENS = Array.from(
-  { length: 8 },
-  (_, i) => `chart-${i + 1}`,
-) as readonly string[];
 
 export const PIE_COLORS = [
   v("chart-1"),

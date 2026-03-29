@@ -3,6 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import type { Db } from "@/lib/db";
+import { nowEpoch } from "@/data/core/timestamps";
 import type { McpClient } from "@/models/types";
 import { ulid } from "ulid";
 
@@ -34,7 +35,7 @@ export async function createMcpClient(
 ): Promise<McpClient> {
   const id = ulid();
   const clientId = generateClientId();
-  const now = Math.floor(Date.now() / 1000);
+  const now = nowEpoch();
 
   const sql = `
     INSERT INTO mcp_clients (id, client_id, client_name, redirect_uris, grant_types, created_at)

@@ -3,6 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import type { Db } from "@/lib/db";
+import { nowEpoch } from "@/data/core/timestamps";
 import type { McpToken } from "@/models/types";
 import { ulid } from "ulid";
 
@@ -71,7 +72,7 @@ export async function createMcpToken(
   input: CreateMcpTokenInput,
 ): Promise<McpToken> {
   const id = ulid();
-  const now = Math.floor(Date.now() / 1000);
+  const now = nowEpoch();
 
   const sql = `
     INSERT INTO mcp_tokens
@@ -122,7 +123,7 @@ export async function getValidTokenByHash(
   db: Db,
   accessTokenHash: string,
 ): Promise<McpToken | null> {
-  const now = Math.floor(Date.now() / 1000);
+  const now = nowEpoch();
   return db.firstOrNull<McpToken>(
     `SELECT * FROM mcp_tokens
      WHERE access_token_hash = ? AND revoked = 0 AND expires_at > ?`,
@@ -139,7 +140,7 @@ export async function getValidTokenByRefreshHash(
   db: Db,
   refreshTokenHash: string,
 ): Promise<McpToken | null> {
-  const now = Math.floor(Date.now() / 1000);
+  const now = nowEpoch();
   return db.firstOrNull<McpToken>(
     `SELECT * FROM mcp_tokens
      WHERE refresh_token_hash = ? AND revoked = 0 AND refresh_expires_at > ?`,
@@ -156,7 +157,7 @@ export async function updateLastUsed(
   db: Db,
   id: string,
 ): Promise<void> {
-  const now = Math.floor(Date.now() / 1000);
+  const now = nowEpoch();
   await db.execute(
     "UPDATE mcp_tokens SET last_used_at = ? WHERE id = ?",
     [now, id],
@@ -172,7 +173,7 @@ export async function revokeToken(
   db: Db,
   id: string,
 ): Promise<boolean> {
-  const now = Math.floor(Date.now() / 1000);
+  const now = nowEpoch();
   const meta = await db.execute(
     "UPDATE mcp_tokens SET revoked = 1, revoked_at = ? WHERE id = ? AND revoked = 0",
     [now, id],
@@ -190,7 +191,7 @@ export async function revokeTokensByClientId(
   clientId: string,
   userEmail: string,
 ): Promise<number> {
-  const now = Math.floor(Date.now() / 1000);
+  const now = nowEpoch();
   const meta = await db.execute(
     "UPDATE mcp_tokens SET revoked = 1, revoked_at = ? WHERE client_id = ? AND user_email = ? AND revoked = 0",
     [now, clientId, userEmail],
