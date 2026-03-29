@@ -6,7 +6,7 @@ import { vi } from "vitest";
 import type { Db } from "@/lib/db";
 
 /**
- * Create a mock Db with all four methods stubbed as vi.fn().
+ * Create a mock Db with all methods stubbed as vi.fn().
  * Each test case overrides specific methods as needed.
  */
 export function createMockDb(): Db {
@@ -15,6 +15,7 @@ export function createMockDb(): Db {
     firstOrNull: vi.fn(),
     execute: vi.fn(),
     batch: vi.fn(),
+    call: vi.fn(),
   };
 }
 

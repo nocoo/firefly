@@ -49,6 +49,9 @@ export interface Db {
 
   /** Execute multiple write queries in a batch (atomic via D1.batch). */
   batch(statements: DbBatchStatement[]): Promise<DbQueryResult[]>;
+
+  /** Call a custom Worker endpoint (non-SQL). Reuses Worker URL and auth. */
+  call<T = unknown>(path: string, body: unknown): Promise<T>;
 }
 
 // ---------------------------------------------------------------------------
@@ -138,6 +141,10 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
         { statements },
       );
       return result.results;
+    },
+
+    async call<T>(path: string, body: unknown): Promise<T> {
+      return post<T>(path, body);
     },
   };
 
