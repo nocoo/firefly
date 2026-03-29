@@ -1,31 +1,11 @@
 // ---------------------------------------------------------------------------
-// Category entity — CRUD + reorder + post stats
+// Category entity — thin wrapper over taxonomy factory + category-only ops
 // ---------------------------------------------------------------------------
 
 import type { Db } from "@/lib/db";
 import type { Category } from "@/models/types";
-import { EntityCacheManager } from "@/data/core/cache-manager";
-import { nowEpoch, newId } from "@/data/core/timestamps";
-import { buildSetClauses } from "@/data/core/sql";
-
-// ---------------------------------------------------------------------------
-// Entity config
-// ---------------------------------------------------------------------------
-
-const fields = {
-  name: { column: "name" },
-  slug: { column: "slug" },
-  description: { column: "description" },
-  sortOrder: { column: "sort_order" },
-} as const;
-
-const CACHE_TTL = 5 * 60 * 1000;
-const cache = new EntityCacheManager<Category[]>(CACHE_TTL);
-
-/** Force next `listCategories` call to re-fetch from DB. */
-export function invalidateCategoryCache(): void {
-  cache.invalidate();
-}
+import { createTaxonomyEntity } from "@/data/core/taxonomy-factory";
+import { nowEpoch } from "@/data/core/timestamps";
 
 // ---------------------------------------------------------------------------
 // Input types (D5: camelCase)
@@ -46,134 +26,49 @@ export interface UpdateCategoryInput {
 }
 
 // ---------------------------------------------------------------------------
-// CategoryWithPostStats (admin only)
+// Entity instance
 // ---------------------------------------------------------------------------
 
-export interface CategoryWithPostStats extends Category {
-  total_posts: number;
-  published_posts: number;
-  draft_posts: number;
-}
+const entity = createTaxonomyEntity<Category, CreateCategoryInput, UpdateCategoryInput>({
+  table: "categories",
+  entityName: "Category",
+  fields: {
+    name: { column: "name" },
+    slug: { column: "slug" },
+    description: { column: "description" },
+    sortOrder: { column: "sort_order" },
+  },
+  orderBy: "sort_order DESC, name ASC",
+  cacheTtl: 5 * 60 * 1000,
+  insertColumns: ["id", "name", "slug", "description", "sort_order", "created_at", "updated_at"],
+  buildInsertParams: (id, input, now) => [
+    id,
+    input.name,
+    input.slug,
+    input.description ?? null,
+    input.sortOrder ?? 1,
+    now,
+    now,
+  ],
+});
 
 // ---------------------------------------------------------------------------
-// listCategories
+// Re-exports (zero consumer changes)
 // ---------------------------------------------------------------------------
 
-export async function listCategories(db: Db): Promise<Category[]> {
-  const cached = cache.get();
-  if (cached) return cached;
-
-  const result = await db.query<Category>(
-    "SELECT * FROM categories ORDER BY sort_order DESC, name ASC",
-  );
-  cache.set(result.results);
-  return result.results;
-}
+export const listCategories = entity.list;
+export const getCategoryBySlug = entity.getBySlug;
+export const getCategoryById = entity.getById;
+export const createCategory = entity.create;
+export const updateCategory = entity.update;
+export const deleteCategory = entity.delete;
+export const invalidateCategoryCache = entity.invalidateCache;
 
 // ---------------------------------------------------------------------------
-// getCategoryBySlug
+// Category-only: reorderCategories
 // ---------------------------------------------------------------------------
 
-export async function getCategoryBySlug(
-  db: Db,
-  slug: string,
-): Promise<Category | null> {
-  return db.firstOrNull<Category>(
-    "SELECT * FROM categories WHERE slug = ?",
-    [slug],
-  );
-}
-
-// ---------------------------------------------------------------------------
-// getCategoryById
-// ---------------------------------------------------------------------------
-
-export async function getCategoryById(
-  db: Db,
-  id: string,
-): Promise<Category | null> {
-  return db.firstOrNull<Category>(
-    "SELECT * FROM categories WHERE id = ?",
-    [id],
-  );
-}
-
-// ---------------------------------------------------------------------------
-// createCategory
-// ---------------------------------------------------------------------------
-
-export async function createCategory(
-  db: Db,
-  input: CreateCategoryInput,
-): Promise<Category> {
-  const id = newId();
-  const now = nowEpoch();
-
-  await db.execute(
-    `INSERT INTO categories (id, name, slug, description, sort_order, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [
-      id,
-      input.name,
-      input.slug,
-      input.description ?? null,
-      input.sortOrder ?? 1,
-      now,
-      now,
-    ],
-  );
-
-  const category = await getCategoryById(db, id);
-  if (!category) throw new Error(`Failed to retrieve Category ${id} after creation`);
-  invalidateCategoryCache();
-  return category;
-}
-
-// ---------------------------------------------------------------------------
-// updateCategory
-// ---------------------------------------------------------------------------
-
-export async function updateCategory(
-  db: Db,
-  id: string,
-  input: UpdateCategoryInput,
-): Promise<Category | null> {
-  if (Object.keys(input).length === 0) return getCategoryById(db, id);
-
-  const { setClauses, params } = buildSetClauses(input, fields);
-  if (setClauses.length === 0) return getCategoryById(db, id);
-
-  setClauses.push("updated_at = ?");
-  params.push(nowEpoch());
-  params.push(id);
-
-  await db.execute(
-    `UPDATE categories SET ${setClauses.join(", ")} WHERE id = ?`,
-    params,
-  );
-
-  invalidateCategoryCache();
-  return getCategoryById(db, id);
-}
-
-// ---------------------------------------------------------------------------
-// deleteCategory
-// ---------------------------------------------------------------------------
-
-export async function deleteCategory(db: Db, id: string): Promise<boolean> {
-  const meta = await db.execute("DELETE FROM categories WHERE id = ?", [id]);
-  if (meta.changes > 0) invalidateCategoryCache();
-  return meta.changes > 0;
-}
-
-// ---------------------------------------------------------------------------
-// reorderCategories
-// ---------------------------------------------------------------------------
-
-export async function reorderCategories(
-  db: Db,
-  ids: string[],
-): Promise<void> {
+export async function reorderCategories(db: Db, ids: string[]): Promise<void> {
   if (ids.length === 0) return;
 
   const now = nowEpoch();
@@ -183,16 +78,20 @@ export async function reorderCategories(
   }));
 
   await db.batch(statements);
-  invalidateCategoryCache();
+  entity.invalidateCache();
 }
 
 // ---------------------------------------------------------------------------
-// listCategoriesWithPostStats (admin only)
+// Category-only: listCategoriesWithPostStats
 // ---------------------------------------------------------------------------
 
-export async function listCategoriesWithPostStats(
-  db: Db,
-): Promise<CategoryWithPostStats[]> {
+export interface CategoryWithPostStats extends Category {
+  total_posts: number;
+  published_posts: number;
+  draft_posts: number;
+}
+
+export async function listCategoriesWithPostStats(db: Db): Promise<CategoryWithPostStats[]> {
   const sql = `
     SELECT
       c.*,
