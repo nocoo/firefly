@@ -11,6 +11,7 @@ import { collectionPageJsonLd } from "@/lib/jsonld";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
+import { Folder } from "lucide-react";
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -89,9 +90,10 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
       <section>
         {posts.length === 0 ? (
-          <p className="py-12 text-center text-blog-muted">
-            {t(locale, "blog.category.noPosts")}
-          </p>
+          <div className="flex flex-col items-center gap-3 py-16 text-blog-muted">
+            <Folder className="h-8 w-8 opacity-40" strokeWidth={1.5} />
+            <p className="text-sm">{t(locale, "blog.category.noPosts")}</p>
+          </div>
         ) : (
           posts.map((post, i) => (
             <PostCard

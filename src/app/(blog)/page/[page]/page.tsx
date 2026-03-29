@@ -10,6 +10,7 @@ import { collectionPageJsonLd } from "@/lib/jsonld";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
+import { FileText } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ page: string }>;
@@ -71,9 +72,10 @@ export default async function HomePaged({ params }: PageProps) {
 
       <section>
         {posts.length === 0 ? (
-          <p className="py-12 text-center text-blog-muted">
-            {t(locale, "blog.home.noPosts")}
-          </p>
+          <div className="flex flex-col items-center gap-3 py-16 text-blog-muted">
+            <FileText className="h-8 w-8 opacity-40" strokeWidth={1.5} />
+            <p className="text-sm">{t(locale, "blog.home.noPosts")}</p>
+          </div>
         ) : (
           posts.map((post, i) => (
             <PostCard
