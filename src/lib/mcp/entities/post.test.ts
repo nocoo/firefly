@@ -526,4 +526,101 @@ describe("unfurl_reference extra tool", () => {
     });
     expectError(result, "403 Forbidden");
   });
+
+  it("preview mode: wraps generic error with 'Unfurl failed' prefix", async () => {
+    vi.mocked(unfurlUrl).mockRejectedValue(new Error("Network timeout"));
+
+    const result = await unfurlTool.handler(ctx, {
+      url: "https://timeout.com",
+    });
+    expectError(result, "Unfurl failed: Network timeout");
+  });
+
+  it("preview mode: handles non-Error throw", async () => {
+    vi.mocked(unfurlUrl).mockRejectedValue("string error");
+
+    const result = await unfurlTool.handler(ctx, {
+      url: "https://fail.com",
+    });
+    expectError(result, "Unfurl failed: string error");
+  });
+
+  it("preview mode: returns UnfurlError message directly", async () => {
+    vi.mocked(unfurlUrl).mockRejectedValue(
+      new UnfurlError("404 Not Found", 404),
+    );
+
+    const result = await unfurlTool.handler(ctx, {
+      url: "https://missing.com",
+    });
+    expectError(result, "404 Not Found");
+  });
+
+  it("save mode: wraps generic error with 'Unfurl failed' prefix", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(unfurlUrl).mockRejectedValue(new Error("DNS failure"));
+
+    const result = await unfurlTool.handler(ctx, {
+      slug: "test-post",
+      url: "https://dns-fail.com",
+    });
+    expectError(result, "Unfurl failed: DNS failure");
+  });
+
+  it("save mode: handles non-Error throw", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(unfurlUrl).mockRejectedValue(42);
+
+    const result = await unfurlTool.handler(ctx, {
+      slug: "test-post",
+      url: "https://num-fail.com",
+    });
+    expectError(result, "Unfurl failed: 42");
+  });
+
+  it("preview mode: falls back through title/description/image chain", async () => {
+    vi.mocked(unfurlUrl).mockResolvedValue({
+      url: "https://bare.com",
+      ogTitle: null,
+      ogDescription: null,
+      ogImage: null,
+      pageTitle: null,
+      readmeImage: "readme.png",
+      bodyText: "text",
+    });
+    vi.mocked(summarizeUnfurl).mockResolvedValue(null);
+
+    const result = await unfurlTool.handler(ctx, {
+      url: "https://bare.com",
+    });
+    const data = parseToolResult(result) as Record<string, unknown>;
+    // Falls back to hostname when all titles are null
+    expect(data.title).toBe("bare.com");
+    expect(data.description).toBe("");
+    // Falls back to readmeImage when ogImage is null
+    expect(data.image).toBe("readme.png");
+  });
+
+  it("save mode: falls back to pageTitle when ogTitle is null", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(unfurlUrl).mockResolvedValue({
+      url: "https://example.com",
+      ogTitle: null,
+      ogDescription: null,
+      ogImage: null,
+      pageTitle: "Page Title",
+      readmeImage: null,
+      bodyText: "text",
+    });
+    vi.mocked(summarizeUnfurl).mockResolvedValue(null);
+    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
+
+    const result = await unfurlTool.handler(ctx, {
+      slug: "test-post",
+      url: "https://example.com",
+    });
+    const data = parseToolResult(result) as Record<string, unknown>;
+    expect(data.title).toBe("Page Title");
+    expect(data.saved).toBe(true);
+  });
 });

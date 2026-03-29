@@ -4,6 +4,7 @@ import { createMockDb } from "@/data/core/test-utils";
 import {
   listCommentsByPost,
   buildCommentTree,
+  deleteComment,
 } from "./comment";
 import type { Comment } from "@/models/types";
 
@@ -149,5 +150,69 @@ describe("buildCommentTree", () => {
     expect(tree[0].id).toBe("c1");
     expect(tree[0].children[0].id).toBe("c2");
     expect(tree[0].children[0].children[0].id).toBe("c3");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// deleteComment
+// ---------------------------------------------------------------------------
+
+describe("deleteComment", () => {
+  let db: Db;
+  beforeEach(() => { db = createMockDb(); });
+
+  it("returns false when comment not found", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue(null);
+
+    const result = await deleteComment(db, "nonexistent");
+    expect(result).toBe(false);
+    expect(db.execute).not.toHaveBeenCalled();
+  });
+
+  it("deletes comment and updates post comment_count", async () => {
+    vi.mocked(db.firstOrNull)
+      // First call: find comment
+      .mockResolvedValueOnce(parentComment)
+      // Second call: count descendants
+      .mockResolvedValueOnce({ cnt: 1 });
+    vi.mocked(db.execute).mockResolvedValue({ meta: { changes: 1, duration: 1 } } as never);
+
+    const result = await deleteComment(db, "c1");
+    expect(result).toBe(true);
+
+    // Should have called DELETE then UPDATE
+    expect(db.execute).toHaveBeenCalledTimes(2);
+
+    const [deleteSql, deleteParams] = vi.mocked(db.execute).mock.calls[0];
+    expect(deleteSql).toContain("DELETE FROM comments");
+    expect(deleteParams).toEqual(["c1"]);
+
+    const [updateSql, updateParams] = vi.mocked(db.execute).mock.calls[1];
+    expect(updateSql).toContain("comment_count");
+    expect(updateParams).toEqual([1, "post-1"]);
+  });
+
+  it("counts multiple descendants for accurate comment_count update", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(parentComment)
+      .mockResolvedValueOnce({ cnt: 3 });
+    vi.mocked(db.execute).mockResolvedValue({ meta: { changes: 1, duration: 1 } } as never);
+
+    await deleteComment(db, "c1");
+
+    const [, updateParams] = vi.mocked(db.execute).mock.calls[1];
+    expect(updateParams).toEqual([3, "post-1"]);
+  });
+
+  it("defaults to 1 when count query returns null", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(parentComment)
+      .mockResolvedValueOnce(null); // countResult is null
+    vi.mocked(db.execute).mockResolvedValue({ meta: { changes: 1, duration: 1 } } as never);
+
+    await deleteComment(db, "c1");
+
+    const [, updateParams] = vi.mocked(db.execute).mock.calls[1];
+    expect(updateParams).toEqual([1, "post-1"]);
   });
 });
