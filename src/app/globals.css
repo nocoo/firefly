@@ -519,6 +519,7 @@
 .blog-social-link[data-brand="email"]:hover    { background: linear-gradient(135deg, #ea4335, #c5221f); border-color: #ea4335; color: #fff; }
 .blog-social-link[data-brand="resume"]:hover   { background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-color: #8b5cf6; color: #fff; }
 .blog-social-icon { width: 0.9em; height: 0.9em; }
+.blog-social-link:hover .blog-social-icon { fill: currentColor; }
 
 /* Tag cloud (sidebar — weighted text links) */
 .blog-tag-cloud { display: flex; flex-wrap: wrap; gap: 0.25em 0.5em; align-items: baseline; }

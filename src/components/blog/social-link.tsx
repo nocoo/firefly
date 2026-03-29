@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
 
 interface SocialLinkProps {
@@ -12,7 +9,6 @@ interface SocialLinkProps {
 }
 
 export function SocialLink({ href, name, brand, icon: Icon, isLucide }: SocialLinkProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const label = name || brand;
 
   return (
@@ -24,11 +20,9 @@ export function SocialLink({ href, name, brand, icon: Icon, isLucide }: SocialLi
       aria-label={label}
       className="blog-social-link"
       data-brand={brand}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       {isLucide ? (
-        <Icon className="blog-social-icon" strokeWidth={1.5} fill={isHovered ? "currentColor" : "none"} />
+        <Icon className="blog-social-icon" strokeWidth={1.5} />
       ) : (
         <Icon className="blog-social-icon" />
       )}
