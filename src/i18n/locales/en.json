@@ -20,6 +20,7 @@
   "blog.month.11": "November",
   "blog.month.12": "December",
   "blog.footer.copyright": "© {year} {siteName}. All rights reserved.",
+  "blog.footer.backToTop": "Back to top",
   "blog.post.draft": "Draft",
   "blog.post.published": "Published",
   "blog.post.byAuthor": "by {author}",

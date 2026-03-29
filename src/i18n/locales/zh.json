@@ -20,6 +20,7 @@
   "blog.month.11": "十一月",
   "blog.month.12": "十二月",
   "blog.footer.copyright": "© {year} {siteName}. 保留所有权利。",
+  "blog.footer.backToTop": "回到顶部",
   "blog.post.draft": "草稿",
   "blog.post.published": "发布于",
   "blog.post.byAuthor": "{author}",
