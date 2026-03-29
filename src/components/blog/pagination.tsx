@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { t, type Locale } from "@/i18n/translations";
 
 interface PaginationProps {
@@ -40,10 +41,10 @@ export function Pagination({
       {/* Previous */}
       {currentPage > 1 ? (
         <Link href={href(currentPage - 1)} prefetch={false} className={`${linkClass} ${inactiveClass}`}>
-          «
+          <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
         </Link>
       ) : (
-        <span className={`${linkClass} ${disabledClass}`}>«</span>
+        <span className={`${linkClass} ${disabledClass}`}><ChevronLeft className="h-4 w-4" strokeWidth={1.5} /></span>
       )}
 
       {/* Page numbers */}
@@ -70,10 +71,10 @@ export function Pagination({
       {/* Next */}
       {currentPage < totalPages ? (
         <Link href={href(currentPage + 1)} prefetch={false} className={`${linkClass} ${inactiveClass}`}>
-          »
+          <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
         </Link>
       ) : (
-        <span className={`${linkClass} ${disabledClass}`}>»</span>
+        <span className={`${linkClass} ${disabledClass}`}><ChevronRight className="h-4 w-4" strokeWidth={1.5} /></span>
       )}
     </nav>
   );
