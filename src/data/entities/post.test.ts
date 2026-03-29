@@ -18,6 +18,9 @@ import {
   listPostYears,
   getAdjacentPosts,
   invalidatePostCaches,
+  getPostRowid,
+  searchPosts,
+  ftsSync,
 } from "./post";
 import type { Post, PostWithCategory } from "@/models/types";
 
@@ -853,5 +856,155 @@ describe("invalidatePostCaches", () => {
     await listMonthlyArchives(db);
 
     expect(db.query).toHaveBeenCalledTimes(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getPostRowid
+// ---------------------------------------------------------------------------
+
+describe("getPostRowid", () => {
+  let db: Db;
+  beforeEach(() => {
+    db = createMockDb();
+  });
+
+  it("returns rowid when post exists", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue({ rowid: 42 });
+
+    const result = await getPostRowid(db, "post-1");
+
+    expect(result).toBe(42);
+    expect(db.firstOrNull).toHaveBeenCalledWith(
+      "SELECT rowid FROM posts WHERE id = ?",
+      ["post-1"],
+    );
+  });
+
+  it("returns null when post not found", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue(null);
+
+    const result = await getPostRowid(db, "nonexistent");
+
+    expect(result).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// searchPosts
+// ---------------------------------------------------------------------------
+
+describe("searchPosts", () => {
+  let db: Db;
+  beforeEach(() => {
+    db = createMockDb();
+  });
+
+  it("calls Worker FTS search endpoint with correct params", async () => {
+    const mockResult = {
+      posts: [samplePostWithCategory],
+      snippets: { "post-1": "Hello <mark>World</mark>" },
+      total: 1,
+      page: 1,
+      pageSize: 20,
+    };
+    vi.mocked(db.call).mockResolvedValue(mockResult);
+
+    const result = await searchPosts(db, { query: "hello" });
+
+    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
+      query: "hello",
+      status: "published",
+      page: 1,
+      pageSize: 20,
+    });
+    expect(result.posts).toHaveLength(1);
+    expect(result.snippets["post-1"]).toBe("Hello <mark>World</mark>");
+    expect(result.total).toBe(1);
+  });
+
+  it("passes custom status, page, and pageSize", async () => {
+    vi.mocked(db.call).mockResolvedValue({
+      posts: [],
+      snippets: {},
+      total: 0,
+      page: 2,
+      pageSize: 10,
+    });
+
+    await searchPosts(db, {
+      query: "test",
+      status: "draft",
+      page: 2,
+      pageSize: 10,
+    });
+
+    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
+      query: "test",
+      status: "draft",
+      page: 2,
+      pageSize: 10,
+    });
+  });
+
+  it("uses default values for optional params", async () => {
+    vi.mocked(db.call).mockResolvedValue({
+      posts: [],
+      snippets: {},
+      total: 0,
+      page: 1,
+      pageSize: 20,
+    });
+
+    await searchPosts(db, { query: "edge computing" });
+
+    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
+      query: "edge computing",
+      status: "published",
+      page: 1,
+      pageSize: 20,
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ftsSync
+// ---------------------------------------------------------------------------
+
+describe("ftsSync", () => {
+  let db: Db;
+  beforeEach(() => {
+    db = createMockDb();
+  });
+
+  it("calls fts-sync endpoint for upsert", async () => {
+    vi.mocked(db.call).mockResolvedValue({ ok: true });
+
+    await ftsSync(db, {
+      action: "upsert",
+      postId: "post-1",
+      title: "Hello",
+      content: "World",
+      excerpt: "Hi",
+    });
+
+    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-sync", {
+      action: "upsert",
+      postId: "post-1",
+      title: "Hello",
+      content: "World",
+      excerpt: "Hi",
+    });
+  });
+
+  it("calls fts-sync endpoint for delete", async () => {
+    vi.mocked(db.call).mockResolvedValue({ ok: true });
+
+    await ftsSync(db, { action: "delete", rowid: 42 });
+
+    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-sync", {
+      action: "delete",
+      rowid: 42,
+    });
   });
 });
