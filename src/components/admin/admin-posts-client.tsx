@@ -383,6 +383,9 @@ function SortableHeader({
 
   const isActive = currentSortBy === column;
   const nextOrder = isActive && currentSortOrder === "desc" ? "asc" : "desc";
+  const ariaSort: "ascending" | "descending" | "none" = isActive
+    ? currentSortOrder === "asc" ? "ascending" : "descending"
+    : "none";
 
   const sp = new URLSearchParams();
   for (const [key, value] of Object.entries(currentParams)) {
@@ -399,7 +402,10 @@ function SortableHeader({
     : ArrowUpDown;
 
   return (
-    <th className={`px-4 py-3 text-left font-medium text-muted-foreground ${className}`}>
+    <th
+      className={`px-4 py-3 text-left font-medium text-muted-foreground ${className}`}
+      aria-sort={ariaSort}
+    >
       <Link
         href={href}
         className={`inline-flex items-center gap-1 transition-colors hover:text-foreground ${isActive ? "text-foreground" : ""}`}
