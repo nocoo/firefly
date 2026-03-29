@@ -44,22 +44,23 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const existing = await getCategoryBySlug(db, slug);
     if (!existing) return notFoundResponse("Category");
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let raw: any;
+    let body: UpdateCategoryInput & { sort_order?: number };
     try {
-      raw = await request.json();
+      body = await request.json();
     } catch {
       return errorResponse("Invalid JSON body");
     }
 
-    // Map snake_case API field to camelCase entity input
-    const body: UpdateCategoryInput = {
-      ...raw,
-      ...(raw.sort_order !== undefined && { sortOrder: raw.sort_order }),
+    // Accept snake_case sort_order from API, map to camelCase
+    const sortOrder = body.sortOrder ?? body.sort_order;
+    const input: UpdateCategoryInput = {
+      ...(body.name !== undefined && { name: body.name }),
+      ...(body.slug !== undefined && { slug: body.slug }),
+      ...(body.description !== undefined && { description: body.description }),
+      ...(sortOrder != null && { sortOrder }),
     };
-    delete (body as Record<string, unknown>).sort_order;
 
-    const updated = await updateCategory(db, existing.id, body);
+    const updated = await updateCategory(db, existing.id, input);
 
     if (!updated) return notFoundResponse("Category");
 

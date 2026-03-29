@@ -4,6 +4,7 @@ import { jsonResponse, errorResponse } from "@/lib/api";
 import {
   listCategories,
   createCategory,
+  type CreateCategoryInput,
 } from "@/data/entities/category";
 
 // GET /api/categories
@@ -24,8 +25,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const db = getDb();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const body = (await request.json()) as any;
+    const body = (await request.json()) as CreateCategoryInput & { sort_order?: number };
 
     if (!body.name?.trim()) {
       return errorResponse("name is required");
@@ -34,11 +34,13 @@ export async function POST(request: NextRequest) {
       return errorResponse("slug is required");
     }
 
+    const sortOrder = body.sortOrder ?? body.sort_order;
+
     const category = await createCategory(db, {
       name: body.name.trim(),
       slug: body.slug.trim(),
-      description: body.description,
-      sortOrder: body.sortOrder ?? body.sort_order,
+      ...(body.description != null && { description: body.description }),
+      ...(sortOrder != null && { sortOrder }),
     });
 
     return jsonResponse(category, 201);
