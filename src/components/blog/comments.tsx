@@ -1,14 +1,16 @@
 import type { CommentTree } from "@/models/types";
 import { formatDateDisplay } from "@/lib/seo";
 import { t, type Locale } from "@/i18n/translations";
+import { DeleteCommentButton } from "@/components/blog/delete-comment-button";
 
 interface CommentItemProps {
   comment: CommentTree;
   locale: Locale;
   depth?: number;
+  isAdmin?: boolean;
 }
 
-function CommentItem({ comment, locale, depth = 0 }: CommentItemProps) {
+function CommentItem({ comment, locale, depth = 0, isAdmin }: CommentItemProps) {
   const maxNestingDepth = 3;
   const effectiveDepth = Math.min(depth, maxNestingDepth);
 
@@ -36,6 +38,15 @@ function CommentItem({ comment, locale, depth = 0 }: CommentItemProps) {
           <time dateTime={new Date(comment.created_at * 1000).toISOString()}>
             {formatDateDisplay(comment.created_at, locale)}
           </time>
+          {isAdmin && (
+            <DeleteCommentButton
+              commentId={comment.id}
+              authorName={comment.author_name}
+              confirmMessage={t(locale, "blog.comments.confirmDelete")}
+              deleteLabel={t(locale, "blog.comments.delete")}
+              failedMessage={t(locale, "blog.comments.deleteFailed")}
+            />
+          )}
         </div>
         <div className="text-sm leading-relaxed text-blog-text">
           {comment.content}
@@ -50,6 +61,7 @@ function CommentItem({ comment, locale, depth = 0 }: CommentItemProps) {
               comment={child}
               locale={locale}
               depth={depth + 1}
+              {...(isAdmin ? { isAdmin } : {})}
             />
           ))}
         </div>
@@ -61,9 +73,10 @@ function CommentItem({ comment, locale, depth = 0 }: CommentItemProps) {
 interface CommentsProps {
   comments: CommentTree[];
   locale: Locale;
+  isAdmin?: boolean;
 }
 
-export function Comments({ comments, locale }: CommentsProps) {
+export function Comments({ comments, locale, isAdmin }: CommentsProps) {
   if (comments.length === 0) return null;
 
   return (
@@ -73,7 +86,7 @@ export function Comments({ comments, locale }: CommentsProps) {
       </h2>
       <div className="divide-y divide-blog-separator">
         {comments.map((comment) => (
-          <CommentItem key={comment.id} comment={comment} locale={locale} />
+          <CommentItem key={comment.id} comment={comment} locale={locale} {...(isAdmin ? { isAdmin } : {})} />
         ))}
       </div>
     </section>

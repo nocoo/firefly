@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LayoutList, LayoutGrid, Eye, Pencil, X } from "lucide-react";
+import { LayoutList, LayoutGrid, Eye, Pencil, X, ArrowUp, ArrowDown, ArrowUpDown, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import type { PostWithCategory, PostStatus, Category, Tag } from "@/models/types";
 import type { PostYearCount } from "@/data/entities/post";
@@ -78,6 +78,8 @@ interface AdminPostsClientProps {
   currentParams: Record<string, string | undefined>;
   currentPage: number;
   pageSize: number;
+  currentSortBy: string;
+  currentSortOrder: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -93,6 +95,8 @@ export function AdminPostsClient({
   currentParams,
   currentPage,
   pageSize,
+  currentSortBy,
+  currentSortOrder,
 }: AdminPostsClientProps) {
   const { t } = useLocale();
   const viewMode = useSyncExternalStore(
@@ -190,6 +194,8 @@ export function AdminPostsClient({
           totalPages={totalPages}
           currentPage={currentPage}
           currentParams={currentParams}
+          currentSortBy={currentSortBy}
+          currentSortOrder={currentSortOrder}
           selectedIds={selectedIds}
           onToggleSelect={toggleSelect}
           onToggleAll={(allIds) => {
@@ -347,6 +353,65 @@ function BulkActionBar({
 }
 
 // ---------------------------------------------------------------------------
+// Sortable Header
+// ---------------------------------------------------------------------------
+
+function SortableHeader({
+  column,
+  label,
+  currentSortBy,
+  currentSortOrder,
+  currentParams,
+  className = "",
+  sortable = true,
+}: {
+  column: string;
+  label: string;
+  currentSortBy: string;
+  currentSortOrder: string;
+  currentParams: Record<string, string | undefined>;
+  className?: string;
+  sortable?: boolean;
+}) {
+  if (!sortable) {
+    return (
+      <th className={`px-4 py-3 text-left font-medium text-muted-foreground ${className}`}>
+        {label}
+      </th>
+    );
+  }
+
+  const isActive = currentSortBy === column;
+  const nextOrder = isActive && currentSortOrder === "desc" ? "asc" : "desc";
+
+  const sp = new URLSearchParams();
+  for (const [key, value] of Object.entries(currentParams)) {
+    if (value && key !== "sort_by" && key !== "sort_order" && key !== "page") {
+      sp.set(key, value);
+    }
+  }
+  sp.set("sort_by", column);
+  sp.set("sort_order", nextOrder);
+  const href = `/admin/posts?${sp.toString()}`;
+
+  const Icon = isActive
+    ? currentSortOrder === "asc" ? ArrowUp : ArrowDown
+    : ArrowUpDown;
+
+  return (
+    <th className={`px-4 py-3 text-left font-medium text-muted-foreground ${className}`}>
+      <Link
+        href={href}
+        className={`inline-flex items-center gap-1 transition-colors hover:text-foreground ${isActive ? "text-foreground" : ""}`}
+      >
+        {label}
+        <Icon className="h-3.5 w-3.5" strokeWidth={1.5} />
+      </Link>
+    </th>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // List View
 // ---------------------------------------------------------------------------
 
@@ -355,6 +420,8 @@ function ListView({
   totalPages,
   currentPage,
   currentParams,
+  currentSortBy,
+  currentSortOrder,
   selectedIds,
   onToggleSelect,
   onToggleAll,
@@ -364,6 +431,8 @@ function ListView({
   totalPages: number;
   currentPage: number;
   currentParams: Record<string, string | undefined>;
+  currentSortBy: string;
+  currentSortOrder: string;
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
   onToggleAll: (allIds: string[]) => void;
@@ -397,18 +466,47 @@ function ListView({
                   }
                 />
               </th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                {t("admin.posts.table.title")}
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
-                {t("admin.posts.table.status")}
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
-                {t("admin.posts.table.category")}
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden lg:table-cell">
-                {t("admin.posts.table.createdAt")}
-              </th>
+              <SortableHeader
+                column="title"
+                label={t("admin.posts.table.title")}
+                currentSortBy={currentSortBy}
+                currentSortOrder={currentSortOrder}
+                currentParams={currentParams}
+              />
+              <SortableHeader
+                column="status"
+                label={t("admin.posts.table.status")}
+                currentSortBy={currentSortBy}
+                currentSortOrder={currentSortOrder}
+                currentParams={currentParams}
+                className="hidden sm:table-cell"
+                sortable={false}
+              />
+              <SortableHeader
+                column="category"
+                label={t("admin.posts.table.category")}
+                currentSortBy={currentSortBy}
+                currentSortOrder={currentSortOrder}
+                currentParams={currentParams}
+                className="hidden md:table-cell"
+                sortable={false}
+              />
+              <SortableHeader
+                column="comment_count"
+                label={t("admin.posts.table.comments")}
+                currentSortBy={currentSortBy}
+                currentSortOrder={currentSortOrder}
+                currentParams={currentParams}
+                className="hidden md:table-cell"
+              />
+              <SortableHeader
+                column="created_at"
+                label={t("admin.posts.table.createdAt")}
+                currentSortBy={currentSortBy}
+                currentSortOrder={currentSortOrder}
+                currentParams={currentParams}
+                className="hidden lg:table-cell"
+              />
               <th className="px-4 py-3 text-right font-medium text-muted-foreground">
                 {t("admin.posts.table.actions")}
               </th>
@@ -418,7 +516,7 @@ function ListView({
             {posts.length === 0 ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   className="px-4 py-8 text-center text-muted-foreground"
                 >
                   {t("admin.posts.noResults")}
@@ -461,6 +559,12 @@ function ListView({
                     </td>
                     <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
                       {post.category_name ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                      <span className="inline-flex items-center gap-1">
+                        <MessageSquare className="h-3.5 w-3.5" strokeWidth={1.5} />
+                        {post.comment_count ?? 0}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
                       {formatDateDisplay(post.created_at)}

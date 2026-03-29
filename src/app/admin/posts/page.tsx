@@ -14,6 +14,8 @@ interface AdminPostsPageProps {
     page?: string;
     year?: string;
     month?: string;
+    sort_by?: string;
+    sort_order?: string;
   }>;
 }
 
@@ -33,8 +35,14 @@ export default async function AdminPostsPage({
   const archiveYear = params.year ? parseInt(params.year, 10) || undefined : undefined;
   const archiveMonth = params.month ? parseInt(params.month, 10) || undefined : undefined;
 
+  const VALID_SORT_BY = ["published_at", "created_at", "comment_count", "view_count", "title"] as const;
+  const sortBy = VALID_SORT_BY.includes(params.sort_by as (typeof VALID_SORT_BY)[number])
+    ? (params.sort_by as (typeof VALID_SORT_BY)[number])
+    : "created_at";
+  const sortOrder = params.sort_order === "asc" ? "asc" as const : "desc" as const;
+
   const [result, categories, tags, yearCounts] = await Promise.all([
-    listPosts(db, { status, categoryId, tagId, query, archiveYear, archiveMonth, page, pageSize: PAGE_SIZE, sortBy: "created_at" }),
+    listPosts(db, { status, categoryId, tagId, query, archiveYear, archiveMonth, page, pageSize: PAGE_SIZE, sortBy, sortOrder }),
     listCategories(db),
     listTags(db),
     listPostYears(db),
@@ -54,9 +62,13 @@ export default async function AdminPostsPage({
         q: params.q,
         year: params.year,
         month: params.month,
+        sort_by: params.sort_by,
+        sort_order: params.sort_order,
       }}
       currentPage={page}
       pageSize={PAGE_SIZE}
+      currentSortBy={sortBy}
+      currentSortOrder={sortOrder}
     />
   );
 }

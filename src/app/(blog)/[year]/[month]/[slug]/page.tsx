@@ -219,7 +219,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
       {showComments && (
         <Suspense>
-          <CommentsSection postId={post.id} locale={locale} />
+          <CommentsSection postId={post.id} locale={locale} isAdmin={isAdmin} />
         </Suspense>
       )}
 
@@ -241,12 +241,14 @@ export default async function PostPage({ params }: PostPageProps) {
 async function CommentsSection({
   postId,
   locale,
+  isAdmin,
 }: {
   postId: string;
   locale: import("@/i18n/translations").Locale;
+  isAdmin: boolean;
 }) {
   const db = getDb();
   const comments = await listCommentsByPost(db, postId);
   const tree = buildCommentTree(comments);
-  return <Comments comments={tree} locale={locale} />;
+  return <Comments comments={tree} locale={locale} isAdmin={isAdmin} />;
 }

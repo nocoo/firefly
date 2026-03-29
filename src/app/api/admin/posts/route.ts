@@ -42,6 +42,17 @@ export async function GET(request: NextRequest) {
     const pageSize = searchParams.get("pageSize");
     if (pageSize) options.pageSize = parseInt(pageSize, 10);
 
+    const VALID_SORT_BY = ["published_at", "created_at", "comment_count", "view_count", "title"] as const;
+    const sortByParam = searchParams.get("sort_by");
+    if (sortByParam && VALID_SORT_BY.includes(sortByParam as (typeof VALID_SORT_BY)[number])) {
+      options.sortBy = sortByParam as (typeof VALID_SORT_BY)[number];
+    }
+
+    const sortOrderParam = searchParams.get("sort_order");
+    if (sortOrderParam === "asc" || sortOrderParam === "desc") {
+      options.sortOrder = sortOrderParam;
+    }
+
     const result = await listPosts(db, options);
     return jsonResponse(result);
   } catch (error) {

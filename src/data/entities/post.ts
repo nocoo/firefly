@@ -65,7 +65,8 @@ export interface ListPostsOptions {
   archiveMonth?: number | undefined;
   page?: number | undefined;
   pageSize?: number | undefined;
-  sortBy?: "published_at" | "created_at" | undefined;
+  sortBy?: "published_at" | "created_at" | "comment_count" | "view_count" | "title" | undefined;
+  sortOrder?: "asc" | "desc" | undefined;
 }
 
 export interface ListPostsResult {
@@ -149,6 +150,7 @@ export async function listPosts(
     page = 1,
     pageSize = DEFAULT_PAGE_SIZE,
     sortBy = "published_at",
+    sortOrder = "desc",
   } = options;
 
   const conditions: string[] = [];
@@ -196,10 +198,15 @@ export async function listPosts(
     conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const offset = (page - 1) * pageSize;
 
-  const orderBy =
-    sortBy === "created_at"
-      ? "ORDER BY p.created_at DESC"
-      : "ORDER BY p.published_at DESC, p.created_at DESC";
+  const dir = sortOrder === "asc" ? "ASC" : "DESC";
+  const orderMap: Record<string, string> = {
+    published_at: `p.published_at ${dir}, p.created_at ${dir}`,
+    created_at: `p.created_at ${dir}`,
+    comment_count: `p.comment_count ${dir}, p.created_at DESC`,
+    view_count: `p.view_count ${dir}, p.created_at DESC`,
+    title: `p.title ${dir}`,
+  };
+  const orderBy = `ORDER BY ${orderMap[sortBy] ?? orderMap.created_at}`;
 
   const sql = `
     ${VIEW_QUERY}

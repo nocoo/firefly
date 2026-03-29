@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Comment entity — read-only (historical WordPress comments)
+// Comment entity — read + delete
 // ---------------------------------------------------------------------------
 
 import type { Db } from "@/lib/db";
@@ -46,4 +46,43 @@ export function buildCommentTree(comments: Comment[]): CommentTree[] {
   }
 
   return roots;
+}
+
+// ---------------------------------------------------------------------------
+// deleteComment — delete a comment and all descendants, update post count
+// ---------------------------------------------------------------------------
+
+export async function deleteComment(
+  db: Db,
+  commentId: string,
+): Promise<boolean> {
+  // 1. Get comment to find post_id
+  const comment = await db.firstOrNull<Comment>(
+    "SELECT * FROM comments WHERE id = ?",
+    [commentId],
+  );
+  if (!comment) return false;
+
+  // 2. Count descendants with recursive CTE (for accurate comment_count update)
+  const countResult = await db.firstOrNull<{ cnt: number }>(
+    `WITH RECURSIVE tree AS (
+       SELECT id FROM comments WHERE id = ?
+       UNION ALL
+       SELECT c.id FROM comments c JOIN tree t ON c.parent_id = t.id
+     )
+     SELECT COUNT(*) AS cnt FROM tree`,
+    [commentId],
+  );
+  const deletedCount = countResult?.cnt ?? 1;
+
+  // 3. DELETE — ON DELETE CASCADE handles children
+  await db.execute("DELETE FROM comments WHERE id = ?", [commentId]);
+
+  // 4. Decrement post.comment_count
+  await db.execute(
+    "UPDATE posts SET comment_count = MAX(0, comment_count - ?) WHERE id = ?",
+    [deletedCount, comment.post_id],
+  );
+
+  return true;
 }
