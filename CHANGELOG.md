@@ -1,5 +1,52 @@
 # Changelog
 
+## v2.0.4 (2026-03-29)
+
+- fix: plug memory leaks in countCache, DNS timer, and React timers
+- docs: fix search pagination to extend Pagination with searchParams prop
+- test: improve branch coverage to 92% (comment, taxonomy-routes, MCP post)
+- docs: refine full-text search design (FTS5 stored mode, Db.call, native search form)
+- chore: bump version to 2.0.3
+- fix: add aria-sort attribute to sortable table headers
+- feat: apply fade-up animation to dashboard stat cards
+- feat: add font-display utility and fade-up animation
+- feat: add Badge component with semantic variants
+- fix: update card layers to use bg-secondary without border/shadow
+- feat: show comments section with admin delete on post edit page
+- chore: bump version to 2.0.2
+- feat: add sortable columns to admin posts table and comment delete for admins
+- fix: move DndContext outside table to prevent hydration error
+- fix: batch accessibility and UI review fixes across blog components
+- refactor: replace pagination guillemets with Lucide chevron icons
+- fix: use theme token for sidebar heading icon color
+- refactor: convert social-link hover to pure CSS
+- fix: hide keyboard shortcut hints on mobile
+- perf: add lazy loading to reference card images
+- feat: add smooth scroll with reduced-motion respect
+- fix: remove redundant link wrapping on post excerpt
+- feat: add separators between sidebar sections for visual rhythm
+- feat: enrich blog footer with RSS link and back-to-top button
+- feat: enrich empty states with contextual icons
+- fix: override IconButton admin tokens inside blog shell
+- feat: add subtle fade-in animation to blog main content
+- refactor: replace padding-bottom hack with aspect-ratio for featured images
+- fix: enlarge touch targets in global bar and drawer close
+- fix: add ARIA dialog semantics to mobile drawer
+- refactor: extract taxonomy slug route helpers to deduplicate [slug] handlers
+- fix: align TaxonomyConfig generics and add explicit callback types
+- refactor: extract taxonomy factory to deduplicate tag/category CRUD
+- refactor: fix category route type drift and deduplicate R2 upload
+- refactor: remove dead analytics functions, unused exports, and unify timestamps
+- fix: sync worker lockfile name and fix remaining doc inaccuracies
+- docs: renumber all docs, archive superseded, remove unused dep
+- refactor: remove dead redirects module and unused admin components
+- docs: sync README, architecture, and media docs with actual codebase
+- refactor: remove dead BaseDataLayer abstraction
+- chore: unify package manager to bun, remove pnpm/npm lockfiles
+- docs: add full-text search design doc (21-full-text-search.md)
+- fix: osv-scanner lockfile path (bun.lock → pnpm-lock.yaml)
+
+
 ## v2.0.1 (2026-03-28)
 
 - Disable Next.js Link prefetch on all blog frontend routes
