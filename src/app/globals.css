@@ -491,7 +491,7 @@
   font-size: 1em; font-weight: 700; color: var(--blog-text); margin-bottom: 0.75em;
   display: flex; align-items: center; gap: 0.4em;
 }
-.blog-sidebar-heading-icon { width: 1em; height: 1em; flex-shrink: 0; opacity: 0.6; }
+.blog-sidebar-heading-icon { width: 1em; height: 1em; flex-shrink: 0; color: var(--blog-muted); }
 
 .blog-sidebar-list { list-style: none; padding: 0; margin: 0; }
 .blog-sidebar-list li { margin: 0; }
