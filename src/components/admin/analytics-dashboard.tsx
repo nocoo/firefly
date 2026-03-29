@@ -317,7 +317,7 @@ function ContentStatCard({
       </div>
       <div>
         <p className="text-sm text-muted-foreground">{label}</p>
-        <p className="text-xl font-semibold text-foreground">{value}</p>
+        <p className="text-xl font-semibold font-display text-foreground">{value}</p>
       </div>
     </div>
   );

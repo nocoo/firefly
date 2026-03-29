@@ -111,7 +111,7 @@ export function HumanTab({ data }: HumanTabProps) {
         <span className="text-sm text-muted-foreground">
           {t("admin.analytics.recent24h")}:
         </span>{" "}
-        <span className="text-lg font-semibold tabular-nums">
+        <span className="text-lg font-semibold font-display tabular-nums">
           {formatNumber(data.recent24h)}
         </span>
       </div>

@@ -84,7 +84,7 @@ function StatCard({
           {t("admin.analytics.vsPrev", { days })}
         </p>
       </div>
-      <p className="mt-1 text-2xl font-semibold text-foreground tabular-nums">
+      <p className="mt-1 text-2xl font-semibold font-display text-foreground tabular-nums">
         {formatNumber(value)}
       </p>
       <p
