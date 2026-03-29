@@ -735,9 +735,9 @@ export async function getPostRowid(
 
 export interface SearchPostsOptions {
   query: string;
-  status?: PostStatus;
-  page?: number;
-  pageSize?: number;
+  status?: PostStatus | undefined;
+  page?: number | undefined;
+  pageSize?: number | undefined;
 }
 
 export interface SearchResult {
