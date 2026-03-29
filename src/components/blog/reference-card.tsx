@@ -51,6 +51,7 @@ export function ReferenceCard({
           <img
             src={image}
             alt={title || "Reference"}
+            loading="lazy"
             className="h-full w-full object-cover"
           />
         ) : (
