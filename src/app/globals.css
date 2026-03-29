@@ -413,7 +413,7 @@
 }
 .blog-global-bar-link {
   display: flex; align-items: center; justify-content: center;
-  width: 2em; height: 2em; border-radius: 0.5em;
+  width: 2.5em; height: 2.5em; border-radius: 0.5em;
   color: var(--blog-muted);
   transition: color 0.15s, background-color 0.15s;
 }
@@ -437,7 +437,7 @@
 .blog-sidebar-close { display: none; }
 .blog-sidebar-drawer .blog-sidebar-close {
   display: flex; align-items: center; justify-content: center;
-  width: 2.25em; height: 2.25em; margin-bottom: 1em;
+  width: 2.5em; height: 2.5em; margin-bottom: 1em;
   color: var(--blog-muted); background: none;
   border: 1px solid var(--blog-separator); border-radius: 0.5em;
   cursor: pointer; transition: color 0.15s, background-color 0.15s;
