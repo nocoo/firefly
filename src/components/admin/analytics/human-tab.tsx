@@ -46,7 +46,7 @@ function DonutTooltip({
   const item = payload[0] as (typeof payload)[number];
 
   return (
-    <div className="rounded-[var(--radius-widget)] border border-border bg-card p-2.5 shadow-sm">
+    <div className="rounded-[var(--radius-widget)] border border-border bg-popover p-2.5 shadow-sm">
       <div className="flex items-center gap-2">
         <div
           className="h-3 w-3 rounded-full"
@@ -73,7 +73,7 @@ function BarTooltip({
   const name = entry.payload?.name ?? "";
 
   return (
-    <div className="rounded-[var(--radius-widget)] border border-border bg-card p-2.5 shadow-sm">
+    <div className="rounded-[var(--radius-widget)] border border-border bg-popover p-2.5 shadow-sm">
       <div className="flex items-center gap-2 text-xs">
         <div
           className="h-2 w-2 rounded-full"

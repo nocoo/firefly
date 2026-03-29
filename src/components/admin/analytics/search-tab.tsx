@@ -39,7 +39,7 @@ function BotTimelineTooltip({
   if (!active || !payload?.length) return null;
 
   return (
-    <div className="rounded-[var(--radius-widget)] border border-border bg-card p-2.5 shadow-sm">
+    <div className="rounded-[var(--radius-widget)] border border-border bg-popover p-2.5 shadow-sm">
       <p className="mb-1 text-xs font-medium text-foreground">
         {label ? formatDateLabel(label) : ""}
       </p>
