@@ -100,6 +100,9 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
           </div>
         )}
 
+        {/* Search */}
+        <SearchInput />
+
         {/* Categories */}
         {categories.length > 0 && (
           <nav className="blog-sidebar-section">
@@ -151,9 +154,6 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
             </div>
           </nav>
         )}
-
-        {/* Search */}
-        <SearchInput />
 
         {/* Archives — recent 2 years by month, older years aggregated */}
         {archives.length > 0 && (
