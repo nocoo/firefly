@@ -6,13 +6,12 @@
  * - POST /api/v1/query       — execute read-only SQL (regex guards writes)
  * - POST /api/v1/execute     — execute write SQL (single + batch)
  * - POST /api/v1/fts-sync    — sync single post to FTS index
- * - POST /api/v1/fts-rebuild — rebuild entire FTS index
  * - POST /api/v1/fts-search  — full-text search with BM25 ranking
  *
  * Auth: Bearer WORKER_SECRET on all POST /api/v1/* routes.
  */
 
-import { handleFtsSync, handleFtsRebuild, handleFtsSearch } from "./fts";
+import { handleFtsSync, handleFtsSearch } from "./fts";
 
 const WORKER_VERSION = "2.1.0";
 
@@ -234,11 +233,6 @@ const worker: ExportedHandler<Env> = {
 
       if (request.method !== "POST") {
         return jsonResponse({ error: "Method not allowed" }, 405);
-      }
-
-      // fts-rebuild requires no body — route before JSON parsing
-      if (path === "/api/v1/fts-rebuild") {
-        return handleFtsRebuild(env.DB);
       }
 
       const bodyOrError = await parseJsonBody(request);

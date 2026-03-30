@@ -5,7 +5,6 @@
  * - segmentText()       — CJK + Latin word segmentation via Intl.Segmenter
  * - sanitizeFtsQuery()  — Escape FTS5 special chars, build MATCH expression
  * - handleFtsSync()     — Upsert/delete a single post in the FTS index
- * - handleFtsRebuild()  — Rebuild the entire FTS index from posts table
  * - handleFtsSearch()   — Execute FTS5 search with BM25 ranking + snippets
  */
 
@@ -230,45 +229,6 @@ export async function handleFtsSync(
   }
 
   return Response.json({ error: `Unknown action: ${action}` }, { status: 400 });
-}
-
-// ---------------------------------------------------------------------------
-// POST /api/v1/fts-rebuild
-// ---------------------------------------------------------------------------
-
-export async function handleFtsRebuild(db: D1Database): Promise<Response> {
-  // Clear existing index
-  await db.prepare("DELETE FROM posts_fts").run();
-
-  // Fetch all posts
-  const { results: posts } = await db
-    .prepare("SELECT rowid, title, content, excerpt FROM posts")
-    .all<{ rowid: number; title: string; content: string; excerpt: string }>();
-
-  if (!posts || posts.length === 0) {
-    return Response.json({ ok: true, indexed: 0 });
-  }
-
-  // Batch insert segmented text
-  const stmts = posts.map((p) =>
-    db
-      .prepare(
-        "INSERT INTO posts_fts(rowid, title, content, excerpt) VALUES (?, ?, ?, ?)",
-      )
-      .bind(
-        p.rowid,
-        segmentText(p.title),
-        segmentText(p.content),
-        segmentText(p.excerpt ?? ""),
-      ),
-  );
-
-  // D1.batch() has a limit; chunk into batches of 50
-  for (let i = 0; i < stmts.length; i += 50) {
-    await db.batch(stmts.slice(i, i + 50));
-  }
-
-  return Response.json({ ok: true, indexed: posts.length });
 }
 
 // ---------------------------------------------------------------------------
