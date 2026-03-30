@@ -137,10 +137,12 @@ export function HumanTab({ data }: HumanTabProps) {
 
         <Panel title={t("admin.analytics.topReferrers")}>
           <RankedTable
-            rows={data.topReferrers.map((r) => ({
-              label: formatReferrer(r.referrer),
-              value: r.views,
-            }))}
+            rows={data.topReferrers
+              .filter((r) => r.referrer.trim() !== "")
+              .map((r) => ({
+                label: formatReferrer(r.referrer),
+                value: r.views,
+              }))}
             valueLabel={t("admin.analytics.tableViews")}
             nameLabel={t("admin.analytics.tableReferrer")}
             noData={t("admin.analytics.noData")}
@@ -230,7 +232,7 @@ export function HumanTab({ data }: HumanTabProps) {
         </Panel>
       </div>
 
-      {/* Countries + Cities */}
+      {/* Countries */}
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title={t("admin.analytics.countries")}>
           {data.countries.length === 0 ? (
@@ -242,20 +244,6 @@ export function HumanTab({ data }: HumanTabProps) {
                 value: c.count,
               }))}
               color={CHART_COLORS[0]}
-            />
-          )}
-        </Panel>
-
-        <Panel title={t("admin.analytics.topCities")}>
-          {data.cities.length === 0 ? (
-            <NoData text={t("admin.analytics.noData")} />
-          ) : (
-            <HorizontalBarList
-              data={data.cities.map((c) => ({
-                name: c.city,
-                value: c.count,
-              }))}
-              color={CHART_COLORS[3]}
             />
           )}
         </Panel>

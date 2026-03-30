@@ -13,6 +13,7 @@ import {
   type SourceType,
   SOURCE_TYPES,
   PERIOD_OPTIONS,
+  formatNumber,
 } from "./analytics/chart-helpers";
 import { OverviewCards } from "./analytics/overview-cards";
 import { TrafficTrend } from "./analytics/traffic-trend";
@@ -141,76 +142,99 @@ export function AnalyticsDashboard({
 
   const currentTabData = sourceCache[activeTab];
 
+  // Compute tab counts from overview for badge display
+  const tabCounts: Record<SourceType, number> = {
+    human: summary.overview.human,
+    search: summary.overview.search,
+    ai: summary.overview.ai,
+    other: summary.overview.otherBot,
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header + Period selector */}
-      <div className="flex items-center justify-end">
-        <SegmentedControl
-          options={PERIOD_OPTIONS.map((o) => ({
-            value: o.value,
-            label: o.label,
-          }))}
-          value={days}
-          onChange={handlePeriodChange}
-        />
+    <div className="grid gap-6 lg:grid-cols-10">
+      {/* ── Left column: charts + tabs (7/10) ── */}
+      <div className="lg:col-span-7 space-y-6">
+        {/* Period selector */}
+        <div className="flex items-center justify-end">
+          <SegmentedControl
+            options={PERIOD_OPTIONS.map((o) => ({
+              value: o.value,
+              label: o.label,
+            }))}
+            value={days}
+            onChange={handlePeriodChange}
+          />
+        </div>
+
+        {/* Traffic trend chart */}
+        <TrafficTrend daily={summary.daily} />
+
+        {/* Source tabs */}
+        <div className="space-y-4">
+          {/* Tab bar */}
+          <div className="flex gap-1 rounded-[var(--radius-widget)] border border-border bg-secondary p-1">
+            {SOURCE_TYPES.map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => handleTabChange(type)}
+                className={`flex-1 flex items-center justify-center gap-2 rounded-[calc(var(--radius-widget)-4px)] px-3 py-2 text-xs font-medium transition-colors ${
+                  activeTab === type
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <span>{t(TAB_KEYS[type])}</span>
+                <span
+                  className={`tabular-nums rounded-full px-1.5 py-0.5 text-[10px] leading-none ${
+                    activeTab === type
+                      ? "bg-secondary text-foreground"
+                      : "bg-background/50 text-muted-foreground"
+                  }`}
+                >
+                  {formatNumber(tabCounts[type])}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Tab content */}
+          {tabLoading && !currentTabData ? (
+            <TabSkeleton />
+          ) : currentTabData ? (
+            <SourceTabContent data={currentTabData} />
+          ) : null}
+        </div>
       </div>
 
-      {/* Content stats (from server) */}
-      {contentStats && (
-        <div className="grid gap-4 sm:grid-cols-3">
-          <ContentStatCard
-            icon={FileText}
-            label={t("admin.dashboard.publishedPosts")}
-            value={contentStats.postCount}
-            index={0}
-          />
-          <ContentStatCard
-            icon={FolderOpen}
-            label={t("admin.dashboard.categories")}
-            value={contentStats.categoryCount}
-            index={1}
-          />
-          <ContentStatCard
-            icon={Tags}
-            label={t("admin.dashboard.tags")}
-            value={contentStats.tagCount}
-            index={2}
-          />
-        </div>
-      )}
+      {/* ── Right column: stats cards (3/10) ── */}
+      <div className="lg:col-span-3 space-y-4">
+        {/* Content stats (from server) */}
+        {contentStats && (
+          <div className="space-y-2">
+            <ContentStatCard
+              icon={FileText}
+              label={t("admin.dashboard.publishedPosts")}
+              value={contentStats.postCount}
+              index={0}
+            />
+            <ContentStatCard
+              icon={FolderOpen}
+              label={t("admin.dashboard.categories")}
+              value={contentStats.categoryCount}
+              index={1}
+            />
+            <ContentStatCard
+              icon={Tags}
+              label={t("admin.dashboard.tags")}
+              value={contentStats.tagCount}
+              index={2}
+            />
+          </div>
+        )}
 
-      {/* Overview cards */}
-      <OverviewCards overview={summary.overview} days={days} />
-
-      {/* Traffic trend chart */}
-      <TrafficTrend daily={summary.daily} />
-
-      {/* Source tabs */}
-      <div className="space-y-4">
-        {/* Tab bar */}
-        <div className="flex gap-1 rounded-[var(--radius-widget)] border border-border bg-secondary p-0.5">
-          {SOURCE_TYPES.map((type) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => handleTabChange(type)}
-              className={`flex-1 rounded-[calc(var(--radius-widget)-2px)] px-3 py-1.5 text-xs font-medium transition-colors ${
-                activeTab === type
-                  ? "bg-background text-foreground shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t(TAB_KEYS[type])}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab content */}
-        {tabLoading && !currentTabData ? (
-          <TabSkeleton />
-        ) : currentTabData ? (
-          <SourceTabContent data={currentTabData} />
-        ) : null}
+        {/* Overview stat cards */}
+        <OverviewCards overview={summary.overview} days={days} />
       </div>
     </div>
   );
@@ -247,35 +271,45 @@ function SkeletonPulse({ className }: { className?: string }) {
 
 function AnalyticsSkeleton() {
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <SkeletonPulse className="h-6 w-32" />
-          <SkeletonPulse className="h-4 w-48" />
+    <div className="grid gap-6 lg:grid-cols-10">
+      {/* Left */}
+      <div className="lg:col-span-7 space-y-6">
+        <div className="flex items-center justify-end">
+          <SkeletonPulse className="h-8 w-[120px]" />
         </div>
-        <SkeletonPulse className="h-8 w-[120px]" />
+        <div className="rounded-[var(--radius-widget)] border border-border/50 bg-secondary/50 p-4 space-y-3">
+          <SkeletonPulse className="h-4 w-36" />
+          <SkeletonPulse className="h-[260px] w-full" />
+        </div>
+        <TabSkeleton />
       </div>
-      {/* Stat cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
+      {/* Right */}
+      <div className="lg:col-span-3 space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
-            className="rounded-[var(--radius-widget)] bg-secondary p-4 space-y-2"
+            className="flex items-center gap-3 rounded-[var(--radius-widget)] bg-secondary p-4"
           >
-            <SkeletonPulse className="h-4 w-20" />
-            <SkeletonPulse className="h-7 w-16" />
-            <SkeletonPulse className="h-3 w-12" />
+            <SkeletonPulse className="h-9 w-9 rounded-lg" />
+            <div className="space-y-1.5 flex-1">
+              <SkeletonPulse className="h-3 w-16" />
+              <SkeletonPulse className="h-5 w-10" />
+            </div>
           </div>
         ))}
+        <div className="space-y-2 pt-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-[var(--radius-widget)] bg-secondary p-4 space-y-2"
+            >
+              <SkeletonPulse className="h-3 w-20" />
+              <SkeletonPulse className="h-6 w-16" />
+              <SkeletonPulse className="h-3 w-12" />
+            </div>
+          ))}
+        </div>
       </div>
-      {/* Chart placeholder */}
-      <div className="rounded-[var(--radius-widget)] border border-border/50 bg-secondary/50 p-4 space-y-3">
-        <SkeletonPulse className="h-4 w-36" />
-        <SkeletonPulse className="h-[200px] w-full" />
-      </div>
-      {/* Tab placeholder */}
-      <TabSkeleton />
     </div>
   );
 }

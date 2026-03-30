@@ -479,6 +479,7 @@ export async function getHumanDetail(
          WHERE ${TIME_WINDOW_WHERE} AND ${sourceCondition("human")}
            AND referrer IS NOT NULL AND referrer != ''
          GROUP BY 1
+         HAVING referrer != ''
          ORDER BY views DESC
          LIMIT 20`,
         [days],
