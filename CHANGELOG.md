@@ -1,5 +1,23 @@
 # Changelog
 
+## v2.1.0 (2026-03-30)
+
+- docs: add FTS bug fix retrospectives to CLAUDE.md
+- fix: sanitizeFtsQuery phrase/prefix support, fts-rebuild empty body, pagination validation
+- docs: update FTS plan with implementation status
+- test(e2e): add search API E2E tests
+- feat(blog): add /search results page with pagination
+- feat(blog): add SearchInput sidebar component
+- feat(ui): add snippet prop to PostCard with safe HTML rendering
+- feat(api): add dedicated GET /api/search endpoint
+- test(data): add searchPosts, getPostRowid, and ftsSync unit tests
+- feat(service): integrate FTS sync into PostService
+- feat(data): add searchPosts() and getPostRowid() functions
+- feat(lib): add Db.call() for custom Worker endpoints
+- feat(worker): add FTS segmentation and search endpoints
+- feat(db): add FTS5 search migration
+
+
 ## v2.0.4 (2026-03-29)
 
 - fix: plug memory leaks in countCache, DNS timer, and React timers
