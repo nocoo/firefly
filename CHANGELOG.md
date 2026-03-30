@@ -1,5 +1,17 @@
 # Changelog
 
+## v2.2.0 (2026-03-30)
+
+- chore: update next-env.d.ts auto-generated type reference path
+- fix: allow /api/favicon in robots.txt for search engine crawling
+- refactor: dashboard two-column layout, stronger tabs, fix referrer empty rows
+- fix: improve command palette contrast and move Visit Site under Dashboard
+- feat: add global command palette search (Cmd+K) to admin
+- fix: move search input back to above categories section
+- fix: adjust search input position, width alignment, and clear button color
+- chore: decommission fts-rebuild endpoint after production index built
+
+
 ## v2.1.0 (2026-03-30)
 
 - docs: add FTS bug fix retrospectives to CLAUDE.md
