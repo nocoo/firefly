@@ -34,6 +34,7 @@ interface NavItem {
   titleKey: string;
   href: string;
   icon: React.ElementType;
+  external?: boolean;
 }
 
 interface NavGroup {
@@ -48,6 +49,7 @@ const NAV_GROUPS: NavGroup[] = [
     defaultOpen: true,
     items: [
       { titleKey: "admin.nav.dashboard", href: "/admin", icon: LayoutDashboard },
+      { titleKey: "admin.sidebar.visitSite", href: "/", icon: ExternalLink, external: true },
     ],
   },
   {
@@ -115,21 +117,35 @@ function NavGroupSection({
       >
         <div className="min-h-0 overflow-hidden">
           <div className="flex flex-col gap-0.5">
-            {group.items.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-normal transition-colors",
-                  isActive(item.href)
-                    ? "bg-accent text-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                )}
-              >
-                <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-                <span>{t(item.titleKey)}</span>
-              </Link>
-            ))}
+            {group.items.map((item) => {
+              const className = cn(
+                "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-normal transition-colors",
+                !item.external && isActive(item.href)
+                  ? "bg-accent text-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
+              );
+              return item.external ? (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={className}
+                >
+                  <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+                  <span>{t(item.titleKey)}</span>
+                </a>
+              ) : (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={className}
+                >
+                  <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+                  <span>{t(item.titleKey)}</span>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -201,17 +217,6 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
             />
           </IconButton>
 
-          {/* Visit site */}
-          <a
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
-            title={t("admin.sidebar.visitSite")}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <ExternalLink className="h-4 w-4" strokeWidth={1.5} />
-          </a>
-
           {/* Search */}
           <button
             onClick={() => openSearch(true)}
@@ -223,21 +228,35 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
 
           {/* Nav icons */}
           <nav className="flex-1 flex flex-col items-center gap-1 pt-1">
-            {ALL_NAV_ITEMS.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={t(item.titleKey)}
-                className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
-                  isActive(item.href)
-                    ? "bg-accent text-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                )}
-              >
-                <item.icon className="h-4 w-4" strokeWidth={1.5} />
-              </Link>
-            ))}
+            {ALL_NAV_ITEMS.map((item) => {
+              const className = cn(
+                "flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
+                !item.external && isActive(item.href)
+                  ? "bg-accent text-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
+              );
+              return item.external ? (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={t(item.titleKey)}
+                  className={className}
+                >
+                  <item.icon className="h-4 w-4" strokeWidth={1.5} />
+                </a>
+              ) : (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  title={t(item.titleKey)}
+                  className={className}
+                >
+                  <item.icon className="h-4 w-4" strokeWidth={1.5} />
+                </Link>
+              );
+            })}
           </nav>
 
           {/* User avatar */}
@@ -281,19 +300,6 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
                 />
               </IconButton>
             </div>
-          </div>
-
-          {/* Visit site */}
-          <div className="px-3">
-            <a
-              href="/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-normal text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <ExternalLink className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-              <span>{t("admin.sidebar.visitSite")}</span>
-            </a>
           </div>
 
           {/* Search */}

@@ -247,7 +247,7 @@ export function CommandPalette() {
       {/* Panel */}
       <div className="absolute inset-x-0 top-[15%] mx-auto flex max-w-[560px] flex-col overflow-hidden rounded-[var(--radius-island)] border border-border bg-card shadow-xl">
         {/* Search input */}
-        <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+        <div className="flex items-center gap-3 border-b border-border bg-secondary px-4 py-3">
           {loading ? (
             <Loader2
               className="h-4 w-4 shrink-0 animate-spin text-muted-foreground"
@@ -294,8 +294,8 @@ export function CommandPalette() {
                   className={cn(
                     "flex w-full flex-col gap-1 px-4 py-2.5 text-left transition-colors",
                     index === activeIndex
-                      ? "bg-accent"
-                      : "hover:bg-accent/50",
+                      ? "bg-secondary text-foreground"
+                      : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
                   )}
                 >
                   <div className="flex items-center gap-2">
