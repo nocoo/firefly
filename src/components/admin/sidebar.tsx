@@ -20,11 +20,13 @@ import {
   KeyRound,
   Fingerprint,
   CloudUpload,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IconButton } from "@/components/ui/icon-button";
 import { useLocale } from "@/i18n/context";
+import { useCommandPalette } from "@/components/admin/command-palette";
 
 // ── Navigation data model ──
 
@@ -150,6 +152,7 @@ interface AdminSidebarProps {
 export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
   const pathname = usePathname();
   const { t } = useLocale();
+  const { setOpen: openSearch } = useCommandPalette();
 
   const isActive = (href: string) => {
     if (href === "/admin") return pathname === "/admin";
@@ -208,6 +211,15 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
           >
             <ExternalLink className="h-4 w-4" strokeWidth={1.5} />
           </a>
+
+          {/* Search */}
+          <button
+            onClick={() => openSearch(true)}
+            title={t("admin.search.trigger")}
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <Search className="h-4 w-4" strokeWidth={1.5} />
+          </button>
 
           {/* Nav icons */}
           <nav className="flex-1 flex flex-col items-center gap-1 pt-1">
@@ -282,6 +294,20 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
               <ExternalLink className="h-4 w-4 shrink-0" strokeWidth={1.5} />
               <span>{t("admin.sidebar.visitSite")}</span>
             </a>
+          </div>
+
+          {/* Search */}
+          <div className="px-3">
+            <button
+              onClick={() => openSearch(true)}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-normal text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <Search className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+              <span className="flex-1 text-left">{t("admin.search.trigger")}</span>
+              <kbd className="hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-border bg-background px-1.5 text-[10px] font-medium text-muted-foreground">
+                ⌘K
+              </kbd>
+            </button>
           </div>
 
           {/* Navigation — collapsible groups */}

@@ -700,7 +700,6 @@ function GridView({
         if (currentParams.status) sp.set("status", currentParams.status);
         if (currentParams.category) sp.set("category", currentParams.category);
         if (currentParams.tag) sp.set("tag", currentParams.tag);
-        if (currentParams.q) sp.set("q", currentParams.q);
         if (currentParams.year) sp.set("year", currentParams.year);
         if (currentParams.month) sp.set("month", currentParams.month);
 
@@ -723,7 +722,7 @@ function GridView({
         loadingRef.current = false;
       }
     },
-    [currentParams.status, currentParams.category, currentParams.tag, currentParams.q, currentParams.year, currentParams.month],
+    [currentParams.status, currentParams.category, currentParams.tag, currentParams.year, currentParams.month],
   );
 
   // Reset when filters change

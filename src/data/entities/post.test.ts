@@ -947,6 +947,31 @@ describe("searchPosts", () => {
     });
   });
 
+  it("omits status when null (searches all statuses)", async () => {
+    vi.mocked(db.call).mockResolvedValue({
+      posts: [],
+      snippets: {},
+      total: 0,
+      page: 1,
+      pageSize: 10,
+    });
+
+    await searchPosts(db, {
+      query: "admin search",
+      status: null,
+      pageSize: 10,
+    });
+
+    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
+      query: "admin search",
+      page: 1,
+      pageSize: 10,
+    });
+    // Ensure status key is not present at all
+    const callArgs = vi.mocked(db.call).mock.calls[0][1] as Record<string, unknown>;
+    expect("status" in callArgs).toBe(false);
+  });
+
   it("uses default values for optional params", async () => {
     vi.mocked(db.call).mockResolvedValue({
       posts: [],

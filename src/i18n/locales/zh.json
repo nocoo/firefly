@@ -443,5 +443,10 @@
   "admin.media.loadMore": "加载更多",
   "admin.media.showing": "显示 {count} / {total}",
   "admin.media.deleteError": "删除图片失败",
-  "admin.media.associateError": "文章已保存，但未能关联上传的图片。可从媒体库手动关联。"
+  "admin.media.associateError": "文章已保存，但未能关联上传的图片。可从媒体库手动关联。",
+
+  "admin.search.placeholder": "搜索文章...",
+  "admin.search.noResults": "没有找到结果",
+  "admin.search.loading": "搜索中...",
+  "admin.search.trigger": "搜索"
 }

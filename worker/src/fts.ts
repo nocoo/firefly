@@ -245,7 +245,7 @@ export async function handleFtsSearch(
 
   const {
     query,
-    status = "published",
+    status,
     page: rawPage = 1,
     pageSize: rawPageSize = 20,
   } = body as FtsSearchBody;
@@ -271,6 +271,9 @@ export async function handleFtsSearch(
 
   const offset = (page - 1) * pageSize;
 
+  // Build optional status filter clause
+  const statusClause = status ? "AND p.status = ?" : "";
+
   // Search with BM25 ranking: title × 10, content × 1, excerpt × 5
   const searchSql = `
     SELECT p.*, c.name AS category_name, c.slug AS category_slug,
@@ -279,7 +282,7 @@ export async function handleFtsSearch(
     JOIN posts p ON p.rowid = posts_fts.rowid
     LEFT JOIN categories c ON p.category_id = c.id
     WHERE posts_fts MATCH ?
-      AND p.status = ?
+      ${statusClause}
     ORDER BY bm25(posts_fts, 10.0, 1.0, 5.0), p.published_at DESC, p.rowid DESC
     LIMIT ? OFFSET ?
   `;
@@ -289,18 +292,24 @@ export async function handleFtsSearch(
     FROM posts_fts
     JOIN posts p ON p.rowid = posts_fts.rowid
     WHERE posts_fts MATCH ?
-      AND p.status = ?
+      ${statusClause}
   `;
+
+  // Build bind params — status only included when filtering
+  const searchParams = status
+    ? [matchExpr, status, pageSize, offset]
+    : [matchExpr, pageSize, offset];
+  const countParams = status ? [matchExpr, status] : [matchExpr];
 
   try {
     const [searchResult, countResult] = await Promise.all([
       db
         .prepare(searchSql)
-        .bind(matchExpr, status, pageSize, offset)
+        .bind(...searchParams)
         .all<FtsSearchResult>(),
       db
         .prepare(countSql)
-        .bind(matchExpr, status)
+        .bind(...countParams)
         .first<{ count: number }>(),
     ]);
 

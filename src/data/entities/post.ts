@@ -735,7 +735,8 @@ export async function getPostRowid(
 
 export interface SearchPostsOptions {
   query: string;
-  status?: PostStatus | undefined;
+  /** Pass a status to filter, null to search all statuses, or omit for default "published". */
+  status?: PostStatus | null | undefined;
   page?: number | undefined;
   pageSize?: number | undefined;
 }
@@ -756,18 +757,17 @@ export async function searchPosts(
   db: Db,
   options: SearchPostsOptions,
 ): Promise<SearchResult> {
-  const { query, status = "published" } = options;
+  // null = all statuses (admin search), undefined = default "published" (public search)
+  const status = options.status === null ? null : (options.status ?? "published");
 
   // Clamp page/pageSize to safe positive integers
   const page = sanitizePage(options.page, 1);
   const pageSize = sanitizePage(options.pageSize, 20, 100);
 
-  return db.call<SearchResult>("/api/v1/fts-search", {
-    query,
-    status,
-    page,
-    pageSize,
-  });
+  const body: Record<string, unknown> = { query: options.query, page, pageSize };
+  if (status) body.status = status;
+
+  return db.call<SearchResult>("/api/v1/fts-search", body);
 }
 
 /** Clamp a page/pageSize value to a safe positive integer. */

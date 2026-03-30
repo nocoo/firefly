@@ -27,9 +27,6 @@ export async function GET(request: NextRequest) {
     const tagId = searchParams.get("tag");
     if (tagId) options.tagId = tagId;
 
-    const query = searchParams.get("q");
-    if (query) options.query = query;
-
     const year = searchParams.get("year");
     if (year) options.archiveYear = parseInt(year, 10);
 
