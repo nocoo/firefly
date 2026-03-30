@@ -12,7 +12,7 @@ export default function robots(): MetadataRoute.Robots {
       // the wildcard rule only.
       {
         userAgent: "*",
-        allow: "/",
+        allow: ["/", "/api/favicon"],
         disallow: ["/api/", "/admin/", "/login"],
       },
     ],
