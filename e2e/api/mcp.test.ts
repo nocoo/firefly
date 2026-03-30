@@ -7,7 +7,7 @@
  * Token seed strategy: E2E runs with E2E_SKIP_AUTH=true, so we use
  * POST /api/mcp/tokens (admin create) to generate valid Bearer tokens.
  */
-const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17043";
+const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
 const MCP_HEADERS = {
   "Content-Type": "application/json",

@@ -3,7 +3,7 @@
  *
  * Covers: GET /api/categories, GET /api/categories/[slug]
  */
-const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17043";
+const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
 describe("GET /api/categories", () => {
   it("returns list of categories", async () => {

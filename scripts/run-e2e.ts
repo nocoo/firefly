@@ -8,9 +8,9 @@
  *   bun scripts/run-e2e.ts --browser-only # Run browser E2E only (L3)
  *
  * Port convention:
- *   Dev:     7043
- *   API E2E: 17043 (10000 + dev)
- *   BDD E2E: 27043 (20000 + dev)
+ *   Dev:     7028
+ *   API E2E: 17028 (10000 + dev)
+ *   BDD E2E: 27028 (20000 + dev)
  *   Worker:  8787  (wrangler default)
  */
 import { spawn, type Subprocess } from "bun";
@@ -22,9 +22,9 @@ const BUN = process.execPath;
 // Resolve wrangler binary from the worker's node_modules
 const WRANGLER = `${process.cwd()}/worker/node_modules/.bin/wrangler`;
 
-const DEV_PORT = 7043;
-const API_E2E_PORT = DEV_PORT + 10000; // 17043
-const BROWSER_E2E_PORT = DEV_PORT + 20000; // 27043
+const DEV_PORT = 7028;
+const API_E2E_PORT = DEV_PORT + 10000; // 17028
+const BROWSER_E2E_PORT = DEV_PORT + 20000; // 27028
 const WORKER_PORT = 8787;
 
 const args = process.argv.slice(2);
@@ -172,7 +172,7 @@ async function main() {
   }
 
   // --- Start Next.js dev server(s) ---
-  // In default (all) mode, start two servers: API on 17043, browser on 27043.
+  // In default (all) mode, start two servers: API on 17028, browser on 27028.
   // In --api-only or --browser-only mode, start one server on the appropriate port.
   const apiPort = API_E2E_PORT;
   const browserPort = BROWSER_E2E_PORT;

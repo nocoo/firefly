@@ -7,7 +7,7 @@
  * .env.test overrides R2_BUCKET_NAME to point to the test bucket;
  * CF_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY are inherited from .env.
  */
-const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17043";
+const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
 /** Minimal valid 1x1 PNG (68 bytes) */
 function createMinimalPng(): Buffer {

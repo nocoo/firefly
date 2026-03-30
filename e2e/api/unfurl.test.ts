@@ -12,7 +12,7 @@
  */
 import { it, expect, describe } from "vitest";
 
-const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17043";
+const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
 describe("POST /api/unfurl", () => {
   it("returns 400 when url is missing", async () => {

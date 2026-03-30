@@ -8,7 +8,7 @@
  * - If not configured: 400 with "AI provider not configured"
  * Both are valid outcomes; the test asserts correct response shapes.
  */
-const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17043";
+const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
 describe("POST /api/posts/[slug]/excerpt", () => {
   it("returns 200 with excerpt or 400 when AI is not configured", async () => {

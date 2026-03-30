@@ -19,7 +19,7 @@ See [docs/](./docs/README.md) for architecture and design documents.
 
 ```bash
 bun install
-bun run dev          # Start dev server (Webpack, port 7043)
+bun run dev          # Start dev server (Webpack, port 7028)
 ```
 
 ### Testing

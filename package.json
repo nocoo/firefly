@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --webpack -p 7043",
+    "dev": "next dev --webpack -p 7028",
     "build": "next build",
     "start": "next start",
     "test": "vitest run",

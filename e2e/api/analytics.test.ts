@@ -8,7 +8,7 @@
  * not via a dedicated POST endpoint. Only GET is tested here.
  * Auth 401 is tested at L1 (proxy unit tests) since E2E runs with E2E_SKIP_AUTH=true.
  */
-const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17043";
+const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
 describe("GET /api/analytics", () => {
   it("returns summary data with default 30-day range", async () => {

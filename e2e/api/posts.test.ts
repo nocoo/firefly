@@ -4,7 +4,7 @@
  * Covers: GET /api/posts, GET /api/posts/[slug], POST /api/posts,
  *         PUT /api/posts/[slug], DELETE /api/posts/[slug]
  */
-const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17043";
+const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
 describe("GET /api/posts", () => {
   it("returns paginated list of published posts", async () => {

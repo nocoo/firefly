@@ -6,7 +6,7 @@
  *
  * Note: Requires R2 test bucket (lizhengblog-test) to be configured.
  */
-const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17043";
+const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
 /** Minimal valid 1x1 PNG (68 bytes) */
 function createMinimalPng(): Buffer {

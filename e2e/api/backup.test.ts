@@ -11,7 +11,7 @@
  * Push and history tests without a real Backy server can only verify
  * the "not configured" path — actual push tests need a running Backy.
  */
-const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17043";
+const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
 describe("GET /api/backup (unconfigured)", () => {
   it("returns configured: false when no config set", async () => {

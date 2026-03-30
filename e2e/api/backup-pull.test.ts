@@ -6,7 +6,7 @@
  * Note: Pull webhook uses its own X-Webhook-Key auth (NOT session auth),
  * so 401 tests work even with E2E_SKIP_AUTH=true.
  */
-const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17043";
+const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
 // ---------------------------------------------------------------------------
 // Pull key CRUD

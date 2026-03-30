@@ -3,7 +3,7 @@
  *
  * Covers: GET /api/tags, GET /api/tags/[slug]
  */
-const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17043";
+const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
 describe("GET /api/tags", () => {
   it("returns list of tags", async () => {

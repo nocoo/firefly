@@ -296,16 +296,16 @@ connectivity before running tests.
 
 ```typescript
 // 1. Start local worker with --env test on port 18787
-// 2. Start Next.js dev server on port 17043 (E2E port = 10000 + 7043)
+// 2. Start Next.js dev server on port 17028 (E2E port = 10000 + 7028)
 //    with WORKER_URL=http://localhost:18787
 // 3. Run vitest on e2e/api/ directory
 // 4. Tear down both servers
 ```
 
 Port convention:
-- Dev server: `7043`
-- API E2E: `17043` (10000 + dev)
-- BDD E2E: `27043` (20000 + dev)
+- Dev server: `7028`
+- API E2E: `17028` (10000 + dev)
+- BDD E2E: `27028` (20000 + dev)
 
 ### 4.2 Create API E2E Tests
 
@@ -378,7 +378,7 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./browser",
-  baseURL: process.env.E2E_BASE_URL ?? "http://localhost:27043",
+  baseURL: process.env.E2E_BASE_URL ?? "http://localhost:27028",
   use: {
     headless: true,
     screenshot: "only-on-failure",

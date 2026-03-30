@@ -11,7 +11,7 @@
  * logic (isProtectedRoute, isProtectedApiRoute) and by manual testing
  * against a server without E2E_SKIP_AUTH.
  */
-const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17043";
+const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
 describe("Auth bypass — admin routes", () => {
   it("GET /admin is accessible with E2E_SKIP_AUTH=true", async () => {

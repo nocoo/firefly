@@ -6,7 +6,7 @@
  * Note: GET /api/settings is not proxy-protected (proxy only guards POST/PUT/DELETE/PATCH).
  * PUT /api/settings IS proxy-protected but E2E_SKIP_AUTH=true bypasses it.
  */
-const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17043";
+const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
 describe("GET /api/settings", () => {
   it("returns site settings", async () => {
