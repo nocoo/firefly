@@ -1,5 +1,17 @@
 # Changelog
 
+## v2.3.0 (2026-03-31)
+
+- fix: suppress Recharts width/height -1 warnings on initial render
+- docs: add retrospective for filename normalization regression
+- fix: revert filename normalization — preserve original display name in DB
+- feat: add drag-and-drop upload to media library with filename normalization
+- refactor: archive one-time migration scripts and scrub hardcoded domains
+- chore: migrate CI to reusable bun-quality workflow
+- fix: upgrade CI security tools (osv-scanner v2.3.5, gitleaks v8.30.1)
+- chore: migrate ports 7043/17043/27043 → 7028/17028/27028
+
+
 ## v2.2.0 (2026-03-30)
 
 - chore: update next-env.d.ts auto-generated type reference path
