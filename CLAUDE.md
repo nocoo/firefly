@@ -43,3 +43,8 @@ Personal blog platform built with Next.js + Cloudflare Workers.
 **问题**: `?page=foo`、`?page=0`、`?page=-1`、`?page_size=NaN` 全部原样传入 SQL 的 `LIMIT/OFFSET`，会产生负数或 NaN，导致 D1 错误暴露为 500。
 **修复**: 在 API 路由、页面组件、数据层、Worker 四层都加了正整数校验和 clamp。
 **教训**: 用户输入（query string）到 SQL 参数之间的每一层都应该做边界校验，不能假设上游已经验证过。尤其是 `parseInt()` 对非数字字符串返回 `NaN`，必须显式检查。
+
+### 2026-03-31: normalizeUploadFilename 把 DB filename 改成 UUID 导致行为回归
+**问题**: 计划要求"filename normalization"，实现时把 `attachments.filename` 从用户原始文件名改成了随机 UUID。但 `filename` 在系统中承担展示名、搜索字段（`filename LIKE ?`）、排序字段（`ORDER BY filename`）和 Markdown alt 文本等多重角色，全部被破坏。
+**修复**: 回滚改动，保留 `file.name` 原样写入 DB。R2 key 本身已经用 UUID（`generateFireflyR2Key`），存储层的去重不需要改 DB 展示名。
+**教训**: 修改一个字段的写入值前，必须追踪该字段的所有读取场景（展示、搜索、排序、导出）。"存储 key" 和 "展示名" 是两个不同职责，不能混为一谈。纯函数测试只覆盖了 helper 本身的正确性，没有覆盖集成行为（"上传后媒体记录仍可按原文件名搜索"），所以回归未被测试拦住。
