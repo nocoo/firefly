@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
 import { getR2PublicUrl, getR2ClientAdapter } from "@/lib/r2-client";
-import { generateFireflyR2Key, normalizeUploadFilename, validateUpload } from "@/lib/r2";
+import { generateFireflyR2Key, validateUpload } from "@/lib/r2";
 import { listMedia } from "@/data/entities/media";
 import { MediaService } from "@/services/media-service";
 
@@ -86,12 +86,11 @@ export async function POST(request: NextRequest) {
     }
 
     const key = generateFireflyR2Key(file.name);
-    const normalizedFilename = normalizeUploadFilename(file.name);
     const db = getDb();
     const r2 = getR2ClientAdapter();
 
     const media = await MediaService.upload(db, r2, {
-      filename: normalizedFilename,
+      filename: file.name,
       r2Key: key,
       mimeType: file.type,
       data,
