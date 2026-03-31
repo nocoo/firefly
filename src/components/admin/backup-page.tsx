@@ -324,7 +324,7 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
               <Input
                 value={editUrl}
                 onChange={(e) => setEditUrl(e.target.value)}
-                placeholder="https://backy.dev.hexly.ai/api/webhook/..."
+                placeholder="https://example.com/api/webhook/..."
               />
             </div>
             <div className="space-y-2">

@@ -3,7 +3,7 @@
  *
  * Covers: POST /api/upload
  *
- * Note: This test requires R2 test bucket (lizhengblog-test) to be configured.
+ * Note: This test requires an R2 test bucket to be configured.
  * .env.test overrides R2_BUCKET_NAME to point to the test bucket;
  * CF_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY are inherited from .env.
  */

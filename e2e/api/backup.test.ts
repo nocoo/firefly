@@ -37,7 +37,7 @@ describe("PUT /api/backup", () => {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        webhookUrl: "https://backy.dev.hexly.ai/api/webhook/test-project",
+        webhookUrl: "https://example.com/api/webhook/test-project",
         apiKey: "test-api-key-1234567890abcdef",
       }),
     });
@@ -88,7 +88,7 @@ describe("PUT /api/backup", () => {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        webhookUrl: "https://backy.dev.hexly.ai/api/webhook/test-project",
+        webhookUrl: "https://example.com/api/webhook/test-project",
         apiKey: "test-api-key-1234567890abcdef",
       }),
     });
@@ -99,7 +99,7 @@ describe("PUT /api/backup", () => {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        webhookUrl: "https://backy.dev.hexly.ai/api/webhook/updated-project",
+        webhookUrl: "https://example.com/api/webhook/updated-project",
       }),
     });
     expect(res.status).toBe(200);
@@ -112,7 +112,7 @@ describe("PUT /api/backup", () => {
     const getBody = await getRes.json();
     expect(getBody.configured).toBe(true);
     expect(getBody.webhookUrl).toBe(
-      "https://backy.dev.hexly.ai/api/webhook/updated-project",
+      "https://example.com/api/webhook/updated-project",
     );
     // Key should still be masked (preserved from before)
     expect(getBody.apiKey).toContain("\u2022");
@@ -135,7 +135,7 @@ describe("GET /api/backup (configured)", () => {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        webhookUrl: "https://backy.dev.hexly.ai/api/webhook/test-project",
+        webhookUrl: "https://example.com/api/webhook/test-project",
         apiKey: "test-api-key-1234567890abcdef",
       }),
     });
@@ -152,7 +152,7 @@ describe("GET /api/backup (configured)", () => {
     const body = await res.json();
     expect(body.configured).toBe(true);
     expect(body.webhookUrl).toBe(
-      "https://backy.dev.hexly.ai/api/webhook/test-project",
+      "https://example.com/api/webhook/test-project",
     );
     // API key should be masked (not the raw key)
     expect(body.apiKey).not.toBe("test-api-key-1234567890abcdef");

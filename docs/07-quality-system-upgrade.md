@@ -17,7 +17,7 @@
 | L2 Integration | ✅ | 27 API E2E tests, 13/14 endpoints (upload excluded), 6 test files |
 | G2 Security | ✅ | osv-scanner 0 vulns, gitleaks 0 leaks, pre-push |
 | L3 System | ✅ | 15 Playwright specs (blog nav, SEO, admin, RSS), manual/CI |
-| D1 Isolation | ✅ | `lizhengme-db-test` via worker `[env.test]`, `E2E_SKIP_AUTH` in proxy |
+| D1 Isolation | ✅ | `firefly-db-test` via worker `[env.test]`, `E2E_SKIP_AUTH` in proxy |
 
 ### API Endpoints to Cover (L2)
 
@@ -212,7 +212,7 @@ brew install gitleaks
 
 ## Step 3: D1 — Test Resource Isolation
 
-**Goal**: Worker has `[env.test]` binding to `lizhengme-db-test`. E2E scripts connect to test DB only.
+**Goal**: Worker has `[env.test]` binding to `firefly-db-test`. E2E scripts connect to test DB only.
 
 ### 3.1 Add Test Environment to Worker
 
@@ -220,11 +220,11 @@ brew install gitleaks
 
 ```toml
 [env.test]
-name = "lizhengme-test"
+name = "firefly-test"
 
 [[env.test.d1_databases]]
 binding = "DB"
-database_name = "lizhengme-db-test"
+database_name = "firefly-db-test"
 database_id = "ae2356d2-xxxx"  # from CF_D1_TEST_DATABASE_ID in .env
 ```
 
@@ -256,7 +256,7 @@ This goes inside the `if (isProtectedRoute || isProtectedApiRoute)` branch, **be
 **File**: `.env.test` (new, gitignored)
 
 ```bash
-# Test environment — points to lizhengme-db-test via test worker
+# Test environment — points to firefly-db-test via test worker
 WORKER_URL=http://localhost:8787  # local wrangler dev --env test
 WORKER_SECRET=test-secret
 E2E_SKIP_AUTH=true
@@ -265,7 +265,7 @@ E2E_SKIP_AUTH=true
 ### 3.4 Apply Schema to Test DB Using Existing Migration Script
 
 The project already has `scripts/migrations/apply-migration.ts` which supports `--test` flag
-to target `lizhengme-db-test` via `CF_D1_TEST_DATABASE_ID`. No new script needed.
+to target `firefly-db-test` via `CF_D1_TEST_DATABASE_ID`. No new script needed.
 
 **Workflow**: before first L2 run, apply all migrations to test DB:
 
@@ -288,7 +288,7 @@ connectivity before running tests.
 
 ## Step 4: L2 — Integration/API E2E Tests
 
-**Goal**: 13/14 API endpoints covered with real HTTP calls against `lizhengme-db-test` (upload excluded, see scope decision above).
+**Goal**: 13/14 API endpoints covered with real HTTP calls against `firefly-db-test` (upload excluded, see scope decision above).
 
 ### 4.1 Create E2E Runner
 
@@ -463,7 +463,7 @@ bun run test:e2e:browser
 | L2 | `bun run test:e2e:api` | 13/14 endpoints covered (upload excluded), 0 failures |
 | G2 | `bun run security` | osv-scanner 0 vulns, gitleaks no leaks |
 | L3 | `bun run test:e2e:browser` | Core journeys pass |
-| D1 | Worker `[env.test]` + `.env.test` | E2E uses `lizhengme-db-test` only |
+| D1 | Worker `[env.test]` + `.env.test` | E2E uses `firefly-db-test` only |
 
 ### Atomic Commits
 

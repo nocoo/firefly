@@ -6,7 +6,7 @@
  * 1. Gutenberg blocks (<!-- wp:xxx --> ... <!-- /wp:xxx -->) — 49 posts
  * 2. Classic HTML (raw <a>, <img>, <strong>, etc.) — 698 posts
  *
- * Rewrites image URLs from lizheng.me → assets.lizheng.me
+ * Rewrites image URLs from lizheng.me → b.no.mt
  * Updates all posts in D1 via Worker proxy.
  *
  * Usage: bun scripts/migrations/07-convert-content-to-markdown.ts [--dry-run]
@@ -65,7 +65,7 @@ function stripTags(html: string): string {
 function rewriteImageUrls(text: string): string {
   return text.replace(
     /https?:\/\/lizheng\.me\/wp-content\/uploads\//g,
-    "https://assets.lizheng.me/wp-content/uploads/",
+    "https://b.no.mt/wp-content/uploads/",
   );
 }
 

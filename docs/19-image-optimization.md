@@ -132,7 +132,7 @@ When `optimizeImages` is true, the `image()` renderer outputs:
 - `srcset` uses Next.js default `deviceSizes` breakpoints (subset: 640, 828, 1080, 1920)
 - `sizes` matches the blog content column width pattern (already used by featured images)
 - `data-original-src` preserves the original URL for the lightbox to use
-- Only rewrites URLs matching our known domains (`assets.lizheng.me`, `lizheng.me`);
+- Only rewrites URLs matching our known asset and site domains;
   external image URLs are left unchanged (no proxy for foreign domains)
 - `decoding="async"` improves rendering performance
 

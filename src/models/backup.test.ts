@@ -15,7 +15,7 @@ import {
 
 describe("isValidWebhookUrl", () => {
   it("accepts valid HTTPS URL", () => {
-    expect(isValidWebhookUrl("https://backy.dev.hexly.ai/api/webhook/abc")).toBe(
+    expect(isValidWebhookUrl("https://example.com/api/webhook/abc")).toBe(
       true,
     );
   });
@@ -44,7 +44,7 @@ describe("isValidWebhookUrl", () => {
 describe("validateBackyConfig", () => {
   it("returns valid for complete config", () => {
     const result = validateBackyConfig({
-      webhookUrl: "https://backy.dev.hexly.ai/api/webhook/abc",
+      webhookUrl: "https://example.com/api/webhook/abc",
       apiKey: "test-api-key-12345",
     });
     expect(result).toEqual({ valid: true });

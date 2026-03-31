@@ -1,7 +1,7 @@
 # 12 — SEO Audit Report
 
 > Audit date: 2026-03-24
-> Scope: Blog frontend (`lizheng.me`) — HTML standards, redundancy, speed
+> Scope: Blog frontend — HTML standards, redundancy, speed
 
 ## Overall Assessment
 
@@ -188,7 +188,7 @@ pages. Example:
 {
   "@type": "CollectionPage",
   "name": "Category: Tech",
-  "url": "https://lizheng.me/category/tech",
+  "url": "https://example.com/category/tech",
   "mainEntity": {
     "@type": "ItemList",
     "numberOfItems": 15,

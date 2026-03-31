@@ -20,7 +20,7 @@ coverage/
 .dev.vars.*
 
 # Migration data (contains database dumps, never commit)
-scripts/migrations/data/
+scripts/migrations/archive/data/
 
 # Playwright
 test-results/

@@ -284,10 +284,10 @@ const x = 1;
 
 describe("renderMarkdown with optimizeImages", () => {
   const opts = { optimizeImages: true };
-  const assetsHostname = process.env.NEXT_PUBLIC_ASSETS_HOSTNAME ?? "assets.lizheng.me";
-  const siteHostname = process.env.NEXT_PUBLIC_SITE_HOSTNAME ?? "lizheng.me";
+  const assetsHostname = process.env.NEXT_PUBLIC_ASSETS_HOSTNAME ?? "assets.example.com";
+  const siteHostname = process.env.NEXT_PUBLIC_SITE_HOSTNAME ?? "example.com";
   const internalUrl = `https://${assetsHostname}/uploads/photo.jpg`;
-  const externalUrl = "https://example.com/img.jpg";
+  const externalUrl = "https://external-site.org/img.jpg";
 
   it("default mode: image renders raw <img> without srcset", () => {
     const html = renderMarkdown(`![Alt](${internalUrl})`);

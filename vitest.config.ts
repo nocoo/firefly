@@ -5,8 +5,8 @@ export default defineConfig({
     globals: true,
     exclude: ["e2e/**", "node_modules/**", "worker/**", ".claude/**"],
     env: {
-      NEXT_PUBLIC_SITE_HOSTNAME: "lizheng.me",
-      NEXT_PUBLIC_ASSETS_HOSTNAME: "assets.lizheng.me",
+      NEXT_PUBLIC_SITE_HOSTNAME: "example.com",
+      NEXT_PUBLIC_ASSETS_HOSTNAME: "assets.example.com",
     },
     coverage: {
       provider: "v8",

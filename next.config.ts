@@ -7,7 +7,7 @@ const pkg = JSON.parse(readFileSync("./package.json", "utf-8")) as {
 
 const nextConfig: NextConfig = {
   experimental: {},
-  allowedDevOrigins: ["firefly.dev.hexly.ai"],
+  allowedDevOrigins: (process.env.ALLOWED_DEV_ORIGINS ?? "").split(",").filter(Boolean),
   env: {
     NEXT_PUBLIC_APP_VERSION: pkg.version,
   },

@@ -6,7 +6,7 @@ Firefly is a modern, high-performance blog platform replacing a WordPress instal
 at `your-domain.com`. Goals: extreme performance, SEO-first, AI-crawler-friendly, clean
 admin experience using the basalt design system.
 
-## Source Analysis (WordPress @ lizheng.me)
+## Source Analysis (WordPress)
 
 ### Content Inventory
 
@@ -41,15 +41,15 @@ admin experience using the basalt design system.
 | StatPress | Empty data — discard |
 | Yoast SEO | Empty data — build SEO natively |
 
-### WordPress Tables — Table Prefix `lizheng_`
+### WordPress Tables — Table Prefix `wp_`
 
 Core tables to extract from:
-- `lizheng_posts` — posts, pages, attachments, revisions
-- `lizheng_postmeta` — thumbnail_id, view_count, etc.
-- `lizheng_terms` + `lizheng_term_taxonomy` + `lizheng_term_relationships` — categories & tags
-- `lizheng_comments` + `lizheng_commentmeta` — threaded comments
-- `lizheng_users` — single user
-- `lizheng_independent_analytics_*` — views, visitors, sessions, referrers, etc.
+- `wp_posts` — posts, pages, attachments, revisions
+- `wp_postmeta` — thumbnail_id, view_count, etc.
+- `wp_terms` + `wp_term_taxonomy` + `wp_term_relationships` — categories & tags
+- `wp_comments` + `wp_commentmeta` — threaded comments
+- `wp_users` — single user
+- `wp_independent_analytics_*` — views, visitors, sessions, referrers, etc.
 
 ### URL Structure Migration
 
@@ -83,11 +83,11 @@ wp-content/uploads/YYYY/MM/filename.ext
 
 **Target (R2 custom domain):**
 ```
-https://assets.lizheng.me/wp-content/uploads/YYYY/MM/filename.ext
+https://assets.your-domain.com/wp-content/uploads/YYYY/MM/filename.ext
 ```
 
 During migration: keep R2 keys as-is (`wp-content/uploads/...`). Bind custom domain
-`assets.lizheng.me` to R2 bucket, serving objects at their original keys.
+`assets.your-domain.com` to R2 bucket, serving objects at their original keys.
 Batch-replace `https://your-domain.com/wp-content/uploads/` →
 `https://assets.your-domain.com/wp-content/uploads/` in post_content.
 

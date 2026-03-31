@@ -136,7 +136,7 @@ This module depends on `r2-client.ts` (which reads `R2_PUBLIC_URL` env var) and 
 2. Validate: must be image (magic-byte check), `width === height` (strict, no tolerance, no crop)
 3. Generate version: `crypto.randomUUID().slice(0, 8)`
 4. Resize to all 7 target sizes using `sharp`, output as PNG
-5. Upload **all** 7 variants to R2 under `lizhengblog/wp-content/uploads/firefly/site/{version}/`. All uploads must succeed — if any single upload fails, the entire operation fails and `site_logo_version` is **not** updated. Already-uploaded variants from the failed batch are orphaned (harmless, cleaned up later)
+5. Upload **all** 7 variants to R2 under `{R2_KEY_PREFIX}site/{version}/`. All uploads must succeed — if any single upload fails, the entire operation fails and `site_logo_version` is **not** updated. Already-uploaded variants from the failed batch are orphaned (harmless, cleaned up later)
 6. Only after all 7 uploads succeed: call `updateSiteLogoVersion(db, version)` to persist the new version
 7. Return `{ version, sizes: [{ size, url }] }`
 

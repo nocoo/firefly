@@ -146,14 +146,14 @@ describe("validateMcpToken", () => {
 // ---------------------------------------------------------------------------
 
 describe("validateOrigin", () => {
-  const siteUrl = "https://lizheng.me";
+  const siteUrl = "https://example.com";
 
   it("allows null origin (CLI clients)", () => {
     expect(validateOrigin(null, siteUrl)).toBeNull();
   });
 
   it("allows matching site origin", () => {
-    expect(validateOrigin("https://lizheng.me", siteUrl)).toBeNull();
+    expect(validateOrigin("https://example.com", siteUrl)).toBeNull();
   });
 
   it("allows localhost origin", () => {

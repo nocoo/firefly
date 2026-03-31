@@ -2,14 +2,14 @@ name = "firefly"
 main = "src/index.ts"
 compatibility_date = "2026-03-01"
 
-[[routes]]
-pattern = "firefly.worker.hexly.ai"
-custom_domain = true
+# [[routes]]
+# pattern = "your-worker.example.com"
+# custom_domain = true
 
 [[d1_databases]]
 binding = "DB"
-database_name = "lizhengme-db"
-database_id = "4bf7da18-b41c-41c1-8191-20e664c2f067"
+database_name = "firefly-db"
+database_id = "YOUR_D1_DATABASE_ID"
 
 # ---------- Test environment ----------
 [env.test]
@@ -17,8 +17,8 @@ name = "firefly-test"
 
 [[env.test.d1_databases]]
 binding = "DB"
-database_name = "lizhengme-db-test"
-database_id = "ae2356d2-bb21-45aa-9fb2-55184fcc7826"
+database_name = "firefly-db-test"
+database_id = "YOUR_D1_TEST_DATABASE_ID"
 
 [[env.test.r2_buckets]]
 binding = "BUCKET"

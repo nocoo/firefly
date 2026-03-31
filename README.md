@@ -2,7 +2,7 @@
 
 Modern blog platform. Next.js 16 + Cloudflare D1 + R2. Deployed on Railway.
 
-Migrated from WordPress (lizheng.me).
+Migrated from WordPress.
 
 ## Documentation
 

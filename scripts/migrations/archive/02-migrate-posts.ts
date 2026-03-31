@@ -101,7 +101,7 @@ function transformContent(content: string | null): string {
   // Replace WordPress image URLs with R2 custom domain
   result = result.replace(
     /https?:\/\/lizheng\.me\/wp-content\/uploads\//g,
-    "https://assets.lizheng.me/wp-content/uploads/",
+    "https://b.no.mt/wp-content/uploads/",
   );
 
   // Strip WordPress shortcodes [shortcode attr="val"]...[/shortcode]
@@ -284,7 +284,7 @@ async function migratePosts() {
     if (attachedFile) {
       attachmentMap.set(
         p.ID!,
-        `https://assets.lizheng.me/wp-content/uploads/${attachedFile}`,
+        `https://b.no.mt/wp-content/uploads/${attachedFile}`,
       );
     }
   }

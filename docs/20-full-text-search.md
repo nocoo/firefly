@@ -752,7 +752,7 @@ New keys added to `en.json` and `zh.json`:
 
 ## D1 Compatibility — Verified
 
-Tested on D1 remote (test env `lizhengme-db-test`) on 2026-03-29:
+Tested on D1 remote (test env `firefly-db-test`) on 2026-03-29:
 
 | Feature | Result |
 |---|---|

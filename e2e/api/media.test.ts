@@ -4,7 +4,7 @@
  * Covers: GET /api/media, GET /api/media/[id], POST /api/media,
  *         DELETE /api/media/[id], PATCH /api/media/associate
  *
- * Note: Requires R2 test bucket (lizhengblog-test) to be configured.
+ * Note: Requires R2 test bucket to be configured.
  */
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 

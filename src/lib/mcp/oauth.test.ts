@@ -83,12 +83,12 @@ describe("isLoopbackRedirectUri", () => {
 
 describe("getOAuthMetadata", () => {
   it("returns correct metadata structure", () => {
-    const metadata = getOAuthMetadata("https://lizheng.me");
+    const metadata = getOAuthMetadata("https://example.com");
 
-    expect(metadata.issuer).toBe("https://lizheng.me");
-    expect(metadata.authorization_endpoint).toBe("https://lizheng.me/api/mcp/authorize");
-    expect(metadata.token_endpoint).toBe("https://lizheng.me/api/mcp/token");
-    expect(metadata.registration_endpoint).toBe("https://lizheng.me/api/mcp/register");
+    expect(metadata.issuer).toBe("https://example.com");
+    expect(metadata.authorization_endpoint).toBe("https://example.com/api/mcp/authorize");
+    expect(metadata.token_endpoint).toBe("https://example.com/api/mcp/token");
+    expect(metadata.registration_endpoint).toBe("https://example.com/api/mcp/register");
     expect(metadata.response_types_supported).toEqual(["code"]);
     expect(metadata.grant_types_supported).toEqual(["authorization_code", "refresh_token"]);
     expect(metadata.code_challenge_methods_supported).toEqual(["S256"]);
