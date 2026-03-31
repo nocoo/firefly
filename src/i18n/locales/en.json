@@ -444,6 +444,10 @@
   "admin.media.showing": "Showing {count} of {total}",
   "admin.media.deleteError": "Failed to delete image",
   "admin.media.associateError": "Post saved, but failed to link uploaded images. They can be linked from the media library.",
+  "admin.media.dropToUpload": "Drop files to upload",
+  "admin.media.uploadProgress": "Uploading {current}/{total}...",
+  "admin.media.uploadComplete": "{count} files uploaded",
+  "admin.media.uploadFailed": "Failed to upload {filename}",
 
   "admin.search.placeholder": "Search posts...",
   "admin.search.noResults": "No results found",

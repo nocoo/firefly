@@ -127,6 +127,17 @@ export function generateFireflyR2Key(filename: string): string {
   return `${getR2KeyPrefix()}${uuid}${suffix}`;
 }
 
+/**
+ * Normalize an upload filename to `{uuid}.{ext}` format.
+ * Replaces the original name with a random UUID and lowercases the extension.
+ * If no extension is found, returns just the UUID.
+ */
+export function normalizeUploadFilename(filename: string): string {
+  const ext = extractExtension(filename);
+  const uuid = crypto.randomUUID();
+  return ext ? `${uuid}.${ext}` : uuid;
+}
+
 // ---------------------------------------------------------------------------
 // Validation
 // ---------------------------------------------------------------------------

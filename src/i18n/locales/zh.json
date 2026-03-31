@@ -444,6 +444,10 @@
   "admin.media.showing": "显示 {count} / {total}",
   "admin.media.deleteError": "删除图片失败",
   "admin.media.associateError": "文章已保存，但未能关联上传的图片。可从媒体库手动关联。",
+  "admin.media.dropToUpload": "拖放文件上传",
+  "admin.media.uploadProgress": "上传中 {current}/{total}...",
+  "admin.media.uploadComplete": "已上传 {count} 个文件",
+  "admin.media.uploadFailed": "上传失败：{filename}",
 
   "admin.search.placeholder": "搜索文章...",
   "admin.search.noResults": "没有找到结果",

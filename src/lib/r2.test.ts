@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { generateR2Key, generateFireflyR2Key, getR2KeyPrefix, extractExtension, validateUpload, detectMimeType } from "./r2";
+import { generateR2Key, generateFireflyR2Key, getR2KeyPrefix, extractExtension, normalizeUploadFilename, validateUpload, detectMimeType } from "./r2";
 
 // ---------------------------------------------------------------------------
 // Test helpers — real magic byte headers for each format
@@ -86,6 +86,52 @@ describe("extractExtension", () => {
 
   it("returns empty string for trailing dot", () => {
     expect(extractExtension("file.")).toBe("");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// normalizeUploadFilename
+// ---------------------------------------------------------------------------
+
+describe("normalizeUploadFilename", () => {
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+  it("returns uuid.ext for a regular filename", () => {
+    const result = normalizeUploadFilename("photo.jpg");
+    expect(result).toMatch(/^[0-9a-f-]+\.jpg$/);
+    const [name] = result.split(".");
+    expect(name).toMatch(UUID_RE);
+  });
+
+  it("lowercases the extension", () => {
+    const result = normalizeUploadFilename("screenshot.PNG");
+    expect(result).toMatch(/\.png$/);
+  });
+
+  it("returns UUID only when no extension", () => {
+    const result = normalizeUploadFilename("noext");
+    expect(result).toMatch(UUID_RE);
+    expect(result).not.toContain(".");
+  });
+
+  it("extracts correct extension from multiple dots", () => {
+    const result = normalizeUploadFilename("my.vacation.photo.JPEG");
+    expect(result).toMatch(/\.jpeg$/);
+    // Should only have one dot (uuid.ext)
+    const parts = result.split(".");
+    expect(parts).toHaveLength(2);
+  });
+
+  it("returns UUID only for trailing dot", () => {
+    const result = normalizeUploadFilename("file.");
+    expect(result).toMatch(UUID_RE);
+    expect(result).not.toContain(".");
+  });
+
+  it("generates unique filenames on each call", () => {
+    const a = normalizeUploadFilename("same.jpg");
+    const b = normalizeUploadFilename("same.jpg");
+    expect(a).not.toBe(b);
   });
 });
 

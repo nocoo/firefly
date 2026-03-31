@@ -19,6 +19,7 @@ import {
   FileAudio,
   FileVideo,
   File,
+  Upload,
 } from "lucide-react";
 import type { Attachment } from "@/models/types";
 import type { YearCount } from "@/data/entities/media";
@@ -139,6 +140,12 @@ export function MediaLibrary({
   const searchRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Drag-and-drop upload
+  const [dragOver, setDragOver] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+  const dragCounterRef = useRef(0);
+
   // Re-fetch when filters change
   const fetchMedia = useCallback(
     async (f: Filters, page: number, append: boolean) => {
@@ -241,6 +248,90 @@ export function MediaLibrary({
     [t],
   );
 
+  // ---------------------------------------------------------------------------
+  // Drag-and-drop upload
+  // ---------------------------------------------------------------------------
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounterRef.current += 1;
+    if (dragCounterRef.current === 1) setDragOver(true);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounterRef.current -= 1;
+    if (dragCounterRef.current === 0) setDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault();
+      dragCounterRef.current = 0;
+      setDragOver(false);
+
+      const files = Array.from(e.dataTransfer.files);
+      if (files.length === 0) return;
+
+      setUploading(true);
+      setUploadProgress({ current: 0, total: files.length });
+
+      let successCount = 0;
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        setUploadProgress({ current: i + 1, total: files.length });
+
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const res = await fetch("/api/media", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!res.ok) {
+            const data = await res.json();
+            toast.error(
+              t("admin.media.uploadFailed").replace("{filename}", file.name) +
+                (data.error ? `: ${data.error}` : ""),
+            );
+            continue;
+          }
+
+          const data = await res.json();
+          const newItem: MediaWithUrl = {
+            ...data,
+            url: data.url,
+          };
+          setMedia((prev) => [newItem, ...prev]);
+          setTotal((prev) => prev + 1);
+          successCount++;
+        } catch {
+          toast.error(
+            t("admin.media.uploadFailed").replace("{filename}", file.name),
+          );
+        }
+      }
+
+      setUploading(false);
+      if (successCount > 0) {
+        toast.success(
+          t("admin.media.uploadComplete").replace(
+            "{count}",
+            String(successCount),
+          ),
+        );
+      }
+    },
+    [t],
+  );
+
   const formatDate = (epoch: number) => {
     return new Date(epoch * 1000).toLocaleDateString(undefined, {
       year: "numeric",
@@ -250,7 +341,33 @@ export function MediaLibrary({
   };
 
   return (
-    <>
+    <div
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className="relative"
+    >
+      {/* ── Drag overlay ── */}
+      {dragOver && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 rounded-[var(--radius-widget)] border-2 border-dashed border-primary bg-primary/5 backdrop-blur-sm">
+          <Upload className="h-10 w-10 text-primary" />
+          <p className="text-sm font-medium text-primary">
+            {t("admin.media.dropToUpload")}
+          </p>
+        </div>
+      )}
+
+      {/* ── Upload progress indicator ── */}
+      {uploading && (
+        <div className="mb-4 flex items-center gap-2 rounded-[var(--radius-widget)] border border-border bg-secondary px-4 py-2 text-sm text-muted-foreground">
+          <Upload className="h-4 w-4 animate-pulse" />
+          {t("admin.media.uploadProgress")
+            .replace("{current}", String(uploadProgress.current))
+            .replace("{total}", String(uploadProgress.total))}
+        </div>
+      )}
+
       {/* ── Filter bar ── */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
         {/* Search */}
@@ -573,6 +690,6 @@ export function MediaLibrary({
         destructive
         onConfirm={handleDelete}
       />
-    </>
+    </div>
   );
 }
