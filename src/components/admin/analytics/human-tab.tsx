@@ -150,15 +150,15 @@ export function HumanTab({ data }: HumanTabProps) {
         </Panel>
       </div>
 
-      {/* Three-column: Devices, Browsers, OS */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      {/* 2x2 grid: Devices, Browsers, OS, Countries */}
+      <div className="grid gap-4 lg:grid-cols-2">
         <Panel title={t("admin.analytics.devices")}>
           {donutData.length === 0 ? (
             <NoData text={t("admin.analytics.noData")} />
           ) : (
             <div className="flex flex-col items-center">
-              <div className="w-full max-w-[200px] min-h-[140px]">
-                <DashboardResponsiveContainer width="100%" height={160}>
+              <div className="h-[160px] w-full max-w-[200px]">
+                <DashboardResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={donutData}
@@ -230,10 +230,7 @@ export function HumanTab({ data }: HumanTabProps) {
             />
           )}
         </Panel>
-      </div>
 
-      {/* Countries */}
-      <div className="grid gap-4 lg:grid-cols-2">
         <Panel title={t("admin.analytics.countries")}>
           {data.countries.length === 0 ? (
             <NoData text={t("admin.analytics.noData")} />
