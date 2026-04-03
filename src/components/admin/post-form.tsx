@@ -634,7 +634,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
                 type="text"
                 value={referenceTitle}
                 onChange={(e) => setReferenceTitle(e.target.value)}
-                className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-[var(--radius-widget)] border border-input bg-input px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div className="space-y-1">
@@ -643,7 +643,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
                 value={referenceDescription}
                 onChange={(e) => setReferenceDescription(e.target.value)}
                 rows={2}
-                className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-[var(--radius-widget)] border border-input bg-input px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             {referenceImage && (
