@@ -110,7 +110,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[var(--radius-widget)] border border-border/50 bg-secondary/50 p-4">
+    <div className="rounded-[var(--radius-widget)] bg-secondary p-4">
       <h3 className="text-sm font-medium text-foreground mb-3">{title}</h3>
       {children}
     </div>
