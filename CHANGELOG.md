@@ -1,5 +1,18 @@
 # Changelog
 
+## v2.3.1 (2026-04-03)
+
+- feat(analytics): replace bot lists with donut charts
+- fix(analytics): device donut chart sizing and 2x2 layout
+- fix(admin): dashboard cards use pure bg-secondary for L2 brightness
+- refactor(admin): organize ai-settings-form into L2 cards per B-4/B-5
+- refactor(admin): organize site-identity-form into L2 cards per B-4/B-5
+- refactor(admin): organize settings-form into L2 cards per B-4/B-5
+- fix(admin): textarea use bg-input per B-5 spec
+- fix(admin): add bg-secondary to table containers per B-4 spec
+- fix(ui): align interactive controls with B-5 color spec
+
+
 ## v2.3.0 (2026-03-31)
 
 - fix: suppress Recharts width/height -1 warnings on initial render
