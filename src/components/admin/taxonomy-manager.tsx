@@ -373,14 +373,14 @@ export function TaxonomyManager({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t("admin.taxonomy.name")}
-              className="rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="rounded-[var(--radius-widget)] border border-input bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <input
               type="text"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
               placeholder={t("admin.taxonomy.slug")}
-              className="rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="rounded-[var(--radius-widget)] border border-input bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <input

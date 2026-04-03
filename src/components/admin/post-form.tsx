@@ -341,7 +341,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
           required
-          className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full rounded-[var(--radius-widget)] border border-input bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder={t("admin.postForm.titlePlaceholder")}
         />
       </div>
@@ -360,7 +360,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
           required
-          className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full rounded-[var(--radius-widget)] border border-input bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder={t("admin.postForm.slugPlaceholder")}
         />
       </div>
@@ -408,7 +408,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
                 onChange={(e) => setContent(e.target.value)}
                 required
                 rows={20}
-                className="w-full min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
+                className="w-full min-h-[480px] rounded-[var(--radius-widget)] border border-input bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
                 placeholder={t("admin.postForm.contentPlaceholder")}
               />
             </>
@@ -427,7 +427,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             onChange={(e) => setContent(e.target.value)}
             required
             rows={20}
-            className="w-full min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
+            className="w-full min-h-[480px] rounded-[var(--radius-widget)] border border-input bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
             placeholder={t("admin.postForm.contentPlaceholder")}
           />
         </div>
@@ -463,7 +463,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           value={excerpt}
           onChange={(e) => setExcerpt(e.target.value)}
           rows={3}
-          className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full rounded-[var(--radius-widget)] border border-input bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder={t("admin.postForm.excerptPlaceholder")}
         />
       </div>
@@ -529,7 +529,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           type="datetime-local"
           value={publishedAtLocal}
           onChange={(e) => setPublishedAtLocal(e.target.value)}
-          className="w-full sm:w-auto rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full sm:w-auto rounded-[var(--radius-widget)] border border-input bg-input px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
@@ -573,7 +573,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           type="url"
           value={featuredImage}
           onChange={(e) => setFeaturedImage(e.target.value)}
-          className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full rounded-[var(--radius-widget)] border border-input bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder="https://..."
         />
       </div>
@@ -589,7 +589,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             type="url"
             value={referenceUrl}
             onChange={(e) => setReferenceUrl(e.target.value)}
-            className="flex-1 rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="flex-1 rounded-[var(--radius-widget)] border border-input bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             placeholder="https://github.com/..."
           />
           <button
