@@ -8,9 +8,13 @@ import {
   LineChart,
   Line,
   CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 import {
   CHART_COLORS,
+  PIE_COLORS,
   chartAxis,
   formatDateLabel,
   formatNumber,
@@ -24,8 +28,38 @@ interface SearchTabProps {
 }
 
 // ---------------------------------------------------------------------------
-// Custom tooltip
+// Custom tooltips
 // ---------------------------------------------------------------------------
+
+function DonutTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{
+    name: string;
+    value: number;
+    payload: { fill: string; percent: number };
+  }>;
+}) {
+  if (!active || !payload?.length) return null;
+  const item = payload[0] as (typeof payload)[number];
+
+  return (
+    <div className="rounded-[var(--radius-widget)] border border-border bg-popover p-2.5 shadow-sm">
+      <div className="flex items-center gap-2">
+        <div
+          className="h-3 w-3 rounded-full"
+          style={{ backgroundColor: item.payload.fill }}
+        />
+        <span className="text-sm font-medium text-foreground">{item.name}</span>
+      </div>
+      <div className="text-sm text-muted-foreground">
+        {formatNumber(item.value)} ({(item.payload.percent * 100).toFixed(1)}%)
+      </div>
+    </div>
+  );
+}
 
 function BotTimelineTooltip({
   active,
@@ -78,15 +112,67 @@ export function SearchTab({ data }: SearchTabProps) {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, counts]) => ({ date, ...counts }));
 
+  // Pre-compute donut data with fill + percent
+  const botTotal = data.bots.reduce((s, b) => s + b.count, 0);
+  const donutData = data.bots.map((b, i) => ({
+    name: b.botName,
+    value: b.count,
+    fill: PIE_COLORS[i % PIE_COLORS.length],
+    percent: botTotal > 0 ? b.count / botTotal : 0,
+  }));
+
   return (
     <div className="space-y-4">
       {/* Bot breakdown */}
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title={t("admin.analytics.botBreakdown")}>
-          {data.bots.length === 0 ? (
+          {donutData.length === 0 ? (
             <NoData text={t("admin.analytics.noData")} />
           ) : (
-            <BotList bots={data.bots} />
+            <div className="flex flex-col items-center">
+              <div className="h-[160px] w-full max-w-[200px]">
+                <DashboardResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={donutData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius="50%"
+                      outerRadius="80%"
+                      strokeWidth={0}
+                      paddingAngle={2}
+                    >
+                      {donutData.map((entry) => (
+                        <Cell key={entry.name} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      content={<DonutTooltip />}
+                      isAnimationActive={false}
+                    />
+                  </PieChart>
+                </DashboardResponsiveContainer>
+              </div>
+              {/* Legend */}
+              <div className="mt-2 grid w-full grid-cols-2 gap-x-4 gap-y-1.5">
+                {donutData.map((item) => (
+                  <div key={item.name} className="flex items-center gap-2">
+                    <div
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ background: item.fill }}
+                    />
+                    <span className="text-xs text-muted-foreground truncate">
+                      {item.name}
+                    </span>
+                    <span className="ml-auto text-xs font-medium text-foreground">
+                      {formatNumber(item.value)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </Panel>
 
@@ -228,29 +314,6 @@ function Panel({
 
 function NoData({ text }: { text: string }) {
   return <p className="text-sm text-muted-foreground py-4">{text}</p>;
-}
-
-function BotList({ bots }: { bots: { botName: string; count: number }[] }) {
-  return (
-    <div className="space-y-2 text-sm">
-      {bots.map((bot, i) => (
-        <div key={i} className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div
-              className="h-2 w-2 rounded-full"
-              style={{
-                backgroundColor: CHART_COLORS[i % CHART_COLORS.length],
-              }}
-            />
-            <span className="truncate max-w-[160px]">{bot.botName}</span>
-          </div>
-          <span className="tabular-nums font-medium">
-            {formatNumber(bot.count)}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
 }
 
 function RankedTable({

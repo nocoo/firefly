@@ -1,60 +1,163 @@
 "use client";
 
 import type { OtherBotDetailResponse } from "@/models/analytics-types";
-import { CHART_COLORS, formatNumber } from "./chart-helpers";
+import { PieChart, Pie, Cell, Tooltip } from "recharts";
+import { PIE_COLORS, formatNumber } from "./chart-helpers";
+import { DashboardResponsiveContainer } from "./responsive-container";
 import { useLocale } from "@/i18n/context";
 
 interface OtherBotTabProps {
   data: OtherBotDetailResponse;
 }
 
+// ---------------------------------------------------------------------------
+// Custom tooltip
+// ---------------------------------------------------------------------------
+
+function DonutTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{
+    name: string;
+    value: number;
+    payload: { fill: string; percent: number };
+  }>;
+}) {
+  if (!active || !payload?.length) return null;
+  const item = payload[0] as (typeof payload)[number];
+
+  return (
+    <div className="rounded-[var(--radius-widget)] border border-border bg-popover p-2.5 shadow-sm">
+      <div className="flex items-center gap-2">
+        <div
+          className="h-3 w-3 rounded-full"
+          style={{ backgroundColor: item.payload.fill }}
+        />
+        <span className="text-sm font-medium text-foreground">{item.name}</span>
+      </div>
+      <div className="text-sm text-muted-foreground">
+        {formatNumber(item.value)} ({(item.payload.percent * 100).toFixed(1)}%)
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Donut chart with legend
+// ---------------------------------------------------------------------------
+
+function DonutWithLegend({
+  data,
+}: {
+  data: { name: string; value: number; fill: string; percent: number }[];
+}) {
+  return (
+    <div className="flex flex-col items-center">
+      <div className="h-[160px] w-full max-w-[200px]">
+        <DashboardResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              innerRadius="50%"
+              outerRadius="80%"
+              strokeWidth={0}
+              paddingAngle={2}
+            >
+              {data.map((entry) => (
+                <Cell key={entry.name} fill={entry.fill} />
+              ))}
+            </Pie>
+            <Tooltip content={<DonutTooltip />} isAnimationActive={false} />
+          </PieChart>
+        </DashboardResponsiveContainer>
+      </div>
+      {/* Legend */}
+      <div className="mt-2 grid w-full grid-cols-2 gap-x-4 gap-y-1.5">
+        {data.map((item) => (
+          <div key={item.name} className="flex items-center gap-2">
+            <div
+              className="h-2 w-2 shrink-0 rounded-full"
+              style={{ background: item.fill }}
+            />
+            <span className="text-xs text-muted-foreground truncate">
+              {item.name}
+            </span>
+            <span className="ml-auto text-xs font-medium text-foreground">
+              {formatNumber(item.value)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
 export function OtherBotTab({ data }: OtherBotTabProps) {
   const { t } = useLocale();
+
+  // Pre-compute donut data for category breakdown
+  const categoryTotal = data.byCategory.reduce((s, c) => s + c.count, 0);
+  const categoryDonut = data.byCategory.map((c, i) => ({
+    name: c.category,
+    value: c.count,
+    fill: PIE_COLORS[i % PIE_COLORS.length],
+    percent: categoryTotal > 0 ? c.count / categoryTotal : 0,
+  }));
+
+  // Pre-compute donut data for social bots
+  const socialTotal = data.socialBots.reduce((s, b) => s + b.count, 0);
+  const socialDonut = data.socialBots.map((b, i) => ({
+    name: b.botName,
+    value: b.count,
+    fill: PIE_COLORS[i % PIE_COLORS.length],
+    percent: socialTotal > 0 ? b.count / socialTotal : 0,
+  }));
+
+  // Pre-compute donut data for monitor bots
+  const monitorTotal = data.monitorBots.reduce((s, b) => s + b.count, 0);
+  const monitorDonut = data.monitorBots.map((b, i) => ({
+    name: b.botName,
+    value: b.count,
+    fill: PIE_COLORS[i % PIE_COLORS.length],
+    percent: monitorTotal > 0 ? b.count / monitorTotal : 0,
+  }));
 
   return (
     <div className="space-y-4">
       {/* Category breakdown */}
       <Panel title={t("admin.analytics.categoryBreakdown")}>
-        {data.byCategory.length === 0 ? (
+        {categoryDonut.length === 0 ? (
           <NoData text={t("admin.analytics.noData")} />
         ) : (
-          <div className="space-y-2 text-sm">
-            {data.byCategory.map((cat, i) => (
-              <div key={i} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="h-2 w-2 rounded-full"
-                    style={{
-                      backgroundColor:
-                        CHART_COLORS[i % CHART_COLORS.length],
-                    }}
-                  />
-                  <span className="capitalize">{cat.category}</span>
-                </div>
-                <span className="tabular-nums font-medium">
-                  {formatNumber(cat.count)}
-                </span>
-              </div>
-            ))}
-          </div>
+          <DonutWithLegend data={categoryDonut} />
         )}
       </Panel>
 
       {/* Two-column: Social + Monitor */}
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title={t("admin.analytics.socialBots")}>
-          {data.socialBots.length === 0 ? (
+          {socialDonut.length === 0 ? (
             <NoData text={t("admin.analytics.noData")} />
           ) : (
-            <BotList bots={data.socialBots} />
+            <DonutWithLegend data={socialDonut} />
           )}
         </Panel>
 
         <Panel title={t("admin.analytics.monitorBots")}>
-          {data.monitorBots.length === 0 ? (
+          {monitorDonut.length === 0 ? (
             <NoData text={t("admin.analytics.noData")} />
           ) : (
-            <BotList bots={data.monitorBots} />
+            <DonutWithLegend data={monitorDonut} />
           )}
         </Panel>
       </div>
@@ -119,27 +222,4 @@ function Panel({
 
 function NoData({ text }: { text: string }) {
   return <p className="text-sm text-muted-foreground py-4">{text}</p>;
-}
-
-function BotList({ bots }: { bots: { botName: string; count: number }[] }) {
-  return (
-    <div className="space-y-2 text-sm">
-      {bots.map((bot, i) => (
-        <div key={i} className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div
-              className="h-2 w-2 rounded-full"
-              style={{
-                backgroundColor: CHART_COLORS[i % CHART_COLORS.length],
-              }}
-            />
-            <span className="truncate max-w-[160px]">{bot.botName}</span>
-          </div>
-          <span className="tabular-nums font-medium">
-            {formatNumber(bot.count)}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
 }
