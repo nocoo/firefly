@@ -86,95 +86,113 @@ export function SettingsForm({ settings }: SettingsFormProps) {
   };
 
   return (
-    <div className="max-w-xl space-y-8">
-      {/* Locale */}
-      <div className="space-y-2">
-        <label className="text-base font-medium text-foreground">
-          {t("admin.settings.locale")}
-        </label>
-        <p className="text-sm text-muted-foreground">
-          {t("admin.settings.localeHint")}
-        </p>
-        <Select
-          value={locale}
-          onChange={(e) => setLocale(e.target.value as Locale)}
-        >
-          <option value="zh">中文</option>
-          <option value="en">English</option>
-        </Select>
+    <div className="space-y-6">
+      {/* Card 1: Display Settings */}
+      <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-5">
+        <h2 className="text-base font-medium text-foreground">
+          {t("admin.settings.displaySettings")}
+        </h2>
+
+        {/* Locale */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">
+            {t("admin.settings.locale")}
+          </label>
+          <p className="text-xs text-muted-foreground">
+            {t("admin.settings.localeHint")}
+          </p>
+          <Select
+            value={locale}
+            onChange={(e) => setLocale(e.target.value as Locale)}
+            className="max-w-xs"
+          >
+            <option value="zh">中文</option>
+            <option value="en">English</option>
+          </Select>
+        </div>
+
+        {/* Posts per page */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">
+            {t("admin.settings.postsPerPage")}
+          </label>
+          <p className="text-xs text-muted-foreground">
+            {t("admin.settings.postsPerPageHint")}
+          </p>
+          <Input
+            type="number"
+            min={1}
+            max={100}
+            value={postsPerPage}
+            onChange={(e) => setPostsPerPage(e.target.value)}
+            className="max-w-[120px]"
+          />
+        </div>
+
+        {/* Font style */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">
+            {t("admin.settings.fontStyle")}
+          </label>
+          <p className="text-xs text-muted-foreground">
+            {t("admin.settings.fontStyleHint")}
+          </p>
+          <SegmentedControl
+            options={[
+              { value: "pingfang", label: t("admin.settings.fontStylePingfang") },
+              { value: "classic", label: t("admin.settings.fontStyleClassic") },
+              { value: "serif", label: t("admin.settings.fontStyleSerif") },
+              { value: "sans", label: t("admin.settings.fontStyleSans") },
+            ]}
+            value={fontStyle}
+            onChange={(v) => setFontStyle(v as FontStyle)}
+          />
+        </div>
       </div>
 
-      {/* Posts per page */}
-      <div className="space-y-2">
-        <label className="text-base font-medium text-foreground">
-          {t("admin.settings.postsPerPage")}
-        </label>
-        <p className="text-sm text-muted-foreground">
-          {t("admin.settings.postsPerPageHint")}
-        </p>
-        <Input
-          type="number"
-          min={1}
-          max={100}
-          value={postsPerPage}
-          onChange={(e) => setPostsPerPage(e.target.value)}
-        />
+      {/* Card 2: Content Settings */}
+      <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-5">
+        <h2 className="text-base font-medium text-foreground">
+          {t("admin.settings.contentSettings")}
+        </h2>
+
+        {/* Comments enabled */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">
+            {t("admin.settings.commentsEnabled")}
+          </label>
+          <p className="text-xs text-muted-foreground">
+            {t("admin.settings.commentsEnabledHint")}
+          </p>
+          <SegmentedControl
+            options={[
+              { value: "on", label: t("admin.settings.commentsOn") },
+              { value: "off", label: t("admin.settings.commentsOff") },
+            ]}
+            value={commentsEnabled ? "on" : "off"}
+            onChange={(v) => setCommentsEnabled(v === "on")}
+          />
+        </div>
       </div>
 
-      {/* Comments enabled */}
-      <div className="space-y-2">
-        <label className="text-base font-medium text-foreground">
-          {t("admin.settings.commentsEnabled")}
-        </label>
-        <p className="text-sm text-muted-foreground">
-          {t("admin.settings.commentsEnabledHint")}
-        </p>
-        <SegmentedControl
-          options={[
-            { value: "on", label: t("admin.settings.commentsOn") },
-            { value: "off", label: t("admin.settings.commentsOff") },
-          ]}
-          value={commentsEnabled ? "on" : "off"}
-          onChange={(v) => setCommentsEnabled(v === "on")}
-        />
-      </div>
-
-      {/* Font style */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          {t("admin.settings.fontStyle")}
-        </label>
-        <p className="text-xs text-muted-foreground">
-          {t("admin.settings.fontStyleHint")}
-        </p>
-        <SegmentedControl
-          options={[
-            { value: "pingfang", label: t("admin.settings.fontStylePingfang") },
-            { value: "classic", label: t("admin.settings.fontStyleClassic") },
-            { value: "serif", label: t("admin.settings.fontStyleSerif") },
-            { value: "sans", label: t("admin.settings.fontStyleSans") },
-          ]}
-          value={fontStyle}
-          onChange={(v) => setFontStyle(v as FontStyle)}
-        />
-      </div>
-
-      {/* Internal URLs */}
-      <div className="space-y-2">
-        <label className="text-base font-medium text-foreground">
-          {t("admin.settings.internalUrls")}
-        </label>
-        <p className="text-sm text-muted-foreground">
-          {t("admin.settings.internalUrlsHint")}
-        </p>
-        <div className="space-y-1.5">
+      {/* Card 3: Internal URLs */}
+      <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-4">
+        <div>
+          <h2 className="text-base font-medium text-foreground">
+            {t("admin.settings.internalUrls")}
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t("admin.settings.internalUrlsHint")}
+          </p>
+        </div>
+        <div className="space-y-2">
           {internalUrls.map(({ label, path }) => {
             const fullUrl = `${origin}${path}`;
             const isCopied = copiedUrl === fullUrl;
             return (
               <div
                 key={path}
-                className="flex items-center gap-2 rounded-[var(--radius-widget)] border border-border px-3 py-2"
+                className="flex items-center gap-2 rounded-[var(--radius-widget)] border border-input bg-input px-3 py-2"
               >
                 <span className="min-w-0 flex-1 truncate font-mono text-xs text-foreground">
                   {fullUrl}
