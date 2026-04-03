@@ -409,7 +409,7 @@ export function TaxonomyManager({
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-[var(--radius-widget)] border border-border">
+      <div className="overflow-x-auto rounded-[var(--radius-widget)] border border-border bg-secondary">
         {sortable ? (
           <DndContext
             sensors={sensors}

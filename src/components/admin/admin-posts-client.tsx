@@ -452,7 +452,7 @@ function ListView({
   return (
     <>
       {/* Table */}
-      <div className="overflow-x-auto rounded-[var(--radius-widget)] border border-border">
+      <div className="overflow-x-auto rounded-[var(--radius-widget)] border border-border bg-secondary">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-secondary/50">

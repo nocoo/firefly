@@ -318,7 +318,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
           <p className="text-sm">{t("admin.mcpTokens.empty")}</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-[var(--radius-widget)] border border-border">
+        <div className="overflow-x-auto rounded-[var(--radius-widget)] border border-border bg-secondary">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-secondary/50">
