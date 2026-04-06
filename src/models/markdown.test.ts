@@ -284,8 +284,16 @@ const x = 1;
 
 describe("renderMarkdown with optimizeImages", () => {
   const opts = { optimizeImages: true };
-  const assetsHostname = process.env.NEXT_PUBLIC_ASSETS_HOSTNAME ?? "assets.example.com";
-  const siteHostname = process.env.NEXT_PUBLIC_SITE_HOSTNAME ?? "example.com";
+  // R2_PUBLIC_URL is set to https://assets.example.com in vitest.config.ts
+  const assetsHostname = (() => {
+    const url = process.env.R2_PUBLIC_URL;
+    if (!url) return "assets.example.com";
+    try {
+      return new URL(url).hostname;
+    } catch {
+      return "assets.example.com";
+    }
+  })();
   const internalUrl = `https://${assetsHostname}/uploads/photo.jpg`;
   const externalUrl = "https://external-site.org/img.jpg";
 
@@ -362,11 +370,12 @@ describe("renderMarkdown with optimizeImages", () => {
     expect(html).toContain("<pre><code");
   });
 
-  it("optimized mode: site domain is also optimized", () => {
-    const url = `https://${siteHostname}/some/image.png`;
-    const html = renderMarkdown(`![Alt](${url})`, opts);
-    expect(html).toContain("/_next/image");
-    expect(html).toContain("srcset");
-    expect(html).toContain(`data-original-src="${url}"`);
+  it("optimized mode: only R2 assets domain is optimized, other domains are not", () => {
+    const otherUrl = "https://other-site.com/some/image.png";
+    const html = renderMarkdown(`![Alt](${otherUrl})`, opts);
+    // Should NOT be optimized — not in whitelist
+    expect(html).not.toContain("/_next/image");
+    expect(html).not.toContain("srcset");
+    expect(html).toContain(`src="${otherUrl}"`);
   });
 });

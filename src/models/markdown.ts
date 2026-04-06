@@ -20,13 +20,18 @@ export interface RenderMarkdownOptions {
 // Image optimisation constants
 // ---------------------------------------------------------------------------
 
-/** Domains whose images are safe to proxy through /_next/image. */
+/**
+ * Extract hostname from R2_PUBLIC_URL for image optimization whitelist.
+ * Images from this domain are proxied through /_next/image for optimization.
+ */
 const OPTIMIZABLE_HOSTS = (() => {
-  const hosts = [
-    process.env.NEXT_PUBLIC_ASSETS_HOSTNAME,
-    process.env.NEXT_PUBLIC_SITE_HOSTNAME,
-  ].filter(Boolean) as string[];
-  return hosts.length > 0 ? hosts : [];
+  const url = process.env.R2_PUBLIC_URL;
+  if (!url) return [];
+  try {
+    return [new URL(url).hostname];
+  } catch {
+    return [];
+  }
 })();
 
 /** Subset of Next.js default deviceSizes suitable for blog content. */
