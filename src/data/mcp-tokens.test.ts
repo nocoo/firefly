@@ -11,6 +11,9 @@ import {
   revokeToken,
   revokeTokensByClientId,
   listMcpTokens,
+  deleteMcpToken,
+  deleteRevokedTokens,
+  countRevokedTokens,
   sha256,
   randomHex,
   generateAccessToken,
@@ -318,5 +321,98 @@ describe("listMcpTokens", () => {
     expect(sql).toContain("ORDER BY created_at DESC");
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("tok-1");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// deleteMcpToken
+// ---------------------------------------------------------------------------
+
+describe("deleteMcpToken", () => {
+  let db: Db;
+  beforeEach(() => { db = createMockDb(); });
+
+  it("deletes revoked token and returns true", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });
+
+    const result = await deleteMcpToken(db, "tok-1");
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("DELETE FROM mcp_tokens");
+    expect(sql).toContain("revoked = 1");
+    expect(params![0]).toBe("tok-1");
+    expect(result).toBe(true);
+  });
+
+  it("returns false when token not found or not revoked", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 0, duration: 1 });
+
+    const result = await deleteMcpToken(db, "tok-active");
+
+    expect(result).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// deleteRevokedTokens
+// ---------------------------------------------------------------------------
+
+describe("deleteRevokedTokens", () => {
+  let db: Db;
+  beforeEach(() => { db = createMockDb(); });
+
+  it("deletes all revoked tokens and returns count", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 5, duration: 2 });
+
+    const result = await deleteRevokedTokens(db);
+
+    const [sql] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("DELETE FROM mcp_tokens");
+    expect(sql).toContain("revoked = 1");
+    expect(result).toBe(5);
+  });
+
+  it("returns 0 when no revoked tokens", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 0, duration: 1 });
+
+    const result = await deleteRevokedTokens(db);
+
+    expect(result).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// countRevokedTokens
+// ---------------------------------------------------------------------------
+
+describe("countRevokedTokens", () => {
+  let db: Db;
+  beforeEach(() => { db = createMockDb(); });
+
+  it("returns count of revoked tokens", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 3 });
+
+    const result = await countRevokedTokens(db);
+
+    const [sql] = vi.mocked(db.firstOrNull).mock.calls[0];
+    expect(sql).toContain("COUNT(*)");
+    expect(sql).toContain("revoked = 1");
+    expect(result).toBe(3);
+  });
+
+  it("returns 0 when no revoked tokens", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+
+    const result = await countRevokedTokens(db);
+
+    expect(result).toBe(0);
+  });
+
+  it("returns 0 when query returns null", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue(null);
+
+    const result = await countRevokedTokens(db);
+
+    expect(result).toBe(0);
   });
 });

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Plus, Copy, Check, Terminal } from "lucide-react";
+import { KeyRound, Plus, Copy, Check, Terminal, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { McpToken } from "@/models/types";
 import { useLocale } from "@/i18n/context";
@@ -195,12 +195,19 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
     id: string;
   } | null>(null);
 
+  const revokedCount = useMemo(
+    () => tokens.filter((t) => t.revoked === 1).length,
+    [tokens],
+  );
+
   const formatDate = (epoch: number | null) => {
     if (!epoch) return "—";
     return new Date(epoch * 1000).toLocaleString();
   };
 
   const [revokeTargetId, setRevokeTargetId] = useState<string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [showBulkDelete, setShowBulkDelete] = useState(false);
 
   const handleRevoke = async (id: string) => {
     setRevokeTargetId(null);
@@ -211,10 +218,43 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
         const data = await res.json();
         throw new Error(data.error ?? "Failed to revoke token");
       }
-      toast.success(t("admin.mcpTokens.revoke"));
+      toast.success(t("admin.mcpTokens.revoked"));
       router.refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to revoke token");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setDeleteTargetId(null);
+    setError(null);
+    try {
+      const res = await fetch(`/api/mcp/tokens/${id}?action=delete`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Failed to delete token");
+      }
+      toast.success(t("admin.mcpTokens.deleted"));
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete token");
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    setShowBulkDelete(false);
+    setError(null);
+    try {
+      const res = await fetch("/api/mcp/tokens", { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Failed to delete revoked tokens");
+      }
+      const data = await res.json();
+      toast.success(t("admin.mcpTokens.bulkDeleted", { count: data.deleted }));
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete revoked tokens");
     }
   };
 
@@ -318,84 +358,105 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
           <p className="text-sm">{t("admin.mcpTokens.empty")}</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-[var(--radius-widget)] border border-border bg-secondary">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-secondary/50">
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  {t("admin.mcpTokens.colClient")}
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
-                  {t("admin.mcpTokens.colPreview")}
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
-                  {t("admin.mcpTokens.colLastUsed")}
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden lg:table-cell">
-                  {t("admin.mcpTokens.colCreated")}
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  {t("admin.mcpTokens.colStatus")}
-                </th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  {t("admin.mcpTokens.colAction")}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {tokens.map((token) => {
-                const isRevoked = token.revoked === 1;
-                const isExpired =
-                  token.expires_at < Math.floor(Date.now() / 1000);
-                const status = isRevoked
-                  ? t("admin.mcpTokens.statusRevoked")
-                  : isExpired
-                    ? t("admin.mcpTokens.statusExpired")
-                    : t("admin.mcpTokens.statusActive");
-                const statusClass =
-                  isRevoked || isExpired
-                    ? "text-muted-foreground"
-                    : "text-green-600 dark:text-green-400";
+        <div className="space-y-3">
+          {/* Bulk delete button */}
+          {revokedCount > 0 && (
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowBulkDelete(true)}
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {t("admin.mcpTokens.bulkDelete", { count: revokedCount })}
+              </button>
+            </div>
+          )}
+          <div className="overflow-x-auto rounded-[var(--radius-widget)] border border-border bg-secondary">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-secondary/50">
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                    {t("admin.mcpTokens.colClient")}
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
+                    {t("admin.mcpTokens.colPreview")}
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
+                    {t("admin.mcpTokens.colLastUsed")}
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden lg:table-cell">
+                    {t("admin.mcpTokens.colCreated")}
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                    {t("admin.mcpTokens.colStatus")}
+                  </th>
+                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                    {t("admin.mcpTokens.colAction")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {tokens.map((token) => {
+                  const isRevoked = token.revoked === 1;
+                  const isExpired =
+                    token.expires_at < Math.floor(Date.now() / 1000);
+                  const status = isRevoked
+                    ? t("admin.mcpTokens.statusRevoked")
+                    : isExpired
+                      ? t("admin.mcpTokens.statusExpired")
+                      : t("admin.mcpTokens.statusActive");
+                  const statusClass =
+                    isRevoked || isExpired
+                      ? "text-muted-foreground"
+                      : "text-green-600 dark:text-green-400";
 
-                return (
-                  <tr
-                    key={token.id}
-                    className="border-b border-border last:border-0 hover:bg-accent/50 transition-colors"
-                  >
-                    <td className="px-4 py-3 font-medium">
-                      {token.client_name ?? "—"}
-                    </td>
-                    <td className="px-4 py-3 hidden sm:table-cell">
-                      <code className="rounded bg-secondary px-1.5 py-0.5 text-xs font-mono">
-                        {token.access_token_preview}…
-                      </code>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
-                      {formatDate(token.last_used_at)}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
-                      {formatDate(token.created_at)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs font-medium ${statusClass}`}>
-                        {status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {!isRevoked && (
-                        <button
-                          onClick={() => setRevokeTargetId(token.id)}
-                          className="text-xs text-destructive hover:text-destructive/80 transition-colors"
-                        >
-                          {t("admin.mcpTokens.revoke")}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                  return (
+                    <tr
+                      key={token.id}
+                      className="border-b border-border last:border-0 hover:bg-accent/50 transition-colors"
+                    >
+                      <td className="px-4 py-3 font-medium">
+                        {token.client_name ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 hidden sm:table-cell">
+                        <code className="rounded bg-secondary px-1.5 py-0.5 text-xs font-mono">
+                          {token.access_token_preview}…
+                        </code>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                        {formatDate(token.last_used_at)}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
+                        {formatDate(token.created_at)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs font-medium ${statusClass}`}>
+                          {status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {isRevoked ? (
+                          <button
+                            onClick={() => setDeleteTargetId(token.id)}
+                            className="text-xs text-destructive hover:text-destructive/80 transition-colors"
+                          >
+                            {t("admin.mcpTokens.delete")}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setRevokeTargetId(token.id)}
+                            className="text-xs text-destructive hover:text-destructive/80 transition-colors"
+                          >
+                            {t("admin.mcpTokens.revoke")}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -409,6 +470,30 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
         confirmLabel={t("admin.mcpTokens.revoke")}
         cancelLabel={t("admin.confirm.cancel")}
         onConfirm={() => { if (revokeTargetId) handleRevoke(revokeTargetId); }}
+      />
+
+      {/* Delete confirmation dialog */}
+      <ConfirmDialog
+        open={!!deleteTargetId}
+        onOpenChange={(open) => { if (!open) setDeleteTargetId(null); }}
+        title={t("admin.mcpTokens.confirmDelete")}
+        description=""
+        destructive
+        confirmLabel={t("admin.mcpTokens.delete")}
+        cancelLabel={t("admin.confirm.cancel")}
+        onConfirm={() => { if (deleteTargetId) handleDelete(deleteTargetId); }}
+      />
+
+      {/* Bulk delete confirmation dialog */}
+      <ConfirmDialog
+        open={showBulkDelete}
+        onOpenChange={setShowBulkDelete}
+        title={t("admin.mcpTokens.confirmBulkDelete", { count: revokedCount })}
+        description=""
+        destructive
+        confirmLabel={t("admin.mcpTokens.deleteBulkConfirm")}
+        cancelLabel={t("admin.confirm.cancel")}
+        onConfirm={handleBulkDelete}
       />
     </div>
   );

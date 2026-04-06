@@ -577,4 +577,108 @@ describe("MCP Admin Token API", () => {
     // Revoked token should be rejected
     expect(mcpRes.status).toBe(401);
   });
+
+  it("DELETE single revoked token permanently", async () => {
+    // Create and revoke a token
+    const createRes = await fetch(`${BASE}/api/mcp/tokens`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ client_name: "e2e-delete-single" }),
+    });
+    const created = await createRes.json();
+
+    // Revoke first
+    await fetch(`${BASE}/api/mcp/tokens/${created.id}`, { method: "DELETE" });
+
+    // Permanently delete
+    const deleteRes = await fetch(
+      `${BASE}/api/mcp/tokens/${created.id}?action=delete`,
+      { method: "DELETE" },
+    );
+    expect(deleteRes.status).toBe(200);
+    const deleteData = await deleteRes.json();
+    expect(deleteData.action).toBe("deleted");
+
+    // Token should no longer exist in list
+    const listRes = await fetch(`${BASE}/api/mcp/tokens`);
+    const tokens = await listRes.json();
+    const found = tokens.find((t: { id: string }) => t.id === created.id);
+    expect(found).toBeUndefined();
+  });
+
+  it("DELETE non-revoked token with action=delete fails", async () => {
+    // Create a token (not revoked)
+    const createRes = await fetch(`${BASE}/api/mcp/tokens`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ client_name: "e2e-delete-active" }),
+    });
+    const created = await createRes.json();
+
+    // Try to permanently delete without revoking first
+    const deleteRes = await fetch(
+      `${BASE}/api/mcp/tokens/${created.id}?action=delete`,
+      { method: "DELETE" },
+    );
+    expect(deleteRes.status).toBe(404);
+
+    // Cleanup: revoke then delete
+    await fetch(`${BASE}/api/mcp/tokens/${created.id}`, { method: "DELETE" });
+    await fetch(`${BASE}/api/mcp/tokens/${created.id}?action=delete`, { method: "DELETE" });
+  });
+
+  it("DELETE /api/mcp/tokens bulk deletes all revoked tokens", async () => {
+    // Create and revoke two tokens
+    const t1 = await (
+      await fetch(`${BASE}/api/mcp/tokens`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ client_name: "e2e-bulk-1" }),
+      })
+    ).json();
+    const t2 = await (
+      await fetch(`${BASE}/api/mcp/tokens`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ client_name: "e2e-bulk-2" }),
+      })
+    ).json();
+
+    // Revoke both
+    await fetch(`${BASE}/api/mcp/tokens/${t1.id}`, { method: "DELETE" });
+    await fetch(`${BASE}/api/mcp/tokens/${t2.id}`, { method: "DELETE" });
+
+    // Bulk delete
+    const bulkRes = await fetch(`${BASE}/api/mcp/tokens`, { method: "DELETE" });
+    expect(bulkRes.status).toBe(200);
+    const bulkData = await bulkRes.json();
+    expect(bulkData.deleted).toBeGreaterThanOrEqual(2);
+
+    // Verify tokens are gone
+    const listRes = await fetch(`${BASE}/api/mcp/tokens`);
+    const tokens = await listRes.json();
+    expect(tokens.find((t: { id: string }) => t.id === t1.id)).toBeUndefined();
+    expect(tokens.find((t: { id: string }) => t.id === t2.id)).toBeUndefined();
+  });
+
+  it("GET /api/mcp/tokens?revoked_count=true returns count", async () => {
+    // Create and revoke a token
+    const t = await (
+      await fetch(`${BASE}/api/mcp/tokens`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ client_name: "e2e-count" }),
+      })
+    ).json();
+    await fetch(`${BASE}/api/mcp/tokens/${t.id}`, { method: "DELETE" });
+
+    // Check count
+    const countRes = await fetch(`${BASE}/api/mcp/tokens?revoked_count=true`);
+    expect(countRes.status).toBe(200);
+    const countData = await countRes.json();
+    expect(countData.revoked_count).toBeGreaterThanOrEqual(1);
+
+    // Cleanup
+    await fetch(`${BASE}/api/mcp/tokens/${t.id}?action=delete`, { method: "DELETE" });
+  });
 });

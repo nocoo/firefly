@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
-import { listMcpTokens, generateAccessToken, generateRefreshToken, sha256, createMcpToken } from "@/data/mcp-tokens";
+import { listMcpTokens, generateAccessToken, generateRefreshToken, sha256, createMcpToken, deleteRevokedTokens, countRevokedTokens } from "@/data/mcp-tokens";
 import { createMcpClient } from "@/data/mcp-clients";
 
 const E2E_EMAIL = "e2e@test.local";
@@ -17,7 +17,9 @@ async function requireAdmin(): Promise<{ email: string } | null> {
 }
 
 // GET /api/mcp/tokens — list all tokens (admin)
-export async function GET() {
+// Query params:
+//   ?revoked_count=true — return count of revoked tokens instead of full list
+export async function GET(request: Request) {
   const admin = await requireAdmin();
   if (!admin) {
     return errorResponse("Unauthorized", 401);
@@ -25,6 +27,13 @@ export async function GET() {
 
   try {
     const db = getDb();
+    const url = new URL(request.url);
+
+    if (url.searchParams.get("revoked_count") === "true") {
+      const count = await countRevokedTokens(db);
+      return jsonResponse({ revoked_count: count });
+    }
+
     const tokens = await listMcpTokens(db);
     return jsonResponse(tokens);
   } catch (error) {
@@ -84,6 +93,25 @@ export async function POST(request: Request) {
       scope: token.scope,
       client_name: token.client_name,
     }, 201);
+  } catch (error) {
+    return errorResponse(
+      error instanceof Error ? error.message : "Internal server error",
+      500,
+    );
+  }
+}
+
+// DELETE /api/mcp/tokens — delete all revoked tokens (admin)
+export async function DELETE() {
+  const admin = await requireAdmin();
+  if (!admin) {
+    return errorResponse("Unauthorized", 401);
+  }
+
+  try {
+    const db = getDb();
+    const deletedCount = await deleteRevokedTokens(db);
+    return jsonResponse({ success: true, deleted: deletedCount });
   } catch (error) {
     return errorResponse(
       error instanceof Error ? error.message : "Internal server error",

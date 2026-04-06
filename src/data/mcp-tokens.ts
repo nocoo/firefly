@@ -212,3 +212,47 @@ export async function listMcpTokens(
   );
   return result.results;
 }
+
+// ---------------------------------------------------------------------------
+// deleteMcpToken
+// ---------------------------------------------------------------------------
+
+/** Permanently delete a token by ID (only allowed for revoked tokens). */
+export async function deleteMcpToken(
+  db: Db,
+  id: string,
+): Promise<boolean> {
+  const meta = await db.execute(
+    "DELETE FROM mcp_tokens WHERE id = ? AND revoked = 1",
+    [id],
+  );
+  return meta.changes > 0;
+}
+
+// ---------------------------------------------------------------------------
+// deleteRevokedTokens
+// ---------------------------------------------------------------------------
+
+/** Permanently delete all revoked tokens. Returns number of deleted tokens. */
+export async function deleteRevokedTokens(
+  db: Db,
+): Promise<number> {
+  const meta = await db.execute(
+    "DELETE FROM mcp_tokens WHERE revoked = 1",
+  );
+  return meta.changes;
+}
+
+// ---------------------------------------------------------------------------
+// countRevokedTokens
+// ---------------------------------------------------------------------------
+
+/** Count revoked tokens. */
+export async function countRevokedTokens(
+  db: Db,
+): Promise<number> {
+  const row = await db.firstOrNull<{ count: number }>(
+    "SELECT COUNT(*) as count FROM mcp_tokens WHERE revoked = 1",
+  );
+  return row?.count ?? 0;
+}
