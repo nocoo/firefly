@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.4.0 (2026-04-06)
+
+- refactor: consolidate domain env vars into R2_PUBLIC_URL
+
+
 ## v2.3.2 (2026-04-06)
 
 - chore(deps): upgrade next 16.2.2, vitest 4.1.2, vite 8.0.5 (security)
