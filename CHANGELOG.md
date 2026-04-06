@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.3.2 (2026-04-06)
+
+- chore(deps): upgrade next 16.2.2, vitest 4.1.2, vite 8.0.5 (security)
+- feat(admin): add delete functionality for revoked MCP tokens
+
+
 ## v2.3.1 (2026-04-03)
 
 - feat(analytics): replace bot lists with donut charts
