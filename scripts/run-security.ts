@@ -13,7 +13,7 @@ async function main() {
   // 1. osv-scanner — check bun.lock for known CVEs
   console.log("[G2] osv-scanner: checking dependencies...");
   try {
-    await $`osv-scanner --lockfile=bun.lock`.quiet();
+    await $`osv-scanner scan --config=osv-scanner.toml --lockfile=bun.lock`.quiet();
     console.log("[G2] osv-scanner: ✅ no vulnerabilities\n");
   } catch {
     console.error("[G2] osv-scanner: ❌ vulnerabilities found\n");

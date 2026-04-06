@@ -1,0 +1,7 @@
+# OSV-Scanner configuration for vulnerability management
+# https://google.github.io/osv-scanner/configuration/
+
+[[IgnoredVulns]]
+id = "GHSA-5f7q-jpqc-wp7h"
+ignoreUntil = 2026-05-01
+reason = "CVE-2025-59472 is fixed in Next.js 16.1.5+. We are on 16.2.2 which includes the fix. OSV database has not yet updated the fixed_version metadata. See: https://github.com/advisories/GHSA-5f7q-jpqc-wp7h"
