@@ -171,8 +171,8 @@ export function SystemMonitorDashboard() {
 
   useEffect(() => {
     fetchStats();
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchStats, 60_000);
+    // Refresh every 10 seconds
+    const interval = setInterval(fetchStats, 10_000);
     return () => clearInterval(interval);
   }, [fetchStats]);
 
@@ -360,7 +360,7 @@ export function SystemMonitorDashboard() {
               </div>
             </>
           ) : (
-            <div className="flex h-64 items-center justify-center text-muted-foreground">
+            <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
               {t("admin.system.samples", { count: memory.summary.sampleCount })}
             </div>
           )}
@@ -496,7 +496,7 @@ export function SystemMonitorDashboard() {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="flex h-64 items-center justify-center text-muted-foreground">
+              <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
                 {t("admin.system.noCacheEntries")}
               </div>
             )}

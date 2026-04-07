@@ -25,6 +25,10 @@ const memoryHistory: MemorySnapshot[] = [];
 let collectionInterval: ReturnType<typeof setInterval> | null = null;
 let collectionStarted = false;
 
+// Shorter interval in dev mode for faster feedback
+const COLLECTION_INTERVAL_MS =
+  process.env.NODE_ENV === "development" ? 10_000 : 60_000;
+
 /**
  * Collect a memory snapshot using Node.js process.memoryUsage().
  */
@@ -75,7 +79,7 @@ function startMemoryCollection(intervalMs: number = 60_000): void {
  */
 function ensureCollectionStarted(): void {
   if (!collectionStarted && typeof process !== "undefined") {
-    startMemoryCollection(60_000);
+    startMemoryCollection(COLLECTION_INTERVAL_MS);
   }
 }
 
@@ -133,7 +137,9 @@ export function getMemoryStats(): {
 export async function register(): Promise<void> {
   // Only run on Node.js runtime (not Edge)
   if (process.env.NEXT_RUNTIME === "nodejs") {
-    console.log("[instrumentation] Starting memory collection...");
-    startMemoryCollection(60_000); // Collect every 60 seconds
+    console.log(
+      `[instrumentation] Starting memory collection (interval: ${COLLECTION_INTERVAL_MS / 1000}s)...`,
+    );
+    startMemoryCollection(COLLECTION_INTERVAL_MS);
   }
 }
