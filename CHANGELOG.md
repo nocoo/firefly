@@ -179,8 +179,8 @@
 
 - feat(media): dynamic year filter with counts and file type icons
 - fix: add attachment backfill script to correct media library dates
-- docs: replace lizheng.me references with generic placeholders
-- refactor: replace lizheng.me hardcoded instances with env vars
+- docs: replace lizheng.blog references with generic placeholders
+- refactor: replace lizheng.blog hardcoded instances with env vars
 
 
 ## v1.7.6 (2026-03-27)
@@ -313,7 +313,7 @@
 - refactor: replace native confirm/alert with ConfirmDialog and toast
 - feat: add Sonner toast, Radix AlertDialog, and ConfirmDialog components
 - feat: enhance post search with keyboard shortcut, wider matching, and date filters
-- fix: add lizheng.me HTTPS to next/image remote patterns
+- fix: add lizheng.blog HTTPS to next/image remote patterns
 - fix: resolve picomatch CVE, E2E next build+start, skip HTTPS in test
 - fix: E2E uses next build+start, skip HTTPS redirect in test mode
 
