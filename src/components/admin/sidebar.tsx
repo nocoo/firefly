@@ -21,6 +21,7 @@ import {
   Fingerprint,
   CloudUpload,
   Search,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -71,6 +72,7 @@ const NAV_GROUPS: NavGroup[] = [
       { titleKey: "admin.nav.aiSettings", href: "/admin/ai-settings", icon: Bot },
       { titleKey: "admin.nav.mcpTokens", href: "/admin/mcp", icon: KeyRound },
       { titleKey: "admin.nav.backup", href: "/admin/backup", icon: CloudUpload },
+      { titleKey: "admin.nav.systemMonitor", href: "/admin/system", icon: Activity },
     ],
   },
 ];

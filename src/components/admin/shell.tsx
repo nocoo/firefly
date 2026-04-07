@@ -28,6 +28,7 @@ const PAGE_TITLE_KEYS: Record<string, string> = {
   "/admin/ai-settings": "admin.nav.aiSettings",
   "/admin/mcp": "admin.nav.mcpTokens",
   "/admin/backup": "admin.backup.title",
+  "/admin/system": "admin.nav.systemMonitor",
 };
 
 interface AdminShellProps {

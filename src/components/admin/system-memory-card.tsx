@@ -27,14 +27,16 @@ interface MemorySnapshot {
 }
 
 interface MemoryStats {
-  current: MemorySnapshot;
-  history: MemorySnapshot[];
-  summary: {
-    peakHeapMB: number;
-    avgHeapMB: number;
-    sampleCount: number;
-    collectionStarted: number | null;
-    uptimeSeconds: number;
+  memory: {
+    current: MemorySnapshot;
+    history: MemorySnapshot[];
+    summary: {
+      peakHeapMB: number;
+      avgHeapMB: number;
+      sampleCount: number;
+      collectionStarted: number | null;
+      uptimeSeconds: number;
+    };
   };
 }
 
@@ -112,7 +114,7 @@ export function SystemMemoryCard() {
     );
   }
 
-  const { current, history, summary } = stats;
+  const { current, history, summary } = stats.memory;
 
   // Downsample history for chart display (max 96 points = 48h at 30min intervals)
   // This keeps the chart readable while showing the full 48h trend

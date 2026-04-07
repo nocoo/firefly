@@ -394,6 +394,8 @@
   "admin.mcpTokens.guideStep3": "Paste the config into your client's MCP settings file, then restart the client.",
   "admin.mcpTokens.guideTools": "16 tools available — Posts (CRUD + AI excerpt), Tags (CRUD), Categories (CRUD).",
   "admin.system.memoryTitle": "System Memory",
+  "admin.system.subtitle": "Performance & Cache Monitor",
+  "admin.nav.systemMonitor": "System Monitor",
   "admin.preview.emptyState": "Start writing to see a live preview",
   "admin.preview.featuredImageAlt": "Featured image",
   "auth.welcome": "Welcome back",
