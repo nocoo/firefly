@@ -23,6 +23,7 @@ const MAX_SAMPLES = 2880; // 48 hours at 1 sample/min
 const memoryHistory: MemorySnapshot[] = [];
 
 let collectionInterval: ReturnType<typeof setInterval> | null = null;
+let collectionStarted = false;
 
 /**
  * Collect a memory snapshot using Node.js process.memoryUsage().
@@ -41,9 +42,11 @@ function collectMemorySnapshot(): MemorySnapshot {
 
 /**
  * Start collecting memory snapshots at regular intervals.
+ * Safe to call multiple times — only starts once.
  */
 function startMemoryCollection(intervalMs: number = 60_000): void {
-  if (collectionInterval) return; // Already running
+  if (collectionInterval || collectionStarted) return; // Already running
+  collectionStarted = true;
 
   // Collect initial snapshot
   memoryHistory.push(collectMemorySnapshot());
@@ -64,6 +67,16 @@ function startMemoryCollection(intervalMs: number = 60_000): void {
       );
     }
   }, intervalMs);
+}
+
+/**
+ * Ensure memory collection is running.
+ * Called lazily when stats are requested.
+ */
+function ensureCollectionStarted(): void {
+  if (!collectionStarted && typeof process !== "undefined") {
+    startMemoryCollection(60_000);
+  }
 }
 
 /**
@@ -90,6 +103,9 @@ export function getMemoryStats(): {
   avgHeapMB: number;
   collectionStarted: number | null;
 } {
+  // Ensure collection is running on first access
+  ensureCollectionStarted();
+
   const current = collectMemorySnapshot();
   const history = getMemoryHistory();
 

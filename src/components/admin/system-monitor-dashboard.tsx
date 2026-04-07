@@ -112,17 +112,6 @@ function formatTime(timestamp: number): string {
   });
 }
 
-function formatTimeAgo(timestamp: number): string {
-  const diff = Date.now() - timestamp;
-  const mins = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-  if (days > 0) return `${days}d ago`;
-  if (hours > 0) return `${hours}h ago`;
-  if (mins > 0) return `${mins}m ago`;
-  return "just now";
-}
-
 // Chart colors
 const COLORS = [
   "hsl(var(--chart-1))",
@@ -143,7 +132,21 @@ export function SystemMonitorDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
 
-  useSetPageSubtitle(t("admin.system.subtitle") ?? "Performance & Cache Monitor");
+  useSetPageSubtitle(t("admin.system.subtitle"));
+
+  const formatTimeAgo = useCallback(
+    (timestamp: number): string => {
+      const diff = Date.now() - timestamp;
+      const mins = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+      if (days > 0) return t("admin.system.timeAgo.days", { n: days });
+      if (hours > 0) return t("admin.system.timeAgo.hours", { n: hours });
+      if (mins > 0) return t("admin.system.timeAgo.minutes", { n: mins });
+      return t("admin.system.timeAgo.justNow");
+    },
+    [t],
+  );
 
   const fetchStats = useCallback(async () => {
     try {
@@ -223,14 +226,14 @@ export function SystemMonitorDashboard() {
       {/* Header with refresh button */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          {lastUpdated && `Last updated: ${formatTimeAgo(lastUpdated)}`}
+          {lastUpdated && t("admin.system.lastUpdated", { time: formatTimeAgo(lastUpdated) })}
         </div>
         <button
           onClick={fetchStats}
           className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-secondary transition-colors"
         >
           <RefreshCw className="h-4 w-4" />
-          Refresh
+          {t("admin.system.refresh")}
         </button>
       </div>
 
@@ -238,28 +241,31 @@ export function SystemMonitorDashboard() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={HardDrive}
-          label="Heap Used"
+          label={t("admin.system.heapUsed")}
           value={`${memory.current.heapUsedMB} MB`}
-          subtext={`${Math.round((memory.current.heapUsedMB / memory.current.heapTotalMB) * 100)}% of ${memory.current.heapTotalMB} MB`}
+          subtext={t("admin.system.heapPercent", {
+            percent: Math.round((memory.current.heapUsedMB / memory.current.heapTotalMB) * 100),
+            total: memory.current.heapTotalMB,
+          })}
           trend={memory.current.heapUsedMB > memory.summary.avgHeapMB ? "up" : "down"}
         />
         <StatCard
           icon={Cpu}
-          label="RSS (Total)"
+          label={t("admin.system.rss")}
           value={`${memory.current.rssMB} MB`}
-          subtext="Total process memory"
+          subtext={t("admin.system.rssDesc")}
         />
         <StatCard
           icon={TrendingUp}
-          label="Peak / Avg Heap"
+          label={t("admin.system.peakAvg")}
           value={`${memory.summary.peakHeapMB} MB`}
-          subtext={`Avg: ${memory.summary.avgHeapMB} MB`}
+          subtext={t("admin.system.avgLabel", { value: memory.summary.avgHeapMB })}
         />
         <StatCard
           icon={Clock}
-          label="Uptime"
+          label={t("admin.system.uptime")}
           value={formatUptime(memory.summary.uptimeSeconds)}
-          subtext={`${memory.summary.sampleCount} samples collected`}
+          subtext={t("admin.system.samples", { count: memory.summary.sampleCount })}
         />
       </div>
 
@@ -268,84 +274,92 @@ export function SystemMonitorDashboard() {
         <div className="border-b px-6 py-4">
           <h3 className="flex items-center gap-2 font-medium">
             <Activity className="h-4 w-4" />
-            Memory Usage (48h)
+            {t("admin.system.memoryTrend")}
           </h3>
         </div>
         <div className="p-6">
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={memoryChartData}>
-                <defs>
-                  <linearGradient id="heapGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={COLORS[0]} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={COLORS[0]} stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="rssGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={COLORS[1]} stopOpacity={0.2} />
-                    <stop offset="95%" stopColor={COLORS[1]} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis
-                  dataKey="time"
-                  tick={{ fontSize: 10 }}
-                  tickLine={false}
-                  axisLine={false}
-                  interval="preserveStartEnd"
-                />
-                <YAxis
-                  tick={{ fontSize: 10 }}
-                  tickLine={false}
-                  axisLine={false}
-                  width={50}
-                  tickFormatter={(v) => `${v} MB`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "6px",
-                    fontSize: "12px",
-                  }}
-                  labelFormatter={(_, payload) => payload[0]?.payload?.fullTime ?? ""}
-                  formatter={(value, name) => [
-                    `${value} MB`,
-                    name === "heap" ? "Heap Used" : name === "rss" ? "RSS" : name,
-                  ]}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="rss"
-                  stroke={COLORS[1]}
-                  fill="url(#rssGradient)"
-                  strokeWidth={1.5}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="heap"
-                  stroke={COLORS[0]}
-                  fill="url(#heapGradient)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="mt-4 flex justify-center gap-6 text-xs text-muted-foreground">
-            <span className="flex items-center gap-2">
-              <span
-                className="h-3 w-3 rounded-full"
-                style={{ backgroundColor: COLORS[0] }}
-              />
-              Heap Used
-            </span>
-            <span className="flex items-center gap-2">
-              <span
-                className="h-3 w-3 rounded-full"
-                style={{ backgroundColor: COLORS[1] }}
-              />
-              RSS (Total)
-            </span>
-          </div>
+          {memoryChartData.length > 1 ? (
+            <>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={memoryChartData}>
+                    <defs>
+                      <linearGradient id="heapGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={COLORS[0]} stopOpacity={0.3} />
+                        <stop offset="95%" stopColor={COLORS[0]} stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="rssGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={COLORS[1]} stopOpacity={0.2} />
+                        <stop offset="95%" stopColor={COLORS[1]} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis
+                      dataKey="time"
+                      tick={{ fontSize: 10 }}
+                      tickLine={false}
+                      axisLine={false}
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10 }}
+                      tickLine={false}
+                      axisLine={false}
+                      width={50}
+                      tickFormatter={(v) => `${v} MB`}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "6px",
+                        fontSize: "12px",
+                      }}
+                      labelFormatter={(_, payload) => payload[0]?.payload?.fullTime ?? ""}
+                      formatter={(value, name) => [
+                        `${value} MB`,
+                        name === "heap" ? t("admin.system.heapLabel") : t("admin.system.rssLabel"),
+                      ]}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="rss"
+                      stroke={COLORS[1]}
+                      fill="url(#rssGradient)"
+                      strokeWidth={1.5}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="heap"
+                      stroke={COLORS[0]}
+                      fill="url(#heapGradient)"
+                      strokeWidth={2}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 flex justify-center gap-6 text-xs text-muted-foreground">
+                <span className="flex items-center gap-2">
+                  <span
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: COLORS[0] }}
+                  />
+                  {t("admin.system.heapLabel")}
+                </span>
+                <span className="flex items-center gap-2">
+                  <span
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: COLORS[1] }}
+                  />
+                  {t("admin.system.rssLabel")}
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="flex h-64 items-center justify-center text-muted-foreground">
+              {t("admin.system.samples", { count: memory.summary.sampleCount })}
+            </div>
+          )}
         </div>
       </div>
 
@@ -356,31 +370,31 @@ export function SystemMonitorDashboard() {
           <div className="border-b px-6 py-4">
             <h3 className="flex items-center gap-2 font-medium">
               <Database className="h-4 w-4" />
-              Next.js Cache Overview
+              {t("admin.system.cacheOverview")}
             </h3>
           </div>
           <div className="p-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Total Entries</div>
+                <div className="text-xs text-muted-foreground">{t("admin.system.totalEntries")}</div>
                 <div className="text-2xl font-semibold tabular-nums">
                   {cache.totalEntries}
                 </div>
               </div>
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Total Size</div>
+                <div className="text-xs text-muted-foreground">{t("admin.system.totalSize")}</div>
                 <div className="text-2xl font-semibold tabular-nums">
                   {formatBytes(cache.totalSizeBytes)}
                 </div>
               </div>
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Oldest Entry</div>
+                <div className="text-xs text-muted-foreground">{t("admin.system.oldestEntry")}</div>
                 <div className="text-sm">
                   {cache.oldestEntry ? formatTimeAgo(cache.oldestEntry) : "—"}
                 </div>
               </div>
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Newest Entry</div>
+                <div className="text-xs text-muted-foreground">{t("admin.system.newestEntry")}</div>
                 <div className="text-sm">
                   {cache.newestEntry ? formatTimeAgo(cache.newestEntry) : "—"}
                 </div>
@@ -391,7 +405,7 @@ export function SystemMonitorDashboard() {
             {cacheKindData.length > 0 && (
               <div className="mt-6">
                 <div className="text-xs text-muted-foreground mb-2">
-                  Entries by Type
+                  {t("admin.system.entriesByType")}
                 </div>
                 <div className="h-48">
                   <ResponsiveContainer width="100%" height="100%">
@@ -430,7 +444,7 @@ export function SystemMonitorDashboard() {
           <div className="border-b px-6 py-4">
             <h3 className="flex items-center gap-2 font-medium">
               <Layers className="h-4 w-4" />
-              Cache Size by Type
+              {t("admin.system.cacheSizeByType")}
             </h3>
           </div>
           <div className="p-6">
@@ -463,7 +477,7 @@ export function SystemMonitorDashboard() {
                       }}
                       formatter={(_, __, props) => [
                         props.payload.sizeLabel,
-                        "Size",
+                        t("admin.system.colSize"),
                       ]}
                     />
                     <Bar dataKey="sizeMB" radius={[0, 4, 4, 0]}>
@@ -479,7 +493,7 @@ export function SystemMonitorDashboard() {
               </div>
             ) : (
               <div className="flex h-64 items-center justify-center text-muted-foreground">
-                No cache entries yet
+                {t("admin.system.noCacheEntries")}
               </div>
             )}
           </div>
@@ -492,19 +506,19 @@ export function SystemMonitorDashboard() {
           <div className="border-b px-6 py-4">
             <h3 className="flex items-center gap-2 font-medium">
               <Database className="h-4 w-4" />
-              Top Cache Entries (by size)
+              {t("admin.system.topCacheEntries")}
             </h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="px-6 py-3 text-left font-medium">Key</th>
-                  <th className="px-4 py-3 text-left font-medium">Kind</th>
-                  <th className="px-4 py-3 text-right font-medium">Size</th>
-                  <th className="px-4 py-3 text-right font-medium">Accesses</th>
-                  <th className="px-4 py-3 text-right font-medium">Last Access</th>
-                  <th className="px-4 py-3 text-left font-medium">Tags</th>
+                  <th className="px-6 py-3 text-left font-medium">{t("admin.system.colKey")}</th>
+                  <th className="px-4 py-3 text-left font-medium">{t("admin.system.colKind")}</th>
+                  <th className="px-4 py-3 text-right font-medium">{t("admin.system.colSize")}</th>
+                  <th className="px-4 py-3 text-right font-medium">{t("admin.system.colAccesses")}</th>
+                  <th className="px-4 py-3 text-right font-medium">{t("admin.system.colLastAccess")}</th>
+                  <th className="px-4 py-3 text-left font-medium">{t("admin.system.colTags")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -557,7 +571,7 @@ export function SystemMonitorDashboard() {
       )}
 
       {/* Memory Recommendation */}
-      <MemoryRecommendation memory={memory} cache={cache} />
+      <MemoryRecommendation memory={memory} cache={cache} t={t} />
     </div>
   );
 }
@@ -603,9 +617,11 @@ function StatCard({
 function MemoryRecommendation({
   memory,
   cache,
+  t,
 }: {
   memory: SystemStats["memory"];
   cache: CacheStats;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const heapPercent = (memory.current.heapUsedMB / memory.current.heapTotalMB) * 100;
   const rssGB = memory.current.rssMB / 1024;
@@ -617,30 +633,42 @@ function MemoryRecommendation({
   // Check heap usage
   if (heapPercent > 85) {
     status = "critical";
-    recommendations.push("Heap usage is very high (>85%). Consider reducing cache size or increasing memory limit.");
+    recommendations.push(t("admin.system.heapHigh"));
   } else if (heapPercent > 70) {
     status = "warning";
-    recommendations.push("Heap usage is elevated (>70%). Monitor for potential memory pressure.");
+    recommendations.push(t("admin.system.heapWarning"));
   }
 
   // Check RSS vs container limit (assume 4GB based on Railway config)
   const containerLimitGB = 4;
   if (rssGB > containerLimitGB * 0.8) {
     status = "critical";
-    recommendations.push(`RSS (${rssGB.toFixed(1)}GB) is approaching container limit (${containerLimitGB}GB). Risk of OOM.`);
+    recommendations.push(
+      t("admin.system.rssHigh", {
+        value: rssGB.toFixed(1),
+        limit: containerLimitGB,
+      }),
+    );
   } else if (rssGB > containerLimitGB * 0.6) {
     if (status !== "critical") status = "warning";
-    recommendations.push(`RSS (${rssGB.toFixed(1)}GB) is at ${Math.round((rssGB / containerLimitGB) * 100)}% of container limit.`);
+    recommendations.push(
+      t("admin.system.rssWarning", {
+        value: rssGB.toFixed(1),
+        percent: Math.round((rssGB / containerLimitGB) * 100),
+      }),
+    );
   }
 
   // Check cache size
   if (cacheGB > 0.5) {
-    recommendations.push(`Cache is using ${formatBytes(cache.totalSizeBytes)}. Consider setting cacheMaxMemorySize in next.config.js.`);
+    recommendations.push(
+      t("admin.system.cacheHint", { size: formatBytes(cache.totalSizeBytes) }),
+    );
   }
 
   // Healthy status
   if (recommendations.length === 0) {
-    recommendations.push("Memory usage looks healthy. No immediate action needed.");
+    recommendations.push(t("admin.system.healthy"));
   }
 
   const bgColor = {
@@ -659,7 +687,7 @@ function MemoryRecommendation({
     <div className={`rounded-lg border p-6 ${bgColor}`}>
       <h3 className={`flex items-center gap-2 font-medium ${textColor}`}>
         <Activity className="h-4 w-4" />
-        Memory Assessment
+        {t("admin.system.memoryAssessment")}
       </h3>
       <ul className="mt-3 space-y-1.5 text-sm">
         {recommendations.map((rec, i) => (
