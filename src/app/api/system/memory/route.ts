@@ -5,7 +5,17 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getMemoryStats } from "@/instrumentation";
-import { getCacheStats } from "@/lib/cache-handler";
+
+// Empty cache stats placeholder (custom cache handler disabled for now)
+const EMPTY_CACHE_STATS = {
+  totalEntries: 0,
+  totalSizeBytes: 0,
+  entriesByKind: {},
+  sizeByKind: {},
+  entries: [],
+  oldestEntry: null,
+  newestEntry: null,
+};
 
 export async function GET(): Promise<Response> {
   // Auth check — only authenticated users can view system stats
@@ -15,7 +25,6 @@ export async function GET(): Promise<Response> {
   }
 
   const memoryStats = getMemoryStats();
-  const cacheStats = getCacheStats();
 
   return NextResponse.json({
     memory: {
@@ -29,6 +38,8 @@ export async function GET(): Promise<Response> {
         uptimeSeconds: process.uptime(),
       },
     },
-    cache: cacheStats,
+    // Cache monitoring disabled — custom cache handler causes build issues
+    // TODO: Re-enable after fixing cache handler implementation
+    cache: EMPTY_CACHE_STATS,
   });
 }

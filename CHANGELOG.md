@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.4.1 (2026-04-07)
+
+- chore: move system monitor to overview section in sidebar
+- fix: improve system monitor UX
+- style: align system monitor cards with project design system
+- fix: add i18n for system monitor and lazy init memory collection
+- feat: add system monitor page with 48h memory/cache visualization
+- feat: add system memory monitoring to admin dashboard
+
+
 ## v2.4.0 (2026-04-06)
 
 - refactor: consolidate domain env vars into R2_PUBLIC_URL

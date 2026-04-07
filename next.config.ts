@@ -21,8 +21,10 @@ function getAssetsHostname(): string {
 
 const nextConfig: NextConfig = {
   experimental: {},
-  cacheHandler: require.resolve("./src/lib/cache-handler.ts"),
-  cacheMaxMemorySize: 0, // Disable default in-memory cache (we use our own)
+  // Custom cache handler disabled — causes build issues with static page generation
+  // TODO: Fix cache handler to properly implement Next.js cache interface
+  // cacheHandler: require.resolve("./src/lib/cache-handler.ts"),
+  // cacheMaxMemorySize: 0,
   allowedDevOrigins: (process.env.ALLOWED_DEV_ORIGINS ?? "").split(",").filter(Boolean),
   env: {
     NEXT_PUBLIC_APP_VERSION: pkg.version,
