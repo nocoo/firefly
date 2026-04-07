@@ -31,10 +31,34 @@ export interface CacheStats {
   newestEntry: number | null;
 }
 
+/**
+ * Next.js CacheHandlerValue interface.
+ * This is what get() must return.
+ */
+interface CacheHandlerValue {
+  lastModified: number;
+  age?: number;
+  cacheState?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  value: any | null;
+}
+
+/**
+ * Internal storage entry — includes lastModified for proper CacheHandlerValue return.
+ */
+interface StoredEntry {
+  lastModified: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  value: any;
+  tags?: string[];
+}
+
 // In-memory cache storage
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const cache = new Map<string, any>();
+const cache = new Map<string, StoredEntry>();
 const metadata = new Map<string, CacheEntryMeta>();
+
+// Tag invalidation timestamps
+const tagRevalidatedAt = new Map<string, number>();
 
 /**
  * Estimate the size of a cache entry in bytes.
@@ -96,11 +120,33 @@ export function getCacheStats(): CacheStats {
 
 /**
  * Custom cache handler class that tracks all entries.
+ * Implements the Next.js CacheHandler interface.
  */
 export default class MonitoredCacheHandler {
+
+  /**
+   * Get a cache entry.
+   * Must return CacheHandlerValue format or null.
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async get(key: string): Promise<any> {
-    const value = cache.get(key);
+  async get(key: string, _ctx?: any): Promise<CacheHandlerValue | null> {
+    const stored = cache.get(key);
+
+    if (!stored) {
+      return null;
+    }
+
+    // Check if any tags have been invalidated
+    const entryTags = stored.tags ?? [];
+    for (const tag of entryTags) {
+      const revalidatedTime = tagRevalidatedAt.get(tag);
+      if (revalidatedTime && revalidatedTime > stored.lastModified) {
+        // Entry is stale due to tag revalidation
+        cache.delete(key);
+        metadata.delete(key);
+        return null;
+      }
+    }
 
     // Update access metadata
     const meta = metadata.get(key);
@@ -109,16 +155,32 @@ export default class MonitoredCacheHandler {
       meta.accessCount += 1;
     }
 
-    return value ?? null;
+    // Return in CacheHandlerValue format
+    return {
+      lastModified: stored.lastModified,
+      value: stored.value,
+    };
   }
 
+  /**
+   * Set a cache entry.
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async set(key: string, data: any, ctx?: any): Promise<void> {
-    cache.set(key, data);
+    const now = Date.now();
 
-    // Extract kind from the entry
+    // Extract tags from context
+    const tags: string[] = ctx?.tags ?? [];
+
+    // Store the entry
+    cache.set(key, {
+      lastModified: now,
+      value: data,
+      tags,
+    });
+
+    // Extract kind from the data for monitoring
     let kind = "unknown";
-    let tags: string[] = [];
     let revalidate: number | null = null;
 
     if (data) {
@@ -128,37 +190,45 @@ export default class MonitoredCacheHandler {
       }
     }
 
-    if (ctx?.tags && Array.isArray(ctx.tags)) {
-      tags = ctx.tags;
-    }
-
-    // Store metadata
+    // Store metadata for monitoring
     const existing = metadata.get(key);
     metadata.set(key, {
       key,
       kind,
       size: estimateSize(data),
-      createdAt: existing?.createdAt ?? Date.now(),
-      lastAccessedAt: Date.now(),
+      createdAt: existing?.createdAt ?? now,
+      lastAccessedAt: now,
       accessCount: existing?.accessCount ?? 0,
       tags,
       revalidate,
     });
   }
 
+  /**
+   * Revalidate entries by tag.
+   */
   async revalidateTag(tags: string | string[]): Promise<void> {
     const tagList = Array.isArray(tags) ? tags : [tags];
+    const now = Date.now();
 
-    // Find and remove entries with matching tags
-    for (const [key, meta] of metadata.entries()) {
-      if (meta.tags.some((t) => tagList.includes(t))) {
+    // Mark tags as revalidated
+    for (const tag of tagList) {
+      tagRevalidatedAt.set(tag, now);
+    }
+
+    // Remove entries with matching tags
+    for (const [key, stored] of cache.entries()) {
+      const entryTags = stored.tags ?? [];
+      if (entryTags.some((t) => tagList.includes(t))) {
         cache.delete(key);
         metadata.delete(key);
       }
     }
   }
 
-  // Reset the request-level cache (called between requests)
+  /**
+   * Reset the request-level cache (called between requests).
+   */
   resetRequestCache(): void {
     // No-op for persistent cache
   }
