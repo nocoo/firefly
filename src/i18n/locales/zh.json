@@ -393,6 +393,7 @@
   "admin.mcpTokens.guideStep2": "复制令牌（仅显示一次），替换配置中的 YOUR_TOKEN。",
   "admin.mcpTokens.guideStep3": "将配置粘贴到客户端的 MCP 设置文件中，然后重启客户端。",
   "admin.mcpTokens.guideTools": "16 个工具可用 — 文章（增删改查 + AI 摘要）、标签（增删改查）、分类（增删改查）。",
+  "admin.system.memoryTitle": "系统内存",
   "admin.preview.emptyState": "开始编写以查看实时预览",
   "admin.preview.featuredImageAlt": "封面图片",
   "auth.welcome": "欢迎回来",

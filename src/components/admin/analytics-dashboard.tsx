@@ -21,6 +21,7 @@ import { HumanTab } from "./analytics/human-tab";
 import { SearchTab } from "./analytics/search-tab";
 import { AiBotTab } from "./analytics/ai-bot-tab";
 import { OtherBotTab } from "./analytics/other-bot-tab";
+import { SystemMemoryCard } from "./system-memory-card";
 
 // ---------------------------------------------------------------------------
 // Tab labels (i18n key mapping)
@@ -235,6 +236,9 @@ export function AnalyticsDashboard({
 
         {/* Overview stat cards */}
         <OverviewCards overview={summary.overview} days={days} />
+
+        {/* System memory stats */}
+        <SystemMemoryCard />
       </div>
     </div>
   );
