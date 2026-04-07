@@ -97,7 +97,7 @@ export function SystemMemoryCard() {
 
   if (loading) {
     return (
-      <div className="rounded-lg border bg-card p-6">
+      <div className="rounded-[var(--radius-widget)] bg-secondary p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-4 w-32 rounded bg-muted" />
           <div className="h-32 rounded bg-muted" />
@@ -108,7 +108,7 @@ export function SystemMemoryCard() {
 
   if (error || !stats) {
     return (
-      <div className="rounded-lg border bg-card p-6">
+      <div className="rounded-[var(--radius-widget)] bg-secondary p-6">
         <p className="text-sm text-muted-foreground">{error ?? "No data"}</p>
       </div>
     );
@@ -136,17 +136,17 @@ export function SystemMemoryCard() {
     : 0;
 
   return (
-    <div className="rounded-lg border bg-card">
+    <div className="rounded-[var(--radius-widget)] bg-secondary">
       {/* Header */}
-      <div className="border-b px-6 py-4">
-        <h3 className="flex items-center gap-2 font-medium">
+      <div className="border-b border-border/50 px-4 py-3">
+        <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
           <Activity className="h-4 w-4" />
           {t("admin.system.memoryTitle") ?? "System Memory"}
         </h3>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4 p-6 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4">
         <div className="space-y-1">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <HardDrive className="h-3 w-3" />
@@ -205,8 +205,8 @@ export function SystemMemoryCard() {
 
       {/* Chart */}
       {chartData.length > 1 && (
-        <div className="border-t px-6 py-4">
-          <div className="h-40">
+        <div className="border-t border-border/50 px-4 py-3">
+          <div className="h-36">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />

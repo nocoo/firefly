@@ -238,7 +238,7 @@ export function SystemMonitorDashboard() {
       </div>
 
       {/* Memory Overview Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={HardDrive}
           label={t("admin.system.heapUsed")}
@@ -248,31 +248,35 @@ export function SystemMonitorDashboard() {
             total: memory.current.heapTotalMB,
           })}
           trend={memory.current.heapUsedMB > memory.summary.avgHeapMB ? "up" : "down"}
+          index={0}
         />
         <StatCard
           icon={Cpu}
           label={t("admin.system.rss")}
           value={`${memory.current.rssMB} MB`}
           subtext={t("admin.system.rssDesc")}
+          index={1}
         />
         <StatCard
           icon={TrendingUp}
           label={t("admin.system.peakAvg")}
           value={`${memory.summary.peakHeapMB} MB`}
           subtext={t("admin.system.avgLabel", { value: memory.summary.avgHeapMB })}
+          index={2}
         />
         <StatCard
           icon={Clock}
           label={t("admin.system.uptime")}
           value={formatUptime(memory.summary.uptimeSeconds)}
           subtext={t("admin.system.samples", { count: memory.summary.sampleCount })}
+          index={3}
         />
       </div>
 
       {/* Memory Trend Chart */}
-      <div className="rounded-lg border bg-card">
-        <div className="border-b px-6 py-4">
-          <h3 className="flex items-center gap-2 font-medium">
+      <div className="rounded-[var(--radius-widget)] bg-secondary">
+        <div className="border-b border-border/50 px-6 py-4">
+          <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
             <Activity className="h-4 w-4" />
             {t("admin.system.memoryTrend")}
           </h3>
@@ -366,9 +370,9 @@ export function SystemMonitorDashboard() {
       {/* Cache Statistics */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Cache Overview */}
-        <div className="rounded-lg border bg-card">
-          <div className="border-b px-6 py-4">
-            <h3 className="flex items-center gap-2 font-medium">
+        <div className="rounded-[var(--radius-widget)] bg-secondary">
+          <div className="border-b border-border/50 px-6 py-4">
+            <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
               <Database className="h-4 w-4" />
               {t("admin.system.cacheOverview")}
             </h3>
@@ -440,9 +444,9 @@ export function SystemMonitorDashboard() {
         </div>
 
         {/* Cache Size by Kind */}
-        <div className="rounded-lg border bg-card">
-          <div className="border-b px-6 py-4">
-            <h3 className="flex items-center gap-2 font-medium">
+        <div className="rounded-[var(--radius-widget)] bg-secondary">
+          <div className="border-b border-border/50 px-6 py-4">
+            <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
               <Layers className="h-4 w-4" />
               {t("admin.system.cacheSizeByType")}
             </h3>
@@ -502,9 +506,9 @@ export function SystemMonitorDashboard() {
 
       {/* Top Cache Entries Table */}
       {cache.entries.length > 0 && (
-        <div className="rounded-lg border bg-card">
-          <div className="border-b px-6 py-4">
-            <h3 className="flex items-center gap-2 font-medium">
+        <div className="rounded-[var(--radius-widget)] bg-secondary">
+          <div className="border-b border-border/50 px-6 py-4">
+            <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
               <Database className="h-4 w-4" />
               {t("admin.system.topCacheEntries")}
             </h3>
@@ -586,15 +590,20 @@ function StatCard({
   value,
   subtext,
   trend,
+  index = 0,
 }: {
   icon: React.ElementType;
   label: string;
   value: string;
   subtext?: string;
   trend?: "up" | "down";
+  index?: number;
 }) {
   return (
-    <div className="rounded-lg border bg-card p-4">
+    <div
+      className="rounded-[var(--radius-widget)] bg-secondary p-4 animate-fade-up"
+      style={{ animationDelay: `${index * 60}ms` }}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Icon className="h-4 w-4" />
@@ -606,7 +615,9 @@ function StatCard({
           />
         )}
       </div>
-      <div className="mt-2 text-2xl font-semibold tabular-nums">{value}</div>
+      <div className="mt-2 text-2xl font-semibold font-display text-foreground tabular-nums">
+        {value}
+      </div>
       {subtext && (
         <div className="mt-1 text-xs text-muted-foreground">{subtext}</div>
       )}
@@ -684,8 +695,8 @@ function MemoryRecommendation({
   }[status];
 
   return (
-    <div className={`rounded-lg border p-6 ${bgColor}`}>
-      <h3 className={`flex items-center gap-2 font-medium ${textColor}`}>
+    <div className={`rounded-[var(--radius-widget)] p-6 ${bgColor}`}>
+      <h3 className={`flex items-center gap-2 text-sm font-medium ${textColor}`}>
         <Activity className="h-4 w-4" />
         {t("admin.system.memoryAssessment")}
       </h3>
@@ -704,9 +715,9 @@ function MemoryRecommendation({
 function LoadingSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-lg border bg-card p-4">
+          <div key={i} className="rounded-[var(--radius-widget)] bg-secondary p-4">
             <div className="animate-pulse space-y-2">
               <div className="h-4 w-20 rounded bg-muted" />
               <div className="h-8 w-24 rounded bg-muted" />
@@ -715,7 +726,7 @@ function LoadingSkeleton() {
           </div>
         ))}
       </div>
-      <div className="rounded-lg border bg-card p-6">
+      <div className="rounded-[var(--radius-widget)] bg-secondary p-6">
         <div className="animate-pulse">
           <div className="h-4 w-32 rounded bg-muted mb-4" />
           <div className="h-64 rounded bg-muted" />
