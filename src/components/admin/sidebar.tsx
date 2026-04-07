@@ -50,6 +50,7 @@ const NAV_GROUPS: NavGroup[] = [
     defaultOpen: true,
     items: [
       { titleKey: "admin.nav.dashboard", href: "/admin", icon: LayoutDashboard },
+      { titleKey: "admin.nav.systemMonitor", href: "/admin/system", icon: Activity },
       { titleKey: "admin.sidebar.visitSite", href: "/", icon: ExternalLink, external: true },
     ],
   },
@@ -72,7 +73,6 @@ const NAV_GROUPS: NavGroup[] = [
       { titleKey: "admin.nav.aiSettings", href: "/admin/ai-settings", icon: Bot },
       { titleKey: "admin.nav.mcpTokens", href: "/admin/mcp", icon: KeyRound },
       { titleKey: "admin.nav.backup", href: "/admin/backup", icon: CloudUpload },
-      { titleKey: "admin.nav.systemMonitor", href: "/admin/system", icon: Activity },
     ],
   },
 ];
