@@ -522,6 +522,40 @@ export async function getPostTags(
 }
 
 // ---------------------------------------------------------------------------
+// getPostsTagsMap — batch fetch tags for multiple posts
+// ---------------------------------------------------------------------------
+
+export async function getPostsTagsMap(
+  db: Db,
+  postIds: string[],
+): Promise<Map<string, { id: string; name: string; slug: string }[]>> {
+  if (postIds.length === 0) return new Map();
+
+  const placeholders = postIds.map(() => "?").join(", ");
+  const sql = `
+    SELECT pt.post_id, t.id, t.name, t.slug
+    FROM tags t
+    INNER JOIN post_tags pt ON pt.tag_id = t.id
+    WHERE pt.post_id IN (${placeholders})
+    ORDER BY t.name
+  `;
+  const result = await db.query<{
+    post_id: string;
+    id: string;
+    name: string;
+    slug: string;
+  }>(sql, postIds);
+
+  const map = new Map<string, { id: string; name: string; slug: string }[]>();
+  for (const row of result.results) {
+    const existing = map.get(row.post_id) ?? [];
+    existing.push({ id: row.id, name: row.name, slug: row.slug });
+    map.set(row.post_id, existing);
+  }
+  return map;
+}
+
+// ---------------------------------------------------------------------------
 // setPostTags — replace all tags for a post (D4: pure batch, NO count refresh)
 // ---------------------------------------------------------------------------
 

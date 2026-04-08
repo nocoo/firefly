@@ -9,6 +9,7 @@ import {
   updatePost,
   deletePost,
   getPostTags,
+  getPostsTagsMap,
   setPostTags,
   batchUpdatePosts,
   refreshCategoryPostCount,
@@ -627,6 +628,43 @@ describe("getPostTags", () => {
 
     const result = await getPostTags(db, "post-1");
     expect(result).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getPostsTagsMap — batch fetch tags for multiple posts
+// ---------------------------------------------------------------------------
+
+describe("getPostsTagsMap", () => {
+  let db: Db;
+  beforeEach(() => { db = createMockDb(); });
+
+  it("returns a map of post IDs to tags", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [
+        { post_id: "p1", id: "t1", name: "React", slug: "react" },
+        { post_id: "p1", id: "t2", name: "TypeScript", slug: "typescript" },
+        { post_id: "p2", id: "t1", name: "React", slug: "react" },
+      ],
+      meta: { changes: 0, duration: 1 },
+    });
+
+    const result = await getPostsTagsMap(db, ["p1", "p2", "p3"]);
+
+    expect(result.get("p1")).toEqual([
+      { id: "t1", name: "React", slug: "react" },
+      { id: "t2", name: "TypeScript", slug: "typescript" },
+    ]);
+    expect(result.get("p2")).toEqual([
+      { id: "t1", name: "React", slug: "react" },
+    ]);
+    expect(result.get("p3")).toBeUndefined();
+  });
+
+  it("returns empty map for empty input", async () => {
+    const result = await getPostsTagsMap(db, []);
+    expect(result.size).toBe(0);
+    expect(db.query).not.toHaveBeenCalled();
   });
 });
 

@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/db";
-import { listPosts, listPostYears } from "@/data/entities/post";
+import { listPosts, listPostYears, getPostsTagsMap } from "@/data/entities/post";
 import { listCategories } from "@/data/entities/category";
 import { listTags } from "@/data/entities/tag";
 import type { PostStatus } from "@/models/types";
@@ -46,9 +46,19 @@ export default async function AdminPostsPage({
     listPostYears(db),
   ]);
 
+  // Batch fetch tags for all posts in the result
+  const postIds = result.posts.map((p) => p.id);
+  const postsTagsMap = await getPostsTagsMap(db, postIds);
+
+  // Attach tags to each post
+  const postsWithTags = result.posts.map((post) => ({
+    ...post,
+    tags: postsTagsMap.get(post.id) ?? [],
+  }));
+
   return (
     <AdminPostsClient
-      posts={result.posts}
+      posts={postsWithTags}
       total={result.total}
       categories={categories}
       tags={tags}

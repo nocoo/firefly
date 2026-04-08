@@ -2,6 +2,11 @@
 
 Personal blog platform built with Next.js + Cloudflare Workers.
 
+## Deployment
+
+- **Platform**: Railway (NOT Cloudflare Pages)
+- **Release**: `bun run release` bumps version, commits, tags, and pushes to trigger Railway deploy
+
 ## Architecture
 
 ### Data Layer

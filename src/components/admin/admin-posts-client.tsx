@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LayoutList, LayoutGrid, Eye, Pencil, X, ArrowUp, ArrowDown, ArrowUpDown, MessageSquare } from "lucide-react";
+import { LayoutList, LayoutGrid, Pencil, X, ArrowUp, ArrowDown, ArrowUpDown, MessageSquare, Link2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import type { PostWithCategory, PostStatus, Category, Tag } from "@/models/types";
 import type { PostYearCount } from "@/data/entities/post";
@@ -18,6 +18,11 @@ import { useSetPageSubtitle } from "@/components/admin/page-subtitle-context";
 // ---------------------------------------------------------------------------
 // Types & constants
 // ---------------------------------------------------------------------------
+
+/** Post with tags attached (from server) */
+interface PostWithTags extends PostWithCategory {
+  tags: { id: string; name: string; slug: string }[];
+}
 
 type ViewMode = "list" | "grid";
 const VIEW_MODE_KEY = "firefly_posts_view_mode";
@@ -55,7 +60,7 @@ const STATUS_COLORS: Record<PostStatus, string> = {
   archived: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300",
 };
 
-function getPreviewUrl(post: PostWithCategory): string {
+function getPreviewUrl(post: PostWithTags): string {
   if (post.status === "published" && post.published_at) {
     return postPath(post.slug, post.published_at);
   }
@@ -68,7 +73,7 @@ function getPreviewUrl(post: PostWithCategory): string {
 
 interface AdminPostsClientProps {
   /** Initial posts for list view (server-rendered first page) */
-  posts: PostWithCategory[];
+  posts: PostWithTags[];
   total: number;
   categories: Category[];
   tags: Tag[];
@@ -418,6 +423,37 @@ function SortableHeader({
 }
 
 // ---------------------------------------------------------------------------
+// Copy Link Button
+// ---------------------------------------------------------------------------
+
+function CopyLinkButton({ post }: { post: PostWithTags }) {
+  const { t } = useLocale();
+  const url = typeof window !== "undefined"
+    ? `${window.location.origin}${getPreviewUrl(post)}`
+    : getPreviewUrl(post);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success(t("admin.posts.linkCopied"));
+    } catch {
+      toast.error(t("admin.posts.linkCopyFailed"));
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="inline-flex items-center justify-center rounded-[var(--radius-widget)] p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      title={t("admin.posts.copyLink")}
+    >
+      <Link2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // List View
 // ---------------------------------------------------------------------------
 
@@ -432,7 +468,7 @@ function ListView({
   onToggleSelect,
   onToggleAll,
 }: {
-  posts: PostWithCategory[];
+  posts: PostWithTags[];
   total: number;
   totalPages: number;
   currentPage: number;
@@ -506,12 +542,29 @@ function ListView({
                 className="hidden md:table-cell"
               />
               <SortableHeader
+                column="tags"
+                label={t("admin.posts.table.tags")}
+                currentSortBy={currentSortBy}
+                currentSortOrder={currentSortOrder}
+                currentParams={currentParams}
+                className="hidden lg:table-cell"
+                sortable={false}
+              />
+              <SortableHeader
+                column="published_at"
+                label={t("admin.posts.table.publishedAt")}
+                currentSortBy={currentSortBy}
+                currentSortOrder={currentSortOrder}
+                currentParams={currentParams}
+                className="hidden xl:table-cell"
+              />
+              <SortableHeader
                 column="created_at"
                 label={t("admin.posts.table.createdAt")}
                 currentSortBy={currentSortBy}
                 currentSortOrder={currentSortOrder}
                 currentParams={currentParams}
-                className="hidden lg:table-cell"
+                className="hidden xl:table-cell"
               />
               <th className="px-4 py-3 text-right font-medium text-muted-foreground">
                 {t("admin.posts.table.actions")}
@@ -522,7 +575,7 @@ function ListView({
             {posts.length === 0 ? (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={9}
                   className="px-4 py-8 text-center text-muted-foreground"
                 >
                   {t("admin.posts.noResults")}
@@ -573,19 +626,34 @@ function ListView({
                       </span>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
+                      {post.tags.length > 0 ? (
+                        <div className="flex flex-wrap gap-1 max-w-[200px]">
+                          {post.tags.slice(0, 3).map((tag) => (
+                            <span
+                              key={tag.id}
+                              className="inline-block rounded-md bg-accent px-1.5 py-0.5 text-xs"
+                            >
+                              {tag.name}
+                            </span>
+                          ))}
+                          {post.tags.length > 3 && (
+                            <span className="text-xs text-muted-foreground">
+                              +{post.tags.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground hidden xl:table-cell">
+                      {post.published_at ? formatDateDisplay(post.published_at) : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground hidden xl:table-cell">
                       {formatDateDisplay(post.created_at)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <a
-                          href={getPreviewUrl(post)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                        >
-                          <Eye className="h-3.5 w-3.5" strokeWidth={1.5} />
-                          {t("admin.posts.preview")}
-                        </a>
                         <Link
                           href={`/admin/posts/${post.id}/edit`}
                           className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
@@ -593,6 +661,16 @@ function ListView({
                           <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
                           {t("admin.posts.edit")}
                         </Link>
+                        <CopyLinkButton post={post} />
+                        <a
+                          href={getPreviewUrl(post)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center rounded-[var(--radius-widget)] p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                          title={t("admin.posts.openInNewTab")}
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.5} />
+                        </a>
                         <DeletePostButton slug={post.slug} title={post.title} />
                       </div>
                     </td>
