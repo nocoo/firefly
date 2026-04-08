@@ -467,15 +467,14 @@ export async function updatePost(
     params.push(input.publishedAt);
   }
 
-  // Auto-set published_at when transitioning to published without explicit date
-  if (
-    input.status === "published" &&
-    input.publishedAt === undefined
-  ) {
-    if (!existing.published_at) {
-      setClauses.push("published_at = ?");
-      params.push(nowEpoch());
-    }
+  // Auto-set published_at when final status is published and no date exists.
+  // Covers both: (1) transitioning to published, (2) already published but missing date.
+  const finalStatus = input.status ?? existing.status;
+  const willHavePublishedAt =
+    input.publishedAt !== undefined || existing.published_at != null;
+  if (finalStatus === "published" && !willHavePublishedAt) {
+    setClauses.push("published_at = ?");
+    params.push(nowEpoch());
   }
 
   if (setClauses.length === 0) return getPostById(db, id);

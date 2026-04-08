@@ -493,6 +493,68 @@ describe("updatePost", () => {
     expect(pubAt).toBeDefined();
   });
 
+  it("auto-sets publishedAt when already published but date is null", async () => {
+    // Scenario: post is already published but published_at is missing (e.g., data inconsistency)
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({ ...samplePostWithCategory, status: "published", published_at: null })
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    // Update without passing status — final status remains "published"
+    await updatePost(db, "post-1", { title: "Updated Title" });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("published_at = ?");
+    // The published_at param should be a recent epoch timestamp
+    const pubAt = params!.find(
+      (p) => typeof p === "number" && p > now - 10,
+    );
+    expect(pubAt).toBeDefined();
+  });
+
+  it("does not overwrite existing publishedAt when updating published post", async () => {
+    const existingPubAt = 1700000000;
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({ ...samplePostWithCategory, status: "published", published_at: existingPubAt })
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", { title: "Updated Title" });
+
+    const [sql] = vi.mocked(db.execute).mock.calls[0];
+    // Should NOT contain published_at since it already has a value
+    expect(sql).not.toContain("published_at = ?");
+  });
+
+  it("allows explicitly setting publishedAt to null", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({ ...samplePostWithCategory, status: "draft", published_at: 1700000000 })
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", { publishedAt: null });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("published_at = ?");
+    expect(params).toContain(null);
+  });
+
+  it("allows explicitly setting publishedAt to a custom timestamp", async () => {
+    const customPubAt = 1600000000;
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({ ...samplePostWithCategory, status: "draft", published_at: null })
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", { status: "published", publishedAt: customPubAt });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("published_at = ?");
+    expect(params).toContain(customPubAt);
+    // Should only have one published_at clause (the explicit one, not auto-set)
+    expect(sql.match(/published_at = \?/g)?.length).toBe(1);
+  });
+
   it("returns null when post not found", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(null);
     const result = await updatePost(db, "nope", { title: "X" });
