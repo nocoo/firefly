@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.4.4 (2026-04-08)
+
+- feat(admin): enhance posts list with tags, published date, and quick actions
+
+
 ## v2.4.3 (2026-04-08)
 
 - fix(post): auto-set published_at when post is published but date is missing
