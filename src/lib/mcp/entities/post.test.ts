@@ -198,6 +198,21 @@ describe("post entity handlers", () => {
         }),
       );
     });
+
+    it("defaults pagination when opts are omitted in the data layer", async () => {
+      vi.mocked(listPosts).mockResolvedValue({ posts: [], total: 0 });
+
+      const result = await postEntity.dataLayer.list(ctx.db, undefined);
+
+      expect(result).toEqual({ items: [], total: 0 });
+      expect(listPosts).toHaveBeenCalledWith(
+        ctx.db,
+        expect.objectContaining({
+          page: 1,
+          pageSize: 20,
+        }),
+      );
+    });
   });
 
   // ---- get + afterGet hook ----
@@ -307,6 +322,40 @@ describe("post entity handlers", () => {
       });
     });
 
+    it("maps nullable snake_case update fields to camelCase", async () => {
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(PostService.update).mockResolvedValue(samplePostWithCategory);
+
+      await handlers.handleUpdate(ctx, {
+        slug: "test-post",
+        category_id: null,
+        featured_image: null,
+        published_at: null,
+        reference_url: "https://example.com/ref",
+        reference_title: "Reference Title",
+        reference_description: null,
+        reference_image: "cover.png",
+      });
+
+      const updateCallArgs = vi.mocked(PostService.update).mock.calls[0][2];
+      expect(updateCallArgs).toEqual({
+        categoryId: null,
+        featuredImage: null,
+        publishedAt: null,
+        referenceUrl: "https://example.com/ref",
+        referenceTitle: "Reference Title",
+        referenceDescription: null,
+        referenceImage: "cover.png",
+      });
+      expect(updateCallArgs).not.toHaveProperty("category_id");
+      expect(updateCallArgs).not.toHaveProperty("featured_image");
+      expect(updateCallArgs).not.toHaveProperty("published_at");
+      expect(updateCallArgs).not.toHaveProperty("reference_url");
+      expect(updateCallArgs).not.toHaveProperty("reference_title");
+      expect(updateCallArgs).not.toHaveProperty("reference_description");
+      expect(updateCallArgs).not.toHaveProperty("reference_image");
+    });
+
     it("omits tagIds when tag_ids not provided", async () => {
       vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
       vi.mocked(PostService.update).mockResolvedValue(samplePostWithCategory);
@@ -406,6 +455,14 @@ describe("generate_excerpt extra tool", () => {
     expectError(result, "AI provider not configured");
   });
 
+  it("wraps non-Error excerpt failures", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(generateExcerpt).mockRejectedValue("AI gateway down");
+
+    const result = await excerptTool.handler(ctx, { slug: "test-post" });
+    expectError(result, "Excerpt generation failed: AI gateway down");
+  });
+
   it("returns error for other AI failures", async () => {
     vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
     vi.mocked(generateExcerpt).mockRejectedValue(new Error("API timeout"));
@@ -476,6 +533,43 @@ describe("unfurl_reference extra tool", () => {
     const data = parseToolResult(result) as Record<string, unknown>;
     expect(data.saved).toBe(true);
     expect(updatePost).toHaveBeenCalled();
+  });
+
+  it("save mode: returns validation error when both id and slug are provided", async () => {
+    const result = await unfurlTool.handler(ctx, {
+      id: "post-1",
+      slug: "test-post",
+    });
+
+    expectError(result, "Provide either id or slug, not both");
+    expect(unfurlUrl).not.toHaveBeenCalled();
+  });
+
+  it("save mode: prefers AI title over raw metadata", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(unfurlUrl).mockResolvedValue({
+      url: "https://example.com",
+      ogTitle: "Raw Title",
+      ogDescription: "Raw Desc",
+      ogImage: null,
+      pageTitle: "Page Title",
+      readmeImage: "readme.png",
+      bodyText: "text",
+    });
+    vi.mocked(summarizeUnfurl).mockResolvedValue({
+      title: "AI Title",
+      description: "AI Desc",
+    });
+    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
+
+    const result = await unfurlTool.handler(ctx, {
+      slug: "test-post",
+      url: "https://example.com",
+    });
+    const data = parseToolResult(result) as Record<string, unknown>;
+    expect(data.title).toBe("AI Title");
+    expect(data.description).toBe("AI Desc");
+    expect(data.saved).toBe(true);
   });
 
   it("save mode: uses post reference_url when no url provided", async () => {
@@ -601,6 +695,26 @@ describe("unfurl_reference extra tool", () => {
     expect(data.image).toBe("readme.png");
   });
 
+  it("preview mode: returns null image when no image metadata exists", async () => {
+    vi.mocked(unfurlUrl).mockResolvedValue({
+      url: "https://plain.com",
+      ogTitle: "Plain",
+      ogDescription: null,
+      ogImage: null,
+      pageTitle: null,
+      readmeImage: null,
+      bodyText: "text",
+    });
+    vi.mocked(summarizeUnfurl).mockResolvedValue(null);
+
+    const result = await unfurlTool.handler(ctx, {
+      url: "https://plain.com",
+    });
+    const data = parseToolResult(result) as Record<string, unknown>;
+    expect(data.title).toBe("Plain");
+    expect(data.image).toBeNull();
+  });
+
   it("save mode: falls back to pageTitle when ogTitle is null", async () => {
     vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
     vi.mocked(unfurlUrl).mockResolvedValue({
@@ -621,6 +735,29 @@ describe("unfurl_reference extra tool", () => {
     });
     const data = parseToolResult(result) as Record<string, unknown>;
     expect(data.title).toBe("Page Title");
+    expect(data.saved).toBe(true);
+  });
+
+  it("save mode: falls back to the hostname when no title metadata exists", async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(unfurlUrl).mockResolvedValue({
+      url: "https://fallback.example.com/path",
+      ogTitle: null,
+      ogDescription: null,
+      ogImage: null,
+      pageTitle: null,
+      readmeImage: null,
+      bodyText: "text",
+    });
+    vi.mocked(summarizeUnfurl).mockResolvedValue(null);
+    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
+
+    const result = await unfurlTool.handler(ctx, {
+      slug: "test-post",
+      url: "https://fallback.example.com/path",
+    });
+    const data = parseToolResult(result) as Record<string, unknown>;
+    expect(data.title).toBe("fallback.example.com");
     expect(data.saved).toBe(true);
   });
 });
