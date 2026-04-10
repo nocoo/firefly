@@ -147,6 +147,23 @@ describe("category entity handlers", () => {
       });
     });
 
+    it("maps sort_order to sortOrder in update input", async () => {
+      vi.mocked(getCategoryById).mockResolvedValue(sampleCategory);
+      vi.mocked(updateCategory).mockResolvedValue({
+        ...sampleCategory,
+        sort_order: 10,
+      });
+
+      await handlers.handleUpdate(ctx, {
+        id: "cat-1",
+        sort_order: 10,
+      });
+
+      expect(updateCategory).toHaveBeenCalledWith(ctx.db, "cat-1", {
+        sortOrder: 10,
+      });
+    });
+
     it("handles nullable description", async () => {
       vi.mocked(getCategoryById).mockResolvedValue(sampleCategory);
       vi.mocked(updateCategory).mockResolvedValue({
