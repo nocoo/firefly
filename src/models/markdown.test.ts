@@ -1,5 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { Marked } from "marked";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderMarkdown } from "./markdown";
+
+const originalR2PublicUrl = process.env.R2_PUBLIC_URL;
+
+beforeEach(() => {
+  process.env.R2_PUBLIC_URL = originalR2PublicUrl;
+  vi.restoreAllMocks();
+});
 
 // ---------------------------------------------------------------------------
 // renderMarkdown()
@@ -83,6 +91,37 @@ describe("renderMarkdown", () => {
     expect(html).toContain('alt="5D3L2883"');
   });
 
+  it("uses postTitle when the image URL has no filename", () => {
+    const html = renderMarkdown("![](https://example.com/)", { postTitle: "My Post" });
+    expect(html).toContain('alt="My Post"');
+  });
+
+  it("uses an empty alt attribute when neither postTitle nor filename is available", () => {
+    const html = renderMarkdown("![](https://example.com/)");
+    expect(html).toContain('alt=""');
+  });
+
+  it("falls back safely when filename extraction returns undefined", () => {
+    const originalPop = Array.prototype.pop as (this: unknown[]) => unknown;
+    vi.spyOn(Array.prototype, "pop").mockImplementation(function (this: unknown[]) {
+      if (
+        this.length === 3 &&
+        this[0] === "" &&
+        this[1] === "uploads" &&
+        this[2] === "photo.jpg"
+      ) {
+        return undefined;
+      }
+
+      return originalPop.call(this);
+    });
+
+    const html = renderMarkdown("![](https://example.com/uploads/photo.jpg)", {
+      postTitle: "My Post",
+    });
+    expect(html).toContain('alt="My Post"');
+  });
+
   // --- Code blocks ---
   it("renders fenced code blocks", () => {
     const md = "```js\nconst x = 1;\n```";
@@ -154,6 +193,13 @@ describe("renderMarkdown", () => {
     expect(renderMarkdown("")).toBe("");
   });
 
+  it("returns empty string when marked returns a non-string result", () => {
+    vi.spyOn(Marked.prototype, "parseMarkdown").mockReturnValueOnce(
+      (() => undefined) as never,
+    );
+    expect(renderMarkdown("Hello world", { postTitle: "Synthetic" })).toBe("");
+  });
+
   it("handles mixed content", () => {
     const md = `# Title
 
@@ -216,6 +262,12 @@ const x = 1;
 
     const html2 = renderMarkdown("[call](tel:+1234567890)");
     expect(html2).toContain('href="tel:+1234567890"');
+  });
+
+  it("allows bare relative paths in links", () => {
+    const html = renderMarkdown("[Guide](docs/getting-started.html)");
+    expect(html).toContain('href="docs/getting-started.html"');
+    expect(html).not.toContain('target="_blank"');
   });
 
   it("escapes quotes in link href attributes", () => {
@@ -377,5 +429,21 @@ describe("renderMarkdown with optimizeImages", () => {
     expect(html).not.toContain("/_next/image");
     expect(html).not.toContain("srcset");
     expect(html).toContain(`src="${otherUrl}"`);
+  });
+
+  it("optimized mode: does not proxy images when R2_PUBLIC_URL is missing at module load", async () => {
+    delete process.env.R2_PUBLIC_URL;
+    vi.resetModules();
+
+    try {
+      const { renderMarkdown: renderWithoutR2Url } = await import("./markdown");
+      const html = renderWithoutR2Url(`![Alt](${internalUrl})`, opts);
+      expect(html).toContain(`src="${internalUrl}"`);
+      expect(html).not.toContain("/_next/image");
+      expect(html).not.toContain("srcset");
+    } finally {
+      process.env.R2_PUBLIC_URL = originalR2PublicUrl;
+      vi.resetModules();
+    }
   });
 });
