@@ -233,4 +233,15 @@ describe("resolvePostId", () => {
     // DB should only have been called once
     expect(mockFirstOrNull).toHaveBeenCalledTimes(1);
   });
+
+  it("uses cached null on second call for the same missing slug", async () => {
+    mockFirstOrNull.mockResolvedValueOnce(null);
+
+    const r1 = await resolvePostId(mockDb, "/2024/06/missing-slug");
+    const r2 = await resolvePostId(mockDb, "/2024/07/missing-slug");
+
+    expect(r1).toBeNull();
+    expect(r2).toBeNull();
+    expect(mockFirstOrNull).toHaveBeenCalledTimes(1);
+  });
 });
