@@ -1,4 +1,3 @@
-import { Marked } from "marked";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderMarkdown } from "./markdown";
 
@@ -193,11 +192,22 @@ describe("renderMarkdown", () => {
     expect(renderMarkdown("")).toBe("");
   });
 
-  it("returns empty string when marked returns a non-string result", () => {
-    vi.spyOn(Marked.prototype, "parseMarkdown").mockReturnValueOnce(
-      (() => undefined) as never,
-    );
-    expect(renderMarkdown("Hello world", { postTitle: "Synthetic" })).toBe("");
+  it("returns empty string when marked returns a non-string result", async () => {
+    // `parse` is an own instance property (bound in the Marked constructor),
+    // so prototype-level mocks can't intercept it. We must reset the module
+    // graph, mock `marked` to make `parse` return a non-string, and then
+    // re-import `renderMarkdown` so it picks up the mocked Marked.
+    vi.resetModules();
+    vi.doMock("marked", () => ({
+      Marked: class {
+        parse() {
+          return undefined;
+        }
+      },
+    }));
+    const { renderMarkdown: freshRender } = await import("./markdown");
+    expect(freshRender("Hello world", { postTitle: "Synthetic" })).toBe("");
+    vi.doUnmock("marked");
   });
 
   it("handles mixed content", () => {
