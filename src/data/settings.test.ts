@@ -127,6 +127,41 @@ describe("parseRow", () => {
     expect(parseRow({ ...sampleRow, site_name: "" }).siteName).toBe("My Blog");
   });
 
+  it("falls back to empty string when site_tagline is null/undefined", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(parseRow({ ...sampleRow, site_tagline: null as any }).siteTagline).toBe("");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(parseRow({ ...sampleRow, site_tagline: undefined as any }).siteTagline).toBe("");
+  });
+
+  it("falls back to empty string when site_description is null/undefined", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(parseRow({ ...sampleRow, site_description: null as any }).siteDescription).toBe("");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(parseRow({ ...sampleRow, site_description: undefined as any }).siteDescription).toBe("");
+  });
+
+  it("falls back to empty string when site_author is null/undefined", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(parseRow({ ...sampleRow, site_author: null as any }).siteAuthor).toBe("");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(parseRow({ ...sampleRow, site_author: undefined as any }).siteAuthor).toBe("");
+  });
+
+  it("falls back to empty string when author_email is null/undefined", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(parseRow({ ...sampleRow, author_email: null as any }).authorEmail).toBe("");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(parseRow({ ...sampleRow, author_email: undefined as any }).authorEmail).toBe("");
+  });
+
+  it("falls back to empty string when twitter_handle is null/undefined", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(parseRow({ ...sampleRow, twitter_handle: null as any }).twitterHandle).toBe("");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(parseRow({ ...sampleRow, twitter_handle: undefined as any }).twitterHandle).toBe("");
+  });
+
   it("parses valid social_links JSON", () => {
     const links = [{ name: "GitHub", url: "https://github.com/test", brand: "github" }];
     const result = parseRow({ ...sampleRow, social_links: JSON.stringify(links) });
@@ -325,6 +360,58 @@ describe("updateSiteSettings", () => {
 
     const params = vi.mocked(db.execute).mock.calls[0][1] as unknown[];
     expect(params).toContain(JSON.stringify(links));
+  });
+
+  it("slices siteTagline to 500 characters", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
+    vi.mocked(db.firstOrNull).mockResolvedValue(sampleRow);
+
+    const longTagline = "a".repeat(600);
+    await updateSiteSettings(db, { siteTagline: longTagline });
+
+    const params = vi.mocked(db.execute).mock.calls[0][1] as unknown[];
+    expect(params).toContain("a".repeat(500));
+  });
+
+  it("slices siteDescription to 1000 characters", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
+    vi.mocked(db.firstOrNull).mockResolvedValue(sampleRow);
+
+    const longDesc = "b".repeat(1200);
+    await updateSiteSettings(db, { siteDescription: longDesc });
+
+    const params = vi.mocked(db.execute).mock.calls[0][1] as unknown[];
+    expect(params).toContain("b".repeat(1000));
+  });
+
+  it("slices authorEmail to 255 characters", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
+    vi.mocked(db.firstOrNull).mockResolvedValue(sampleRow);
+
+    const longEmail = "c".repeat(300) + "@example.com";
+    await updateSiteSettings(db, { authorEmail: longEmail });
+
+    const params = vi.mocked(db.execute).mock.calls[0][1] as unknown[];
+    expect(params).toContain(longEmail.slice(0, 255));
+  });
+
+  it("slices twitterHandle to 50 characters", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
+    vi.mocked(db.firstOrNull).mockResolvedValue(sampleRow);
+
+    const longHandle = "@" + "d".repeat(70);
+    await updateSiteSettings(db, { twitterHandle: longHandle });
+
+    const params = vi.mocked(db.execute).mock.calls[0][1] as unknown[];
+    expect(params).toContain(longHandle.slice(0, 50));
+  });
+
+  it("converts commentsEnabled false to integer 0", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
+    vi.mocked(db.firstOrNull).mockResolvedValue(sampleRow);
+
+    await updateSiteSettings(db, { commentsEnabled: false });
+    expect(vi.mocked(db.execute).mock.calls[0][1]).toContain(0);
   });
 });
 
