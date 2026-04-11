@@ -255,6 +255,19 @@ describe("taxonomy factory — update", () => {
     expect(result).toEqual(sampleWidget);
   });
 
+  it("returns existing row without executing when no mapped fields are provided", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue(sampleWidget);
+
+    const result = await entity.update(
+      db,
+      "w-1",
+      { extraField: "ignored" } as unknown as UpdateWidgetInput,
+    );
+
+    expect(db.execute).not.toHaveBeenCalled();
+    expect(result).toEqual(sampleWidget);
+  });
+
   it("invalidates cache after update", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleWidget);

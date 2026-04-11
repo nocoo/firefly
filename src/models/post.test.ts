@@ -142,6 +142,11 @@ describe("excerptFromContent", () => {
     expect(result).toBe("The quick brown fox");
   });
 
+  it("returns a hard truncation when there is no word boundary before maxLength", () => {
+    const text = "Supercalifragilisticexpialidocious";
+    expect(excerptFromContent(text, 10)).toBe("Supercalif");
+  });
+
   it("returns full text if under limit", () => {
     const text = "Short text";
     expect(excerptFromContent(text)).toBe("Short text");

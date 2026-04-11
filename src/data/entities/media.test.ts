@@ -129,6 +129,18 @@ describe("listMedia", () => {
     expect(countParams).toContain(marchStart);
   });
 
+  it("defaults total to 0 when the count query returns null", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue(null);
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+
+    const result = await listMedia(db, { postId: "post-1" });
+
+    expect(result.total).toBe(0);
+  });
+
   it("supports custom sort", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue({ cnt: 0 });
     vi.mocked(db.query).mockResolvedValue({
@@ -235,6 +247,19 @@ describe("createMedia", () => {
     // size, width, height, post_id should be null
     const nullCount = params.filter((p) => p === null).length;
     expect(nullCount).toBeGreaterThanOrEqual(3);
+  });
+
+  it("throws when the inserted attachment cannot be reloaded", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
+    vi.mocked(db.firstOrNull).mockResolvedValue(null);
+
+    await expect(
+      createMedia(db, {
+        filename: "photo.jpg",
+        r2Key: "uploads/2026/photo.jpg",
+        mimeType: "image/jpeg",
+      }),
+    ).rejects.toThrow(/Failed to retrieve Attachment .+ after creation/);
   });
 });
 
@@ -353,6 +378,20 @@ describe("batchCreateMedia", () => {
     const count = await batchCreateMedia(db, []);
     expect(count).toBe(0);
     expect(db.batch).not.toHaveBeenCalled();
+  });
+
+  it("treats missing batch change metadata as zero inserted rows", async () => {
+    vi.mocked(db.batch).mockResolvedValue([
+      { results: [], meta: { changes: 1, duration: 1 } },
+      { results: [] } as never,
+    ]);
+
+    const count = await batchCreateMedia(db, [
+      { filename: "a.jpg", r2Key: "a.jpg", mimeType: "image/jpeg" },
+      { filename: "b.jpg", r2Key: "b.jpg", mimeType: "image/jpeg" },
+    ]);
+
+    expect(count).toBe(1);
   });
 });
 

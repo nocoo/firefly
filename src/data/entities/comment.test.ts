@@ -151,6 +151,16 @@ describe("buildCommentTree", () => {
     expect(tree[0].children[0].id).toBe("c2");
     expect(tree[0].children[0].children[0].id).toBe("c3");
   });
+
+  it("skips a comment when node lookup unexpectedly fails", () => {
+    const getSpy = vi
+      .spyOn(Map.prototype, "get")
+      .mockImplementationOnce(() => undefined);
+
+    expect(buildCommentTree([parentComment])).toEqual([]);
+
+    getSpy.mockRestore();
+  });
 });
 
 // ---------------------------------------------------------------------------

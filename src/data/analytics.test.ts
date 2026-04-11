@@ -386,6 +386,93 @@ describe("getHumanDetail", () => {
     expect(result.recent24h).toBe(42);
     expect(result.topPages).toEqual([]);
   });
+
+  it("returns recent24h=0 when db.firstOrNull returns null (L553 null coalescing)", async () => {
+    const emptyResults = { results: [], meta: { changes: 0, duration: 1 } };
+    vi.mocked(db.query).mockResolvedValue(emptyResults);
+    // recent24h query returns null
+    vi.mocked(db.firstOrNull).mockResolvedValue(null);
+
+    const result = await getHumanDetail(db, 30);
+
+    expect(result.type).toBe("human");
+    expect(result.recent24h).toBe(0);
+  });
+
+  it("resolves article path title from DB when post exists (L215-match, L222-found)", async () => {
+    // topPagesRaw returns an article path
+    vi.mocked(db.query)
+      .mockResolvedValueOnce({
+        results: [{ path: "/2026/03/my-article", views: 100 }],
+        meta: { changes: 0, duration: 1 },
+      })
+      .mockResolvedValue({ results: [], meta: { changes: 0, duration: 1 } });
+    // firstOrNull: first call for recent24h, subsequent for post title lookup
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({ count: 10 }) // recent24h
+      .mockResolvedValueOnce({ title: "My Article Title" }); // post lookup
+
+    const result = await getHumanDetail(db, 30);
+
+    expect(result.topPages).toHaveLength(1);
+    expect(result.topPages[0].title).toBe("My Article Title");
+    expect(result.topPages[0].isPost).toBe(true);
+  });
+
+  it("uses formatPathAsTitle when article path but post not found in DB (L215-match, L222-not found)", async () => {
+    // topPagesRaw returns an article path
+    vi.mocked(db.query)
+      .mockResolvedValueOnce({
+        results: [{ path: "/2026/03/nonexistent-article", views: 50 }],
+        meta: { changes: 0, duration: 1 },
+      })
+      .mockResolvedValue({ results: [], meta: { changes: 0, duration: 1 } });
+    // firstOrNull: first call for recent24h, second returns null (post not found)
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({ count: 5 }) // recent24h
+      .mockResolvedValueOnce(null); // post not found
+
+    const result = await getHumanDetail(db, 30);
+
+    expect(result.topPages).toHaveLength(1);
+    expect(result.topPages[0].title).toBe("2026 / 03 / nonexistent-article");
+    expect(result.topPages[0].isPost).toBe(false);
+  });
+
+  it("uses formatPathAsTitle for non-article paths (L215-no match)", async () => {
+    // topPagesRaw returns a non-article path
+    vi.mocked(db.query)
+      .mockResolvedValueOnce({
+        results: [{ path: "/category/tech", views: 30 }],
+        meta: { changes: 0, duration: 1 },
+      })
+      .mockResolvedValue({ results: [], meta: { changes: 0, duration: 1 } });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+
+    const result = await getHumanDetail(db, 30);
+
+    expect(result.topPages).toHaveLength(1);
+    expect(result.topPages[0].title).toBe("category / tech");
+    expect(result.topPages[0].isPost).toBe(false);
+  });
+
+  it("degrades to path-based title when DB lookup throws (try-catch fallback)", async () => {
+    vi.mocked(db.query)
+      .mockResolvedValueOnce({
+        results: [{ path: "/2026/03/error-article", views: 20 }],
+        meta: { changes: 0, duration: 1 },
+      })
+      .mockResolvedValue({ results: [], meta: { changes: 0, duration: 1 } });
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({ count: 0 }) // recent24h
+      .mockRejectedValueOnce(new Error("DB error")); // post lookup fails
+
+    const result = await getHumanDetail(db, 30);
+
+    expect(result.topPages).toHaveLength(1);
+    expect(result.topPages[0].title).toBe("2026 / 03 / error-article");
+    expect(result.topPages[0].isPost).toBe(false);
+  });
 });
 
 describe("getSearchDetail", () => {
@@ -403,6 +490,85 @@ describe("getSearchDetail", () => {
     expect(result.type).toBe("search");
     expect(result.bots).toEqual([]);
     expect(result.dailyByBot).toEqual([]);
+  });
+
+  it("resolves article path title from DB for crawlerVsPage (L628-match, L634-found)", async () => {
+    const emptyResults = { results: [], meta: { changes: 0, duration: 1 } };
+    vi.mocked(db.query)
+      .mockResolvedValueOnce(emptyResults) // bots
+      .mockResolvedValueOnce(emptyResults) // topPagesRaw
+      .mockResolvedValueOnce(emptyResults) // dailyByBotRaw
+      .mockResolvedValueOnce({
+        // crawlerVsPageRaw with article path
+        results: [{ bot_name: "Googlebot", path: "/2026/04/crawler-test", count: 50 }],
+        meta: { changes: 0, duration: 1 },
+      });
+    // firstOrNull returns post title
+    vi.mocked(db.firstOrNull).mockResolvedValueOnce({ title: "Crawler Test Post" });
+
+    const result = await getSearchDetail(db, 30);
+
+    expect(result.crawlerVsPage).toHaveLength(1);
+    expect(result.crawlerVsPage[0].title).toBe("Crawler Test Post");
+    expect(result.crawlerVsPage[0].botName).toBe("Googlebot");
+  });
+
+  it("uses formatPathAsTitle when article path but post not found (L628-match, L634-not found)", async () => {
+    const emptyResults = { results: [], meta: { changes: 0, duration: 1 } };
+    vi.mocked(db.query)
+      .mockResolvedValueOnce(emptyResults) // bots
+      .mockResolvedValueOnce(emptyResults) // topPagesRaw
+      .mockResolvedValueOnce(emptyResults) // dailyByBotRaw
+      .mockResolvedValueOnce({
+        // crawlerVsPageRaw with article path
+        results: [{ bot_name: "Bingbot", path: "/2026/04/no-post", count: 30 }],
+        meta: { changes: 0, duration: 1 },
+      });
+    // firstOrNull returns null (post not found)
+    vi.mocked(db.firstOrNull).mockResolvedValueOnce(null);
+
+    const result = await getSearchDetail(db, 30);
+
+    expect(result.crawlerVsPage).toHaveLength(1);
+    expect(result.crawlerVsPage[0].title).toBe("2026 / 04 / no-post");
+  });
+
+  it("uses formatPathAsTitle for non-article paths in crawlerVsPage (L628-no match)", async () => {
+    const emptyResults = { results: [], meta: { changes: 0, duration: 1 } };
+    vi.mocked(db.query)
+      .mockResolvedValueOnce(emptyResults) // bots
+      .mockResolvedValueOnce(emptyResults) // topPagesRaw
+      .mockResolvedValueOnce(emptyResults) // dailyByBotRaw
+      .mockResolvedValueOnce({
+        // crawlerVsPageRaw with non-article path
+        results: [{ bot_name: "Googlebot", path: "/robots.txt", count: 100 }],
+        meta: { changes: 0, duration: 1 },
+      });
+
+    const result = await getSearchDetail(db, 30);
+
+    expect(result.crawlerVsPage).toHaveLength(1);
+    expect(result.crawlerVsPage[0].title).toBe("robots.txt");
+  });
+
+  it("degrades to path-based title when DB lookup throws in crawlerVsPage", async () => {
+    const emptyResults = { results: [], meta: { changes: 0, duration: 1 } };
+    vi.mocked(db.query)
+      .mockResolvedValueOnce(emptyResults) // bots
+      .mockResolvedValueOnce(emptyResults) // topPagesRaw
+      .mockResolvedValueOnce(emptyResults) // dailyByBotRaw
+      .mockResolvedValueOnce({
+        // crawlerVsPageRaw with article path
+        results: [{ bot_name: "GPTBot", path: "/2026/04/db-error", count: 10 }],
+        meta: { changes: 0, duration: 1 },
+      });
+    // firstOrNull throws error
+    vi.mocked(db.firstOrNull).mockRejectedValueOnce(new Error("DB error"));
+
+    const result = await getSearchDetail(db, 30);
+
+    expect(result.crawlerVsPage).toHaveLength(1);
+    expect(result.crawlerVsPage[0].title).toBe("2026 / 04 / db-error");
   });
 });
 

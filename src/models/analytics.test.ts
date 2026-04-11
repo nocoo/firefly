@@ -162,6 +162,22 @@ describe("parseDevice", () => {
     expect(result.browser).toBe("Edge");
   });
 
+  it("detects Opera browser from OPR user agents", () => {
+    const result = parseDevice(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 OPR/106.0.0.0",
+    );
+    expect(result.browser).toBe("Opera");
+    expect(result.os).toBe("Windows");
+  });
+
+  it("detects legacy Opera user agents", () => {
+    const result = parseDevice(
+      "Opera/9.80 (Windows NT 6.1; WOW64) Presto/2.12.388 Version/12.18",
+    );
+    expect(result.browser).toBe("Opera");
+    expect(result.os).toBe("Windows");
+  });
+
   it("classifies bots as device type bot", () => {
     const result = parseDevice(
       "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
@@ -181,6 +197,13 @@ describe("parseDevice", () => {
       "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
     );
     expect(result.deviceType).toBe("desktop");
+    expect(result.os).toBe("Linux");
+  });
+
+  it("leaves browser null when no known browser token is present", () => {
+    const result = parseDevice("Mozilla/5.0 (X11; Linux x86_64)");
+    expect(result.deviceType).toBe("desktop");
+    expect(result.browser).toBeNull();
     expect(result.os).toBe("Linux");
   });
 });

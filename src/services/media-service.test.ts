@@ -93,6 +93,38 @@ describe("MediaService.upload", () => {
     expect(input.postId).toBe("post-1");
   });
 
+  it("passes width and height when provided", async () => {
+    vi.mocked(createMedia).mockResolvedValue(sampleAttachment);
+
+    await MediaService.upload(db, r2, {
+      filename: "photo.jpg",
+      r2Key: "uploads/photo.jpg",
+      mimeType: "image/jpeg",
+      data: new Uint8Array([1]),
+      width: 1920,
+      height: 1080,
+    });
+
+    const input = vi.mocked(createMedia).mock.calls[0][1];
+    expect(input.width).toBe(1920);
+    expect(input.height).toBe(1080);
+  });
+
+  it("omits width and height when not provided", async () => {
+    vi.mocked(createMedia).mockResolvedValue(sampleAttachment);
+
+    await MediaService.upload(db, r2, {
+      filename: "photo.jpg",
+      r2Key: "uploads/photo.jpg",
+      mimeType: "image/jpeg",
+      data: new Uint8Array([1]),
+    });
+
+    const input = vi.mocked(createMedia).mock.calls[0][1];
+    expect(input.width).toBeUndefined();
+    expect(input.height).toBeUndefined();
+  });
+
   it("throws when R2 upload fails (primary)", async () => {
     vi.mocked(r2.upload).mockRejectedValue(new Error("R2 timeout"));
 

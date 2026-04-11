@@ -1190,3 +1190,509 @@ describe("ftsSync", () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Branch coverage: countCacheGet/countCacheSet (lines 130, 141, 144)
+// ---------------------------------------------------------------------------
+
+describe("count cache branches", () => {
+  let db: Db;
+
+  beforeEach(() => {
+    db = createMockDb();
+    invalidatePostCaches();
+  });
+
+  it("evicts expired cache entry (line 130 - cache TTL expired)", async () => {
+    // First call populates cache
+    vi.mocked(db.query).mockResolvedValue({
+      results: [samplePostWithCategory],
+      meta: { changes: 0, duration: 1 },
+    });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 10 });
+
+    await listPosts(db);
+    expect(db.firstOrNull).toHaveBeenCalledOnce();
+
+    // Mock Date.now to simulate time passing beyond TTL (5 minutes = 300000ms)
+    const originalDateNow = Date.now;
+    vi.spyOn(Date, "now").mockReturnValue(originalDateNow() + 6 * 60 * 1000);
+
+    // Second call should hit DB again due to expired cache
+    await listPosts(db);
+    expect(db.firstOrNull).toHaveBeenCalledTimes(2);
+
+    vi.restoreAllMocks();
+  });
+
+  it("evicts oldest entry when cache is full (lines 141, 144)", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 1 });
+
+    // Fill cache with 65 different queries (COUNT_MAX_SIZE = 64)
+    // Each query needs a different WHERE clause to create a unique cache key
+    // Use different categoryId values to create unique cache keys
+    for (let i = 0; i < 65; i++) {
+      await listPosts(db, { categoryId: `cat-${i}` });
+    }
+
+    // Should have called firstOrNull 65 times (no cache hits, all different keys)
+    expect(db.firstOrNull).toHaveBeenCalledTimes(65);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Branch coverage: listPosts sort/filter branches
+// ---------------------------------------------------------------------------
+
+describe("listPosts branch coverage", () => {
+  let db: Db;
+
+  beforeEach(() => {
+    db = createMockDb();
+    invalidatePostCaches();
+  });
+
+  it("applies ASC sort direction (line 225)", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+
+    await listPosts(db, { sortBy: "published_at", sortOrder: "asc" });
+
+    const [sql] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("p.published_at ASC");
+  });
+
+  it("sorts by comment_count", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+
+    await listPosts(db, { sortBy: "comment_count" });
+
+    const [sql] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("p.comment_count DESC");
+  });
+
+  it("sorts by view_count", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+
+    await listPosts(db, { sortBy: "view_count" });
+
+    const [sql] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("p.view_count DESC");
+  });
+
+  it("sorts by title", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+
+    await listPosts(db, { sortBy: "title" });
+
+    const [sql] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("p.title DESC");
+  });
+
+  it("falls back to created_at for unknown sortBy (line 233)", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+
+    // Force an invalid sortBy value via type assertion
+    await listPosts(db, { sortBy: "invalid_field" as "created_at" });
+
+    const [sql] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("p.created_at DESC");
+  });
+
+  it("filters by archiveYear only without archiveMonth (line 213 false branch)", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+
+    await listPosts(db, { archiveYear: 2026 });
+
+    const [sql, params] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("strftime('%Y'");
+    expect(params).toContain(2026);
+    // Should not contain month filter
+    expect(sql).not.toContain("strftime('%m'");
+  });
+
+  it("uses results.length as fallback when count is null (line 261)", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [samplePostWithCategory, samplePostWithCategory],
+      meta: { changes: 0, duration: 1 },
+    });
+    vi.mocked(db.firstOrNull).mockResolvedValue(null);
+
+    const result = await listPosts(db);
+
+    expect(result.total).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Branch coverage: createPost error branch (line 354)
+// ---------------------------------------------------------------------------
+
+describe("createPost branch coverage", () => {
+  let db: Db;
+
+  beforeEach(() => {
+    db = createMockDb();
+  });
+
+  it("throws error when post cannot be retrieved after creation (line 354)", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
+    // Return null when trying to fetch the newly created post
+    vi.mocked(db.firstOrNull).mockResolvedValue(null);
+
+    await expect(
+      createPost(db, {
+        title: "Test",
+        slug: "test",
+        content: "Content",
+        status: "draft",
+      }),
+    ).rejects.toThrow("Failed to retrieve Post");
+  });
+
+  it("uses provided publishedAt when status is published", async () => {
+    const customPubAt = 1600000000;
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
+    vi.mocked(db.firstOrNull).mockResolvedValue(samplePostWithCategory);
+
+    await createPost(db, {
+      title: "Test",
+      slug: "test",
+      content: "Content",
+      status: "published",
+      publishedAt: customPubAt,
+    });
+
+    const params = vi.mocked(db.execute).mock.calls[0][1]!;
+    expect(params).toContain(customPubAt);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Branch coverage: updatePost additional branches
+// ---------------------------------------------------------------------------
+
+describe("updatePost branch coverage", () => {
+  let db: Db;
+
+  beforeEach(() => {
+    db = createMockDb();
+  });
+
+  it("updates slug when provided (line 378)", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce({ ...samplePostWithCategory, slug: "new-slug" });
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    const result = await updatePost(db, "post-1", { slug: "new-slug" });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("slug = ?");
+    expect(params).toContain("new-slug");
+    expect(result?.slug).toBe("new-slug");
+  });
+
+  it("uses explicit non-null excerpt over auto-generated (line 404)", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", { excerpt: "Custom excerpt" });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("excerpt = ?");
+    expect(params).toContain("Custom excerpt");
+  });
+
+  it("regenerates excerpt from new content when excerpt is null (line 402-403)", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", {
+      content: "New content here",
+      excerpt: null,
+    });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("excerpt = ?");
+    expect(params).toContain("Auto excerpt...");
+  });
+
+  it("updates categoryId when provided", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", { categoryId: "cat-new" });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("category_id = ?");
+    expect(params).toContain("cat-new");
+  });
+
+  it("sets categoryId to null when explicitly passed", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce({ ...samplePostWithCategory, category_id: null });
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", { categoryId: null });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("category_id = ?");
+    expect(params).toContain(null);
+  });
+
+  it("updates featuredImage when provided", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", { featuredImage: "new-image.jpg" });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("featured_image = ?");
+    expect(params).toContain("new-image.jpg");
+  });
+
+  it("sets featuredImage to null when explicitly passed", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({ ...samplePostWithCategory, featured_image: "old.jpg" })
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", { featuredImage: null });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("featured_image = ?");
+    expect(params).toContain(null);
+  });
+
+  it("updates referenceUrl when provided", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", { referenceUrl: "https://example.com/ref" });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("reference_url = ?");
+    expect(params).toContain("https://example.com/ref");
+  });
+
+  it("preserves reference metadata when explicitly set alongside null referenceUrl (lines 431-443)", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({
+        ...samplePostWithCategory,
+        reference_url: "https://old.com",
+        reference_title: "Old Title",
+      })
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    // Explicitly set referenceTitle when clearing referenceUrl
+    await updatePost(db, "post-1", {
+      referenceUrl: null,
+      referenceTitle: "Keep This Title",
+    });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    // reference_title should be "Keep This Title", not null
+    expect(params).toContain("Keep This Title");
+    // reference_description and reference_image should be null (auto-cleared)
+    expect(sql).toContain("reference_description = ?");
+    expect(sql).toContain("reference_image = ?");
+  });
+
+  it("updates referenceTitle when provided", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", { referenceTitle: "New Title" });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("reference_title = ?");
+    expect(params).toContain("New Title");
+  });
+
+  it("updates referenceDescription when provided", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", { referenceDescription: "New Desc" });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("reference_description = ?");
+    expect(params).toContain("New Desc");
+  });
+
+  it("updates referenceImage when provided", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", { referenceImage: "ref-image.png" });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("reference_image = ?");
+    expect(params).toContain("ref-image.png");
+  });
+
+  it("updates commentEnabled when provided", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", { commentEnabled: 1 });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("comment_enabled = ?");
+    expect(params).toContain(1);
+  });
+
+  it("does not auto-generate excerpt when content changes with explicit excerpt (line 393 false)", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    // Update content AND provide explicit excerpt
+    await updatePost(db, "post-1", {
+      content: "New content",
+      excerpt: "My explicit excerpt",
+    });
+
+    const params = vi.mocked(db.execute).mock.calls[0][1]!;
+    // Should use explicit excerpt, not auto-generated
+    expect(params).toContain("My explicit excerpt");
+    expect(params).not.toContain("Auto excerpt...");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Branch coverage: searchPosts edge cases
+// ---------------------------------------------------------------------------
+
+describe("searchPosts branch coverage", () => {
+  let db: Db;
+
+  beforeEach(() => {
+    db = createMockDb();
+  });
+
+  it("floors pageSize to integer", async () => {
+    vi.mocked(db.call).mockResolvedValue({
+      posts: [],
+      snippets: {},
+      total: 0,
+      page: 1,
+      pageSize: 15,
+    });
+
+    await searchPosts(db, { query: "test", pageSize: 15.9 });
+
+    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
+      query: "test",
+      status: "published",
+      page: 1,
+      pageSize: 15,
+    });
+  });
+
+  it("floors page to integer", async () => {
+    vi.mocked(db.call).mockResolvedValue({
+      posts: [],
+      snippets: {},
+      total: 0,
+      page: 2,
+      pageSize: 20,
+    });
+
+    await searchPosts(db, { query: "test", page: 2.8 });
+
+    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
+      query: "test",
+      status: "published",
+      page: 2,
+      pageSize: 20,
+    });
+  });
+
+  it("handles Infinity page by falling back to default", async () => {
+    vi.mocked(db.call).mockResolvedValue({
+      posts: [],
+      snippets: {},
+      total: 0,
+      page: 1,
+      pageSize: 20,
+    });
+
+    await searchPosts(db, { query: "test", page: Infinity });
+
+    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
+      query: "test",
+      status: "published",
+      page: 1,
+      pageSize: 20,
+    });
+  });
+
+  it("handles Infinity pageSize by falling back to default", async () => {
+    vi.mocked(db.call).mockResolvedValue({
+      posts: [],
+      snippets: {},
+      total: 0,
+      page: 1,
+      pageSize: 20,
+    });
+
+    await searchPosts(db, { query: "test", pageSize: Infinity });
+
+    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
+      query: "test",
+      status: "published",
+      page: 1,
+      pageSize: 20,
+    });
+  });
+});

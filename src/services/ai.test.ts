@@ -585,6 +585,29 @@ describe("summarizeUnfurl", () => {
     const result = await summarizeUnfurl("Title", null, "Body");
     expect(result).toBeNull();
   });
+
+  it("treats non-string title as empty and returns null", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: '{"title":123,"description":"some desc"}',
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await summarizeUnfurl("Title", null, "Body");
+    expect(result).toBeNull();
+  });
+
+  it("treats non-string description as empty string", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: '{"title":"Valid Title","description":null}',
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await summarizeUnfurl("Title", null, "Body");
+    expect(result).toEqual({
+      title: "Valid Title",
+      description: "",
+    });
+  });
 });
 
 // ── generateExcerpt reasoning fallback tests ──
@@ -668,5 +691,37 @@ describe("generateExcerpt reasoning fallback", () => {
 
     const result = await generateExcerpt("Title", "Content");
     expect(result).toBe("This is the actual last block excerpt content");
+  });
+
+  it("skips empty lines in reasoning text", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: "",
+      reasoning: [
+        {
+          type: "reasoning" as const,
+          text: "\n\n\nThis line is after empty lines and long enough\n\n",
+        },
+      ],
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await generateExcerpt("Title", "Content");
+    expect(result).toBe("This line is after empty lines and long enough");
+  });
+
+  it("returns empty when lastReasoning.text is empty string", async () => {
+    mockedGetAiSettings.mockResolvedValue(mockSettings);
+    mockedGenerateText.mockResolvedValue({
+      text: "",
+      reasoning: [
+        {
+          type: "reasoning" as const,
+          text: "",
+        },
+      ],
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await generateExcerpt("Title", "Content");
+    expect(result).toBe("");
   });
 });
