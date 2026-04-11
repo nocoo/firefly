@@ -124,10 +124,11 @@ function startNextServer(
 ): Subprocess {
   // Build first, then start in production mode.
   // Next.js 16 refuses to run two `next dev` instances in the same directory,
-  // so we use `next build` + `next start` which has no such restriction and
+  // so we use `bun run build` + `next start` which has no such restriction and
   // better matches production behavior.
+  // Note: `bun run build` triggers prebuild scripts (e.g., cache-handler compilation).
   console.log(`▸ Building Next.js for E2E...`);
-  const build = Bun.spawnSync([BUN, "run", "next", "build"], {
+  const build = Bun.spawnSync([BUN, "run", "build"], {
     cwd: process.cwd(),
     env,
     stdout: "ignore",
