@@ -1,10 +1,9 @@
 # === Quality Gate: pre-push ===
-# L1 Coverage + G1 Lint + L2 Integration + G2 Security
+# L1 Coverage + G1 Lint + G2 Security
+# L2 API E2E runs in CI only (requires running server)
 echo "▸ L1: unit tests (coverage ≥90%)"
 bun run test:coverage
 echo "▸ G1: lint"
 bun run lint
-echo "▸ L2: API E2E"
-bun run test:e2e:api
 echo "▸ G2: security"
 bun run security

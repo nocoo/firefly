@@ -7,11 +7,16 @@
  *   bun scripts/run-e2e.ts --api-only   # Run API E2E only (L2)
  *   bun scripts/run-e2e.ts --browser-only # Run browser E2E only (L3)
  *
+ * CI Mode:
+ *   When WORKER_URL is set (e.g., CI environment), the runner skips starting
+ *   a local wrangler worker and uses the remote worker directly. This enables
+ *   L2 tests to run in GitHub Actions against the deployed test worker.
+ *
  * Port convention:
  *   Dev:     7028
  *   API E2E: 17028 (10000 + dev)
  *   BDD E2E: 27028 (20000 + dev)
- *   Worker:  8787  (wrangler default)
+ *   Worker:  8787  (wrangler default, local only)
  */
 import { spawn, type Subprocess } from "bun";
 import { readFileSync, existsSync } from "node:fs";
@@ -30,6 +35,9 @@ const WORKER_PORT = 8787;
 const args = process.argv.slice(2);
 const apiOnly = args.includes("--api-only");
 const browserOnly = args.includes("--browser-only");
+
+// CI mode: when WORKER_URL is pre-set, skip local worker startup
+const ciMode = !!process.env.WORKER_URL;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -150,25 +158,29 @@ async function main() {
   const testEnv = loadEnvFile(".env.test");
   const prodEnv = loadEnvFile(".env");
 
-  // Merge: prod env as base, test env overrides
-  const env = { ...process.env, ...prodEnv, ...testEnv };
+  // Merge: prod env as base, test env overrides, process.env has highest priority
+  const env = { ...prodEnv, ...testEnv, ...process.env };
 
-  // --- Start test worker (wrangler dev --env test) ---
-  startWorker();
-  await waitForWorkerReady();
+  // --- Start test worker (skip in CI mode) ---
+  if (ciMode) {
+    console.log(`▸ CI mode: using remote worker at ${process.env.WORKER_URL}`);
+  } else {
+    startWorker();
+    await waitForWorkerReady();
 
-  // --- Apply DB migrations to local D1 ---
-  console.log("▸ Applying DB migrations to local D1...");
-  try {
-    const { applyAll } = await import("./migrations/runner.ts");
-    const result = await applyAll("local");
-    console.log(
-      `▸ Migrations: ${result.applied.length} applied, ${result.skipped.length} already up-to-date`,
-    );
-  } catch (err) {
-    console.error("❌ Migration failed:", err);
-    cleanup();
-    process.exit(1);
+    // --- Apply DB migrations to local D1 ---
+    console.log("▸ Applying DB migrations to local D1...");
+    try {
+      const { applyAll } = await import("./migrations/runner.ts");
+      const result = await applyAll("local");
+      console.log(
+        `▸ Migrations: ${result.applied.length} applied, ${result.skipped.length} already up-to-date`,
+      );
+    } catch (err) {
+      console.error("❌ Migration failed:", err);
+      cleanup();
+      process.exit(1);
+    }
   }
 
   // --- Start Next.js dev server(s) ---
