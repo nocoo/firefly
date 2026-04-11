@@ -147,8 +147,9 @@ function startNextServer(
     {
       cwd: process.cwd(),
       env: { ...env, PORT: String(port) },
-      stdout: "ignore",
-      stderr: "ignore",
+      // In CI mode, show server output to help debug env var issues
+      stdout: ciMode ? "inherit" : "ignore",
+      stderr: ciMode ? "inherit" : "ignore",
     },
   );
   procs.push(proc);
