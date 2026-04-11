@@ -162,6 +162,14 @@ async function main() {
   // Merge: prod env as base, test env overrides, process.env has highest priority
   const env = { ...prodEnv, ...testEnv, ...process.env };
 
+  // Debug: show key env vars (CI only)
+  if (ciMode) {
+    console.log("▸ ENV DEBUG:");
+    console.log(`  WORKER_URL=${env.WORKER_URL ? "(set)" : "(missing)"}`);
+    console.log(`  WORKER_SECRET=${env.WORKER_SECRET ? "(set)" : "(missing)"}`);
+    console.log(`  E2E_SKIP_AUTH=${env.E2E_SKIP_AUTH}`);
+  }
+
   // --- Start test worker (skip in CI mode) ---
   if (ciMode) {
     console.log(`▸ CI mode: using remote worker at ${process.env.WORKER_URL}`);
