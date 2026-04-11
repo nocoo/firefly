@@ -32,3 +32,4 @@ yarn.lock
 
 # Claude Code worktrees
 .claude/worktrees/
+src/lib/cache-handler.js
