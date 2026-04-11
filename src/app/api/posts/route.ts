@@ -8,12 +8,6 @@ import { PostService } from "@/services/post-service";
 // GET /api/posts — list posts with optional filters
 export async function GET(request: NextRequest) {
   try {
-    // Debug: log env vars (only in CI)
-    if (process.env.CI === "true") {
-      console.log("[DEBUG] WORKER_URL:", process.env.WORKER_URL ? "(set)" : "(missing)");
-      console.log("[DEBUG] WORKER_SECRET:", process.env.WORKER_SECRET ? "(set)" : "(missing)");
-    }
-
     const db = getDb();
     const { searchParams } = new URL(request.url);
 
