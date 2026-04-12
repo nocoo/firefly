@@ -53,7 +53,8 @@ export async function getPostAuthor(
     type: "agent",
     name: agent.name,
     url: null,
-    avatarUrl: getAgentAvatarUrl(agent.slug, agent.avatar_version, 128),
+    // Use agent.id (not slug) for stable avatar paths
+    avatarUrl: getAgentAvatarUrl(agent.id, agent.avatar_version, 128),
   };
 }
 

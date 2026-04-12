@@ -268,6 +268,7 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="mt-1"
+                disabled={!isNew}
               >
                 <option value="">
                   {t("admin.aiAgents.form.selectCategory")}
@@ -279,7 +280,9 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
                 ))}
               </Select>
               <p className="mt-1 text-xs text-muted-foreground">
-                {t("admin.aiAgents.form.categoryHelp")}
+                {isNew
+                  ? t("admin.aiAgents.form.categoryHelp")
+                  : t("admin.aiAgents.form.categoryLocked")}
               </p>
             </div>
 

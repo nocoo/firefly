@@ -100,7 +100,8 @@ describe("getPostAuthor", () => {
       type: "agent",
       name: "Claude Daily",
       url: null,
-      avatarUrl: "https://test-cdn.example.com/uploads/firefly/agents/claude-daily/v1/avatar-128.png",
+      // Avatar path uses agent ID (not slug) for stability
+      avatarUrl: "https://test-cdn.example.com/uploads/firefly/agents/agent-1/v1/avatar-128.png",
     });
   });
 

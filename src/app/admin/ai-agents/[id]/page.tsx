@@ -24,8 +24,9 @@ export default async function AiAgentEditPage({
   if (!isNew && !agent) notFound();
 
   // Pre-compute avatar URL on server (getAgentAvatarUrl is server-only)
+  // Use agent.id (not slug) for stable paths that survive slug changes
   const avatarUrl = agent
-    ? getAgentAvatarUrl(agent.slug, agent.avatar_version, 128)
+    ? getAgentAvatarUrl(agent.id, agent.avatar_version, 128)
     : null;
 
   return (

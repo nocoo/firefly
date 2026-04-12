@@ -4,6 +4,8 @@
 // Depends on r2-client.ts (reads R2_PUBLIC_URL env var). Must NOT be imported
 // by client components. Client components receive pre-computed avatar URLs
 // as props from their parent server components.
+//
+// Avatar paths use agent ID (not slug) to ensure stability when slug changes.
 // ---------------------------------------------------------------------------
 
 import "server-only";
@@ -30,18 +32,22 @@ function getAvatarBasePath(): string {
  * Build the public CDN URL for an agent avatar variant.
  * Returns null if avatarVersion is null (agent has no avatar).
  *
- * @example getAgentAvatarUrl("claude-daily", "a1b2c3d4", 64)
- * // → "https://cdn.example.com/uploads/firefly/agents/claude-daily/a1b2c3d4/avatar-64.png"
+ * @param agentId - The agent's stable ID (not slug)
+ * @param avatarVersion - The avatar version or null
+ * @param size - The avatar size
+ *
+ * @example getAgentAvatarUrl("01HQ...", "a1b2c3d4", 64)
+ * // → "https://cdn.example.com/uploads/firefly/agents/01HQ.../a1b2c3d4/avatar-64.png"
  */
 export function getAgentAvatarUrl(
-  agentSlug: string,
+  agentId: string,
   avatarVersion: string | null,
   size: AvatarSize,
 ): string | null {
   return buildAgentAvatarUrl(
     getR2PublicUrl(),
     getR2KeyPrefix(),
-    agentSlug,
+    agentId,
     avatarVersion,
     size,
   );
@@ -49,21 +55,25 @@ export function getAgentAvatarUrl(
 
 /**
  * Build the R2 object key for an agent avatar variant (no CDN prefix).
+ *
+ * @param agentId - The agent's stable ID (not slug)
  */
 export function getAgentAvatarR2Key(
-  agentSlug: string,
+  agentId: string,
   version: string,
   size: AvatarSize,
 ): string {
-  return `${getAvatarBasePath()}/${agentSlug}/${version}/avatar-${size}.png`;
+  return `${getAvatarBasePath()}/${agentId}/${version}/avatar-${size}.png`;
 }
 
 /**
  * Get all R2 keys for a specific avatar version (for deletion).
+ *
+ * @param agentId - The agent's stable ID (not slug)
  */
 export function getAllAvatarR2Keys(
-  agentSlug: string,
+  agentId: string,
   version: string,
 ): string[] {
-  return AVATAR_SIZES.map((size) => getAgentAvatarR2Key(agentSlug, version, size));
+  return AVATAR_SIZES.map((size) => getAgentAvatarR2Key(agentId, version, size));
 }

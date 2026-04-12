@@ -405,6 +405,7 @@
   "admin.aiAgents.form.category": "Category",
   "admin.aiAgents.form.selectCategory": "Select a category...",
   "admin.aiAgents.form.categoryHelp": "Agent can only create posts in this category",
+  "admin.aiAgents.form.categoryLocked": "Category cannot be changed after creation",
   "admin.aiAgents.form.description": "Description",
   "admin.aiAgents.form.descriptionPlaceholder": "Optional description for the agent",
   "admin.aiAgents.form.isActive": "Active",

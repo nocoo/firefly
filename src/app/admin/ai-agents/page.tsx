@@ -14,9 +14,10 @@ export default async function AiAgentsPage() {
   const mcpUrl = `${SITE_URL}/api/mcp`;
 
   // Pre-compute avatar URLs on the server (getAgentAvatarUrl is server-only)
+  // Use agent.id (not slug) for stable paths that survive slug changes
   const agentsWithAvatarUrls = agents.map((agent) => ({
     ...agent,
-    avatarUrl: getAgentAvatarUrl(agent.slug, agent.avatar_version, 64),
+    avatarUrl: getAgentAvatarUrl(agent.id, agent.avatar_version, 64),
   }));
 
   return (

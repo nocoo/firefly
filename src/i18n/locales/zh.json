@@ -405,6 +405,7 @@
   "admin.aiAgents.form.category": "分类",
   "admin.aiAgents.form.selectCategory": "选择分类...",
   "admin.aiAgents.form.categoryHelp": "代理只能在此分类下创建文章",
+  "admin.aiAgents.form.categoryLocked": "分类创建后无法更改",
   "admin.aiAgents.form.description": "描述",
   "admin.aiAgents.form.descriptionPlaceholder": "代理的可选描述",
   "admin.aiAgents.form.isActive": "启用",

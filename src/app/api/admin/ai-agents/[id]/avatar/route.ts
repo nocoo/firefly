@@ -89,9 +89,10 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     );
 
     // Upload all variants — all must succeed before DB update
+    // Use agent.id (not slug) for stable paths that survive slug changes
     await Promise.all(
       resized.map(async ({ size, data }) => {
-        const key = getAgentAvatarR2Key(agent.slug, version, size);
+        const key = getAgentAvatarR2Key(agent.id, version, size);
         await uploadBufferToR2(key, data, "image/png");
       }),
     );
@@ -99,11 +100,11 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     // All uploads succeeded — persist version to DB
     await updateAvatarVersion(db, id, version);
 
-    // Get URLs for response
+    // Get URLs for response (use agent.id for stable paths)
     const urls = AVATAR_SIZES.reduce(
       (acc, size) => {
         // version is always set here (just generated), so URL will not be null
-        const url = getAgentAvatarUrl(agent.slug, version, size);
+        const url = getAgentAvatarUrl(agent.id, version, size);
         if (url) acc[size] = url;
         return acc;
       },
