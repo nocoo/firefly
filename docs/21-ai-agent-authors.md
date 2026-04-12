@@ -1,6 +1,6 @@
 # 21 — AI Agent Authors
 
-扩展 MCP 功能，允许多个 AI agent（Claude、GPT 等）作为独立作者发布内容。每个 agent 独占一个分类，使用静态 API key 认证（不走 OAuth 流程），发布的文章默认私密，由管理员审核后才能公开。
+扩展 MCP 功能，允许多个 AI agent（Claude、GPT 等）作为独立作者发布内容。每个 agent 绑定一个分类（同一分类可有多个 agent），使用静态 API key 认证（不走 OAuth 流程），发布的文章默认私密，由管理员审核后才能公开。
 
 ## Motivation
 
@@ -14,8 +14,8 @@
 ### Target State
 
 - 每个 AI agent 获得一个静态 API key（`firefly_agent_<hex>`）
-- 每个 agent **独占**一个分类（1:1 绑定，数据库唯一约束）
-- Agent 只能操作其绑定分类下的文章，该分类不允许人工混写
+- 每个 agent 绑定一个分类（同一分类可有多个 agent）
+- Agent 只能操作**自己创建的**文章（通过 `posts.ai_agent_id` 判断）
 - Agent 创建的文章强制为 `private` 状态，无法自行发布
 - 管理员可以管理 agent（创建/编辑/禁用/重新生成 key）
 - Agent 可以上传头像，文章页显示 agent 作为作者
@@ -24,52 +24,40 @@
 
 ## Ownership Model
 
-### 设计决策：分类级隔离（非作者级）
+### 设计决策：ai_agent_id 级隔离
 
-本设计采用**分类级隔离**而非作者级隔离：
+本设计采用**文章级作者标记**：
 
 | 方案 | 优点 | 缺点 |
 |------|------|------|
-| **分类级隔离**（选定） | 实现简单；分类天然形成内容边界；无需改 posts 表 schema | 一个分类只能一个 agent；该分类不能人工混写 |
-| 作者级隔离 | 更细粒度控制；允许多 agent 共用分类 | 需给 posts 加 `author_agent_id`；破坏现有数据模型 |
+| 分类级隔离（旧方案） | 实现简单；分类天然形成内容边界 | 一个分类只能一个 agent；该分类不能人工混写 |
+| **ai_agent_id 级隔离**（当前） | 细粒度控制；允许多 agent 共用分类；允许人类在同分类创作 | 需要 posts.ai_agent_id 字段 |
 
-**约束规则：**
+**当前规则：**
 
-1. 每个分类最多绑定一个 agent（`UNIQUE(category_id)` 约束）
-2. **已绑定 agent 的分类，管理员不能创建新文章、不能将其他文章移入该分类**（API 层硬拦截）
-3. 该分类下所有文章一律视为 agent authored，管理员只能做审核（改 status）和编辑，不能直接创作
-4. Agent 可以编辑/删除该分类下的**所有**文章（包括历史迁移文章）
-5. 建议为 agent 创建专属分类（如"AI 日记"、"Claude 随笔"）
+1. 同一分类可以有多个 agent（移除了 `UNIQUE(category_id)` 约束）
+2. Agent 创建文章时自动设置 `ai_agent_id = agent.id`
+3. Agent 只能查看/编辑/删除自己创建的文章（`ai_agent_id` 匹配）
+4. 人类可以在任意分类创建文章（不设置 `ai_agent_id`）
+5. 文章作者通过 `ai_agent_id` 直接 JOIN 查询，无需反向查找
 
-**Admin 写入拦截（硬约束）：**
+### Posts 表字段
 
-| 操作 | 路由 | 行为 |
-|------|------|------|
-| 在已绑定分类下创建文章 | `POST /api/posts` | 返回 400："此分类已绑定 AI Agent，请使用 Agent 创建文章" |
-| 将文章移入已绑定分类 | `PUT /api/posts/[slug]` | 返回 400："不能将文章移入已绑定 AI Agent 的分类" |
-| 批量将文章移入已绑定分类 | `PATCH /api/admin/posts/batch` | 返回 400："不能将文章移入已绑定 AI Agent 的分类" |
-| 在已绑定分类下通过 MCP 创建（OAuth） | `create_post` | 返回 error："此分类已绑定 AI Agent" |
-| 通过 MCP 将文章移入已绑定分类（OAuth） | `update_post` | 返回 error："不能将文章移入已绑定 AI Agent 的分类" |
-
-**OAuth MCP 用户对 Agent 分类既有文章的权限：**
-
-| 操作 | 允许 | 说明 |
-|------|------|------|
-| `list_posts` | ✅ | 可以看到 agent 分类的文章 |
-| `get_post` | ✅ | 可以读取 agent 分类的文章 |
-| `update_post`（不改 category_id） | ✅ | 可以编辑内容、改 status（审核发布） |
-| `update_post`（改 category_id 为 agent 分类） | ❌ | 禁止把文章移入 agent 分类 |
-| `delete_post` | ✅ | 可以删除 agent 分类的文章 |
-| `create_post`（指向 agent 分类） | ❌ | 禁止在 agent 分类下创建 |
-
-### Posts 表不变
-
-现有 `posts` 表不新增作者字段。作者归属通过 **category → agent** 反查：
+`posts` 表新增 `ai_agent_id` 字段：
 
 ```sql
--- 查询文章的 agent 作者
-SELECT a.* FROM ai_agents a
-JOIN posts p ON p.category_id = a.category_id
+-- Migration: 015-post-ai-agent.sql
+ALTER TABLE posts ADD COLUMN ai_agent_id TEXT REFERENCES ai_agents(id) ON DELETE SET NULL;
+CREATE INDEX idx_posts_ai_agent ON posts(ai_agent_id);
+```
+
+**作者查询：**
+
+```sql
+-- 查询文章作者信息（直接 JOIN）
+SELECT p.*, a.name AS agent_name, a.slug AS agent_slug, a.avatar_version AS agent_avatar_version
+FROM posts p
+LEFT JOIN ai_agents a ON p.ai_agent_id = a.id
 WHERE p.id = ?
 ```
 
@@ -132,7 +120,7 @@ Authorization: Bearer <token>
 
 ## Database Schema
 
-**Migration: `scripts/migrations/014-ai-agents.sql`**
+**Migration: `scripts/migrations/014-ai-agents.sql` + `015-post-ai-agent.sql`**
 
 ```sql
 -- AI Agent Authors — static API key authentication for AI writing agents
@@ -141,7 +129,7 @@ CREATE TABLE ai_agents (
   name              TEXT NOT NULL,              -- Display name: "Claude Daily Journal"
   slug              TEXT NOT NULL UNIQUE,       -- URL identifier: "claude-daily-journal"
   description       TEXT,                       -- Optional description
-  category_id       TEXT NOT NULL UNIQUE        -- Bound category (1:1, enforced by UNIQUE)
+  category_id       TEXT NOT NULL               -- Bound category (multiple agents can share)
     REFERENCES categories(id) ON DELETE RESTRICT,
   api_key_hash      TEXT NOT NULL UNIQUE,       -- SHA-256 hash of firefly_agent_<hex>
   api_key_preview   TEXT NOT NULL,              -- Last 8 chars for identification
@@ -152,18 +140,34 @@ CREATE TABLE ai_agents (
   updated_at        INTEGER NOT NULL            -- Last update time (epoch)
 );
 
+CREATE INDEX idx_ai_agents_category ON ai_agents(category_id);
 CREATE INDEX idx_ai_agents_api_key_hash ON ai_agents(api_key_hash);
+
+-- Posts 表添加 ai_agent_id 字段
+ALTER TABLE posts ADD COLUMN ai_agent_id TEXT REFERENCES ai_agents(id) ON DELETE SET NULL;
+CREATE INDEX idx_posts_ai_agent ON posts(ai_agent_id);
 ```
 
 ### Design Decisions
 
 | Decision | Rationale |
 |----------|-----------|
-| `category_id` with `UNIQUE` | 强制一个分类只能绑定一个 agent |
-| `ON DELETE RESTRICT` | 防止误删有 agent 绑定的分类 |
+| `category_id` **without** UNIQUE | 允许同一分类多个 agent |
+| `posts.ai_agent_id` | 直接标记文章作者，细粒度权限控制 |
+| `ON DELETE SET NULL` for ai_agent_id | Agent 删除后文章保留，作者变为匿名 |
+| `ON DELETE RESTRICT` for category_id | 防止误删有 agent 绑定的分类 |
 | `api_key_hash` unique index | Fast O(1) lookup during authentication |
 | `api_key_preview` = 后 8 位 | 前缀 `firefly_agent_` 太长，只存末尾便于识别 |
 | `avatar_version` nullable | null = no avatar; versioning enables CDN cache busting |
+
+### Agent 删除策略
+
+Agent 删除采用**软删除保护**：
+
+- 如果 agent 有任何文章引用（`posts.ai_agent_id = agent.id`），禁止删除
+- API 返回 409 Conflict 并告知文章数量
+- 管理员需先将相关文章删除或重新分配后才能删除 agent
+- UI 层：删除按钮仅在 `is_active = 0` 且 `post_count = 0` 时显示
 
 ---
 
@@ -201,18 +205,16 @@ New Files:
 Modified Files:
 ├── src/lib/mcp/auth.ts                        # Add agent token validation
 ├── src/lib/mcp/server.ts                      # Add scoped context branch
-├── src/lib/mcp/entities/post.ts               # Block OAuth create/update to agent-bound categories
 ├── src/lib/seo.ts                             # Add authorOverride to buildPageMeta
 ├── src/app/api/mcp/route.ts                   # Route to correct auth handler
-├── src/app/api/posts/route.ts                 # Block create in agent-bound categories
-├── src/app/api/posts/[slug]/route.ts          # Block move to agent-bound categories
-├── src/app/api/admin/posts/batch/route.ts     # Block batch move to agent-bound categories
 ├── src/app/(blog)/[year]/[month]/[slug]/page.tsx  # Show agent author + metadata
 ├── src/app/feed.xml/route.ts                  # Use agent author in RSS
 ├── src/lib/jsonld.ts                          # Use agent author in JSON-LD
 ├── src/components/admin/sidebar.tsx           # Add AI Agents nav item
 ├── src/i18n/locales/en.json                   # Add i18n keys
-└── src/i18n/locales/zh.json                   # Add i18n keys
+├── src/i18n/locales/zh.json                   # Add i18n keys
+├── src/models/types.ts                        # Add ai_agent_id to Post, PostWithAgent type
+└── src/data/entities/post.ts                  # Add aiAgentId to CreatePostInput, VIEW_QUERY JOIN agent
 ```
 
 ---
@@ -246,13 +248,14 @@ export async function generateAgentApiKey(): Promise<{
 | Function | Purpose |
 |----------|---------|
 | `createAiAgent(db, input)` | Create agent, generate key, return `{ agent, plaintextKey }` |
-| `getAiAgentById(db, id)` | Get agent with category info |
+| `getAiAgentById(db, id)` | Get agent by ID |
+| `getAiAgentBySlug(db, slug)` | Get agent by slug |
 | `getAiAgentByApiKey(db, plaintextKey)` | Validate key, update `last_used_at`, return agent or null |
-| `getAiAgentByCategoryId(db, categoryId)` | Get agent by category (for author rendering) |
-| `listAiAgents(db, opts)` | List all agents (optionally include inactive) |
+| `listAiAgents(db, opts)` | List all agents with category info and post count |
 | `updateAiAgent(db, id, input)` | Update agent fields |
 | `regenerateAgentApiKey(db, id)` | Generate new key, return `{ agent, plaintextKey }` |
-| `deleteAiAgent(db, id)` | Delete agent |
+| `deleteAiAgent(db, id)` | Delete agent (blocked if has posts) |
+| `getAiAgentPostCount(db, id)` | Get count of posts referencing this agent |
 
 ---
 
@@ -282,25 +285,25 @@ import { PostService } from "@/services/post-service";
  * - list/get/create/update/delete all scoped to agent's category
  * - create forces status = "private"
  * - update ignores status field
+ * - list/get/create/update/delete all scoped to agent's own posts (ai_agent_id match)
+ * - create forces status = "private" and sets ai_agent_id = agent.id
+ * - update ignores status field
  * - Reuses projection and afterGet from postEntity for consistent behavior
  * - NO extra tools (generate_excerpt, unfurl_reference disabled)
  */
 export function createAgentPostEntity(agent: AiAgent): EntityConfig<Post> {
-  const categoryId = agent.categoryId;
+  const categoryId = agent.category_id;
+  const agentId = agent.id;
 
   return {
     name: "post",
     display: "Post",
     dataLayer: {
-      // list: force category filter
+      // list: filter by agent's own posts
       list: async (db, opts) => {
         const o = (opts ?? {}) as Record<string, unknown>;
-        // Reject if client tries to specify different category
-        if (o.category_id && o.category_id !== categoryId) {
-          throw new Error("Access denied: You can only access posts in your assigned category");
-        }
         const result = await listPosts(db, {
-          categoryId,  // forced
+          aiAgentId: agentId,  // Only agent's own posts
           status: o.status as any,
           query: o.query as string | undefined,
           page: (o.page as number) ?? 1,
@@ -309,30 +312,31 @@ export function createAgentPostEntity(agent: AiAgent): EntityConfig<Post> {
         return { items: result.posts, total: result.total };
       },
 
-      // getById: verify category ownership
+      // getById: verify ai_agent_id ownership
       getById: async (db, id) => {
         const post = await getPostById(db, id);
-        if (post && post.category_id !== categoryId) {
+        if (post && post.ai_agent_id !== agentId) {
           return null; // treat as not found
         }
         return post;
       },
 
-      // getBySlug: verify category ownership
+      // getBySlug: verify ai_agent_id ownership
       getBySlug: async (db, slug) => {
         const post = await getPostBySlug(db, slug);
-        if (post && post.category_id !== categoryId) {
+        if (post && post.ai_agent_id !== agentId) {
           return null;
         }
         return post;
       },
 
-      // create: force category + status
+      // create: force category + status + aiAgentId
       create: async (db, input: any) => {
         return PostService.create(db, {
           ...input,
-          categoryId,         // forced
+          categoryId,         // forced to agent's bound category
           status: "private",  // forced
+          aiAgentId: agentId, // mark as agent's own post
         });
       },
 
@@ -355,7 +359,6 @@ export function createAgentPostEntity(agent: AiAgent): EntityConfig<Post> {
         query: z.string().optional(),
         page: z.number().optional(),
         page_size: z.number().min(1).max(100).optional(),
-        // category_id intentionally omitted — agent can't change it
       },
       create: {
         title: z.string(),
@@ -533,56 +536,56 @@ export async function validateMcpAuth(
 export interface PostAuthor {
   type: "site" | "agent";
   name: string;
-  url: string | null;        // agent 无 URL，站点作者有 SITE_URL
-  avatarUrl: string | null;  // agent 头像或 null
+  avatarUrl: string | null;  // agent 头像或站点 logo
 }
 
 /**
- * Resolve author for a post.
- * If post's category is bound to an agent, return agent as author.
- * Otherwise return null (caller falls back to site author).
+ * Resolve author for a post (synchronous, uses JOINed data).
+ * If post has ai_agent_id, return agent as author.
+ * Otherwise return site author.
+ * 
+ * IMPORTANT: This function is SYNCHRONOUS and requires PostWithAgent
+ * (which includes agent_name, agent_slug, agent_avatar_version from JOIN).
  */
-export async function getPostAuthor(
-  db: Db,
-  post: Post,
-): Promise<PostAuthor | null> {
-  if (!post.category_id) return null;
-  
-  const agent = await getAiAgentByCategoryId(db, post.category_id);
-  if (!agent) return null;
-  
-  return {
-    type: "agent",
-    name: agent.name,
-    url: null,
-    // Use agent.id (not slug) for stable avatar paths
-    avatarUrl: getAgentAvatarUrl(agent.id, agent.avatar_version, 128),
-  };
-}
-
-/**
- * Get author for metadata (Metadata.authors, OpenGraph.authors).
- * Returns agent name if applicable, otherwise site author.
- */
-export async function getPostAuthorForMeta(
-  db: Db,
-  post: Post,
-  siteAuthor: string,
-): Promise<{ name: string; url: string }> {
-  const agent = await getPostAuthor(db, post);
-  if (agent) {
-    return { name: agent.name, url: SITE_URL }; // agent uses site URL
+export function getPostAuthor(
+  post: PostWithAgent,
+  settings: { siteAuthor: string; siteLogoVersion: string | null },
+): PostAuthor {
+  if (post.ai_agent_id && post.agent_name) {
+    // AI Agent 作品
+    return {
+      type: "agent",
+      name: post.agent_name,
+      avatarUrl: post.agent_avatar_version
+        ? getAgentAvatarUrl(post.ai_agent_id, post.agent_avatar_version, 64)
+        : null,
+    };
+  } else {
+    // 人类作品
+    return {
+      type: "site",
+      name: settings.siteAuthor,
+      avatarUrl: settings.siteLogoVersion
+        ? getLogoUrl(settings.siteLogoVersion, 64)
+        : null,
+    };
   }
-  return { name: siteAuthor, url: SITE_URL };
 }
 ```
+
+**关键变化（相比旧的 async 版本）：**
+
+1. **同步函数**：不再调用 `getAiAgentByCategoryId`，直接使用 JOINed 数据
+2. **PostWithAgent 类型**：需要 `agent_name`, `agent_slug`, `agent_avatar_version` 字段
+3. **双路径返回**：AI agent 文章返回 agent 信息，人类文章返回站点信息
+4. **无数据库依赖**：所有数据来自已 JOIN 的 post 对象
 
 ### 需要修改的输出面
 
 | 位置 | 当前行为 | 目标行为 | 修改点 |
 |------|----------|----------|--------|
 | **文章详情页 UI** | 无作者显示 | Agent 头像 + 名称 | `page.tsx` header 区域 |
-| **文章详情页 Metadata** | `siteAuthor` | Agent 名称 | `generateMetadata` 调用 `getPostAuthorForMeta` |
+| **文章详情页 Metadata** | `siteAuthor` | Agent 名称 | `generateMetadata` 调用 `getPostAuthor` |
 | **文章列表卡片** | 无作者显示 | 可选：显示 agent 小头像 | `post-card.tsx` |
 | **RSS Feed** | `siteAuthor` | Agent 名称 | `feed.xml/route.ts` 的 `<dc:creator>` |
 | **JSON-LD** | 站点级 author | Agent 信息 | `jsonld.ts` 的 `author` 字段 |
@@ -623,17 +626,17 @@ export function buildPageMeta(
 
 ### 文章详情页 generateMetadata 修改
 
-现有代码已经通过 `getCachedPost` 使用 `published` 过滤，确保未发布文章不泄露元信息。
-修改只需在获取 post 后调用 `getPostAuthorForMeta`：
+现有代码通过 `getPostBySlugWithAgent` 获取带 agent 信息的文章。
+修改只需调用同步的 `getPostAuthor`：
 
 ```ts
 // src/app/(blog)/[year]/[month]/[slug]/page.tsx
-import { getPostAuthorForMeta } from "@/lib/ai-agent/author";
+import { getPostAuthor } from "@/lib/ai-agent/author";
 
-// 保留现有的 published-only 缓存查询
+// 使用新的带 agent JOIN 的查询
 const getCachedPost = cache((slug: string) => {
   const db = getDb();
-  return getPostBySlug(db, slug, "published");  // 保持不变
+  return getPostBySlugWithAgent(db, slug, "published");
 });
 
 export async function generateMetadata({
@@ -641,7 +644,7 @@ export async function generateMetadata({
 }: PostPageProps): Promise<Metadata> {
   const { slug } = await params;
   const db = getDb();
-  const post = await getCachedPost(slug);  // published-only
+  const post = await getCachedPost(slug);  // PostWithAgent 类型
 
   if (!post) return { title: "Not Found" };
 
@@ -651,8 +654,11 @@ export async function generateMetadata({
     getLocale(),
   ]);
   
-  // NEW: resolve agent author
-  const authorMeta = await getPostAuthorForMeta(db, post, settings.siteAuthor);
+  // 同步获取作者信息（无数据库调用）
+  const author = getPostAuthor(post, {
+    siteAuthor: settings.siteAuthor,
+    siteLogoVersion: settings.siteLogoVersion,
+  });
   
   const path = postPath(post.slug, post.published_at);
 
@@ -663,7 +669,7 @@ export async function generateMetadata({
     locale,
     image: post.featured_image ?? undefined,
     // ... existing fields
-    authorOverride: authorMeta,  // NEW
+    authorOverride: { name: author.name, url: SITE_URL },
   }, settings);
 }
 ```

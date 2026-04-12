@@ -261,7 +261,7 @@ function AgentRow({
               <Power className="h-4 w-4" />
             )}
           </button>
-          {!agent.is_active && (
+          {!agent.is_active && agent.post_count === 0 && (
             <button
               onClick={onDelete}
               className="p-1.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
