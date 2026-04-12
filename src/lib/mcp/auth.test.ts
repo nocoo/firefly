@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db } from "@/lib/db";
 import { createMockDb } from "@/data/core/test-utils";
-import type { McpToken } from "@/models/types";
+import type { McpToken, AiAgent } from "@/models/types";
 import {
   extractBearerToken,
   validateMcpToken,
+  validateMcpAuth,
   validateOrigin,
 } from "./auth";
 
@@ -18,7 +19,12 @@ vi.mock("@/data/mcp-tokens", () => ({
   sha256: vi.fn().mockImplementation(async (input: string) => `hashed_${input}`),
 }));
 
+vi.mock("@/data/entities/ai-agent", () => ({
+  getAiAgentByApiKey: vi.fn(),
+}));
+
 import { getValidTokenByHash, updateLastUsed } from "@/data/mcp-tokens";
+import { getAiAgentByApiKey } from "@/data/entities/ai-agent";
 
 
 const now = Math.floor(Date.now() / 1000);
@@ -38,6 +44,21 @@ const sampleToken: McpToken = {
   revoked: 0,
   revoked_at: null,
   created_at: now,
+};
+
+const sampleAgent: AiAgent = {
+  id: "agent-1",
+  name: "Claude Daily",
+  slug: "claude-daily",
+  description: "Daily journal",
+  category_id: "cat-1",
+  api_key_hash: "hashed_firefly_agent_abc",
+  api_key_preview: "gent_abc",
+  avatar_version: null,
+  is_active: 1,
+  last_used_at: null,
+  created_at: now,
+  updated_at: now,
 };
 
 // ---------------------------------------------------------------------------
@@ -138,6 +159,80 @@ describe("validateMcpToken", () => {
     await validateMcpToken(db, "Bearer my_token");
 
     expect(getValidTokenByHash).toHaveBeenCalledWith(db, "hashed_my_token");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// validateMcpAuth (unified)
+// ---------------------------------------------------------------------------
+
+describe("validateMcpAuth", () => {
+  let db: Db;
+  beforeEach(() => {
+    db = createMockDb();
+    vi.mocked(getValidTokenByHash).mockReset();
+    vi.mocked(getAiAgentByApiKey).mockReset();
+    vi.mocked(updateLastUsed).mockReset().mockResolvedValue(undefined);
+  });
+
+  it("returns null for missing Authorization header", async () => {
+    const result = await validateMcpAuth(db, null);
+    expect(result).toBeNull();
+  });
+
+  it("returns null for malformed Authorization header", async () => {
+    const result = await validateMcpAuth(db, "Basic abc");
+    expect(result).toBeNull();
+  });
+
+  it("routes firefly_agent_ tokens to agent validation", async () => {
+    vi.mocked(getAiAgentByApiKey).mockResolvedValue(sampleAgent);
+
+    const result = await validateMcpAuth(db, "Bearer firefly_agent_abc123");
+
+    expect(getAiAgentByApiKey).toHaveBeenCalledWith(db, "firefly_agent_abc123");
+    expect(getValidTokenByHash).not.toHaveBeenCalled();
+    expect(result).toEqual({ type: "agent", agent: sampleAgent });
+  });
+
+  it("routes firefly_at_ tokens to OAuth validation", async () => {
+    vi.mocked(getValidTokenByHash).mockResolvedValue(sampleToken);
+
+    const result = await validateMcpAuth(db, "Bearer firefly_at_abc123");
+
+    expect(getAiAgentByApiKey).not.toHaveBeenCalled();
+    expect(getValidTokenByHash).toHaveBeenCalledWith(db, "hashed_firefly_at_abc123");
+    expect(result).toEqual({ type: "oauth", token: sampleToken });
+  });
+
+  it("returns null for invalid agent token", async () => {
+    vi.mocked(getAiAgentByApiKey).mockResolvedValue(null);
+
+    const result = await validateMcpAuth(db, "Bearer firefly_agent_invalid");
+    expect(result).toBeNull();
+  });
+
+  it("returns null for invalid OAuth token", async () => {
+    vi.mocked(getValidTokenByHash).mockResolvedValue(null);
+
+    const result = await validateMcpAuth(db, "Bearer firefly_at_invalid");
+    expect(result).toBeNull();
+  });
+
+  it("returns null for unknown token prefix", async () => {
+    const result = await validateMcpAuth(db, "Bearer unknown_prefix_token");
+    expect(result).toBeNull();
+    expect(getAiAgentByApiKey).not.toHaveBeenCalled();
+    expect(getValidTokenByHash).not.toHaveBeenCalled();
+  });
+
+  it("updates last_used_at for valid OAuth token", async () => {
+    vi.mocked(getValidTokenByHash).mockResolvedValue(sampleToken);
+
+    await validateMcpAuth(db, "Bearer firefly_at_abc");
+
+    await new Promise((r) => setTimeout(r, 10));
+    expect(updateLastUsed).toHaveBeenCalledWith(db, "tok-1");
   });
 });
 

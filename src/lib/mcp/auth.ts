@@ -3,8 +3,9 @@
 // ---------------------------------------------------------------------------
 
 import type { Db } from "@/lib/db";
-import type { McpToken } from "@/models/types";
+import type { McpToken, AiAgent } from "@/models/types";
 import { getValidTokenByHash, updateLastUsed, sha256 } from "@/data/mcp-tokens";
+import { getAiAgentByApiKey } from "@/data/entities/ai-agent";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -22,6 +23,12 @@ export interface McpAuthError {
 }
 
 export type McpAuthOutcome = McpAuthResult | McpAuthError;
+
+// Unified auth result — both OAuth and Agent tokens
+export type McpUnifiedAuthResult =
+  | { type: "oauth"; token: McpToken }
+  | { type: "agent"; agent: AiAgent }
+  | null;
 
 // ---------------------------------------------------------------------------
 // extractBearerToken
@@ -70,6 +77,44 @@ export async function validateMcpToken(
   });
 
   return { valid: true, token };
+}
+
+// ---------------------------------------------------------------------------
+// validateMcpAuth — unified auth for both OAuth and Agent tokens
+// ---------------------------------------------------------------------------
+
+/**
+ * Unified auth function that routes to the correct validator based on token prefix.
+ *
+ * - `firefly_agent_xxx` → Agent API key validation
+ * - `firefly_at_xxx` → OAuth access token validation
+ *
+ * Returns null if token is missing, malformed, or invalid.
+ * Agent auth updates last_used_at in the agent validation function.
+ */
+export async function validateMcpAuth(
+  db: Db,
+  authHeader: string | null,
+): Promise<McpUnifiedAuthResult> {
+  const bearerToken = extractBearerToken(authHeader);
+  if (!bearerToken) return null;
+
+  // Route by prefix
+  if (bearerToken.startsWith("firefly_agent_")) {
+    const agent = await getAiAgentByApiKey(db, bearerToken);
+    return agent ? { type: "agent", agent } : null;
+  }
+
+  if (bearerToken.startsWith("firefly_at_")) {
+    const tokenHash = await sha256(bearerToken);
+    const token = await getValidTokenByHash(db, tokenHash);
+    if (token) {
+      updateLastUsed(db, token.id).catch(() => {});
+      return { type: "oauth", token };
+    }
+  }
+
+  return null;
 }
 
 // ---------------------------------------------------------------------------
