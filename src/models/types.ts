@@ -183,6 +183,30 @@ export interface CommentTree extends Comment {
 }
 
 // ---------------------------------------------------------------------------
+// AI Agent Authors — static API key authentication
+// ---------------------------------------------------------------------------
+
+export interface AiAgent {
+  id: string; // ULID
+  name: string;
+  slug: string;
+  description: string | null;
+  category_id: string;
+  api_key_hash: string;
+  api_key_preview: string; // Last 8 chars
+  avatar_version: string | null;
+  is_active: number; // 0 | 1
+  last_used_at: number | null;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface AiAgentWithCategory extends AiAgent {
+  category_name: string;
+  category_slug: string;
+}
+
+// ---------------------------------------------------------------------------
 // MCP (Model Context Protocol) — OAuth 2.1 + tool access
 // ---------------------------------------------------------------------------
 
