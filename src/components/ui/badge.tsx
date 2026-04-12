@@ -16,7 +16,7 @@ const badgeVariants = cva(
         success:
           "bg-success/10 text-success",
         warning:
-          "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+          "bg-warning/10 text-warning-foreground",
         outline:
           "border-border text-foreground",
       },

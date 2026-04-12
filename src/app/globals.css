@@ -63,6 +63,8 @@
   --color-card-foreground: hsl(var(--card-foreground));
   --color-success: hsl(var(--success));
   --color-success-foreground: hsl(var(--success-foreground));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
 
   /* Blog palette */
   --color-blog-bg: var(--blog-bg);
@@ -157,6 +159,8 @@
   --radius: 0.5rem;
   --success: 142 71% 45%;
   --success-foreground: 0 0% 100%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 38 92% 20%;
 
   /* Chart palette */
   --chart-1: 217 91% 60%;
@@ -215,6 +219,8 @@
   --ring: 217 91% 60%;
   --success: 142 71% 45%;
   --success-foreground: 0 0% 100%;
+  --warning: 38 92% 55%;
+  --warning-foreground: 38 92% 90%;
 
   --chart-1: 217 91% 65%;
   --chart-2: 160 60% 50%;
