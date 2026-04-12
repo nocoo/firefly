@@ -8,7 +8,6 @@ import {
   getAiAgentBySlug,
 } from "@/data/entities/ai-agent";
 import { getCategoryById } from "@/data/entities/category";
-import { getAiAgentByCategoryId } from "@/data/entities/ai-agent";
 import { generateAgentPrompt } from "@/lib/ai-agent/prompt-generator";
 import { SITE_URL } from "@/lib/seo";
 
@@ -80,15 +79,6 @@ export async function POST(request: NextRequest) {
       return errorResponse("Category not found", 400);
     }
 
-    // Check category is not already bound to another agent
-    const existingByCategory = await getAiAgentByCategoryId(db, categoryId);
-    if (existingByCategory) {
-      return errorResponse(
-        `Category "${category.name}" is already bound to agent "${existingByCategory.name}"`,
-        400,
-      );
-    }
-
     // Create agent
     const { agent, plaintextKey } = await createAiAgent(db, {
       name: name.trim(),
@@ -119,9 +109,9 @@ export async function POST(request: NextRequest) {
       201,
     );
   } catch (error) {
-    // Handle unique constraint violation
+    // Handle unique constraint violation (slug)
     if (error instanceof Error && error.message.includes("UNIQUE constraint")) {
-      return errorResponse("Agent slug or category already in use", 400);
+      return errorResponse("Agent slug already in use", 400);
     }
     return errorResponse(
       error instanceof Error ? error.message : "Internal server error",

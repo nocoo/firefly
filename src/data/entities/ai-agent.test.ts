@@ -7,7 +7,6 @@ import {
   getAiAgentById,
   getAiAgentBySlug,
   getAiAgentByApiKey,
-  getAiAgentByCategoryId,
   listAiAgents,
   updateAiAgent,
   updateAvatarVersion,
@@ -207,32 +206,6 @@ describe("getAiAgentByApiKey", () => {
 
     const [sql] = vi.mocked(db.firstOrNull).mock.calls[0];
     expect(sql).toContain("is_active = 1");
-  });
-});
-
-// ---------------------------------------------------------------------------
-// getAiAgentByCategoryId
-// ---------------------------------------------------------------------------
-
-describe("getAiAgentByCategoryId", () => {
-  let db: Db;
-  beforeEach(() => {
-    db = createMockDb();
-  });
-
-  it("returns agent bound to category", async () => {
-    vi.mocked(db.firstOrNull).mockResolvedValue(sampleAgent);
-    const result = await getAiAgentByCategoryId(db, "cat-1");
-
-    const [sql, params] = vi.mocked(db.firstOrNull).mock.calls[0];
-    expect(sql).toContain("category_id = ?");
-    expect(params).toEqual(["cat-1"]);
-    expect(result?.name).toBe("Claude Daily");
-  });
-
-  it("returns null when category has no agent", async () => {
-    vi.mocked(db.firstOrNull).mockResolvedValue(null);
-    expect(await getAiAgentByCategoryId(db, "cat-2")).toBeNull();
   });
 });
 

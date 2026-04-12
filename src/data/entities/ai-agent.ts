@@ -156,24 +156,6 @@ export async function getAiAgentByApiKey(
 }
 
 // ---------------------------------------------------------------------------
-// getAiAgentByCategoryId
-// ---------------------------------------------------------------------------
-
-/**
- * Get the agent bound to a category (for author rendering).
- * Returns null if category is not bound to any agent.
- */
-export async function getAiAgentByCategoryId(
-  db: Db,
-  categoryId: string,
-): Promise<AiAgent | null> {
-  return db.firstOrNull<AiAgent>(
-    "SELECT * FROM ai_agents WHERE category_id = ?",
-    [categoryId],
-  );
-}
-
-// ---------------------------------------------------------------------------
 // listAiAgents
 // ---------------------------------------------------------------------------
 

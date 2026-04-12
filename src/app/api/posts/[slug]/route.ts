@@ -4,7 +4,6 @@ import { jsonResponse, errorResponse, notFoundResponse } from "@/lib/api";
 import { getPostBySlug } from "@/data/entities/post";
 import type { PostStatus } from "@/models/types";
 import { PostService } from "@/services/post-service";
-import { getAiAgentByCategoryId } from "@/data/entities/ai-agent";
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -42,18 +41,6 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (!existing) return notFoundResponse("Post");
 
     const body = (await request.json()) as Record<string, unknown>;
-
-    // Block moving post to an agent-bound category
-    const newCategoryId = (body.categoryId ?? body.category_id) as string | null | undefined;
-    if (newCategoryId && newCategoryId !== existing.category_id) {
-      const agent = await getAiAgentByCategoryId(db, newCategoryId);
-      if (agent) {
-        return errorResponse(
-          "Cannot move post to a category bound to an AI agent.",
-          400,
-        );
-      }
-    }
 
     const updated = await PostService.update(db, existing.id, {
       title: body.title as string | undefined,

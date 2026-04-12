@@ -4,7 +4,6 @@ import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
 import { PostService } from "@/services/post-service";
 import type { PostStatus } from "@/models/types";
-import { getAiAgentByCategoryId } from "@/data/entities/ai-agent";
 
 const VALID_STATUSES = new Set<PostStatus>([
   "draft",
@@ -56,17 +55,6 @@ export async function PATCH(request: NextRequest) {
     }
 
     const db = getDb();
-
-    // Block moving posts to an agent-bound category
-    if (sanitized.categoryId) {
-      const agent = await getAiAgentByCategoryId(db, sanitized.categoryId);
-      if (agent) {
-        return errorResponse(
-          "Cannot move posts to a category bound to an AI agent.",
-          400,
-        );
-      }
-    }
 
     const changed = await PostService.batchUpdate(db, ids, sanitized);
 
