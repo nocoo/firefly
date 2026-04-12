@@ -54,7 +54,7 @@ export function CopyButton({ text, className }: { text: string; className?: stri
       title="Copy"
     >
       {copied ? (
-        <Check className="h-3.5 w-3.5 text-green-600" />
+        <Check className="h-3.5 w-3.5 text-success" />
       ) : (
         <Copy className="h-3.5 w-3.5" />
       )}
@@ -84,7 +84,7 @@ export function NewKeyModal({
       <div className="mx-4 w-full max-w-lg rounded-lg bg-background border border-border shadow-lg">
         <div className="border-b border-border px-6 py-4">
           <h2 className="text-lg font-semibold text-foreground">{agentName}</h2>
-          <p className="mt-1 text-sm text-amber-600 dark:text-amber-400">
+          <p className="mt-1 text-sm text-warning-foreground">
             {t("admin.aiAgents.keyWarning")}
           </p>
         </div>
@@ -192,7 +192,7 @@ function AgentRow({
       </td>
       <td className="px-4 py-3">
         {agent.is_active ? (
-          <Badge variant="default" className="bg-green-600">
+          <Badge variant="success">
             {t("admin.aiAgents.active")}
           </Badge>
         ) : (
