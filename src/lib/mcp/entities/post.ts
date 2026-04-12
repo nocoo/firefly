@@ -17,6 +17,7 @@ import { unfurlUrl, UnfurlError } from "@/services/unfurl";
 import type { EntityConfig, ToolContext } from "../framework/types";
 import { resolveEntity } from "../framework/resolve";
 import { ok, error } from "../framework/response";
+import { getAiAgentByCategoryId } from "@/data/entities/ai-agent";
 
 // ---------------------------------------------------------------------------
 // Extra tool: unfurl_reference (two modes: preview + save)
@@ -142,8 +143,32 @@ export const postEntity: EntityConfig<Post> = {
     },
     getById: getPostById,
     getBySlug: getPostBySlug,
-    create: (db, input) => PostService.create(db, input),
-    update: (db, id, input) => PostService.update(db, id, input),
+    create: async (db, input) => {
+      // Block creation in agent-bound categories
+      const categoryId = (input as Record<string, unknown>).categoryId as string | undefined;
+      if (categoryId) {
+        const agent = await getAiAgentByCategoryId(db, categoryId);
+        if (agent) {
+          throw new Error("This category is bound to an AI agent. Use the agent to create posts.");
+        }
+      }
+      return PostService.create(db, input);
+    },
+    update: async (db, id, input) => {
+      // Block moving post to an agent-bound category
+      const newCategoryId = (input as Record<string, unknown>).categoryId as string | undefined;
+      if (newCategoryId) {
+        // Get current post to check if category is changing
+        const existingPost = await getPostById(db, id);
+        if (existingPost && newCategoryId !== existingPost.category_id) {
+          const agent = await getAiAgentByCategoryId(db, newCategoryId);
+          if (agent) {
+            throw new Error("Cannot move post to a category bound to an AI agent.");
+          }
+        }
+      }
+      return PostService.update(db, id, input);
+    },
     delete: (db, id) => PostService.delete(db, id),
   },
   schemas: {

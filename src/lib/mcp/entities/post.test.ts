@@ -4,7 +4,7 @@
 // ---------------------------------------------------------------------------
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Post, PostWithCategory, Tag } from "@/models/types";
+import type { Post, PostWithCategory, Tag, AiAgent } from "@/models/types";
 import { createCrudHandlers } from "../framework/handlers";
 import {
   createMockContext,
@@ -51,6 +51,10 @@ vi.mock("@/services/unfurl", () => ({
   },
 }));
 
+vi.mock("@/data/entities/ai-agent", () => ({
+  getAiAgentByCategoryId: vi.fn(),
+}));
+
 import {
   listPosts,
   getPostById,
@@ -61,6 +65,7 @@ import {
 import { PostService } from "@/services/post-service";
 import { generateExcerpt, summarizeUnfurl } from "@/services/ai";
 import { unfurlUrl, UnfurlError } from "@/services/unfurl";
+import { getAiAgentByCategoryId } from "@/data/entities/ai-agent";
 
 // ---------------------------------------------------------------------------
 // Test data
@@ -103,6 +108,21 @@ const sampleTags: Pick<Tag, "id" | "name" | "slug">[] = [
   { id: "tag-1", name: "TypeScript", slug: "typescript" },
 ];
 
+const sampleAgent: AiAgent = {
+  id: "agent-1",
+  name: "Claude Daily",
+  slug: "claude-daily",
+  description: "Daily journal",
+  category_id: "cat-agent",
+  api_key_hash: "hash",
+  api_key_preview: "preview",
+  avatar_version: null,
+  is_active: 1,
+  last_used_at: null,
+  created_at: now,
+  updated_at: now,
+};
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -125,6 +145,7 @@ describe("post entity handlers", () => {
     vi.mocked(generateExcerpt).mockReset();
     vi.mocked(summarizeUnfurl).mockReset();
     vi.mocked(unfurlUrl).mockReset();
+    vi.mocked(getAiAgentByCategoryId).mockReset();
   });
 
   // ---- list + projection ----
@@ -299,6 +320,46 @@ describe("post entity handlers", () => {
       expect(createCallArgs).not.toHaveProperty("tagIds");
       expect(createCallArgs).not.toHaveProperty("tag_ids");
     });
+
+    it("throws error when category is bound to an AI agent", async () => {
+      vi.mocked(getAiAgentByCategoryId).mockResolvedValue(sampleAgent);
+
+      await expect(
+        handlers.handleCreate(ctx, {
+          title: "New",
+          slug: "new",
+          content: "body",
+          category_id: "cat-agent",
+        }),
+      ).rejects.toThrow("This category is bound to an AI agent");
+    });
+
+    it("allows create when category has no agent", async () => {
+      vi.mocked(getAiAgentByCategoryId).mockResolvedValue(null);
+      vi.mocked(PostService.create).mockResolvedValue(samplePostWithCategory);
+
+      await handlers.handleCreate(ctx, {
+        title: "New",
+        slug: "new",
+        content: "body",
+        category_id: "cat-1",
+      });
+
+      expect(PostService.create).toHaveBeenCalled();
+    });
+
+    it("allows create without category_id", async () => {
+      vi.mocked(PostService.create).mockResolvedValue(samplePostWithCategory);
+
+      await handlers.handleCreate(ctx, {
+        title: "New",
+        slug: "new",
+        content: "body",
+      });
+
+      expect(getAiAgentByCategoryId).not.toHaveBeenCalled();
+      expect(PostService.create).toHaveBeenCalled();
+    });
   });
 
   // ---- update (via PostService) ----
@@ -379,6 +440,65 @@ describe("post entity handlers", () => {
         title: "Updated",
       });
       expectError(result, "Post not found: post-1");
+    });
+
+    it("throws error when moving post to agent-bound category", async () => {
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(getPostById).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(getAiAgentByCategoryId).mockResolvedValue(sampleAgent);
+
+      await expect(
+        handlers.handleUpdate(ctx, {
+          slug: "test-post",
+          category_id: "cat-agent",
+        }),
+      ).rejects.toThrow("Cannot move post to a category bound to an AI agent");
+    });
+
+    it("allows update when staying in same category (no agent check needed)", async () => {
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(PostService.update).mockResolvedValue(samplePostWithCategory);
+
+      await handlers.handleUpdate(ctx, {
+        slug: "test-post",
+        category_id: "cat-1", // same as existing post
+        title: "Updated",
+      });
+
+      expect(getAiAgentByCategoryId).not.toHaveBeenCalled();
+      expect(PostService.update).toHaveBeenCalled();
+    });
+
+    it("allows update when moving to category without agent", async () => {
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(getPostById).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(getAiAgentByCategoryId).mockResolvedValue(null);
+      vi.mocked(PostService.update).mockResolvedValue({
+        ...samplePostWithCategory,
+        category_id: "cat-2",
+      });
+
+      await handlers.handleUpdate(ctx, {
+        slug: "test-post",
+        category_id: "cat-2",
+        title: "Updated",
+      });
+
+      expect(getAiAgentByCategoryId).toHaveBeenCalledWith(ctx.db, "cat-2");
+      expect(PostService.update).toHaveBeenCalled();
+    });
+
+    it("allows update without changing category", async () => {
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(PostService.update).mockResolvedValue(samplePostWithCategory);
+
+      await handlers.handleUpdate(ctx, {
+        slug: "test-post",
+        title: "Just title",
+      });
+
+      expect(getAiAgentByCategoryId).not.toHaveBeenCalled();
+      expect(PostService.update).toHaveBeenCalled();
     });
   });
 
