@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// AI Agent avatar URL helpers — server-only
+// AI Agent avatar utilities — server-only
 //
 // Depends on r2-client.ts (reads R2_PUBLIC_URL env var). Must NOT be imported
 // by client components. Client components receive pre-computed avatar URLs
@@ -9,13 +9,14 @@
 import "server-only";
 import { getR2PublicUrl } from "../r2-client";
 import { getR2KeyPrefix } from "../r2";
+import {
+  buildAgentAvatarUrl,
+  AVATAR_SIZES,
+  type AvatarSize,
+} from "./avatar-url";
 
-// ---------------------------------------------------------------------------
-// Types & constants
-// ---------------------------------------------------------------------------
-
-export type AvatarSize = 32 | 64 | 128 | 256;
-export const AVATAR_SIZES: AvatarSize[] = [32, 64, 128, 256];
+// Re-export types for convenience
+export { AVATAR_SIZES, type AvatarSize } from "./avatar-url";
 
 function getAvatarBasePath(): string {
   return `${getR2KeyPrefix()}agents`;
@@ -37,8 +38,13 @@ export function getAgentAvatarUrl(
   avatarVersion: string | null,
   size: AvatarSize,
 ): string | null {
-  if (!avatarVersion) return null;
-  return `${getR2PublicUrl()}/${getAvatarBasePath()}/${agentSlug}/${avatarVersion}/avatar-${size}.png`;
+  return buildAgentAvatarUrl(
+    getR2PublicUrl(),
+    getR2KeyPrefix(),
+    agentSlug,
+    avatarVersion,
+    size,
+  );
 }
 
 /**

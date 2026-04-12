@@ -10,12 +10,12 @@ import { useLocale } from "@/i18n/context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { getAgentAvatarUrl } from "@/lib/ai-agent/avatar";
 import { NewKeyModal } from "@/components/admin/ai-agents-manager";
 
 interface AiAgentFormProps {
   agent: AiAgent | null;
   categories: Category[];
+  initialAvatarUrl: string | null;
 }
 
 function slugify(name: string): string {
@@ -26,7 +26,7 @@ function slugify(name: string): string {
     .slice(0, 64);
 }
 
-export function AiAgentForm({ agent, categories }: AiAgentFormProps) {
+export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentFormProps) {
   const router = useRouter();
   const { t } = useLocale();
   const isNew = !agent;
@@ -36,7 +36,7 @@ export function AiAgentForm({ agent, categories }: AiAgentFormProps) {
   const [slug, setSlug] = useState(agent?.slug ?? "");
   const [description, setDescription] = useState(agent?.description ?? "");
   const [categoryId, setCategoryId] = useState(agent?.category_id ?? "");
-  const [avatarVersion, setAvatarVersion] = useState(agent?.avatar_version ?? null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
   const [isActive, setIsActive] = useState(agent?.is_active ?? 1);
 
   // UI state
@@ -79,13 +79,20 @@ export function AiAgentForm({ agent, categories }: AiAgentFormProps) {
 
     setSaving(true);
     try {
-      const body = {
-        name: name.trim(),
-        slug: slug.trim(),
-        description: description.trim() || null,
-        category_id: categoryId,
-        is_active: isActive,
-      };
+      // API expects camelCase fields
+      const body = isNew
+        ? {
+            name: name.trim(),
+            slug: slug.trim(),
+            description: description.trim() || null,
+            categoryId,
+          }
+        : {
+            name: name.trim(),
+            slug: slug.trim(),
+            description: description.trim() || null,
+            isActive: isActive === 1,
+          };
 
       const url = isNew
         ? "/api/admin/ai-agents"
@@ -106,10 +113,10 @@ export function AiAgentForm({ agent, categories }: AiAgentFormProps) {
       const data = await res.json();
 
       if (isNew) {
-        // Show the key modal for new agents
+        // API returns { agent: { name, ... }, apiKey, prompt }
         setNewKey({
-          agentName: data.name,
-          apiKey: data.api_key,
+          agentName: data.agent.name,
+          apiKey: data.apiKey,
           prompt: data.prompt,
         });
       } else {
@@ -139,7 +146,8 @@ export function AiAgentForm({ agent, categories }: AiAgentFormProps) {
     setUploadingAvatar(true);
     try {
       const formData = new FormData();
-      formData.append("avatar", file);
+      // API expects field name "file"
+      formData.append("file", file);
 
       const res = await fetch(`/api/admin/ai-agents/${agent.id}/avatar`, {
         method: "POST",
@@ -152,7 +160,12 @@ export function AiAgentForm({ agent, categories }: AiAgentFormProps) {
       }
 
       const data = await res.json();
-      setAvatarVersion(data.avatar_version);
+      // API returns { version, urls } - build URL client-side using shared helper
+      // We need CDN base URL and key prefix from the response URLs
+      const url128 = data.urls?.[128];
+      if (url128) {
+        setAvatarUrl(url128);
+      }
       toast.success("Avatar uploaded");
       router.refresh();
     } catch (error) {
@@ -179,7 +192,7 @@ export function AiAgentForm({ agent, categories }: AiAgentFormProps) {
         throw new Error("Failed to delete avatar");
       }
 
-      setAvatarVersion(null);
+      setAvatarUrl(null);
       toast.success("Avatar removed");
       router.refresh();
     } catch (error) {
@@ -196,10 +209,6 @@ export function AiAgentForm({ agent, categories }: AiAgentFormProps) {
     router.push("/admin/ai-agents");
     router.refresh();
   };
-
-  const avatarUrl = agent
-    ? getAgentAvatarUrl(agent.slug, avatarVersion, 128)
-    : null;
 
   return (
     <div className="space-y-6">

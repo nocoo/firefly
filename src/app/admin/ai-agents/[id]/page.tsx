@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db";
 import { getAiAgentById } from "@/data/entities/ai-agent";
 import { listCategories } from "@/data/entities/category";
 import { AiAgentForm } from "@/components/admin/ai-agent-form";
+import { getAgentAvatarUrl } from "@/lib/ai-agent/avatar";
 
 interface AiAgentEditPageProps {
   params: Promise<{ id: string }>;
@@ -22,5 +23,16 @@ export default async function AiAgentEditPage({
 
   if (!isNew && !agent) notFound();
 
-  return <AiAgentForm agent={agent} categories={categories} />;
+  // Pre-compute avatar URL on server (getAgentAvatarUrl is server-only)
+  const avatarUrl = agent
+    ? getAgentAvatarUrl(agent.slug, agent.avatar_version, 128)
+    : null;
+
+  return (
+    <AiAgentForm
+      agent={agent}
+      categories={categories}
+      initialAvatarUrl={avatarUrl}
+    />
+  );
 }

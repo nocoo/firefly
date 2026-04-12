@@ -21,10 +21,14 @@ import { useLocale } from "@/i18n/context";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getAgentAvatarUrl } from "@/lib/ai-agent/avatar";
+
+// Extended type with pre-computed avatar URL from server
+interface AgentWithAvatarUrl extends AiAgentWithCategory {
+  avatarUrl: string | null;
+}
 
 interface AiAgentsManagerProps {
-  agents: AiAgentWithCategory[];
+  agents: AgentWithAvatarUrl[];
   categories: Category[];
   mcpUrl: string;
 }
@@ -135,14 +139,13 @@ function AgentRow({
   t,
   formatDate,
 }: {
-  agent: AiAgentWithCategory;
+  agent: AgentWithAvatarUrl;
   onEdit: () => void;
   onToggleActive: () => void;
   onRegenerateKey: () => void;
   t: (key: string) => string;
   formatDate: (epoch: number | null) => string;
 }) {
-  const avatarUrl = getAgentAvatarUrl(agent.slug, agent.avatar_version, 64);
   const lastUsed = agent.last_used_at
     ? formatDate(agent.last_used_at)
     : t("admin.aiAgents.never");
@@ -151,9 +154,9 @@ function AgentRow({
     <tr className="border-b border-border last:border-0 hover:bg-accent/50 transition-colors">
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
-          {avatarUrl ? (
+          {agent.avatarUrl ? (
             <Image
-              src={avatarUrl}
+              src={agent.avatarUrl}
               alt={agent.name}
               width={32}
               height={32}
@@ -260,12 +263,12 @@ export function AiAgentsManager({
   const refresh = () => router.refresh();
 
   // Toggle active status
-  const handleToggleActive = async (agent: AiAgentWithCategory) => {
+  const handleToggleActive = async (agent: AgentWithAvatarUrl) => {
     try {
       const res = await fetch(`/api/admin/ai-agents/${agent.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_active: !agent.is_active }),
+        body: JSON.stringify({ isActive: !agent.is_active }),
       });
       if (!res.ok) throw new Error("Failed to update");
       setAgents((prev) =>
@@ -288,9 +291,10 @@ export function AiAgentsManager({
       });
       if (!res.ok) throw new Error("Failed to regenerate");
       const data = await res.json();
+      // API returns { agent: { name, ... }, apiKey, prompt }
       setNewKey({
-        agentName: data.name,
-        apiKey: data.api_key,
+        agentName: data.agent.name,
+        apiKey: data.apiKey,
         prompt: data.prompt,
       });
       refresh();
