@@ -17,58 +17,43 @@ export interface AgentPromptInput {
  * and should be copied by the admin to configure their AI agent.
  */
 export function generateAgentPrompt(input: AgentPromptInput): string {
-  return `# ${input.agentName} 写作指南
+  return `# ${input.agentName} MCP 连接指南
 
-你是 Firefly 博客的 AI 写作者「${input.agentName}」，专门负责「${input.categoryName}」分类的内容创作。
+你是「${input.agentName}」，一个 Firefly 博客的 AI 写作者，负责「${input.categoryName}」分类的内容创作。
 
 ## MCP 连接配置
 
-\`\`\`
-MCP URL: ${input.mcpUrl}
-API Key: ${input.apiKey}
-\`\`\`
-
-## 写作规范
-
-1. **使用标准 Markdown 语法**
-   - 标题使用 \`#\` 到 \`######\`
-   - 代码块使用三个反引号并标注语言
-   - 图片使用 \`![alt](url)\` 格式
-   - 链接使用 \`[text](url)\` 格式
-
-2. **文章结构**
-   - 每篇文章必须有清晰的标题（title 字段）
-   - 建议提供摘要（excerpt 字段，100-200 字）
-   - 正文使用 content 字段，支持完整 Markdown
-
-3. **限制说明**
-   - 你只能在「${input.categoryName}」分类下创建和编辑文章
-   - 文章创建后状态为「私密」，需要管理员审核后发布
-   - 无法修改文章的发布状态
-
-## 可用工具
-
-- \`list_posts\` — 列出你负责分类下的文章
-- \`get_post\` — 获取文章详情
-- \`create_post\` — 创建新文章
-- \`update_post\` — 更新已有文章
-- \`delete_post\` — 删除文章
-
-## 示例：创建文章
-
 \`\`\`json
 {
-  "tool": "create_post",
-  "arguments": {
-    "title": "文章标题",
-    "slug": "article-slug",
-    "excerpt": "文章摘要，简要描述文章内容...",
-    "content": "# 正文标题\\n\\n正文内容使用 Markdown 格式..."
+  "mcpServers": {
+    "firefly": {
+      "url": "${input.mcpUrl}",
+      "headers": {
+        "Authorization": "Bearer ${input.apiKey}"
+      }
+    }
   }
 }
 \`\`\`
 
----
+## 可用工具
 
-> **安全提醒**：请妥善保管 API Key，不要在公开场合分享。如果密钥泄露，请联系管理员重新生成。`;
+- \`list_posts\` — 列出文章（自动限制在「${input.categoryName}」分类）
+- \`get_post\` — 获取文章详情
+- \`create_post\` — 创建新文章（自动设为私密状态）
+- \`update_post\` — 更新文章（无法修改发布状态）
+- \`delete_post\` — 删除文章
+
+## 限制说明
+
+- 你只能在「${input.categoryName}」分类下操作
+- 文章创建后状态为私密，需要管理员审核后发布
+- 无法修改文章的发布状态
+
+## 安全须知
+
+⚠️ **API Key 安全**：请妥善保管此 API Key。泄露请联系管理员重新生成。
+
+⚠️ **写作安全**：文章内容虽仅作者可见，但请**严禁写入敏感凭据**（如其他服务的 API Key、密码、Token 等）。`;
 }
+

@@ -10,6 +10,7 @@ import {
 import { getCategoryById } from "@/data/entities/category";
 import { getAiAgentByCategoryId } from "@/data/entities/ai-agent";
 import { generateAgentPrompt } from "@/lib/ai-agent/prompt-generator";
+import { SITE_URL } from "@/lib/seo";
 
 // ---------------------------------------------------------------------------
 // GET /api/admin/ai-agents — list all agents
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Generate MCP connection prompt
-    const mcpUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/api/mcp`;
+    const mcpUrl = `${SITE_URL}/api/mcp`;
     const prompt = generateAgentPrompt({
       agentName: agent.name,
       categoryName: category.name,

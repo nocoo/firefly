@@ -5,6 +5,7 @@ import { jsonResponse, errorResponse, notFoundResponse } from "@/lib/api";
 import { regenerateAgentApiKey } from "@/data/entities/ai-agent";
 import { getCategoryById } from "@/data/entities/category";
 import { generateAgentPrompt } from "@/lib/ai-agent/prompt-generator";
+import { SITE_URL } from "@/lib/seo";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -33,7 +34,7 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
     const category = await getCategoryById(db, agent.category_id);
 
     // Generate new MCP connection prompt
-    const mcpUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/api/mcp`;
+    const mcpUrl = `${SITE_URL}/api/mcp`;
     const prompt = generateAgentPrompt({
       agentName: agent.name,
       categoryName: category?.name ?? "",

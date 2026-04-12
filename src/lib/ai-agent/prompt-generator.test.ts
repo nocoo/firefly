@@ -16,24 +16,24 @@ describe("generateAgentPrompt", () => {
 
   it("includes agent name in title and description", () => {
     const prompt = generateAgentPrompt(baseInput);
-    expect(prompt).toContain("# Claude Daily 写作指南");
+    expect(prompt).toContain("# Claude Daily MCP 连接指南");
     expect(prompt).toContain("「Claude Daily」");
   });
 
   it("includes category name in description and constraints", () => {
     const prompt = generateAgentPrompt(baseInput);
     expect(prompt).toContain("「AI 日记」");
-    expect(prompt).toContain("只能在「AI 日记」分类下创建和编辑文章");
+    expect(prompt).toContain("只能在「AI 日记」分类下操作");
   });
 
-  it("includes MCP URL in connection config", () => {
+  it("includes MCP URL in JSON connection config", () => {
     const prompt = generateAgentPrompt(baseInput);
-    expect(prompt).toContain("MCP URL: https://example.com/api/mcp");
+    expect(prompt).toContain('"url": "https://example.com/api/mcp"');
   });
 
-  it("includes API key in connection config", () => {
+  it("includes API key in Authorization header", () => {
     const prompt = generateAgentPrompt(baseInput);
-    expect(prompt).toContain("API Key: firefly_agent_abc123");
+    expect(prompt).toContain('"Authorization": "Bearer firefly_agent_abc123"');
   });
 
   it("lists all 5 available tools", () => {
@@ -45,32 +45,30 @@ describe("generateAgentPrompt", () => {
     expect(prompt).toContain("`delete_post`");
   });
 
-  it("includes JSON example for create_post", () => {
+  it("includes security reminder about API key", () => {
     const prompt = generateAgentPrompt(baseInput);
-    expect(prompt).toContain('"tool": "create_post"');
-    expect(prompt).toContain('"title"');
-    expect(prompt).toContain('"slug"');
-    expect(prompt).toContain('"excerpt"');
-    expect(prompt).toContain('"content"');
+    expect(prompt).toContain("API Key 安全");
+    expect(prompt).toContain("妥善保管");
+    expect(prompt).toContain("重新生成");
   });
 
-  it("includes security reminder", () => {
+  it("includes warning about sensitive credentials in content", () => {
     const prompt = generateAgentPrompt(baseInput);
-    expect(prompt).toContain("安全提醒");
-    expect(prompt).toContain("妥善保管 API Key");
-    expect(prompt).toContain("重新生成");
+    expect(prompt).toContain("写作安全");
+    expect(prompt).toContain("严禁写入敏感凭据");
+    expect(prompt).toContain("API Key、密码、Token");
   });
 
   it("mentions private status constraint", () => {
     const prompt = generateAgentPrompt(baseInput);
-    expect(prompt).toContain("状态为「私密」");
+    expect(prompt).toContain("状态为私密");
     expect(prompt).toContain("无法修改文章的发布状态");
   });
 
-  it("includes Markdown formatting guidelines", () => {
+  it("includes valid JSON config block with mcpServers structure", () => {
     const prompt = generateAgentPrompt(baseInput);
-    expect(prompt).toContain("标准 Markdown 语法");
-    expect(prompt).toContain("代码块");
-    expect(prompt).toContain("三个反引号");
+    expect(prompt).toContain('"mcpServers"');
+    expect(prompt).toContain('"firefly"');
+    expect(prompt).toContain('"headers"');
   });
 });
