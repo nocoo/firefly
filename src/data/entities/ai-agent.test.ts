@@ -13,6 +13,7 @@ import {
   updateAvatarVersion,
   regenerateAgentApiKey,
   deleteAiAgent,
+  getAiAgentPostCount,
 } from "./ai-agent";
 import type { AiAgent, AiAgentWithCategory } from "@/models/types";
 
@@ -41,6 +42,7 @@ const sampleAgentWithCategory: AiAgentWithCategory = {
   ...sampleAgent,
   category_name: "AI Journal",
   category_slug: "ai-journal",
+  post_count: 0,
 };
 
 // ---------------------------------------------------------------------------
@@ -400,17 +402,84 @@ describe("deleteAiAgent", () => {
     db = createMockDb();
   });
 
-  it("deletes and returns true", async () => {
+  it("deletes and returns success when no posts reference agent", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
-    expect(await deleteAiAgent(db, "agent-1")).toBe(true);
 
-    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
-    expect(sql).toContain("DELETE FROM ai_agents");
+    const result = await deleteAiAgent(db, "agent-1");
+
+    expect(result.success).toBe(true);
+    expect(result.postCount).toBeUndefined();
+
+    // Should check post count first
+    const [countSql, countParams] = vi.mocked(db.firstOrNull).mock.calls[0];
+    expect(countSql).toContain("COUNT(*)");
+    expect(countSql).toContain("ai_agent_id = ?");
+    expect(countParams).toEqual(["agent-1"]);
+
+    // Then delete
+    const [deleteSql, deleteParams] = vi.mocked(db.execute).mock.calls[0];
+    expect(deleteSql).toContain("DELETE FROM ai_agents");
+    expect(deleteParams).toEqual(["agent-1"]);
+  });
+
+  it("blocks deletion when posts reference agent", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 3 });
+
+    const result = await deleteAiAgent(db, "agent-1");
+
+    expect(result.success).toBe(false);
+    expect(result.postCount).toBe(3);
+    // Should NOT execute delete
+    expect(db.execute).not.toHaveBeenCalled();
+  });
+
+  it("returns success=false when agent not found (0 changes)", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+    vi.mocked(db.execute).mockResolvedValue({ changes: 0, duration: 0 });
+
+    const result = await deleteAiAgent(db, "nope");
+
+    expect(result.success).toBe(false);
+    expect(result.postCount).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getAiAgentPostCount
+// ---------------------------------------------------------------------------
+
+describe("getAiAgentPostCount", () => {
+  let db: Db;
+  beforeEach(() => {
+    db = createMockDb();
+  });
+
+  it("returns count of posts referencing agent", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 5 });
+
+    const result = await getAiAgentPostCount(db, "agent-1");
+
+    expect(result).toBe(5);
+    const [sql, params] = vi.mocked(db.firstOrNull).mock.calls[0];
+    expect(sql).toContain("COUNT(*)");
+    expect(sql).toContain("ai_agent_id = ?");
     expect(params).toEqual(["agent-1"]);
   });
 
-  it("returns false when not found", async () => {
-    vi.mocked(db.execute).mockResolvedValue({ changes: 0, duration: 0 });
-    expect(await deleteAiAgent(db, "nope")).toBe(false);
+  it("returns 0 when no posts reference agent", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+
+    const result = await getAiAgentPostCount(db, "agent-1");
+
+    expect(result).toBe(0);
+  });
+
+  it("returns 0 when query returns null", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue(null);
+
+    const result = await getAiAgentPostCount(db, "agent-1");
+
+    expect(result).toBe(0);
   });
 });

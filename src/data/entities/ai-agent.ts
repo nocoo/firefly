@@ -182,7 +182,7 @@ export interface ListAiAgentsOptions {
 }
 
 /**
- * List all agents with category info.
+ * List all agents with category info and post count.
  * By default excludes inactive agents.
  */
 export async function listAiAgents(
@@ -196,7 +196,8 @@ export async function listAiAgents(
     SELECT
       a.*,
       c.name AS category_name,
-      c.slug AS category_slug
+      c.slug AS category_slug,
+      (SELECT COUNT(*) FROM posts p WHERE p.ai_agent_id = a.id) AS post_count
     FROM ai_agents a
     JOIN categories c ON a.category_id = c.id
     ${whereClause}
@@ -273,6 +274,25 @@ export async function updateAvatarVersion(
 }
 
 // ---------------------------------------------------------------------------
+// getAiAgentPostCount
+// ---------------------------------------------------------------------------
+
+/**
+ * Get the number of posts authored by an agent.
+ * Used to determine if an agent can be deleted (must have 0 posts).
+ */
+export async function getAiAgentPostCount(
+  db: Db,
+  agentId: string,
+): Promise<number> {
+  const result = await db.firstOrNull<{ count: number }>(
+    "SELECT COUNT(*) AS count FROM posts WHERE ai_agent_id = ?",
+    [agentId],
+  );
+  return result?.count ?? 0;
+}
+
+// ---------------------------------------------------------------------------
 // regenerateAgentApiKey
 // ---------------------------------------------------------------------------
 
@@ -309,13 +329,39 @@ export async function regenerateAgentApiKey(
 // deleteAiAgent
 // ---------------------------------------------------------------------------
 
+export interface DeleteAiAgentResult {
+  success: boolean;
+  /** Number of posts still referencing this agent (if deletion was blocked) */
+  postCount?: number;
+}
+
+/**
+ * Delete an AI agent.
+ *
+ * Deletion is BLOCKED if the agent has any posts referencing it (ai_agent_id).
+ * This prevents silently orphaning published articles or changing their authorship.
+ * To delete an agent with posts, first reassign or delete those posts.
+ *
+ * @returns success=true if deleted, success=false with postCount if blocked
+ */
 export async function deleteAiAgent(
   db: Db,
   id: string,
-): Promise<boolean> {
+): Promise<DeleteAiAgentResult> {
+  // Check if any posts reference this agent
+  const countResult = await db.firstOrNull<{ count: number }>(
+    "SELECT COUNT(*) AS count FROM posts WHERE ai_agent_id = ?",
+    [id],
+  );
+  const postCount = countResult?.count ?? 0;
+
+  if (postCount > 0) {
+    return { success: false, postCount };
+  }
+
   const meta = await db.execute(
     "DELETE FROM ai_agents WHERE id = ?",
     [id],
   );
-  return meta.changes > 0;
+  return { success: meta.changes > 0 };
 }

@@ -211,6 +211,8 @@ export interface AiAgent {
 export interface AiAgentWithCategory extends AiAgent {
   category_name: string;
   category_slug: string;
+  /** Number of posts authored by this agent (for deletion check) */
+  post_count: number;
 }
 
 // ---------------------------------------------------------------------------

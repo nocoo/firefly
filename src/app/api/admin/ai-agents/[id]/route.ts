@@ -132,8 +132,15 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
     const { id } = await params;
     const db = getDb();
 
-    const deleted = await deleteAiAgent(db, id);
-    if (!deleted) {
+    const result = await deleteAiAgent(db, id);
+
+    if (!result.success) {
+      if (result.postCount !== undefined && result.postCount > 0) {
+        return errorResponse(
+          `Cannot delete agent: ${result.postCount} post(s) still reference this agent. Reassign or delete those posts first.`,
+          409, // Conflict
+        );
+      }
       return notFoundResponse("Agent");
     }
 
