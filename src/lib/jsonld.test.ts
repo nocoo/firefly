@@ -80,7 +80,29 @@ describe("blogPostingJsonLd", () => {
   it("uses site identity for author and publisher", () => {
     const result = JSON.parse(blogPostingJsonLd(post, testSite));
     expect(result.author.name).toBe("Test Author");
+    expect(result.author.url).toBe(SITE_URL);
     expect(result.publisher.name).toBe("Test Author");
+  });
+
+  it("uses authorOverride when provided", () => {
+    const result = JSON.parse(
+      blogPostingJsonLd(post, testSite, undefined, "zh", { name: "Claude Daily" }),
+    );
+    expect(result.author.name).toBe("Claude Daily");
+    expect(result.author.url).toBeUndefined();
+    // publisher should still be site author
+    expect(result.publisher.name).toBe("Test Author");
+  });
+
+  it("uses authorOverride with custom URL when provided", () => {
+    const result = JSON.parse(
+      blogPostingJsonLd(post, testSite, undefined, "zh", {
+        name: "Claude Daily",
+        url: "https://example.com/agents/claude-daily",
+      }),
+    );
+    expect(result.author.name).toBe("Claude Daily");
+    expect(result.author.url).toBe("https://example.com/agents/claude-daily");
   });
 
   it("includes keywords when provided", () => {

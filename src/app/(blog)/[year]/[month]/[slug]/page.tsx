@@ -126,11 +126,14 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const tagNames = tags.map((tg) => tg.name);
 
+  // Prepare JSON-LD author (agent name if applicable)
+  const jsonLdAuthor = author ? { name: author.name } : undefined;
+
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: blogPostingJsonLd(post, settings, tagNames, locale) }}
+        dangerouslySetInnerHTML={{ __html: blogPostingJsonLd(post, settings, tagNames, locale, jsonLdAuthor) }}
       />
       <script
         type="application/ld+json"

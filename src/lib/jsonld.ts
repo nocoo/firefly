@@ -31,13 +31,20 @@ export function websiteJsonLd(site: SiteIdentity, locale: Locale = "zh"): string
 // BlogPosting (post detail)
 // ---------------------------------------------------------------------------
 
+export interface BlogPostingAuthor {
+  name: string;
+  url?: string;
+}
+
 export function blogPostingJsonLd(
   post: PostWithCategory,
   site: SiteIdentity,
   tagNames?: string[],
   locale: Locale = "zh",
+  authorOverride?: BlogPostingAuthor,
 ): string {
   const url = `${SITE_URL}${postPath(post.slug, post.published_at)}`;
+  const author = authorOverride ?? { name: site.siteAuthor, url: SITE_URL };
 
   return JSON.stringify({
     "@context": "https://schema.org",
@@ -53,8 +60,8 @@ export function blogPostingJsonLd(
     ...(post.featured_image ? { image: post.featured_image } : {}),
     author: {
       "@type": "Person",
-      name: site.siteAuthor,
-      url: SITE_URL,
+      name: author.name,
+      ...(author.url ? { url: author.url } : {}),
     },
     publisher: {
       "@type": "Person",
