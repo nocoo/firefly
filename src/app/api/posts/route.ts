@@ -4,6 +4,7 @@ import { jsonResponse, errorResponse } from "@/lib/api";
 import { listPosts, type ListPostsOptions } from "@/data/entities/post";
 import type { PostStatus } from "@/models/types";
 import { PostService } from "@/services/post-service";
+import { getAiAgentByCategoryId } from "@/data/entities/ai-agent";
 
 // GET /api/posts — list posts with optional filters
 export async function GET(request: NextRequest) {
@@ -61,6 +62,18 @@ export async function POST(request: NextRequest) {
     }
     if (!body.content && body.content !== "") {
       return errorResponse("content is required");
+    }
+
+    // Block creation in agent-bound categories
+    const categoryId = (body.categoryId ?? body.category_id) as string | undefined;
+    if (categoryId) {
+      const agent = await getAiAgentByCategoryId(db, categoryId);
+      if (agent) {
+        return errorResponse(
+          "This category is bound to an AI agent. Use the agent to create posts.",
+          400,
+        );
+      }
     }
 
     const post = await PostService.create(db, {
