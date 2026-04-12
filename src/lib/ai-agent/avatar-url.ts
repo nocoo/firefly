@@ -4,7 +4,11 @@
 // Pure function that builds avatar URLs from known values. Can be imported
 // by both server and client components. Does NOT read environment variables.
 //
-// Avatar paths use agent ID (not slug) to ensure stability when slug changes.
+// STORAGE PATH: agents/{agentId}/{version}/avatar-{size}.png
+//
+// We use agent ID (not slug) in paths to ensure stability when slug changes.
+// This design was established when the feature was first implemented — no
+// migration needed since there was never a slug-based storage scheme in prod.
 // ---------------------------------------------------------------------------
 
 export type AvatarSize = 32 | 64 | 128 | 256;

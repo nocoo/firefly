@@ -5,7 +5,11 @@
 // by client components. Client components receive pre-computed avatar URLs
 // as props from their parent server components.
 //
-// Avatar paths use agent ID (not slug) to ensure stability when slug changes.
+// STORAGE PATH: agents/{agentId}/{version}/avatar-{size}.png
+//
+// We use agent ID (not slug) in paths to ensure stability when slug changes.
+// This design was established when the feature was first implemented — no
+// migration needed since there was never a slug-based storage scheme in prod.
 // ---------------------------------------------------------------------------
 
 import "server-only";
