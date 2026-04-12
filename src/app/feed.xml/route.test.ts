@@ -80,6 +80,16 @@ vi.mock("@/models/markdown", () => ({
   renderMarkdown: vi.fn((content: string) => `<p>${content}</p>`),
 }));
 
+vi.mock("@/lib/ai-agent/author", () => ({
+  getPostAuthor: vi.fn().mockImplementation(async (_db: unknown, post: { id: string }) => {
+    // Return agent author for first post, null for second
+    if (post.id === "p1") {
+      return { type: "agent", name: "Claude Daily", url: null, avatarUrl: null };
+    }
+    return null;
+  }),
+}));
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -142,8 +152,26 @@ describe("GET /feed.xml", () => {
     expect(xml).toContain("<![CDATA[First Post]]>");
     expect(xml).toContain("<![CDATA[Hello world]]>");
     expect(xml).toContain("<content:encoded><![CDATA[<h1>Hello</h1>]]>");
-    expect(xml).toContain("<dc:creator><![CDATA[Test Author]]>");
     expect(xml).toContain("<![CDATA[General]]></category>");
+  });
+
+  it("uses agent name for dc:creator when post is by an agent", async () => {
+    const response = await GET();
+    const xml = await response.text();
+
+    // First post has agent author
+    expect(xml).toContain("<dc:creator><![CDATA[Claude Daily]]>");
+  });
+
+  it("uses site author for dc:creator when post is not by an agent", async () => {
+    const response = await GET();
+    const xml = await response.text();
+
+    // Second post has no agent, should use site author
+    const secondItemIndex = xml.indexOf("second-post");
+    const closingItemIndex = xml.indexOf("</item>", secondItemIndex);
+    const secondItemSlice = xml.slice(secondItemIndex, closingItemIndex);
+    expect(secondItemSlice).toContain("<dc:creator><![CDATA[Test Author]]>");
   });
 
   it("handles posts with special characters in titles (via CDATA)", async () => {

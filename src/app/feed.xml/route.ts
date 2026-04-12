@@ -5,6 +5,7 @@ import { renderMarkdown } from "@/models/markdown";
 import { SITE_URL, postPath, htmlLang } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { escapeXml } from "@/lib/xml";
+import { getPostAuthor } from "@/lib/ai-agent/author";
 
 export async function GET() {
   const db = getDb();
@@ -17,19 +18,25 @@ export async function GET() {
     getSiteSettings(db),
   ]);
 
-  const items = posts.map((post) => {
+  // Resolve authors for all posts (parallel)
+  const postAuthors = await Promise.all(
+    posts.map((post) => getPostAuthor(db, post)),
+  );
+
+  const items = posts.map((post, idx) => {
     const url = `${SITE_URL}${postPath(post.slug, post.published_at)}`;
     const pubDate = post.published_at
       ? new Date(post.published_at * 1000).toUTCString()
       : new Date(post.created_at * 1000).toUTCString();
     const html = post.content_html || renderMarkdown(post.content);
+    const authorName = postAuthors[idx]?.name ?? settings.siteAuthor;
 
     return `    <item>
       <title><![CDATA[${post.title}]]></title>
       <link>${url}</link>
       <guid isPermaLink="true">${url}</guid>
       <pubDate>${pubDate}</pubDate>
-      <dc:creator><![CDATA[${settings.siteAuthor}]]></dc:creator>
+      <dc:creator><![CDATA[${authorName}]]></dc:creator>
       <description><![CDATA[${post.excerpt ?? ""}]]></description>
       <content:encoded><![CDATA[${html}]]></content:encoded>
       ${post.category_name ? `<category><![CDATA[${post.category_name}]]></category>` : ""}
