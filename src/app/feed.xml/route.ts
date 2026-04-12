@@ -18,10 +18,8 @@ export async function GET() {
     getSiteSettings(db),
   ]);
 
-  // Resolve authors for all posts (parallel)
-  const postAuthors = await Promise.all(
-    posts.map((post) => getPostAuthor(db, post)),
-  );
+  // Resolve authors for all posts (now synchronous with JOINed data)
+  const postAuthors = posts.map((post) => getPostAuthor(post, settings));
 
   const items = posts.map((post, idx) => {
     const url = `${SITE_URL}${postPath(post.slug, post.published_at)}`;

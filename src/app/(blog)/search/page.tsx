@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
 import { searchPosts } from "@/data/entities/post";
+import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
 import { EmptyState } from "@/components/blog/empty-state";
 import { Search } from "lucide-react";
+import { getPostAuthor } from "@/lib/ai-agent/author";
 
 export const metadata: Metadata = {
   robots: { index: false },
@@ -34,11 +36,14 @@ export default async function SearchPage({
   const parsed = page ? parseInt(page, 10) : 1;
   const currentPage = Number.isFinite(parsed) && parsed >= 1 ? parsed : 1;
 
-  const result = await searchPosts(db, {
-    query: q.trim(),
-    page: currentPage,
-    pageSize: PAGE_SIZE,
-  });
+  const [result, settings] = await Promise.all([
+    searchPosts(db, {
+      query: q.trim(),
+      page: currentPage,
+      pageSize: PAGE_SIZE,
+    }),
+    getSiteSettings(db),
+  ]);
 
   const totalPages = Math.ceil(result.total / PAGE_SIZE);
 
@@ -64,6 +69,7 @@ export default async function SearchPage({
                 key={post.id}
                 post={post}
                 locale={locale}
+                author={getPostAuthor(post, settings)}
                 snippet={result.snippets[post.id]}
               />
             ))}

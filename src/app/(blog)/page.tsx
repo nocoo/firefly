@@ -11,6 +11,7 @@ import { t } from "@/i18n/translations";
 import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
 import { EmptyState } from "@/components/blog/empty-state";
 import { FileText } from "lucide-react";
+import { getPostAuthor } from "@/lib/ai-agent/author";
 
 export async function generateMetadata(): Promise<Metadata> {
   const db = getDb();
@@ -99,7 +100,7 @@ export default async function Home() {
               key={post.id}
               post={post}
               locale={locale}
-              author={settings.siteAuthor}
+              author={getPostAuthor(post, settings)}
               priority={i === 0 && !!post.featured_image}
             />
           ))

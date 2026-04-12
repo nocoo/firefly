@@ -3,13 +3,17 @@
 //
 // This module depends on server-only imports (avatar.ts → r2-client.ts) and
 // must NOT be imported by client components.
+//
+// Post author resolution logic:
+// - ai_agent_id is set → Agent author (use agent avatar + name from JOIN)
+// - ai_agent_id is null → Human author (use site logo + site author)
 // ---------------------------------------------------------------------------
 
 import "server-only";
-import type { Db } from "@/lib/db";
-import type { Post } from "@/models/types";
-import { getAiAgentByCategoryId } from "@/data/entities/ai-agent";
+import type { PostWithAgent } from "@/models/types";
+import type { SiteSettings } from "@/data/settings";
 import { getAgentAvatarUrl } from "./avatar";
+import { getLogoUrl } from "../logo";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -19,7 +23,7 @@ export interface PostAuthor {
   type: "site" | "agent";
   name: string;
   url: string | null; // agent has no URL, site author has SITE_URL
-  avatarUrl: string | null; // agent avatar or null
+  avatarUrl: string | null; // agent avatar or site logo
 }
 
 // ---------------------------------------------------------------------------
@@ -29,33 +33,36 @@ export interface PostAuthor {
 /**
  * Resolve author for a post.
  *
- * If the post's category is bound to an agent, returns the agent as author.
- * Otherwise returns null (caller should fall back to site author).
+ * If the post has ai_agent_id set, returns the agent as author (using JOINed fields).
+ * Otherwise returns site author (using site settings).
  *
  * @example
- * const author = await getPostAuthor(db, post);
- * if (author) {
- *   // Display agent name and avatar
- * } else {
- *   // Display site author
- * }
+ * const author = getPostAuthor(post, settings);
+ * // Display author.name and author.avatarUrl
  */
-export async function getPostAuthor(
-  db: Db,
-  post: Post,
-): Promise<PostAuthor | null> {
-  if (!post.category_id) return null;
-
-  const agent = await getAiAgentByCategoryId(db, post.category_id);
-  if (!agent) return null;
-
-  return {
-    type: "agent",
-    name: agent.name,
-    url: null,
-    // Use agent.id (not slug) for stable avatar paths
-    avatarUrl: getAgentAvatarUrl(agent.id, agent.avatar_version, 128),
-  };
+export function getPostAuthor(
+  post: PostWithAgent,
+  settings: SiteSettings,
+): PostAuthor {
+  if (post.ai_agent_id && post.agent_name) {
+    // AI Agent author
+    return {
+      type: "agent",
+      name: post.agent_name,
+      url: null,
+      avatarUrl: getAgentAvatarUrl(post.ai_agent_id, post.agent_avatar_version, 128),
+    };
+  } else {
+    // Human author (site owner)
+    return {
+      type: "site",
+      name: settings.siteAuthor,
+      url: null, // caller should use SITE_URL if needed
+      avatarUrl: settings.siteLogoVersion
+        ? getLogoUrl(settings.siteLogoVersion, 80)
+        : null,
+    };
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -65,21 +72,18 @@ export async function getPostAuthor(
 /**
  * Get author info for metadata (Metadata.authors, OpenGraph.authors).
  *
- * Returns agent name if the post's category is bound to an agent,
+ * Returns agent name if the post has ai_agent_id set,
  * otherwise returns site author. Always uses SITE_URL for the URL field.
  *
- * @param siteAuthor - The site's default author name
  * @param siteUrl - The site's URL (used for both agent and site author)
  */
-export async function getPostAuthorForMeta(
-  db: Db,
-  post: Post,
-  siteAuthor: string,
+export function getPostAuthorForMeta(
+  post: PostWithAgent,
+  settings: SiteSettings,
   siteUrl: string,
-): Promise<{ name: string; url: string }> {
-  const author = await getPostAuthor(db, post);
-  if (author) {
-    return { name: author.name, url: siteUrl };
+): { name: string; url: string } {
+  if (post.ai_agent_id && post.agent_name) {
+    return { name: post.agent_name, url: siteUrl };
   }
-  return { name: siteAuthor, url: siteUrl };
+  return { name: settings.siteAuthor, url: siteUrl };
 }

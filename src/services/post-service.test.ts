@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db } from "@/lib/db";
-import { createMockDb } from "@/data/core/test-utils";
+import { createMockDb, createMockPostWithAgent } from "@/data/core/test-utils";
 import { PostService } from "./post-service";
-import type { PostWithCategory } from "@/models/types";
+import type { PostWithAgent } from "@/models/types";
 
 // Mock all post entity functions
 vi.mock("@/data/entities/post", () => ({
@@ -55,9 +55,7 @@ import { invalidateTagCache } from "@/data/entities/tag";
 // Fixtures
 // ---------------------------------------------------------------------------
 
-const now = Math.floor(Date.now() / 1000);
-
-const samplePost: PostWithCategory = {
+const samplePost = createMockPostWithAgent({
   id: "post-1",
   title: "Hello World",
   slug: "hello-world",
@@ -66,23 +64,9 @@ const samplePost: PostWithCategory = {
   excerpt: "Hello",
   status: "published",
   category_id: "cat-1",
-  featured_image: null,
-  comment_enabled: 1,
-  comment_count: 0,
-  view_count: 0,
-  reading_time: 1,
-  wp_id: null,
-  wp_permalink: null,
-  reference_url: null,
-  reference_title: null,
-  reference_description: null,
-  reference_image: null,
-  published_at: now,
-  created_at: now,
-  updated_at: now,
   category_name: "Tech",
   category_slug: "tech",
-};
+});
 
 const sampleTags = [
   { id: "t1", name: "React", slug: "react" },
@@ -176,7 +160,7 @@ describe("PostService.create", () => {
 
   // L104: Cover branch where post.excerpt is null (uses ?? undefined fallback)
   it("handles null excerpt in ftsSync (L104 branch)", async () => {
-    const postWithNullExcerpt: PostWithCategory = {
+    const postWithNullExcerpt: PostWithAgent = {
       ...samplePost,
       excerpt: null,
     };
@@ -303,7 +287,7 @@ describe("PostService.update", () => {
 
   // L148: Cover branch where categoryId is undefined but category changed (null → cat-1)
   it("handles categoryId undefined when category changes from null (L148 branch)", async () => {
-    const existingWithNullCategory: PostWithCategory = {
+    const existingWithNullCategory: PostWithAgent = {
       ...samplePost,
       category_id: null,
     };
@@ -379,7 +363,7 @@ describe("PostService.update", () => {
 
   // L184: Cover branch where updated.excerpt is null (uses ?? undefined fallback)
   it("handles null excerpt in ftsSync during update (L184 branch)", async () => {
-    const postWithNullExcerpt: PostWithCategory = {
+    const postWithNullExcerpt: PostWithAgent = {
       ...samplePost,
       excerpt: null,
     };

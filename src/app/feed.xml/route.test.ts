@@ -44,12 +44,16 @@ vi.mock("@/data/entities/post", () => ({
         excerpt: "Hello world",
         status: "published",
         category_id: "cat-1",
+        ai_agent_id: "agent-1",
         featured_image: null,
         published_at: 1700000000,
         created_at: 1700000000,
         updated_at: 1700000000,
         category_name: "General",
         category_slug: "general",
+        agent_name: "Claude Daily",
+        agent_slug: "claude-daily",
+        agent_avatar_version: null,
       },
       {
         id: "p2",
@@ -60,12 +64,16 @@ vi.mock("@/data/entities/post", () => ({
         excerpt: "World excerpt",
         status: "published",
         category_id: null,
+        ai_agent_id: null,
         featured_image: null,
         published_at: 1700100000,
         created_at: 1700100000,
         updated_at: 1700100000,
         category_name: null,
         category_slug: null,
+        agent_name: null,
+        agent_slug: null,
+        agent_avatar_version: null,
       },
     ],
     total: 2,
@@ -81,12 +89,13 @@ vi.mock("@/models/markdown", () => ({
 }));
 
 vi.mock("@/lib/ai-agent/author", () => ({
-  getPostAuthor: vi.fn().mockImplementation(async (_db: unknown, post: { id: string }) => {
-    // Return agent author for first post, null for second
-    if (post.id === "p1") {
-      return { type: "agent", name: "Claude Daily", url: null, avatarUrl: null };
+  getPostAuthor: vi.fn().mockImplementation((post: { ai_agent_id: string | null; agent_name: string | null }) => {
+    // Return agent author if post has ai_agent_id and agent_name
+    if (post.ai_agent_id && post.agent_name) {
+      return { type: "agent", name: post.agent_name, url: null, avatarUrl: null };
     }
-    return null;
+    // Return site author
+    return { type: "site", name: "Test Author", url: null, avatarUrl: null };
   }),
 }));
 

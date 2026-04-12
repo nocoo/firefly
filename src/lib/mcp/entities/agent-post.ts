@@ -1,8 +1,8 @@
 // ---------------------------------------------------------------------------
 // Agent Post Entity — constrained post entity for AI agents
 //
-// Each agent can only access posts in their assigned category.
-// - create forces status = "private" and categoryId = agent's category
+// Each agent can only access posts they created (via ai_agent_id).
+// - create forces status = "private", categoryId = agent's category, aiAgentId = agent.id
 // - update ignores status field
 // - No extra tools (generate_excerpt, unfurl_reference disabled)
 // ---------------------------------------------------------------------------
@@ -21,28 +21,29 @@ import { PostService } from "@/services/post-service";
 /**
  * Create a constrained post entity for a specific agent.
  *
- * - list/get/create/update/delete all scoped to agent's category
- * - create forces status = "private"
+ * - list/get/create/update/delete all scoped to agent's ai_agent_id
+ * - create forces status = "private", injects aiAgentId
  * - update ignores status field
  * - Reuses projection and afterGet from postEntity for consistent behavior
  * - NO extra tools (generate_excerpt, unfurl_reference disabled)
  */
 export function createAgentPostEntity(agent: AiAgent): EntityConfig<Post> {
   const categoryId = agent.category_id;
+  const agentId = agent.id;
 
   return {
     name: "post",
     display: "Post",
     dataLayer: {
-      // list: force category filter
+      // list: force ai_agent_id filter (agent can only see own posts)
       list: async (db, opts) => {
         const o = (opts ?? {}) as Record<string, unknown>;
-        // Reject if client tries to specify different category
-        if (o.category_id && o.category_id !== categoryId) {
-          throw new Error("Access denied: You can only access posts in your assigned category");
+        // Reject if client tries to specify different ai_agent_id
+        if (o.ai_agent_id && o.ai_agent_id !== agentId) {
+          throw new Error("Access denied: You can only access your own posts");
         }
         const result = await listPosts(db, {
-          categoryId, // forced
+          aiAgentId: agentId, // forced
           status: o.status as "draft" | "published" | "private" | "archived" | undefined,
           query: o.query as string | undefined,
           page: (o.page as number) ?? 1,
@@ -51,41 +52,45 @@ export function createAgentPostEntity(agent: AiAgent): EntityConfig<Post> {
         return { items: result.posts, total: result.total };
       },
 
-      // getById: verify category ownership
+      // getById: verify ai_agent_id ownership
       getById: async (db, id) => {
         const post = await getPostById(db, id);
-        if (post && post.category_id !== categoryId) {
+        if (post && post.ai_agent_id !== agentId) {
           return null; // treat as not found
         }
         return post;
       },
 
-      // getBySlug: verify category ownership
+      // getBySlug: verify ai_agent_id ownership
       getBySlug: async (db, slug) => {
         const post = await getPostBySlug(db, slug);
-        if (post && post.category_id !== categoryId) {
+        if (post && post.ai_agent_id !== agentId) {
           return null;
         }
         return post;
       },
 
-      // create: force category + status
+      // create: force category + status + aiAgentId
       create: async (db, input: Record<string, unknown>) => {
         return PostService.create(db, {
           ...input,
-          categoryId, // forced
-          status: "private", // forced
+          categoryId,           // forced to agent's category
+          status: "private",    // forced
+          aiAgentId: agentId,   // mark as created by this agent
         } as Parameters<typeof PostService.create>[1]);
       },
 
-      // update: strip status, block category change
+      // update: strip status, block ai_agent_id change
       update: async (db, id, input: Record<string, unknown>) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { status, categoryId: inputCategoryId, ...rest } = input;
+        const { status, categoryId: inputCategoryId, aiAgentId: inputAgentId, ...rest } = input;
+        if (inputAgentId && inputAgentId !== agentId) {
+          throw new Error("Access denied: Cannot reassign post to different agent");
+        }
+        // status is silently ignored, categoryId change blocked
         if (inputCategoryId && inputCategoryId !== categoryId) {
           throw new Error("Access denied: Cannot move post to different category");
         }
-        // status is silently ignored
         return PostService.update(db, id, rest as Parameters<typeof PostService.update>[2]);
       },
 

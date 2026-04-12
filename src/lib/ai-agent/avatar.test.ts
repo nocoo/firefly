@@ -1,8 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
 
-// Mock server-only (noop in test environment)
-vi.mock("server-only", () => ({}));
-
 // Mock r2-client before importing avatar
 vi.mock("../r2-client", () => ({
   getR2PublicUrl: vi.fn(() => "https://test-cdn.example.com"),

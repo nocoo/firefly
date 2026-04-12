@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db } from "@/lib/db";
 import { createMockDb } from "@/data/core/test-utils";
-import type { PostWithCategory, AiAgent } from "@/models/types";
+import type { PostWithAgent, AiAgent } from "@/models/types";
+import { createMockPostWithAgent } from "@/data/core/test-utils";
 import { createAgentPostEntity } from "./agent-post";
 
 // ---------------------------------------------------------------------------
@@ -47,7 +48,7 @@ const sampleAgent: AiAgent = {
   updated_at: now,
 };
 
-const samplePost: PostWithCategory = {
+const samplePost: PostWithAgent = createMockPostWithAgent({
   id: "post-1",
   title: "Test Post",
   slug: "test-post",
@@ -56,8 +57,12 @@ const samplePost: PostWithCategory = {
   excerpt: null,
   status: "private",
   category_id: "cat-agent", // same as agent's category
+  ai_agent_id: "agent-1", // owned by this agent
   category_name: "Agent Category",
   category_slug: "agent-category",
+  agent_name: "Claude Daily",
+  agent_slug: "claude-daily",
+  agent_avatar_version: null,
   featured_image: null,
   comment_enabled: 1,
   comment_count: 0,
@@ -72,15 +77,15 @@ const samplePost: PostWithCategory = {
   published_at: null,
   created_at: now,
   updated_at: now,
-};
+});
 
-const otherCategoryPost: PostWithCategory = {
+const otherAgentPost: PostWithAgent = createMockPostWithAgent({
   ...samplePost,
   id: "post-other",
-  category_id: "cat-other", // different category
-  category_name: "Other Category",
-  category_slug: "other-category",
-};
+  ai_agent_id: "agent-other", // owned by different agent
+  agent_name: "Other Agent",
+  agent_slug: "other-agent",
+});
 
 // ---------------------------------------------------------------------------
 // createAgentPostEntity
@@ -97,33 +102,33 @@ describe("createAgentPostEntity", () => {
   });
 
   describe("list", () => {
-    it("forces agent's category in list query", async () => {
+    it("forces agent's ai_agent_id in list query", async () => {
       vi.mocked(listPosts).mockResolvedValue({ posts: [samplePost], total: 1 });
 
       await entity.dataLayer.list(db, {});
 
       expect(listPosts).toHaveBeenCalledWith(db, expect.objectContaining({
-        categoryId: "cat-agent",
+        aiAgentId: "agent-1",
       }));
     });
 
-    it("throws when trying to access different category", async () => {
+    it("throws when trying to access different agent's posts", async () => {
       await expect(
-        entity.dataLayer.list(db, { category_id: "cat-other" }),
+        entity.dataLayer.list(db, { ai_agent_id: "agent-other" }),
       ).rejects.toThrow("Access denied");
     });
 
-    it("allows specifying the same category", async () => {
+    it("allows specifying the same ai_agent_id", async () => {
       vi.mocked(listPosts).mockResolvedValue({ posts: [samplePost], total: 1 });
 
-      await entity.dataLayer.list(db, { category_id: "cat-agent" });
+      await entity.dataLayer.list(db, { ai_agent_id: "agent-1" });
 
       expect(listPosts).toHaveBeenCalled();
     });
   });
 
   describe("getById", () => {
-    it("returns post if in agent's category", async () => {
+    it("returns post if owned by agent", async () => {
       vi.mocked(getPostById).mockResolvedValue(samplePost);
 
       const result = await entity.dataLayer.getById(db, "post-1");
@@ -131,8 +136,8 @@ describe("createAgentPostEntity", () => {
       expect(result).toEqual(samplePost);
     });
 
-    it("returns null if post is in different category", async () => {
-      vi.mocked(getPostById).mockResolvedValue(otherCategoryPost);
+    it("returns null if post is owned by different agent", async () => {
+      vi.mocked(getPostById).mockResolvedValue(otherAgentPost);
 
       const result = await entity.dataLayer.getById(db, "post-other");
 
@@ -141,7 +146,7 @@ describe("createAgentPostEntity", () => {
   });
 
   describe("getBySlug", () => {
-    it("returns post if in agent's category", async () => {
+    it("returns post if owned by agent", async () => {
       vi.mocked(getPostBySlug).mockResolvedValue(samplePost);
 
       const result = await entity.dataLayer.getBySlug(db, "test-post");
@@ -149,8 +154,8 @@ describe("createAgentPostEntity", () => {
       expect(result).toEqual(samplePost);
     });
 
-    it("returns null if post is in different category", async () => {
-      vi.mocked(getPostBySlug).mockResolvedValue(otherCategoryPost);
+    it("returns null if post is owned by different agent", async () => {
+      vi.mocked(getPostBySlug).mockResolvedValue(otherAgentPost);
 
       const result = await entity.dataLayer.getBySlug(db, "test-post");
 
@@ -159,7 +164,7 @@ describe("createAgentPostEntity", () => {
   });
 
   describe("create", () => {
-    it("forces category and status", async () => {
+    it("forces category, status, and aiAgentId", async () => {
       vi.mocked(PostService.create).mockResolvedValue(samplePost);
 
       await entity.dataLayer.create(db, { title: "New", slug: "new", content: "Content" });
@@ -167,10 +172,11 @@ describe("createAgentPostEntity", () => {
       expect(PostService.create).toHaveBeenCalledWith(db, expect.objectContaining({
         categoryId: "cat-agent",
         status: "private",
+        aiAgentId: "agent-1",
       }));
     });
 
-    it("ignores client-provided category and status", async () => {
+    it("ignores client-provided category, status, and aiAgentId", async () => {
       vi.mocked(PostService.create).mockResolvedValue(samplePost);
 
       await entity.dataLayer.create(db, {
@@ -179,12 +185,14 @@ describe("createAgentPostEntity", () => {
         content: "Content",
         categoryId: "cat-other",
         status: "published",
+        aiAgentId: "agent-other",
       });
 
-      // Both should be overwritten
+      // All should be overwritten
       expect(PostService.create).toHaveBeenCalledWith(db, expect.objectContaining({
         categoryId: "cat-agent",
         status: "private",
+        aiAgentId: "agent-1",
       }));
     });
   });
@@ -213,12 +221,22 @@ describe("createAgentPostEntity", () => {
       ).rejects.toThrow("Cannot move post to different category");
     });
 
-    it("allows updating without changing category", async () => {
+    it("throws when trying to reassign to different agent", async () => {
+      await expect(
+        entity.dataLayer.update(db, "post-1", {
+          title: "Updated",
+          aiAgentId: "agent-other",
+        }),
+      ).rejects.toThrow("Cannot reassign post to different agent");
+    });
+
+    it("allows updating without changing category or aiAgentId", async () => {
       vi.mocked(PostService.update).mockResolvedValue(samplePost);
 
       await entity.dataLayer.update(db, "post-1", {
         title: "Updated",
         categoryId: "cat-agent", // same category
+        aiAgentId: "agent-1", // same agent
       });
 
       expect(PostService.update).toHaveBeenCalled();

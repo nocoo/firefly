@@ -13,6 +13,7 @@ import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
 import { EmptyState } from "@/components/blog/empty-state";
 import { parseArchivePeriod } from "./parse-archive-period";
 import { Archive } from "lucide-react";
+import { getPostAuthor } from "@/lib/ai-agent/author";
 
 interface ArchivePageProps {
   params: Promise<{ period: string }>;
@@ -101,7 +102,7 @@ export default async function ArchivePage({ params }: ArchivePageProps) {
               key={post.id}
               post={post}
               locale={locale}
-              author={settings.siteAuthor}
+              author={getPostAuthor(post, settings)}
               priority={i === 0 && !!post.featured_image}
             />
           ))

@@ -13,6 +13,7 @@ import { t } from "@/i18n/translations";
 import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
 import { EmptyState } from "@/components/blog/empty-state";
 import { Tag } from "lucide-react";
+import { getPostAuthor } from "@/lib/ai-agent/author";
 
 interface TagPageProps {
   params: Promise<{ slug: string }>;
@@ -100,7 +101,7 @@ export default async function TagPage({ params }: TagPageProps) {
               key={post.id}
               post={post}
               locale={locale}
-              author={settings.siteAuthor}
+              author={getPostAuthor(post, settings)}
               priority={i === 0 && !!post.featured_image}
             />
           ))

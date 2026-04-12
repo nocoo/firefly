@@ -43,6 +43,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": new URL("./src", import.meta.url).pathname,
+      // Stub server-only to noop in test environment
+      "server-only": new URL("./test/server-only-stub.ts", import.meta.url).pathname,
     },
   },
 });

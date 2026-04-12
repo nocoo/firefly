@@ -1,16 +1,21 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Calendar, User } from "lucide-react";
-import type { PostWithCategory } from "@/models/types";
+import type { PostWithAgent } from "@/models/types";
 import { postPath, formatDateDisplay } from "@/lib/seo";
 import { t, type Locale } from "@/i18n/translations";
 import { sanitizeSnippet } from "@/lib/sanitize-snippet";
 
+export interface PostCardAuthor {
+  name: string;
+  avatarUrl: string | null;
+}
+
 interface PostCardProps {
-  post: PostWithCategory;
+  post: PostWithAgent;
   locale: Locale;
-  /** Author name for the byline */
-  author?: string;
+  /** Author info for the byline (name + optional avatar) */
+  author?: PostCardAuthor;
   /** Mark the featured image as high-priority (LCP) */
   priority?: boolean;
   /** FTS5 HTML snippet with <mark> tags — overrides excerpt when provided */
@@ -51,8 +56,18 @@ export function PostCard({ post, locale, author, priority, snippet }: PostCardPr
         </span>
         {author && (
           <span className="blog-byline-item">
-            <User className="blog-byline-icon" />
-            <span>{author}</span>
+            {author.avatarUrl ? (
+              <Image
+                src={author.avatarUrl}
+                alt={author.name}
+                width={16}
+                height={16}
+                className="blog-byline-avatar"
+              />
+            ) : (
+              <User className="blog-byline-icon" />
+            )}
+            <span>{author.name}</span>
           </span>
         )}
       </div>

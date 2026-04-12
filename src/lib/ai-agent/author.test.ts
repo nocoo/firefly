@@ -1,100 +1,92 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
-// Mock server-only (noop in test environment)
-vi.mock("server-only", () => ({}));
-
-// Mock r2-client for avatar.ts
-vi.mock("../r2-client", () => ({
-  getR2PublicUrl: vi.fn(() => "https://test-cdn.example.com"),
+// Mock avatar module to provide stable URLs (not env-dependent)
+vi.mock("./avatar", () => ({
+  getAgentAvatarUrl: vi.fn(
+    (agentId: string, version: string | null, size: number) =>
+      version
+        ? `https://test-cdn.example.com/uploads/firefly/agents/${agentId}/${version}/avatar-${size}.png`
+        : null,
+  ),
 }));
 
-// Mock r2 for avatar.ts
-vi.mock("../r2", () => ({
-  getR2KeyPrefix: vi.fn(() => "uploads/firefly/"),
-}));
-
-// Mock ai-agent entity
-vi.mock("@/data/entities/ai-agent", () => ({
-  getAiAgentByCategoryId: vi.fn(),
+// Mock logo module for site author avatar
+vi.mock("../logo", () => ({
+  getLogoUrl: vi.fn(
+    (version: string, size: number) =>
+      `https://test-cdn.example.com/uploads/firefly/logo/${version}/logo-${size}.png`,
+  ),
 }));
 
 import { getPostAuthor, getPostAuthorForMeta } from "./author";
-import { getAiAgentByCategoryId } from "@/data/entities/ai-agent";
-import type { Post, AiAgent } from "@/models/types";
-import type { Db } from "@/lib/db";
+import { createMockPostWithAgent } from "@/data/core/test-utils";
+import type { SiteSettings } from "@/data/settings";
 
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------
 
-const mockDb = {} as Db;
+function createMockSettings(overrides: Partial<SiteSettings> = {}): SiteSettings {
+  return {
+    locale: "zh",
+    postsPerPage: 10,
+    commentsEnabled: false,
+    fontStyle: "pingfang",
+    siteLogoVersion: null,
+    siteName: "Test Blog",
+    siteTagline: "",
+    siteDescription: "",
+    siteAuthor: "Site Owner",
+    authorEmail: "",
+    twitterHandle: "",
+    socialLinks: [],
+    updatedAt: 0,
+    ...overrides,
+  };
+}
 
-const samplePost: Post = {
-  id: "post-1",
-  title: "Test Post",
-  slug: "test-post",
-  content: "# Test",
-  content_html: "<h1>Test</h1>",
-  excerpt: null,
-  status: "published",
-  category_id: "cat-1",
-  featured_image: null,
-  comment_enabled: 1,
-  comment_count: 0,
-  view_count: 0,
-  reading_time: null,
-  wp_id: null,
-  wp_permalink: null,
-  reference_url: null,
-  reference_title: null,
-  reference_description: null,
-  reference_image: null,
-  published_at: 1700000000,
-  created_at: 1700000000,
-  updated_at: 1700000000,
-};
-
-const sampleAgent: AiAgent = {
-  id: "agent-1",
-  name: "Claude Daily",
-  slug: "claude-daily",
-  description: "Daily journal by Claude",
-  category_id: "cat-1",
-  api_key_hash: "abc123hash",
-  api_key_preview: "a1b2c3d4",
-  avatar_version: "v1",
-  is_active: 1,
-  last_used_at: null,
-  created_at: 1700000000,
-  updated_at: 1700000000,
-};
+const defaultSettings = createMockSettings({
+  siteAuthor: "Site Owner",
+  siteLogoVersion: "v1",
+});
 
 // ---------------------------------------------------------------------------
 // getPostAuthor
 // ---------------------------------------------------------------------------
 
 describe("getPostAuthor", () => {
-  beforeEach(() => {
-    vi.resetAllMocks();
+  it("returns site author when post has no ai_agent_id", () => {
+    const post = createMockPostWithAgent({ ai_agent_id: null });
+    const result = getPostAuthor(post, defaultSettings);
+
+    expect(result).toEqual({
+      type: "site",
+      name: "Site Owner",
+      url: null,
+      avatarUrl: "https://test-cdn.example.com/uploads/firefly/logo/v1/logo-80.png",
+    });
   });
 
-  it("returns null if post has no category_id", async () => {
-    const postWithoutCategory = { ...samplePost, category_id: null };
-    const result = await getPostAuthor(mockDb, postWithoutCategory);
-    expect(result).toBeNull();
-    expect(getAiAgentByCategoryId).not.toHaveBeenCalled();
+  it("returns site author when post has ai_agent_id but no agent_name", () => {
+    // Edge case: ai_agent_id set but JOINed agent_name is null (orphaned reference)
+    const post = createMockPostWithAgent({
+      ai_agent_id: "agent-1",
+      agent_name: null,
+    });
+    const result = getPostAuthor(post, defaultSettings);
+
+    expect(result.type).toBe("site");
+    expect(result.name).toBe("Site Owner");
   });
 
-  it("returns null if category has no bound agent", async () => {
-    vi.mocked(getAiAgentByCategoryId).mockResolvedValue(null);
-    const result = await getPostAuthor(mockDb, samplePost);
-    expect(result).toBeNull();
-    expect(getAiAgentByCategoryId).toHaveBeenCalledWith(mockDb, "cat-1");
-  });
-
-  it("returns agent as author when category is bound to agent", async () => {
-    vi.mocked(getAiAgentByCategoryId).mockResolvedValue(sampleAgent);
-    const result = await getPostAuthor(mockDb, samplePost);
+  it("returns agent author when post has ai_agent_id and agent_name", () => {
+    const post = createMockPostWithAgent({
+      ai_agent_id: "agent-1",
+      agent_name: "Claude Daily",
+      agent_slug: "claude-daily",
+      agent_avatar_version: "v1",
+    });
+    const result = getPostAuthor(post, defaultSettings);
 
     expect(result).toEqual({
       type: "agent",
@@ -105,14 +97,34 @@ describe("getPostAuthor", () => {
     });
   });
 
-  it("returns null avatarUrl when agent has no avatar", async () => {
-    const agentWithoutAvatar = { ...sampleAgent, avatar_version: null };
-    vi.mocked(getAiAgentByCategoryId).mockResolvedValue(agentWithoutAvatar);
-    const result = await getPostAuthor(mockDb, samplePost);
+  it("returns null avatarUrl when agent has no avatar", () => {
+    const post = createMockPostWithAgent({
+      ai_agent_id: "agent-1",
+      agent_name: "Claude Daily",
+      agent_slug: "claude-daily",
+      agent_avatar_version: null,
+    });
+    const result = getPostAuthor(post, defaultSettings);
 
     expect(result).toEqual({
       type: "agent",
       name: "Claude Daily",
+      url: null,
+      avatarUrl: null,
+    });
+  });
+
+  it("returns null avatarUrl when site has no logo", () => {
+    const post = createMockPostWithAgent({ ai_agent_id: null });
+    const settingsWithoutLogo = createMockSettings({
+      siteAuthor: "Site Owner",
+      siteLogoVersion: null,
+    });
+    const result = getPostAuthor(post, settingsWithoutLogo);
+
+    expect(result).toEqual({
+      type: "site",
+      name: "Site Owner",
       url: null,
       avatarUrl: null,
     });
@@ -124,18 +136,9 @@ describe("getPostAuthor", () => {
 // ---------------------------------------------------------------------------
 
 describe("getPostAuthorForMeta", () => {
-  beforeEach(() => {
-    vi.resetAllMocks();
-  });
-
-  it("returns site author when post has no agent", async () => {
-    vi.mocked(getAiAgentByCategoryId).mockResolvedValue(null);
-    const result = await getPostAuthorForMeta(
-      mockDb,
-      samplePost,
-      "Site Owner",
-      "https://example.com",
-    );
+  it("returns site author when post has no agent", () => {
+    const post = createMockPostWithAgent({ ai_agent_id: null });
+    const result = getPostAuthorForMeta(post, defaultSettings, "https://example.com");
 
     expect(result).toEqual({
       name: "Site Owner",
@@ -143,14 +146,12 @@ describe("getPostAuthorForMeta", () => {
     });
   });
 
-  it("returns agent name with site URL when post has agent", async () => {
-    vi.mocked(getAiAgentByCategoryId).mockResolvedValue(sampleAgent);
-    const result = await getPostAuthorForMeta(
-      mockDb,
-      samplePost,
-      "Site Owner",
-      "https://example.com",
-    );
+  it("returns agent name with site URL when post has agent", () => {
+    const post = createMockPostWithAgent({
+      ai_agent_id: "agent-1",
+      agent_name: "Claude Daily",
+    });
+    const result = getPostAuthorForMeta(post, defaultSettings, "https://example.com");
 
     expect(result).toEqual({
       name: "Claude Daily",
@@ -158,17 +159,28 @@ describe("getPostAuthorForMeta", () => {
     });
   });
 
-  it("uses site URL for agent author (not agent URL)", async () => {
-    vi.mocked(getAiAgentByCategoryId).mockResolvedValue(sampleAgent);
-    const result = await getPostAuthorForMeta(
-      mockDb,
-      samplePost,
-      "Site Owner",
-      "https://myblog.com",
-    );
+  it("uses site URL for agent author (not agent URL)", () => {
+    const post = createMockPostWithAgent({
+      ai_agent_id: "agent-1",
+      agent_name: "Claude Daily",
+    });
+    const result = getPostAuthorForMeta(post, defaultSettings, "https://myblog.com");
 
     // Agent author uses site URL, not agent-specific URL
     expect(result.url).toBe("https://myblog.com");
     expect(result.name).toBe("Claude Daily");
+  });
+
+  it("falls back to site author when agent_name is missing", () => {
+    const post = createMockPostWithAgent({
+      ai_agent_id: "agent-1",
+      agent_name: null,
+    });
+    const result = getPostAuthorForMeta(post, defaultSettings, "https://example.com");
+
+    expect(result).toEqual({
+      name: "Site Owner",
+      url: "https://example.com",
+    });
   });
 });

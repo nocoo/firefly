@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import type { Db } from "@/lib/db";
-import type { PostWithCategory, PostStatus } from "@/models/types";
+import type { PostWithAgent, PostStatus } from "@/models/types";
 import { readingTime, excerptFromContent } from "@/models/post";
 import { renderMarkdown } from "@/models/markdown";
 import { createCache } from "@/lib/cache";
@@ -14,9 +14,11 @@ import { nowEpoch, newId } from "@/data/core/timestamps";
 // ---------------------------------------------------------------------------
 
 const VIEW_QUERY = `
-  SELECT p.*, c.name AS category_name, c.slug AS category_slug
+  SELECT p.*, c.name AS category_name, c.slug AS category_slug,
+         a.name AS agent_name, a.slug AS agent_slug, a.avatar_version AS agent_avatar_version
   FROM posts p
   LEFT JOIN categories c ON p.category_id = c.id
+  LEFT JOIN ai_agents a ON p.ai_agent_id = a.id
 `;
 
 // ---------------------------------------------------------------------------
@@ -30,6 +32,7 @@ export interface CreatePostInput {
   status: PostStatus;
   excerpt?: string | undefined;
   categoryId?: string | undefined;
+  aiAgentId?: string | undefined;
   featuredImage?: string | undefined;
   commentEnabled?: number | undefined;
   publishedAt?: number | undefined;
@@ -59,6 +62,7 @@ export interface UpdatePostInput {
 export interface ListPostsOptions {
   status?: PostStatus | undefined;
   categoryId?: string | undefined;
+  aiAgentId?: string | undefined;
   tagId?: string | undefined;
   query?: string | undefined;
   archiveYear?: number | undefined;
@@ -70,7 +74,7 @@ export interface ListPostsOptions {
 }
 
 export interface ListPostsResult {
-  posts: PostWithCategory[];
+  posts: PostWithAgent[];
   total: number;
 }
 
@@ -167,6 +171,7 @@ export async function listPosts(
   const {
     status,
     categoryId,
+    aiAgentId,
     tagId,
     query,
     archiveYear,
@@ -188,6 +193,11 @@ export async function listPosts(
   if (categoryId) {
     conditions.push("p.category_id = ?");
     params.push(categoryId);
+  }
+
+  if (aiAgentId !== undefined) {
+    conditions.push("p.ai_agent_id = ?");
+    params.push(aiAgentId);
   }
 
   if (tagId) {
@@ -239,7 +249,7 @@ export async function listPosts(
     LIMIT ? OFFSET ?
   `;
 
-  const result = await db.query<PostWithCategory>(sql, [
+  const result = await db.query<PostWithAgent>(sql, [
     ...params,
     pageSize,
     offset,
@@ -273,7 +283,7 @@ export async function getPostBySlug(
   db: Db,
   slug: string,
   status?: PostStatus,
-): Promise<PostWithCategory | null> {
+): Promise<PostWithAgent | null> {
   const conditions = ["p.slug = ?"];
   const params: unknown[] = [slug];
 
@@ -283,7 +293,7 @@ export async function getPostBySlug(
   }
 
   const sql = `${VIEW_QUERY} WHERE ${conditions.join(" AND ")}`;
-  return db.firstOrNull<PostWithCategory>(sql, params);
+  return db.firstOrNull<PostWithAgent>(sql, params);
 }
 
 // ---------------------------------------------------------------------------
@@ -293,8 +303,8 @@ export async function getPostBySlug(
 export async function getPostById(
   db: Db,
   id: string,
-): Promise<PostWithCategory | null> {
-  return db.firstOrNull<PostWithCategory>(
+): Promise<PostWithAgent | null> {
+  return db.firstOrNull<PostWithAgent>(
     `${VIEW_QUERY} WHERE p.id = ?`,
     [id],
   );
@@ -307,7 +317,7 @@ export async function getPostById(
 export async function createPost(
   db: Db,
   input: CreatePostInput,
-): Promise<PostWithCategory> {
+): Promise<PostWithAgent> {
   const id = newId();
   const now = nowEpoch();
 
@@ -322,11 +332,11 @@ export async function createPost(
   const sql = `
     INSERT INTO posts (
       id, title, slug, content, content_html, excerpt, status,
-      category_id, featured_image, comment_enabled,
+      category_id, ai_agent_id, featured_image, comment_enabled,
       reading_time, published_at,
       reference_url, reference_title, reference_description, reference_image,
       created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   await db.execute(sql, [
@@ -338,6 +348,7 @@ export async function createPost(
     computedExcerpt,
     input.status,
     input.categoryId ?? null,
+    input.aiAgentId ?? null,
     input.featuredImage ?? null,
     input.commentEnabled ?? 0,
     computedReadingTime,
@@ -363,7 +374,7 @@ export async function updatePost(
   db: Db,
   id: string,
   input: UpdatePostInput,
-): Promise<PostWithCategory | null> {
+): Promise<PostWithAgent | null> {
   const existing = await getPostById(db, id);
   if (!existing) return null;
 
@@ -775,7 +786,7 @@ export interface SearchPostsOptions {
 }
 
 export interface SearchResult {
-  posts: PostWithCategory[];
+  posts: PostWithAgent[];
   snippets: Record<string, string>;
   total: number;
   page: number;

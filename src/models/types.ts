@@ -49,6 +49,7 @@ export interface Post {
   excerpt: string | null;
   status: PostStatus;
   category_id: string | null;
+  ai_agent_id: string | null;
   featured_image: string | null;
   comment_enabled: number; // 0 | 1
   comment_count: number;
@@ -172,6 +173,12 @@ export interface Redirect {
 export interface PostWithCategory extends Post {
   category_name: string | null;
   category_slug: string | null;
+}
+
+export interface PostWithAgent extends PostWithCategory {
+  agent_name: string | null;
+  agent_slug: string | null;
+  agent_avatar_version: string | null;
 }
 
 export interface PostWithTags extends PostWithCategory {

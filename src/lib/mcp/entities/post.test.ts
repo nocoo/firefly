@@ -4,13 +4,14 @@
 // ---------------------------------------------------------------------------
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Post, PostWithCategory, Tag, AiAgent } from "@/models/types";
+import type { Post, PostWithAgent, Tag, AiAgent } from "@/models/types";
 import { createCrudHandlers } from "../framework/handlers";
 import {
   createMockContext,
   parseToolResult,
   expectError,
 } from "../framework/test-utils";
+import { createMockPostWithAgent } from "@/data/core/test-utils";
 import { postEntity } from "./post";
 import type { ToolContext } from "../framework/types";
 
@@ -73,7 +74,7 @@ import { getAiAgentByCategoryId } from "@/data/entities/ai-agent";
 
 const now = Math.floor(Date.now() / 1000);
 
-const samplePost: Post = {
+const samplePostWithAgent: PostWithAgent = createMockPostWithAgent({
   id: "post-1",
   title: "Test Post",
   slug: "test-post",
@@ -82,27 +83,12 @@ const samplePost: Post = {
   excerpt: "Hello",
   status: "published",
   category_id: "cat-1",
-  featured_image: null,
-  comment_enabled: 0,
-  comment_count: 0,
-  view_count: 0,
-  reading_time: 1,
-  wp_id: null,
-  wp_permalink: null,
-  reference_url: null,
-  reference_title: null,
-  reference_description: null,
-  reference_image: null,
+  category_name: "Tech",
+  category_slug: "tech",
   published_at: now,
   created_at: now,
   updated_at: now,
-};
-
-const samplePostWithCategory: PostWithCategory = {
-  ...samplePost,
-  category_name: "Tech",
-  category_slug: "tech",
-};
+});
 
 const sampleTags: Pick<Tag, "id" | "name" | "slug">[] = [
   { id: "tag-1", name: "TypeScript", slug: "typescript" },
@@ -153,7 +139,7 @@ describe("post entity handlers", () => {
   describe("handleList", () => {
     it("returns paginated posts with projection", async () => {
       vi.mocked(listPosts).mockResolvedValue({
-        posts: [samplePostWithCategory],
+        posts: [samplePostWithAgent],
         total: 1,
       });
       const result = await handlers.handleList(ctx, {});
@@ -174,7 +160,7 @@ describe("post entity handlers", () => {
 
     it("restores content with include group", async () => {
       vi.mocked(listPosts).mockResolvedValue({
-        posts: [samplePostWithCategory],
+        posts: [samplePostWithAgent],
         total: 1,
       });
       const result = await handlers.handleList(ctx, {
@@ -189,7 +175,7 @@ describe("post entity handlers", () => {
 
     it("returns all fields with 'full' include", async () => {
       vi.mocked(listPosts).mockResolvedValue({
-        posts: [samplePostWithCategory],
+        posts: [samplePostWithAgent],
         total: 1,
       });
       const result = await handlers.handleList(ctx, { include: ["full"] });
@@ -240,11 +226,11 @@ describe("post entity handlers", () => {
 
   describe("handleGet", () => {
     it("enriches post with tags via afterGet", async () => {
-      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
       vi.mocked(getPostTags).mockResolvedValue(sampleTags);
 
       const result = await handlers.handleGet(ctx, { slug: "test-post" });
-      const data = parseToolResult(result) as PostWithCategory & {
+      const data = parseToolResult(result) as PostWithAgent & {
         tags: typeof sampleTags;
       };
       expect(data.tags).toEqual(sampleTags);
@@ -252,11 +238,11 @@ describe("post entity handlers", () => {
     });
 
     it("resolves by id", async () => {
-      vi.mocked(getPostById).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(getPostById).mockResolvedValue(samplePostWithAgent);
       vi.mocked(getPostTags).mockResolvedValue([]);
 
       const result = await handlers.handleGet(ctx, { id: "post-1" });
-      const data = parseToolResult(result) as PostWithCategory;
+      const data = parseToolResult(result) as PostWithAgent;
       expect(data.title).toBe("Test Post");
     });
 
@@ -271,7 +257,7 @@ describe("post entity handlers", () => {
 
   describe("handleCreate", () => {
     it("maps tag_ids to tagIds for PostService (mapCreateInput)", async () => {
-      vi.mocked(PostService.create).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(PostService.create).mockResolvedValue(samplePostWithAgent);
 
       await handlers.handleCreate(ctx, {
         title: "New",
@@ -287,7 +273,7 @@ describe("post entity handlers", () => {
     });
 
     it("maps snake_case fields to camelCase for PostService", async () => {
-      vi.mocked(PostService.create).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(PostService.create).mockResolvedValue(samplePostWithAgent);
 
       await handlers.handleCreate(ctx, {
         title: "New",
@@ -308,7 +294,7 @@ describe("post entity handlers", () => {
     });
 
     it("omits tagIds when no tag_ids provided", async () => {
-      vi.mocked(PostService.create).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(PostService.create).mockResolvedValue(samplePostWithAgent);
 
       await handlers.handleCreate(ctx, {
         title: "New",
@@ -336,7 +322,7 @@ describe("post entity handlers", () => {
 
     it("allows create when category has no agent", async () => {
       vi.mocked(getAiAgentByCategoryId).mockResolvedValue(null);
-      vi.mocked(PostService.create).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(PostService.create).mockResolvedValue(samplePostWithAgent);
 
       await handlers.handleCreate(ctx, {
         title: "New",
@@ -349,7 +335,7 @@ describe("post entity handlers", () => {
     });
 
     it("allows create without category_id", async () => {
-      vi.mocked(PostService.create).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(PostService.create).mockResolvedValue(samplePostWithAgent);
 
       await handlers.handleCreate(ctx, {
         title: "New",
@@ -366,8 +352,8 @@ describe("post entity handlers", () => {
 
   describe("handleUpdate", () => {
     it("maps new_slug to slug and tag_ids to tagIds", async () => {
-      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
-      vi.mocked(PostService.update).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
+      vi.mocked(PostService.update).mockResolvedValue(samplePostWithAgent);
 
       await handlers.handleUpdate(ctx, {
         slug: "test-post",
@@ -384,8 +370,8 @@ describe("post entity handlers", () => {
     });
 
     it("maps nullable snake_case update fields to camelCase", async () => {
-      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
-      vi.mocked(PostService.update).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
+      vi.mocked(PostService.update).mockResolvedValue(samplePostWithAgent);
 
       await handlers.handleUpdate(ctx, {
         slug: "test-post",
@@ -418,8 +404,8 @@ describe("post entity handlers", () => {
     });
 
     it("omits tagIds when tag_ids not provided", async () => {
-      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
-      vi.mocked(PostService.update).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
+      vi.mocked(PostService.update).mockResolvedValue(samplePostWithAgent);
 
       await handlers.handleUpdate(ctx, {
         slug: "test-post",
@@ -432,7 +418,7 @@ describe("post entity handlers", () => {
     });
 
     it("returns error when PostService.update returns null", async () => {
-      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
       vi.mocked(PostService.update).mockResolvedValue(null);
 
       const result = await handlers.handleUpdate(ctx, {
@@ -443,8 +429,8 @@ describe("post entity handlers", () => {
     });
 
     it("throws error when moving post to agent-bound category", async () => {
-      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
-      vi.mocked(getPostById).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
+      vi.mocked(getPostById).mockResolvedValue(samplePostWithAgent);
       vi.mocked(getAiAgentByCategoryId).mockResolvedValue(sampleAgent);
 
       await expect(
@@ -456,8 +442,8 @@ describe("post entity handlers", () => {
     });
 
     it("allows update when staying in same category (no agent check needed)", async () => {
-      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
-      vi.mocked(PostService.update).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
+      vi.mocked(PostService.update).mockResolvedValue(samplePostWithAgent);
 
       await handlers.handleUpdate(ctx, {
         slug: "test-post",
@@ -470,11 +456,11 @@ describe("post entity handlers", () => {
     });
 
     it("allows update when moving to category without agent", async () => {
-      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
-      vi.mocked(getPostById).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
+      vi.mocked(getPostById).mockResolvedValue(samplePostWithAgent);
       vi.mocked(getAiAgentByCategoryId).mockResolvedValue(null);
       vi.mocked(PostService.update).mockResolvedValue({
-        ...samplePostWithCategory,
+        ...samplePostWithAgent,
         category_id: "cat-2",
       });
 
@@ -489,8 +475,8 @@ describe("post entity handlers", () => {
     });
 
     it("allows update without changing category", async () => {
-      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
-      vi.mocked(PostService.update).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
+      vi.mocked(PostService.update).mockResolvedValue(samplePostWithAgent);
 
       await handlers.handleUpdate(ctx, {
         slug: "test-post",
@@ -506,7 +492,7 @@ describe("post entity handlers", () => {
 
   describe("handleDelete", () => {
     it("deletes post by slug", async () => {
-      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
       vi.mocked(PostService.delete).mockResolvedValue(true);
 
       const result = await handlers.handleDelete(ctx, { slug: "test-post" });
@@ -537,9 +523,9 @@ describe("generate_excerpt extra tool", () => {
   )!;
 
   it("generates excerpt by slug and saves to DB", async () => {
-    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
     vi.mocked(generateExcerpt).mockResolvedValue("AI excerpt");
-    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(updatePost).mockResolvedValue(samplePostWithAgent);
 
     const result = await excerptTool.handler(ctx, { slug: "test-post" });
     const data = parseToolResult(result);
@@ -548,9 +534,9 @@ describe("generate_excerpt extra tool", () => {
   });
 
   it("generates excerpt by id and saves to DB", async () => {
-    vi.mocked(getPostById).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(getPostById).mockResolvedValue(samplePostWithAgent);
     vi.mocked(generateExcerpt).mockResolvedValue("AI excerpt");
-    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(updatePost).mockResolvedValue(samplePostWithAgent);
 
     const result = await excerptTool.handler(ctx, { id: "post-1" });
     const data = parseToolResult(result);
@@ -566,7 +552,7 @@ describe("generate_excerpt extra tool", () => {
   });
 
   it("returns error when AI not configured", async () => {
-    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
     vi.mocked(generateExcerpt).mockRejectedValue(
       new Error("AI not configured"),
     );
@@ -576,7 +562,7 @@ describe("generate_excerpt extra tool", () => {
   });
 
   it("wraps non-Error excerpt failures", async () => {
-    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
     vi.mocked(generateExcerpt).mockRejectedValue("AI gateway down");
 
     const result = await excerptTool.handler(ctx, { slug: "test-post" });
@@ -584,7 +570,7 @@ describe("generate_excerpt extra tool", () => {
   });
 
   it("returns error for other AI failures", async () => {
-    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
     vi.mocked(generateExcerpt).mockRejectedValue(new Error("API timeout"));
 
     const result = await excerptTool.handler(ctx, { slug: "test-post" });
@@ -633,7 +619,7 @@ describe("unfurl_reference extra tool", () => {
   });
 
   it("save mode: unfurls and saves to post", async () => {
-    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
     vi.mocked(unfurlUrl).mockResolvedValue({
       url: "https://example.com",
       ogTitle: "Example",
@@ -644,7 +630,7 @@ describe("unfurl_reference extra tool", () => {
       bodyText: "text",
     });
     vi.mocked(summarizeUnfurl).mockResolvedValue(null);
-    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(updatePost).mockResolvedValue(samplePostWithAgent);
 
     const result = await unfurlTool.handler(ctx, {
       slug: "test-post",
@@ -666,7 +652,7 @@ describe("unfurl_reference extra tool", () => {
   });
 
   it("save mode: prefers AI title over raw metadata", async () => {
-    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
     vi.mocked(unfurlUrl).mockResolvedValue({
       url: "https://example.com",
       ogTitle: "Raw Title",
@@ -680,7 +666,7 @@ describe("unfurl_reference extra tool", () => {
       title: "AI Title",
       description: "AI Desc",
     });
-    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(updatePost).mockResolvedValue(samplePostWithAgent);
 
     const result = await unfurlTool.handler(ctx, {
       slug: "test-post",
@@ -694,7 +680,7 @@ describe("unfurl_reference extra tool", () => {
 
   it("save mode: uses post reference_url when no url provided", async () => {
     const postWithRef = {
-      ...samplePostWithCategory,
+      ...samplePostWithAgent,
       reference_url: "https://saved.com",
     };
     vi.mocked(getPostById).mockResolvedValue(postWithRef);
@@ -717,7 +703,7 @@ describe("unfurl_reference extra tool", () => {
   });
 
   it("returns error when no url on post and none provided", async () => {
-    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
 
     const result = await unfurlTool.handler(ctx, { slug: "test-post" });
     expectError(result, "No reference URL on post and no url provided");
@@ -729,7 +715,7 @@ describe("unfurl_reference extra tool", () => {
   });
 
   it("returns UnfurlError message directly", async () => {
-    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
     vi.mocked(unfurlUrl).mockRejectedValue(
       new UnfurlError("403 Forbidden", 403),
     );
@@ -771,7 +757,7 @@ describe("unfurl_reference extra tool", () => {
   });
 
   it("save mode: wraps generic error with 'Unfurl failed' prefix", async () => {
-    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
     vi.mocked(unfurlUrl).mockRejectedValue(new Error("DNS failure"));
 
     const result = await unfurlTool.handler(ctx, {
@@ -782,7 +768,7 @@ describe("unfurl_reference extra tool", () => {
   });
 
   it("save mode: handles non-Error throw", async () => {
-    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
     vi.mocked(unfurlUrl).mockRejectedValue(42);
 
     const result = await unfurlTool.handler(ctx, {
@@ -836,7 +822,7 @@ describe("unfurl_reference extra tool", () => {
   });
 
   it("save mode: falls back to pageTitle when ogTitle is null", async () => {
-    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
     vi.mocked(unfurlUrl).mockResolvedValue({
       url: "https://example.com",
       ogTitle: null,
@@ -847,7 +833,7 @@ describe("unfurl_reference extra tool", () => {
       bodyText: "text",
     });
     vi.mocked(summarizeUnfurl).mockResolvedValue(null);
-    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(updatePost).mockResolvedValue(samplePostWithAgent);
 
     const result = await unfurlTool.handler(ctx, {
       slug: "test-post",
@@ -859,7 +845,7 @@ describe("unfurl_reference extra tool", () => {
   });
 
   it("save mode: falls back to the hostname when no title metadata exists", async () => {
-    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
     vi.mocked(unfurlUrl).mockResolvedValue({
       url: "https://fallback.example.com/path",
       ogTitle: null,
@@ -870,7 +856,7 @@ describe("unfurl_reference extra tool", () => {
       bodyText: "text",
     });
     vi.mocked(summarizeUnfurl).mockResolvedValue(null);
-    vi.mocked(updatePost).mockResolvedValue(samplePostWithCategory);
+    vi.mocked(updatePost).mockResolvedValue(samplePostWithAgent);
 
     const result = await unfurlTool.handler(ctx, {
       slug: "test-post",

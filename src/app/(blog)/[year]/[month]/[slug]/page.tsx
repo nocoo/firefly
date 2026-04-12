@@ -53,8 +53,8 @@ export async function generateMetadata({
     getLocale(),
   ]);
 
-  // Resolve author (agent or site author)
-  const authorMeta = await getPostAuthorForMeta(db, post, settings.siteAuthor, SITE_URL);
+  // Resolve author (agent or site author) - now synchronous with JOINed data
+  const authorMeta = getPostAuthorForMeta(post, settings, SITE_URL);
   const path = postPath(post.slug, post.published_at);
 
   return buildPageMeta({
@@ -97,8 +97,8 @@ export default async function PostPage({ params }: PostPageProps) {
   const isAdmin = await isAdminSession();
   const showComments = settings.commentsEnabled && !!post.comment_enabled;
 
-  // Resolve author (agent or null for site author)
-  const author = await getPostAuthor(db, post);
+  // Resolve author (agent or site owner) - now synchronous with JOINed data
+  const author = getPostAuthor(post, settings);
 
   // Adjacent posts for keyboard navigation
   const adjacent = post.published_at
@@ -126,8 +126,8 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const tagNames = tags.map((tg) => tg.name);
 
-  // Prepare JSON-LD author (agent name if applicable)
-  const jsonLdAuthor = author ? { name: author.name } : undefined;
+  // JSON-LD always has author now (either agent or site owner)
+  const jsonLdAuthor = { name: author.name };
 
   return (
     <>
@@ -148,22 +148,20 @@ export default async function PostPage({ params }: PostPageProps) {
               {post.title}
             </h1>
             <div className="blog-byline">
-              {author && (
-                <span className="blog-byline-item">
-                  {author.avatarUrl ? (
-                    <Image
-                      src={author.avatarUrl}
-                      alt={author.name}
-                      width={20}
-                      height={20}
-                      className="blog-byline-avatar"
-                    />
-                  ) : (
-                    <User className="blog-byline-icon" strokeWidth={1.5} />
-                  )}
-                  <span>{author.name}</span>
-                </span>
-              )}
+              <span className="blog-byline-item">
+                {author.avatarUrl ? (
+                  <Image
+                    src={author.avatarUrl}
+                    alt={author.name}
+                    width={20}
+                    height={20}
+                    className="blog-byline-avatar"
+                  />
+                ) : (
+                  <User className="blog-byline-icon" strokeWidth={1.5} />
+                )}
+                <span>{author.name}</span>
+              </span>
               <span className="blog-byline-item">
                 <Calendar className="blog-byline-icon" strokeWidth={1.5} />
                 <time
