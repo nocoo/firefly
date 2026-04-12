@@ -1,7 +1,7 @@
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/lib/api";
-import { validateMcpToken, validateOrigin } from "@/lib/mcp/auth";
-import { createMcpServer } from "@/lib/mcp/server";
+import { validateMcpAuth, validateOrigin } from "@/lib/mcp/auth";
+import { createMcpServer, type McpServerContext } from "@/lib/mcp/server";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 
 export async function POST(request: Request) {
@@ -16,18 +16,23 @@ export async function POST(request: Request) {
     return errorResponse(originError.error, originError.status);
   }
 
-  // Step 2: Validate Bearer token
+  // Step 2: Validate Bearer token (supports both OAuth and Agent tokens)
   const db = getDb();
-  const authResult = await validateMcpToken(
+  const authResult = await validateMcpAuth(
     db,
     request.headers.get("authorization"),
   );
-  if (!authResult.valid) {
-    return errorResponse(authResult.error, authResult.status);
+  if (!authResult) {
+    return errorResponse("Invalid, expired, or revoked token", 401);
   }
 
-  // Step 3: Create MCP server and handle request via stateless transport
-  const server = createMcpServer(db);
+  // Step 3: Build server context based on auth type
+  const context: McpServerContext = authResult.type === "agent"
+    ? { type: "agent", agent: authResult.agent }
+    : { type: "oauth" };
+
+  // Step 4: Create MCP server and handle request via stateless transport
+  const server = createMcpServer(db, context);
   const transport = new WebStandardStreamableHTTPServerTransport({
     enableJsonResponse: true, // JSON-only, no SSE — stateless Phase 1
   });

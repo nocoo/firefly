@@ -9,8 +9,9 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db } from "@/lib/db";
+import type { AiAgent } from "@/models/types";
 import { createMockDb } from "@/data/core/test-utils";
-import { createMcpServer } from "./server";
+import { createMcpServer, type McpServerContext } from "./server";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 
 // ---------------------------------------------------------------------------
@@ -119,8 +120,9 @@ const MCP_HEADERS = {
 async function sendStatelessRequest(
   db: Db,
   body: unknown,
+  context?: McpServerContext,
 ): Promise<Response> {
-  const server = createMcpServer(db);
+  const server = createMcpServer(db, context);
   const transport = new WebStandardStreamableHTTPServerTransport({
     enableJsonResponse: true,
   });
@@ -141,8 +143,8 @@ async function sendStatelessRequest(
 }
 
 /** Create a stateful MCP session and return a callTool helper. */
-async function createSession(db: Db) {
-  const server = createMcpServer(db);
+async function createSession(db: Db, context?: McpServerContext) {
+  const server = createMcpServer(db, context);
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: () => `sess-${Math.random()}`,
     enableJsonResponse: true,
@@ -493,6 +495,134 @@ describe("createMcpServer", () => {
     expectToolError(await callTool("get_category", { slug: "nonexistent" }), "not found");
     expectToolError(await callTool("update_category", { slug: "nonexistent" }), "not found");
     expectToolError(await callTool("delete_category", { slug: "nonexistent" }), "not found");
+
+    await transport.close();
+    await server.close();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Agent Context Tests
+// ---------------------------------------------------------------------------
+
+describe("createMcpServer with agent context", () => {
+  let db: Db;
+  const now = Math.floor(Date.now() / 1000);
+
+  const sampleAgent: AiAgent = {
+    id: "agent-1",
+    name: "Claude Daily",
+    slug: "claude-daily",
+    description: "Daily journal",
+    category_id: "c-1",
+    api_key_hash: "hashed_key",
+    api_key_preview: "firefly_agent",
+    avatar_version: null,
+    is_active: 1,
+    last_used_at: null,
+    created_at: now,
+    updated_at: now,
+  };
+
+  const agentContext: McpServerContext = { type: "agent", agent: sampleAgent };
+
+  beforeEach(() => {
+    db = createMockDb();
+  });
+
+  it("creates a server instance with agent context", () => {
+    const server = createMcpServer(db, agentContext);
+    expect(server).toBeDefined();
+  });
+
+  it("registers only 5 post tools for agent context (no tag/category)", async () => {
+    const { server, transport, listTools } = await createSession(db, agentContext);
+
+    const body = await listTools();
+    expect(body.result.tools).toHaveLength(5);
+
+    const names = body.result.tools
+      .map((t: { name: string }) => t.name)
+      .sort();
+    expect(names).toEqual([
+      "create_post",
+      "delete_post",
+      "get_post",
+      "list_posts",
+      "update_post",
+    ]);
+
+    await transport.close();
+    await server.close();
+  });
+
+  it("agent post tools do not include extra tools (generate_excerpt, unfurl_reference)", async () => {
+    const { server, transport, listTools } = await createSession(db, agentContext);
+
+    const body = await listTools();
+    const names = body.result.tools.map((t: { name: string }) => t.name);
+
+    expect(names).not.toContain("generate_excerpt");
+    expect(names).not.toContain("unfurl_reference");
+
+    await transport.close();
+    await server.close();
+  });
+
+  it("agent create_post schema does not have status or category_id", async () => {
+    const { server, transport, listTools } = await createSession(db, agentContext);
+
+    const body = await listTools();
+    const tools = body.result.tools as {
+      name: string;
+      inputSchema: { properties?: Record<string, unknown> };
+    }[];
+
+    const createPost = tools.find((t) => t.name === "create_post");
+    const props = createPost?.inputSchema.properties ?? {};
+
+    expect(props).not.toHaveProperty("status");
+    expect(props).not.toHaveProperty("category_id");
+
+    await transport.close();
+    await server.close();
+  });
+
+  it("agent update_post schema does not have status or category_id", async () => {
+    const { server, transport, listTools } = await createSession(db, agentContext);
+
+    const body = await listTools();
+    const tools = body.result.tools as {
+      name: string;
+      inputSchema: { properties?: Record<string, unknown> };
+    }[];
+
+    const updatePost = tools.find((t) => t.name === "update_post");
+    const props = updatePost?.inputSchema.properties ?? {};
+
+    expect(props).not.toHaveProperty("status");
+    expect(props).not.toHaveProperty("category_id");
+
+    await transport.close();
+    await server.close();
+  });
+
+  it("oauth context registers all 17 tools", async () => {
+    const oauthContext: McpServerContext = { type: "oauth" };
+    const { server, transport, listTools } = await createSession(db, oauthContext);
+
+    const body = await listTools();
+    expect(body.result.tools).toHaveLength(17);
+
+    await transport.close();
+    await server.close();
+  });
+
+  it("no context (undefined) registers all 17 tools (backward compatible)", async () => {
+    const { server, transport, listTools } = await createSession(db);
+
+    const body = await listTools();
+    expect(body.result.tools).toHaveLength(17);
 
     await transport.close();
     await server.close();
