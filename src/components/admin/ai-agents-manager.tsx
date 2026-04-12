@@ -239,7 +239,7 @@ function AgentRow({
           <button
             onClick={onEdit}
             className="p-1.5 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            title="Edit"
+            title={t("admin.aiAgents.edit")}
           >
             <Pencil className="h-4 w-4" />
           </button>
