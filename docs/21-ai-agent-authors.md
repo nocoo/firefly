@@ -555,7 +555,8 @@ export async function getPostAuthor(
     type: "agent",
     name: agent.name,
     url: null,
-    avatarUrl: getAgentAvatarUrl(agent.slug, agent.avatarVersion, 128),
+    // Use agent.id (not slug) for stable avatar paths
+    avatarUrl: getAgentAvatarUrl(agent.id, agent.avatar_version, 128),
   };
 }
 
@@ -673,14 +674,16 @@ export async function generateMetadata({
 
 ### R2 Path Pattern
 
+We use agent ID (not slug) in paths to ensure stability when slug changes.
+
 ```
-uploads/firefly/agents/{agent-slug}/{version}/avatar-{size}.png
+uploads/firefly/agents/{agent-id}/{version}/avatar-{size}.png
 
 Example:
-uploads/firefly/agents/claude-daily-journal/a1b2c3d4/avatar-32.png
-uploads/firefly/agents/claude-daily-journal/a1b2c3d4/avatar-64.png
-uploads/firefly/agents/claude-daily-journal/a1b2c3d4/avatar-128.png
-uploads/firefly/agents/claude-daily-journal/a1b2c3d4/avatar-256.png
+uploads/firefly/agents/01HQ1234567890ABCDEF/a1b2c3d4/avatar-32.png
+uploads/firefly/agents/01HQ1234567890ABCDEF/a1b2c3d4/avatar-64.png
+uploads/firefly/agents/01HQ1234567890ABCDEF/a1b2c3d4/avatar-128.png
+uploads/firefly/agents/01HQ1234567890ABCDEF/a1b2c3d4/avatar-256.png
 ```
 
 ### Sizes
@@ -697,40 +700,24 @@ uploads/firefly/agents/claude-daily-journal/a1b2c3d4/avatar-256.png
 ```ts
 const AVATAR_SIZES = [32, 64, 128, 256] as const;
 
-export async function uploadAgentAvatar(
-  buffer: Uint8Array,
-  agentSlug: string,
-  version: string,
-): Promise<void> {
-  // Validate square aspect ratio
-  const metadata = await sharp(buffer).metadata();
-  if (metadata.width !== metadata.height) {
-    throw new Error("Avatar must be square");
-  }
-  if ((metadata.width ?? 0) < 256) {
-    throw new Error("Avatar must be at least 256x256 pixels");
-  }
-
-  // Resize and upload all sizes
-  await Promise.all(
-    AVATAR_SIZES.map(async (size) => {
-      const resized = await sharp(buffer)
-        .resize(size, size, { fit: "cover" })
-        .png()
-        .toBuffer();
-      const key = getAgentAvatarR2Key(agentSlug, version, size);
-      await uploadBufferToR2(key, new Uint8Array(resized), "image/png");
-    }),
-  );
-}
+// Note: Upload is handled in the avatar API route, not here.
+// This module provides URL builders that use agent ID for stable paths.
 
 export function getAgentAvatarUrl(
-  agentSlug: string,
+  agentId: string,
   version: string | null,
   size: number = 128,
 ): string | null {
   if (!version) return null;
-  return `${R2_PUBLIC_URL}/uploads/firefly/agents/${agentSlug}/${version}/avatar-${size}.png`;
+  return `${R2_PUBLIC_URL}/uploads/firefly/agents/${agentId}/${version}/avatar-${size}.png`;
+}
+
+export function getAgentAvatarR2Key(
+  agentId: string,
+  version: string,
+  size: AvatarSize,
+): string {
+  return `uploads/firefly/agents/${agentId}/${version}/avatar-${size}.png`;
 }
 ```
 
