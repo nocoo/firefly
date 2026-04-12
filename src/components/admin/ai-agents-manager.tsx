@@ -14,6 +14,7 @@ import {
   Users,
   Folder,
   Clock,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { AiAgentWithCategory, Category } from "@/models/types";
@@ -31,6 +32,36 @@ interface AiAgentsManagerProps {
   agents: AgentWithAvatarUrl[];
   categories: Category[];
   mcpUrl: string;
+}
+
+// ---------------------------------------------------------------------------
+// Delete confirmation dialog
+// ---------------------------------------------------------------------------
+
+function DeleteAgentDialog({
+  agent,
+  open,
+  onOpenChange,
+  onConfirm,
+  t,
+}: {
+  agent: AgentWithAvatarUrl | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  t: (key: string) => string;
+}) {
+  if (!agent) return null;
+  return (
+    <ConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t("admin.aiAgents.deleteAgent")}
+      description={t("admin.aiAgents.deleteConfirm").replace("{name}", agent.name)}
+      destructive
+      onConfirm={onConfirm}
+    />
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -136,6 +167,7 @@ function AgentRow({
   onEdit,
   onToggleActive,
   onRegenerateKey,
+  onDelete,
   t,
   formatDate,
 }: {
@@ -143,6 +175,7 @@ function AgentRow({
   onEdit: () => void;
   onToggleActive: () => void;
   onRegenerateKey: () => void;
+  onDelete: () => void;
   t: (key: string) => string;
   formatDate: (epoch: number | null) => string;
 }) {
@@ -220,7 +253,7 @@ function AgentRow({
           <button
             onClick={onToggleActive}
             className="p-1.5 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            title={agent.is_active ? "Disable" : "Enable"}
+            title={agent.is_active ? t("admin.aiAgents.disable") : t("admin.aiAgents.enable")}
           >
             {agent.is_active ? (
               <PowerOff className="h-4 w-4" />
@@ -228,6 +261,15 @@ function AgentRow({
               <Power className="h-4 w-4" />
             )}
           </button>
+          {!agent.is_active && (
+            <button
+              onClick={onDelete}
+              className="p-1.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+              title={t("admin.aiAgents.delete")}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </td>
     </tr>
@@ -252,6 +294,7 @@ export function AiAgentsManager({
     prompt: string;
   } | null>(null);
   const [confirmRegenerate, setConfirmRegenerate] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<AgentWithAvatarUrl | null>(null);
 
   // Date formatter
   const formatDate = (epoch: number | null): string => {
@@ -313,6 +356,21 @@ export function AiAgentsManager({
     router.push("/admin/ai-agents/new");
   };
 
+  // Delete agent
+  const handleDelete = async (agent: AgentWithAvatarUrl) => {
+    setConfirmDelete(null);
+    try {
+      const res = await fetch(`/api/admin/ai-agents/${agent.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete");
+      setAgents((prev) => prev.filter((a) => a.id !== agent.id));
+      toast.success(t("admin.aiAgents.deleted"));
+    } catch {
+      toast.error(t("admin.aiAgents.deleteFailed"));
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -344,9 +402,9 @@ export function AiAgentsManager({
           </Button>
         </div>
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden">
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
           <table className="w-full">
-            <thead className="bg-secondary/50">
+            <thead className="bg-muted/50">
               <tr className="border-b border-border">
                 <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
                   {t("admin.aiAgents.name")}
@@ -374,6 +432,7 @@ export function AiAgentsManager({
                   onEdit={() => handleEdit(agent.id)}
                   onToggleActive={() => handleToggleActive(agent)}
                   onRegenerateKey={() => setConfirmRegenerate(agent.id)}
+                  onDelete={() => setConfirmDelete(agent)}
                   t={t}
                   formatDate={formatDate}
                 />
@@ -404,6 +463,17 @@ export function AiAgentsManager({
         onConfirm={() => {
           if (confirmRegenerate) handleRegenerateKey(confirmRegenerate);
         }}
+      />
+
+      {/* Confirm delete dialog */}
+      <DeleteAgentDialog
+        agent={confirmDelete}
+        open={!!confirmDelete}
+        onOpenChange={(open) => !open && setConfirmDelete(null)}
+        onConfirm={() => {
+          if (confirmDelete) handleDelete(confirmDelete);
+        }}
+        t={t}
       />
     </div>
   );
