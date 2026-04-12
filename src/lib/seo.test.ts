@@ -120,6 +120,32 @@ describe("buildPageMeta", () => {
     expect(meta.openGraph?.siteName).toBe("Test Blog");
   });
 
+  it("uses authorOverride when provided", () => {
+    const meta = buildPageMeta({
+      title: "Test",
+      description: "Desc",
+      path: "/test",
+      authorOverride: { name: "Claude Daily", url: `${SITE_URL}/agents/claude-daily` },
+    }, testSite);
+
+    expect(meta.authors).toEqual([{ name: "Claude Daily", url: `${SITE_URL}/agents/claude-daily` }]);
+    expect(meta.openGraph?.siteName).toBe("Test Blog"); // siteName unchanged
+  });
+
+  it("uses authorOverride in article OG authors", () => {
+    const meta = buildPageMeta({
+      title: "AI Post",
+      description: "Desc",
+      path: "/post",
+      type: "article",
+      publishedTime: "2026-03-24T00:00:00.000Z",
+      authorOverride: { name: "Claude Daily", url: `${SITE_URL}/agents/claude-daily` },
+    }, testSite);
+
+    const og = meta.openGraph as Record<string, unknown>;
+    expect(og.authors).toEqual(["Claude Daily"]);
+  });
+
   it("omits twitter handle when empty", () => {
     const meta = buildPageMeta({
       title: "Test",

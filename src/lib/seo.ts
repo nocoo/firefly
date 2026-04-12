@@ -53,6 +53,8 @@ export interface PageMetaInput {
   publishedTime?: string | undefined;
   modifiedTime?: string | undefined;
   keywords?: string[] | undefined;
+  /** Override the default site author (for AI agent posts). */
+  authorOverride?: { name: string; url: string } | undefined;
 }
 
 export function buildPageMeta(
@@ -64,10 +66,13 @@ export function buildPageMeta(
   const locale = input.locale ?? "zh";
   const lang = htmlLang(locale);
 
+  // Use authorOverride if provided, otherwise fall back to site author
+  const author = input.authorOverride ?? { name: site.siteAuthor, url: SITE_URL };
+
   return {
     title: input.title,
     description: input.description,
-    authors: [{ name: site.siteAuthor, url: SITE_URL }],
+    authors: [author],
     ...(input.keywords?.length ? { keywords: input.keywords } : {}),
     alternates: {
       canonical: url,
@@ -85,7 +90,7 @@ export function buildPageMeta(
         ? {
             publishedTime: input.publishedTime,
             modifiedTime: input.modifiedTime,
-            authors: [site.siteAuthor],
+            authors: [author.name],
           }
         : {}),
     },
