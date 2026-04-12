@@ -595,6 +595,7 @@
 }
 .blog-byline-item { display: inline-flex; align-items: center; gap: 0.3em; }
 .blog-byline-icon { width: 0.9em; height: 0.9em; flex-shrink: 0; }
+.blog-byline-avatar { width: 1.25em; height: 1.25em; border-radius: 50%; flex-shrink: 0; }
 .blog-byline a { color: var(--blog-text); text-decoration: none; transition: color 0.15s; }
 .blog-byline a:hover { color: var(--blog-accent); }
 .blog-byline-edit { color: var(--blog-accent); transition: opacity 0.15s; }

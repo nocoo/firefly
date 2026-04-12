@@ -9,12 +9,13 @@ import { getSiteSettings } from "@/data/settings";
 import { isAdminSession } from "@/lib/auth";
 import { listCommentsByPost, buildCommentTree } from "@/data/entities/comment";
 import { renderMarkdown } from "@/models/markdown";
-import { Calendar, Folder, Clock, SquarePen } from "lucide-react";
+import { Calendar, Folder, Clock, SquarePen, User } from "lucide-react";
 import {
   buildPageMeta,
   formatDateDisplay,
   formatDateISO,
   postPath,
+  SITE_URL,
 } from "@/lib/seo";
 import { blogPostingJsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { Comments } from "@/components/blog/comments";
@@ -24,6 +25,7 @@ import { ReferenceCard } from "@/components/blog/reference-card";
 import { ArticleNav } from "@/components/blog/article-nav";
 import { getLocale } from "@/i18n/server";
 import { t } from "@/i18n/translations";
+import { getPostAuthor, getPostAuthorForMeta } from "@/lib/ai-agent/author";
 
 // Deduplicate getPostBySlug across generateMetadata + page component
 // within the same request. React cache() is per-request in server components.
@@ -50,6 +52,9 @@ export async function generateMetadata({
     getSiteSettings(db),
     getLocale(),
   ]);
+
+  // Resolve author (agent or site author)
+  const authorMeta = await getPostAuthorForMeta(db, post, settings.siteAuthor, SITE_URL);
   const path = postPath(post.slug, post.published_at);
 
   return buildPageMeta({
@@ -64,6 +69,8 @@ export async function generateMetadata({
       : undefined,
     modifiedTime: formatDateISO(post.updated_at),
     keywords: tags.map((t) => t.name),
+    // Only set authorOverride if it's an agent (different from site author)
+    authorOverride: authorMeta.name !== settings.siteAuthor ? authorMeta : undefined,
   }, settings);
 }
 
@@ -89,6 +96,9 @@ export default async function PostPage({ params }: PostPageProps) {
   const settings = await getSiteSettings(db);
   const isAdmin = await isAdminSession();
   const showComments = settings.commentsEnabled && !!post.comment_enabled;
+
+  // Resolve author (agent or null for site author)
+  const author = await getPostAuthor(db, post);
 
   // Adjacent posts for keyboard navigation
   const adjacent = post.published_at
@@ -135,6 +145,22 @@ export default async function PostPage({ params }: PostPageProps) {
               {post.title}
             </h1>
             <div className="blog-byline">
+              {author && (
+                <span className="blog-byline-item">
+                  {author.avatarUrl ? (
+                    <Image
+                      src={author.avatarUrl}
+                      alt={author.name}
+                      width={20}
+                      height={20}
+                      className="blog-byline-avatar"
+                    />
+                  ) : (
+                    <User className="blog-byline-icon" strokeWidth={1.5} />
+                  )}
+                  <span>{author.name}</span>
+                </span>
+              )}
               <span className="blog-byline-item">
                 <Calendar className="blog-byline-icon" strokeWidth={1.5} />
                 <time
