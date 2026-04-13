@@ -106,7 +106,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
           {isMobile && mobileOpen && (
             <>
               <div
-                className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs"
+                className="fixed inset-0 z-40 bg-zinc-950/50 backdrop-blur-xs"
                 onClick={() => setMobileOpen(false)}
               />
               <div className="fixed inset-y-0 left-0 z-50 w-[260px]">

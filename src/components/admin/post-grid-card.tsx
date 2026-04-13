@@ -89,7 +89,7 @@ export const PostGridCard = memo(function PostGridCard({
       </Link>
 
       {/* Hover overlay — covers only the image area */}
-      <div className="absolute inset-x-0 top-0 h-[200px] flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="absolute inset-x-0 top-0 h-[200px] flex items-center justify-center gap-2 bg-zinc-950/40 opacity-0 transition-opacity group-hover:opacity-100">
         <a
           href={previewUrl}
           target="_blank"

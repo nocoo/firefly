@@ -336,7 +336,7 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
                       <button
                         onClick={handleAvatarDelete}
                         disabled={uploadingAvatar}
-                        className="absolute right-1 top-1 rounded-full bg-black/50 p-1 text-white hover:bg-black/70 transition-colors"
+                        className="absolute right-1 top-1 rounded-full bg-zinc-950/50 p-1 text-white hover:bg-zinc-950/70 transition-colors"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -347,7 +347,7 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
                     </div>
                   )}
                   {uploadingAvatar && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                    <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/50">
                       <Loader2 className="h-8 w-8 animate-spin text-white" />
                     </div>
                   )}

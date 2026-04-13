@@ -240,7 +240,7 @@ export function CommandPalette() {
     <div className="fixed inset-0 z-50" onKeyDown={handleKeyDown}>
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-xs"
+        className="absolute inset-0 bg-background/95 backdrop-blur-sm"
         onClick={() => setOpen(false)}
       />
 

@@ -60,7 +60,7 @@ export function ImageLightbox({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm"
       onClick={onClose}
     >
       {/* Content — stop propagation so clicking inside doesn't close */}
@@ -77,7 +77,7 @@ export function ImageLightbox({
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white/80 transition-colors hover:bg-black/70 hover:text-white"
+          className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-950/50 text-white/80 transition-colors hover:bg-zinc-950/70 hover:text-white"
         >
           <X className="h-4 w-4" />
         </button>
@@ -86,7 +86,7 @@ export function ImageLightbox({
         <div
           className={
             "flex flex-1 items-center justify-center p-4" +
-            (hasPanel ? " bg-black/20 md:min-w-[400px]" : "")
+            (hasPanel ? " bg-zinc-950/20 md:min-w-[400px]" : "")
           }
         >
           {previewContent ?? (

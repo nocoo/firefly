@@ -108,7 +108,7 @@ export function NewAgentModal({
   t: (key: string) => string;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/50">
       <div className="mx-4 w-full max-w-lg rounded-lg bg-background border border-border shadow-lg">
         <div className="border-b border-border px-6 py-4">
           <h2 className="text-lg font-semibold text-foreground">{agentName}</h2>
@@ -442,7 +442,7 @@ export function AiAgentsManager({
 
       {/* Loading indicator for prompt fetch */}
       {loadingPrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/50">
           <div className="rounded-lg bg-background border border-border px-6 py-4">
             <p className="text-sm text-muted-foreground">Loading prompt...</p>
           </div>
