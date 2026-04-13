@@ -132,7 +132,7 @@ async function handleExecute(body: unknown, env: Env): Promise<Response> {
     return jsonResponse({ error: "Invalid request body" }, 400);
   }
 
-  // Support single statement or batch
+  // Support single statement, batch array, or raw multi-statement string
   const { sql, params, statements } = body as {
     sql?: string;
     params?: unknown[];
@@ -140,7 +140,7 @@ async function handleExecute(body: unknown, env: Env): Promise<Response> {
   };
 
   try {
-    // Batch mode
+    // Batch mode (array of statements)
     if (Array.isArray(statements) && statements.length > 0) {
       const stmts = statements.map((s) => {
         const stmt = env.DB.prepare(s.sql);
@@ -159,11 +159,26 @@ async function handleExecute(body: unknown, env: Env): Promise<Response> {
       });
     }
 
-    // Single statement mode
+    // Single or multi-statement mode
     if (typeof sql !== "string" || sql.trim().length === 0) {
       return jsonResponse({ error: "Missing or empty sql" }, 400);
     }
 
+    // Check if SQL contains multiple statements (semicolon followed by non-whitespace)
+    // This heuristic detects "stmt1; stmt2" patterns
+    const isMultiStatement = /;\s*\S/.test(sql);
+
+    if (isMultiStatement) {
+      // Use exec() for multi-statement SQL (migrations with PRAGMA, etc.)
+      // exec() preserves connection-level state across statements
+      const result = await env.DB.exec(sql);
+      return jsonResponse({
+        results: [],
+        meta: { count: result.count, duration: result.duration },
+      });
+    }
+
+    // Single statement mode
     const stmt = env.DB.prepare(sql);
     const bound =
       Array.isArray(params) && params.length > 0 ? stmt.bind(...params) : stmt;
