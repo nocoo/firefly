@@ -74,6 +74,53 @@ function discoverMigrations(): MigrationFile[] {
   });
 }
 
+/**
+ * Parse migration SQL into pre-batch statements and batch section.
+ *
+ * Migration files can have two sections:
+ * 1. Statements before `-- @batch` marker: executed one-by-one (can skip on error)
+ * 2. Statements after `-- @batch` marker: executed as a single batch request
+ *    (preserves connection-level state like PRAGMA foreign_keys)
+ *
+ * If no `-- @batch` marker, all statements run in normal mode (one-by-one).
+ */
+interface ParsedMigration {
+  preBatchStatements: string[];
+  batchSql: string | null;
+}
+
+function parseMigration(sql: string): ParsedMigration {
+  const batchMarker = "-- @batch";
+  const markerIndex = sql.indexOf(batchMarker);
+
+  if (markerIndex === -1) {
+    // No batch section, all statements are pre-batch
+    return {
+      preBatchStatements: splitStatements(sql),
+      batchSql: null,
+    };
+  }
+
+  const preBatchSql = sql.slice(0, markerIndex);
+  const batchSql = sql.slice(markerIndex + batchMarker.length);
+
+  return {
+    preBatchStatements: splitStatements(preBatchSql),
+    batchSql: stripComments(batchSql),
+  };
+}
+
+/**
+ * Strip comments from SQL, keeping only executable statements.
+ */
+function stripComments(sql: string): string {
+  return sql
+    .split("\n")
+    .filter((line) => !line.trim().startsWith("--"))
+    .join("\n")
+    .trim();
+}
+
 function splitStatements(sql: string): string[] {
   return sql
     .split(";")
@@ -106,11 +153,17 @@ async function applyOne(
   migration: MigrationFile,
 ): Promise<void> {
   const sql = readFileSync(migration.path, "utf-8");
-  const statements = splitStatements(sql);
+  const { preBatchStatements, batchSql } = parseMigration(sql);
 
-  console.log(`▸ Applying ${migration.name} (${statements.length} statements)...`);
+  const totalParts =
+    preBatchStatements.length + (batchSql ? 1 : 0);
+  const modeDesc = batchSql
+    ? `${preBatchStatements.length} pre-batch + batch`
+    : `${preBatchStatements.length} statements`;
+  console.log(`▸ Applying ${migration.name} (${modeDesc})...`);
 
-  for (const stmt of statements) {
+  // Execute pre-batch statements one by one (can skip on error)
+  for (const stmt of preBatchStatements) {
     const preview = stmt.substring(0, 70).replace(/\n/g, " ");
     try {
       await adapter.execute(stmt);
@@ -128,6 +181,24 @@ async function applyOne(
         console.log(`  ⊘ ${preview} (table already exists, skipping)`);
         continue;
       }
+      // Handle "index already exists" without IF NOT EXISTS
+      if (/index .* already exists/i.test(msg)) {
+        console.log(`  ⊘ ${preview} (index already exists, skipping)`);
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  // Execute batch section (all statements in single request)
+  if (batchSql) {
+    console.log(`  ▸ Executing batch section...`);
+    try {
+      await adapter.execute(batchSql);
+      console.log(`  ✓ Batch executed successfully`);
+    } catch (err) {
+      const msg = String(err);
+      console.log(`  ✗ Batch failed: ${msg}`);
       throw err;
     }
   }

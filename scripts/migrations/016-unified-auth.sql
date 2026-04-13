@@ -5,7 +5,15 @@
 --    AI Authors are now just identity records, not authentication endpoints
 -- 2. Add scope field to mcp_tokens: "full" (admin) or "author" (AI writing mode)
 
--- 1. Rebuild ai_agents table without auth fields
+-- Part 1: Add scope to mcp_tokens (idempotent — runner skips if column exists)
+ALTER TABLE mcp_tokens ADD COLUMN scope TEXT NOT NULL DEFAULT 'full';
+
+-- @batch
+-- Part 2: Rebuild ai_agents table without auth fields
+-- NOTE: @batch is required because PRAGMA foreign_keys is connection-level state.
+-- Without batch mode, each statement runs in a separate HTTP request (= separate connection),
+-- so FK enforcement would NOT be disabled when DROP TABLE executes.
+--
 -- CRITICAL: Temporarily disable FK enforcement to prevent ON DELETE SET NULL
 --           from clearing posts.ai_agent_id when we drop the old table.
 PRAGMA foreign_keys = OFF;
@@ -33,6 +41,3 @@ CREATE INDEX idx_ai_agents_category ON ai_agents(category_id);
 
 -- Re-enable FK enforcement
 PRAGMA foreign_keys = ON;
-
--- 2. Add scope to mcp_tokens (default to 'full' for existing tokens)
-ALTER TABLE mcp_tokens ADD COLUMN scope TEXT NOT NULL DEFAULT 'full';
