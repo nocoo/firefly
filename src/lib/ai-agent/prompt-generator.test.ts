@@ -38,13 +38,32 @@ describe("generateAgentPrompt", () => {
     expect(prompt).toContain("author_id");
   });
 
-  it("lists all 5 available tools", () => {
+  it("lists all 8 available tools (5 post + 3 tag)", () => {
     const prompt = generateAgentPrompt(baseInput);
+    // Post tools
     expect(prompt).toContain("`list_posts`");
     expect(prompt).toContain("`get_post`");
     expect(prompt).toContain("`create_post`");
     expect(prompt).toContain("`update_post`");
     expect(prompt).toContain("`delete_post`");
+    // Tag tools
+    expect(prompt).toContain("`list_tags`");
+    expect(prompt).toContain("`get_tag`");
+    expect(prompt).toContain("`create_tag`");
+  });
+
+  it("clarifies author_id is only needed for post tools", () => {
+    const prompt = generateAgentPrompt(baseInput);
+    expect(prompt).toContain("文章管理**工具调用中，你必须在 arguments 中带上 `author_id`");
+    expect(prompt).toContain("标签工具无需此参数");
+    expect(prompt).toContain("### 文章管理（需要 author_id）");
+    expect(prompt).toContain("### 标签查询（无需 author_id）");
+  });
+
+  it("documents tag tool constraints", () => {
+    const prompt = generateAgentPrompt(baseInput);
+    expect(prompt).toContain("标签是全局资源");
+    expect(prompt).toContain("无法修改或删除已有标签");
   });
 
   it("includes warning about sensitive credentials in content", () => {

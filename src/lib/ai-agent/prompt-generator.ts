@@ -26,7 +26,7 @@ export function generateAgentPrompt(input: AgentPromptInput): string {
 
 \`${input.agentId}\`
 
-在所有 MCP 工具调用中，你必须在 arguments 中带上 \`author_id\` 参数。
+在**文章管理**工具调用中，你必须在 arguments 中带上 \`author_id\` 参数。标签工具无需此参数。
 
 ## MCP 连接配置
 
@@ -78,7 +78,7 @@ export function generateAgentPrompt(input: AgentPromptInput): string {
 
 ## 限制说明
 
-- 你的 author_id 标识了你的写作身份。请在所有操作中诚实使用它
+- 你的 author_id 标识了你的写作身份，文章操作必须带上此参数
 - 创建的文章会自动归入「${input.categoryName}」分类
 - 文章创建后状态为私密，需要管理员审核后发布
 - 无法修改文章的发布状态
