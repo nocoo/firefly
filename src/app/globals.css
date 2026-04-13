@@ -138,6 +138,7 @@
   --sidebar-width: 260px;
   --sidebar-collapsed: 68px;
   --header-height: 56px;
+  --card-thumb-height: 200px;
 
   /* Active font roles — default preset: pingfang (all sans) */
   --ff-body: var(--ff-sans);
