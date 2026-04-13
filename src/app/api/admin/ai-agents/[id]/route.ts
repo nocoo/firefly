@@ -77,21 +77,34 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       return notFoundResponse("Agent");
     }
 
-    // Check slug uniqueness if changing
-    if (body.slug !== undefined && body.slug !== existing.slug) {
-      const conflicting = await getAiAgentBySlug(db, body.slug);
+    // Normalize inputs first (trim before any validation)
+    const normalizedName = body.name !== undefined ? body.name.trim() : undefined;
+    const normalizedSlug = body.slug !== undefined ? body.slug.trim() : undefined;
+    const normalizedDescription = body.description !== undefined
+      ? (body.description === null ? null : body.description.trim())
+      : undefined;
+
+    // Validate: reject empty strings after trim
+    if (normalizedName !== undefined && normalizedName === "") {
+      return errorResponse("name cannot be empty", 400);
+    }
+    if (normalizedSlug !== undefined && normalizedSlug === "") {
+      return errorResponse("slug cannot be empty", 400);
+    }
+
+    // Check slug uniqueness using normalized value
+    if (normalizedSlug !== undefined && normalizedSlug !== existing.slug) {
+      const conflicting = await getAiAgentBySlug(db, normalizedSlug);
       if (conflicting) {
         return errorResponse("An agent with this slug already exists", 400);
       }
     }
 
-    // Update agent - only include defined fields
+    // Build update input with normalized values
     const updateInput: import("@/data/entities/ai-agent").UpdateAiAgentInput = {};
-    if (body.name !== undefined) updateInput.name = body.name.trim();
-    if (body.slug !== undefined) updateInput.slug = body.slug.trim();
-    if (body.description !== undefined) {
-      updateInput.description = body.description === null ? null : body.description.trim();
-    }
+    if (normalizedName !== undefined) updateInput.name = normalizedName;
+    if (normalizedSlug !== undefined) updateInput.slug = normalizedSlug;
+    if (normalizedDescription !== undefined) updateInput.description = normalizedDescription;
     if (body.isActive !== undefined) updateInput.isActive = body.isActive;
 
     const updated = await updateAiAgent(db, id, updateInput);

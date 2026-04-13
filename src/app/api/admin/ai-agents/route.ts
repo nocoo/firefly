@@ -54,11 +54,16 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as CreateAgentBody;
     const { name, slug, description, categoryId } = body;
 
-    // Validate required fields
-    if (!name || typeof name !== "string" || name.trim() === "") {
+    // Normalize first
+    const normalizedName = typeof name === "string" ? name.trim() : "";
+    const normalizedSlug = typeof slug === "string" ? slug.trim() : "";
+    const normalizedDescription = typeof description === "string" ? description.trim() : null;
+
+    // Validate required fields (after normalization)
+    if (!normalizedName) {
       return errorResponse("name is required", 400);
     }
-    if (!slug || typeof slug !== "string" || slug.trim() === "") {
+    if (!normalizedSlug) {
       return errorResponse("slug is required", 400);
     }
     if (!categoryId || typeof categoryId !== "string") {
@@ -67,8 +72,8 @@ export async function POST(request: NextRequest) {
 
     const db = getDb();
 
-    // Check slug uniqueness
-    const existingBySlug = await getAiAgentBySlug(db, slug);
+    // Check slug uniqueness (using normalized value)
+    const existingBySlug = await getAiAgentBySlug(db, normalizedSlug);
     if (existingBySlug) {
       return errorResponse("An agent with this slug already exists", 400);
     }
@@ -79,11 +84,11 @@ export async function POST(request: NextRequest) {
       return errorResponse("Category not found", 400);
     }
 
-    // Create agent
+    // Create agent (using normalized values)
     const { agent, plaintextKey } = await createAiAgent(db, {
-      name: name.trim(),
-      slug: slug.trim(),
-      description: description?.trim() ?? null,
+      name: normalizedName,
+      slug: normalizedSlug,
+      description: normalizedDescription,
       categoryId,
     });
 
