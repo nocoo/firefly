@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.5.5 (2026-04-13)
+
+- fix(i18n): add missing translations for AI agent modal
+
+
 ## v2.5.4 (2026-04-13)
 
 - fix(worker): support multi-statement SQL via DB.exec()
