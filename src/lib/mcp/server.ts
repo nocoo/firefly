@@ -37,11 +37,11 @@ export function createMcpServer(db: Db, context?: McpServerContext): McpServer {
   const server = new McpServer({ name: "firefly", version: APP_VERSION });
   const ctx: ToolContext = { db };
 
-  // Author scope: only register constrained post tools that require author_id
+  // Author scope: constrained post tools (require author_id) + full tag CRUD
   if (context?.type === "author") {
     const authorPostEntity = createAuthorPostEntity();
     registerEntityTools(server, authorPostEntity, ctx);
-    // No tag/category tools for author scope
+    registerEntityTools(server, tagEntity, ctx);  // Tags are global, no author constraint
     return server;
   }
 
