@@ -168,7 +168,8 @@ describe("MCP Main Endpoint — Auth", () => {
     expect(res.status).toBe(401);
 
     const data = await res.json();
-    expect(data.error).toContain("Authorization");
+    // Unified error message for security (doesn't reveal if token is missing vs invalid)
+    expect(data.error).toContain("Invalid");
   });
 
   it("returns 401 with invalid Bearer token", async () => {
