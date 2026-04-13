@@ -109,7 +109,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
                 className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs"
                 onClick={() => setMobileOpen(false)}
               />
-              <div className="fixed inset-y-0 left-0 z-50 w-[260px]">
+              <div className="fixed inset-y-0 left-0 z-50 w-[var(--sidebar-width)]">
                 <AdminSidebar
                   collapsed={false}
                   onToggle={() => setMobileOpen(false)}

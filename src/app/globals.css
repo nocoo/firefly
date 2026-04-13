@@ -131,6 +131,11 @@
   --ff-kai: Georgia, "Times New Roman", "Heti Kai", serif;
   --ff-mono: "SFMono-Regular", consolas, "Liberation Mono", menlo, courier, monospace;
 
+  /* Admin layout tokens */
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 68px;
+  --header-height: 56px;
+
   /* Active font roles — default preset: pingfang (all sans) */
   --ff-body: var(--ff-sans);
   --ff-heading: var(--ff-sans);
