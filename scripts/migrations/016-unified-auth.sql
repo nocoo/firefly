@@ -6,6 +6,10 @@
 -- 2. Add scope field to mcp_tokens: "full" (admin) or "author" (AI writing mode)
 
 -- 1. Rebuild ai_agents table without auth fields
+-- CRITICAL: Temporarily disable FK enforcement to prevent ON DELETE SET NULL
+--           from clearing posts.ai_agent_id when we drop the old table.
+PRAGMA foreign_keys = OFF;
+
 CREATE TABLE ai_agents_new (
   id                TEXT PRIMARY KEY,
   name              TEXT NOT NULL,
@@ -26,6 +30,9 @@ DROP TABLE ai_agents;
 ALTER TABLE ai_agents_new RENAME TO ai_agents;
 
 CREATE INDEX idx_ai_agents_category ON ai_agents(category_id);
+
+-- Re-enable FK enforcement
+PRAGMA foreign_keys = ON;
 
 -- 2. Add scope to mcp_tokens (default to 'full' for existing tokens)
 ALTER TABLE mcp_tokens ADD COLUMN scope TEXT NOT NULL DEFAULT 'full';

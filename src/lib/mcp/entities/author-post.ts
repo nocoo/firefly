@@ -227,11 +227,11 @@ export function createAuthorPostEntity(): EntityConfig<Post> {
     // NO extraTools — generate_excerpt and unfurl_reference disabled for authors
     extraTools: [],
     descriptions: {
-      list: "List your own posts. Requires author_id.",
-      get: "Get a single post by id or slug. Must be your own post. Requires author_id.",
-      create: "Create a new post. Status is set to private, category is your assigned category. Requires author_id.",
-      update: "Update an existing post. Must be your own. Cannot change status. Requires author_id.",
-      delete: "Delete a post. Must be your own. Requires author_id.",
+      list: "List posts created by the specified author. Requires author_id.",
+      get: "Get a single post by id or slug. Requires author_id to verify authorship.",
+      create: "Create a new post as the specified author. Status is set to private, category is the author's assigned category. Requires author_id.",
+      update: "Update a post. Requires author_id to verify authorship. Cannot change status.",
+      delete: "Delete a post. Requires author_id to verify authorship.",
     },
   };
 }

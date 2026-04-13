@@ -16,9 +16,12 @@ export async function GET(request: Request) {
     const codeChallenge = params.get("code_challenge");
     const codeChallengeMethod = params.get("code_challenge_method");
     const state = params.get("state");
-    const scopeParam = params.get("scope") ?? "full";
+    const scope = params.get("scope") ?? "full";
+
     // Validate scope: only "full" or "author" allowed
-    const scope = scopeParam === "author" ? "author" : "full";
+    if (scope !== "full" && scope !== "author") {
+      return errorResponse(`Invalid scope: ${scope}. Must be 'full' or 'author'`);
+    }
 
     // Validate required params
     if (!responseType || !clientId || !redirectUri || !codeChallenge || !codeChallengeMethod || !state) {
