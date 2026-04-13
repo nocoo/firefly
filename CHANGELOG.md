@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.5.6 (2026-04-13)
+
+- fix(post): auto-set published_at when status becomes published
+
+
 ## v2.5.5 (2026-04-13)
 
 - fix(i18n): add missing translations for AI agent modal
