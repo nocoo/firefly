@@ -1,5 +1,22 @@
 # Changelog
 
+## v2.5.1 (2026-04-13)
+
+- feat(blog): full opacity for author avatar/name in byline
+- fix(api): add type validation before trim in ai-agents PATCH/POST routes
+- docs(ai-agent): clean up outdated category-bound model references
+- fix(api): normalize inputs before validation in ai-agents routes
+- docs(ai-agent): update for ai_agent_id ownership model
+- refactor(ai-agent): remove category-agent binding checks
+- feat(ai-agent): block deletion when posts reference agent (soft delete)
+- feat(data): add ai_agent_id to posts for direct agent authorship
+- fix(ai-agent): improve MCP connection prompt and use correct SITE_URL
+- fix(admin): localize edit button title in AI agents list
+- feat(admin): add delete functionality for inactive AI agents
+- fix(ui): use semantic color tokens in AI Agent components
+- feat(design): add warning semantic color token
+
+
 ## v2.4.4 (2026-04-08)
 
 - feat(admin): enhance posts list with tags, published date, and quick actions
