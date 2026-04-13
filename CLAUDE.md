@@ -58,3 +58,8 @@ Personal blog platform built with Next.js + Cloudflare Workers.
 **问题**: 添加 `ai_agents` 表后直接 release，CI 的 L2 E2E 测试失败，因为 test D1 数据库还没有新表。Next.js build 阶段会 prefetch sitemap 等静态路由，触发数据库查询，schema 不匹配导致 500。
 **修复**: 手动在 test D1 执行迁移 + 部署 test worker，然后 rerun CI。
 **教训**: 涉及 DB schema 变更时，release 前必须：1) 先在 test D1 执行迁移 2) 部署 test worker 3) 本地验证 E2E 能过（或至少 build 能过）。pre-push 只跑 L1/G1/G2，无法发现 L2 E2E 问题，所以 schema 变更需要额外的手动验证步骤。
+
+### 2026-04-13: PRAGMA foreign_keys 在迁移 runner 中无效
+**问题**: 迁移 016 用 `PRAGMA foreign_keys = OFF` 防止 `DROP TABLE ai_agents` 触发 `ON DELETE SET NULL` 清空 `posts.ai_agent_id`。但 runner 把 SQL 按分号拆分，每条语句用独立 HTTP 请求执行。`PRAGMA foreign_keys` 是连接级状态，所以 FK 禁用对后续 DROP TABLE 完全无效。
+**修复**: 增加 `-- @batch` 标记支持。标记后的语句作为单个请求发送到 D1 REST API（支持分号分隔的多语句）。标记前的语句仍可单独执行并跳过已存在的错误。
+**教训**: SQLite PRAGMA 是连接级状态，不是数据库级持久配置。通过 REST API 执行 SQL 时，每个请求可能是独立连接。涉及 PRAGMA 的迁移必须确保相关语句在同一连接内执行。
