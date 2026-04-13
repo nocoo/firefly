@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.5.4 (2026-04-13)
+
+- fix(worker): support multi-statement SQL via DB.exec()
+- docs: add retrospective for PRAGMA foreign_keys migration issue
+- fix(migrations): add @batch mode for connection-level PRAGMA statements
+
+
 ## v2.5.3 (2026-04-13)
 
 - fix(mcp): unify auth error messages for security
