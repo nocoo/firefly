@@ -337,9 +337,13 @@ export function createAgentPostEntity(agent: AiAgent): EntityConfig<Post> {
         });
       },
 
-      // update: strip status, block category change
+      // update: strip status, block category/aiAgentId change (defense-in-depth)
       update: async (db, id, input: any) => {
-        const { status, categoryId: inputCategoryId, ...rest } = input;
+        const { status, categoryId: inputCategoryId, aiAgentId: inputAgentId, ...rest } = input;
+        // Defense-in-depth: block ai_agent_id reassignment even if schema strips it
+        if (inputAgentId && inputAgentId !== agentId) {
+          throw new Error("Access denied: Cannot reassign post to different agent");
+        }
         if (inputCategoryId && inputCategoryId !== categoryId) {
           throw new Error("Access denied: Cannot move post to different category");
         }
@@ -802,7 +806,7 @@ API Key: ${input.apiKey}
 | Risk | Mitigation |
 |------|------------|
 | **Key leakage** | Hash-only storage; plaintext 仅在创建/重新生成时展示一次，UI 不可回显 |
-| **Cross-agent access** | `agentPostEntity` 的 dataLayer 在每个操作中校验 `ai_agent_id`，不匹配则返回 404 |
+| **Cross-agent access** | `agentPostEntity` 的 dataLayer 在每个操作中校验 `ai_agent_id`：getById/getBySlug 不匹配返回 null（表现为 not found）；list 显式传入其他 ai_agent_id 则抛 Access denied |
 | **Status manipulation** | `create` 强制 `status: "private"`；`update` 的 schema 不含 status 字段 |
 | **Category deletion** | `ON DELETE RESTRICT` 阻止删除有 agent 的分类 |
 | **Token confusion** | 不同前缀：`firefly_agent_` vs `firefly_at_` |
