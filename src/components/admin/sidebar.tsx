@@ -190,12 +190,12 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
     <aside
       className={cn(
         "sticky top-0 flex h-screen shrink-0 flex-col bg-background transition-[width] duration-300 ease-in-out overflow-hidden",
-        collapsed ? "w-[68px]" : "w-[260px]",
+        collapsed ? "w-[var(--sidebar-collapsed)]" : "w-[var(--sidebar-width)]",
       )}
     >
       {collapsed ? (
         /* ── Collapsed view ── */
-        <div className="flex h-screen w-[68px] flex-col items-center">
+        <div className="flex h-screen w-[var(--sidebar-collapsed)] flex-col items-center">
           {/* Logo */}
           <div className="flex h-14 items-center justify-center">
             <img
@@ -273,7 +273,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
         </div>
       ) : (
         /* ── Expanded view ── */
-        <div className="flex h-screen w-[260px] flex-col">
+        <div className="flex h-screen w-[var(--sidebar-width)] flex-col">
           {/* Header */}
           <div className="px-3 h-14 flex items-center">
             <div className="flex w-full items-center justify-between px-3">

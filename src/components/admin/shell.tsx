@@ -176,7 +176,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
                 role="presentation"
                 onClick={closeMobile}
               />
-              <div className="absolute inset-y-0 left-0 z-50 w-[260px]">
+              <div className="absolute inset-y-0 left-0 z-50 w-[var(--sidebar-width)]">
                 <AdminSidebar
                   collapsed={false}
                   onToggle={closeMobile}

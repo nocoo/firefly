@@ -10,6 +10,8 @@ import { BlogFooter } from "./blog-footer";
 import { Menu } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
 
+// Matches --breakpoint-desktop in globals.css @theme.
+// Read at runtime so the single source of truth stays in CSS.
 const DESKTOP_QUERY = "(min-width: 1200px)";
 
 interface BlogLayoutClientProps {

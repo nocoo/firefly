@@ -63,7 +63,7 @@ export const PostGridCard = memo(function PostGridCard({
       {/* Top area — featured image or text preview */}
       <Link href={`/admin/posts/${post.id}/edit`} className="block">
         {post.featured_image ? (
-          <div className="relative h-[200px] bg-secondary">
+          <div className="relative h-[var(--card-thumb-height)] bg-secondary">
             <Image
               src={post.featured_image}
               alt={post.title}
@@ -74,7 +74,7 @@ export const PostGridCard = memo(function PostGridCard({
             />
           </div>
         ) : (
-          <div className="h-[200px] overflow-hidden bg-blog-bg p-3">
+          <div className="h-[var(--card-thumb-height)] overflow-hidden bg-blog-bg p-3">
             <p className="font-body text-base leading-snug text-blog-text line-clamp-5">
               {post.excerpt || post.title}
             </p>
@@ -83,7 +83,7 @@ export const PostGridCard = memo(function PostGridCard({
       </Link>
 
       {/* Hover overlay — covers only the image area */}
-      <div className="absolute inset-x-0 top-0 h-[200px] flex items-center justify-center gap-2 bg-zinc-950/40 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="absolute inset-x-0 top-0 h-[var(--card-thumb-height)] flex items-center justify-center gap-2 bg-zinc-950/40 opacity-0 transition-opacity group-hover:opacity-100">
         <a
           href={previewUrl}
           target="_blank"
