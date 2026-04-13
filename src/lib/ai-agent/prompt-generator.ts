@@ -68,7 +68,7 @@ export function generateAgentPrompt(input: AgentPromptInput): string {
 
 ## 限制说明
 
-- 你只能操作自己创建的文章（按作者隔离）
+- 你的 author_id 标识了你的写作身份。请在所有操作中诚实使用它
 - 创建的文章会自动归入「${input.categoryName}」分类
 - 文章创建后状态为私密，需要管理员审核后发布
 - 无法修改文章的发布状态
