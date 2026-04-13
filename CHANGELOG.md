@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.5.3 (2026-04-13)
+
+- fix(mcp): unify auth error messages for security
+
+
 ## v2.5.2 (2026-04-13)
 
 - fix(mcp): migration FK safety, scope validation, accurate descriptions
