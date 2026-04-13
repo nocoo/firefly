@@ -265,7 +265,7 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => handleInputChange(e.target.value)}
             placeholder={t("admin.search.placeholder")}
-            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0"
           />
           <kbd className="hidden sm:inline-flex h-5 items-center rounded border border-border bg-background px-1.5 text-[10px] font-medium text-muted-foreground">
             ESC
