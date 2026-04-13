@@ -1,5 +1,19 @@
 # Changelog
 
+## v2.5.2 (2026-04-13)
+
+- fix(mcp): migration FK safety, scope validation, accurate descriptions
+- docs(prompt): clarify author_id is self-reported identity
+- fix(mcp): add author_id to get/delete schemas and scope validation
+- feat(mcp): unified OAuth auth with scope-based permissions
+- feat(types): simplify AiAgent, add McpTokenScope type
+- feat(db): add migration 016 for unified auth model
+- docs: add defense-in-depth aiAgentId check and precise cross-agent behavior
+- docs: fix agent permission descriptions to reflect ai_agent_id model
+- feat(ci): add pre-push test DB schema check
+- docs: add retrospective for DB migration before release
+
+
 ## v2.5.1 (2026-04-13)
 
 - feat(blog): full opacity for author avatar/name in byline
