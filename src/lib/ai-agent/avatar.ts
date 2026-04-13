@@ -5,7 +5,7 @@
 // by client components. Client components receive pre-computed avatar URLs
 // as props from their parent server components.
 //
-// STORAGE PATH: agents/{agentId}/{version}/avatar-{size}.png
+// STORAGE PATH: agents/{agentId}/{version}/avatar-{size}.jpg
 //
 // We use agent ID (not slug) in paths to ensure stability when slug changes.
 // This design was established when the feature was first implemented — no
@@ -41,7 +41,7 @@ function getAvatarBasePath(): string {
  * @param size - The avatar size
  *
  * @example getAgentAvatarUrl("01HQ...", "a1b2c3d4", 64)
- * // → "https://cdn.example.com/uploads/firefly/agents/01HQ.../a1b2c3d4/avatar-64.png"
+ * // → "https://cdn.example.com/uploads/firefly/agents/01HQ.../a1b2c3d4/avatar-64.jpg"
  */
 export function getAgentAvatarUrl(
   agentId: string,
@@ -67,7 +67,7 @@ export function getAgentAvatarR2Key(
   version: string,
   size: AvatarSize,
 ): string {
-  return `${getAvatarBasePath()}/${agentId}/${version}/avatar-${size}.png`;
+  return `${getAvatarBasePath()}/${agentId}/${version}/avatar-${size}.jpg`;
 }
 
 /**

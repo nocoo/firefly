@@ -600,6 +600,7 @@
   display: flex; flex-wrap: wrap; align-items: center; gap: 0.25em 0.75em;
 }
 .blog-byline-item { display: inline-flex; align-items: center; gap: 0.3em; }
+.blog-byline-item.blog-byline-author { opacity: calc(1 / 0.55); } /* Counteract parent opacity for author avatar+name */
 .blog-byline-icon { width: 0.9em; height: 0.9em; flex-shrink: 0; }
 .blog-byline-avatar { width: 1.25em; height: 1.25em; border-radius: 50%; flex-shrink: 0; }
 .blog-byline a { color: var(--blog-text); text-decoration: none; transition: color 0.15s; }

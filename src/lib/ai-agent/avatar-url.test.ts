@@ -19,14 +19,14 @@ describe("buildAgentAvatarUrl", () => {
       128,
     );
     expect(result).toBe(
-      "https://cdn.example.com/uploads/firefly/agents/01HQ1234567890/abc123/avatar-128.png",
+      "https://cdn.example.com/uploads/firefly/agents/01HQ1234567890/abc123/avatar-128.jpg",
     );
   });
 
   it("works for all avatar sizes", () => {
     for (const size of AVATAR_SIZES) {
       const result = buildAgentAvatarUrl(cdnBase, keyPrefix, "agent-id", "v1", size);
-      expect(result).toContain(`avatar-${size}.png`);
+      expect(result).toContain(`avatar-${size}.jpg`);
     }
   });
 

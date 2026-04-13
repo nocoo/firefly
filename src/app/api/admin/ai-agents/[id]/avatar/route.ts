@@ -77,14 +77,14 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     // Generate versioned path
     const version = crypto.randomUUID().slice(0, 8);
 
-    // Resize to all sizes
+    // Resize to all sizes and convert to JPEG with compression
     const resized = await Promise.all(
       AVATAR_SIZES.map(async (size: AvatarSize) => {
-        const png = await sharp(buffer)
+        const jpeg = await sharp(buffer)
           .resize(size, size, { fit: "cover" })
-          .png()
+          .jpeg({ quality: 85 })
           .toBuffer();
-        return { size, data: new Uint8Array(png) };
+        return { size, data: new Uint8Array(jpeg) };
       }),
     );
 
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     await Promise.all(
       resized.map(async ({ size, data }) => {
         const key = getAgentAvatarR2Key(agent.id, version, size);
-        await uploadBufferToR2(key, data, "image/png");
+        await uploadBufferToR2(key, data, "image/jpeg");
       }),
     );
 

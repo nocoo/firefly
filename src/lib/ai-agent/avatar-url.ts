@@ -4,7 +4,7 @@
 // Pure function that builds avatar URLs from known values. Can be imported
 // by both server and client components. Does NOT read environment variables.
 //
-// STORAGE PATH: agents/{agentId}/{version}/avatar-{size}.png
+// STORAGE PATH: agents/{agentId}/{version}/avatar-{size}.jpg
 //
 // We use agent ID (not slug) in paths to ensure stability when slug changes.
 // This design was established when the feature was first implemented — no
@@ -25,7 +25,7 @@ export const AVATAR_SIZES: AvatarSize[] = [32, 64, 128, 256];
  * @param size - The avatar size (32, 64, 128, or 256)
  *
  * @example buildAgentAvatarUrl("https://cdn.example.com", "uploads/firefly", "01HQ...", "a1b2c3d4", 64)
- * // → "https://cdn.example.com/uploads/firefly/agents/01HQ.../a1b2c3d4/avatar-64.png"
+ * // → "https://cdn.example.com/uploads/firefly/agents/01HQ.../a1b2c3d4/avatar-64.jpg"
  */
 export function buildAgentAvatarUrl(
   cdnBaseUrl: string,
@@ -35,5 +35,5 @@ export function buildAgentAvatarUrl(
   size: AvatarSize,
 ): string | null {
   if (!avatarVersion) return null;
-  return `${cdnBaseUrl}/${keyPrefix}agents/${agentId}/${avatarVersion}/avatar-${size}.png`;
+  return `${cdnBaseUrl}/${keyPrefix}agents/${agentId}/${avatarVersion}/avatar-${size}.jpg`;
 }
