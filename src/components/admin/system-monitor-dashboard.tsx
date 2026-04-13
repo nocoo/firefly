@@ -611,7 +611,7 @@ function StatCard({
         </div>
         {trend && (
           <TrendingUp
-            className={`h-4 w-4 ${trend === "up" ? "text-amber-500" : "text-green-500 rotate-180"}`}
+            className={`h-4 w-4 ${trend === "up" ? "text-warning" : "text-success rotate-180"}`}
           />
         )}
       </div>
