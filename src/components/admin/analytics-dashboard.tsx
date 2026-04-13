@@ -187,7 +187,7 @@ export function AnalyticsDashboard({
               >
                 <span>{t(TAB_KEYS[type])}</span>
                 <span
-                  className={`tabular-nums rounded-full px-1.5 py-0.5 text-[10px] leading-none ${
+                  className={`tabular-nums rounded-full px-1.5 py-0.5 text-2xs leading-none ${
                     activeTab === type
                       ? "bg-secondary text-foreground"
                       : "bg-background/50 text-muted-foreground"

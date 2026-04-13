@@ -513,7 +513,7 @@ export function MediaLibrary({
               ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-muted-foreground">
                   <FileTypeIcon mime={item.mime_type} className="h-8 w-8" />
-                  <span className="max-w-full truncate px-1.5 text-[9px]">
+                  <span className="max-w-full truncate px-1.5 text-3xs">
                     {item.filename.split(".").pop()?.toUpperCase()}
                   </span>
                 </div>
@@ -523,10 +523,10 @@ export function MediaLibrary({
               <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
                 {/* Info */}
                 <div className="p-1.5">
-                  <p className="truncate text-[10px] font-medium text-white leading-tight">
+                  <p className="truncate text-2xs font-medium text-white leading-tight">
                     {item.filename}
                   </p>
-                  <div className="mt-0.5 flex items-center gap-1.5 text-[9px] text-white/70">
+                  <div className="mt-0.5 flex items-center gap-1.5 text-3xs text-white/70">
                     {item.size != null && (
                       <span>{formatFileSize(item.size)}</span>
                     )}

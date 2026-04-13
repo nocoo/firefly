@@ -106,7 +106,7 @@ function StatCard({
       <p className="mt-0.5 text-lg font-semibold font-display text-foreground tabular-nums">
         {formatNumber(value)}
       </p>
-      <p className="text-[10px] text-muted-foreground/60">
+      <p className="text-2xs text-muted-foreground/60">
         {t("admin.analytics.vsPrev", { days })}
       </p>
     </div>

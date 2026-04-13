@@ -96,7 +96,7 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
             aria-label="GitHub repository"
             className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
           >
-            <Github className="h-[18px] w-[18px]" aria-hidden="true" strokeWidth={1.5} />
+            <Github className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
           </a>
           <ThemeToggle />
         </div>
@@ -130,13 +130,13 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
                   <img src="/logo-24.png" alt="Firefly" width={24} height={24} className="h-5 w-5" />
                   <span className="text-sm font-semibold text-primary-foreground">Firefly</span>
                 </div>
-                <span className="text-[10px] font-medium uppercase tracking-widest text-primary-foreground/60">
+                <span className="text-2xs font-medium uppercase tracking-widest text-primary-foreground/60">
                   BLOG
                 </span>
               </div>
               {/* Barcode row */}
               <div className="mt-3 flex items-center justify-between">
-                <span className="text-[9px] font-mono text-primary-foreground/40 tracking-wider">
+                <span className="text-3xs font-mono text-primary-foreground/40 tracking-wider">
                   ID {year}-{today.slice(4)}
                 </span>
                 <div className="h-6">
@@ -180,7 +180,7 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
               </button>
 
               {/* Terms */}
-              <p className="mt-3 text-center text-[10px] leading-relaxed text-muted-foreground/60">
+              <p className="mt-3 text-center text-2xs leading-relaxed text-muted-foreground/60">
                 {t("auth.terms")}
               </p>
             </div>
@@ -189,7 +189,7 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
             <div className="mt-auto flex items-center justify-center border-t border-border bg-secondary/50 py-2.5">
               <div className="flex items-center gap-1.5">
                 <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                <span className="text-[10px] text-muted-foreground">{t("auth.secureAuth")}</span>
+                <span className="text-2xs text-muted-foreground">{t("auth.secureAuth")}</span>
               </div>
             </div>
           </div>

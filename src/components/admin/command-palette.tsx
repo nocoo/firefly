@@ -267,7 +267,7 @@ export function CommandPalette() {
             placeholder={t("admin.search.placeholder")}
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
-          <kbd className="hidden sm:inline-flex h-5 items-center rounded border border-border bg-background px-1.5 text-[10px] font-medium text-muted-foreground">
+          <kbd className="hidden sm:inline-flex h-5 items-center rounded border border-border bg-background px-1.5 text-2xs font-medium text-muted-foreground">
             ESC
           </kbd>
         </div>
@@ -304,7 +304,7 @@ export function CommandPalette() {
                     </span>
                     <span
                       className={cn(
-                        "inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium leading-none",
+                        "inline-flex shrink-0 rounded-full px-2 py-0.5 text-2xs font-medium leading-none",
                         STATUS_COLORS[post.status as PostStatus] ?? "",
                       )}
                     >
