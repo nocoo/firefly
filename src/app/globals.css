@@ -86,6 +86,9 @@
   --radius-lg: 12px;
   --radius-md: 8px;
   --radius-sm: 6px;
+
+  /* Breakpoints */
+  --breakpoint-desktop: 1200px;
 }
 
 /*
@@ -399,7 +402,7 @@
   margin: 0 auto;
 }
 
-@media (min-width: 1200px) {
+@media (min-width: theme(--breakpoint-desktop)) {
   .blog-max-width { display: grid; grid-template-columns: 25% 1fr; }
 }
 
@@ -407,7 +410,7 @@
 .blog-sidebar { background: var(--blog-sidebar); padding: 2em 6%; }
 
 .blog-sidebar-desktop { display: none; }
-@media (min-width: 1200px) {
+@media (min-width: theme(--breakpoint-desktop)) {
   .blog-sidebar-desktop {
     display: block;
     position: sticky;
@@ -446,7 +449,7 @@
 }
 
 /* Magazine bleed (desktop) */
-@media (min-width: 1200px) {
+@media (min-width: theme(--breakpoint-desktop)) {
   .blog-main .blog-featured-image {
     margin-left: calc(-1 * var(--blog-main-px, 6%) - 3em);
     margin-right: 0;
@@ -476,7 +479,7 @@
 .blog-mobile-bar { position: fixed; top: 0.75em; left: 0.75em; z-index: 21; }
 .blog-mobile-bar button { color: var(--blog-muted); background: none; border: none; transition: color 0.15s, background-color 0.15s; }
 .blog-mobile-bar button:hover { color: var(--blog-text); background: var(--blog-separator); }
-@media (min-width: 1200px) { .blog-mobile-bar { display: none; } }
+@media (min-width: theme(--breakpoint-desktop)) { .blog-mobile-bar { display: none; } }
 
 /* Mobile backdrop */
 .blog-sidebar-backdrop {
