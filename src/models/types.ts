@@ -190,7 +190,7 @@ export interface CommentTree extends Comment {
 }
 
 // ---------------------------------------------------------------------------
-// AI Agent Authors — static API key authentication
+// AI Agent Authors — identity records for AI writing
 // ---------------------------------------------------------------------------
 
 export interface AiAgent {
@@ -199,11 +199,7 @@ export interface AiAgent {
   slug: string;
   description: string | null;
   category_id: string;
-  api_key_hash: string;
-  api_key_preview: string; // Last 8 chars
   avatar_version: string | null;
-  is_active: number; // 0 | 1
-  last_used_at: number | null;
   created_at: number;
   updated_at: number;
 }
@@ -245,6 +241,9 @@ export interface McpAuthCode {
   created_at: number;
 }
 
+/** MCP token scope: "full" for admin, "author" for AI writing mode */
+export type McpTokenScope = "full" | "author";
+
 /** Persistent access & refresh token (hash-only storage) */
 export interface McpToken {
   id: string; // ULID
@@ -253,7 +252,7 @@ export interface McpToken {
   refresh_token_hash: string | null;
   client_id: string;
   user_email: string;
-  scope: string;
+  scope: McpTokenScope;
   client_name: string | null;
   last_used_at: number | null;
   expires_at: number;
