@@ -715,7 +715,8 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       </form>
 
       {/* Right: Live preview — visible only on lg+ */}
-      <div className="sticky top-0 hidden h-[calc(100vh-56px-12px-40px)] w-1/2 min-w-0 overflow-y-auto rounded-[var(--radius-widget)] border border-border lg:block">
+      {/* height = 100vh - header(--header-height) - shell-padding(12px) - content-padding(40px) */}
+      <div className="sticky top-0 hidden h-[calc(100vh-var(--header-height)-12px-40px)] w-1/2 min-w-0 overflow-y-auto rounded-[var(--radius-widget)] border border-border lg:block">
         <MarkdownPreview
           title={title}
           excerpt={excerpt}
