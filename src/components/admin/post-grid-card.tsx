@@ -6,16 +6,10 @@ import Image from "next/image";
 import { Eye, Pencil } from "lucide-react";
 import type { PostWithCategory, PostStatus } from "@/models/types";
 import { postPath, formatDateDisplay } from "@/lib/seo";
+import { STATUS_COLORS } from "@/lib/status-colors";
 import { DeletePostButton } from "./delete-post-button";
 import { useLocale } from "@/i18n/context";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-
-const STATUS_COLORS: Record<PostStatus, string> = {
-  draft: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
-  published: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  private: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
-  archived: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300",
-};
 
 interface PostGridCardProps {
   post: PostWithCategory;
@@ -89,13 +83,13 @@ export const PostGridCard = memo(function PostGridCard({
       </Link>
 
       {/* Hover overlay — covers only the image area */}
-      <div className="absolute inset-x-0 top-0 h-[200px] flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="absolute inset-x-0 top-0 h-[200px] flex items-center justify-center gap-2 bg-zinc-950/40 opacity-0 transition-opacity group-hover:opacity-100">
         <a
           href={previewUrl}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
-          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-widget)] bg-white/90 text-gray-800 transition-colors hover:bg-white"
+          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-widget)] bg-card/90 text-card-foreground transition-colors hover:bg-card"
           title={t("admin.posts.preview")}
         >
           <Eye className="h-4 w-4" strokeWidth={1.5} />
@@ -103,7 +97,7 @@ export const PostGridCard = memo(function PostGridCard({
         <Link
           href={`/admin/posts/${post.id}/edit`}
           onClick={(e) => e.stopPropagation()}
-          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-widget)] bg-white/90 text-gray-800 transition-colors hover:bg-white"
+          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-widget)] bg-card/90 text-card-foreground transition-colors hover:bg-card"
           title={t("admin.posts.edit")}
         >
           <Pencil className="h-4 w-4" strokeWidth={1.5} />

@@ -40,8 +40,8 @@ function StatusMessage({ type, text }: { type: "success" | "error" | "info"; tex
     <p
       className={cn(
         "text-sm",
-        type === "success" && "text-green-600 dark:text-green-400",
-        type === "error" && "text-red-600 dark:text-red-400",
+        type === "success" && "text-success",
+        type === "error" && "text-destructive",
         type === "info" && "text-muted-foreground",
       )}
     >
