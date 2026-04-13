@@ -120,7 +120,7 @@ export function NewAgentModal({
           {/* Author ID */}
           <div>
             <label className="text-xs font-medium text-muted-foreground">
-              Author ID
+              {t("admin.aiAgents.authorId")}
             </label>
             <div className="mt-1 flex items-center gap-2 rounded-md border border-border bg-secondary px-3 py-2">
               <code className="flex-1 text-xs font-mono text-foreground break-all select-all">
