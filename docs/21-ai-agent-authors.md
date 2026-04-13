@@ -74,7 +74,7 @@ Authorization: Bearer <token>
          │                                │
          │                                ▼
          │                        Scoped MCP Server
-         │                        (category-filtered, status-locked)
+         │                        (ai_agent_id-filtered, status-locked)
          │
          └── firefly_at_xxx ────▶ validateMcpToken() ────▶ { type: "oauth", token }
                                           │
@@ -154,15 +154,15 @@ CREATE INDEX idx_posts_ai_agent ON posts(ai_agent_id);
 |----------|-----------|
 | `category_id` **without** UNIQUE | 允许同一分类多个 agent |
 | `posts.ai_agent_id` | 直接标记文章作者，细粒度权限控制 |
-| `ON DELETE SET NULL` for ai_agent_id | Agent 删除后文章保留，作者变为匿名 |
+| `ON DELETE SET NULL` for ai_agent_id | DB 层允许孤儿文章（作者变匿名），但**应用层会先拦截** |
 | `ON DELETE RESTRICT` for category_id | 防止误删有 agent 绑定的分类 |
 | `api_key_hash` unique index | Fast O(1) lookup during authentication |
 | `api_key_preview` = 后 8 位 | 前缀 `firefly_agent_` 太长，只存末尾便于识别 |
 | `avatar_version` nullable | null = no avatar; versioning enables CDN cache busting |
 
-### Agent 删除策略
+### Agent 删除策略（应用层）
 
-Agent 删除采用**软删除保护**：
+虽然 DB schema 定义了 `ON DELETE SET NULL`（为了数据完整性的 fallback），但**应用层在此之前就拦截删除**：
 
 - 如果 agent 有任何文章引用（`posts.ai_agent_id = agent.id`），禁止删除
 - API 返回 409 Conflict 并告知文章数量
@@ -847,8 +847,7 @@ API Key: ${input.apiKey}
   "admin.aiAgents.create": "Create Agent",
   "admin.aiAgents.edit": "Edit Agent",
   "admin.aiAgents.regenerateKey": "Regenerate API Key",
-  "admin.aiAgents.keyWarning": "Save this API key now — it won't be shown again!",
-  "admin.aiAgents.categoryBoundError": "This category is bound to an AI Agent. Use the Agent to create posts."
+  "admin.aiAgents.keyWarning": "Save this API key now — it won't be shown again!"
 }
 
 // src/i18n/locales/zh.json
@@ -858,8 +857,7 @@ API Key: ${input.apiKey}
   "admin.aiAgents.create": "创建代理",
   "admin.aiAgents.edit": "编辑代理",
   "admin.aiAgents.regenerateKey": "重新生成 API Key",
-  "admin.aiAgents.keyWarning": "请立即保存此 API Key，之后将无法再次查看！",
-  "admin.aiAgents.categoryBoundError": "此分类已绑定 AI 代理，请使用代理创建文章。"
+  "admin.aiAgents.keyWarning": "请立即保存此 API Key，之后将无法再次查看！"
 }
 ```
 
@@ -871,10 +869,10 @@ API Key: ${input.apiKey}
 
 | File | Tests |
 |------|-------|
-| `src/data/entities/ai-agent.test.ts` | CRUD, key generation, hash validation, prefix check, unique category constraint |
+| `src/data/entities/ai-agent.test.ts` | CRUD, key generation, hash validation, prefix check, soft delete protection |
 | `src/lib/ai-agent/avatar.test.ts` | Square validation, size validation, multi-size upload |
 | `src/lib/ai-agent/prompt-generator.test.ts` | Template rendering, placeholder substitution |
-| `src/lib/mcp/entities/agent-post.test.ts` | Category scoping, status forcing, field stripping |
+| `src/lib/mcp/entities/agent-post.test.ts` | ai_agent_id scoping, status forcing, field stripping |
 
 ### L2 — Lint + Type Check
 
@@ -888,11 +886,11 @@ bun run typecheck
 | File | Tests |
 |------|-------|
 | `e2e/api/ai-agents.test.ts` | Create returns key once; regenerate works; avatar validates square; inactive rejected |
-| `e2e/api/mcp.test.ts` (extended) | Agent auth accepted; category scoping; status locked; cross-category denied; extra tools not registered |
+| `e2e/api/mcp.test.ts` (extended) | Agent auth accepted; ai_agent_id scoping; status locked; cross-agent denied; extra tools not registered |
 
 ### L4 — BDD E2E (Optional)
 
-Full flow: create agent → copy prompt → use key in MCP call → verify post created as private in correct category → verify author shown on post page.
+Full flow: create agent → copy prompt → use key in MCP call → verify post created as private with correct ai_agent_id → verify agent author shown on post page.
 
 ---
 
@@ -901,15 +899,15 @@ Full flow: create agent → copy prompt → use key in MCP call → verify post 
 | # | Commit Message | Files | Verify |
 |---|----------------|-------|--------|
 | 1 | feat(db): add ai_agents table migration | `scripts/migrations/014-ai-agents.sql` | `bun run migrate:local` |
-| 2 | feat(data): add ai-agent entity CRUD | `src/data/entities/ai-agent.ts`, `ai-agent.test.ts` | `bun test ai-agent` |
-| 3 | feat(ai-agent): add avatar upload utilities | `src/lib/ai-agent/avatar.ts`, `avatar.test.ts` | `bun test avatar` |
-| 4 | feat(ai-agent): add Chinese prompt generator | `src/lib/ai-agent/prompt-generator.ts`, `prompt-generator.test.ts` | `bun test prompt` |
-| 5 | feat(ai-agent): add author resolution helper | `src/lib/ai-agent/author.ts`, `author.test.ts` | `bun test author` |
-| 6 | feat(api): add ai-agents admin CRUD routes | `src/app/api/admin/ai-agents/**` | `bun test` |
-| 7 | feat(api): block writes to agent-bound categories | `src/app/api/posts/route.ts`, `[slug]/route.ts`, `src/app/api/admin/posts/batch/route.ts` | `bun test` |
-| 8 | feat(mcp): add agent token validation to auth | `src/lib/mcp/auth.ts`, `auth.test.ts` | `bun test auth` |
-| 9 | feat(mcp): add agentPostEntity for scoped access | `src/lib/mcp/entities/agent-post.ts`, `agent-post.test.ts` | `bun test agent-post` |
-| 10 | feat(mcp): block OAuth create/update to agent-bound categories | `src/lib/mcp/entities/post.ts`, `post.test.ts` | `bun test post` |
+| 2 | feat(db): add ai_agent_id to posts | `scripts/migrations/015-post-ai-agent.sql` | `bun run migrate:local` |
+| 3 | feat(data): add ai-agent entity CRUD | `src/data/entities/ai-agent.ts`, `ai-agent.test.ts` | `bun test ai-agent` |
+| 4 | feat(data): add ai_agent_id to post entity | `src/data/entities/post.ts`, `post.test.ts` | `bun test post` |
+| 5 | feat(ai-agent): add avatar upload utilities | `src/lib/ai-agent/avatar.ts`, `avatar.test.ts` | `bun test avatar` |
+| 6 | feat(ai-agent): add Chinese prompt generator | `src/lib/ai-agent/prompt-generator.ts`, `prompt-generator.test.ts` | `bun test prompt` |
+| 7 | feat(ai-agent): add sync author resolution helper | `src/lib/ai-agent/author.ts`, `author.test.ts` | `bun test author` |
+| 8 | feat(api): add ai-agents admin CRUD routes | `src/app/api/admin/ai-agents/**` | `bun test` |
+| 9 | feat(mcp): add agent token validation to auth | `src/lib/mcp/auth.ts`, `auth.test.ts` | `bun test auth` |
+| 10 | feat(mcp): add agentPostEntity for ai_agent_id-scoped access | `src/lib/mcp/entities/agent-post.ts`, `agent-post.test.ts` | `bun test agent-post` |
 | 11 | feat(mcp): support agent context in server.ts | `src/lib/mcp/server.ts`, `server.test.ts`, `src/app/api/mcp/route.ts` | `bun test server` |
 | 12 | feat(seo): add authorOverride to buildPageMeta | `src/lib/seo.ts`, `seo.test.ts` | `bun test seo` |
 | 13 | feat(blog): show agent author on post page + metadata | `src/app/(blog)/[year]/[month]/[slug]/page.tsx` | manual |
@@ -936,13 +934,12 @@ bun run test:e2e:api        # API E2E tests pass
 
 # After commit 18 (full feature):
 # Manual verification:
-# 1. Create agent in /admin/ai-agents (with new category)
+# 1. Create agent in /admin/ai-agents (with category binding)
 # 2. Save API key from modal (only shown once)
-# 3. Try create post in admin for that category → expect 400 error
-# 4. Call /api/mcp with agent key → create_post
-# 5. Verify: post status = private, category = agent's category
-# 6. Verify: agent avatar shown on post detail page
-# 7. Verify: agent name in HTML metadata (og:article:author)
-# 8. Verify: agent name in RSS feed item
-# 9. Verify: agent name in JSON-LD author field
+# 3. Call /api/mcp with agent key → create_post
+# 4. Verify: post status = private, ai_agent_id = agent.id
+# 5. Verify: agent avatar shown on post detail page
+# 6. Verify: agent name in HTML metadata (og:article:author)
+# 7. Verify: agent name in RSS feed item
+# 8. Verify: agent name in JSON-LD author field
 ```
