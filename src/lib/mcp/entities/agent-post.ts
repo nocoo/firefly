@@ -179,11 +179,11 @@ export function createAgentPostEntity(agent: AiAgent): EntityConfig<Post> {
     // NO extraTools — generate_excerpt and unfurl_reference disabled for agents
     extraTools: [],
     descriptions: {
-      list: `List posts in your assigned category (${agent.name}).`,
-      get: "Get a single post by id or slug (returns with tags).",
-      create: "Create a new post (status will be set to private).",
-      update: "Update an existing post (cannot change status).",
-      delete: "Delete a post.",
+      list: "List your own posts (filtered by ai_agent_id).",
+      get: "Get a single post by id or slug (must be your own, returns with tags).",
+      create: "Create a new post (status set to private, category forced to your assigned category).",
+      update: "Update an existing post (must be your own, cannot change status).",
+      delete: "Delete a post (must be your own).",
     },
   };
 }

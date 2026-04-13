@@ -23,7 +23,7 @@ describe("generateAgentPrompt", () => {
   it("includes category name in description and constraints", () => {
     const prompt = generateAgentPrompt(baseInput);
     expect(prompt).toContain("「AI 日记」");
-    expect(prompt).toContain("只能在「AI 日记」分类下操作");
+    expect(prompt).toContain("自动归入「AI 日记」分类");
   });
 
   it("includes MCP URL in JSON connection config", () => {

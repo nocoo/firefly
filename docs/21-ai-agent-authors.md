@@ -282,11 +282,8 @@ import { PostService } from "@/services/post-service";
 
 /**
  * Create a constrained post entity for a specific agent.
- * - list/get/create/update/delete all scoped to agent's category
- * - create forces status = "private"
- * - update ignores status field
- * - list/get/create/update/delete all scoped to agent's own posts (ai_agent_id match)
- * - create forces status = "private" and sets ai_agent_id = agent.id
+ * - list/get/update/delete all scoped to agent's own posts (ai_agent_id match)
+ * - create forces status = "private", categoryId = agent's category, aiAgentId = agent.id
  * - update ignores status field
  * - Reuses projection and afterGet from postEntity for consistent behavior
  * - NO extra tools (generate_excerpt, unfurl_reference disabled)
@@ -434,11 +431,11 @@ export function createAgentPostEntity(agent: AiAgent): EntityConfig<Post> {
     // NO extraTools — generate_excerpt and unfurl_reference disabled for agents
     extraTools: [],
     descriptions: {
-      list: `List posts in your assigned category (${agent.name}).`,
-      get: "Get a single post by id or slug (returns with tags).",
-      create: "Create a new post (status will be set to private).",
-      update: "Update an existing post (cannot change status).",
-      delete: "Delete a post.",
+      list: `List your own posts (filtered by ai_agent_id).`,
+      get: "Get a single post by id or slug (returns with tags, must be your own).",
+      create: "Create a new post (status will be set to private, category forced to your assigned category).",
+      update: "Update an existing post (cannot change status, must be your own).",
+      delete: "Delete a post (must be your own).",
     },
   };
 }
@@ -626,17 +623,17 @@ export function buildPageMeta(
 
 ### 文章详情页 generateMetadata 修改
 
-现有代码通过 `getPostBySlugWithAgent` 获取带 agent 信息的文章。
+现有代码 `getPostBySlug` 已通过 VIEW_QUERY 返回带 agent 信息的 `PostWithAgent` 类型。
 修改只需调用同步的 `getPostAuthor`：
 
 ```ts
 // src/app/(blog)/[year]/[month]/[slug]/page.tsx
 import { getPostAuthor } from "@/lib/ai-agent/author";
 
-// 使用新的带 agent JOIN 的查询
+// 现有查询已包含 agent JOIN
 const getCachedPost = cache((slug: string) => {
   const db = getDb();
-  return getPostBySlugWithAgent(db, slug, "published");
+  return getPostBySlug(db, slug, "published");  // 返回 PostWithAgent
 });
 
 export async function generateMetadata({
@@ -765,17 +762,18 @@ API Key: ${input.apiKey}
    - 正文使用 content 字段，支持完整 Markdown
 
 3. **限制说明**
-   - 你只能在「${input.categoryName}」分类下创建和编辑文章
+   - 你只能操作自己创建的文章（按 ai_agent_id 隔离）
+   - 创建文章时会自动归入「${input.categoryName}」分类
    - 文章创建后状态为「私密」，需要管理员审核后发布
    - 无法修改文章的发布状态
 
 ## 可用工具
 
-- \`list_posts\` — 列出你负责分类下的文章
-- \`get_post\` — 获取文章详情
-- \`create_post\` — 创建新文章
-- \`update_post\` — 更新已有文章
-- \`delete_post\` — 删除文章
+- \`list_posts\` — 列出你自己创建的文章
+- \`get_post\` — 获取文章详情（必须是你自己的文章）
+- \`create_post\` — 创建新文章（自动归入你的分类）
+- \`update_post\` — 更新已有文章（必须是你自己的文章）
+- \`delete_post\` — 删除文章（必须是你自己的文章）
 
 ## 示例：创建文章
 
@@ -804,7 +802,7 @@ API Key: ${input.apiKey}
 | Risk | Mitigation |
 |------|------------|
 | **Key leakage** | Hash-only storage; plaintext 仅在创建/重新生成时展示一次，UI 不可回显 |
-| **Cross-category access** | `agentPostEntity` 的 dataLayer 在每个操作中校验 `category_id` |
+| **Cross-agent access** | `agentPostEntity` 的 dataLayer 在每个操作中校验 `ai_agent_id`，不匹配则返回 404 |
 | **Status manipulation** | `create` 强制 `status: "private"`；`update` 的 schema 不含 status 字段 |
 | **Category deletion** | `ON DELETE RESTRICT` 阻止删除有 agent 的分类 |
 | **Token confusion** | 不同前缀：`firefly_agent_` vs `firefly_at_` |
