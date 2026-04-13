@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.5.7 (2026-04-13)
+
+- fix(ai-agent): clarify author_id requirement scope in prompt
+- fix(mcp): restrict author tag access to list/get/create only
+- feat(mcp): add tag CRUD tools to author scope
+
+
 ## v2.5.6 (2026-04-13)
 
 - fix(post): auto-set published_at when status becomes published
