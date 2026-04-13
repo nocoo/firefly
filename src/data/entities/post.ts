@@ -473,19 +473,25 @@ export async function updatePost(
     params.push(input.commentEnabled);
   }
 
-  if (input.publishedAt !== undefined) {
-    setClauses.push("published_at = ?");
-    params.push(input.publishedAt);
-  }
+  // Determine the final published_at value:
+  // - If input.publishedAt is provided (including null), use that
+  // - Otherwise, keep existing value
+  const finalPublishedAt =
+    input.publishedAt !== undefined ? input.publishedAt : existing.published_at;
 
-  // Auto-set published_at when final status is published and no date exists.
-  // Covers both: (1) transitioning to published, (2) already published but missing date.
+  // Auto-set published_at when final status is published but date would be null.
+  // This ensures published posts always have a published_at timestamp.
   const finalStatus = input.status ?? existing.status;
-  const willHavePublishedAt =
-    input.publishedAt !== undefined || existing.published_at != null;
-  if (finalStatus === "published" && !willHavePublishedAt) {
+  const needsAutoPublishedAt = finalStatus === "published" && finalPublishedAt == null;
+
+  if (needsAutoPublishedAt) {
+    // Override any explicit null with current time
     setClauses.push("published_at = ?");
     params.push(nowEpoch());
+  } else if (input.publishedAt !== undefined) {
+    // User explicitly set a value (could be a timestamp or null for non-published)
+    setClauses.push("published_at = ?");
+    params.push(input.publishedAt);
   }
 
   if (setClauses.length === 0) return getPostById(db, id);
