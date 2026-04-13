@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       refresh_token_hash: refreshHash,
       client_id: client.client_id,
       user_email: admin.email,
-      scope: "mcp:full",
+      scope: "full",
       client_name: body.client_name,
     });
 

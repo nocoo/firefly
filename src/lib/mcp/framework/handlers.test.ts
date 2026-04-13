@@ -440,7 +440,7 @@ describe("handleDelete", () => {
     const result = await handleDelete(ctx, { id: "e-1" });
     const data = parseToolResult(result) as { deleted: boolean };
     expect(data.deleted).toBe(true);
-    expect(config.dataLayer.delete).toHaveBeenCalledWith(ctx.db, "e-1");
+    expect(config.dataLayer.delete).toHaveBeenCalledWith(ctx.db, "e-1", expect.anything());
   });
 
   it("deletes entity by slug", async () => {

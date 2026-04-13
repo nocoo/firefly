@@ -12,6 +12,7 @@ import {
   ACCESS_TOKEN_TTL,
 } from "@/data/mcp-tokens";
 import { getMcpClientByClientId } from "@/data/mcp-clients";
+import type { McpTokenScope } from "@/models/types";
 
 export async function POST(request: Request) {
   try {
@@ -94,7 +95,9 @@ async function handleAuthorizationCode(body: FormData) {
   await revokeTokensByClientId(db, clientId, userEmail);
 
   // Step 7: Generate and store new token pair
-  return issueTokenPair(db, clientId, userEmail, authCode.scope, authCode.client_id);
+  // Scope from auth code is validated during authorization, safe to cast
+  const tokenScope = (authCode.scope === "author" ? "author" : "full") as McpTokenScope;
+  return issueTokenPair(db, clientId, userEmail, tokenScope, authCode.client_id);
 }
 
 // ---------------------------------------------------------------------------
@@ -138,7 +141,7 @@ async function issueTokenPair(
   db: ReturnType<typeof getDb>,
   clientId: string,
   userEmail: string,
-  scope: string,
+  scope: McpTokenScope,
   clientName: string | null | undefined,
 ) {
   const accessToken = generateAccessToken();

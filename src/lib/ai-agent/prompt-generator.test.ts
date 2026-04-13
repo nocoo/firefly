@@ -9,8 +9,8 @@ import { generateAgentPrompt } from "./prompt-generator";
 describe("generateAgentPrompt", () => {
   const baseInput = {
     agentName: "Claude Daily",
+    agentId: "01HQ12345ABCDE",
     categoryName: "AI 日记",
-    apiKey: "firefly_agent_abc123",
     mcpUrl: "https://example.com/api/mcp",
   };
 
@@ -31,9 +31,11 @@ describe("generateAgentPrompt", () => {
     expect(prompt).toContain('"url": "https://example.com/api/mcp"');
   });
 
-  it("includes API key in Authorization header", () => {
+  it("includes author_id in description and example", () => {
     const prompt = generateAgentPrompt(baseInput);
-    expect(prompt).toContain('"Authorization": "Bearer firefly_agent_abc123"');
+    expect(prompt).toContain("`01HQ12345ABCDE`");
+    expect(prompt).toContain('"author_id": "01HQ12345ABCDE"');
+    expect(prompt).toContain("author_id");
   });
 
   it("lists all 5 available tools", () => {
@@ -43,13 +45,6 @@ describe("generateAgentPrompt", () => {
     expect(prompt).toContain("`create_post`");
     expect(prompt).toContain("`update_post`");
     expect(prompt).toContain("`delete_post`");
-  });
-
-  it("includes security reminder about API key", () => {
-    const prompt = generateAgentPrompt(baseInput);
-    expect(prompt).toContain("API Key 安全");
-    expect(prompt).toContain("妥善保管");
-    expect(prompt).toContain("重新生成");
   });
 
   it("includes warning about sensitive credentials in content", () => {
@@ -70,5 +65,11 @@ describe("generateAgentPrompt", () => {
     expect(prompt).toContain('"mcpServers"');
     expect(prompt).toContain('"firefly"');
     expect(prompt).toContain('"headers"');
+  });
+
+  it("mentions OAuth token placeholder instead of hardcoded key", () => {
+    const prompt = generateAgentPrompt(baseInput);
+    expect(prompt).toContain("<YOUR_OAUTH_TOKEN>");
+    expect(prompt).toContain("OAuth 授权");
   });
 });

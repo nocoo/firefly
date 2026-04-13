@@ -1,14 +1,15 @@
 // ---------------------------------------------------------------------------
-// Agent Post Entity — constrained post entity for AI agents
+// Author Post Entity — constrained post entity for AI authors (author scope)
 //
-// Each agent can only access posts they created (via ai_agent_id).
-// - create forces status = "private", categoryId = agent's category, aiAgentId = agent.id
+// Requires author_id in all operations to identify the AI author.
+// - create forces status = "private", categoryId = author's category, aiAgentId = author_id
 // - update ignores status field
 // - No extra tools (generate_excerpt, unfurl_reference disabled)
 // ---------------------------------------------------------------------------
 
 import { z } from "zod";
-import type { Post, AiAgent } from "@/models/types";
+import type { Post } from "@/models/types";
+import type { Db } from "@/lib/db";
 import type { EntityConfig } from "../framework/types";
 import {
   listPosts,
@@ -16,34 +17,45 @@ import {
   getPostBySlug,
   getPostTags,
 } from "@/data/entities/post";
+import { getAiAgentById } from "@/data/entities/ai-agent";
 import { PostService } from "@/services/post-service";
 
 /**
- * Create a constrained post entity for a specific agent.
+ * Get and validate author from the database.
+ * Throws if author_id is missing or author not found.
+ */
+async function requireAuthor(db: Db, authorId: unknown) {
+  if (!authorId || typeof authorId !== "string") {
+    throw new Error("author_id is required for all operations");
+  }
+  const author = await getAiAgentById(db, authorId);
+  if (!author) {
+    throw new Error(`Author not found: ${authorId}`);
+  }
+  return author;
+}
+
+/**
+ * Create a constrained post entity for author scope.
  *
- * - list/get/create/update/delete all scoped to agent's ai_agent_id
- * - create forces status = "private", injects aiAgentId
+ * - All operations require author_id in arguments
+ * - list/get/create/update/delete all scoped to the provided author_id
+ * - create forces status = "private", injects aiAgentId and categoryId from author
  * - update ignores status field
- * - Reuses projection and afterGet from postEntity for consistent behavior
  * - NO extra tools (generate_excerpt, unfurl_reference disabled)
  */
-export function createAgentPostEntity(agent: AiAgent): EntityConfig<Post> {
-  const categoryId = agent.category_id;
-  const agentId = agent.id;
-
+export function createAuthorPostEntity(): EntityConfig<Post> {
   return {
     name: "post",
     display: "Post",
     dataLayer: {
-      // list: force ai_agent_id filter (agent can only see own posts)
+      // list: require author_id, filter by ai_agent_id
       list: async (db, opts) => {
         const o = (opts ?? {}) as Record<string, unknown>;
-        // Reject if client tries to specify different ai_agent_id
-        if (o.ai_agent_id && o.ai_agent_id !== agentId) {
-          throw new Error("Access denied: You can only access your own posts");
-        }
+        const author = await requireAuthor(db, o.author_id);
+
         const result = await listPosts(db, {
-          aiAgentId: agentId, // forced
+          aiAgentId: author.id,
           status: o.status as "draft" | "published" | "private" | "archived" | undefined,
           query: o.query as string | undefined,
           page: (o.page as number) ?? 1,
@@ -52,74 +64,104 @@ export function createAgentPostEntity(agent: AiAgent): EntityConfig<Post> {
         return { items: result.posts, total: result.total };
       },
 
-      // getById: verify ai_agent_id ownership
-      getById: async (db, id) => {
+      // getById: require author_id, verify ownership
+      getById: async (db, id, args) => {
+        const o = (args ?? {}) as Record<string, unknown>;
+        const author = await requireAuthor(db, o.author_id);
+
         const post = await getPostById(db, id);
-        if (post && post.ai_agent_id !== agentId) {
+        if (post && post.ai_agent_id !== author.id) {
           return null; // treat as not found
         }
         return post;
       },
 
-      // getBySlug: verify ai_agent_id ownership
-      getBySlug: async (db, slug) => {
+      // getBySlug: require author_id, verify ownership
+      getBySlug: async (db, slug, args) => {
+        const o = (args ?? {}) as Record<string, unknown>;
+        const author = await requireAuthor(db, o.author_id);
+
         const post = await getPostBySlug(db, slug);
-        if (post && post.ai_agent_id !== agentId) {
+        if (post && post.ai_agent_id !== author.id) {
           return null;
         }
         return post;
       },
 
-      // create: force category + status + aiAgentId
+      // create: require author_id, force category + status + aiAgentId
       create: async (db, input: Record<string, unknown>) => {
+        const author = await requireAuthor(db, input.author_id);
+
         return PostService.create(db, {
           ...input,
-          categoryId,           // forced to agent's category
-          status: "private",    // forced
-          aiAgentId: agentId,   // mark as created by this agent
+          categoryId: author.category_id,   // forced to author's category
+          status: "private",                 // forced
+          aiAgentId: author.id,              // mark as created by this author
         } as Parameters<typeof PostService.create>[1]);
       },
 
-      // update: strip status, block ai_agent_id change
+      // update: require author_id, strip status, block ai_agent_id change
       update: async (db, id, input: Record<string, unknown>) => {
+        const author = await requireAuthor(db, input.author_id);
+
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { status, categoryId: inputCategoryId, aiAgentId: inputAgentId, ...rest } = input;
-        if (inputAgentId && inputAgentId !== agentId) {
-          throw new Error("Access denied: Cannot reassign post to different agent");
+        const { status, categoryId: inputCategoryId, aiAgentId: inputAgentId, author_id, ...rest } = input;
+
+        if (inputAgentId && inputAgentId !== author.id) {
+          throw new Error("Access denied: Cannot reassign post to different author");
         }
-        // status is silently ignored, categoryId change blocked
-        if (inputCategoryId && inputCategoryId !== categoryId) {
+        if (inputCategoryId && inputCategoryId !== author.category_id) {
           throw new Error("Access denied: Cannot move post to different category");
         }
+
+        // Verify ownership before update
+        const existing = await getPostById(db, id);
+        if (!existing || existing.ai_agent_id !== author.id) {
+          throw new Error("Post not found or access denied");
+        }
+
         return PostService.update(db, id, rest as Parameters<typeof PostService.update>[2]);
       },
 
-      // delete: ownership already verified by getById in framework
-      delete: (db, id) => PostService.delete(db, id),
+      // delete: require author_id, verify ownership
+      delete: async (db, id, args) => {
+        const o = (args ?? {}) as Record<string, unknown>;
+        const author = await requireAuthor(db, o.author_id);
+
+        // Verify ownership before delete
+        const existing = await getPostById(db, id);
+        if (!existing || existing.ai_agent_id !== author.id) {
+          throw new Error("Post not found or access denied");
+        }
+
+        return PostService.delete(db, id);
+      },
     },
     schemas: {
       list: {
+        author_id: z.string().describe("Your author ID (required)"),
         status: z.enum(["draft", "published", "private", "archived"]).optional(),
         query: z.string().optional(),
         page: z.number().optional(),
         page_size: z.number().min(1).max(100).optional(),
-        // category_id intentionally omitted — agent can't change it
       },
       create: {
+        author_id: z.string().describe("Your author ID (required)"),
         title: z.string(),
         slug: z.string(),
         content: z.string(),
         // status intentionally omitted — forced to private
         excerpt: z.string().optional(),
-        // category_id intentionally omitted — forced to agent's category
+        // category_id intentionally omitted — forced to author's category
         tag_ids: z.array(z.string()).optional(),
         featured_image: z.string().optional(),
       },
       update: {
+        author_id: z.string().describe("Your author ID (required)"),
         title: z.string().optional(),
         new_slug: z.string().optional(),
         content: z.string().optional(),
-        // status intentionally omitted — agent cannot change it
+        // status intentionally omitted — author cannot change it
         excerpt: z.string().nullable().optional(),
         // category_id intentionally omitted
         tag_ids: z.array(z.string()).optional(),
@@ -127,7 +169,7 @@ export function createAgentPostEntity(agent: AiAgent): EntityConfig<Post> {
       },
     },
     // ─────────────────────────────────────────────────────────────
-    // Reuse hooks from postEntity for consistent behavior
+    // Hooks for consistent behavior
     // ─────────────────────────────────────────────────────────────
     hooks: {
       // afterGet: enrich with tags (same as postEntity)
@@ -156,7 +198,7 @@ export function createAgentPostEntity(agent: AiAgent): EntityConfig<Post> {
       },
     },
     // ─────────────────────────────────────────────────────────────
-    // Reuse projection from postEntity for consistent list response
+    // Projection for consistent list response
     // ─────────────────────────────────────────────────────────────
     projection: {
       omit: [
@@ -176,14 +218,14 @@ export function createAgentPostEntity(agent: AiAgent): EntityConfig<Post> {
         reference_detail: ["reference_description", "reference_image"],
       },
     },
-    // NO extraTools — generate_excerpt and unfurl_reference disabled for agents
+    // NO extraTools — generate_excerpt and unfurl_reference disabled for authors
     extraTools: [],
     descriptions: {
-      list: "List your own posts (filtered by ai_agent_id).",
-      get: "Get a single post by id or slug (must be your own, returns with tags).",
-      create: "Create a new post (status set to private, category forced to your assigned category).",
-      update: "Update an existing post (must be your own, cannot change status).",
-      delete: "Delete a post (must be your own).",
+      list: "List your own posts. Requires author_id.",
+      get: "Get a single post by id or slug. Must be your own post. Requires author_id.",
+      create: "Create a new post. Status is set to private, category is your assigned category. Requires author_id.",
+      update: "Update an existing post. Must be your own. Cannot change status. Requires author_id.",
+      delete: "Delete a post. Must be your own. Requires author_id.",
     },
   };
 }

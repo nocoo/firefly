@@ -4,7 +4,7 @@
 
 import type { Db } from "@/lib/db";
 import { nowEpoch } from "@/data/core/timestamps";
-import type { McpToken } from "@/models/types";
+import type { McpToken, McpTokenScope } from "@/models/types";
 import { ulid } from "ulid";
 
 // ---------------------------------------------------------------------------
@@ -27,7 +27,7 @@ export interface CreateMcpTokenInput {
   refresh_token_hash: string;
   client_id: string;
   user_email: string;
-  scope?: string;
+  scope?: McpTokenScope;
   client_name?: string;
 }
 
@@ -88,7 +88,7 @@ export async function createMcpToken(
     input.refresh_token_hash,
     input.client_id,
     input.user_email,
-    input.scope ?? "mcp:full",
+    input.scope ?? "full",
     input.client_name ?? null,
     now + ACCESS_TOKEN_TTL,
     now + REFRESH_TOKEN_TTL,

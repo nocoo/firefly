@@ -183,7 +183,7 @@ describe("tag entity handlers", () => {
       vi.mocked(deleteTag).mockResolvedValue(true);
 
       const result = await handlers.handleDelete(ctx, { slug: "javascript" });
-      expect(deleteTag).toHaveBeenCalledWith(ctx.db, "tag-1");
+      expect(deleteTag).toHaveBeenCalledWith(ctx.db, "tag-1", expect.anything());
       const data = parseToolResult(result) as { deleted: boolean };
       expect(data.deleted).toBe(true);
     });
@@ -193,7 +193,7 @@ describe("tag entity handlers", () => {
       vi.mocked(deleteTag).mockResolvedValue(true);
 
       const result = await handlers.handleDelete(ctx, { id: "tag-1" });
-      expect(deleteTag).toHaveBeenCalledWith(ctx.db, "tag-1");
+      expect(deleteTag).toHaveBeenCalledWith(ctx.db, "tag-1", expect.anything());
       const data = parseToolResult(result) as { deleted: boolean };
       expect(data.deleted).toBe(true);
     });

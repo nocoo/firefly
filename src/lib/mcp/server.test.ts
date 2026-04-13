@@ -9,7 +9,6 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db } from "@/lib/db";
-import type { AiAgent } from "@/models/types";
 import { createMockDb } from "@/data/core/test-utils";
 import { createMcpServer, type McpServerContext } from "./server";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
@@ -502,41 +501,25 @@ describe("createMcpServer", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Agent Context Tests
+// Author Context Tests
 // ---------------------------------------------------------------------------
 
-describe("createMcpServer with agent context", () => {
+describe("createMcpServer with author context", () => {
   let db: Db;
-  const now = Math.floor(Date.now() / 1000);
 
-  const sampleAgent: AiAgent = {
-    id: "agent-1",
-    name: "Claude Daily",
-    slug: "claude-daily",
-    description: "Daily journal",
-    category_id: "c-1",
-    api_key_hash: "hashed_key",
-    api_key_preview: "firefly_agent",
-    avatar_version: null,
-    is_active: 1,
-    last_used_at: null,
-    created_at: now,
-    updated_at: now,
-  };
-
-  const agentContext: McpServerContext = { type: "agent", agent: sampleAgent };
+  const authorContext: McpServerContext = { type: "author", userEmail: "author@example.com" };
 
   beforeEach(() => {
     db = createMockDb();
   });
 
-  it("creates a server instance with agent context", () => {
-    const server = createMcpServer(db, agentContext);
+  it("creates a server instance with author context", () => {
+    const server = createMcpServer(db, authorContext);
     expect(server).toBeDefined();
   });
 
-  it("registers only 5 post tools for agent context (no tag/category)", async () => {
-    const { server, transport, listTools } = await createSession(db, agentContext);
+  it("registers only 5 post tools for author context (no tag/category)", async () => {
+    const { server, transport, listTools } = await createSession(db, authorContext);
 
     const body = await listTools();
     expect(body.result.tools).toHaveLength(5);
@@ -557,7 +540,7 @@ describe("createMcpServer with agent context", () => {
   });
 
   it("agent post tools do not include extra tools (generate_excerpt, unfurl_reference)", async () => {
-    const { server, transport, listTools } = await createSession(db, agentContext);
+    const { server, transport, listTools } = await createSession(db, authorContext);
 
     const body = await listTools();
     const names = body.result.tools.map((t: { name: string }) => t.name);
@@ -570,7 +553,7 @@ describe("createMcpServer with agent context", () => {
   });
 
   it("agent create_post schema does not have status or category_id", async () => {
-    const { server, transport, listTools } = await createSession(db, agentContext);
+    const { server, transport, listTools } = await createSession(db, authorContext);
 
     const body = await listTools();
     const tools = body.result.tools as {
@@ -589,7 +572,7 @@ describe("createMcpServer with agent context", () => {
   });
 
   it("agent update_post schema does not have status or category_id", async () => {
-    const { server, transport, listTools } = await createSession(db, agentContext);
+    const { server, transport, listTools } = await createSession(db, authorContext);
 
     const body = await listTools();
     const tools = body.result.tools as {
@@ -607,9 +590,9 @@ describe("createMcpServer with agent context", () => {
     await server.close();
   });
 
-  it("oauth context registers all 17 tools", async () => {
-    const oauthContext: McpServerContext = { type: "oauth" };
-    const { server, transport, listTools } = await createSession(db, oauthContext);
+  it("full context registers all 17 tools", async () => {
+    const fullContext: McpServerContext = { type: "full", userEmail: "admin@example.com" };
+    const { server, transport, listTools } = await createSession(db, fullContext);
 
     const body = await listTools();
     expect(body.result.tools).toHaveLength(17);

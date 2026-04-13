@@ -2,15 +2,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db } from "@/lib/db";
 import { createMockDb } from "@/data/core/test-utils";
 import {
-  generateAgentApiKey,
   createAiAgent,
   getAiAgentById,
   getAiAgentBySlug,
-  getAiAgentByApiKey,
   listAiAgents,
   updateAiAgent,
   updateAvatarVersion,
-  regenerateAgentApiKey,
   deleteAiAgent,
   getAiAgentPostCount,
 } from "./ai-agent";
@@ -28,11 +25,7 @@ const sampleAgent: AiAgent = {
   slug: "claude-daily",
   description: "Daily journal by Claude",
   category_id: "cat-1",
-  api_key_hash: "abc123hash",
-  api_key_preview: "a1b2c3d4",
   avatar_version: null,
-  is_active: 1,
-  last_used_at: null,
   created_at: now,
   updated_at: now,
 };
@@ -45,29 +38,6 @@ const sampleAgentWithCategory: AiAgentWithCategory = {
 };
 
 // ---------------------------------------------------------------------------
-// generateAgentApiKey
-// ---------------------------------------------------------------------------
-
-describe("generateAgentApiKey", () => {
-  it("generates key with correct prefix", async () => {
-    const { plaintext, hash, preview } = await generateAgentApiKey();
-
-    expect(plaintext).toMatch(/^firefly_agent_[0-9a-f]{48}$/);
-    expect(hash).toMatch(/^[0-9a-f]{64}$/); // SHA-256
-    expect(preview).toHaveLength(8);
-    expect(plaintext.endsWith(preview)).toBe(true);
-  });
-
-  it("generates unique keys", async () => {
-    const key1 = await generateAgentApiKey();
-    const key2 = await generateAgentApiKey();
-
-    expect(key1.plaintext).not.toBe(key2.plaintext);
-    expect(key1.hash).not.toBe(key2.hash);
-  });
-});
-
-// ---------------------------------------------------------------------------
 // createAiAgent
 // ---------------------------------------------------------------------------
 
@@ -77,7 +47,7 @@ describe("createAiAgent", () => {
     db = createMockDb();
   });
 
-  it("creates agent and returns plaintext key", async () => {
+  it("creates agent and returns it", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleAgent);
 
@@ -91,31 +61,26 @@ describe("createAiAgent", () => {
     expect(db.execute).toHaveBeenCalledOnce();
     const [sql] = vi.mocked(db.execute).mock.calls[0];
     expect(sql).toContain("INSERT INTO ai_agents");
-    expect(result.agent.name).toBe("Claude Daily");
-    expect(result.plaintextKey).toMatch(/^firefly_agent_[0-9a-f]{48}$/);
+    expect(result.name).toBe("Claude Daily");
   });
 
-  it("stores hash not plaintext", async () => {
+  it("stores correct fields without auth columns", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleAgent);
 
-    const result = await createAiAgent(db, {
+    await createAiAgent(db, {
       name: "Test",
       slug: "test",
       categoryId: "cat-1",
     });
 
-    const params = vi.mocked(db.execute).mock.calls[0][1]!;
-    // params: [id, name, slug, description, category_id, api_key_hash, api_key_preview, now, now]
-    const storedHash = params[5] as string;
-    const storedPreview = params[6] as string;
-
-    // Hash should be SHA-256 (64 hex chars)
-    expect(storedHash).toMatch(/^[0-9a-f]{64}$/);
-    // Plaintext key should NOT be stored
-    expect(storedHash).not.toContain("firefly_agent_");
-    // Preview should be last 8 chars of plaintext
-    expect(result.plaintextKey.endsWith(storedPreview)).toBe(true);
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    // Should NOT contain api_key fields
+    expect(sql).not.toContain("api_key");
+    expect(sql).not.toContain("is_active");
+    expect(sql).not.toContain("last_used_at");
+    // params: [id, name, slug, description, category_id, now, now]
+    expect(params).toHaveLength(7);
   });
 });
 
@@ -167,49 +132,6 @@ describe("getAiAgentBySlug", () => {
 });
 
 // ---------------------------------------------------------------------------
-// getAiAgentByApiKey
-// ---------------------------------------------------------------------------
-
-describe("getAiAgentByApiKey", () => {
-  let db: Db;
-  beforeEach(() => {
-    db = createMockDb();
-  });
-
-  it("returns null for invalid prefix", async () => {
-    const result = await getAiAgentByApiKey(db, "invalid_token");
-    expect(result).toBeNull();
-    expect(db.firstOrNull).not.toHaveBeenCalled();
-  });
-
-  it("returns null for non-existent key", async () => {
-    vi.mocked(db.firstOrNull).mockResolvedValue(null);
-    const result = await getAiAgentByApiKey(db, "firefly_agent_abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234");
-    expect(result).toBeNull();
-  });
-
-  it("returns agent and updates last_used_at on valid key", async () => {
-    vi.mocked(db.firstOrNull).mockResolvedValue(sampleAgent);
-    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });
-
-    const result = await getAiAgentByApiKey(db, "firefly_agent_abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234");
-
-    expect(result?.name).toBe("Claude Daily");
-    expect(db.execute).toHaveBeenCalledOnce();
-    const [sql] = vi.mocked(db.execute).mock.calls[0];
-    expect(sql).toContain("last_used_at");
-  });
-
-  it("checks is_active = 1 in query", async () => {
-    vi.mocked(db.firstOrNull).mockResolvedValue(null);
-    await getAiAgentByApiKey(db, "firefly_agent_abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234");
-
-    const [sql] = vi.mocked(db.firstOrNull).mock.calls[0];
-    expect(sql).toContain("is_active = 1");
-  });
-});
-
-// ---------------------------------------------------------------------------
 // listAiAgents
 // ---------------------------------------------------------------------------
 
@@ -234,22 +156,13 @@ describe("listAiAgents", () => {
     expect(result[0].category_name).toBe("AI Journal");
   });
 
-  it("excludes inactive by default", async () => {
+  it("does not filter by is_active (no longer exists)", async () => {
     vi.mocked(db.query).mockResolvedValue({ results: [], meta: { changes: 0, duration: 1 } });
 
     await listAiAgents(db);
 
     const [sql] = vi.mocked(db.query).mock.calls[0];
-    expect(sql).toContain("is_active = 1");
-  });
-
-  it("includes inactive when requested", async () => {
-    vi.mocked(db.query).mockResolvedValue({ results: [], meta: { changes: 0, duration: 1 } });
-
-    await listAiAgents(db, { includeInactive: true });
-
-    const [sql] = vi.mocked(db.query).mock.calls[0];
-    expect(sql).not.toContain("is_active = 1");
+    expect(sql).not.toContain("is_active");
   });
 });
 
@@ -273,16 +186,6 @@ describe("updateAiAgent", () => {
     expect(sql).toContain("UPDATE ai_agents SET");
     expect(params).toContain("Updated");
     expect(result?.name).toBe("Updated");
-  });
-
-  it("converts isActive boolean to integer", async () => {
-    vi.mocked(db.firstOrNull).mockResolvedValue(sampleAgent);
-    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
-
-    await updateAiAgent(db, "agent-1", { isActive: false });
-
-    const params = vi.mocked(db.execute).mock.calls[0][1]!;
-    expect(params).toContain(0);
   });
 
   it("returns existing when no fields provided", async () => {
@@ -331,37 +234,6 @@ describe("updateAvatarVersion", () => {
 
     const params = vi.mocked(db.execute).mock.calls[0][1]!;
     expect(params[0]).toBeNull();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// regenerateAgentApiKey
-// ---------------------------------------------------------------------------
-
-describe("regenerateAgentApiKey", () => {
-  let db: Db;
-  beforeEach(() => {
-    db = createMockDb();
-  });
-
-  it("generates new key and updates hash", async () => {
-    vi.mocked(db.firstOrNull).mockResolvedValue(sampleAgent);
-    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
-
-    const result = await regenerateAgentApiKey(db, "agent-1");
-
-    expect(result).not.toBeNull();
-    expect(result!.plaintextKey).toMatch(/^firefly_agent_[0-9a-f]{48}$/);
-    const [sql] = vi.mocked(db.execute).mock.calls[0];
-    expect(sql).toContain("api_key_hash = ?");
-    expect(sql).toContain("api_key_preview = ?");
-  });
-
-  it("returns null when agent not found", async () => {
-    vi.mocked(db.firstOrNull).mockResolvedValue(null);
-    const result = await regenerateAgentApiKey(db, "nope");
-    expect(result).toBeNull();
-    expect(db.execute).not.toHaveBeenCalled();
   });
 });
 

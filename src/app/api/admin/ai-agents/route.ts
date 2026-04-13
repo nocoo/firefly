@@ -23,7 +23,7 @@ export async function GET() {
 
   try {
     const db = getDb();
-    const agents = await listAiAgents(db, { includeInactive: true });
+    const agents = await listAiAgents(db);
     return jsonResponse({ agents });
   } catch (error) {
     return errorResponse(
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create agent (using normalized values)
-    const { agent, plaintextKey } = await createAiAgent(db, {
+    const agent = await createAiAgent(db, {
       name: normalizedName,
       slug: normalizedSlug,
       description: normalizedDescription,
@@ -107,8 +107,8 @@ export async function POST(request: NextRequest) {
     const mcpUrl = `${SITE_URL}/api/mcp`;
     const prompt = generateAgentPrompt({
       agentName: agent.name,
+      agentId: agent.id,
       categoryName: category.name,
-      apiKey: plaintextKey,
       mcpUrl,
     });
 
@@ -119,7 +119,6 @@ export async function POST(request: NextRequest) {
           category_name: category.name,
           category_slug: category.slug,
         },
-        apiKey: plaintextKey, // Only returned on create
         prompt,
       },
       201,

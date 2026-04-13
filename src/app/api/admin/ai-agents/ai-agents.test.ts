@@ -62,11 +62,7 @@ const mockAgent = {
   slug: "test-agent",
   description: null,
   category_id: "cat-1",
-  api_key_hash: "hash",
-  api_key_preview: "preview",
   avatar_version: null,
-  is_active: 1,
-  last_used_at: null,
   created_at: now,
   updated_at: now,
 };
@@ -160,10 +156,7 @@ describe("POST /api/admin/ai-agents", () => {
   it("creates agent with trimmed values", async () => {
     vi.mocked(getAiAgentBySlug).mockResolvedValue(null);
     vi.mocked(getCategoryById).mockResolvedValue(mockCategory);
-    vi.mocked(createAiAgent).mockResolvedValue({
-      agent: mockAgent,
-      plaintextKey: "firefly_agent_abc123",
-    });
+    vi.mocked(createAiAgent).mockResolvedValue(mockAgent);
 
     const request = createRequest({
       name: "  New Agent  ",
@@ -353,20 +346,6 @@ describe("PATCH /api/admin/ai-agents/[id]", () => {
 
     const body = await response.json();
     expect(body.error).toBe("description must be a string or null");
-  });
-
-  it("rejects non-boolean isActive", async () => {
-    const request = new NextRequest("http://localhost/api/admin/ai-agents/agent-1", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isActive: "true" }),
-    });
-
-    const response = await PATCH(request, { params: Promise.resolve({ id: "agent-1" }) });
-    expect(response.status).toBe(400);
-
-    const body = await response.json();
-    expect(body.error).toBe("isActive must be a boolean");
   });
 });
 

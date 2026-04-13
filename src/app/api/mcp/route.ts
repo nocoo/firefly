@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/lib/api";
-import { validateMcpAuth, validateOrigin } from "@/lib/mcp/auth";
+import { validateMcpToken, validateOrigin } from "@/lib/mcp/auth";
 import { createMcpServer, type McpServerContext } from "@/lib/mcp/server";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 
@@ -16,20 +16,21 @@ export async function POST(request: Request) {
     return errorResponse(originError.error, originError.status);
   }
 
-  // Step 2: Validate Bearer token (supports both OAuth and Agent tokens)
+  // Step 2: Validate Bearer token (OAuth tokens only)
   const db = getDb();
-  const authResult = await validateMcpAuth(
+  const authResult = await validateMcpToken(
     db,
     request.headers.get("authorization"),
   );
-  if (!authResult) {
-    return errorResponse("Invalid, expired, or revoked token", 401);
+  if (!authResult.valid) {
+    return errorResponse(authResult.error, authResult.status);
   }
 
-  // Step 3: Build server context based on auth type
-  const context: McpServerContext = authResult.type === "agent"
-    ? { type: "agent", agent: authResult.agent }
-    : { type: "oauth" };
+  // Step 3: Build server context based on token scope
+  const context: McpServerContext = {
+    type: authResult.token.scope === "author" ? "author" : "full",
+    userEmail: authResult.token.user_email,
+  };
 
   // Step 4: Create MCP server and handle request via stateless transport
   const server = createMcpServer(db, context);

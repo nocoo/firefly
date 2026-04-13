@@ -8,7 +8,7 @@ import { getAgentAvatarUrl } from "@/lib/ai-agent/avatar";
 export default async function AiAgentsPage() {
   const db = getDb();
   const [agents, categories] = await Promise.all([
-    listAiAgents(db, { includeInactive: true }),
+    listAiAgents(db),
     listCategories(db),
   ]);
   const mcpUrl = `${SITE_URL}/api/mcp`;

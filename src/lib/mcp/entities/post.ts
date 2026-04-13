@@ -140,8 +140,8 @@ export const postEntity: EntityConfig<Post> = {
       });
       return { items: result.posts, total: result.total };
     },
-    getById: getPostById,
-    getBySlug: getPostBySlug,
+    getById: (db, id) => getPostById(db, id),
+    getBySlug: (db, slug) => getPostBySlug(db, slug),
     create: (db, input) => PostService.create(db, input),
     update: (db, id, input) => PostService.update(db, id, input),
     delete: (db, id) => PostService.delete(db, id),

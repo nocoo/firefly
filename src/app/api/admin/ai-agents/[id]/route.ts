@@ -57,7 +57,6 @@ interface UpdateAgentBody {
   name?: string;
   slug?: string;
   description?: string | null;
-  isActive?: boolean;
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
@@ -86,9 +85,6 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     }
     if (body.description !== undefined && body.description !== null && typeof body.description !== "string") {
       return errorResponse("description must be a string or null", 400);
-    }
-    if (body.isActive !== undefined && typeof body.isActive !== "boolean") {
-      return errorResponse("isActive must be a boolean", 400);
     }
 
     // Normalize inputs (trim before any validation)
@@ -119,7 +115,6 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     if (normalizedName !== undefined) updateInput.name = normalizedName;
     if (normalizedSlug !== undefined) updateInput.slug = normalizedSlug;
     if (normalizedDescription !== undefined) updateInput.description = normalizedDescription;
-    if (body.isActive !== undefined) updateInput.isActive = body.isActive;
 
     const updated = await updateAiAgent(db, id, updateInput);
 

@@ -10,7 +10,7 @@ import { useLocale } from "@/i18n/context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { NewKeyModal } from "@/components/admin/ai-agents-manager";
+import { NewAgentModal } from "@/components/admin/ai-agents-manager";
 
 interface AiAgentFormProps {
   agent: AiAgent | null;
@@ -37,14 +37,13 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
   const [description, setDescription] = useState(agent?.description ?? "");
   const [categoryId, setCategoryId] = useState(agent?.category_id ?? "");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
-  const [isActive, setIsActive] = useState(agent?.is_active ?? 1);
 
   // UI state
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [newKey, setNewKey] = useState<{
+  const [newAgent, setNewAgent] = useState<{
     agentName: string;
-    apiKey: string;
+    agentId: string;
     prompt: string;
   } | null>(null);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(!!agent);
@@ -91,7 +90,6 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
             name: name.trim(),
             slug: slug.trim(),
             description: description.trim() || null,
-            isActive: isActive === 1,
           };
 
       const url = isNew
@@ -113,10 +111,10 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
       const data = await res.json();
 
       if (isNew) {
-        // API returns { agent: { name, ... }, apiKey, prompt }
-        setNewKey({
+        // API returns { agent: { id, name, ... }, prompt }
+        setNewAgent({
           agentName: data.agent.name,
-          apiKey: data.apiKey,
+          agentId: data.agent.id,
           prompt: data.prompt,
         });
       } else {
@@ -204,8 +202,8 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
     }
   };
 
-  const handleKeyModalClose = () => {
-    setNewKey(null);
+  const handleAgentModalClose = () => {
+    setNewAgent(null);
     router.push("/admin/ai-agents");
     router.refresh();
   };
@@ -300,22 +298,20 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
               />
             </div>
 
-            {/* Status (only for edit) */}
-            {!isNew && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  checked={isActive === 1}
-                  onChange={(e) => setIsActive(e.target.checked ? 1 : 0)}
-                  className="h-4 w-4 rounded border-border"
-                />
-                <label
-                  htmlFor="isActive"
-                  className="text-sm font-medium text-foreground"
-                >
-                  {t("admin.aiAgents.form.isActive")}
+            {/* Author ID (only for edit, read-only) */}
+            {!isNew && agent && (
+              <div>
+                <label className="text-sm font-medium text-foreground">
+                  Author ID
                 </label>
+                <div className="mt-1 flex items-center gap-2 rounded-md border border-border bg-secondary px-3 py-2">
+                  <code className="flex-1 text-xs font-mono text-foreground select-all">
+                    {agent.id}
+                  </code>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t("admin.aiAgents.form.authorIdHelp")}
+                </p>
               </div>
             )}
           </div>
@@ -401,13 +397,13 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
         </div>
       </div>
 
-      {/* New key modal */}
-      {newKey && (
-        <NewKeyModal
-          agentName={newKey.agentName}
-          apiKey={newKey.apiKey}
-          prompt={newKey.prompt}
-          onClose={handleKeyModalClose}
+      {/* New agent modal */}
+      {newAgent && (
+        <NewAgentModal
+          agentName={newAgent.agentName}
+          agentId={newAgent.agentId}
+          prompt={newAgent.prompt}
+          onClose={handleAgentModalClose}
           t={t}
         />
       )}

@@ -1,18 +1,12 @@
 // ---------------------------------------------------------------------------
-// AI Agent entity — CRUD + API key management
+// AI Agent entity — pure identity records for AI writing
+// No independent authentication — all access via OAuth tokens
 // ---------------------------------------------------------------------------
 
 import type { Db } from "@/lib/db";
 import type { AiAgent, AiAgentWithCategory } from "@/models/types";
 import { nowEpoch } from "@/data/core/timestamps";
-import { randomHex, sha256 } from "@/data/mcp-tokens";
 import { ulid } from "ulid";
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const API_KEY_PREFIX = "firefly_agent_";
 
 // ---------------------------------------------------------------------------
 // Input types (camelCase)
@@ -29,51 +23,23 @@ export interface UpdateAiAgentInput {
   name?: string;
   slug?: string;
   description?: string | null;
-  isActive?: boolean;
-}
-
-// ---------------------------------------------------------------------------
-// API key generation
-// ---------------------------------------------------------------------------
-
-/**
- * Generate a new agent API key.
- * Returns plaintext (for one-time display), hash (for storage), and preview (last 8 chars).
- */
-export async function generateAgentApiKey(): Promise<{
-  plaintext: string;
-  hash: string;
-  preview: string;
-}> {
-  const random = randomHex(24); // 48 hex chars
-  const plaintext = `${API_KEY_PREFIX}${random}`;
-  const hash = await sha256(plaintext);
-  const preview = plaintext.slice(-8); // Last 8 chars for identification
-  return { plaintext, hash, preview };
 }
 
 // ---------------------------------------------------------------------------
 // createAiAgent
 // ---------------------------------------------------------------------------
 
-export interface CreateAiAgentResult {
-  agent: AiAgent;
-  plaintextKey: string;
-}
-
 export async function createAiAgent(
   db: Db,
   input: CreateAiAgentInput,
-): Promise<CreateAiAgentResult> {
+): Promise<AiAgent> {
   const id = ulid();
   const now = nowEpoch();
-  const { plaintext, hash, preview } = await generateAgentApiKey();
 
   const sql = `
     INSERT INTO ai_agents
-      (id, name, slug, description, category_id, api_key_hash, api_key_preview,
-       avatar_version, is_active, last_used_at, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, NULL, 1, NULL, ?, ?)
+      (id, name, slug, description, category_id, avatar_version, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, NULL, ?, ?)
   `;
 
   await db.execute(sql, [
@@ -82,15 +48,13 @@ export async function createAiAgent(
     input.slug,
     input.description ?? null,
     input.categoryId,
-    hash,
-    preview,
     now,
     now,
   ]);
 
   const agent = await getAiAgentById(db, id);
   if (!agent) throw new Error(`Failed to retrieve ai_agent ${id} after creation`);
-  return { agent, plaintextKey: plaintext };
+  return agent;
 }
 
 // ---------------------------------------------------------------------------
@@ -122,58 +86,15 @@ export async function getAiAgentBySlug(
 }
 
 // ---------------------------------------------------------------------------
-// getAiAgentByApiKey
-// ---------------------------------------------------------------------------
-
-/**
- * Validate an API key and return the agent if valid.
- * Updates last_used_at on successful validation.
- * Returns null if key is invalid or agent is disabled.
- */
-export async function getAiAgentByApiKey(
-  db: Db,
-  plaintextKey: string,
-): Promise<AiAgent | null> {
-  // Quick prefix check
-  if (!plaintextKey.startsWith(API_KEY_PREFIX)) return null;
-
-  const hash = await sha256(plaintextKey);
-  const agent = await db.firstOrNull<AiAgent>(
-    "SELECT * FROM ai_agents WHERE api_key_hash = ? AND is_active = 1",
-    [hash],
-  );
-
-  if (!agent) return null;
-
-  // Update last_used_at
-  const now = nowEpoch();
-  await db.execute(
-    "UPDATE ai_agents SET last_used_at = ? WHERE id = ?",
-    [now, agent.id],
-  );
-
-  return agent;
-}
-
-// ---------------------------------------------------------------------------
 // listAiAgents
 // ---------------------------------------------------------------------------
 
-export interface ListAiAgentsOptions {
-  includeInactive?: boolean;
-}
-
 /**
  * List all agents with category info and post count.
- * By default excludes inactive agents.
  */
 export async function listAiAgents(
   db: Db,
-  opts?: ListAiAgentsOptions,
 ): Promise<AiAgentWithCategory[]> {
-  const includeInactive = opts?.includeInactive ?? false;
-  const whereClause = includeInactive ? "" : "WHERE a.is_active = 1";
-
   const sql = `
     SELECT
       a.*,
@@ -182,7 +103,6 @@ export async function listAiAgents(
       (SELECT COUNT(*) FROM posts p WHERE p.ai_agent_id = a.id) AS post_count
     FROM ai_agents a
     JOIN categories c ON a.category_id = c.id
-    ${whereClause}
     ORDER BY a.name ASC
   `;
 
@@ -214,10 +134,6 @@ export async function updateAiAgent(
   if (input.description !== undefined) {
     sets.push("description = ?");
     params.push(input.description);
-  }
-  if (input.isActive !== undefined) {
-    sets.push("is_active = ?");
-    params.push(input.isActive ? 1 : 0);
   }
 
   if (sets.length === 0) {
@@ -272,39 +188,6 @@ export async function getAiAgentPostCount(
     [agentId],
   );
   return result?.count ?? 0;
-}
-
-// ---------------------------------------------------------------------------
-// regenerateAgentApiKey
-// ---------------------------------------------------------------------------
-
-export interface RegenerateKeyResult {
-  agent: AiAgent;
-  plaintextKey: string;
-}
-
-/**
- * Generate a new API key for an agent.
- * Old key is immediately invalidated.
- */
-export async function regenerateAgentApiKey(
-  db: Db,
-  id: string,
-): Promise<RegenerateKeyResult | null> {
-  const agent = await getAiAgentById(db, id);
-  if (!agent) return null;
-
-  const { plaintext, hash, preview } = await generateAgentApiKey();
-  const now = nowEpoch();
-
-  await db.execute(
-    `UPDATE ai_agents SET api_key_hash = ?, api_key_preview = ?, updated_at = ? WHERE id = ?`,
-    [hash, preview, now, id],
-  );
-
-  const updated = await getAiAgentById(db, id);
-  if (!updated) throw new Error(`Failed to retrieve ai_agent ${id} after key regeneration`);
-  return { agent: updated, plaintextKey: plaintext };
 }
 
 // ---------------------------------------------------------------------------

@@ -198,7 +198,7 @@ describe("category entity handlers", () => {
       vi.mocked(getCategoryBySlug).mockResolvedValue(sampleCategory);
       vi.mocked(deleteCategory).mockResolvedValue(true);
       const result = await handlers.handleDelete(ctx, { slug: "tech" });
-      expect(deleteCategory).toHaveBeenCalledWith(ctx.db, "cat-1");
+      expect(deleteCategory).toHaveBeenCalledWith(ctx.db, "cat-1", expect.anything());
       const data = parseToolResult(result) as { deleted: boolean };
       expect(data.deleted).toBe(true);
     });

@@ -3,7 +3,7 @@ import type { Db } from "@/lib/db";
 import { createMockDb } from "@/data/core/test-utils";
 import type { PostWithAgent, AiAgent } from "@/models/types";
 import { createMockPostWithAgent } from "@/data/core/test-utils";
-import { createAgentPostEntity } from "./agent-post";
+import { createAuthorPostEntity } from "./author-post";
 
 // ---------------------------------------------------------------------------
 // Mock dependencies
@@ -16,6 +16,10 @@ vi.mock("@/data/entities/post", () => ({
   getPostTags: vi.fn(),
 }));
 
+vi.mock("@/data/entities/ai-agent", () => ({
+  getAiAgentById: vi.fn(),
+}));
+
 vi.mock("@/services/post-service", () => ({
   PostService: {
     create: vi.fn(),
@@ -25,6 +29,7 @@ vi.mock("@/services/post-service", () => ({
 }));
 
 import { listPosts, getPostById, getPostBySlug, getPostTags } from "@/data/entities/post";
+import { getAiAgentById } from "@/data/entities/ai-agent";
 import { PostService } from "@/services/post-service";
 
 // ---------------------------------------------------------------------------
@@ -39,11 +44,7 @@ const sampleAgent: AiAgent = {
   slug: "claude-daily",
   description: "Daily journal",
   category_id: "cat-agent",
-  api_key_hash: "hash",
-  api_key_preview: "preview",
   avatar_version: null,
-  is_active: 1,
-  last_used_at: null,
   created_at: now,
   updated_at: now,
 };
@@ -56,8 +57,8 @@ const samplePost: PostWithAgent = createMockPostWithAgent({
   content_html: "<h1>Test</h1>",
   excerpt: null,
   status: "private",
-  category_id: "cat-agent", // same as agent's category
-  ai_agent_id: "agent-1", // owned by this agent
+  category_id: "cat-agent",
+  ai_agent_id: "agent-1",
   category_name: "Agent Category",
   category_slug: "agent-category",
   agent_name: "Claude Daily",
@@ -82,92 +83,121 @@ const samplePost: PostWithAgent = createMockPostWithAgent({
 const otherAgentPost: PostWithAgent = createMockPostWithAgent({
   ...samplePost,
   id: "post-other",
-  ai_agent_id: "agent-other", // owned by different agent
+  ai_agent_id: "agent-other",
   agent_name: "Other Agent",
   agent_slug: "other-agent",
 });
 
 // ---------------------------------------------------------------------------
-// createAgentPostEntity
+// createAuthorPostEntity
 // ---------------------------------------------------------------------------
 
-describe("createAgentPostEntity", () => {
+describe("createAuthorPostEntity", () => {
   let db: Db;
-  let entity: ReturnType<typeof createAgentPostEntity>;
+  let entity: ReturnType<typeof createAuthorPostEntity>;
 
   beforeEach(() => {
     db = createMockDb();
-    entity = createAgentPostEntity(sampleAgent);
+    entity = createAuthorPostEntity();
     vi.resetAllMocks();
   });
 
   describe("list", () => {
-    it("forces agent's ai_agent_id in list query", async () => {
+    it("requires author_id", async () => {
+      await expect(
+        entity.dataLayer.list(db, {}),
+      ).rejects.toThrow("author_id is required");
+    });
+
+    it("validates author exists", async () => {
+      vi.mocked(getAiAgentById).mockResolvedValue(null);
+
+      await expect(
+        entity.dataLayer.list(db, { author_id: "invalid-author" }),
+      ).rejects.toThrow("Author not found: invalid-author");
+    });
+
+    it("filters by author_id when valid", async () => {
+      vi.mocked(getAiAgentById).mockResolvedValue(sampleAgent);
       vi.mocked(listPosts).mockResolvedValue({ posts: [samplePost], total: 1 });
 
-      await entity.dataLayer.list(db, {});
+      await entity.dataLayer.list(db, { author_id: "agent-1" });
 
       expect(listPosts).toHaveBeenCalledWith(db, expect.objectContaining({
         aiAgentId: "agent-1",
       }));
     });
-
-    it("throws when trying to access different agent's posts", async () => {
-      await expect(
-        entity.dataLayer.list(db, { ai_agent_id: "agent-other" }),
-      ).rejects.toThrow("Access denied");
-    });
-
-    it("allows specifying the same ai_agent_id", async () => {
-      vi.mocked(listPosts).mockResolvedValue({ posts: [samplePost], total: 1 });
-
-      await entity.dataLayer.list(db, { ai_agent_id: "agent-1" });
-
-      expect(listPosts).toHaveBeenCalled();
-    });
   });
 
   describe("getById", () => {
-    it("returns post if owned by agent", async () => {
+    it("requires author_id", async () => {
+      await expect(
+        entity.dataLayer.getById(db, "post-1", {}),
+      ).rejects.toThrow("author_id is required");
+    });
+
+    it("returns post if owned by author", async () => {
+      vi.mocked(getAiAgentById).mockResolvedValue(sampleAgent);
       vi.mocked(getPostById).mockResolvedValue(samplePost);
 
-      const result = await entity.dataLayer.getById(db, "post-1");
+      const result = await entity.dataLayer.getById(db, "post-1", { author_id: "agent-1" });
 
       expect(result).toEqual(samplePost);
     });
 
-    it("returns null if post is owned by different agent", async () => {
+    it("returns null if post is owned by different author", async () => {
+      vi.mocked(getAiAgentById).mockResolvedValue(sampleAgent);
       vi.mocked(getPostById).mockResolvedValue(otherAgentPost);
 
-      const result = await entity.dataLayer.getById(db, "post-other");
+      const result = await entity.dataLayer.getById(db, "post-other", { author_id: "agent-1" });
 
       expect(result).toBeNull();
     });
   });
 
   describe("getBySlug", () => {
-    it("returns post if owned by agent", async () => {
+    it("requires author_id", async () => {
+      await expect(
+        entity.dataLayer.getBySlug(db, "test-post", {}),
+      ).rejects.toThrow("author_id is required");
+    });
+
+    it("returns post if owned by author", async () => {
+      vi.mocked(getAiAgentById).mockResolvedValue(sampleAgent);
       vi.mocked(getPostBySlug).mockResolvedValue(samplePost);
 
-      const result = await entity.dataLayer.getBySlug(db, "test-post");
+      const result = await entity.dataLayer.getBySlug(db, "test-post", { author_id: "agent-1" });
 
       expect(result).toEqual(samplePost);
     });
 
-    it("returns null if post is owned by different agent", async () => {
+    it("returns null if post is owned by different author", async () => {
+      vi.mocked(getAiAgentById).mockResolvedValue(sampleAgent);
       vi.mocked(getPostBySlug).mockResolvedValue(otherAgentPost);
 
-      const result = await entity.dataLayer.getBySlug(db, "test-post");
+      const result = await entity.dataLayer.getBySlug(db, "test-post", { author_id: "agent-1" });
 
       expect(result).toBeNull();
     });
   });
 
   describe("create", () => {
-    it("forces category, status, and aiAgentId", async () => {
+    it("requires author_id", async () => {
+      await expect(
+        entity.dataLayer.create(db, { title: "New", slug: "new", content: "Content" }),
+      ).rejects.toThrow("author_id is required");
+    });
+
+    it("forces category, status, and aiAgentId from author", async () => {
+      vi.mocked(getAiAgentById).mockResolvedValue(sampleAgent);
       vi.mocked(PostService.create).mockResolvedValue(samplePost);
 
-      await entity.dataLayer.create(db, { title: "New", slug: "new", content: "Content" });
+      await entity.dataLayer.create(db, {
+        author_id: "agent-1",
+        title: "New",
+        slug: "new",
+        content: "Content",
+      });
 
       expect(PostService.create).toHaveBeenCalledWith(db, expect.objectContaining({
         categoryId: "cat-agent",
@@ -177,9 +207,11 @@ describe("createAgentPostEntity", () => {
     });
 
     it("ignores client-provided category, status, and aiAgentId", async () => {
+      vi.mocked(getAiAgentById).mockResolvedValue(sampleAgent);
       vi.mocked(PostService.create).mockResolvedValue(samplePost);
 
       await entity.dataLayer.create(db, {
+        author_id: "agent-1",
         title: "New",
         slug: "new",
         content: "Content",
@@ -198,48 +230,85 @@ describe("createAgentPostEntity", () => {
   });
 
   describe("update", () => {
+    it("requires author_id", async () => {
+      await expect(
+        entity.dataLayer.update(db, "post-1", { title: "Updated" }),
+      ).rejects.toThrow("author_id is required");
+    });
+
+    it("verifies ownership before update", async () => {
+      vi.mocked(getAiAgentById).mockResolvedValue(sampleAgent);
+      vi.mocked(getPostById).mockResolvedValue(otherAgentPost);
+
+      await expect(
+        entity.dataLayer.update(db, "post-other", { author_id: "agent-1", title: "Updated" }),
+      ).rejects.toThrow("Post not found or access denied");
+    });
+
     it("strips status from update", async () => {
+      vi.mocked(getAiAgentById).mockResolvedValue(sampleAgent);
+      vi.mocked(getPostById).mockResolvedValue(samplePost);
       vi.mocked(PostService.update).mockResolvedValue(samplePost);
 
       await entity.dataLayer.update(db, "post-1", {
+        author_id: "agent-1",
         title: "Updated",
         status: "published", // should be ignored
       });
 
-      expect(PostService.update).toHaveBeenCalledWith(db, "post-1", {
-        title: "Updated",
-        // status should NOT be present
-      });
+      const updateCall = vi.mocked(PostService.update).mock.calls[0][2];
+      expect(updateCall).not.toHaveProperty("status");
     });
 
     it("throws when trying to change category", async () => {
+      vi.mocked(getAiAgentById).mockResolvedValue(sampleAgent);
+
       await expect(
         entity.dataLayer.update(db, "post-1", {
+          author_id: "agent-1",
           title: "Updated",
           categoryId: "cat-other",
         }),
       ).rejects.toThrow("Cannot move post to different category");
     });
 
-    it("throws when trying to reassign to different agent", async () => {
+    it("throws when trying to reassign to different author", async () => {
+      vi.mocked(getAiAgentById).mockResolvedValue(sampleAgent);
+
       await expect(
         entity.dataLayer.update(db, "post-1", {
+          author_id: "agent-1",
           title: "Updated",
           aiAgentId: "agent-other",
         }),
-      ).rejects.toThrow("Cannot reassign post to different agent");
+      ).rejects.toThrow("Cannot reassign post to different author");
+    });
+  });
+
+  describe("delete", () => {
+    it("requires author_id", async () => {
+      await expect(
+        entity.dataLayer.delete(db, "post-1", {}),
+      ).rejects.toThrow("author_id is required");
     });
 
-    it("allows updating without changing category or aiAgentId", async () => {
-      vi.mocked(PostService.update).mockResolvedValue(samplePost);
+    it("verifies ownership before delete", async () => {
+      vi.mocked(getAiAgentById).mockResolvedValue(sampleAgent);
+      vi.mocked(getPostById).mockResolvedValue(otherAgentPost);
 
-      await entity.dataLayer.update(db, "post-1", {
-        title: "Updated",
-        categoryId: "cat-agent", // same category
-        aiAgentId: "agent-1", // same agent
-      });
+      await expect(
+        entity.dataLayer.delete(db, "post-other", { author_id: "agent-1" }),
+      ).rejects.toThrow("Post not found or access denied");
+    });
 
-      expect(PostService.update).toHaveBeenCalled();
+    it("deletes when ownership verified", async () => {
+      vi.mocked(getAiAgentById).mockResolvedValue(sampleAgent);
+      vi.mocked(getPostById).mockResolvedValue(samplePost);
+      vi.mocked(PostService.delete).mockResolvedValue(true);
+
+      await entity.dataLayer.delete(db, "post-1", { author_id: "agent-1" });
+
+      expect(PostService.delete).toHaveBeenCalledWith(db, "post-1");
     });
   });
 
@@ -285,8 +354,16 @@ describe("createAgentPostEntity", () => {
   });
 
   describe("schema", () => {
-    it("list schema does not include category_id", () => {
-      expect(entity.schemas.list).not.toHaveProperty("category_id");
+    it("list schema includes author_id", () => {
+      expect(entity.schemas.list).toHaveProperty("author_id");
+    });
+
+    it("create schema includes author_id", () => {
+      expect(entity.schemas.create).toHaveProperty("author_id");
+    });
+
+    it("update schema includes author_id", () => {
+      expect(entity.schemas.update).toHaveProperty("author_id");
     });
 
     it("create schema does not include status or category_id", () => {

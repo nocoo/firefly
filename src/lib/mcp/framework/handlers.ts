@@ -19,12 +19,12 @@ export function createCrudHandlers<T extends { id: string }>(
   const displayName = config.display;
 
   // Helper: resolve with entity-specific not-found message.
-  function resolve(db: Parameters<typeof resolveEntity>[0], args: IdOrSlug) {
+  function resolve(db: Parameters<typeof resolveEntity>[0], args: IdOrSlug & Record<string, unknown>) {
     return resolveEntity(
       db,
       args,
-      dataLayer.getById,
-      dataLayer.getBySlug,
+      (db, id) => dataLayer.getById(db, id, args),
+      (db, slug) => dataLayer.getBySlug(db, slug, args),
       displayName,
     );
   }
@@ -71,7 +71,7 @@ export function createCrudHandlers<T extends { id: string }>(
   // ---- get ----
   async function handleGet(
     ctx: ToolContext,
-    args: IdOrSlug,
+    args: IdOrSlug & Record<string, unknown>,
   ): Promise<CallToolResult> {
     const resolved = await resolve(ctx.db, args);
     if ("error" in resolved) return error(resolved.error);
@@ -137,11 +137,11 @@ export function createCrudHandlers<T extends { id: string }>(
   // ---- delete ----
   async function handleDelete(
     ctx: ToolContext,
-    args: IdOrSlug,
+    args: IdOrSlug & Record<string, unknown>,
   ): Promise<CallToolResult> {
     const resolved = await resolve(ctx.db, args);
     if ("error" in resolved) return error(resolved.error);
-    await dataLayer.delete(ctx.db, resolved.id);
+    await dataLayer.delete(ctx.db, resolved.id, args);
     return ok({ deleted: true });
   }
 

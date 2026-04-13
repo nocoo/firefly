@@ -1,20 +1,17 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   Plus,
   Copy,
   Check,
-  RefreshCw,
   Pencil,
-  Power,
-  PowerOff,
   Users,
   Folder,
-  Clock,
   Trash2,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { AiAgentWithCategory, Category } from "@/models/types";
@@ -94,18 +91,18 @@ export function CopyButton({ text, className }: { text: string; className?: stri
 }
 
 // ---------------------------------------------------------------------------
-// New Token Modal — shows the plaintext key once after creation/regeneration
+// New Agent Modal — shows the author ID and prompt after creation
 // ---------------------------------------------------------------------------
 
-export function NewKeyModal({
+export function NewAgentModal({
   agentName,
-  apiKey,
+  agentId,
   prompt,
   onClose,
   t,
 }: {
   agentName: string;
-  apiKey: string;
+  agentId: string;
   prompt: string;
   onClose: () => void;
   t: (key: string) => string;
@@ -115,21 +112,21 @@ export function NewKeyModal({
       <div className="mx-4 w-full max-w-lg rounded-lg bg-background border border-border shadow-lg">
         <div className="border-b border-border px-6 py-4">
           <h2 className="text-lg font-semibold text-foreground">{agentName}</h2>
-          <p className="mt-1 text-sm text-warning-foreground">
-            {t("admin.aiAgents.keyWarning")}
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("admin.aiAgents.agentCreated")}
           </p>
         </div>
         <div className="space-y-4 px-6 py-4">
-          {/* API Key */}
+          {/* Author ID */}
           <div>
             <label className="text-xs font-medium text-muted-foreground">
-              API Key
+              Author ID
             </label>
             <div className="mt-1 flex items-center gap-2 rounded-md border border-border bg-secondary px-3 py-2">
               <code className="flex-1 text-xs font-mono text-foreground break-all select-all">
-                {apiKey}
+                {agentId}
               </code>
-              <CopyButton text={apiKey} />
+              <CopyButton text={agentId} />
             </div>
           </div>
 
@@ -150,7 +147,7 @@ export function NewKeyModal({
         </div>
         <div className="border-t border-border px-6 py-3 flex justify-end">
           <Button variant="default" onClick={onClose}>
-            {t("admin.aiAgents.keyCopied") ? "Done" : "Close"}
+            {t("common.done")}
           </Button>
         </div>
       </div>
@@ -165,24 +162,16 @@ export function NewKeyModal({
 function AgentRow({
   agent,
   onEdit,
-  onToggleActive,
-  onRegenerateKey,
+  onShowPrompt,
   onDelete,
   t,
-  formatDate,
 }: {
   agent: AgentWithAvatarUrl;
   onEdit: () => void;
-  onToggleActive: () => void;
-  onRegenerateKey: () => void;
+  onShowPrompt: () => void;
   onDelete: () => void;
   t: (key: string) => string;
-  formatDate: (epoch: number | null) => string;
 }) {
-  const lastUsed = agent.last_used_at
-    ? formatDate(agent.last_used_at)
-    : t("admin.aiAgents.never");
-
   return (
     <tr className="border-b border-border last:border-0 hover:bg-accent/50 transition-colors">
       <td className="px-4 py-3">
@@ -213,26 +202,17 @@ function AgentRow({
         </div>
       </td>
       <td className="px-4 py-3">
-        <code className="text-xs font-mono text-muted-foreground">
-          ...{agent.api_key_preview}
-        </code>
-      </td>
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Clock className="h-3.5 w-3.5" />
-          <span>{lastUsed}</span>
+        <div className="flex items-center gap-2">
+          <code className="text-xs font-mono text-muted-foreground">
+            {agent.id.slice(0, 8)}...
+          </code>
+          <CopyButton text={agent.id} />
         </div>
       </td>
       <td className="px-4 py-3">
-        {agent.is_active ? (
-          <Badge variant="success">
-            {t("admin.aiAgents.active")}
-          </Badge>
-        ) : (
-          <Badge variant="secondary">
-            {t("admin.aiAgents.inactive")}
-          </Badge>
-        )}
+        <Badge variant="secondary">
+          {agent.post_count} {agent.post_count === 1 ? "post" : "posts"}
+        </Badge>
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-1">
@@ -244,24 +224,13 @@ function AgentRow({
             <Pencil className="h-4 w-4" />
           </button>
           <button
-            onClick={onRegenerateKey}
+            onClick={onShowPrompt}
             className="p-1.5 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            title={t("admin.aiAgents.regenerateKey")}
+            title={t("admin.aiAgents.showPrompt")}
           >
-            <RefreshCw className="h-4 w-4" />
+            <FileText className="h-4 w-4" />
           </button>
-          <button
-            onClick={onToggleActive}
-            className="p-1.5 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            title={agent.is_active ? t("admin.aiAgents.disable") : t("admin.aiAgents.enable")}
-          >
-            {agent.is_active ? (
-              <PowerOff className="h-4 w-4" />
-            ) : (
-              <Power className="h-4 w-4" />
-            )}
-          </button>
-          {!agent.is_active && agent.post_count === 0 && (
+          {agent.post_count === 0 && (
             <button
               onClick={onDelete}
               className="p-1.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
@@ -283,68 +252,31 @@ function AgentRow({
 export function AiAgentsManager({
   agents: initialAgents,
   categories: _categories,
-  mcpUrl: _mcpUrl,
+  mcpUrl,
 }: AiAgentsManagerProps) {
   const router = useRouter();
   const { t } = useLocale();
   const [agents, setAgents] = useState(initialAgents);
-  const [newKey, setNewKey] = useState<{
+  const [newAgent, setNewAgent] = useState<{
     agentName: string;
-    apiKey: string;
+    agentId: string;
     prompt: string;
   } | null>(null);
-  const [confirmRegenerate, setConfirmRegenerate] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<AgentWithAvatarUrl | null>(null);
+  const [showPromptFor, setShowPromptFor] = useState<AgentWithAvatarUrl | null>(null);
 
-  // Date formatter
-  const formatDate = (epoch: number | null): string => {
-    if (!epoch) return "—";
-    return new Date(epoch * 1000).toLocaleString();
-  };
+  // Generate prompt for an existing agent
+  const generatePrompt = useCallback((agent: AgentWithAvatarUrl): string => {
+    // Import the prompt generator function client-side is not ideal,
+    // so we replicate the key parts here
+    return `你是「${agent.name}」。
 
-  // Refresh data
-  const refresh = () => router.refresh();
+Author ID: ${agent.id}
 
-  // Toggle active status
-  const handleToggleActive = async (agent: AgentWithAvatarUrl) => {
-    try {
-      const res = await fetch(`/api/admin/ai-agents/${agent.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: !agent.is_active }),
-      });
-      if (!res.ok) throw new Error("Failed to update");
-      setAgents((prev) =>
-        prev.map((a) =>
-          a.id === agent.id ? { ...a, is_active: a.is_active ? 0 : 1 } : a,
-        ),
-      );
-      toast.success(agent.is_active ? "Agent disabled" : "Agent enabled");
-    } catch {
-      toast.error("Failed to update agent");
-    }
-  };
+在所有 MCP 工具调用中带上 author_id 参数。
 
-  // Regenerate key
-  const handleRegenerateKey = async (agentId: string) => {
-    setConfirmRegenerate(null);
-    try {
-      const res = await fetch(`/api/admin/ai-agents/${agentId}/regenerate-key`, {
-        method: "POST",
-      });
-      if (!res.ok) throw new Error("Failed to regenerate");
-      const data = await res.json();
-      // API returns { agent: { name, ... }, apiKey, prompt }
-      setNewKey({
-        agentName: data.agent.name,
-        apiKey: data.apiKey,
-        prompt: data.prompt,
-      });
-      refresh();
-    } catch {
-      toast.error("Failed to regenerate API key");
-    }
-  };
+MCP URL: ${mcpUrl}`;
+  }, [mcpUrl]);
 
   // Edit agent
   const handleEdit = (agentId: string) => {
@@ -354,6 +286,11 @@ export function AiAgentsManager({
   // Create new agent
   const handleCreate = () => {
     router.push("/admin/ai-agents/new");
+  };
+
+  // Show prompt for existing agent
+  const handleShowPrompt = (agent: AgentWithAvatarUrl) => {
+    setShowPromptFor(agent);
   };
 
   // Delete agent
@@ -370,6 +307,40 @@ export function AiAgentsManager({
       toast.error(t("admin.aiAgents.deleteFailed"));
     }
   };
+
+  // Check URL for newly created agent
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const newAgentId = url.searchParams.get("new");
+    if (newAgentId) {
+      const agent = agents.find((a) => a.id === newAgentId);
+      if (agent) {
+        // Fetch the full prompt from API
+        fetch(`/api/admin/ai-agents/${newAgentId}/prompt`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.prompt) {
+              setNewAgent({
+                agentName: agent.name,
+                agentId: agent.id,
+                prompt: data.prompt,
+              });
+            }
+          })
+          .catch(() => {
+            // Fallback to basic prompt
+            setNewAgent({
+              agentName: agent.name,
+              agentId: agent.id,
+              prompt: generatePrompt(agent),
+            });
+          });
+      }
+      // Clean up URL
+      url.searchParams.delete("new");
+      window.history.replaceState({}, "", url.pathname);
+    }
+  }, [agents, generatePrompt, mcpUrl]);
 
   return (
     <div className="space-y-6">
@@ -413,13 +384,10 @@ export function AiAgentsManager({
                   {t("admin.aiAgents.category")}
                 </th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
-                  API Key
+                  Author ID
                 </th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
-                  {t("admin.aiAgents.lastUsed")}
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
-                  {t("admin.aiAgents.status")}
+                  {t("admin.aiAgents.posts")}
                 </th>
                 <th className="px-4 py-2 w-24"></th>
               </tr>
@@ -430,11 +398,9 @@ export function AiAgentsManager({
                   key={agent.id}
                   agent={agent}
                   onEdit={() => handleEdit(agent.id)}
-                  onToggleActive={() => handleToggleActive(agent)}
-                  onRegenerateKey={() => setConfirmRegenerate(agent.id)}
+                  onShowPrompt={() => handleShowPrompt(agent)}
                   onDelete={() => setConfirmDelete(agent)}
                   t={t}
-                  formatDate={formatDate}
                 />
               ))}
             </tbody>
@@ -442,28 +408,27 @@ export function AiAgentsManager({
         </div>
       )}
 
-      {/* New key modal */}
-      {newKey && (
-        <NewKeyModal
-          agentName={newKey.agentName}
-          apiKey={newKey.apiKey}
-          prompt={newKey.prompt}
-          onClose={() => setNewKey(null)}
+      {/* New agent modal */}
+      {newAgent && (
+        <NewAgentModal
+          agentName={newAgent.agentName}
+          agentId={newAgent.agentId}
+          prompt={newAgent.prompt}
+          onClose={() => setNewAgent(null)}
           t={t}
         />
       )}
 
-      {/* Confirm regenerate dialog */}
-      <ConfirmDialog
-        open={!!confirmRegenerate}
-        onOpenChange={(open) => !open && setConfirmRegenerate(null)}
-        title={t("admin.aiAgents.regenerateKey")}
-        description={t("admin.aiAgents.regenerateConfirm")}
-        destructive
-        onConfirm={() => {
-          if (confirmRegenerate) handleRegenerateKey(confirmRegenerate);
-        }}
-      />
+      {/* Show prompt modal for existing agent */}
+      {showPromptFor && (
+        <NewAgentModal
+          agentName={showPromptFor.name}
+          agentId={showPromptFor.id}
+          prompt={generatePrompt(showPromptFor)}
+          onClose={() => setShowPromptFor(null)}
+          t={t}
+        />
+      )}
 
       {/* Confirm delete dialog */}
       <DeleteAgentDialog

@@ -37,7 +37,7 @@ const sampleToken: McpToken = {
   refresh_token_hash: "hash_rt",
   client_id: "firefly_mcp_01HQ",
   user_email: "admin@example.com",
-  scope: "mcp:full",
+  scope: "full",
   client_name: "Claude Code",
   last_used_at: null,
   expires_at: now + ACCESS_TOKEN_TTL,
@@ -123,7 +123,7 @@ describe("createMcpToken", () => {
     expect(params![3]).toBe("hash_rt");
     expect(params![4]).toBe("firefly_mcp_01HQ");
     expect(params![5]).toBe("admin@example.com");
-    expect(params![6]).toBe("mcp:full"); // default scope
+    expect(params![6]).toBe("full"); // default scope
     expect(result.client_name).toBe("Claude Code");
   });
 

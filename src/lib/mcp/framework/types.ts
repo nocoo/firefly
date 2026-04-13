@@ -20,13 +20,13 @@ export interface DataLayer<T> {
     db: Db,
     opts?: unknown,
   ) => Promise<T[] | { items: T[]; total: number }>;
-  getById: (db: Db, id: string) => Promise<T | null>;
-  getBySlug: (db: Db, slug: string) => Promise<T | null>;
+  getById: (db: Db, id: string, args?: unknown) => Promise<T | null>;
+  getBySlug: (db: Db, slug: string, args?: unknown) => Promise<T | null>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   create: (db: Db, input: any) => Promise<T>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   update: (db: Db, id: string, input: any) => Promise<T | null>;
-  delete: (db: Db, id: string) => Promise<boolean>;
+  delete: (db: Db, id: string, args?: unknown) => Promise<boolean>;
 }
 
 // ---- Lifecycle hooks ----
