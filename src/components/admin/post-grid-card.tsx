@@ -75,7 +75,7 @@ export const PostGridCard = memo(function PostGridCard({
           </div>
         ) : (
           <div className="h-[200px] overflow-hidden bg-blog-bg p-3">
-            <p className="font-[var(--ff-body)] text-base leading-snug text-blog-text line-clamp-5">
+            <p className="font-body text-base leading-snug text-blog-text line-clamp-5">
               {post.excerpt || post.title}
             </p>
           </div>
@@ -119,11 +119,11 @@ export const PostGridCard = memo(function PostGridCard({
       <CardFooter className="px-2.5 pb-2 pt-0">
         <div className="flex items-center gap-1.5">
           <span
-            className={`inline-block rounded-full px-1.5 py-0.5 text-[10px] font-medium leading-none ${STATUS_COLORS[post.status as PostStatus] ?? ""}`}
+            className={`inline-block rounded-full px-1.5 py-0.5 text-2xs font-medium leading-none ${STATUS_COLORS[post.status as PostStatus] ?? ""}`}
           >
             {t(`admin.posts.status.${post.status}`)}
           </span>
-          <span className="text-[11px] text-muted-foreground">{date}</span>
+          <span className="text-xs text-muted-foreground">{date}</span>
         </div>
       </CardFooter>
     </Card>

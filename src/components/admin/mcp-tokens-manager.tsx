@@ -50,7 +50,7 @@ function CodeBlock({ code, lang }: { code: string; lang?: string }) {
   return (
     <div className="group relative rounded-[var(--radius-widget)] bg-secondary border border-border">
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-border">
-        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+        <span className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">
           {lang ?? "config"}
         </span>
         <CopyButton text={code} />
