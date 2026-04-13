@@ -14,83 +14,100 @@
 
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import type { EntityConfig, ToolContext } from "./types";
+import type { CrudOp, EntityConfig, ToolContext } from "./types";
 import { createCrudHandlers } from "./handlers";
+
+export interface RegisterOptions {
+  /** Operations to disable (skip registering). */
+  disabledOps?: CrudOp[];
+}
 
 export function registerEntityTools<T extends { id: string }>(
   server: McpServer,
   config: EntityConfig<T>,
   ctx: ToolContext,
+  options?: RegisterOptions,
 ): void {
   const plural = config.plural ?? config.name + "s";
   const handlers = createCrudHandlers(config);
+  const disabled = new Set(options?.disabledOps ?? []);
 
   // ---- list ----
-  server.tool(
-    `list_${plural}`,
-    config.descriptions?.list ?? `List all ${plural}.`,
-    {
-      ...config.schemas.list,
-      ...(config.projection
-        ? {
-            include: z
-              .array(z.string())
-              .optional()
-              .describe(
-                "Opt-in fields excluded by default. Use 'full' for all fields.",
-              ),
-          }
-        : {}),
-    },
-    ((args: any) => handlers.handleList(ctx, args)) as any,
-  );
+  if (!disabled.has("list")) {
+    server.tool(
+      `list_${plural}`,
+      config.descriptions?.list ?? `List all ${plural}.`,
+      {
+        ...config.schemas.list,
+        ...(config.projection
+          ? {
+              include: z
+                .array(z.string())
+                .optional()
+                .describe(
+                  "Opt-in fields excluded by default. Use 'full' for all fields.",
+                ),
+            }
+          : {}),
+      },
+      ((args: any) => handlers.handleList(ctx, args)) as any,
+    );
+  }
 
   // ---- get ----
-  server.tool(
-    `get_${config.name}`,
-    config.descriptions?.get ??
-      `Get a single ${config.display} by id or slug (exactly one required).`,
-    {
-      id: z.string().optional(),
-      slug: z.string().optional(),
-      ...config.schemas.get,
-    },
-    ((args: any) => handlers.handleGet(ctx, args)) as any,
-  );
+  if (!disabled.has("get")) {
+    server.tool(
+      `get_${config.name}`,
+      config.descriptions?.get ??
+        `Get a single ${config.display} by id or slug (exactly one required).`,
+      {
+        id: z.string().optional(),
+        slug: z.string().optional(),
+        ...config.schemas.get,
+      },
+      ((args: any) => handlers.handleGet(ctx, args)) as any,
+    );
+  }
 
   // ---- create ----
-  server.tool(
-    `create_${config.name}`,
-    config.descriptions?.create ?? `Create a new ${config.display}.`,
-    config.schemas.create,
-    ((args: any) => handlers.handleCreate(ctx, args)) as any,
-  );
+  if (!disabled.has("create")) {
+    server.tool(
+      `create_${config.name}`,
+      config.descriptions?.create ?? `Create a new ${config.display}.`,
+      config.schemas.create,
+      ((args: any) => handlers.handleCreate(ctx, args)) as any,
+    );
+  }
 
   // ---- update ----
-  server.tool(
-    `update_${config.name}`,
-    config.descriptions?.update ??
-      `Update an existing ${config.display} by id or slug (exactly one required).`,
-    {
-      id: z.string().optional(),
-      slug: z.string().optional(),
-      ...config.schemas.update,
-    },
-    ((args: any) => handlers.handleUpdate(ctx, args)) as any,
-  );
+  if (!disabled.has("update")) {
+    server.tool(
+      `update_${config.name}`,
+      config.descriptions?.update ??
+        `Update an existing ${config.display} by id or slug (exactly one required).`,
+      {
+        id: z.string().optional(),
+        slug: z.string().optional(),
+        ...config.schemas.update,
+      },
+      ((args: any) => handlers.handleUpdate(ctx, args)) as any,
+    );
+  }
 
   // ---- delete ----
-  server.tool(
-    `delete_${config.name}`,
-    config.descriptions?.delete ??
-      `Delete a ${config.display} by id or slug (exactly one required). Irreversible.`,
-    {
-      id: z.string().optional(),
-      slug: z.string().optional(),
-      ...config.schemas.delete,
-    },
-    ((args: any) => handlers.handleDelete(ctx, args)) as any,
-  );
+  if (!disabled.has("delete")) {
+    server.tool(
+      `delete_${config.name}`,
+      config.descriptions?.delete ??
+        `Delete a ${config.display} by id or slug (exactly one required). Irreversible.`,
+      {
+        id: z.string().optional(),
+        slug: z.string().optional(),
+        ...config.schemas.delete,
+      },
+      ((args: any) => handlers.handleDelete(ctx, args)) as any,
+    );
+  }
 
   // ---- extra tools ----
   for (const extra of config.extraTools ?? []) {

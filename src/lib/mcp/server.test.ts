@@ -518,11 +518,11 @@ describe("createMcpServer with author context", () => {
     expect(server).toBeDefined();
   });
 
-  it("registers 10 tools for author context (post + tag, no category)", async () => {
+  it("registers 8 tools for author context (post + tag read/create, no update/delete)", async () => {
     const { server, transport, listTools } = await createSession(db, authorContext);
 
     const body = await listTools();
-    expect(body.result.tools).toHaveLength(10);
+    expect(body.result.tools).toHaveLength(8);
 
     const names = body.result.tools
       .map((t: { name: string }) => t.name)
@@ -531,13 +531,11 @@ describe("createMcpServer with author context", () => {
       "create_post",
       "create_tag",
       "delete_post",
-      "delete_tag",
       "get_post",
       "get_tag",
       "list_posts",
       "list_tags",
       "update_post",
-      "update_tag",
     ]);
 
     await transport.close();

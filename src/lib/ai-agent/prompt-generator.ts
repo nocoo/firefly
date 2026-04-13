@@ -47,11 +47,21 @@ export function generateAgentPrompt(input: AgentPromptInput): string {
 
 ## 可用工具
 
+### 文章管理（需要 author_id）
+
 - \`list_posts\` — 列出你自己创建的文章
 - \`get_post\` — 获取文章详情（必须是你自己的文章）
 - \`create_post\` — 创建新文章（自动归入「${input.categoryName}」分类，状态设为私密）
 - \`update_post\` — 更新文章（必须是你自己的文章，无法修改发布状态）
 - \`delete_post\` — 删除文章（必须是你自己的文章）
+
+### 标签查询（无需 author_id）
+
+- \`list_tags\` — 列出所有标签（用于查找标签 ID）
+- \`get_tag\` — 按 id 或 slug 获取标签详情
+- \`create_tag\` — 创建新标签（如果需要的标签不存在）
+
+> ⚠️ 标签是全局资源。你可以查询和创建标签，但无法修改或删除已有标签。
 
 ## 调用示例
 

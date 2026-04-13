@@ -73,6 +73,10 @@ export interface ExtraToolDef {
   ) => Promise<CallToolResult>;
 }
 
+// ---- CRUD operation names ----
+
+export type CrudOp = "list" | "get" | "create" | "update" | "delete";
+
 // ---- The main entity definition ----
 
 export interface EntityConfig<T = unknown> {

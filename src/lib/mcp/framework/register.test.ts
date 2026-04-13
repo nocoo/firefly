@@ -187,4 +187,48 @@ describe("registerEntityTools", () => {
     const listCall = toolSpy.mock.calls.find((c) => c[0] === "list_widgets");
     expect(listCall![1]).toBe("Custom list description.");
   });
+
+  it("respects disabledOps option", () => {
+    const server = new McpServer({ name: "test", version: "0.0.1" });
+    const toolSpy = vi.spyOn(server, "tool");
+    const ctx = createMockContext();
+    const config = createTestConfig();
+
+    registerEntityTools(server, config, ctx, { disabledOps: ["update", "delete"] });
+
+    expect(toolSpy).toHaveBeenCalledTimes(3); // list, get, create only
+    const toolNames = toolSpy.mock.calls.map((call) => call[0]);
+    expect(toolNames).toEqual([
+      "list_widgets",
+      "get_widget",
+      "create_widget",
+    ]);
+    expect(toolNames).not.toContain("update_widget");
+    expect(toolNames).not.toContain("delete_widget");
+  });
+
+  it("disabledOps can disable all CRUD operations", () => {
+    const server = new McpServer({ name: "test", version: "0.0.1" });
+    const toolSpy = vi.spyOn(server, "tool");
+    const ctx = createMockContext();
+    const config = createTestConfig({
+      extraTools: [
+        {
+          name: "special_action",
+          description: "Extra tool only",
+          schema: { target: z.string() },
+          handler: vi.fn(async () => ({ content: [{ type: "text" as const, text: "ok" }] })),
+        },
+      ],
+    });
+
+    registerEntityTools(server, config, ctx, {
+      disabledOps: ["list", "get", "create", "update", "delete"],
+    });
+
+    // Only the extra tool should be registered
+    expect(toolSpy).toHaveBeenCalledTimes(1);
+    const toolNames = toolSpy.mock.calls.map((call) => call[0]);
+    expect(toolNames).toEqual(["special_action"]);
+  });
 });
