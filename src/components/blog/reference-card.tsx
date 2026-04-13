@@ -29,7 +29,7 @@ export function ReferenceCard({
       className="reference-card-placeholder"
       style={{ backgroundColor: brand.color }}
     >
-      <brand.Icon className="h-8 w-8 text-white" strokeWidth={1.5} />
+      <brand.Icon className="h-8 w-8 text-white" strokeWidth={1.5} aria-hidden="true" />
     </div>
   ) : (
     <div className="reference-card-placeholder reference-card-placeholder-neutral">

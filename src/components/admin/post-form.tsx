@@ -368,7 +368,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       {/* Content — Write / Preview tabs (mobile) or always-write (desktop) */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-foreground">
+          <label id="content-label" htmlFor="content" className="text-sm font-medium text-foreground">
             {t("admin.postForm.content")}
           </label>
           {/* Tab switcher — hidden on lg+ where preview is side-by-side */}
@@ -423,6 +423,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             {...(post?.id ? { postId: post.id } : {})}
           />
           <textarea
+            aria-labelledby="content-label"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             required
