@@ -49,7 +49,7 @@ export async function validateMcpToken(
     return {
       valid: false,
       status: 401,
-      error: "Missing or malformed Authorization header",
+      error: "Invalid or missing token",
     };
   }
 
@@ -60,7 +60,7 @@ export async function validateMcpToken(
     return {
       valid: false,
       status: 401,
-      error: "Invalid, expired, or revoked token",
+      error: "Invalid or missing token",
     };
   }
 

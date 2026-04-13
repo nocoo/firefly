@@ -89,7 +89,7 @@ describe("validateMcpToken", () => {
     expect(result.valid).toBe(false);
     if (!result.valid) {
       expect(result.status).toBe(401);
-      expect(result.error).toContain("Missing");
+      expect(result.error).toContain("Invalid");
     }
   });
 
