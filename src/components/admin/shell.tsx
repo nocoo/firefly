@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, Github } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -45,6 +45,9 @@ export function AdminShell({ user, children }: AdminShellProps) {
   const isTablet = useIsTablet();
   const [collapsed, setCollapsed] = useState(isTablet);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const hamburgerRef = useRef<HTMLButtonElement>(null);
+  const mainRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const { t } = useLocale();
 
@@ -89,6 +92,63 @@ export function AdminShell({ user, children }: AdminShellProps) {
     };
   }, [mobileOpen]);
 
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
+
+  // Escape key to close + focus trap inside mobile sidebar
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setMobileOpen(false);
+        hamburgerRef.current?.focus();
+        return;
+      }
+
+      if (e.key === "Tab" && sidebarRef.current) {
+        const focusable = sidebarRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [mobileOpen]);
+
+  // Move focus into sidebar on open
+  useEffect(() => {
+    if (mobileOpen && sidebarRef.current) {
+      const first = sidebarRef.current.querySelector<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      first?.focus();
+    }
+  }, [mobileOpen]);
+
+  // Set inert on background content when mobile sidebar is open
+  useEffect(() => {
+    if (mainRef.current) {
+      if (mobileOpen) {
+        mainRef.current.setAttribute("inert", "");
+      } else {
+        mainRef.current.removeAttribute("inert");
+      }
+    }
+  }, [mobileOpen]);
+
   return (
     <CommandPaletteProvider>
       <PageSubtitleProvider>
@@ -104,29 +164,37 @@ export function AdminShell({ user, children }: AdminShellProps) {
 
           {/* Mobile overlay */}
           {isMobile && mobileOpen && (
-            <>
+            <div
+              ref={sidebarRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label={t("admin.sidebar.openNav")}
+              className="fixed inset-0 z-40"
+            >
               <div
-                className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs"
-                onClick={() => setMobileOpen(false)}
+                className="absolute inset-0 bg-black/50 backdrop-blur-xs"
+                role="presentation"
+                onClick={closeMobile}
               />
-              <div className="fixed inset-y-0 left-0 z-50 w-[260px]">
+              <div className="absolute inset-y-0 left-0 z-50 w-[260px]">
                 <AdminSidebar
                   collapsed={false}
-                  onToggle={() => setMobileOpen(false)}
+                  onToggle={closeMobile}
                   user={user}
                 />
               </div>
-            </>
+            </div>
           )}
 
           {/* Main content */}
-          <main className="flex-1 flex flex-col min-h-screen min-w-0">
+          <div ref={mainRef} className="flex-1 flex flex-col min-h-screen min-w-0">
             {/* Top bar */}
             <ShellHeader
               title={title}
               isMobile={isMobile}
               onOpenMobile={() => setMobileOpen(true)}
               openNavLabel={t("admin.sidebar.openNav")}
+              hamburgerRef={hamburgerRef}
             />
 
             {/* Page content */}
@@ -135,7 +203,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
                 {children}
               </div>
             </div>
-          </main>
+          </div>
 
           {/* Global toast notifications */}
           <Toaster />
@@ -154,11 +222,13 @@ function ShellHeader({
   isMobile,
   onOpenMobile,
   openNavLabel,
+  hamburgerRef,
 }: {
   title: string;
   isMobile: boolean;
   onOpenMobile: () => void;
   openNavLabel: string;
+  hamburgerRef?: React.RefObject<HTMLButtonElement | null>;
 }) {
   const { subtitle } = usePageSubtitle();
 
@@ -166,7 +236,7 @@ function ShellHeader({
     <header className="flex h-14 items-center justify-between px-4 md:px-6 shrink-0">
       <div className="flex items-center gap-3">
         {isMobile && (
-          <IconButton onClick={onOpenMobile} aria-label={openNavLabel}>
+          <IconButton ref={hamburgerRef} onClick={onOpenMobile} aria-label={openNavLabel}>
             <Menu
               className="h-5 w-5"
               aria-hidden="true"
