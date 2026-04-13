@@ -93,7 +93,7 @@ describe("getOAuthMetadata", () => {
     expect(metadata.grant_types_supported).toEqual(["authorization_code", "refresh_token"]);
     expect(metadata.code_challenge_methods_supported).toEqual(["S256"]);
     expect(metadata.token_endpoint_auth_methods_supported).toEqual(["none"]);
-    expect(metadata.scopes_supported).toEqual(["mcp:full"]);
+    expect(metadata.scopes_supported).toEqual(["full", "author"]);
   });
 
   it("uses issuer as URL base for all endpoints", () => {

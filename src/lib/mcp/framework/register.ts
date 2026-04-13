@@ -50,7 +50,11 @@ export function registerEntityTools<T extends { id: string }>(
     `get_${config.name}`,
     config.descriptions?.get ??
       `Get a single ${config.display} by id or slug (exactly one required).`,
-    { id: z.string().optional(), slug: z.string().optional() },
+    {
+      id: z.string().optional(),
+      slug: z.string().optional(),
+      ...config.schemas.get,
+    },
     ((args: any) => handlers.handleGet(ctx, args)) as any,
   );
 
@@ -80,7 +84,11 @@ export function registerEntityTools<T extends { id: string }>(
     `delete_${config.name}`,
     config.descriptions?.delete ??
       `Delete a ${config.display} by id or slug (exactly one required). Irreversible.`,
-    { id: z.string().optional(), slug: z.string().optional() },
+    {
+      id: z.string().optional(),
+      slug: z.string().optional(),
+      ...config.schemas.delete,
+    },
     ((args: any) => handlers.handleDelete(ctx, args)) as any,
   );
 

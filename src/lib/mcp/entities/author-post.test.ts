@@ -358,12 +358,20 @@ describe("createAuthorPostEntity", () => {
       expect(entity.schemas.list).toHaveProperty("author_id");
     });
 
+    it("get schema includes author_id", () => {
+      expect(entity.schemas.get).toHaveProperty("author_id");
+    });
+
     it("create schema includes author_id", () => {
       expect(entity.schemas.create).toHaveProperty("author_id");
     });
 
     it("update schema includes author_id", () => {
       expect(entity.schemas.update).toHaveProperty("author_id");
+    });
+
+    it("delete schema includes author_id", () => {
+      expect(entity.schemas.delete).toHaveProperty("author_id");
     });
 
     it("create schema does not include status or category_id", () => {

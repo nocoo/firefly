@@ -145,6 +145,9 @@ export function createAuthorPostEntity(): EntityConfig<Post> {
         page: z.number().optional(),
         page_size: z.number().min(1).max(100).optional(),
       },
+      get: {
+        author_id: z.string().describe("Your author ID (required)"),
+      },
       create: {
         author_id: z.string().describe("Your author ID (required)"),
         title: z.string(),
@@ -166,6 +169,9 @@ export function createAuthorPostEntity(): EntityConfig<Post> {
         // category_id intentionally omitted
         tag_ids: z.array(z.string()).optional(),
         featured_image: z.string().nullable().optional(),
+      },
+      delete: {
+        author_id: z.string().describe("Your author ID (required)"),
       },
     },
     // ─────────────────────────────────────────────────────────────

@@ -16,7 +16,9 @@ export async function GET(request: Request) {
     const codeChallenge = params.get("code_challenge");
     const codeChallengeMethod = params.get("code_challenge_method");
     const state = params.get("state");
-    const scope = params.get("scope") ?? "mcp:full";
+    const scopeParam = params.get("scope") ?? "full";
+    // Validate scope: only "full" or "author" allowed
+    const scope = scopeParam === "author" ? "author" : "full";
 
     // Validate required params
     if (!responseType || !clientId || !redirectUri || !codeChallenge || !codeChallengeMethod || !state) {

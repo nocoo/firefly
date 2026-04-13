@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -263,20 +263,12 @@ export function AiAgentsManager({
     prompt: string;
   } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<AgentWithAvatarUrl | null>(null);
-  const [showPromptFor, setShowPromptFor] = useState<AgentWithAvatarUrl | null>(null);
-
-  // Generate prompt for an existing agent
-  const generatePrompt = useCallback((agent: AgentWithAvatarUrl): string => {
-    // Import the prompt generator function client-side is not ideal,
-    // so we replicate the key parts here
-    return `你是「${agent.name}」。
-
-Author ID: ${agent.id}
-
-在所有 MCP 工具调用中带上 author_id 参数。
-
-MCP URL: ${mcpUrl}`;
-  }, [mcpUrl]);
+  const [showPromptFor, setShowPromptFor] = useState<{
+    agentName: string;
+    agentId: string;
+    prompt: string;
+  } | null>(null);
+  const [loadingPrompt, setLoadingPrompt] = useState(false);
 
   // Edit agent
   const handleEdit = (agentId: string) => {
@@ -288,9 +280,27 @@ MCP URL: ${mcpUrl}`;
     router.push("/admin/ai-agents/new");
   };
 
-  // Show prompt for existing agent
-  const handleShowPrompt = (agent: AgentWithAvatarUrl) => {
-    setShowPromptFor(agent);
+  // Show prompt for existing agent — fetch from API
+  const handleShowPrompt = async (agent: AgentWithAvatarUrl) => {
+    setLoadingPrompt(true);
+    try {
+      const res = await fetch(`/api/admin/ai-agents/${agent.id}/prompt`);
+      const data = await res.json();
+      setShowPromptFor({
+        agentName: agent.name,
+        agentId: agent.id,
+        prompt: data.prompt ?? `Author ID: ${agent.id}\n\nMCP URL: ${mcpUrl}`,
+      });
+    } catch {
+      // Fallback to basic info
+      setShowPromptFor({
+        agentName: agent.name,
+        agentId: agent.id,
+        prompt: `Author ID: ${agent.id}\n\nMCP URL: ${mcpUrl}`,
+      });
+    } finally {
+      setLoadingPrompt(false);
+    }
   };
 
   // Delete agent
@@ -332,7 +342,7 @@ MCP URL: ${mcpUrl}`;
             setNewAgent({
               agentName: agent.name,
               agentId: agent.id,
-              prompt: generatePrompt(agent),
+              prompt: `Author ID: ${agent.id}\n\nMCP URL: ${mcpUrl}`,
             });
           });
       }
@@ -340,7 +350,7 @@ MCP URL: ${mcpUrl}`;
       url.searchParams.delete("new");
       window.history.replaceState({}, "", url.pathname);
     }
-  }, [agents, generatePrompt, mcpUrl]);
+  }, [agents, mcpUrl]);
 
   return (
     <div className="space-y-6">
@@ -422,12 +432,21 @@ MCP URL: ${mcpUrl}`;
       {/* Show prompt modal for existing agent */}
       {showPromptFor && (
         <NewAgentModal
-          agentName={showPromptFor.name}
-          agentId={showPromptFor.id}
-          prompt={generatePrompt(showPromptFor)}
+          agentName={showPromptFor.agentName}
+          agentId={showPromptFor.agentId}
+          prompt={showPromptFor.prompt}
           onClose={() => setShowPromptFor(null)}
           t={t}
         />
+      )}
+
+      {/* Loading indicator for prompt fetch */}
+      {loadingPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="rounded-lg bg-background border border-border px-6 py-4">
+            <p className="text-sm text-muted-foreground">Loading prompt...</p>
+          </div>
+        </div>
       )}
 
       {/* Confirm delete dialog */}

@@ -87,8 +87,12 @@ export interface EntityConfig<T = unknown> {
   /** Zod schemas for tool input validation. */
   schemas: {
     list?: Record<string, z.ZodType>;
+    /** Extra fields for get tool (in addition to id/slug). */
+    get?: Record<string, z.ZodType>;
     create: Record<string, z.ZodType>;
     update: Record<string, z.ZodType>;
+    /** Extra fields for delete tool (in addition to id/slug). */
+    delete?: Record<string, z.ZodType>;
   };
   /** Tool descriptions (optional overrides, sensible defaults generated). */
   descriptions?: {
