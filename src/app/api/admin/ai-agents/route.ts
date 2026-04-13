@@ -54,10 +54,24 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as CreateAgentBody;
     const { name, slug, description, categoryId } = body;
 
-    // Normalize first
-    const normalizedName = typeof name === "string" ? name.trim() : "";
-    const normalizedSlug = typeof slug === "string" ? slug.trim() : "";
-    const normalizedDescription = typeof description === "string" ? description.trim() : null;
+    // Type validation first
+    if (typeof name !== "string") {
+      return errorResponse("name must be a string", 400);
+    }
+    if (typeof slug !== "string") {
+      return errorResponse("slug must be a string", 400);
+    }
+    if (description !== undefined && description !== null && typeof description !== "string") {
+      return errorResponse("description must be a string or null", 400);
+    }
+    if (typeof categoryId !== "string") {
+      return errorResponse("categoryId must be a string", 400);
+    }
+
+    // Normalize
+    const normalizedName = name.trim();
+    const normalizedSlug = slug.trim();
+    const normalizedDescription = description ? description.trim() : null;
 
     // Validate required fields (after normalization)
     if (!normalizedName) {
@@ -65,9 +79,6 @@ export async function POST(request: NextRequest) {
     }
     if (!normalizedSlug) {
       return errorResponse("slug is required", 400);
-    }
-    if (!categoryId || typeof categoryId !== "string") {
-      return errorResponse("categoryId is required", 400);
     }
 
     const db = getDb();

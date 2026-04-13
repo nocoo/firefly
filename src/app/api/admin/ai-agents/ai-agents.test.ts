@@ -1,7 +1,7 @@
 /**
  * AI Agents API — Route validation tests
  *
- * Tests for input normalization and validation in POST/PATCH handlers.
+ * Tests for input normalization, type validation, and all CRUD operations.
  * These are unit tests using mocked handlers, not E2E tests.
  */
 
@@ -22,6 +22,7 @@ vi.mock("@/data/entities/ai-agent", () => ({
   getAiAgentById: vi.fn(),
   getAiAgentBySlug: vi.fn(),
   updateAiAgent: vi.fn(),
+  deleteAiAgent: vi.fn(),
 }));
 
 vi.mock("@/data/entities/category", () => ({
@@ -43,10 +44,11 @@ import {
   getAiAgentById,
   getAiAgentBySlug,
   updateAiAgent,
+  deleteAiAgent,
 } from "@/data/entities/ai-agent";
 import { getCategoryById } from "@/data/entities/category";
 import { POST } from "./route";
-import { PATCH } from "./[id]/route";
+import { PATCH, DELETE } from "./[id]/route";
 
 // ---------------------------------------------------------------------------
 // Test data
@@ -309,5 +311,114 @@ describe("PATCH /api/admin/ai-agents/[id]", () => {
     expect(updateAiAgent).toHaveBeenCalledWith(mockDb, "agent-1", {
       description: null,
     });
+  });
+
+  it("rejects non-string name", async () => {
+    const request = new NextRequest("http://localhost/api/admin/ai-agents/agent-1", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: 123 }),
+    });
+
+    const response = await PATCH(request, { params: Promise.resolve({ id: "agent-1" }) });
+    expect(response.status).toBe(400);
+
+    const body = await response.json();
+    expect(body.error).toBe("name must be a string");
+  });
+
+  it("rejects non-string slug", async () => {
+    const request = new NextRequest("http://localhost/api/admin/ai-agents/agent-1", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug: { foo: "bar" } }),
+    });
+
+    const response = await PATCH(request, { params: Promise.resolve({ id: "agent-1" }) });
+    expect(response.status).toBe(400);
+
+    const body = await response.json();
+    expect(body.error).toBe("slug must be a string");
+  });
+
+  it("rejects array description", async () => {
+    const request = new NextRequest("http://localhost/api/admin/ai-agents/agent-1", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ description: ["a", "b"] }),
+    });
+
+    const response = await PATCH(request, { params: Promise.resolve({ id: "agent-1" }) });
+    expect(response.status).toBe(400);
+
+    const body = await response.json();
+    expect(body.error).toBe("description must be a string or null");
+  });
+
+  it("rejects non-boolean isActive", async () => {
+    const request = new NextRequest("http://localhost/api/admin/ai-agents/agent-1", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isActive: "true" }),
+    });
+
+    const response = await PATCH(request, { params: Promise.resolve({ id: "agent-1" }) });
+    expect(response.status).toBe(400);
+
+    const body = await response.json();
+    expect(body.error).toBe("isActive must be a boolean");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DELETE /api/admin/ai-agents/[id] — Delete validation
+// ---------------------------------------------------------------------------
+
+describe("DELETE /api/admin/ai-agents/[id]", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(auth).mockResolvedValue({ user: { email: "admin@example.com" } } as any);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(getDb).mockReturnValue(mockDb as any);
+  });
+
+  it("returns 404 when agent not found", async () => {
+    vi.mocked(deleteAiAgent).mockResolvedValue({ success: false });
+
+    const request = new NextRequest("http://localhost/api/admin/ai-agents/nonexistent", {
+      method: "DELETE",
+    });
+
+    const response = await DELETE(request, { params: Promise.resolve({ id: "nonexistent" }) });
+    expect(response.status).toBe(404);
+  });
+
+  it("returns 409 when agent has posts", async () => {
+    vi.mocked(deleteAiAgent).mockResolvedValue({ success: false, postCount: 3 });
+
+    const request = new NextRequest("http://localhost/api/admin/ai-agents/agent-1", {
+      method: "DELETE",
+    });
+
+    const response = await DELETE(request, { params: Promise.resolve({ id: "agent-1" }) });
+    expect(response.status).toBe(409);
+
+    const body = await response.json();
+    expect(body.error).toContain("3 post(s)");
+  });
+
+  it("returns 200 on successful deletion", async () => {
+    vi.mocked(deleteAiAgent).mockResolvedValue({ success: true });
+
+    const request = new NextRequest("http://localhost/api/admin/ai-agents/agent-1", {
+      method: "DELETE",
+    });
+
+    const response = await DELETE(request, { params: Promise.resolve({ id: "agent-1" }) });
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(body.success).toBe(true);
   });
 });

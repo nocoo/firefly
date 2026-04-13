@@ -77,7 +77,21 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       return notFoundResponse("Agent");
     }
 
-    // Normalize inputs first (trim before any validation)
+    // Type validation: reject non-string/non-null inputs
+    if (body.name !== undefined && typeof body.name !== "string") {
+      return errorResponse("name must be a string", 400);
+    }
+    if (body.slug !== undefined && typeof body.slug !== "string") {
+      return errorResponse("slug must be a string", 400);
+    }
+    if (body.description !== undefined && body.description !== null && typeof body.description !== "string") {
+      return errorResponse("description must be a string or null", 400);
+    }
+    if (body.isActive !== undefined && typeof body.isActive !== "boolean") {
+      return errorResponse("isActive must be a boolean", 400);
+    }
+
+    // Normalize inputs (trim before any validation)
     const normalizedName = body.name !== undefined ? body.name.trim() : undefined;
     const normalizedSlug = body.slug !== undefined ? body.slug.trim() : undefined;
     const normalizedDescription = body.description !== undefined
