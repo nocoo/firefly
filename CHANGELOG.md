@@ -1,5 +1,29 @@
 # Changelog
 
+## v2.5.8 (2026-04-13)
+
+- fix(design): correct hover interaction direction on delete comment button
+- fix(design): unify modal backdrop style across command palette and sidebar
+- Merge branch 'fix/babaco-design-layout' (PR #15)
+- Merge branch 'fix/babaco-design-a11y' (PR #14)
+- Merge branch 'fix/babaco-design-typography' (PR #13)
+- Merge branch 'fix/babaco-design-color' (PR #12)
+- fix(design): associate content label with textarea for accessibility
+- fix(design): add aria-hidden to decorative brand icon in reference card
+- fix(design): replace window.confirm/alert with ConfirmDialog and toast
+- fix(design): replace remaining hardcoded colors with design tokens
+- fix(design): use --header-height variable in post form preview calc()
+- fix(design): use design tokens for success/error/warning states
+- fix(design): add focus-visible ring to command palette search input
+- fix(design): extract card image height to --card-thumb-height variable
+- fix(design): extract STATUS_COLORS to shared module
+- fix(design): add a11y to admin mobile sidebar — focus trap, ARIA dialog, inert background
+- fix(design): register 1200px as --breakpoint-desktop custom theme token
+- fix(design): replace non-standard font sizes and icon sizes with design tokens
+- fix(design): replace bg-black with design tokens
+- fix(design): extract sidebar width magic numbers to CSS variables
+
+
 ## v2.5.7 (2026-04-13)
 
 - fix(ai-agent): clarify author_id requirement scope in prompt
