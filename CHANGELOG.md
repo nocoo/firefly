@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.5.9 (2026-04-14)
+
+- fix(ui): replace raw select tags with Select component in MCP token manager
+- fix(mcp): reject invalid scope on token creation instead of fail-open
+- feat(mcp): add token scope management to admin UI
+
+
 ## v2.5.8 (2026-04-13)
 
 - fix(design): correct hover interaction direction on delete comment button
