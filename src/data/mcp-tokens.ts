@@ -214,6 +214,23 @@ export async function listMcpTokens(
 }
 
 // ---------------------------------------------------------------------------
+// updateTokenScope
+// ---------------------------------------------------------------------------
+
+/** Update the scope of an active (non-revoked) token. Returns true if updated. */
+export async function updateTokenScope(
+  db: Db,
+  id: string,
+  scope: McpTokenScope,
+): Promise<boolean> {
+  const meta = await db.execute(
+    "UPDATE mcp_tokens SET scope = ? WHERE id = ? AND revoked = 0",
+    [scope, id],
+  );
+  return meta.changes > 0;
+}
+
+// ---------------------------------------------------------------------------
 // deleteMcpToken
 // ---------------------------------------------------------------------------
 

@@ -2,9 +2,9 @@
 
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Plus, Copy, Check, Terminal, Trash2 } from "lucide-react";
+import { KeyRound, Plus, Copy, Check, Terminal, Trash2, Shield, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-import type { McpToken } from "@/models/types";
+import type { McpToken, McpTokenScope } from "@/models/types";
 import { useLocale } from "@/i18n/context";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
@@ -190,6 +190,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [clientName, setClientName] = useState("");
+  const [createScope, setCreateScope] = useState<McpTokenScope>("full");
   const [newToken, setNewToken] = useState<{
     access_token: string;
     id: string;
@@ -266,7 +267,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
       const res = await fetch("/api/mcp/tokens", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ client_name: clientName.trim() }),
+        body: JSON.stringify({ client_name: clientName.trim(), scope: createScope }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -280,6 +281,24 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
       setError(err instanceof Error ? err.message : "Failed to create token");
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleScopeChange = async (tokenId: string, newScope: McpTokenScope) => {
+    try {
+      const res = await fetch(`/api/mcp/tokens/${tokenId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scope: newScope }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Failed to update scope");
+      }
+      toast.success(t("admin.mcpTokens.scopeUpdated"));
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update scope");
     }
   };
 
@@ -336,6 +355,19 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
             onKeyDown={(e) => e.key === "Enter" && handleCreate()}
           />
         </div>
+        <div className="w-32 shrink-0">
+          <label className="text-sm font-medium text-foreground">
+            {t("admin.mcpTokens.scope")}
+          </label>
+          <select
+            value={createScope}
+            onChange={(e) => setCreateScope(e.target.value as McpTokenScope)}
+            className="mt-1 w-full rounded-[var(--radius-widget)] border border-input bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="full">{t("admin.mcpTokens.scopeFull")}</option>
+            <option value="author">{t("admin.mcpTokens.scopeAuthor")}</option>
+          </select>
+        </div>
         <button
           onClick={handleCreate}
           disabled={creating || !clientName.trim()}
@@ -381,6 +413,9 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
                     {t("admin.mcpTokens.colPreview")}
                   </th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                    {t("admin.mcpTokens.colScope")}
+                  </th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
                     {t("admin.mcpTokens.colLastUsed")}
                   </th>
@@ -422,6 +457,29 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
                         <code className="rounded bg-secondary px-1.5 py-0.5 text-xs font-mono">
                           {token.access_token_preview}…
                         </code>
+                      </td>
+                      <td className="px-4 py-3">
+                        {isRevoked ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                            {token.scope === "author" ? (
+                              <ShieldCheck className="h-3.5 w-3.5" />
+                            ) : (
+                              <Shield className="h-3.5 w-3.5" />
+                            )}
+                            {token.scope === "author"
+                              ? t("admin.mcpTokens.scopeAuthor")
+                              : t("admin.mcpTokens.scopeFull")}
+                          </span>
+                        ) : (
+                          <select
+                            value={token.scope}
+                            onChange={(e) => handleScopeChange(token.id, e.target.value as McpTokenScope)}
+                            className="rounded-md border border-input bg-input px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-ring"
+                          >
+                            <option value="full">{t("admin.mcpTokens.scopeFull")}</option>
+                            <option value="author">{t("admin.mcpTokens.scopeAuthor")}</option>
+                          </select>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
                         {formatDate(token.last_used_at)}

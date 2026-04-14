@@ -14,6 +14,7 @@ import {
   deleteMcpToken,
   deleteRevokedTokens,
   countRevokedTokens,
+  updateTokenScope,
   sha256,
   randomHex,
   generateAccessToken,
@@ -414,5 +415,46 @@ describe("countRevokedTokens", () => {
     const result = await countRevokedTokens(db);
 
     expect(result).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// updateTokenScope
+// ---------------------------------------------------------------------------
+
+describe("updateTokenScope", () => {
+  let db: Db;
+  beforeEach(() => { db = createMockDb(); });
+
+  it("updates scope of active token and returns true", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });
+
+    const result = await updateTokenScope(db, "tok-1", "author");
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("UPDATE mcp_tokens");
+    expect(sql).toContain("scope = ?");
+    expect(sql).toContain("revoked = 0");
+    expect(params![0]).toBe("author");
+    expect(params![1]).toBe("tok-1");
+    expect(result).toBe(true);
+  });
+
+  it("returns false when token is revoked or not found", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 0, duration: 1 });
+
+    const result = await updateTokenScope(db, "revoked-tok", "full");
+
+    expect(result).toBe(false);
+  });
+
+  it("accepts 'full' scope value", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });
+
+    const result = await updateTokenScope(db, "tok-1", "full");
+
+    const [, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(params![0]).toBe("full");
+    expect(result).toBe(true);
   });
 });

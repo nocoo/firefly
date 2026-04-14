@@ -3,8 +3,10 @@ import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
 import { listMcpTokens, generateAccessToken, generateRefreshToken, sha256, createMcpToken, deleteRevokedTokens, countRevokedTokens } from "@/data/mcp-tokens";
 import { createMcpClient } from "@/data/mcp-clients";
+import type { McpTokenScope } from "@/models/types";
 
 const E2E_EMAIL = "e2e@test.local";
+const VALID_SCOPES: McpTokenScope[] = ["full", "author"];
 
 /** Check admin auth — returns user email or null. Bypassed in E2E. */
 async function requireAdmin(): Promise<{ email: string } | null> {
@@ -52,11 +54,15 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = (await request.json()) as { client_name?: string };
+    const body = (await request.json()) as { client_name?: string; scope?: string };
 
     if (!body.client_name || typeof body.client_name !== "string") {
       return errorResponse("client_name is required");
     }
+
+    const scope: McpTokenScope = VALID_SCOPES.includes(body.scope as McpTokenScope)
+      ? (body.scope as McpTokenScope)
+      : "full";
 
     const db = getDb();
 
@@ -79,7 +85,7 @@ export async function POST(request: Request) {
       refresh_token_hash: refreshHash,
       client_id: client.client_id,
       user_email: admin.email,
-      scope: "full",
+      scope,
       client_name: body.client_name,
     });
 
