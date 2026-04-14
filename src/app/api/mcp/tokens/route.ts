@@ -60,9 +60,14 @@ export async function POST(request: Request) {
       return errorResponse("client_name is required");
     }
 
-    const scope: McpTokenScope = VALID_SCOPES.includes(body.scope as McpTokenScope)
-      ? (body.scope as McpTokenScope)
-      : "full";
+    // Absent → default "full"; present but invalid → reject (fail-closed)
+    let scope: McpTokenScope = "full";
+    if (body.scope !== undefined) {
+      if (!VALID_SCOPES.includes(body.scope as McpTokenScope)) {
+        return errorResponse(`Invalid scope. Must be one of: ${VALID_SCOPES.join(", ")}`);
+      }
+      scope = body.scope as McpTokenScope;
+    }
 
     const db = getDb();
 
