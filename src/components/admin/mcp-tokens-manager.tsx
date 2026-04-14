@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import type { McpToken, McpTokenScope } from "@/models/types";
 import { useLocale } from "@/i18n/context";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+import { Select } from "@/components/ui/select";
 
 interface McpTokensManagerProps {
   tokens: McpToken[];
@@ -359,14 +360,14 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
           <label className="text-sm font-medium text-foreground">
             {t("admin.mcpTokens.scope")}
           </label>
-          <select
+          <Select
             value={createScope}
             onChange={(e) => setCreateScope(e.target.value as McpTokenScope)}
-            className="mt-1 w-full rounded-[var(--radius-widget)] border border-input bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="mt-1"
           >
             <option value="full">{t("admin.mcpTokens.scopeFull")}</option>
             <option value="author">{t("admin.mcpTokens.scopeAuthor")}</option>
-          </select>
+          </Select>
         </div>
         <button
           onClick={handleCreate}
@@ -471,14 +472,14 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
                               : t("admin.mcpTokens.scopeFull")}
                           </span>
                         ) : (
-                          <select
+                          <Select
                             value={token.scope}
                             onChange={(e) => handleScopeChange(token.id, e.target.value as McpTokenScope)}
-                            className="rounded-md border border-input bg-input px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-ring"
+                            className="h-7 py-1 pl-2 pr-8 text-xs"
                           >
                             <option value="full">{t("admin.mcpTokens.scopeFull")}</option>
                             <option value="author">{t("admin.mcpTokens.scopeAuthor")}</option>
-                          </select>
+                          </Select>
                         )}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
