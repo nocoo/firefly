@@ -372,7 +372,7 @@ export function AiAgentsManager({
 
       {/* Table or empty state */}
       {agents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-12">
+        <div className="flex flex-col items-center justify-center rounded-[var(--radius-card)] bg-secondary py-12">
           <Users className="h-12 w-12 text-muted-foreground/50" />
           <p className="mt-4 text-sm text-muted-foreground">
             {t("admin.aiAgents.empty")}
@@ -383,9 +383,9 @@ export function AiAgentsManager({
           </Button>
         </div>
       ) : (
-        <div className="rounded-lg border border-border bg-card overflow-hidden">
+        <div className="rounded-[var(--radius-card)] bg-secondary p-1 overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-muted/50">
+            <thead>
               <tr className="border-b border-border">
                 <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
                   {t("admin.aiAgents.name")}
