@@ -99,7 +99,7 @@ function NavGroupSection({
         onClick={() => setOpen(!open)}
         className="flex w-full items-center justify-between px-3 py-2.5"
       >
-        <span className="text-sm font-normal text-muted-foreground">
+        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground/70">
           {t(group.labelKey)}
         </span>
         <span className="flex h-7 w-7 shrink-0 items-center justify-center">
