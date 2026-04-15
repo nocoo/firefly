@@ -285,7 +285,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
                   height={24}
                   className="h-6 w-6"
                 />
-                <span className="text-lg font-semibold text-foreground">
+                <span className="text-lg font-bold tracking-tighter text-foreground">
                   {t("admin.sidebar.firefly")}
                 </span>
                 <span className="rounded-md bg-secondary px-1.5 py-0.5 font-mono text-2xs font-medium text-muted-foreground leading-none">
