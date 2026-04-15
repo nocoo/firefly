@@ -159,7 +159,7 @@ function SetupGuide({
               onClick={() => setActiveTab(key)}
               className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
                 activeTab === key
-                  ? "bg-background text-foreground shadow-sm"
+                  ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >

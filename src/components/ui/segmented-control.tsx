@@ -38,7 +38,7 @@ export function SegmentedControl<T extends string | number>({
           onClick={() => onChange(opt.value)}
           className={`rounded-[calc(var(--radius-widget)-2px)] px-3 py-1 text-xs font-medium transition-colors ${
             value === opt.value
-              ? "bg-background text-foreground shadow-xs"
+              ? "bg-card text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
