@@ -35,7 +35,7 @@ export const PostGridCard = memo(function PostGridCard({
 
   return (
     <Card
-      className={`group relative overflow-hidden shadow-sm transition-colors ${
+      className={`group relative overflow-hidden transition-colors ${
         selected
           ? "border-primary ring-2 ring-primary/20"
           : "hover:border-primary/50"
@@ -51,7 +51,7 @@ export const PostGridCard = memo(function PostGridCard({
               e.stopPropagation();
               onToggleSelect(post.id);
             }}
-            className={`h-4 w-4 cursor-pointer rounded border-border text-primary shadow-sm focus:ring-ring ${
+            className={`h-4 w-4 cursor-pointer rounded border-border text-primary focus:ring-ring ${
               selected
                 ? "opacity-100"
                 : "opacity-0 group-hover:opacity-100"
