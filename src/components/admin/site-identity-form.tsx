@@ -311,7 +311,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
             {t("admin.settings.siteDescriptionHint")}
           </p>
           <textarea
-            className="flex min-h-[80px] w-full max-w-lg rounded-md border border-input bg-input px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex min-h-[80px] w-full max-w-lg rounded-md border border-border bg-secondary px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             value={siteDescription}
             onChange={(e) => setSiteDescription(e.target.value)}
             placeholder={t("admin.settings.siteDescriptionPlaceholder")}
