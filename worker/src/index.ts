@@ -2,6 +2,7 @@
  * firefly Worker — Cloudflare Worker with native D1 binding.
  *
  * Routes:
+ * - GET  /api/live            — surety-standard liveness (no auth)
  * - GET  /api/v1/health      — health check (no auth)
  * - POST /api/v1/query       — execute read-only SQL (regex guards writes)
  * - POST /api/v1/execute     — execute write SQL (single + batch)
@@ -12,8 +13,9 @@
  */
 
 import { handleFtsSync, handleFtsSearch } from "./fts";
+import pkg from "../package.json";
 
-const WORKER_VERSION = "2.1.0";
+const VERSION = pkg.version;
 
 const bootTime = Date.now();
 
@@ -75,12 +77,45 @@ async function handleHealth(env: Env): Promise<Response> {
   return jsonResponse(
     {
       status: isHealthy ? "ok" : "error",
-      version: WORKER_VERSION,
+      version: VERSION,
       uptime: Math.round((Date.now() - bootTime) / 1000),
       db: dbStatus,
       timestamp: new Date().toISOString(),
     },
     isHealthy ? 200 : 503,
+    { "Cache-Control": "no-store" },
+  );
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/live — surety-standard liveness
+// ---------------------------------------------------------------------------
+
+async function handleLive(env: Env): Promise<Response> {
+  const timestamp = new Date().toISOString();
+  const uptime = Math.round((Date.now() - bootTime) / 1000);
+
+  let database: { connected: boolean; error?: string } = { connected: false };
+  try {
+    await env.DB.prepare("SELECT 1 AS probe").first();
+    database = { connected: true };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    database = { connected: false, error: msg.replace(/\bok\b/gi, "***") };
+  }
+
+  const healthy = database.connected;
+
+  return jsonResponse(
+    {
+      status: healthy ? "ok" : "error",
+      version: VERSION,
+      component: "firefly-worker",
+      timestamp,
+      uptime,
+      database,
+    },
+    healthy ? 200 : 503,
     { "Cache-Control": "no-store" },
   );
 }
@@ -231,6 +266,14 @@ const worker: ExportedHandler<Env> = {
     // CORS preflight
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders() });
+    }
+
+    // GET /api/live — surety-standard liveness (no auth)
+    if (path === "/api/live") {
+      if (request.method !== "GET") {
+        return jsonResponse({ error: "Method not allowed" }, 405);
+      }
+      return handleLive(env);
     }
 
     // GET /api/v1/health — no auth
