@@ -134,6 +134,7 @@ export const postEntity: EntityConfig<Post> = {
         status: o.status as PostStatus | undefined,
         categoryId: o.category_id as string | undefined,
         tagId: o.tag_id as string | undefined,
+        aiAgentId: o.ai_agent_id as string | undefined,
         query: o.query as string | undefined,
         page: (o.page as number) ?? 1,
         pageSize: (o.page_size as number) ?? 20,
@@ -154,6 +155,7 @@ export const postEntity: EntityConfig<Post> = {
       category_id: z.string().optional(),
       tag_id: z.string().optional(),
       query: z.string().optional(),
+      ai_agent_id: z.string().optional().describe("Filter by AI author ID."),
       page: z.number().optional(),
       page_size: z.number().min(1).max(100).optional(),
     },
@@ -169,6 +171,7 @@ export const postEntity: EntityConfig<Post> = {
       tag_ids: z.array(z.string()).optional(),
       featured_image: z.string().optional(),
       published_at: z.number().optional(),
+      ai_agent_id: z.string().optional().describe("AI author ID. Optional in full mode; omit for normal (human) posts."),
     },
     update: {
       title: z.string().optional(),
@@ -186,6 +189,7 @@ export const postEntity: EntityConfig<Post> = {
       reference_title: z.string().nullable().optional(),
       reference_description: z.string().nullable().optional(),
       reference_image: z.string().nullable().optional(),
+      ai_agent_id: z.string().nullable().optional().describe("AI author ID. Set to reassign, null to clear."),
     },
   },
   hooks: {
@@ -194,13 +198,14 @@ export const postEntity: EntityConfig<Post> = {
       tags: await getPostTags(ctx.db, post.id),
     }),
     mapCreateInput: (args) => {
-      const { tag_ids, category_id, featured_image, published_at, ...rest } = args;
+      const { tag_ids, category_id, featured_image, published_at, ai_agent_id, ...rest } = args;
       return {
         ...rest,
         ...(tag_ids !== undefined && { tagIds: tag_ids }),
         ...(category_id !== undefined && { categoryId: category_id }),
         ...(featured_image !== undefined && { featuredImage: featured_image }),
         ...(published_at !== undefined && { publishedAt: published_at }),
+        ...(ai_agent_id !== undefined && { aiAgentId: ai_agent_id }),
       };
     },
     mapUpdateInput: (args) => {
@@ -214,6 +219,7 @@ export const postEntity: EntityConfig<Post> = {
         reference_title,
         reference_description,
         reference_image,
+        ai_agent_id,
         ...rest
       } = args;
       return {
@@ -227,6 +233,7 @@ export const postEntity: EntityConfig<Post> = {
         ...(reference_title !== undefined && { referenceTitle: reference_title }),
         ...(reference_description !== undefined && { referenceDescription: reference_description }),
         ...(reference_image !== undefined && { referenceImage: reference_image }),
+        ...(ai_agent_id !== undefined && { aiAgentId: ai_agent_id }),
       };
     },
   },
