@@ -1,5 +1,30 @@
 # Changelog
 
+## v2.5.10 (2026-04-16)
+
+- deps: update hono 4.12.12→4.12.14, @modelcontextprotocol/sdk 1.27.1→1.29.0
+- fix(data): wire aiAgentId through updatePost persistence layer
+- feat(mcp): add optional ai_agent_id to full-scope post entity
+- Merge pull request #32 from nocoo/fix/issue-25
+- Merge pull request #31 from nocoo/fix/issue-24
+- Merge pull request #30 from nocoo/fix/issue-23
+- Merge pull request #29 from nocoo/fix/issue-22
+- Merge pull request #28 from nocoo/fix/issue-21
+- Merge pull request #27 from nocoo/fix/issue-20
+- Merge pull request #26 from nocoo/fix/issue-19
+- feat(ui): add standalone Skeleton base component
+- fix(ui): SegmentedControl selected state bg-background → bg-card
+- fix(ui): add hover border darkening to Input and Select
+- style(sidebar): brand name font-bold + tracking-tighter
+- style(shell): GitHub icon h-5 → h-[18px] per B02-2h
+- fix(ui): remove shadow-sm from PostGridCard
+- style(sidebar): nav group labels text-xs uppercase tracking-wider
+- Merge pull request #18 from nocoo/fix/ai-agents-table-l2
+- fix(ui): ai-agents table and empty state to L2 bg-secondary
+- Merge pull request #17 from nocoo/fix/issue-16
+- fix(ui): migrate L3 controls from bg-input to bg-secondary + border-border
+
+
 ## v2.5.9 (2026-04-14)
 
 - fix(ui): replace raw select tags with Select component in MCP token manager
