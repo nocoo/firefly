@@ -57,6 +57,7 @@ export interface UpdatePostInput {
   referenceTitle?: string | null | undefined;
   referenceDescription?: string | null | undefined;
   referenceImage?: string | null | undefined;
+  aiAgentId?: string | null | undefined;
 }
 
 export interface ListPostsOptions {
@@ -471,6 +472,11 @@ export async function updatePost(
   if (input.commentEnabled !== undefined) {
     setClauses.push("comment_enabled = ?");
     params.push(input.commentEnabled);
+  }
+
+  if (input.aiAgentId !== undefined) {
+    setClauses.push("ai_agent_id = ?");
+    params.push(input.aiAgentId);
   }
 
   // Determine the final published_at value:

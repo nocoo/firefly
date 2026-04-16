@@ -564,6 +564,32 @@ describe("updatePost", () => {
     expect(db.execute).not.toHaveBeenCalled();
   });
 
+  it("updates ai_agent_id when aiAgentId is provided", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", { aiAgentId: "agent-42" });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("ai_agent_id = ?");
+    expect(params).toContain("agent-42");
+  });
+
+  it("clears ai_agent_id when aiAgentId is null", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce(samplePostWithCategory)
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", { aiAgentId: null });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("ai_agent_id = ?");
+    expect(params).toContain(null);
+  });
+
   it("returns existing when no fields provided", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(samplePostWithCategory);
     const result = await updatePost(db, "post-1", {});
