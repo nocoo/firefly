@@ -62,19 +62,26 @@ const tagRevalidatedAt = new Map<string, number>();
 
 /**
  * Estimate the size of a cache entry in bytes.
+ * Uses sampling for large objects to avoid memory pressure from JSON.stringify.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function estimateSize(value: any): number {
   if (!value) return 0;
 
-  try {
-    // Try JSON stringify for size estimation
-    const str = JSON.stringify(value);
-    return str.length;
-  } catch {
-    // Fallback: rough estimate
-    return 1024;
+  // Fast path: use rough estimates based on type and structure
+  // This avoids creating a full JSON string copy which doubles memory temporarily
+  if (typeof value === 'string') return value.length;
+  if (typeof value === 'number' || typeof value === 'boolean') return 8;
+  if (value === null) return 4;
+  
+  // For objects, use a heuristic based on key count
+  if (typeof value === 'object') {
+    const keys = Object.keys(value);
+    // Rough estimate: 50 bytes per key on average
+    return keys.length * 50 + 100;
   }
+
+  return 256; // Default fallback
 }
 
 /**

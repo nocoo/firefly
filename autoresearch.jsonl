@@ -1,0 +1,2 @@
+{"type":"config","name":"优化 Firefly 运行时内存占用","metricName":"rss_mb","metricUnit":"mb","bestDirection":"lower"}
+{"run":1,"commit":"e8856cd","metric":46.58,"metrics":{"startup_time_ms":533},"status":"keep","description":"Baseline: RSS memory usage after warmup + requests","timestamp":1776396626770,"segment":0,"confidence":null,"iterationTokens":251,"asi":{"hypothesis":"Baseline measurement of RSS memory after typical request workload"}}
