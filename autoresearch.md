@@ -1,27 +1,41 @@
-# Autoresearch: 优化运行时内存占用
+# Autoresearch: 优化 UT 执行时间
 
 ## 目标
-降低 Next.js 应用的运行时内存占用（heapUsed），通过以下方式：
-1. 优化缓存策略（cache-handler）
-2. 减少模块加载开销
-3. 优化数据结构
-4. 懒加载重型依赖
+在保持覆盖率 95%+ 的前提下，优化单元测试执行时间。
 
 ## 基准测试方法
-1. Build 项目
-2. 启动 Next.js 服务器
-3. 模拟一系列典型请求
-4. 测量 heap 内存使用
+运行 `bun run test:coverage` 测量：
+- Duration (总时间)
+- tests 时间（实际测试执行时间）
+- 覆盖率指标
 
 ## 约束
-- 不能破坏功能（tests 必须通过）
-- 不能牺牲性能换内存
-- 不能过拟合基准测试
+- 覆盖率保持在 95%+ (lines, branches, functions, statements)
+- 不删除有意义的测试
+- 不过拟合基准测试
 
 ## 主要指标
-- `heap_used_mb`: 堆内存使用量（MB）
+- `test_duration_s`: 测试总时间（秒）
 
 ## 次要指标
-- `heap_total_mb`: 总堆内存（MB）
-- `rss_mb`: 进程内存（MB）
-- `startup_time_ms`: 启动时间（ms）
+- `tests_count`: 测试用例数量
+- `coverage_lines`: 行覆盖率
+
+## 已完成优化
+
+### 1. DNS 超时测试优化 ✅
+**问题**: `unfurl.test.ts` 中的 "throws on DNS timeout" 测试等待真实的 5 秒 DNS 超时。
+**解决**: 改用 mock rejection 模拟超时行为，无需等待真实超时。
+**效果**: 6.10s → 1.13s (-81.5%)
+
+## 结果总结
+| 指标 | 基线 | 优化后 | 改善 |
+|------|------|--------|------|
+| Duration | 6.10s | 1.09s | -82.1% |
+| Tests | 1261 | 1261 | 0% |
+| Coverage (lines) | 99.19% | 99.14% | -0.05% |
+| Coverage (branches) | 98.63% | 98.63% | 0% |
+| Coverage (functions) | 97.56% | 97.28% | -0.28% |
+| Coverage (statements) | 99.42% | 99.42% | 0% |
+
+所有覆盖率指标仍然在 95%+ 以上。

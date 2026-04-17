@@ -1,52 +1,28 @@
-# Autoresearch Ideas: 内存优化
+# Autoresearch Ideas: UT 优化
 
-## 已完成并保留
+## 已完成 ✅
 
-### 1. estimateSize() 优化 ✅
-- 避免 JSON.stringify 创建临时字符串
-- 改用启发式估算
-- 效果：在噪声范围内（~0.3MB），但代码更优
+### DNS 超时测试优化
+- 原问题: unfurl.test.ts 等待真实 5s DNS 超时
+- 解决: 用 mock rejection 模拟超时
+- 效果: 6.10s → 1.09s (-82%)
 
-### 2. Tag 字符串驻留 ✅
-- 添加 tag 字符串池避免重复分配
-- 缓存条目共享 tags 数组引用
-- 效果：在噪声范围内
+## 评估后不执行
 
-### 3. 统一缓存存储 ✅
-- 合并 cache 和 metadata 两个 Map 为单一存储
-- 减少对象数量和 Map 开销
-- 效果：在噪声范围内，bundle 减少 0.05KB
+### 参数化 SSRF 测试
+- 可以用 `it.each` 合并多个私有网络测试
+- 但会降低可读性和隔离性
+- 当前测试时间已经很快（~1s），不值得
 
-## 已测试但无效
-
-### Float64Array 存储 memoryHistory
-- 固定分配 138KB (2880 * 6 * 8 bytes)
-- 短期测试中历史记录不够多，看不出效果
-- 可能在长期运行的服务器上有帮助
-
-### --max-old-space-size=64
-- 当前使用量已经在 64MB 以下
-- 没有触发更积极的 GC
-
-### 懒加载 memory collection
-- timer 开销可忽略
-- setInterval 不额外分配内存
-
-### image cache TTL 和禁用图片优化
-- 基准测试不包含图片请求
-- 图片相关代码是懒加载的
+### Vitest 缓存
+- 尝试启用 cache 配置
+- 效果不明显（transform/import 时间主导）
 
 ## 结论
 
-运行时 RSS 约 46MB，其中：
-- 启动后约 39MB（Next.js + Node.js 核心）
-- 请求处理后增长约 7MB（模块加载 + 缓存）
-- 噪声范围约 0.3MB
+主要优化已完成。剩余时间（~1s）主要是:
+- transform: ~2.5s (TypeScript 编译)
+- import: ~4s (模块加载)
+- tests: ~1.2s (实际测试)
 
-总优化效果：约 0.35MB（0.75%）
-
-Next.js 框架本身的内存占用是主要部分。进一步优化需要：
-- 检查生产环境的实际工作负载
-- 考虑代码分割和动态导入
-- 长期监控内存增长趋势
-- 评估是否需要更轻量的框架
+这些是 vitest 的固有开销，进一步优化空间有限。
