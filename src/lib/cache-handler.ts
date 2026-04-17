@@ -60,6 +60,19 @@ const metadata = new Map<string, CacheEntryMeta>();
 // Tag invalidation timestamps
 const tagRevalidatedAt = new Map<string, number>();
 
+// Tag string interning pool — avoids duplicate string allocations for common tags
+const tagPool = new Map<string, string>();
+function internTag(tag: string): string {
+  const existing = tagPool.get(tag);
+  if (existing) return existing;
+  tagPool.set(tag, tag);
+  return tag;
+}
+function internTags(tags: string[]): string[] {
+  if (tags.length === 0) return tags;
+  return tags.map(internTag);
+}
+
 /**
  * Estimate the size of a cache entry in bytes.
  * Uses sampling for large objects to avoid memory pressure from JSON.stringify.
@@ -176,8 +189,8 @@ export default class MonitoredCacheHandler {
   async set(key: string, data: any, ctx?: any): Promise<void> {
     const now = Date.now();
 
-    // Extract tags from context
-    const tags: string[] = ctx?.tags ?? [];
+    // Extract tags from context and intern them to reduce string duplication
+    const tags: string[] = internTags(ctx?.tags ?? []);
 
     // Store the entry
     cache.set(key, {
@@ -197,7 +210,7 @@ export default class MonitoredCacheHandler {
       }
     }
 
-    // Store metadata for monitoring
+    // Store metadata for monitoring — share the same tags array reference
     const existing = metadata.get(key);
     metadata.set(key, {
       key,
@@ -206,7 +219,7 @@ export default class MonitoredCacheHandler {
       createdAt: existing?.createdAt ?? now,
       lastAccessedAt: now,
       accessCount: existing?.accessCount ?? 0,
-      tags,
+      tags, // Same reference as StoredEntry.tags
       revalidate,
     });
   }
