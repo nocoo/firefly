@@ -44,18 +44,25 @@ interface CacheHandlerValue {
 }
 
 /**
- * Internal storage entry — includes lastModified for proper CacheHandlerValue return.
+ * Unified storage entry — combines value and metadata to reduce Map overhead.
  */
-interface StoredEntry {
+interface UnifiedEntry {
+  // Value storage (required for CacheHandlerValue)
   lastModified: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value: any;
-  tags?: string[];
+  // Metadata (for monitoring)
+  kind: string;
+  size: number;
+  createdAt: number;
+  lastAccessedAt: number;
+  accessCount: number;
+  tags: string[];
+  revalidate: number | null;
 }
 
-// In-memory cache storage
-const cache = new Map<string, StoredEntry>();
-const metadata = new Map<string, CacheEntryMeta>();
+// Single unified cache storage (replaces separate cache + metadata Maps)
+const cache = new Map<string, UnifiedEntry>();
 
 // Tag invalidation timestamps
 const tagRevalidatedAt = new Map<string, number>();
@@ -101,15 +108,27 @@ function estimateSize(value: any): number {
  * Get cache statistics for monitoring.
  */
 export function getCacheStats(): CacheStats {
-  const entries = Array.from(metadata.values());
-
+  const entries: CacheEntryMeta[] = [];
   const entriesByKind: Record<string, number> = {};
   const sizeByKind: Record<string, number> = {};
   let totalSizeBytes = 0;
   let oldestEntry: number | null = null;
   let newestEntry: number | null = null;
 
-  for (const entry of entries) {
+  for (const [key, entry] of cache.entries()) {
+    // Build metadata view
+    const meta: CacheEntryMeta = {
+      key,
+      kind: entry.kind,
+      size: entry.size,
+      createdAt: entry.createdAt,
+      lastAccessedAt: entry.lastAccessedAt,
+      accessCount: entry.accessCount,
+      tags: entry.tags,
+      revalidate: entry.revalidate,
+    };
+    entries.push(meta);
+
     // Count by kind
     entriesByKind[entry.kind] = (entriesByKind[entry.kind] ?? 0) + 1;
     sizeByKind[entry.kind] = (sizeByKind[entry.kind] ?? 0) + entry.size;
@@ -125,14 +144,14 @@ export function getCacheStats(): CacheStats {
   }
 
   // Sort entries by size descending for top consumers
-  const sortedEntries = [...entries].sort((a, b) => b.size - a.size);
+  entries.sort((a, b) => b.size - a.size);
 
   return {
     totalEntries: entries.length,
     totalSizeBytes,
     entriesByKind,
     sizeByKind,
-    entries: sortedEntries.slice(0, 100), // Top 100 by size
+    entries: entries.slice(0, 100), // Top 100 by size
     oldestEntry,
     newestEntry,
   };
@@ -150,35 +169,30 @@ export default class MonitoredCacheHandler {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async get(key: string, _ctx?: any): Promise<CacheHandlerValue | null> {
-    const stored = cache.get(key);
+    const entry = cache.get(key);
 
-    if (!stored) {
+    if (!entry) {
       return null;
     }
 
     // Check if any tags have been invalidated
-    const entryTags = stored.tags ?? [];
-    for (const tag of entryTags) {
+    for (const tag of entry.tags) {
       const revalidatedTime = tagRevalidatedAt.get(tag);
-      if (revalidatedTime && revalidatedTime > stored.lastModified) {
+      if (revalidatedTime && revalidatedTime > entry.lastModified) {
         // Entry is stale due to tag revalidation
         cache.delete(key);
-        metadata.delete(key);
         return null;
       }
     }
 
-    // Update access metadata
-    const meta = metadata.get(key);
-    if (meta) {
-      meta.lastAccessedAt = Date.now();
-      meta.accessCount += 1;
-    }
+    // Update access metadata (in-place mutation)
+    entry.lastAccessedAt = Date.now();
+    entry.accessCount += 1;
 
     // Return in CacheHandlerValue format
     return {
-      lastModified: stored.lastModified,
-      value: stored.value,
+      lastModified: entry.lastModified,
+      value: entry.value,
     };
   }
 
@@ -192,13 +206,6 @@ export default class MonitoredCacheHandler {
     // Extract tags from context and intern them to reduce string duplication
     const tags: string[] = internTags(ctx?.tags ?? []);
 
-    // Store the entry
-    cache.set(key, {
-      lastModified: now,
-      value: data,
-      tags,
-    });
-
     // Extract kind from the data for monitoring
     let kind = "unknown";
     let revalidate: number | null = null;
@@ -210,16 +217,19 @@ export default class MonitoredCacheHandler {
       }
     }
 
-    // Store metadata for monitoring — share the same tags array reference
-    const existing = metadata.get(key);
-    metadata.set(key, {
-      key,
+    // Get existing entry for createdAt/accessCount preservation
+    const existing = cache.get(key);
+
+    // Store unified entry
+    cache.set(key, {
+      lastModified: now,
+      value: data,
       kind,
       size: estimateSize(data),
       createdAt: existing?.createdAt ?? now,
       lastAccessedAt: now,
       accessCount: existing?.accessCount ?? 0,
-      tags, // Same reference as StoredEntry.tags
+      tags,
       revalidate,
     });
   }
@@ -237,11 +247,9 @@ export default class MonitoredCacheHandler {
     }
 
     // Remove entries with matching tags
-    for (const [key, stored] of cache.entries()) {
-      const entryTags = stored.tags ?? [];
-      if (entryTags.some((t) => tagList.includes(t))) {
+    for (const [key, entry] of cache.entries()) {
+      if (entry.tags.some((t) => tagList.includes(t))) {
         cache.delete(key);
-        metadata.delete(key);
       }
     }
   }
