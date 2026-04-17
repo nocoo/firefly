@@ -82,6 +82,19 @@ describe("createAiAgent", () => {
     // params: [id, name, slug, description, category_id, now, now]
     expect(params).toHaveLength(7);
   });
+  it("throws when agent cannot be retrieved after creation", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
+    vi.mocked(db.firstOrNull).mockResolvedValue(null);
+
+    await expect(
+      createAiAgent(db, {
+        name: "Ghost",
+        slug: "ghost",
+        description: "Vanishes",
+        categoryId: "cat-1",
+      }),
+    ).rejects.toThrow("Failed to retrieve ai_agent");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -188,6 +201,18 @@ describe("updateAiAgent", () => {
     expect(result?.name).toBe("Updated");
   });
 
+  it("updates slug field when provided", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue({ ...sampleAgent, slug: "new-slug" });
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    const result = await updateAiAgent(db, "agent-1", { slug: "new-slug" });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("slug = ?");
+    expect(params).toContain("new-slug");
+    expect(result?.slug).toBe("new-slug");
+  });
+
   it("returns existing when no fields provided", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleAgent);
     const result = await updateAiAgent(db, "agent-1", {});
@@ -287,6 +312,14 @@ describe("deleteAiAgent", () => {
 
     expect(result.success).toBe(false);
     expect(result.postCount).toBeUndefined();
+  });
+  it("handles null count result gracefully", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue(null);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });
+
+    const result = await deleteAiAgent(db, "agent-1");
+
+    expect(result.success).toBe(true);
   });
 });
 
