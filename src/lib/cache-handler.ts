@@ -67,41 +67,23 @@ const cache = new Map<string, UnifiedEntry>();
 // Tag invalidation timestamps
 const tagRevalidatedAt = new Map<string, number>();
 
-// Tag string interning pool — avoids duplicate string allocations for common tags
-const tagPool = new Map<string, string>();
-function internTag(tag: string): string {
-  const existing = tagPool.get(tag);
-  if (existing) return existing;
-  tagPool.set(tag, tag);
-  return tag;
-}
-function internTags(tags: string[]): string[] {
-  if (tags.length === 0) return tags;
-  return tags.map(internTag);
-}
-
 /**
  * Estimate the size of a cache entry in bytes.
- * Uses sampling for large objects to avoid memory pressure from JSON.stringify.
+ * Uses JSON.stringify for accurate measurement. The temporary string allocation
+ * is acceptable because cache.set() is infrequent compared to cache.get().
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function estimateSize(value: any): number {
   if (!value) return 0;
 
-  // Fast path: use rough estimates based on type and structure
-  // This avoids creating a full JSON string copy which doubles memory temporarily
-  if (typeof value === 'string') return value.length;
-  if (typeof value === 'number' || typeof value === 'boolean') return 8;
-  if (value === null) return 4;
-  
-  // For objects, use a heuristic based on key count
-  if (typeof value === 'object') {
-    const keys = Object.keys(value);
-    // Rough estimate: 50 bytes per key on average
-    return keys.length * 50 + 100;
+  try {
+    // JSON.stringify gives accurate size for serializable data
+    // Next.js cache values are always JSON-serializable
+    return JSON.stringify(value).length;
+  } catch {
+    // Fallback for non-serializable values (unlikely in Next.js cache)
+    return 1024;
   }
-
-  return 256; // Default fallback
 }
 
 /**
@@ -203,8 +185,8 @@ export default class MonitoredCacheHandler {
   async set(key: string, data: any, ctx?: any): Promise<void> {
     const now = Date.now();
 
-    // Extract tags from context and intern them to reduce string duplication
-    const tags: string[] = internTags(ctx?.tags ?? []);
+    // Extract tags from context (no interning - tags can be dynamic per-route)
+    const tags: string[] = ctx?.tags ?? [];
 
     // Extract kind from the data for monitoring
     let kind = "unknown";

@@ -181,13 +181,30 @@ describe("resolveAndValidateHostname", () => {
   });
 
   it("throws on DNS timeout", async () => {
-    // Mock DNS to simulate timeout by never resolving
-    // The actual DNS_TIMEOUT_MS is 5000ms, so we need to wait for it
-    // Use a mock that rejects after a short delay to simulate timeout behavior
-    mockedLookup.mockImplementation(
-      () => new Promise((_, reject) => setTimeout(() => reject(new Error("DNS timeout")), 10))
-    );
-    await expect(resolveAndValidateHostname("slow.example.com")).rejects.toThrow("DNS resolution failed");
+    // Use fake timers to test the actual timeout path in Promise.race
+    vi.useFakeTimers();
+    
+    // Mock DNS lookup to never resolve (simulates slow/hanging DNS)
+    mockedLookup.mockImplementation(() => new Promise(() => {}));
+    
+    // Start the promise and immediately attach error handler to prevent unhandled rejection
+    let caughtError: unknown = null;
+    const promise = resolveAndValidateHostname("slow.example.com").catch((err) => {
+      caughtError = err;
+    });
+    
+    // Advance past DNS_TIMEOUT_MS (5000ms) to trigger the timeout branch
+    await vi.runAllTimersAsync();
+    
+    // Wait for the catch handler to run
+    await promise;
+    
+    // Restore real timers
+    vi.useRealTimers();
+    
+    // Verify the timeout error was thrown
+    expect(caughtError).toBeInstanceOf(Error);
+    expect((caughtError as Error).message).toContain("DNS timeout");
   });
 
   it("skips DNS for IPv4 literal hostname", async () => {
