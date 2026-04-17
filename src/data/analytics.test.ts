@@ -588,6 +588,29 @@ describe("getAiBotDetail", () => {
     expect(result.bots).toEqual([]);
     expect(result.dailyByBot).toEqual([]);
   });
+
+  it("maps non-empty bot results and daily data", async () => {
+    const meta = { changes: 0, duration: 1 };
+    let callIndex = 0;
+    vi.mocked(db.query).mockImplementation(async () => {
+      callIndex++;
+      // Call 1: bots
+      if (callIndex === 1)
+        return { results: [{ bot_name: "GPTBot", count: 10 }], meta };
+      // Call 2: topPagesRaw
+      if (callIndex === 2)
+        return { results: [{ path: "/blog/test", views: 5 }], meta };
+      // Call 3: dailyByBotRaw
+      return { results: [{ date: "2026-03-20", bot_name: "GPTBot", count: 10 }], meta };
+    });
+    vi.mocked(db.firstOrNull).mockResolvedValue(null);
+
+    const result = await getAiBotDetail(db, 30);
+
+    expect(result.type).toBe("ai");
+    expect(result.bots).toEqual([{ botName: "GPTBot", count: 10 }]);
+    expect(result.dailyByBot.length).toBeGreaterThan(0);
+  });
 });
 
 describe("getOtherBotDetail", () => {
@@ -607,5 +630,32 @@ describe("getOtherBotDetail", () => {
     expect(result.socialBots).toEqual([]);
     expect(result.monitorBots).toEqual([]);
     expect(result.unknownBots).toEqual([]);
+  });
+
+  it("maps non-empty results for all bot sub-categories", async () => {
+    const meta = { changes: 0, duration: 1 };
+    let callIndex = 0;
+    vi.mocked(db.query).mockImplementation(async () => {
+      callIndex++;
+      if (callIndex === 1)
+        return { results: [{ category: "social", count: 5 }], meta };
+      if (callIndex === 2)
+        return { results: [{ bot_name: "Twitterbot", count: 3 }], meta };
+      if (callIndex === 3)
+        return { results: [{ bot_name: "UptimeRobot", count: 2 }], meta };
+      return {
+        results: [{ bot_name: "Mystery", user_agent: "Mozilla/5.0", count: 1 }],
+        meta,
+      };
+    });
+
+    const result = await getOtherBotDetail(db, 30);
+
+    expect(result.type).toBe("other");
+    expect(result.socialBots).toEqual([{ botName: "Twitterbot", count: 3 }]);
+    expect(result.monitorBots).toEqual([{ botName: "UptimeRobot", count: 2 }]);
+    expect(result.unknownBots).toEqual([
+      { botName: "Mystery", userAgent: "Mozilla/5.0", count: 1 },
+    ]);
   });
 });
