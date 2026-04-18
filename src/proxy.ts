@@ -92,6 +92,15 @@ export async function proxy(request: NextRequest) {
   // --- Markdown content negotiation: rewrite blog posts when Accept: text/markdown ---
   const accept = request.headers.get("accept") ?? "";
   if (accept.includes("text/markdown") && !markdownRejected(accept)) {
+    // Homepage
+    if (pathname === "/" || pathname === "") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/api/md";
+      const response = NextResponse.rewrite(url);
+      response.headers.set("Vary", "Accept");
+      return response;
+    }
+
     const postMatch = pathname.match(BLOG_POST_ROUTE);
     if (postMatch?.groups) {
       const { year, month, slug } = postMatch.groups;

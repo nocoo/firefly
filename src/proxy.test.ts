@@ -284,4 +284,17 @@ describe("proxy — markdown negotiation", () => {
     await proxy(req);
     expect(NextResponse.rewrite).not.toHaveBeenCalled();
   });
+
+  it("rewrites homepage / to /api/md on Accept: text/markdown with Vary: Accept", async () => {
+    const req = makeRequest("/", "text/markdown");
+    const response = (await proxy(req)) as unknown as {
+      type: string;
+      url: { pathname: string };
+      headers: { get: (k: string) => string | null };
+    };
+    expect(NextResponse.rewrite).toHaveBeenCalled();
+    expect(response.type).toBe("rewrite");
+    expect(response.url.pathname).toBe("/api/md");
+    expect(response.headers.get("Vary")).toBe("Accept");
+  });
 });
