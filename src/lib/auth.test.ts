@@ -72,10 +72,18 @@ describe("isE2EMode", () => {
     expect(isE2EMode()).toBe(true);
   });
 
-  it("returns false in production even when E2E_SKIP_AUTH=true", () => {
+  it("returns false in production when E2E_SKIP_AUTH=true but CI is not set", () => {
     vi.stubEnv("E2E_SKIP_AUTH", "true");
     vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("CI", "");
     expect(isE2EMode()).toBe(false);
+  });
+
+  it("returns true in production when E2E_SKIP_AUTH=true and CI=true", () => {
+    vi.stubEnv("E2E_SKIP_AUTH", "true");
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("CI", "true");
+    expect(isE2EMode()).toBe(true);
   });
 
   it("returns false when E2E_SKIP_AUTH is unset", () => {
