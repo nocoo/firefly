@@ -16,6 +16,7 @@ import { useLocale } from "@/i18n/context";
 import type { PostWithCategory } from "@/models/types";
 import type { PostStatus } from "@/models/types";
 import { STATUS_COLORS } from "@/lib/status-colors";
+import { sanitizeSnippet } from "@/lib/sanitize-snippet";
 
 // ---------------------------------------------------------------------------
 // Context
@@ -315,7 +316,7 @@ export function CommandPalette() {
                       <span
                         className="flex-1 truncate [&>mark]:bg-yellow-200 [&>mark]:text-yellow-900 dark:[&>mark]:bg-yellow-800/40 dark:[&>mark]:text-yellow-200"
                         dangerouslySetInnerHTML={{
-                          __html: snippets[post.id],
+                          __html: sanitizeSnippet(snippets[post.id]),
                         }}
                       />
                     )}
