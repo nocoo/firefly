@@ -6,8 +6,24 @@ import { SITE_URL, postPath, htmlLang } from "@/lib/seo";
 import { getLocale } from "@/i18n/server";
 import { escapeXml } from "@/lib/xml";
 import { getPostAuthor } from "@/lib/ai-agent/author";
+import { createCache } from "@/lib/cache";
+
+// In-process response cache mirrors the public Cache-Control max-age=3600.
+// Avoids repeated DB fetch + 50× markdown render on every uncached hit.
+const RESPONSE_TTL_MS = 60_000;
+const feedCache = createCache<string>(RESPONSE_TTL_MS);
 
 export async function GET() {
+  const cached = feedCache.get();
+  if (cached) {
+    return new Response(cached, {
+      headers: {
+        "Content-Type": "application/rss+xml; charset=utf-8",
+        "Cache-Control": "public, max-age=3600, s-maxage=3600",
+      },
+    });
+  }
+
   const db = getDb();
   const [{ posts }, locale, settings] = await Promise.all([
     listPosts(db, {
@@ -62,6 +78,8 @@ export async function GET() {
 ${items.join("\n")}
   </channel>
 </rss>`;
+
+  feedCache.set(xml);
 
   return new Response(xml, {
     headers: {
