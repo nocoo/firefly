@@ -35,6 +35,23 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "Link",
+            value: [
+              '</.well-known/api-catalog>; rel="api-catalog"',
+              '</llms.txt>; rel="service-doc"',
+              '</api/mcp>; rel="service-desc"',
+            ].join(", "),
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
