@@ -22,6 +22,21 @@ interface RedirectRow {
 }
 const redirectCache = createCache<Map<string, RedirectRow>>(5 * 60 * 1000);
 
+/**
+ * Check if Accept header explicitly rejects text/markdown (q=0).
+ * Handles optional whitespace and preceding parameters per RFC 9110.
+ */
+function markdownRejected(accept: string): boolean {
+  // Split on comma to get individual media-range entries
+  for (const entry of accept.split(",")) {
+    const trimmed = entry.trim();
+    if (!trimmed.startsWith("text/markdown")) continue;
+    // Check if this entry has q=0 (or q=0.0, q=0.000 etc.)
+    if (/;\s*q\s*=\s*0(?:\.0+)?\s*$/.test(trimmed)) return true;
+  }
+  return false;
+}
+
 function isProtectedRoute(pathname: string): boolean {
   return PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
@@ -76,13 +91,15 @@ export async function proxy(request: NextRequest) {
 
   // --- Markdown content negotiation: rewrite blog posts when Accept: text/markdown ---
   const accept = request.headers.get("accept") ?? "";
-  if (accept.includes("text/markdown") && !/text\/markdown\s*;\s*q\s*=\s*0(?:\.0+)?(?:\s|,|$)/.test(accept)) {
+  if (accept.includes("text/markdown") && !markdownRejected(accept)) {
     const postMatch = pathname.match(BLOG_POST_ROUTE);
     if (postMatch?.groups) {
       const { year, month, slug } = postMatch.groups;
       const url = request.nextUrl.clone();
       url.pathname = `/api/md/${year}/${month}/${slug}`;
-      return NextResponse.rewrite(url);
+      const response = NextResponse.rewrite(url);
+      response.headers.set("Vary", "Accept");
+      return response;
     }
   }
 
