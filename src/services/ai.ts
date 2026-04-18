@@ -13,7 +13,7 @@ import {
   type AiSettingsInput,
   type SdkType,
 } from "@nocoo/next-ai";
-import { createAiClient, createAiModel } from "@nocoo/next-ai/server";
+import { createAiModel } from "@nocoo/next-ai/server";
 
 // Re-export from next-ai for backward compatibility
 export {
@@ -26,7 +26,7 @@ export {
   type SdkType,
 };
 
-export { createAiClient, createAiModel };
+export { createAiModel };
 
 // Backward-compatible type alias (firefly historically narrowed this to a union)
 export type AiProvider = string;

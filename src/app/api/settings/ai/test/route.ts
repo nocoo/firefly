@@ -9,10 +9,10 @@ import { jsonResponse, errorResponse } from "@/lib/api";
 import { getAiSettings } from "@/data/ai-settings";
 import {
   resolveAiConfig,
-  createAiClient,
   type AiProvider,
   type SdkType,
 } from "@/services/ai";
+import { createAiModel } from "@nocoo/next-ai/server";
 import { generateText } from "ai";
 
 export async function POST(): Promise<Response> {
@@ -31,14 +31,12 @@ export async function POST(): Promise<Response> {
       provider: settings.provider as AiProvider,
       apiKey: settings.apiKey,
       model: settings.model,
-      baseURL: settings.baseURL || undefined,
-      sdkType: (settings.sdkType || undefined) as SdkType | undefined,
+      ...(settings.baseURL ? { baseURL: settings.baseURL } : {}),
+      ...(settings.sdkType ? { sdkType: settings.sdkType as SdkType } : {}),
     });
 
-    const client = createAiClient(config);
-
     const { text } = await generateText({
-      model: client(config.model),
+      model: createAiModel(config),
       prompt: "Reply with exactly: OK",
       maxOutputTokens: 10,
     });
