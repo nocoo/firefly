@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { isE2EMode } from "@/lib/auth-utils";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
 import { listMcpTokens, generateAccessToken, generateRefreshToken, sha256, createMcpToken, deleteRevokedTokens, countRevokedTokens } from "@/data/mcp-tokens";
@@ -10,7 +11,7 @@ const VALID_SCOPES: McpTokenScope[] = ["full", "author"];
 
 /** Check admin auth — returns user email or null. Bypassed in E2E. */
 async function requireAdmin(): Promise<{ email: string } | null> {
-  if (process.env.E2E_SKIP_AUTH === "true") {
+  if (isE2EMode()) {
     return { email: E2E_EMAIL };
   }
   const session = await auth();
