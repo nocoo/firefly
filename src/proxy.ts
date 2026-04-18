@@ -76,7 +76,7 @@ export async function proxy(request: NextRequest) {
 
   // --- Markdown content negotiation: rewrite blog posts when Accept: text/markdown ---
   const accept = request.headers.get("accept") ?? "";
-  if (accept.includes("text/markdown") && !accept.includes("text/markdown;q=0")) {
+  if (accept.includes("text/markdown") && !/text\/markdown\s*;\s*q\s*=\s*0(?:\.0+)?(?:\s|,|$)/.test(accept)) {
     const postMatch = pathname.match(BLOG_POST_ROUTE);
     if (postMatch?.groups) {
       const { year, month, slug } = postMatch.groups;
