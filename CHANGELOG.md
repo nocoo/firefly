@@ -1,5 +1,60 @@
 # Changelog
 
+## v2.5.11 (2026-04-18)
+
+- Merge pull request #39 from nocoo/feat/migrate-next-ai
+- Merge pull request #49 from nocoo/fix/issue-44
+- Merge pull request #48 from nocoo/fix/issue-43
+- Merge pull request #47 from nocoo/fix/issue-42
+- Merge pull request #46 from nocoo/fix/issue-41
+- Merge pull request #45 from nocoo/fix/issue-40
+- feat(proxy): rate-limit public API endpoints by client IP
+- refactor(mcp): use isE2EMode helper for admin auth bypass
+- refactor(admin): use isE2EMode helper for auth bypass check
+- refactor(proxy): use isE2EMode helper for auth bypass checks
+- feat(auth): add isE2EMode helper with production guard
+- feat(lib): add sliding-window IP rate limiter
+- feat(proxy): protect /api/admin GET routes
+- fix(admin): sanitize FTS snippets in command palette
+- feat(security): add security response headers
+- fix(ui): align bg-card usage to B05 luminance spec
+- feat: add homepage markdown rewrite in proxy
+- feat: add homepage markdown API endpoint
+- fix: q=0 extensions edge case and add proxy markdown tests
+- fix: add Vary header and improve q=0 parsing
+- fix: address review findings in markdown negotiation
+- feat: add Accept text/markdown rewrite in proxy
+- feat: add markdown API endpoint for blog posts
+- feat: add OAuth Protected Resource Metadata (RFC 9728)
+- fix: comply api-catalog with RFC 9727 linkset+json format
+- feat: add RFC 8288 Link headers for agent discovery
+- feat: add .well-known/api-catalog endpoint
+- test(ai): update ai-service tests for next-ai migration
+- refactor(ai): update consumers to use createAiModel from next-ai
+- refactor(ai): remove reasoning fallback from generateExcerpt and summarizeUnfurl
+- refactor(ai): migrate services/ai.ts to use @nocoo/next-ai
+- feat(deps): add @nocoo/next-ai, remove redundant AI SDK deps
+- Confirm stable test performance at ~1.1s
+- Fix gist URL bug - exclude GitHub special paths from README fetch
+- fix: remove tagPool memory leak, restore accurate estimateSize, fix DNS timeout test
+- autoresearch: update docs for UT optimization session
+- Replace DNS timeout test with fast mock - 6.10s → 1.13s
+- Baseline: 1261 tests, 6.10s, 99%+ coverage
+- autoresearch: update ideas and experiment log
+- Unified cache storage (merge cache + metadata Maps)
+- Add tag string interning in cache-handler - within noise
+- Optimize estimateSize() to avoid JSON.stringify - within noise
+- test: expand analytics coverage (91% → 95%+)
+- test: boost ai-agent coverage to 100%
+- test: add test-utils sqlContains coverage (66% → 100%)
+- test: add status-colors coverage (0% → 100%)
+- chore: remove stale Next.js CVE ignore (GHSA-5f7q-jpqc-wp7h)
+- Merge pull request #36 from nocoo/feat/live-standard-35
+- feat(api): upgrade /api/live to surety standard (#35)
+- Merge pull request #34 from nocoo/feat/live-33
+- feat(api): add /api/live liveness endpoint (#33)
+
+
 ## v2.5.10 (2026-04-16)
 
 - deps: update hono 4.12.12→4.12.14, @modelcontextprotocol/sdk 1.27.1→1.29.0
