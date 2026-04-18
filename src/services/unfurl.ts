@@ -381,6 +381,9 @@ export function extractBodyText(html: string): string {
 
 const GITHUB_REPO_RE = /^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/?$/;
 
+// GitHub special paths that are not repositories
+const GITHUB_SPECIAL_PATHS = new Set(["gist", "settings", "notifications", "explore", "topics", "trending", "collections", "sponsors", "orgs", "features"]);
+
 export async function fetchGitHubReadmeImage(
   url: string,
 ): Promise<string | null> {
@@ -388,6 +391,8 @@ export async function fetchGitHubReadmeImage(
   if (!match) return null;
 
   const [, owner, repo] = match;
+  // Exclude special GitHub paths that look like repos but aren't
+  if (GITHUB_SPECIAL_PATHS.has(owner)) return null;
   const cleanRepo = repo.replace(/\.git$/, "");
 
   // Try main then master
