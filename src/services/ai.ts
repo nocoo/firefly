@@ -100,31 +100,7 @@ export async function generateExcerpt(
     maxOutputTokens: 1024,
   });
 
-  // Some models (e.g. MiniMax) use extended thinking via Anthropic protocol.
-  // If all output tokens were consumed by reasoning and text is empty,
-  // extract the trailing content from the last reasoning block as fallback.
-  let excerpt = result.text.trim();
-  if (!excerpt && result.reasoning) {
-    const lastReasoning = result.reasoning.at(-1);
-    if (lastReasoning?.type === "reasoning" && lastReasoning.text) {
-      // The reasoning may contain the draft excerpt after the analysis.
-      // Look for quoted content near the end (often the model drafts the excerpt in quotes).
-      const lines = lastReasoning.text.trim().split("\n");
-      // Take the last non-empty line(s) that look like the actual excerpt
-      for (let i = lines.length - 1; i >= 0; i--) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        // Strip surrounding quotes if present
-        const unquoted = line.replace(/^["「『]|["」』]$/g, "").trim();
-        if (unquoted.length >= 20) {
-          excerpt = unquoted;
-          break;
-        }
-      }
-    }
-  }
-
-  return excerpt;
+  return result.text.trim();
 }
 
 // ── Unfurl metadata summarization ──
@@ -184,21 +160,7 @@ export async function summarizeUnfurl(
       maxOutputTokens: 1024,
     });
 
-    // Prefer result.text; for thinking models (e.g. MiniMax-M2.1) that put
-    // output in reasoning blocks and return empty text, try extracting from reasoning.
-    let text = result.text.trim();
-    if (!text && result.reasoning) {
-      const reasoningText = result.reasoning
-        .filter((r): r is { type: "reasoning"; text: string } => r.type === "reasoning" && !!r.text)
-        .map((r) => r.text)
-        .join("\n");
-      // Look for JSON in reasoning output
-      const reasoningJson = reasoningText.match(/\{[\s\S]*?"title"[\s\S]*?"description"[\s\S]*?\}/);
-      if (reasoningJson) {
-        text = reasoningJson[0];
-      }
-    }
-
+    const text = result.text.trim();
     if (!text) return null;
 
     // Extract JSON from response (tolerates markdown fences and surrounding text)
