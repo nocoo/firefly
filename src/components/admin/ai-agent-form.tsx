@@ -224,7 +224,7 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
       </div>
 
       {/* Form */}
-      <div className="rounded-lg border border-border bg-card p-6">
+      <div className="rounded-lg bg-secondary p-6">
         <div className="grid gap-6 md:grid-cols-2">
           {/* Left column: Basic info */}
           <div className="space-y-4">
