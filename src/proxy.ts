@@ -7,6 +7,9 @@ import { createCache } from "@/lib/cache";
 // Routes that require authentication
 const PROTECTED_PREFIXES = ["/admin"];
 
+// Match blog post URLs: /YYYY/MM/slug
+const BLOG_POST_ROUTE = /^\/(?<year>\d{4})\/(?<month>\d{2})\/(?<slug>[^/]+)\/?$/;
+
 // API routes that require authentication (write operations)
 const PROTECTED_API_METHODS = ["POST", "PUT", "DELETE", "PATCH"];
 
@@ -69,6 +72,18 @@ export async function proxy(request: NextRequest) {
     (pathname.includes(".") && !pathname.startsWith("/index.php"))
   ) {
     return NextResponse.next();
+  }
+
+  // --- Markdown content negotiation: rewrite blog posts when Accept: text/markdown ---
+  const accept = request.headers.get("accept") ?? "";
+  if (accept.includes("text/markdown") && !accept.includes("text/markdown;q=0")) {
+    const postMatch = pathname.match(BLOG_POST_ROUTE);
+    if (postMatch?.groups) {
+      const { year, month, slug } = postMatch.groups;
+      const url = request.nextUrl.clone();
+      url.pathname = `/api/md/${year}/${month}/${slug}`;
+      return NextResponse.rewrite(url);
+    }
   }
 
   // --- Auth guard: protect admin routes and write API endpoints ---
