@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { isE2EMode } from "@/lib/auth-utils";
 import { createDb } from "@/lib/db";
 import { trackPageView } from "@/lib/tracking";
 import { createCache } from "@/lib/cache";
@@ -69,7 +70,7 @@ export async function proxy(request: NextRequest) {
   if (
     proto === "http" &&
     process.env.NODE_ENV === "production" &&
-    process.env.E2E_SKIP_AUTH !== "true"
+    !isE2EMode()
   ) {
     const url = request.nextUrl.clone();
     url.protocol = "https";
@@ -116,7 +117,7 @@ export async function proxy(request: NextRequest) {
   if (isProtectedRoute(pathname) || isProtectedApiRoute(pathname, method)) {
     // E2E auth bypass — only active when E2E_SKIP_AUTH is explicitly set.
     // Never set in production; .env.test sets it for local E2E runs.
-    if (process.env.E2E_SKIP_AUTH === "true") {
+    if (isE2EMode()) {
       return NextResponse.next();
     }
 
