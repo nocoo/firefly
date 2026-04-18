@@ -181,7 +181,7 @@ export function AnalyticsDashboard({
                 onClick={() => handleTabChange(type)}
                 className={`flex-1 flex items-center justify-center gap-2 rounded-[calc(var(--radius-widget)-4px)] px-3 py-2 text-xs font-medium transition-colors ${
                   activeTab === type
-                    ? "bg-card text-foreground shadow-sm"
+                    ? "bg-secondary text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
