@@ -29,8 +29,14 @@ vi.mock("@/lib/cache", () => ({
 
 import { NextResponse } from "next/server";
 import { _testHelpers, proxy } from "./proxy";
+import { _testHelpers as rlTestHelpers } from "./lib/rate-limit";
 
-const { isProtectedApiRoute, markdownRejected } = _testHelpers;
+const {
+  isProtectedApiRoute,
+  markdownRejected,
+  getRateLimitConfig,
+  extractClientIp,
+} = _testHelpers;
 
 // ---------------------------------------------------------------------------
 // Helper to build a NextRequest-like object for proxy() tests
@@ -40,9 +46,15 @@ function makeRequest(
   pathname: string,
   acceptHeader?: string,
   method: string = "GET",
+  extraHeaders?: Record<string, string>,
 ) {
   const headers = new Map<string, string>();
   if (acceptHeader !== undefined) headers.set("accept", acceptHeader);
+  if (extraHeaders) {
+    for (const [k, v] of Object.entries(extraHeaders)) {
+      headers.set(k.toLowerCase(), v);
+    }
+  }
 
   const url = {
     pathname,
@@ -304,5 +316,179 @@ describe("proxy — markdown negotiation", () => {
     expect(response.type).toBe("rewrite");
     expect(response.url.pathname).toBe("/api/md");
     expect(response.headers.get("Vary")).toBe("Accept");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// extractClientIp
+// ---------------------------------------------------------------------------
+
+describe("extractClientIp", () => {
+  function reqWith(headers: Record<string, string>) {
+    return {
+      headers: {
+        get: (k: string) => headers[k.toLowerCase()] ?? null,
+      },
+    } as never;
+  }
+
+  it("returns the first IP from x-forwarded-for", () => {
+    expect(
+      extractClientIp(reqWith({ "x-forwarded-for": "1.2.3.4, 5.6.7.8" })),
+    ).toBe("1.2.3.4");
+  });
+
+  it("trims whitespace from x-forwarded-for entries", () => {
+    expect(
+      extractClientIp(reqWith({ "x-forwarded-for": "  9.9.9.9 , 5.5.5.5" })),
+    ).toBe("9.9.9.9");
+  });
+
+  it("falls back to x-real-ip when x-forwarded-for is absent", () => {
+    expect(extractClientIp(reqWith({ "x-real-ip": "10.0.0.1" }))).toBe(
+      "10.0.0.1",
+    );
+  });
+
+  it("returns 'unknown' when no IP headers are present", () => {
+    expect(extractClientIp(reqWith({}))).toBe("unknown");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getRateLimitConfig
+// ---------------------------------------------------------------------------
+
+describe("getRateLimitConfig", () => {
+  it("returns null for non-API routes", () => {
+    expect(getRateLimitConfig("/about", "GET")).toBeNull();
+  });
+
+  it("returns null for /api/auth routes", () => {
+    expect(getRateLimitConfig("/api/auth/callback", "POST")).toBeNull();
+  });
+
+  it("applies stricter limit to POST /api/mcp/register", () => {
+    const cfg = getRateLimitConfig("/api/mcp/register", "POST");
+    expect(cfg).toEqual({ limit: 10, windowMs: 60_000 });
+  });
+
+  it("does not throttle non-POST /api/mcp/register requests", () => {
+    expect(getRateLimitConfig("/api/mcp/register", "GET")).toBeNull();
+  });
+
+  it("exempts other /api/mcp routes", () => {
+    expect(getRateLimitConfig("/api/mcp", "POST")).toBeNull();
+    expect(getRateLimitConfig("/api/mcp/tools", "GET")).toBeNull();
+  });
+
+  it("applies the public API limit to other /api/ routes", () => {
+    expect(getRateLimitConfig("/api/posts", "GET")).toEqual({
+      limit: 60,
+      windowMs: 60_000,
+    });
+    expect(getRateLimitConfig("/api/search", "GET")).toEqual({
+      limit: 60,
+      windowMs: 60_000,
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// proxy() — rate limiting integration
+// ---------------------------------------------------------------------------
+
+describe("proxy — rate limiting", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    rlTestHelpers.reset();
+  });
+
+  it("returns 429 with Retry-After when public /api/ limit is exceeded", async () => {
+    // Public API: 60/min. Use a unique IP per test to isolate buckets.
+    const ip = "10.10.10.1";
+    for (let i = 0; i < 60; i++) {
+      const req = makeRequest("/api/posts", undefined, "GET", {
+        "x-forwarded-for": ip,
+      });
+      await proxy(req);
+    }
+    const blocked = makeRequest("/api/posts", undefined, "GET", {
+      "x-forwarded-for": ip,
+    });
+    const res = (await proxy(blocked)) as unknown as {
+      type: string;
+      init: { status: number; headers: Record<string, string> };
+    };
+    expect(res.type).toBe("json");
+    expect(res.init.status).toBe(429);
+    expect(res.init.headers["Retry-After"]).toBeDefined();
+    expect(Number(res.init.headers["Retry-After"])).toBeGreaterThanOrEqual(1);
+  });
+
+  it("returns 429 after 10 requests on /api/mcp/register POST", async () => {
+    const ip = "10.10.10.2";
+    for (let i = 0; i < 10; i++) {
+      const req = makeRequest("/api/mcp/register", undefined, "POST", {
+        "x-forwarded-for": ip,
+      });
+      await proxy(req);
+    }
+    const blocked = makeRequest("/api/mcp/register", undefined, "POST", {
+      "x-forwarded-for": ip,
+    });
+    const res = (await proxy(blocked)) as unknown as {
+      type: string;
+      init: { status: number };
+    };
+    expect(res.type).toBe("json");
+    expect(res.init.status).toBe(429);
+  });
+
+  it("does not rate-limit /api/auth requests", async () => {
+    const ip = "10.10.10.3";
+    // Far above any cap.
+    for (let i = 0; i < 200; i++) {
+      const req = makeRequest("/api/auth/session", undefined, "GET", {
+        "x-forwarded-for": ip,
+      });
+      const res = (await proxy(req)) as unknown as { type: string };
+      expect(res.type).not.toBe("json"); // never 429
+    }
+  });
+
+  it("does not rate-limit non-/register MCP requests", async () => {
+    const ip = "10.10.10.4";
+    for (let i = 0; i < 100; i++) {
+      const req = makeRequest("/api/mcp/tools", undefined, "GET", {
+        "x-forwarded-for": ip,
+      });
+      const res = (await proxy(req)) as unknown as { type: string };
+      expect(res.type).not.toBe("json");
+    }
+  });
+
+  it("isolates rate limits per IP", async () => {
+    // Exhaust IP A then verify IP B is unaffected.
+    for (let i = 0; i < 60; i++) {
+      await proxy(
+        makeRequest("/api/posts", undefined, "GET", {
+          "x-forwarded-for": "10.20.0.1",
+        }),
+      );
+    }
+    const blockedA = (await proxy(
+      makeRequest("/api/posts", undefined, "GET", {
+        "x-forwarded-for": "10.20.0.1",
+      }),
+    )) as unknown as { type: string; init: { status: number } };
+    expect(blockedA.init.status).toBe(429);
+
+    const allowedB = (await proxy(
+      makeRequest("/api/posts", undefined, "GET", {
+        "x-forwarded-for": "10.20.0.2",
+      }),
+    )) as unknown as { type: string };
+    expect(allowedB.type).not.toBe("json"); // not 429
   });
 });

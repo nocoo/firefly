@@ -4,6 +4,7 @@ import { isE2EMode } from "@/lib/auth-utils";
 import { createDb } from "@/lib/db";
 import { trackPageView } from "@/lib/tracking";
 import { createCache } from "@/lib/cache";
+import { rateLimit } from "@/lib/rate-limit";
 
 // Routes that require authentication
 const PROTECTED_PREFIXES = ["/admin"];
@@ -40,6 +41,61 @@ function markdownRejected(accept: string): boolean {
 
 function isProtectedRoute(pathname: string): boolean {
   return PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+// ---------------------------------------------------------------------------
+// Public API rate limiting
+// ---------------------------------------------------------------------------
+
+const MCP_REGISTER_PATH = "/api/mcp/register";
+// Per-minute caps for public endpoints. MCP registration is a sensitive
+// onboarding action so it's throttled more aggressively.
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const MCP_REGISTER_LIMIT = 10;
+const PUBLIC_API_LIMIT = 60;
+
+interface RateLimitConfig {
+  limit: number;
+  windowMs: number;
+}
+
+/**
+ * Decide whether a public API route should be rate-limited and, if so, with
+ * which budget. Returns null when the route is exempt (auth, mcp other than
+ * /register, or non-API paths).
+ */
+function getRateLimitConfig(
+  pathname: string,
+  method: string,
+): RateLimitConfig | null {
+  if (!pathname.startsWith("/api/")) return null;
+  if (pathname.startsWith("/api/auth/")) return null;
+
+  // /api/mcp/register: stricter cap. Only POST onboards a new client.
+  if (pathname === MCP_REGISTER_PATH && method === "POST") {
+    return { limit: MCP_REGISTER_LIMIT, windowMs: RATE_LIMIT_WINDOW_MS };
+  }
+
+  // All other /api/mcp routes are exempt (own auth + token-bound).
+  if (pathname === "/api/mcp" || pathname.startsWith("/api/mcp/")) return null;
+
+  return { limit: PUBLIC_API_LIMIT, windowMs: RATE_LIMIT_WINDOW_MS };
+}
+
+/**
+ * Extract the client IP from x-forwarded-for (first value) or fall back to
+ * x-real-ip. Returns "unknown" so all unidentified callers share a single
+ * bucket — far better than skipping the limiter entirely.
+ */
+function extractClientIp(request: NextRequest): string {
+  const xff = request.headers.get("x-forwarded-for");
+  if (xff) {
+    const first = xff.split(",")[0]?.trim();
+    if (first) return first;
+  }
+  const real = request.headers.get("x-real-ip");
+  if (real) return real.trim();
+  return "unknown";
 }
 
 function isProtectedApiRoute(pathname: string, method: string): boolean {
@@ -136,6 +192,30 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // --- Rate limit: public API endpoints (post-auth, only public paths) ---
+  // Protected routes have already returned above, so reaching this point
+  // guarantees we're handling a public request.
+  const rlConfig = getRateLimitConfig(pathname, method);
+  if (rlConfig) {
+    const ip = extractClientIp(request);
+    const result = rateLimit(`${pathname}:${ip}`, rlConfig.limit, rlConfig.windowMs);
+    if (!result.allowed) {
+      const retryAfterSec = Math.max(1, Math.ceil(result.resetMs / 1000));
+      return NextResponse.json(
+        { error: "Too Many Requests" },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(retryAfterSec),
+            "X-RateLimit-Limit": String(rlConfig.limit),
+            "X-RateLimit-Remaining": "0",
+            "X-RateLimit-Reset": String(retryAfterSec),
+          },
+        },
+      );
+    }
+  }
+
   // --- WordPress redirect lookup (public routes only) ---
   if (
     !pathname.startsWith("/api/") &&
@@ -224,4 +304,6 @@ export const _testHelpers = {
   isProtectedRoute,
   isProtectedApiRoute,
   markdownRejected,
+  getRateLimitConfig,
+  extractClientIp,
 };
