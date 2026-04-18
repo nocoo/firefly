@@ -3,24 +3,34 @@ import { SITE_URL } from "@/lib/seo";
 
 export function GET() {
   const catalog = {
-    entries: [
+    linkset: [
       {
-        title: "Firefly MCP API",
-        description: "Model Context Protocol server for blog content management",
-        url: `${SITE_URL}/api/mcp`,
-        type: "application/json",
-      },
-      {
-        title: "Firefly LLM Content",
-        description: "LLM-readable blog content index",
-        url: `${SITE_URL}/llms.txt`,
-        type: "text/plain",
+        anchor: `${SITE_URL}/api/mcp`,
+        "service-desc": [
+          {
+            href: `${SITE_URL}/api/mcp`,
+            type: "application/json",
+          },
+        ],
+        "service-doc": [
+          {
+            href: `${SITE_URL}/llms.txt`,
+            type: "text/plain",
+          },
+        ],
+        status: [
+          {
+            href: `${SITE_URL}/api/live`,
+            type: "application/json",
+          },
+        ],
       },
     ],
   };
 
-  return NextResponse.json(catalog, {
+  return new NextResponse(JSON.stringify(catalog), {
     headers: {
+      "Content-Type": "application/linkset+json",
       "Cache-Control": "public, max-age=86400",
     },
   });
