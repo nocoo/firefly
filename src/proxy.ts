@@ -123,11 +123,18 @@ function isProtectedApiRoute(pathname: string, method: string): boolean {
 
 export async function proxy(request: NextRequest) {
   // --- HTTPS redirect: force HTTP → HTTPS in production ---
-  // Skip when running locally (no x-forwarded-proto) or in E2E/dev mode.
+  // Skip when:
+  // - No x-forwarded-proto (direct localhost access)
+  // - Already HTTPS
+  // - localhost/127.0.0.1 host (E2E tests, local dev)
+  // - E2E mode explicitly enabled
   const proto = request.headers.get("x-forwarded-proto");
+  const host = request.headers.get("host") ?? "";
+  const isLocalhost = host.startsWith("localhost") || host.startsWith("127.0.0.1");
   if (
     proto === "http" &&
     process.env.NODE_ENV === "production" &&
+    !isLocalhost &&
     !isE2EMode()
   ) {
     const url = request.nextUrl.clone();

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // Mock all heavy dependencies that proxy.ts imports
 vi.mock("next/server", () => ({
@@ -246,6 +246,74 @@ describe("markdownRejected", () => {
 
   it("returns false for text/markdown;q=1", () => {
     expect(markdownRejected("text/markdown;q=1")).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// proxy() — HTTPS redirect
+// ---------------------------------------------------------------------------
+
+describe("proxy — HTTPS redirect", () => {
+  const originalEnv = process.env.NODE_ENV;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // @ts-expect-error -- test needs to override NODE_ENV
+    process.env.NODE_ENV = "production";
+  });
+
+  afterEach(() => {
+    // @ts-expect-error -- restore NODE_ENV
+    process.env.NODE_ENV = originalEnv;
+  });
+
+  it("redirects HTTP to HTTPS in production with x-forwarded-proto: http", async () => {
+    const req = makeRequest("/api/posts", undefined, "GET", {
+      "x-forwarded-proto": "http",
+      host: "example.com",
+    });
+    const res = (await proxy(req)) as unknown as {
+      type: string;
+      url: { protocol: string };
+      status: number;
+    };
+    expect(res.type).toBe("redirect");
+    expect(res.status).toBe(301);
+  });
+
+  it("does NOT redirect when x-forwarded-proto is https", async () => {
+    const req = makeRequest("/api/posts", undefined, "GET", {
+      "x-forwarded-proto": "https",
+      host: "example.com",
+    });
+    await proxy(req);
+    expect(NextResponse.redirect).not.toHaveBeenCalled();
+  });
+
+  it("does NOT redirect when host is localhost", async () => {
+    const req = makeRequest("/api/posts", undefined, "GET", {
+      "x-forwarded-proto": "http",
+      host: "localhost:17028",
+    });
+    await proxy(req);
+    expect(NextResponse.redirect).not.toHaveBeenCalled();
+  });
+
+  it("does NOT redirect when host is 127.0.0.1", async () => {
+    const req = makeRequest("/api/posts", undefined, "GET", {
+      "x-forwarded-proto": "http",
+      host: "127.0.0.1:17028",
+    });
+    await proxy(req);
+    expect(NextResponse.redirect).not.toHaveBeenCalled();
+  });
+
+  it("does NOT redirect when x-forwarded-proto is missing", async () => {
+    const req = makeRequest("/api/posts", undefined, "GET", {
+      host: "example.com",
+    });
+    await proxy(req);
+    expect(NextResponse.redirect).not.toHaveBeenCalled();
   });
 });
 
