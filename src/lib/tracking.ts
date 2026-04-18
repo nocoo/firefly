@@ -76,13 +76,27 @@ export interface TrackPageViewInput {
  * Track a page view asynchronously. Fire-and-forget — errors are logged
  * but never thrown to avoid blocking the response.
  */
+// Lazily-initialised singleton Db. Avoids per-request createDb allocation
+// when trackPageView fires on every public page view.
+let _trackingDb: Db | null = null;
+function getTrackingDb(): Db | null {
+  if (_trackingDb) return _trackingDb;
+  const workerUrl = process.env.WORKER_URL;
+  const workerSecret = process.env.WORKER_SECRET;
+  if (!workerUrl || !workerSecret) return null;
+  _trackingDb = createDb(workerUrl, workerSecret);
+  return _trackingDb;
+}
+
+/** @internal — exposed for test isolation only */
+export function _resetTrackingDb(): void {
+  _trackingDb = null;
+}
+
 export async function trackPageView(input: TrackPageViewInput): Promise<void> {
   try {
-    const workerUrl = process.env.WORKER_URL;
-    const workerSecret = process.env.WORKER_SECRET;
-    if (!workerUrl || !workerSecret) return;
-
-    const db = createDb(workerUrl, workerSecret);
+    const db = getTrackingDb();
+    if (!db) return;
 
     const bot = detectBot(input.userAgent);
     const device = parseDevice(input.userAgent);

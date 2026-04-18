@@ -22,12 +22,13 @@ vi.mock("@/data/analytics", () => ({
 }));
 
 // Must import after mocks
-import { trackPageView, resolvePostId, _resetSlugCache } from "./tracking";
+import { trackPageView, resolvePostId, _resetSlugCache, _resetTrackingDb } from "./tracking";
 
 describe("trackPageView", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     _resetSlugCache();
+    _resetTrackingDb();
     process.env.WORKER_URL = "https://test.worker.dev";
     process.env.WORKER_SECRET = "test-secret";
   });
