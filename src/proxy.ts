@@ -32,7 +32,7 @@ function markdownRejected(accept: string): boolean {
     const trimmed = entry.trim();
     if (!trimmed.startsWith("text/markdown")) continue;
     // Check if this entry has q=0 (or q=0.0, q=0.000 etc.)
-    if (/;\s*q\s*=\s*0(?:\.0+)?\s*$/.test(trimmed)) return true;
+    if (/;\s*q\s*=\s*0(?:\.0+)?\s*(?:;|$)/.test(trimmed)) return true;
   }
   return false;
 }
@@ -211,4 +211,5 @@ export const config = {
 export const _testHelpers = {
   isProtectedRoute,
   isProtectedApiRoute,
+  markdownRejected,
 };
