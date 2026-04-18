@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { isE2EMode } from "@/lib/auth-utils";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
 import { revokeToken, deleteMcpToken, updateTokenScope } from "@/data/mcp-tokens";
@@ -12,7 +13,7 @@ const VALID_SCOPES: McpTokenScope[] = ["full", "author"];
 
 /** Check admin auth — bypassed in E2E. */
 async function requireAdmin(): Promise<boolean> {
-  if (process.env.E2E_SKIP_AUTH === "true") return true;
+  if (isE2EMode()) return true;
   const session = await auth();
   return !!session?.user;
 }
