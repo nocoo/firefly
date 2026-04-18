@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { isEmailAllowed } from "./auth-utils";
+import { isEmailAllowed, isE2EMode } from "./auth-utils";
 
 describe("isEmailAllowed", () => {
   const originalEnv = process.env.AUTH_ALLOWED_EMAILS;
@@ -54,5 +54,47 @@ describe("isEmailAllowed", () => {
     expect(isEmailAllowed("user@test.com")).toBe(true);
     expect(isEmailAllowed("admin@test.com")).toBe(true);
     expect(isEmailAllowed("")).toBe(false);
+  });
+});
+
+describe("isE2EMode", () => {
+  const originalSkip = process.env.E2E_SKIP_AUTH;
+  const originalNodeEnv = process.env.NODE_ENV;
+
+  afterEach(() => {
+    if (originalSkip !== undefined) {
+      process.env.E2E_SKIP_AUTH = originalSkip;
+    } else {
+      delete process.env.E2E_SKIP_AUTH;
+    }
+    if (originalNodeEnv !== undefined) {
+      process.env.NODE_ENV = originalNodeEnv;
+    } else {
+      delete process.env.NODE_ENV;
+    }
+  });
+
+  it("returns true when E2E_SKIP_AUTH=true and NODE_ENV is not production", () => {
+    process.env.E2E_SKIP_AUTH = "true";
+    process.env.NODE_ENV = "test";
+    expect(isE2EMode()).toBe(true);
+  });
+
+  it("returns false in production even when E2E_SKIP_AUTH=true", () => {
+    process.env.E2E_SKIP_AUTH = "true";
+    process.env.NODE_ENV = "production";
+    expect(isE2EMode()).toBe(false);
+  });
+
+  it("returns false when E2E_SKIP_AUTH is unset", () => {
+    delete process.env.E2E_SKIP_AUTH;
+    process.env.NODE_ENV = "test";
+    expect(isE2EMode()).toBe(false);
+  });
+
+  it("returns false when E2E_SKIP_AUTH is not exactly 'true'", () => {
+    process.env.E2E_SKIP_AUTH = "1";
+    process.env.NODE_ENV = "test";
+    expect(isE2EMode()).toBe(false);
   });
 });

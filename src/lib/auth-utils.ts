@@ -23,3 +23,13 @@ export function isEmailAllowed(email: string): boolean {
   if (allowed.length === 0) return false;
   return allowed.includes(email.toLowerCase());
 }
+
+/**
+ * Whether the E2E auth bypass is active.
+ *
+ * Production guard: even if `E2E_SKIP_AUTH=true` somehow leaks into a
+ * production environment, this returns false so auth is never bypassed.
+ */
+export function isE2EMode(): boolean {
+  return process.env.E2E_SKIP_AUTH === "true" && process.env.NODE_ENV !== "production";
+}
