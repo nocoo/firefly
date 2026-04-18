@@ -65,7 +65,11 @@ async function waitForServer(
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(2000) });
+      const res = await fetch(url, {
+        signal: AbortSignal.timeout(2000),
+        // Skip HTTPS redirect in production mode by pretending we're already on HTTPS
+        headers: { "x-forwarded-proto": "https" },
+      });
       if (strictOk ? res.ok : res.ok || res.status < 500) return;
     } catch {
       // not ready yet
