@@ -47,6 +47,8 @@ function isProtectedApiRoute(pathname: string, method: string): boolean {
   if (pathname.startsWith("/api/auth/")) return false;
   // MCP has its own Bearer token auth — exempt both /api/mcp and /api/mcp/*
   if (pathname === "/api/mcp" || pathname.startsWith("/api/mcp/")) return false;
+  // Admin API routes require auth for ALL methods (including GET)
+  if (pathname.startsWith("/api/admin")) return true;
   // Analytics endpoints require admin auth for all methods (including GET)
   if (pathname.startsWith("/api/analytics")) return true;
   // Media endpoints require admin auth for all methods (including GET)

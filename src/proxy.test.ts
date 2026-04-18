@@ -168,6 +168,14 @@ describe("isProtectedApiRoute — existing behavior", () => {
     expect(isProtectedApiRoute("/api/posts", "GET")).toBe(false);
   });
 
+  it("protects GET /api/admin/posts", () => {
+    expect(isProtectedApiRoute("/api/admin/posts", "GET")).toBe(true);
+  });
+
+  it("protects GET /api/admin/search", () => {
+    expect(isProtectedApiRoute("/api/admin/search", "GET")).toBe(true);
+  });
+
   it("protects all methods for /api/analytics", () => {
     expect(isProtectedApiRoute("/api/analytics", "GET")).toBe(true);
     expect(isProtectedApiRoute("/api/analytics/dashboard", "GET")).toBe(true);
