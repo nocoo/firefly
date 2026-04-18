@@ -1,184 +1,51 @@
 /**
- * AI service module.
- *
- * Provides LLM integration via configurable AI providers.
- * Supports both OpenAI and Anthropic SDK protocols through Vercel AI SDK.
- * Includes built-in providers (Anthropic, MiniMax, GLM, AIHubMix) and a
- * "custom" provider where users supply their own base URL and SDK type.
+ * AI service module — delegates to @nocoo/next-ai for provider/config/client.
+ * Only firefly-specific prompt logic lives here.
  */
 
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { createOpenAI } from "@ai-sdk/openai";
+import {
+  AiProviderRegistry,
+  CUSTOM_PROVIDER_INFO as NEXT_AI_CUSTOM_PROVIDER_INFO,
+  isValidProvider,
+  resolveAiConfig,
+  type AiConfig,
+  type AiProviderInfo,
+  type AiSettingsInput,
+  type SdkType,
+} from "@nocoo/next-ai";
+import { createAiModel } from "@nocoo/next-ai/server";
 
-// ── Provider registry ──
-
-export type SdkType = "anthropic" | "openai";
-
-export type AiProvider = "anthropic" | "minimax" | "glm" | "aihubmix" | "custom";
-
-export interface AiProviderInfo {
-  id: AiProvider;
-  label: string;
-  baseURL: string;
-  sdkType: SdkType;
-  models: string[];
-  defaultModel: string;
-}
-
-export const AI_PROVIDERS: Record<Exclude<AiProvider, "custom">, AiProviderInfo> = {
-  anthropic: {
-    id: "anthropic",
-    label: "Anthropic",
-    baseURL: "https://api.anthropic.com/v1",
-    sdkType: "anthropic",
-    models: ["claude-sonnet-4-20250514"],
-    defaultModel: "claude-sonnet-4-20250514",
-  },
-  minimax: {
-    id: "minimax",
-    label: "MiniMax",
-    baseURL: "https://api.minimaxi.com/anthropic/v1",
-    sdkType: "anthropic",
-    models: ["MiniMax-M2.5", "MiniMax-M2.1"],
-    defaultModel: "MiniMax-M2.5",
-  },
-  glm: {
-    id: "glm",
-    label: "GLM (Zhipu)",
-    baseURL: "https://open.bigmodel.cn/api/anthropic/v1",
-    sdkType: "anthropic",
-    models: ["glm-5", "glm-4.7"],
-    defaultModel: "glm-5",
-  },
-  aihubmix: {
-    id: "aihubmix",
-    label: "AIHubMix",
-    baseURL: "https://aihubmix.com/v1",
-    sdkType: "openai",
-    models: ["gpt-4o-mini", "gpt-5-nano"],
-    defaultModel: "gpt-4o-mini",
-  },
+// Re-export from next-ai for backward compatibility
+export {
+  AiProviderRegistry,
+  isValidProvider,
+  resolveAiConfig,
+  type AiConfig,
+  type AiProviderInfo,
+  type AiSettingsInput,
+  type SdkType,
 };
 
-/** All valid provider IDs (including "custom"). */
-export const ALL_PROVIDER_IDS: AiProvider[] = [
-  ...Object.keys(AI_PROVIDERS) as Exclude<AiProvider, "custom">[],
-  "custom",
-];
+export { createAiModel };
 
-/**
- * Custom provider sentinel — used when provider === "custom".
- * baseURL and sdkType are supplied by user settings at runtime.
- */
-export const CUSTOM_PROVIDER_INFO: Omit<AiProviderInfo, "baseURL" | "sdkType"> = {
-  id: "custom",
-  label: "Custom",
-  models: [],
-  defaultModel: "",
-};
+// Backward-compatible type alias (firefly historically narrowed this to a union)
+export type AiProvider = string;
 
-// ── Config resolution ──
+// ── Backward-compatible registry shims ──
 
-export interface AiConfig {
-  provider: AiProvider;
-  baseURL: string;
-  apiKey: string;
-  model: string;
-  sdkType: SdkType;
-}
+const defaultRegistry = new AiProviderRegistry();
 
-/** User-facing settings (stored in DB). */
-export interface AiSettingsInput {
-  provider: AiProvider;
-  apiKey: string;
-  model: string; // empty = use provider default
-  /** Only used when provider === "custom" */
-  baseURL?: string | undefined;
-  /** Only used when provider === "custom" */
-  sdkType?: SdkType | undefined;
-}
+export const AI_PROVIDERS: Record<string, AiProviderInfo> = Object.fromEntries(
+  defaultRegistry.getAll().map((p) => [p.id, p]),
+);
 
-/**
- * Look up a built-in provider's static config.
- */
-export function getProviderConfig(
-  providerId: AiProvider,
-): AiProviderInfo | undefined {
+export const ALL_PROVIDER_IDS: string[] = defaultRegistry.getAllIds();
+
+export const CUSTOM_PROVIDER_INFO = NEXT_AI_CUSTOM_PROVIDER_INFO;
+
+export function getProviderConfig(providerId: string): AiProviderInfo | undefined {
   if (providerId === "custom") return undefined;
-  return AI_PROVIDERS[providerId];
-}
-
-/**
- * Check if a provider ID is valid (built-in or custom).
- */
-export function isValidProvider(id: string): id is AiProvider {
-  return ALL_PROVIDER_IDS.includes(id as AiProvider);
-}
-
-/**
- * Resolve user settings into a complete AiConfig.
- * Fills in baseURL, sdkType, and default model from the provider registry.
- * For "custom" provider, baseURL and sdkType must be supplied in the input.
- */
-export function resolveAiConfig(input: AiSettingsInput): AiConfig {
-  if (!input.apiKey) {
-    throw new Error("API key is required");
-  }
-
-  if (input.provider === "custom") {
-    if (!input.baseURL) {
-      throw new Error("Base URL is required for custom provider");
-    }
-    if (!input.sdkType) {
-      throw new Error("SDK type is required for custom provider");
-    }
-    if (!input.model) {
-      throw new Error("Model is required for custom provider");
-    }
-    return {
-      provider: "custom",
-      baseURL: input.baseURL,
-      apiKey: input.apiKey,
-      model: input.model,
-      sdkType: input.sdkType,
-    };
-  }
-
-  const info = getProviderConfig(input.provider);
-  if (!info) {
-    throw new Error(`Unknown AI provider: ${input.provider}`);
-  }
-
-  return {
-    provider: input.provider,
-    baseURL: info.baseURL,
-    apiKey: input.apiKey,
-    model: input.model || info.defaultModel,
-    sdkType: info.sdkType,
-  };
-}
-
-// ── Client creation ──
-
-/**
- * Create a Vercel AI SDK provider instance based on sdkType.
- * Returns a function that creates model references: `client(modelId)`.
- *
- * When sdkType is "anthropic", uses @ai-sdk/anthropic.
- * When sdkType is "openai", uses @ai-sdk/openai.
- * Both return the same calling convention: `client(modelId) → LanguageModelV2`.
- */
-export function createAiClient(config: AiConfig) {
-  if (config.sdkType === "openai") {
-    return createOpenAI({
-      baseURL: config.baseURL,
-      apiKey: config.apiKey,
-    });
-  }
-  return createAnthropic({
-    baseURL: config.baseURL,
-    apiKey: config.apiKey,
-  });
+  return defaultRegistry.get(providerId);
 }
 
 // ── Excerpt generation ──
@@ -220,46 +87,20 @@ export async function generateExcerpt(
   }
 
   const config = resolveAiConfig({
-    provider: settings.provider as AiProvider,
+    provider: settings.provider,
     apiKey: settings.apiKey,
     model: settings.model,
-    baseURL: settings.baseURL || undefined,
-    sdkType: (settings.sdkType || undefined) as SdkType | undefined,
+    ...(settings.baseURL ? { baseURL: settings.baseURL } : {}),
+    ...(settings.sdkType ? { sdkType: settings.sdkType as SdkType } : {}),
   });
 
-  const client = createAiClient(config);
-
   const result = await generateText({
-    model: client(config.model),
+    model: createAiModel(config),
     prompt: `${EXCERPT_PROMPT}\n\n标题：${title}\n\n正文：\n${content}`,
     maxOutputTokens: 1024,
   });
 
-  // Some models (e.g. MiniMax) use extended thinking via Anthropic protocol.
-  // If all output tokens were consumed by reasoning and text is empty,
-  // extract the trailing content from the last reasoning block as fallback.
-  let excerpt = result.text.trim();
-  if (!excerpt && result.reasoning) {
-    const lastReasoning = result.reasoning.at(-1);
-    if (lastReasoning?.type === "reasoning" && lastReasoning.text) {
-      // The reasoning may contain the draft excerpt after the analysis.
-      // Look for quoted content near the end (often the model drafts the excerpt in quotes).
-      const lines = lastReasoning.text.trim().split("\n");
-      // Take the last non-empty line(s) that look like the actual excerpt
-      for (let i = lines.length - 1; i >= 0; i--) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        // Strip surrounding quotes if present
-        const unquoted = line.replace(/^["「『]|["」』]$/g, "").trim();
-        if (unquoted.length >= 20) {
-          excerpt = unquoted;
-          break;
-        }
-      }
-    }
-  }
-
-  return excerpt;
+  return result.text.trim();
 }
 
 // ── Unfurl metadata summarization ──
@@ -299,14 +140,12 @@ export async function summarizeUnfurl(
     }
 
     const config = resolveAiConfig({
-      provider: settings.provider as AiProvider,
+      provider: settings.provider,
       apiKey: settings.apiKey,
       model: settings.model,
-      baseURL: settings.baseURL || undefined,
-      sdkType: (settings.sdkType || undefined) as SdkType | undefined,
+      ...(settings.baseURL ? { baseURL: settings.baseURL } : {}),
+      ...(settings.sdkType ? { sdkType: settings.sdkType as SdkType } : {}),
     });
-
-    const client = createAiClient(config);
 
     const contextParts: string[] = [];
     if (ogTitle) contextParts.push(`OG Title: ${ogTitle}`);
@@ -316,26 +155,12 @@ export async function summarizeUnfurl(
     if (contextParts.length === 0) return null;
 
     const result = await generateText({
-      model: client(config.model),
+      model: createAiModel(config),
       prompt: `${UNFURL_PROMPT}\n\n${contextParts.join("\n\n")}`,
       maxOutputTokens: 1024,
     });
 
-    // Prefer result.text; for thinking models (e.g. MiniMax-M2.1) that put
-    // output in reasoning blocks and return empty text, try extracting from reasoning.
-    let text = result.text.trim();
-    if (!text && result.reasoning) {
-      const reasoningText = result.reasoning
-        .filter((r): r is { type: "reasoning"; text: string } => r.type === "reasoning" && !!r.text)
-        .map((r) => r.text)
-        .join("\n");
-      // Look for JSON in reasoning output
-      const reasoningJson = reasoningText.match(/\{[\s\S]*?"title"[\s\S]*?"description"[\s\S]*?\}/);
-      if (reasoningJson) {
-        text = reasoningJson[0];
-      }
-    }
-
+    const text = result.text.trim();
     if (!text) return null;
 
     // Extract JSON from response (tolerates markdown fences and surrounding text)
