@@ -3,24 +3,8 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useCallback } from "react";
-import { Pencil, Trash2, ExternalLink, GripVertical } from "lucide-react";
+import { Pencil, Trash2, ExternalLink, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  KeyboardSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-  arrayMove,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { useLocale } from "@/i18n/context";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { useSetPageSubtitle } from "@/components/admin/page-subtitle-context";
@@ -46,54 +30,6 @@ interface TaxonomyManagerProps {
 }
 
 // ---------------------------------------------------------------------------
-// SortableRow — a table row with drag handle (used only for categories)
-// ---------------------------------------------------------------------------
-
-function SortableRow({
-  item,
-  children,
-}: {
-  item: TaxonomyItem;
-  children: (dragHandle: React.ReactNode) => React.ReactNode;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: item.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : undefined,
-  };
-
-  const handle = (
-    <button
-      type="button"
-      className="flex items-center justify-center rounded p-1 text-muted-foreground cursor-grab active:cursor-grabbing hover:text-foreground transition-colors"
-      {...attributes}
-      {...listeners}
-    >
-      <GripVertical className="h-4 w-4" strokeWidth={1.5} />
-    </button>
-  );
-
-  return (
-    <tr
-      ref={setNodeRef}
-      style={style}
-      className="border-b border-border last:border-0 hover:bg-accent/50 transition-colors"
-    >
-      {children(handle)}
-    </tr>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // TaxonomyManager
 // ---------------------------------------------------------------------------
 
@@ -109,7 +45,7 @@ export function TaxonomyManager({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Local item order (for optimistic DnD reordering)
+  // Local item order (for optimistic reordering via up/down buttons)
   const [orderedItems, setOrderedItems] = useState(initialItems);
   // Sync when server data changes (e.g. after create/delete/edit)
   if (initialItems !== orderedItems && initialItems.length !== orderedItems.length) {
@@ -239,27 +175,19 @@ export function TaxonomyManager({
   const hasStats = type === "category" && orderedItems.some((i) => i.total_posts !== undefined);
 
   // ---------------------------------------------------------------------------
-  // Drag-and-drop (categories only)
+  // Reordering (categories only) — simple up/down buttons
   // ---------------------------------------------------------------------------
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor),
-  );
+  const move = useCallback(
+    async (index: number, direction: -1 | 1) => {
+      const target = index + direction;
+      if (target < 0 || target >= orderedItems.length) return;
 
-  const handleDragEnd = useCallback(
-    async (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (!over || active.id === over.id) return;
-
-      const oldIndex = orderedItems.findIndex((i) => i.id === active.id);
-      const newIndex = orderedItems.findIndex((i) => i.id === over.id);
-      if (oldIndex === -1 || newIndex === -1) return;
-
-      const reordered = arrayMove(orderedItems, oldIndex, newIndex);
+      const previous = orderedItems;
+      const reordered = [...orderedItems];
+      [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
       setOrderedItems(reordered);
 
-      // Persist to server
       try {
         const res = await fetch(`${apiBase}/reorder`, {
           method: "PUT",
@@ -269,8 +197,7 @@ export function TaxonomyManager({
         if (!res.ok) throw new Error("Failed to save order");
         toast.success(t("admin.taxonomy.reorderSaved"));
       } catch {
-        // Revert on failure
-        setOrderedItems(orderedItems);
+        setOrderedItems(previous);
         toast.error(t("admin.taxonomy.unknownError"));
       }
     },
@@ -281,11 +208,30 @@ export function TaxonomyManager({
   // Render helpers
   // ---------------------------------------------------------------------------
 
-  const renderRowContent = (item: TaxonomyItem, dragHandle?: React.ReactNode) => (
+  const renderRowContent = (item: TaxonomyItem, index?: number) => (
     <>
-      {sortable && (
-        <td className="w-8 pl-2 pr-0 py-3">
-          {dragHandle}
+      {sortable && index !== undefined && (
+        <td className="w-16 pl-2 pr-0 py-3">
+          <div className="flex items-center gap-0.5">
+            <button
+              type="button"
+              onClick={() => move(index, -1)}
+              disabled={index === 0}
+              aria-label="Move up"
+              className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+            >
+              <ChevronUp className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+            <button
+              type="button"
+              onClick={() => move(index, 1)}
+              disabled={index === orderedItems.length - 1}
+              aria-label="Move down"
+              className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+            >
+              <ChevronDown className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          </div>
         </td>
       )}
       <td className="px-4 py-3 font-medium text-foreground">
@@ -410,98 +356,48 @@ export function TaxonomyManager({
 
       {/* Table */}
       <div className="overflow-x-auto rounded-[var(--radius-widget)] border border-border bg-secondary">
-        {sortable ? (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-secondary/50">
-                  {sortable && (
-                    <th className="w-8 pl-2 pr-0 py-3" />
-                  )}
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    {t("admin.taxonomy.table.name")}
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
-                    {t("admin.taxonomy.table.slug")}
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
-                    {t("admin.taxonomy.table.description")}
-                  </th>
-                  <th className="px-4 py-3 text-center font-medium text-muted-foreground">
-                    {t("admin.taxonomy.table.posts")}
-                  </th>
-                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                    {t("admin.taxonomy.table.actions")}
-                  </th>
-                </tr>
-              </thead>
-              <SortableContext
-                items={orderedItems.map((i) => i.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <tbody>
-                  {orderedItems.length === 0 ? (
-                    <tr>
-                      <td colSpan={colCount} className="px-4 py-8 text-center text-muted-foreground">
-                        {emptyMessage}
-                      </td>
-                    </tr>
-                  ) : (
-                    orderedItems.map((item) => (
-                      <SortableRow key={item.id} item={item}>
-                        {(dragHandle) => renderRowContent(item, dragHandle)}
-                      </SortableRow>
-                    ))
-                  )}
-                </tbody>
-              </SortableContext>
-            </table>
-          </DndContext>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-secondary/50">
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  {t("admin.taxonomy.table.name")}
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
-                  {t("admin.taxonomy.table.slug")}
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
-                  {t("admin.taxonomy.table.description")}
-                </th>
-                <th className="px-4 py-3 text-center font-medium text-muted-foreground">
-                  {t("admin.taxonomy.table.posts")}
-                </th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  {t("admin.taxonomy.table.actions")}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {orderedItems.length === 0 ? (
-                <tr>
-                  <td colSpan={colCount} className="px-4 py-8 text-center text-muted-foreground">
-                    {emptyMessage}
-                  </td>
-                </tr>
-              ) : (
-                orderedItems.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-b border-border last:border-0 hover:bg-accent/50 transition-colors"
-                  >
-                    {renderRowContent(item)}
-                  </tr>
-                ))
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-secondary/50">
+              {sortable && (
+                <th className="w-16 pl-2 pr-0 py-3" />
               )}
-            </tbody>
-          </table>
-        )}
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                {t("admin.taxonomy.table.name")}
+              </th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
+                {t("admin.taxonomy.table.slug")}
+              </th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
+                {t("admin.taxonomy.table.description")}
+              </th>
+              <th className="px-4 py-3 text-center font-medium text-muted-foreground">
+                {t("admin.taxonomy.table.posts")}
+              </th>
+              <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                {t("admin.taxonomy.table.actions")}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {orderedItems.length === 0 ? (
+              <tr>
+                <td colSpan={colCount} className="px-4 py-8 text-center text-muted-foreground">
+                  {emptyMessage}
+                </td>
+              </tr>
+            ) : (
+              orderedItems.map((item, index) => (
+                <tr
+                  key={item.id}
+                  className="border-b border-border last:border-0 hover:bg-accent/50 transition-colors"
+                >
+                  {renderRowContent(item, sortable ? index : undefined)}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Delete confirmation dialog */}
