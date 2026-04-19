@@ -3,7 +3,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     globals: true,
-    exclude: ["e2e/**", "node_modules/**", "worker/**", ".claude/**"],
+    exclude: ["e2e/**", "**/node_modules/**", "worker/**", ".claude/**"],
     env: {
       R2_PUBLIC_URL: "https://assets.example.com",
     },
