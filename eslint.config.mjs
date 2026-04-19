@@ -35,6 +35,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: [".next/", "node_modules/", "worker/", "dist/", "coverage/", "scripts/"],
+    ignores: [".next/", "node_modules/", "worker/", "dist/", "coverage/", "scripts/", "src/lib/cache-handler.js"],
   },
 );
