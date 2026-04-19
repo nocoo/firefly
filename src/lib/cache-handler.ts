@@ -17,6 +17,13 @@ const LRU_MAX_ENTRIES = 100;
 /** TTL for KV entries in seconds (7 days). */
 const KV_TTL_SECONDS = 7 * 24 * 3600;
 
+/**
+ * Check if we're in build phase. During build, KV is disabled to reduce
+ * memory pressure from 47+ parallel static generation workers.
+ * NEXT_PHASE is set by Next.js: "phase-production-build" during build.
+ */
+const IS_BUILD_PHASE = process.env.NEXT_PHASE === "phase-production-build";
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -103,10 +110,14 @@ let kvClient: KVClient | null = null;
 let kvClientInitialized = false;
 
 /**
- * Get or create the KV client. Returns null if not configured.
+ * Get or create the KV client. Returns null if not configured or during build.
  * Uses lazy initialization to avoid startup overhead when KV is not used.
+ * IMPORTANT: Disabled during build phase to prevent OOM from 47+ workers.
  */
 function getKVClient(): KVClient | null {
+  // Disable KV during build to prevent OOM
+  if (IS_BUILD_PHASE) return null;
+
   if (kvClientInitialized) return kvClient;
 
   const accountId = process.env.CF_ACCOUNT_ID;
@@ -193,9 +204,11 @@ export function getCacheStats(): CacheStats {
     newestEntry,
     kvBackend: {
       enabled: kv !== null,
-      note: kv
-        ? "Stats reflect LRU hot cache only; KV cold storage not included"
-        : "KV not configured; using pure LRU mode",
+      note: IS_BUILD_PHASE
+        ? "KV disabled during build phase"
+        : kv
+          ? "Stats reflect LRU hot cache only; KV cold storage not included"
+          : "KV not configured; using pure LRU mode",
     },
   };
 }
