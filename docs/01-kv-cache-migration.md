@@ -113,25 +113,33 @@ interface KVStoredEntry {
 - `tags` — `revalidateTag()` 需要知道每个 entry 关联的 tags
 - `kind/size/accessCount` — `/api/system/memory` 监控面板依赖
 
-### 2. KV TTL 策略：不使用 TTL 删除
+### 2. KV TTL 策略：统一 7 天过期
 
-**错误做法**（文档原方案）：
+所有 KV 数据（cache entry 和 tag 时间戳）都使用 7 天 TTL：
+
 ```typescript
-// ❌ 把 revalidate 当 TTL，会物理删除 stale entry
-await kvClient.put(key, value, options.revalidate);
+const KV_TTL_SECONDS = 7 * 24 * 3600; // 7 days
+
+// Cache entry
+await kvClient.put(`cache:${key}`, entry, { expirationTtl: KV_TTL_SECONDS });
+
+// Tag 时间戳
+await kvClient.put(`tag:${tag}`, timestamp, { expirationTtl: KV_TTL_SECONDS });
 ```
 
-**正确做法**：
-```typescript
-// ✅ KV 存储不设 TTL，由 cache handler 判断 staleness
-await kvClient.put(key, entry); // 无 TTL 参数
-```
+**为什么不用 `revalidate` 作为 TTL**：
 
-**理由**：
-ISR 的 stale-while-revalidate 语义要求：
-1. 首次请求返回 stale entry（快）
-2. 后台重新生成并更新缓存
-3. 如果用 TTL 删除，entry 过期后直接 miss，用户看到的是冷启动延迟
+ISR 的 stale-while-revalidate 语义要求即使 entry 过了 `revalidate` 时间也要返回旧值。如果把 `revalidate` 当 TTL，entry 一过期就物理删除，会把 ISR 退化成冷 miss。
+
+**为什么 cache entry 需要 TTL**：
+
+tag 时间戳必须有 TTL 防止无限增长，但这会导致一个问题：
+- 假设 cache entry 无 TTL，tag 时间戳 7 天后过期
+- 此时一个 8 天前失效的 entry 会被误判为"有效"（tag 记录不存在 → 没有失效记录 → 有效）
+
+解决方案：cache entry TTL ≤ tag TTL。两者都用 7 天，保证：
+- 频繁访问的页面：每次 `set()` 刷新 TTL，不会过期
+- 7 天无访问的页面：从 KV 过期，下次访问重新生成（符合"冷数据"定义）
 
 ### 3. 监控面板迁移
 
@@ -244,16 +252,24 @@ async get(key: string): Promise<CacheHandlerValue | null> {
 }
 ```
 
-**GC 策略**：tag 时间戳使用 KV TTL 自动过期（如 7 天），避免无限增长。
+**GC 策略**：tag 时间戳和 cache entry 都使用 KV TTL 自动过期。
+
 ```typescript
-// 写入时设置 TTL
+// Tag 时间戳：7 天 TTL
 await kv.put(`tag:${tag}`, now, { expirationTtl: 7 * 24 * 3600 });
+
+// Cache entry：也用 7 天 TTL（与 tag TTL 一致）
+await kv.put(`cache:${key}`, entry, { expirationTtl: 7 * 24 * 3600 });
 ```
 
-**注意**：tag 时间戳可以用 TTL，因为：
-- 7 天后 tag 记录过期消失
-- 如果 cache entry 也存活超过 7 天，tag 检查会 miss → 视为有效
-- 这符合预期：超过 7 天未更新的 tag 失效记录不需要保留
+**TTL 约束**：cache entry TTL ≤ tag TTL，否则会出现"复活"问题：
+- 如果 cache entry 存活时间超过 tag 时间戳，tag 过期后 entry 会被误判为有效
+- 两者使用相同 TTL（7 天）保证：tag 过期时，相关 entry 也已过期或即将过期
+
+**注意**：这意味着 KV 中的 cache entry 最多存活 7 天。对于长期稳定的页面：
+- 7 天内会被访问 → 每次 `set()` 刷新 TTL
+- 7 天无访问 → 从 KV 过期，下次访问重新生成
+- 这符合"冷数据"的定义：长期无访问的页面不需要持久化
 
 ### 5. KV 写入语义：Best-Effort 持久化
 
@@ -330,7 +346,6 @@ export function createKVClient(
         url.searchParams.set("expiration_ttl", String(options.expirationTtl));
       }
       const res = await fetch(url.toString(), {
-      const res = await fetch(url.toString(), {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${apiToken}`,
@@ -381,9 +396,11 @@ import { LRUCache } from "lru-cache";
 
 // LRU 配置
 const LRU_MAX_ENTRIES = 100;
+const KV_TTL_SECONDS = 7 * 24 * 3600; // 7 days
 
 // 双层缓存
 const lruCache = new LRUCache<string, UnifiedEntry>({ max: LRU_MAX_ENTRIES });
+const tagRevalidatedAt = new Map<string, number>();
 let kvClient: KVClient | null = null;
 
 function getKVClient(): KVClient | null {
@@ -415,9 +432,22 @@ export default class CacheHandler {
     
     if (!entry) return null;
     
-    // 3. 检查 tag 失效
+    // 3. 检查 tag 失效（先查内存，miss 则查 KV）
     for (const tag of entry.tags) {
-      const revalidatedTime = tagRevalidatedAt.get(tag);
+      let revalidatedTime = tagRevalidatedAt.get(tag);
+      
+      // 内存没有 → 从 KV lazy-load
+      if (revalidatedTime === undefined) {
+        const kv = getKVClient();
+        if (kv) {
+          const kvTime = await kv.get<number>(`tag:${tag}`);
+          if (kvTime !== null) {
+            tagRevalidatedAt.set(tag, kvTime); // 缓存到内存
+            revalidatedTime = kvTime;
+          }
+        }
+      }
+      
       if (revalidatedTime && revalidatedTime > entry.lastModified) {
         lruCache.delete(key);
         // Lazy: 也从 KV 删除
@@ -449,10 +479,35 @@ export default class CacheHandler {
     // 写入 LRU
     lruCache.set(key, entry);
     
-    // 写入 KV（fire-and-forget，失败不阻塞）
-    getKVClient()?.put(`cache:${key}`, entry).catch(err => {
+    // 写入 KV（fire-and-forget，带 TTL）
+    getKVClient()?.put(`cache:${key}`, entry, { expirationTtl: KV_TTL_SECONDS }).catch(err => {
       console.error(`[cache] KV put failed for ${key}:`, err.message);
     });
+  }
+  
+  async revalidateTag(tags: string | string[]): Promise<void> {
+    const tagList = Array.isArray(tags) ? tags : [tags];
+    const now = Date.now();
+    const kv = getKVClient();
+    
+    // 1. 更新内存 tag 时间戳
+    for (const tag of tagList) {
+      tagRevalidatedAt.set(tag, now);
+    }
+    
+    // 2. 清除 LRU 中匹配的 entry
+    for (const [key, entry] of lruCache.entries()) {
+      if (entry.tags.some(t => tagList.includes(t))) {
+        lruCache.delete(key);
+      }
+    }
+    
+    // 3. 每个 tag 单独写入 KV（带 TTL）
+    if (kv) {
+      await Promise.all(
+        tagList.map(tag => kv.put(`tag:${tag}`, now, { expirationTtl: KV_TTL_SECONDS }))
+      );
+    }
   }
 }
 ```
