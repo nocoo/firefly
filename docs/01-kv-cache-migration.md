@@ -1,6 +1,6 @@
 # KV Cache Migration Plan
 
-将 Next.js 内存缓存迁移到 Cloudflare KV，降低运行时内存占用，同时保持性能。
+将 Next.js 页面缓存迁移到 Cloudflare KV，降低运行时内存占用，同时保持性能和现有语义。
 
 ## 背景
 
@@ -10,12 +10,22 @@
 - 重启后缓存全部丢失，需要重新预热
 - 无法跨实例共享缓存
 
+### 现状
+
+`next.config.ts` 已配置：
+```typescript
+cacheHandler: require.resolve("./src/lib/cache-handler.js"),
+cacheMaxMemorySize: 0, // 禁用 Next.js 内置缓存
+```
+
+自定义 cache handler 完全接管缓存，但当前是纯内存存储。
+
 ## 目标
 
-1. **降低内存占用**：页面缓存存储到 Cloudflare KV
-2. **保持性能**：KV 读取延迟 ~10-50ms，对 ISR 可接受
+1. **降低内存占用**：冷数据存储到 Cloudflare KV
+2. **保持性能**：热数据保留在内存 LRU
 3. **缓存持久化**：重启不丢失热门页面缓存
-4. **最终关闭 Next.js 内置缓存**：完全依赖 KV
+4. **保留现有语义**：ISR stale-while-revalidate、tag invalidation、监控面板
 
 ## KV Namespace
 
@@ -27,6 +37,8 @@
 环境变量：
 ```bash
 # .env.local / Railway
+CF_ACCOUNT_ID=xxx          # 已有
+CF_API_TOKEN=xxx           # 需新增，KV 读写权限
 KV_NAMESPACE_ID=4246634d54b243d2a9b29c9317a2eb68
 
 # .env.test
@@ -57,15 +69,135 @@ KV_NAMESPACE_ID=dca9e942f1ff4739bf5c8d2f28ac2ea0
 ┌─────────────────────────────────────────────────┐
 │                 Next.js (Railway)               │
 │  ┌─────────────────────────────────────────┐    │
-│  │       cache-handler.ts (KV adapter)     │    │
-│  │  - 热数据：LRU in-memory (小容量)       │    │
-│  │  - 冷数据：Cloudflare KV                │    │
+│  │       cache-handler.ts (双层缓存)       │    │
+│  │  - 热数据：LRU in-memory (容量受限)     │    │
+│  │  - 冷数据：Cloudflare KV (持久化)       │    │
 │  └─────────────────────────────────────────┘    │
 │                        │                        │
 │                        ▼                        │
 │              Cloudflare KV (边缘)               │
 │              lizhengblog namespace              │
 └─────────────────────────────────────────────────┘
+```
+
+## 关键设计决策
+
+### 1. KV 存储结构 (Envelope)
+
+KV 必须存储完整的 `UnifiedEntry`，不能只存 value：
+
+```typescript
+// KV 存储的完整结构（与现有 UnifiedEntry 一致）
+interface KVStoredEntry {
+  // CacheHandlerValue 必需字段
+  lastModified: number;
+  value: any;
+  
+  // 元数据（监控、tag 失效依赖）
+  kind: string;
+  size: number;
+  createdAt: number;
+  lastAccessedAt: number;
+  accessCount: number;
+  tags: string[];
+  revalidate: number | null;
+}
+```
+
+**理由**：
+- `lastModified` — Next.js 用于判断 stale-while-revalidate
+- `tags` — `revalidateTag()` 需要知道每个 entry 关联的 tags
+- `kind/size/accessCount` — `/api/system/memory` 监控面板依赖
+
+### 2. KV TTL 策略：不使用 TTL 删除
+
+**错误做法**（文档原方案）：
+```typescript
+// ❌ 把 revalidate 当 TTL，会物理删除 stale entry
+await kvClient.put(key, value, options.revalidate);
+```
+
+**正确做法**：
+```typescript
+// ✅ KV 存储不设 TTL，由 cache handler 判断 staleness
+await kvClient.put(key, entry); // 无 TTL 参数
+```
+
+**理由**：
+ISR 的 stale-while-revalidate 语义要求：
+1. 首次请求返回 stale entry（快）
+2. 后台重新生成并更新缓存
+3. 如果用 TTL 删除，entry 过期后直接 miss，用户看到的是冷启动延迟
+
+### 3. 监控面板迁移
+
+`/api/system/memory` 调用 `getCacheStats()` 展示缓存状态。迁移后需要：
+
+```typescript
+export function getCacheStats(): CacheStats {
+  // LRU 热数据（同步可读）
+  const lruStats = getLRUStats();
+  
+  // KV 冷数据统计（需要异步，或者维护本地计数器）
+  // 方案 A：只展示 LRU stats + "KV entries exist"
+  // 方案 B：维护 kvEntryCount 计数器，每次 put/delete 更新
+  
+  return {
+    ...lruStats,
+    kvBackend: {
+      enabled: true,
+      // 无法同步获取 KV 条目数，用计数器近似
+      estimatedEntries: kvEntryCounter,
+    },
+  };
+}
+```
+
+**建议方案**：Phase 2 先用方案 A（只展示 LRU stats），Phase 3 再考虑 KV stats。
+
+### 4. Tag Invalidation
+
+现有逻辑：
+```typescript
+const tagRevalidatedAt = new Map<string, number>();
+
+async revalidateTag(tags: string[]) {
+  // 1. 记录 tag 失效时间
+  for (const tag of tags) {
+    tagRevalidatedAt.set(tag, Date.now());
+  }
+  // 2. 立即删除匹配的内存 entry
+  for (const [key, entry] of cache.entries()) {
+    if (entry.tags.some(t => tags.includes(t))) {
+      cache.delete(key);
+    }
+  }
+}
+```
+
+迁移后需要同步到 KV：
+```typescript
+async revalidateTag(tags: string[]) {
+  const now = Date.now();
+  
+  // 1. 更新内存 tag 时间戳
+  for (const tag of tags) {
+    tagRevalidatedAt.set(tag, now);
+  }
+  
+  // 2. 清除内存 LRU
+  for (const [key, entry] of lruCache.entries()) {
+    if (entry.tags.some(t => tags.includes(t))) {
+      lruCache.delete(key);
+    }
+  }
+  
+  // 3. 持久化 tag 时间戳到 KV（重启后可恢复）
+  await kvClient.put(`__tag_revalidated__`, Object.fromEntries(tagRevalidatedAt));
+  
+  // 注意：不立即删除 KV 中的 entry
+  // get() 时检查 tag 时间戳，发现 stale 再删除（lazy invalidation）
+}
 ```
 
 ## 实施计划
@@ -80,102 +212,181 @@ KV_NAMESPACE_ID=dca9e942f1ff4739bf5c8d2f28ac2ea0
 
 export interface KVClient {
   get<T>(key: string): Promise<T | null>;
-  put(key: string, value: unknown, ttl?: number): Promise<void>;
+  put(key: string, value: unknown): Promise<void>; // 无 TTL
   delete(key: string): Promise<void>;
   list(prefix?: string): Promise<string[]>;
 }
 
-export function createKVClient(accountId: string, namespaceId: string, apiToken: string): KVClient;
+export function createKVClient(
+  accountId: string,
+  namespaceId: string,
+  apiToken: string
+): KVClient {
+  const baseUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/storage/kv/namespaces/${namespaceId}`;
+  
+  return {
+    async get<T>(key: string): Promise<T | null> {
+      const res = await fetch(`${baseUrl}/values/${encodeURIComponent(key)}`, {
+        headers: { Authorization: `Bearer ${apiToken}` },
+      });
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error(`KV get failed: ${res.status}`);
+      return res.json() as T;
+    },
+    
+    async put(key: string, value: unknown): Promise<void> {
+      const res = await fetch(`${baseUrl}/values/${encodeURIComponent(key)}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${apiToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(value),
+      });
+      if (!res.ok) throw new Error(`KV put failed: ${res.status}`);
+    },
+    
+    async delete(key: string): Promise<void> {
+      const res = await fetch(`${baseUrl}/values/${encodeURIComponent(key)}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${apiToken}` },
+      });
+      if (!res.ok && res.status !== 404) {
+        throw new Error(`KV delete failed: ${res.status}`);
+      }
+    },
+    
+    async list(prefix?: string): Promise<string[]> {
+      const url = new URL(`${baseUrl}/keys`);
+      if (prefix) url.searchParams.set("prefix", prefix);
+      const res = await fetch(url.toString(), {
+        headers: { Authorization: `Bearer ${apiToken}` },
+      });
+      if (!res.ok) throw new Error(`KV list failed: ${res.status}`);
+      const data = await res.json() as { result: { name: string }[] };
+      return data.result.map(k => k.name);
+    },
+  };
+}
 ```
 
-**环境变量**：
-```bash
-CF_ACCOUNT_ID=xxx          # 已有
-CF_API_TOKEN=xxx           # 需新增，KV 读写权限
-KV_NAMESPACE_ID=xxx        # 新增
-```
+### Phase 2: Cache Handler 双层改造
 
-### Phase 2: Cache Handler 改造
+**改造点**：
 
-**文件**: `src/lib/cache-handler.ts`
-
-改造点：
-1. `get()` 先查内存 LRU，miss 则查 KV
-2. `set()` 写入 KV，同时更新内存 LRU
-3. `revalidateTag()` 写入 KV tag 时间戳
-4. 内存 LRU 容量限制（如 100 条或 50MB）
+1. 新增 LRU 容量限制（如 100 条或 50MB）
+2. `get()` 先查 LRU，miss 查 KV，命中后回填 LRU
+3. `set()` 同时写入 LRU 和 KV
+4. `revalidateTag()` 清理 LRU + 持久化 tag 时间戳
+5. 启动时从 KV 加载 tag 时间戳
 
 ```typescript
-// 新增依赖
-import { createKVClient } from "./kv-client";
+import { createKVClient, type KVClient } from "./kv-client";
+import { LRUCache } from "lru-cache";
 
 // LRU 配置
 const LRU_MAX_ENTRIES = 100;
-const LRU_MAX_SIZE_MB = 50;
 
 // 双层缓存
-const memoryCache = new LRUCache<string, UnifiedEntry>({ max: LRU_MAX_ENTRIES });
-const kvClient = createKVClient(...);
+const lruCache = new LRUCache<string, UnifiedEntry>({ max: LRU_MAX_ENTRIES });
+let kvClient: KVClient | null = null;
+
+function getKVClient(): KVClient | null {
+  if (kvClient) return kvClient;
+  const accountId = process.env.CF_ACCOUNT_ID;
+  const apiToken = process.env.CF_API_TOKEN;
+  const namespaceId = process.env.KV_NAMESPACE_ID;
+  if (!accountId || !apiToken || !namespaceId) return null;
+  kvClient = createKVClient(accountId, namespaceId, apiToken);
+  return kvClient;
+}
 
 export default class CacheHandler {
-  async get(key: string) {
-    // 1. 查内存
-    const mem = memoryCache.get(key);
-    if (mem) return mem;
+  async get(key: string): Promise<CacheHandlerValue | null> {
+    // 1. 查 LRU
+    let entry = lruCache.get(key);
     
-    // 2. 查 KV
-    const kv = await kvClient.get(key);
-    if (kv) {
-      memoryCache.set(key, kv); // 回填内存
-      return kv;
+    // 2. LRU miss → 查 KV
+    if (!entry) {
+      const kv = getKVClient();
+      if (kv) {
+        const kvEntry = await kv.get<UnifiedEntry>(`cache:${key}`);
+        if (kvEntry) {
+          entry = kvEntry;
+          lruCache.set(key, entry); // 回填 LRU
+        }
+      }
     }
-    return null;
+    
+    if (!entry) return null;
+    
+    // 3. 检查 tag 失效
+    for (const tag of entry.tags) {
+      const revalidatedTime = tagRevalidatedAt.get(tag);
+      if (revalidatedTime && revalidatedTime > entry.lastModified) {
+        lruCache.delete(key);
+        // Lazy: 也从 KV 删除
+        getKVClient()?.delete(`cache:${key}`).catch(() => {});
+        return null;
+      }
+    }
+    
+    // 4. 更新访问元数据
+    entry.lastAccessedAt = Date.now();
+    entry.accessCount += 1;
+    
+    return { lastModified: entry.lastModified, value: entry.value };
   }
   
-  async set(key: string, value: any, options: CacheOptions) {
-    // 写入 KV（持久化）
-    await kvClient.put(key, value, options.revalidate);
-    // 写入内存（热数据）
-    memoryCache.set(key, value);
+  async set(key: string, data: any, ctx?: any): Promise<void> {
+    const entry: UnifiedEntry = {
+      lastModified: Date.now(),
+      value: data,
+      kind: data?.kind ?? "unknown",
+      size: estimateSize(data),
+      createdAt: lruCache.get(key)?.createdAt ?? Date.now(),
+      lastAccessedAt: Date.now(),
+      accessCount: lruCache.get(key)?.accessCount ?? 0,
+      tags: ctx?.tags ?? [],
+      revalidate: typeof data?.revalidate === "number" ? data.revalidate : null,
+    };
+    
+    // 写入 LRU
+    lruCache.set(key, entry);
+    
+    // 写入 KV（fire-and-forget，失败不阻塞）
+    getKVClient()?.put(`cache:${key}`, entry).catch(err => {
+      console.error(`[cache] KV put failed for ${key}:`, err.message);
+    });
   }
 }
 ```
 
-### Phase 3: Rate Limiter 迁移（可选）
+### Phase 3: 监控面板适配
 
-当前 `rate-limit.ts` 使用 in-memory Map，可考虑迁移到 KV：
+更新 `getCacheStats()` 反映双层架构：
 
 ```typescript
-// rate-limit-kv.ts
-export async function rateLimitKV(ip: string, limit: number, windowSec: number) {
-  const key = `rate:${ip}`;
-  const data = await kvClient.get<{ count: number; ts: number }>(key);
+export function getCacheStats(): CacheStats {
+  const entries: CacheEntryMeta[] = [];
+  // ... 遍历 lruCache 收集统计
   
-  const now = Date.now();
-  if (data && now - data.ts < windowSec * 1000) {
-    if (data.count >= limit) return { allowed: false };
-    await kvClient.put(key, { count: data.count + 1, ts: data.ts }, windowSec);
-  } else {
-    await kvClient.put(key, { count: 1, ts: now }, windowSec);
-  }
-  return { allowed: true };
+  return {
+    totalEntries: entries.length,
+    totalSizeBytes,
+    entriesByKind,
+    sizeByKind,
+    entries: entries.slice(0, 100),
+    oldestEntry,
+    newestEntry,
+    // 新增：KV 后端状态
+    kvBackend: {
+      enabled: !!getKVClient(),
+      // LRU 只是热数据子集，实际缓存量更大
+      note: "Stats reflect LRU hot cache only; KV cold storage not included",
+    },
+  };
 }
-```
-
-**注意**: KV 是最终一致性，限流不够精确。如需精确限流，考虑 Durable Objects。
-
-### Phase 4: 关闭 Next.js 内置缓存
-
-验证 KV 缓存稳定后，在 `next.config.ts` 中禁用内置缓存：
-
-```typescript
-// next.config.ts
-export default {
-  experimental: {
-    // 使用自定义 cache handler，禁用内置缓存
-    incrementalCacheHandlerPath: require.resolve("./src/lib/cache-handler"),
-  },
-};
 ```
 
 ## 性能考量
@@ -190,30 +401,31 @@ export default {
 
 ### 优化策略
 
-1. **热数据内存缓存**：高频访问的页面保留在内存 LRU
-2. **批量读取**：Next.js 预渲染时可能并发请求多个缓存
-3. **TTL 策略**：短 TTL 页面不写 KV（如实时数据）
+1. **热数据内存缓存**：高频访问的页面保留在 LRU
+2. **异步写入**：KV put 不阻塞响应
+3. **Lazy invalidation**：tag 失效时不立即清理 KV，get 时检查再删
 
 ### 监控指标
 
-- `kv_cache_hit_rate`: KV 命中率
-- `memory_cache_hit_rate`: 内存 LRU 命中率
+- `lru_cache_hit_rate`: LRU 命中率
+- `kv_cache_hit_rate`: KV 命中率（LRU miss 后）
 - `kv_latency_p50/p99`: KV 读写延迟
 
 ## 原子化提交计划
 
 1. `feat(lib): add KV client for Cloudflare REST API`
-2. `feat(cache): add LRU layer to cache handler`
-3. `feat(cache): integrate KV as cold storage`
-4. `test(cache): add KV cache integration tests`
-5. `feat(rate-limit): migrate to KV (optional)`
-6. `chore(config): disable Next.js built-in cache`
+2. `feat(cache): add LRU layer with capacity limit`
+3. `feat(cache): integrate KV as cold storage backend`
+4. `feat(cache): persist tag revalidation timestamps to KV`
+5. `test(cache): add KV cache integration tests`
+6. `feat(api): update /api/system/memory for dual-layer stats`
 
 ## 回滚方案
 
 如果 KV 出现问题：
-1. 环境变量 `KV_ENABLED=false` 回退到纯内存模式
+1. 环境变量不配置 `KV_NAMESPACE_ID` → 自动回退到纯 LRU 模式
 2. Cache handler 检测到 KV 不可用时自动降级
+3. 监控面板显示 `kvBackend.enabled: false`
 
 ## 测试计划
 
@@ -221,12 +433,31 @@ export default {
 - KV client mock 测试
 - LRU 淘汰策略测试
 - Cache handler get/set 测试
+- Tag revalidation 跨 LRU+KV 测试
 
 ### L2: API E2E
 - 使用 `lizhengblog-test` namespace
-- 验证页面缓存写入/读取
-- 验证 tag revalidation
+- 验证页面缓存写入 KV
+- 验证重启后缓存恢复
+- 验证 tag revalidation 生效
 
 ### 性能基准
 - 对比迁移前后的 TTFB
-- 监控内存占用变化
+- 监控 LRU 命中率
+- 验证内存占用下降
+
+---
+
+## 超出范围
+
+### Rate Limiter 迁移
+
+当前限流器 (`src/lib/rate-limit.ts`) 是内存 sliding-window 实现，与缓存迁移是**独立的优化方向**。
+
+**不在本计划内的原因**：
+1. 限流器 API 返回 `{ allowed, remaining, resetMs }`，用于生成 `Retry-After` 响应头
+2. 迁移到 KV 需要重新设计数据结构（简单计数器无法提供 resetMs）
+3. KV 是最终一致性，精确限流需要 Durable Objects
+4. 这是行为变更，不是存储后端替换
+
+如需迁移限流器，应作为独立 RFC 评估。
