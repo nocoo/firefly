@@ -24,8 +24,12 @@ cacheMaxMemorySize: 0, // 禁用 Next.js 内置缓存
 
 1. **降低内存占用**：冷数据存储到 Cloudflare KV
 2. **保持性能**：热数据保留在内存 LRU
-3. **缓存持久化**：重启不丢失热门页面缓存
+3. **缓存持久化**：重启后可从 KV 恢复热门页面（best-effort，见限制说明）
 4. **保留现有语义**：ISR stale-while-revalidate、tag invalidation、监控面板
+
+## 部署约束
+
+**单实例假设**：本方案假设 Railway 部署为单实例。多实例部署需要额外的协调机制（如分布式锁或 CAS），超出本计划范围。
 
 ## KV Namespace
 
@@ -175,10 +179,17 @@ async revalidateTag(tags: string[]) {
 }
 ```
 
-迁移后需要同步到 KV：
+**迁移方案：每个 tag 单独存储**
+
+为避免多实例覆盖和无限增长，每个 tag 时间戳存为独立 KV key：
+
 ```typescript
+// KV key 格式: tag:{tagName} → timestamp
+// 例如: tag:post-123 → 1713456789000
+
 async revalidateTag(tags: string[]) {
   const now = Date.now();
+  const kv = getKVClient();
   
   // 1. 更新内存 tag 时间戳
   for (const tag of tags) {
@@ -192,13 +203,88 @@ async revalidateTag(tags: string[]) {
     }
   }
   
-  // 3. 持久化 tag 时间戳到 KV（重启后可恢复）
-  await kvClient.put(`__tag_revalidated__`, Object.fromEntries(tagRevalidatedAt));
-  
-  // 注意：不立即删除 KV 中的 entry
-  // get() 时检查 tag 时间戳，发现 stale 再删除（lazy invalidation）
+  // 3. 每个 tag 单独写入 KV（并行）
+  if (kv) {
+    await Promise.all(
+      tags.map(tag => kv.put(`tag:${tag}`, now))
+    );
+  }
 }
 ```
+
+**get() 时检查 tag 失效**：
+```typescript
+async get(key: string): Promise<CacheHandlerValue | null> {
+  // ... 获取 entry ...
+  
+  // 检查 tag 失效（先查内存，miss 则查 KV）
+  for (const tag of entry.tags) {
+    let revalidatedTime = tagRevalidatedAt.get(tag);
+    
+    // 内存没有 → 从 KV 加载
+    if (revalidatedTime === undefined) {
+      const kv = getKVClient();
+      if (kv) {
+        const kvTime = await kv.get<number>(`tag:${tag}`);
+        if (kvTime !== null) {
+          tagRevalidatedAt.set(tag, kvTime); // 缓存到内存
+          revalidatedTime = kvTime;
+        }
+      }
+    }
+    
+    if (revalidatedTime && revalidatedTime > entry.lastModified) {
+      // Entry stale，删除并返回 null
+      lruCache.delete(key);
+      getKVClient()?.delete(`cache:${key}`).catch(() => {});
+      return null;
+    }
+  }
+  // ...
+}
+```
+
+**GC 策略**：tag 时间戳使用 KV TTL 自动过期（如 7 天），避免无限增长。
+```typescript
+// 写入时设置 TTL
+await kv.put(`tag:${tag}`, now, { expirationTtl: 7 * 24 * 3600 });
+```
+
+**注意**：tag 时间戳可以用 TTL，因为：
+- 7 天后 tag 记录过期消失
+- 如果 cache entry 也存活超过 7 天，tag 检查会 miss → 视为有效
+- 这符合预期：超过 7 天未更新的 tag 失效记录不需要保留
+
+### 5. KV 写入语义：Best-Effort 持久化
+
+`set()` 使用 fire-and-forget 写入 KV：
+
+```typescript
+// 写入 KV（fire-and-forget，失败不阻塞）
+getKVClient()?.put(`cache:${key}`, entry).catch(err => {
+  console.error(`[cache] KV put failed for ${key}:`, err.message);
+});
+```
+
+**明确的 trade-off**：
+
+| 场景 | 行为 |
+|------|------|
+| 正常运行 | KV 写入在后台完成，响应不阻塞 |
+| KV 暂时不可用 | 写入失败，entry 只存在于 LRU，重启后丢失 |
+| 实例在 put() 完成前退出 | 新生成的缓存不会落到 KV |
+
+**设计理由**：
+1. **性能优先**：KV 写入延迟 ~10ms，同步写入会增加每个 ISR 响应的 TTFB
+2. **缓存本质**：缓存丢失是可接受的——Next.js 会重新生成
+3. **符合现状**：当前纯内存缓存重启也会丢失，KV 是增量改进而非强一致性保证
+
+**"重启不丢失热门页面"的正确理解**：
+- 在正常运行期间写入 KV 的页面可以恢复
+- 写入期间崩溃/重启的页面可能丢失
+- 这是 best-effort，不是持久化保证
+
+如需强一致性，可改为同步写入，但会牺牲响应延迟。
 
 ## 实施计划
 
@@ -210,9 +296,13 @@ async revalidateTag(tags: string[]) {
 // KV client using Cloudflare REST API
 // Railway 无法直接绑定 KV，通过 REST API 访问
 
+export interface KVPutOptions {
+  expirationTtl?: number; // TTL in seconds (for tag timestamps)
+}
+
 export interface KVClient {
   get<T>(key: string): Promise<T | null>;
-  put(key: string, value: unknown): Promise<void>; // 无 TTL
+  put(key: string, value: unknown, options?: KVPutOptions): Promise<void>;
   delete(key: string): Promise<void>;
   list(prefix?: string): Promise<string[]>;
 }
@@ -234,8 +324,13 @@ export function createKVClient(
       return res.json() as T;
     },
     
-    async put(key: string, value: unknown): Promise<void> {
-      const res = await fetch(`${baseUrl}/values/${encodeURIComponent(key)}`, {
+    async put(key: string, value: unknown, options?: KVPutOptions): Promise<void> {
+      const url = new URL(`${baseUrl}/values/${encodeURIComponent(key)}`);
+      if (options?.expirationTtl) {
+        url.searchParams.set("expiration_ttl", String(options.expirationTtl));
+      }
+      const res = await fetch(url.toString(), {
+      const res = await fetch(url.toString(), {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${apiToken}`,
@@ -276,9 +371,9 @@ export function createKVClient(
 
 1. 新增 LRU 容量限制（如 100 条或 50MB）
 2. `get()` 先查 LRU，miss 查 KV，命中后回填 LRU
-3. `set()` 同时写入 LRU 和 KV
-4. `revalidateTag()` 清理 LRU + 持久化 tag 时间戳
-5. 启动时从 KV 加载 tag 时间戳
+3. `get()` 检查 tag 失效时，lazy load tag 时间戳从 KV
+4. `set()` 同时写入 LRU 和 KV（fire-and-forget）
+5. `revalidateTag()` 清理 LRU + 每个 tag 单独写入 KV（带 7 天 TTL）
 
 ```typescript
 import { createKVClient, type KVClient } from "./kv-client";
