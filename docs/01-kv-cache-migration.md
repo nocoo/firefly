@@ -24,7 +24,7 @@ cacheMaxMemorySize: 0, // 禁用 Next.js 内置缓存
 
 1. **降低内存占用**：冷数据存储到 Cloudflare KV
 2. **保持性能**：热数据保留在内存 LRU
-3. **缓存持久化**：重启后可从 KV 恢复热门页面（best-effort，见限制说明）
+3. **缓存持久化**：重启后可从 KV 恢复 7 天内有重建的页面（best-effort）
 4. **保留现有语义**：ISR stale-while-revalidate、tag invalidation、监控面板
 
 ## 部署约束
@@ -138,8 +138,12 @@ tag 时间戳必须有 TTL 防止无限增长，但这会导致一个问题：
 - 此时一个 8 天前失效的 entry 会被误判为"有效"（tag 记录不存在 → 没有失效记录 → 有效）
 
 解决方案：cache entry TTL ≤ tag TTL。两者都用 7 天，保证：
-- 频繁访问的页面：每次 `set()` 刷新 TTL，不会过期
-- 7 天无访问的页面：从 KV 过期，下次访问重新生成（符合"冷数据"定义）
+- **7 天内有重建的页面**：`set()` 时刷新 TTL，持续存活
+- **7 天无重建的页面**：从 KV 过期，下次访问重新生成
+
+**注意**：TTL 只在 `set()` 时刷新，普通读取不会延长 TTL。这意味着：
+- 内容稳定、长期无重建的页面，即使持续被访问，7 天后仍会从 KV 过期
+- 这是可接受的——LRU 会保留热数据，KV 只是冷备份
 
 ### 3. 监控面板迁移
 
@@ -266,10 +270,11 @@ await kv.put(`cache:${key}`, entry, { expirationTtl: 7 * 24 * 3600 });
 - 如果 cache entry 存活时间超过 tag 时间戳，tag 过期后 entry 会被误判为有效
 - 两者使用相同 TTL（7 天）保证：tag 过期时，相关 entry 也已过期或即将过期
 
-**注意**：这意味着 KV 中的 cache entry 最多存活 7 天。对于长期稳定的页面：
-- 7 天内会被访问 → 每次 `set()` 刷新 TTL
-- 7 天无访问 → 从 KV 过期，下次访问重新生成
-- 这符合"冷数据"的定义：长期无访问的页面不需要持久化
+**注意**：KV 中的 cache entry 最多存活 7 天（从最后一次 `set()` 开始）。
+- **7 天内有重建的页面**：`set()` 刷新 TTL，持续存活
+- **7 天无重建的页面**：从 KV 过期，下次访问重新生成
+- 普通读取（`get()`）不会延长 TTL，只有写入才会
+- 这是可接受的——LRU 保留热数据，KV 只是持久化备份
 
 ### 5. KV 写入语义：Best-Effort 持久化
 
@@ -277,9 +282,13 @@ await kv.put(`cache:${key}`, entry, { expirationTtl: 7 * 24 * 3600 });
 
 ```typescript
 // 写入 KV（fire-and-forget，失败不阻塞）
-getKVClient()?.put(`cache:${key}`, entry).catch(err => {
-  console.error(`[cache] KV put failed for ${key}:`, err.message);
-});
+const kv = getKVClient();
+if (kv) {
+  kv.put(`cache:${key}`, entry, { expirationTtl: KV_TTL_SECONDS }).catch(err => {
+    console.error(`[cache] KV put failed for ${key}:`, err.message);
+  });
+}
+// 如果 KV 未配置，静默跳过（纯 LRU 模式）
 ```
 
 **明确的 trade-off**：
@@ -450,8 +459,9 @@ export default class CacheHandler {
       
       if (revalidatedTime && revalidatedTime > entry.lastModified) {
         lruCache.delete(key);
-        // Lazy: 也从 KV 删除
-        getKVClient()?.delete(`cache:${key}`).catch(() => {});
+        // Lazy: 也从 KV 删除（fire-and-forget）
+        const kv = getKVClient();
+        if (kv) kv.delete(`cache:${key}`).catch(() => {});
         return null;
       }
     }
@@ -480,9 +490,12 @@ export default class CacheHandler {
     lruCache.set(key, entry);
     
     // 写入 KV（fire-and-forget，带 TTL）
-    getKVClient()?.put(`cache:${key}`, entry, { expirationTtl: KV_TTL_SECONDS }).catch(err => {
-      console.error(`[cache] KV put failed for ${key}:`, err.message);
-    });
+    const kv = getKVClient();
+    if (kv) {
+      kv.put(`cache:${key}`, entry, { expirationTtl: KV_TTL_SECONDS }).catch(err => {
+        console.error(`[cache] KV put failed for ${key}:`, err.message);
+      });
+    }
   }
   
   async revalidateTag(tags: string | string[]): Promise<void> {
@@ -563,12 +576,21 @@ export function getCacheStats(): CacheStats {
 
 ## 原子化提交计划
 
-1. `feat(lib): add KV client for Cloudflare REST API`
-2. `feat(cache): add LRU layer with capacity limit`
-3. `feat(cache): integrate KV as cold storage backend`
-4. `feat(cache): persist tag revalidation timestamps to KV`
-5. `test(cache): add KV cache integration tests`
-6. `feat(api): update /api/system/memory for dual-layer stats`
+1. `chore(deps): add lru-cache dependency`
+2. `feat(lib): add KV client for Cloudflare REST API`
+3. `feat(cache): add LRU layer with capacity limit`
+4. `feat(cache): integrate KV as cold storage backend`
+5. `feat(cache): persist tag revalidation timestamps to KV`
+6. `test(cache): add KV cache integration tests`
+7. `feat(api): update /api/system/memory for dual-layer stats`
+
+## 前置依赖
+
+```bash
+bun add lru-cache
+```
+
+当前仓库未安装 `lru-cache`，需在 Phase 2 开始前添加。
 
 ## 回滚方案
 
