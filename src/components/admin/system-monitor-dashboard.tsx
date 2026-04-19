@@ -52,6 +52,11 @@ interface CacheEntryMeta {
   revalidate: number | null;
 }
 
+interface KVBackendStatus {
+  enabled: boolean;
+  note: string;
+}
+
 interface CacheStats {
   totalEntries: number;
   totalSizeBytes: number;
@@ -60,6 +65,7 @@ interface CacheStats {
   entries: CacheEntryMeta[];
   oldestEntry: number | null;
   newestEntry: number | null;
+  kvBackend: KVBackendStatus;
 }
 
 interface SystemStats {
@@ -378,6 +384,16 @@ export function SystemMonitorDashboard() {
             </h3>
           </div>
           <div className="p-6">
+            {/* KV Backend Status */}
+            <div className="mb-4 flex items-center gap-2">
+              <span
+                className={`h-2 w-2 rounded-full ${cache.kvBackend.enabled ? "bg-green-500" : "bg-amber-500"}`}
+              />
+              <span className="text-xs text-muted-foreground">
+                {cache.kvBackend.enabled ? "KV Backend Connected" : "LRU Only Mode"}
+              </span>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <div className="text-xs text-muted-foreground">{t("admin.system.totalEntries")}</div>

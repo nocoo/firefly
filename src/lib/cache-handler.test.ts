@@ -12,10 +12,15 @@ import type { KVClient } from "./kv-client";
 // Mock KV Client Factory
 // ---------------------------------------------------------------------------
 
+interface MockStoreEntry {
+  value: unknown;
+  ttl: number | undefined;
+}
+
 function createMockKVClient(): KVClient & {
-  store: Map<string, { value: unknown; ttl?: number }>;
+  store: Map<string, MockStoreEntry>;
 } {
-  const store = new Map<string, { value: unknown; ttl?: number }>();
+  const store = new Map<string, MockStoreEntry>();
 
   return {
     store,
@@ -186,7 +191,7 @@ describe("CacheHandler", () => {
         tags: [],
         revalidate: null,
       };
-      mockKV.store.set("cache:key1", { value: entry });
+      mockKV.store.set("cache:key1", { value: entry, ttl: undefined });
 
       const result = await handler.get("key1");
 
@@ -209,7 +214,7 @@ describe("CacheHandler", () => {
     it("lazy-loads tag timestamps from KV", async () => {
       // Put tag timestamp directly into KV (simulating restart)
       const revalidatedTime = Date.now();
-      mockKV.store.set("tag:post-1", { value: revalidatedTime });
+      mockKV.store.set("tag:post-1", { value: revalidatedTime, ttl: undefined });
 
       // Put cache entry with older lastModified
       const entry = {
@@ -223,7 +228,7 @@ describe("CacheHandler", () => {
         tags: ["post-1"],
         revalidate: null,
       };
-      mockKV.store.set("cache:key1", { value: entry });
+      mockKV.store.set("cache:key1", { value: entry, ttl: undefined });
 
       // Get should find entry stale via KV tag check
       const result = await handler.get("key1");
@@ -250,7 +255,7 @@ describe("CacheHandler", () => {
         tags: ["post-1"],
         revalidate: null,
       };
-      mockKV.store.set("cache:key1", { value: entry });
+      mockKV.store.set("cache:key1", { value: entry, ttl: undefined });
 
       await handler.get("key1");
 
@@ -294,10 +299,10 @@ describe("CacheHandler", () => {
         tags: ["category-blog"],
         revalidate: null,
       };
-      mockKV.store.set("cache:post-1", { value: entry });
+      mockKV.store.set("cache:post-1", { value: entry, ttl: undefined });
 
       // Tag was invalidated after entry was written
-      mockKV.store.set("tag:category-blog", { value: tagTime });
+      mockKV.store.set("tag:category-blog", { value: tagTime, ttl: undefined });
 
       // Simulate restart: clear in-memory state but keep KV
       _getLRUCache().clear();
