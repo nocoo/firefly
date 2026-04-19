@@ -1,5 +1,0 @@
-[variables]
-NODE_OPTIONS = "--max-old-space-size=8192"
-
-[phases.build]
-cmds = ["bun run build"]
