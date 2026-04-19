@@ -1,7 +1,24 @@
 // ---------------------------------------------------------------------------
-// Custom Cache Handler with Monitoring
-// Tracks all cache entries for debugging and monitoring purposes.
+// Custom Cache Handler with LRU + Cloudflare KV
+// Two-layer cache: hot data in memory LRU, cold data in Cloudflare KV.
 // https://nextjs.org/docs/app/api-reference/config/next-config-js/cacheHandler
+// ---------------------------------------------------------------------------
+
+import { LRUCache } from "lru-cache";
+import { createKVClient, type KVClient } from "./kv-client";
+
+// ---------------------------------------------------------------------------
+// Configuration
+// ---------------------------------------------------------------------------
+
+/** Maximum entries in the in-memory LRU cache. */
+const LRU_MAX_ENTRIES = 100;
+
+/** TTL for KV entries in seconds (7 days). */
+const KV_TTL_SECONDS = 7 * 24 * 3600;
+
+// ---------------------------------------------------------------------------
+// Types
 // ---------------------------------------------------------------------------
 
 /**
@@ -19,6 +36,14 @@ export interface CacheEntryMeta {
 }
 
 /**
+ * KV backend status for monitoring.
+ */
+export interface KVBackendStatus {
+  enabled: boolean;
+  note: string;
+}
+
+/**
  * Cache statistics snapshot.
  */
 export interface CacheStats {
@@ -29,6 +54,7 @@ export interface CacheStats {
   entries: CacheEntryMeta[];
   oldestEntry: number | null;
   newestEntry: number | null;
+  kvBackend: KVBackendStatus;
 }
 
 /**
@@ -45,6 +71,7 @@ interface CacheHandlerValue {
 
 /**
  * Unified storage entry — combines value and metadata to reduce Map overhead.
+ * This is also the structure stored in KV.
  */
 interface UnifiedEntry {
   // Value storage (required for CacheHandlerValue)
@@ -61,33 +88,64 @@ interface UnifiedEntry {
   revalidate: number | null;
 }
 
-// Single unified cache storage (replaces separate cache + metadata Maps)
-const cache = new Map<string, UnifiedEntry>();
+// ---------------------------------------------------------------------------
+// Module-level state
+// ---------------------------------------------------------------------------
 
-// Tag invalidation timestamps
+// LRU cache for hot data (bounded memory)
+const lruCache = new LRUCache<string, UnifiedEntry>({ max: LRU_MAX_ENTRIES });
+
+// Tag invalidation timestamps (in-memory, lazy-loaded from KV)
 const tagRevalidatedAt = new Map<string, number>();
+
+// Lazy-initialized KV client singleton
+let kvClient: KVClient | null = null;
+let kvClientInitialized = false;
+
+/**
+ * Get or create the KV client. Returns null if not configured.
+ * Uses lazy initialization to avoid startup overhead when KV is not used.
+ */
+function getKVClient(): KVClient | null {
+  if (kvClientInitialized) return kvClient;
+
+  const accountId = process.env.CF_ACCOUNT_ID;
+  const apiToken = process.env.CF_API_TOKEN;
+  const namespaceId = process.env.KV_NAMESPACE_ID;
+
+  if (accountId && apiToken && namespaceId) {
+    kvClient = createKVClient(accountId, namespaceId, apiToken);
+  }
+  kvClientInitialized = true;
+  return kvClient;
+}
+
+// ---------------------------------------------------------------------------
+// Helper functions
+// ---------------------------------------------------------------------------
 
 /**
  * Estimate the size of a cache entry in bytes.
- * Uses JSON.stringify for accurate measurement. The temporary string allocation
- * is acceptable because cache.set() is infrequent compared to cache.get().
+ * Uses JSON.stringify for accurate measurement.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function estimateSize(value: any): number {
   if (!value) return 0;
 
   try {
-    // JSON.stringify gives accurate size for serializable data
-    // Next.js cache values are always JSON-serializable
     return JSON.stringify(value).length;
   } catch {
-    // Fallback for non-serializable values (unlikely in Next.js cache)
     return 1024;
   }
 }
 
+// ---------------------------------------------------------------------------
+// Monitoring
+// ---------------------------------------------------------------------------
+
 /**
  * Get cache statistics for monitoring.
+ * Note: Only reflects LRU hot cache; KV cold storage is not included.
  */
 export function getCacheStats(): CacheStats {
   const entries: CacheEntryMeta[] = [];
@@ -97,8 +155,7 @@ export function getCacheStats(): CacheStats {
   let oldestEntry: number | null = null;
   let newestEntry: number | null = null;
 
-  for (const [key, entry] of cache.entries()) {
-    // Build metadata view
+  for (const [key, entry] of lruCache.entries()) {
     const meta: CacheEntryMeta = {
       key,
       kind: entry.kind,
@@ -111,12 +168,10 @@ export function getCacheStats(): CacheStats {
     };
     entries.push(meta);
 
-    // Count by kind
     entriesByKind[entry.kind] = (entriesByKind[entry.kind] ?? 0) + 1;
     sizeByKind[entry.kind] = (sizeByKind[entry.kind] ?? 0) + entry.size;
     totalSizeBytes += entry.size;
 
-    // Track oldest/newest
     if (oldestEntry === null || entry.createdAt < oldestEntry) {
       oldestEntry = entry.createdAt;
     }
@@ -125,53 +180,132 @@ export function getCacheStats(): CacheStats {
     }
   }
 
-  // Sort entries by size descending for top consumers
   entries.sort((a, b) => b.size - a.size);
 
+  const kv = getKVClient();
   return {
     totalEntries: entries.length,
     totalSizeBytes,
     entriesByKind,
     sizeByKind,
-    entries: entries.slice(0, 100), // Top 100 by size
+    entries: entries.slice(0, 100),
     oldestEntry,
     newestEntry,
+    kvBackend: {
+      enabled: kv !== null,
+      note: kv
+        ? "Stats reflect LRU hot cache only; KV cold storage not included"
+        : "KV not configured; using pure LRU mode",
+    },
   };
 }
 
-/**
- * Custom cache handler class that tracks all entries.
- * Implements the Next.js CacheHandler interface.
- */
-export default class MonitoredCacheHandler {
+// ---------------------------------------------------------------------------
+// Test helpers (internal use only)
+// ---------------------------------------------------------------------------
 
+/** @internal Reset all cache state for testing. */
+export function _resetCacheState(): void {
+  lruCache.clear();
+  tagRevalidatedAt.clear();
+  kvClient = null;
+  kvClientInitialized = false;
+}
+
+/** @internal Inject a mock KV client for testing. */
+export function _setKVClient(client: KVClient | null): void {
+  kvClient = client;
+  kvClientInitialized = true;
+}
+
+/** @internal Get the tag revalidation map for testing. */
+export function _getTagRevalidatedAt(): Map<string, number> {
+  return tagRevalidatedAt;
+}
+
+/** @internal Get the LRU cache for testing. */
+export function _getLRUCache(): LRUCache<string, UnifiedEntry> {
+  return lruCache;
+}
+
+// ---------------------------------------------------------------------------
+// Cache Handler
+// ---------------------------------------------------------------------------
+
+/**
+ * Custom cache handler with two-layer storage:
+ * - Hot data: In-memory LRU cache (bounded by LRU_MAX_ENTRIES)
+ * - Cold data: Cloudflare KV (optional, configured via environment variables)
+ *
+ * When KV is not configured, operates in pure LRU mode (graceful degradation).
+ */
+export default class CacheHandler {
   /**
    * Get a cache entry.
-   * Must return CacheHandlerValue format or null.
+   * 1. Check LRU cache
+   * 2. If miss, check KV (if configured)
+   * 3. Validate against tag invalidation timestamps
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async get(key: string, _ctx?: any): Promise<CacheHandlerValue | null> {
-    const entry = cache.get(key);
+    // 1. Check LRU cache
+    let entry = lruCache.get(key);
 
+    // 2. LRU miss → check KV
     if (!entry) {
-      return null;
+      const kv = getKVClient();
+      if (kv) {
+        try {
+          const kvEntry = await kv.get<UnifiedEntry>(`cache:${key}`);
+          if (kvEntry) {
+            entry = kvEntry;
+            lruCache.set(key, entry); // Backfill LRU
+          }
+        } catch (err) {
+          // KV read failure — degrade gracefully
+          console.error(`[cache] KV get failed for ${key}:`, (err as Error).message);
+        }
+      }
     }
 
-    // Check if any tags have been invalidated
+    if (!entry) return null;
+
+    // 3. Check tag invalidation
     for (const tag of entry.tags) {
-      const revalidatedTime = tagRevalidatedAt.get(tag);
+      let revalidatedTime = tagRevalidatedAt.get(tag);
+
+      // Lazy-load tag timestamp from KV if not in memory
+      if (revalidatedTime === undefined) {
+        const kv = getKVClient();
+        if (kv) {
+          try {
+            const kvTime = await kv.get<number>(`tag:${tag}`);
+            if (kvTime !== null) {
+              tagRevalidatedAt.set(tag, kvTime);
+              revalidatedTime = kvTime;
+            }
+          } catch {
+            // KV read failure — continue without tag check
+          }
+        }
+      }
+
       if (revalidatedTime && revalidatedTime > entry.lastModified) {
-        // Entry is stale due to tag revalidation
-        cache.delete(key);
+        // Entry is stale due to tag invalidation
+        lruCache.delete(key);
+        // Lazy delete from KV (fire-and-forget)
+        const kv = getKVClient();
+        if (kv) {
+          kv.delete(`cache:${key}`).catch(() => {});
+        }
         return null;
       }
     }
 
-    // Update access metadata (in-place mutation)
+    // 4. Update access metadata
     entry.lastAccessedAt = Date.now();
     entry.accessCount += 1;
 
-    // Return in CacheHandlerValue format
     return {
       lastModified: entry.lastModified,
       value: entry.value,
@@ -180,15 +314,14 @@ export default class MonitoredCacheHandler {
 
   /**
    * Set a cache entry.
+   * Writes to both LRU and KV (if configured).
+   * KV write is fire-and-forget to avoid blocking.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async set(key: string, data: any, ctx?: any): Promise<void> {
     const now = Date.now();
-
-    // Extract tags from context (no interning - tags can be dynamic per-route)
     const tags: string[] = ctx?.tags ?? [];
 
-    // Extract kind from the data for monitoring
     let kind = "unknown";
     let revalidate: number | null = null;
 
@@ -199,11 +332,9 @@ export default class MonitoredCacheHandler {
       }
     }
 
-    // Get existing entry for createdAt/accessCount preservation
-    const existing = cache.get(key);
+    const existing = lruCache.get(key);
 
-    // Store unified entry
-    cache.set(key, {
+    const entry: UnifiedEntry = {
       lastModified: now,
       value: data,
       kind,
@@ -213,31 +344,58 @@ export default class MonitoredCacheHandler {
       accessCount: existing?.accessCount ?? 0,
       tags,
       revalidate,
-    });
+    };
+
+    // Write to LRU
+    lruCache.set(key, entry);
+
+    // Write to KV (fire-and-forget with TTL)
+    const kv = getKVClient();
+    if (kv) {
+      kv.put(`cache:${key}`, entry, { expirationTtl: KV_TTL_SECONDS }).catch((err) => {
+        console.error(`[cache] KV put failed for ${key}:`, (err as Error).message);
+      });
+    }
   }
 
   /**
    * Revalidate entries by tag.
+   * - Updates in-memory tag timestamps
+   * - Clears matching entries from LRU
+   * - Persists tag timestamps to KV (if configured)
    */
   async revalidateTag(tags: string | string[]): Promise<void> {
     const tagList = Array.isArray(tags) ? tags : [tags];
     const now = Date.now();
+    const kv = getKVClient();
 
-    // Mark tags as revalidated
+    // 1. Update in-memory tag timestamps
     for (const tag of tagList) {
       tagRevalidatedAt.set(tag, now);
     }
 
-    // Remove entries with matching tags
-    for (const [key, entry] of cache.entries()) {
+    // 2. Clear matching entries from LRU
+    for (const [key, entry] of lruCache.entries()) {
       if (entry.tags.some((t) => tagList.includes(t))) {
-        cache.delete(key);
+        lruCache.delete(key);
       }
+    }
+
+    // 3. Persist tag timestamps to KV (each tag separately, with TTL)
+    if (kv) {
+      await Promise.all(
+        tagList.map((tag) =>
+          kv.put(`tag:${tag}`, now, { expirationTtl: KV_TTL_SECONDS }).catch((err) => {
+            console.error(`[cache] KV tag put failed for ${tag}:`, (err as Error).message);
+          }),
+        ),
+      );
     }
   }
 
   /**
    * Reset the request-level cache (called between requests).
+   * No-op for persistent cache.
    */
   resetRequestCache(): void {
     // No-op for persistent cache
