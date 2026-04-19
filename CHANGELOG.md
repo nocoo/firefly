@@ -1,5 +1,26 @@
 # Changelog
 
+## v2.5.14 (2026-04-19)
+
+- refactor(admin): replace dnd-kit category sorting with up/down buttons
+- docs: remove KV cache migration doc (feature dropped)
+- chore: remove unused kv-client module
+- refactor(cache): drop KV cold storage, keep pure LRU
+- fix(test): match nested node_modules in vitest exclude
+- fix(cache): disable KV during build phase to prevent OOM
+- chore: force Railway cache invalidation
+- revert(cache): remove cacheHandler config to fix Railway OOM
+- Revert "revert(deps): downgrade next 16.2.3 → 16.2.1 to fix Railway OOM"
+- revert(deps): downgrade next 16.2.3 → 16.2.1 to fix Railway OOM
+- fix(build): limit worker count with NEXT_WORKER_COUNT=2
+- fix(build): use --webpack flag instead of --no-turbopack
+- fix(build): disable Turbopack to reduce memory usage
+- fix(build): limit static generation concurrency to 4 workers
+- fix(build): set NODE_OPTIONS via nixpacks.toml
+- fix(build): use node directly with max-old-space-size flag
+- fix(build): increase Node.js heap memory for next build
+
+
 ## v2.5.13 (2026-04-19)
 
 - test(cache): fix pure LRU mode tests with env KV config
