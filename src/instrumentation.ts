@@ -24,6 +24,7 @@ const memoryHistory: MemorySnapshot[] = [];
 
 let collectionInterval: ReturnType<typeof setInterval> | null = null;
 let collectionStarted = false;
+let lastHighMemoryWarnTime = 0; // Throttle high memory warnings
 
 // Shorter interval in dev mode for faster feedback
 const COLLECTION_INTERVAL_MS =
@@ -64,11 +65,17 @@ function startMemoryCollection(intervalMs: number = 60_000): void {
       memoryHistory.shift();
     }
 
-    // Log warning if heap usage exceeds threshold
-    if (snapshot.heapUsedMB > 500) {
-      console.warn(
-        `[memory] High heap usage: ${snapshot.heapUsedMB}MB / ${snapshot.heapTotalMB}MB`,
-      );
+    // Log warning if heap usage exceeds threshold (throttled to once per 5 minutes)
+    const HIGH_MEMORY_THRESHOLD_MB = 500;
+    const HIGH_MEMORY_WARN_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+    if (snapshot.heapUsedMB > HIGH_MEMORY_THRESHOLD_MB) {
+      const now = Date.now();
+      if (now - lastHighMemoryWarnTime > HIGH_MEMORY_WARN_INTERVAL_MS) {
+        console.warn(
+          `[memory] High heap usage: ${snapshot.heapUsedMB}MB / ${snapshot.heapTotalMB}MB`,
+        );
+        lastHighMemoryWarnTime = now;
+      }
     }
   }, intervalMs);
 }
