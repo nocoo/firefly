@@ -67,6 +67,11 @@ describe("CacheHandler", () => {
   // -------------------------------------------------------------------------
 
   describe("pure LRU mode (no KV)", () => {
+    beforeEach(() => {
+      // Ensure KV is disabled for pure LRU tests (overrides any env vars)
+      _setKVClient(null);
+    });
+
     it("stores and retrieves entries from LRU", async () => {
       await handler.set("key1", { kind: "PAGE", data: "test" });
 

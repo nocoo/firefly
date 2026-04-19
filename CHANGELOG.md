@@ -1,5 +1,33 @@
 # Changelog
 
+## v2.5.12 (2026-04-19)
+
+- fix(instrumentation): throttle high memory warnings to once per 5 min
+- feat(admin): show KV backend status in system monitor
+- chore(eslint): ignore cache-handler.js build artifact
+- docs(cache): mark KV cache migration as completed
+- feat(cache): migrate to LRU + Cloudflare KV two-layer cache
+- feat(lib): add KV client for Cloudflare REST API
+- chore(deps): add lru-cache dependency
+- docs(cache): fix optional chaining and clarify TTL behavior
+- docs(cache): fix TTL consistency and code sync issues
+- fix(deps): restore react-is required by recharts
+- docs(cache): fix multi-instance and persistence issues
+- docs(cache): fix KV migration plan design issues
+- Merge pull request #50 from nocoo/feat/mcp-server-card
+- feat(mcp): add MCP Server Card at /.well-known/mcp/server-card.json
+- perf(tracking): use lazy singleton for tracking db
+- docs: add KV cache migration plan document
+- docs: add KV cache migration plan
+- chore(deps): remove unused react-is dependency
+- Add 60s in-process TTL cache for /feed.xml output
+- fix(auth): allow E2E auth bypass in CI environment
+- Baseline (fresh build): RSS after warmup + 20 request cycles
+- fix(proxy): skip HTTPS redirect for localhost in production
+- Baseline: RSS memory after warmup + 20 request cycles
+- fix(e2e): add x-forwarded-proto header to bypass HTTPS redirect
+
+
 ## v2.5.11 (2026-04-18)
 
 - Merge pull request #39 from nocoo/feat/migrate-next-ai
