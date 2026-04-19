@@ -1,5 +1,12 @@
 # KV Cache Migration Plan
 
+> ✅ **Status: Completed** (2026-04-19)
+> 
+> Commits:
+> - `chore(deps): add lru-cache dependency`
+> - `feat(lib): add KV client for Cloudflare REST API`
+> - `feat(cache): migrate to LRU + Cloudflare KV two-layer cache`
+
 将 Next.js 页面缓存迁移到 Cloudflare KV，降低运行时内存占用，同时保持性能和现有语义。
 
 ## 背景
