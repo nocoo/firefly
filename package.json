@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --webpack -p 7028",
-    "build": "bun scripts/build-cache-handler.ts && NODE_OPTIONS='--max-old-space-size=8192' next build",
+    "build": "bun scripts/build-cache-handler.ts && node --max-old-space-size=8192 ./node_modules/.bin/next build",
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
