@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.5.15 (2026-04-20)
+
+- test(e2e): drop locale assertions and fix navigation race
+- refactor(i18n): remove i18n framework, hardcode Chinese throughout
+
+
 ## v2.5.14 (2026-04-19)
 
 - refactor(admin): replace dnd-kit category sorting with up/down buttons
