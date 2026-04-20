@@ -1,5 +1,30 @@
 # Changelog
 
+## v2.5.17 (2026-04-20)
+
+- fix(test): fix AI agents empty state detection in L3 test
+- ci: restore workflow files and enable G2 security scanning
+- test(L3): add comprehensive browser E2E tests for admin pages
+- docs: add .env.example and quality system documentation
+- ci: add parallel L2/L3/Worker jobs to GitHub Actions
+- fix: enable E2E auth bypass for admin API routes and fix test issues
+- test(e2e): add analytics source endpoint tests
+- test(e2e): add system memory endpoint test
+- test(e2e): add MD export endpoint tests
+- test(e2e): add upload logo endpoint tests
+- test(e2e): add MCP OAuth authorize and callback error path tests
+- test(e2e): add unfurl enhance and favicon API tests
+- test(e2e): add categories reorder endpoint test
+- test(worker): enhance FTS tests for higher branch coverage
+- test(worker): add Worker index tests
+- test(e2e): add media years endpoint test
+- test(e2e): add AI settings API tests
+- test(e2e): add admin posts and search API tests
+- test(e2e): add admin comments API test
+- test(e2e): add admin AI agents API tests
+- test(worker): add FTS module tests
+
+
 ## v2.5.16 (2026-04-20)
 
 - fix: address issues from dependency cleanup commits
