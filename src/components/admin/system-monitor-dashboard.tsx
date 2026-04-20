@@ -6,8 +6,6 @@ import {
   HardDrive,
   Cpu,
   Clock,
-  Database,
-  Layers,
   TrendingUp,
   RefreshCw,
 } from "lucide-react";
@@ -19,11 +17,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-  BarChart,
-  Bar,
-  Cell,
-  PieChart,
-  Pie,
 } from "recharts";
 import { useSetPageSubtitle } from "@/components/admin/page-subtitle-context";
 
@@ -40,27 +33,6 @@ interface MemorySnapshot {
   arrayBuffersMB: number;
 }
 
-interface CacheEntryMeta {
-  key: string;
-  kind: string;
-  size: number;
-  createdAt: number;
-  lastAccessedAt: number;
-  accessCount: number;
-  tags: string[];
-  revalidate: number | null;
-}
-
-interface CacheStats {
-  totalEntries: number;
-  totalSizeBytes: number;
-  entriesByKind: Record<string, number>;
-  sizeByKind: Record<string, number>;
-  entries: CacheEntryMeta[];
-  oldestEntry: number | null;
-  newestEntry: number | null;
-}
-
 interface SystemStats {
   memory: {
     current: MemorySnapshot;
@@ -73,18 +45,11 @@ interface SystemStats {
       uptimeSeconds: number;
     };
   };
-  cache: CacheStats;
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
-}
 
 function formatUptime(seconds: number): string {
   const d = Math.floor(seconds / 86400);
@@ -115,9 +80,6 @@ function formatTime(timestamp: number): string {
 const COLORS = [
   "hsl(var(--chart-1))",
   "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
 ];
 
 // ---------------------------------------------------------------------------
@@ -130,7 +92,7 @@ export function SystemMonitorDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
 
-  useSetPageSubtitle("性能与缓存监控");
+  useSetPageSubtitle("系统监控");
 
   const formatTimeAgo = useCallback(
     (timestamp: number): string => {
@@ -186,7 +148,7 @@ export function SystemMonitorDashboard() {
     );
   }
 
-  const { memory, cache } = stats;
+  const { memory } = stats;
 
   // Prepare memory chart data (downsample for readability)
   const downsample = (data: MemorySnapshot[], maxPoints: number) => {
@@ -203,21 +165,6 @@ export function SystemMonitorDashboard() {
     rss: s.rssMB,
     external: s.externalMB,
   }));
-
-  // Cache kind distribution for pie chart
-  const cacheKindData = Object.entries(cache.entriesByKind).map(([kind, count]) => ({
-    name: kind,
-    value: count,
-  }));
-
-  // Cache size by kind for bar chart
-  const cacheSizeData = Object.entries(cache.sizeByKind)
-    .map(([kind, size]) => ({
-      kind,
-      sizeMB: size / 1024 / 1024,
-      sizeLabel: formatBytes(size),
-    }))
-    .sort((a, b) => b.sizeMB - a.sizeMB);
 
   return (
     <div className="space-y-6">
@@ -362,215 +309,8 @@ export function SystemMonitorDashboard() {
         </div>
       </div>
 
-      {/* Cache Statistics */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Cache Overview */}
-        <div className="rounded-[var(--radius-widget)] bg-secondary">
-          <div className="border-b border-border/50 px-6 py-4">
-            <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <Database className="h-4 w-4" />
-              Next.js 缓存概览
-            </h3>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">缓存条目数</div>
-                <div className="text-2xl font-semibold tabular-nums">
-                  {cache.totalEntries}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">缓存总大小</div>
-                <div className="text-2xl font-semibold tabular-nums">
-                  {formatBytes(cache.totalSizeBytes)}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">最早条目</div>
-                <div className="text-sm">
-                  {cache.oldestEntry ? formatTimeAgo(cache.oldestEntry) : "—"}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">最新条目</div>
-                <div className="text-sm">
-                  {cache.newestEntry ? formatTimeAgo(cache.newestEntry) : "—"}
-                </div>
-              </div>
-            </div>
-
-            {/* Kind distribution pie chart */}
-            {cacheKindData.length > 0 && (
-              <div className="mt-6">
-                <div className="text-xs text-muted-foreground mb-2">
-                  按类型分布
-                </div>
-                <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={cacheKindData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={40}
-                        outerRadius={70}
-                        paddingAngle={2}
-                        dataKey="value"
-                        label={({ name, percent }) =>
-                          `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`
-                        }
-                        labelLine={false}
-                      >
-                        {cacheKindData.map((_, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Cache Size by Kind */}
-        <div className="rounded-[var(--radius-widget)] bg-secondary">
-          <div className="border-b border-border/50 px-6 py-4">
-            <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <Layers className="h-4 w-4" />
-              缓存大小分布
-            </h3>
-          </div>
-          <div className="p-6">
-            {cacheSizeData.length > 0 ? (
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={cacheSizeData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis
-                      type="number"
-                      tick={{ fontSize: 10 }}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(v) => `${v.toFixed(1)} MB`}
-                    />
-                    <YAxis
-                      type="category"
-                      dataKey="kind"
-                      tick={{ fontSize: 11 }}
-                      tickLine={false}
-                      axisLine={false}
-                      width={80}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "6px",
-                        fontSize: "12px",
-                      }}
-                      formatter={(_, __, props) => [
-                        props.payload.sizeLabel,
-                        "大小",
-                      ]}
-                    />
-                    <Bar dataKey="sizeMB" radius={[0, 4, 4, 0]}>
-                      {cacheSizeData.map((_, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-                暂无缓存条目
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Top Cache Entries Table */}
-      {cache.entries.length > 0 && (
-        <div className="rounded-[var(--radius-widget)] bg-secondary">
-          <div className="border-b border-border/50 px-6 py-4">
-            <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <Database className="h-4 w-4" />
-              缓存条目排行（按大小）
-            </h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="px-6 py-3 text-left font-medium">键</th>
-                  <th className="px-4 py-3 text-left font-medium">类型</th>
-                  <th className="px-4 py-3 text-right font-medium">大小</th>
-                  <th className="px-4 py-3 text-right font-medium">访问次数</th>
-                  <th className="px-4 py-3 text-right font-medium">最后访问</th>
-                  <th className="px-4 py-3 text-left font-medium">标签</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cache.entries.slice(0, 20).map((entry, i) => (
-                  <tr key={entry.key} className={i % 2 === 0 ? "" : "bg-muted/30"}>
-                    <td className="px-6 py-2 font-mono text-xs truncate max-w-[300px]">
-                      {entry.key}
-                    </td>
-                    <td className="px-4 py-2">
-                      <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">
-                        {entry.kind}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 text-right tabular-nums">
-                      {formatBytes(entry.size)}
-                    </td>
-                    <td className="px-4 py-2 text-right tabular-nums">
-                      {entry.accessCount}
-                    </td>
-                    <td className="px-4 py-2 text-right text-muted-foreground">
-                      {formatTimeAgo(entry.lastAccessedAt)}
-                    </td>
-                    <td className="px-4 py-2">
-                      {entry.tags.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {entry.tags.slice(0, 3).map((tag) => (
-                            <span
-                              key={tag}
-                              className="rounded bg-muted px-1.5 py-0.5 text-xs"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                          {entry.tags.length > 3 && (
-                            <span className="text-xs text-muted-foreground">
-                              +{entry.tags.length - 3}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
       {/* Memory Recommendation */}
-      <MemoryRecommendation memory={memory} cache={cache} />
+      <MemoryRecommendation memory={memory} />
     </div>
   );
 }
@@ -622,14 +362,11 @@ function StatCard({
 
 function MemoryRecommendation({
   memory,
-  cache,
 }: {
   memory: SystemStats["memory"];
-  cache: CacheStats;
 }) {
   const heapPercent = (memory.current.heapUsedMB / memory.current.heapTotalMB) * 100;
   const rssGB = memory.current.rssMB / 1024;
-  const cacheGB = cache.totalSizeBytes / 1024 / 1024 / 1024;
 
   let status: "healthy" | "warning" | "critical" = "healthy";
   const recommendations: string[] = [];
@@ -637,7 +374,7 @@ function MemoryRecommendation({
   // Check heap usage
   if (heapPercent > 85) {
     status = "critical";
-    recommendations.push("堆内存使用率过高（>85%）。建议减少缓存或增加内存限制。");
+    recommendations.push("堆内存使用率过高（>85%）。建议检查内存泄漏或增加内存限制。");
   } else if (heapPercent > 70) {
     status = "warning";
     recommendations.push("堆内存使用率偏高（>70%）。请持续关注内存压力。");
@@ -654,13 +391,6 @@ function MemoryRecommendation({
     if (status !== "critical") status = "warning";
     recommendations.push(
       `RSS（${rssGB.toFixed(1)}GB）已达容器限制的 ${Math.round((rssGB / containerLimitGB) * 100)}%。`,
-    );
-  }
-
-  // Check cache size
-  if (cacheGB > 0.5) {
-    recommendations.push(
-      `缓存占用 ${formatBytes(cache.totalSizeBytes)}。可考虑在 next.config.js 中设置 cacheMaxMemorySize。`,
     );
   }
 
