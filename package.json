@@ -42,7 +42,6 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1014.0",
-    "@hono/node-server": "^1.19.13",
     "@modelcontextprotocol/sdk": "^1.27.1",
     "@nocoo/next-ai": "^0.2.1",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -52,7 +51,6 @@
     "ai": "^6.0.104",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "hono": "^4.12.12",
     "lru-cache": "^11.3.5",
     "lucide-react": "^0.577.0",
     "marked": "^17.0.5",
@@ -75,9 +73,7 @@
   "overrides": {
     "picomatch": ">=4.0.4",
     "brace-expansion": ">=5.0.5",
-    "path-to-regexp": ">=8.4.0",
-    "hono": ">=4.12.12",
-    "@hono/node-server": ">=1.19.13"
+    "path-to-regexp": ">=8.4.0"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
