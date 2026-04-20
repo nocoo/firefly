@@ -1,47 +1,65 @@
-# Autoresearch Ideas: UT 优化
+# Autoresearch Ideas: L1+L2+L3 优化
 
 ## 已完成 ✅
 
-### DNS 超时测试优化
-- 原问题: unfurl.test.ts 等待真实 5s DNS 超时
-- 解决: 用 mock rejection 模拟超时
-- 效果: 6.10s → 1.13s
+### 构建复用
+- **Build once, two servers**: `startNextServer` 调用两次时只 build 一次
+- **Skip rebuild when fresh**: 检查 `.next/BUILD_ID` mtime vs 源文件，无变更则复用
+- **Turbopack for E2E build**: 13s → 8s (production build script 不变)
 
-### GitHub gist URL bug 修复
-- 原问题: fetchGitHubReadmeImage 对 gist URL 触发真实 fetch 等待超时
-- 解决: 添加 GITHUB_SPECIAL_PATHS 排除 gist、settings 等非 repo 路径
-- 效果: bug 修复 + 消除测试超时
+### L2 并行
+- **Vitest projects**: 拆分 `e2e-parallel` (默认) 与 `e2e-serial` (backup/settings/auth/unfurl-enhance)
+- **describe.concurrent**: 在所有无共享状态的 L2 文件应用（mcp/posts/admin-posts/analytics/categories/tags/posts-excerpt/md-export）
 
-## 评估后不执行
+### L3 并行
+- **Playwright fullyParallel + workers=10**: 默认 8 → 10
+- **retries=1**: 缓解远程 D1 worker 偶发 500 / L2-L3 跨 suite 数据竞争
 
-### 参数化 SSRF 测试
-- 可以用 `it.each` 合并多个私有网络测试
-- 但会降低可读性和隔离性
-- 当前测试时间已经很快（~1s），不值得
+### 杂项
+- **waitForServer poll**: 500ms → 100ms
 
-### Vitest 缓存
-- 尝试启用 cache 配置
-- 效果不明显（transform/import 时间主导）
+## 评估后不执行（已尝试）
 
-## 结论
+### L2+L3 并行执行
+- 共享远程 Cloudflare D1 worker
+- 双 Next.js + L2 vitest + L3 playwright 同时打到 worker → 大量 500/rate limit
+- 即便分离两个端口，DB 数据竞争仍导致 preview/admin-list 测试失败
+- **结论**：必须串行
 
-主要优化已完成。6.10s → 1.11s (-81.8%)
+### waitUntil 改 load/domcontentloaded
+- 没有显著加速（35→35s）
+- domcontentloaded 引入 click-after-navigate 的 race
+- **结论**：networkidle 是合理选择
 
-剩余时间（~1s）主要是:
-- transform: ~3.3s (TypeScript 编译)
-- import: ~5.3s (模块加载)
-- tests: ~0.6s (实际测试执行)
+### maxWorkers=12（vitest L2）
+- 长尾 mcp/media/posts 各 ~15s 已饱和
+- 无收益
 
-这些是 vitest 的固有开销，进一步优化空间有限。所有测试执行时间都在 0-8ms 范围内。
+## 潜在但风险高
 
-## 潜在优化方向（低优先级）
+### 削减 L2 测试中等待 dilatation
+- `Date.now()` 加随机后缀避免并发碰撞（admin-ai-agents 已用前缀+suffix=Date.now()，concurrent 时同毫秒可能撞）
+- 改为 `crypto.randomUUID()` 后缀更稳
 
-### Vitest 并行执行配置
-- 可能可以通过调整 `poolOptions.threads` 优化
-- 但需要在多核机器上测试效果
-- 当前测试数量不多，可能看不到明显效果
+### media.test.ts 全 concurrent
+- associate test 依赖 GET /api/media？post_id 看到 orphan
+- 多 describe 并发上传/删除时全局列表会闪烁
+- 当前保留 serial（13s 单文件）
 
-### 减少测试文件数量
-- 合并小测试文件可能减少 import 开销
-- 但会降低代码组织性
-- 不推荐仅为性能牺牲可维护性
+### 切换到本地测试 worker（lizhengme-db-test 本地副本）
+- 当前 `.env.test` 设 `WORKER_URL=http://localhost:8787` 但被 `.env` 的远程 URL 覆盖
+- 若改为本地 wrangler dev + 本地 D1，可放心做 L2+L3 并行（节省 ~25s）
+- 风险：需要本地 D1 数据 seed，实现成本大
+
+### 减少 mcp.test.ts 长尾
+- 30 tests 集中在 1 文件、~15s
+- 拆分 OAuth Authorize/Callback 到独立文件可与 mcp 主流程并行
+- 收益：可能 -3~5s on L2 only path
+
+## 当前结果
+| 阶段 | 基线 | 优化后 |
+|------|------|--------|
+| L1 | 1.03s | 1.07s |
+| L2+L3 | 107.9s | 56s (rebuild) / 30s (cached build) |
+| 总计 | 108.9s | 57-65s |
+| 改善 | - | -40~47% |
