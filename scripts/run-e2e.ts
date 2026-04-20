@@ -19,7 +19,8 @@
  *   Worker:  8787  (wrangler default, local only)
  */
 import { spawn, type Subprocess } from "bun";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, statSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 
 // Use the current bun binary path for spawning subprocesses
 const BUN = process.execPath;
@@ -123,13 +124,62 @@ function startWorker(): Subprocess {
 }
 
 let didBuild = false;
+
+/** Newest mtime in src/, public/, app/, plus key config files. */
+function sourcesNewestMtime(): number {
+  let newest = 0;
+  function walk(dir: string) {
+    if (!existsSync(dir)) return;
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === "node_modules" || entry.name.startsWith("."))
+          continue;
+        walk(p);
+      } else if (entry.isFile()) {
+        try {
+          const m = statSync(p).mtimeMs;
+          if (m > newest) newest = m;
+        } catch {}
+      }
+    }
+  }
+  for (const d of ["src", "public"]) walk(d);
+  for (const f of [
+    "next.config.ts",
+    "package.json",
+    "bun.lock",
+    "tsconfig.json",
+    "postcss.config.mjs",
+  ]) {
+    if (existsSync(f)) {
+      try {
+        const m = statSync(f).mtimeMs;
+        if (m > newest) newest = m;
+      } catch {}
+    }
+  }
+  return newest;
+}
+
+function nextBuildIsFresh(): boolean {
+  const buildId = ".next/BUILD_ID";
+  if (!existsSync(buildId)) return false;
+  const buildMtime = statSync(buildId).mtimeMs;
+  return buildMtime >= sourcesNewestMtime();
+}
+
 function buildNextOnce(env: Record<string, string | undefined>): void {
   if (didBuild) return;
+  if (nextBuildIsFresh()) {
+    console.log("▸ Reusing existing .next build (sources unchanged)");
+    didBuild = true;
+    return;
+  }
   // Build first, then start in production mode.
   // Next.js 16 refuses to run two `next dev` instances in the same directory,
   // so we use `bun run build` + `next start` which has no such restriction and
   // better matches production behavior.
-  // Note: `bun run build` triggers prebuild scripts (e.g., cache-handler compilation).
   console.log(`▸ Building Next.js for E2E (turbopack)...`);
   const build = Bun.spawnSync([BUN, "x", "next", "build", "--turbo"], {
     cwd: process.cwd(),
