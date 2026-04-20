@@ -122,10 +122,9 @@ function startWorker(): Subprocess {
   return proc;
 }
 
-function startNextServer(
-  env: Record<string, string | undefined>,
-  port: number,
-): Subprocess {
+let didBuild = false;
+function buildNextOnce(env: Record<string, string | undefined>): void {
+  if (didBuild) return;
   // Build first, then start in production mode.
   // Next.js 16 refuses to run two `next dev` instances in the same directory,
   // so we use `bun run build` + `next start` which has no such restriction and
@@ -145,6 +144,14 @@ function startNextServer(
     cleanup();
     process.exit(1);
   }
+  didBuild = true;
+}
+
+function startNextServer(
+  env: Record<string, string | undefined>,
+  port: number,
+): Subprocess {
+  buildNextOnce(env);
   console.log(`▸ Starting Next.js (production) on port ${port}...`);
   const proc = spawn(
     [BUN, "run", "next", "start", "-p", String(port)],
