@@ -683,3 +683,154 @@ describe("MCP Admin Token API", () => {
     await fetch(`${BASE}/api/mcp/tokens/${t.id}?action=delete`, { method: "DELETE" });
   });
 });
+
+// ---------------------------------------------------------------------------
+// MCP OAuth Flow — /api/mcp/authorize (error paths)
+// ---------------------------------------------------------------------------
+
+describe("MCP OAuth Authorize — Error Paths", () => {
+  it("returns 400 when missing required parameters", async () => {
+    const res = await fetch(`${BASE}/api/mcp/authorize`, {
+      redirect: "manual",
+    });
+    expect(res.status).toBe(400);
+
+    const data = await res.json();
+    expect(data.error).toContain("Missing required parameters");
+  });
+
+  it("returns 400 when response_type is not 'code'", async () => {
+    const params = new URLSearchParams({
+      response_type: "token",
+      client_id: "test_client",
+      redirect_uri: "http://localhost:9999/callback",
+      code_challenge: "test_challenge",
+      code_challenge_method: "S256",
+      state: "test_state",
+    });
+
+    const res = await fetch(`${BASE}/api/mcp/authorize?${params}`, {
+      redirect: "manual",
+    });
+    expect(res.status).toBe(400);
+
+    const data = await res.json();
+    expect(data.error).toContain("response_type must be 'code'");
+  });
+
+  it("returns 400 when code_challenge_method is not 'S256'", async () => {
+    const params = new URLSearchParams({
+      response_type: "code",
+      client_id: "test_client",
+      redirect_uri: "http://localhost:9999/callback",
+      code_challenge: "test_challenge",
+      code_challenge_method: "plain",
+      state: "test_state",
+    });
+
+    const res = await fetch(`${BASE}/api/mcp/authorize?${params}`, {
+      redirect: "manual",
+    });
+    expect(res.status).toBe(400);
+
+    const data = await res.json();
+    expect(data.error).toContain("code_challenge_method must be 'S256'");
+  });
+
+  it("returns 400 when scope is invalid", async () => {
+    const params = new URLSearchParams({
+      response_type: "code",
+      client_id: "test_client",
+      redirect_uri: "http://localhost:9999/callback",
+      code_challenge: "test_challenge",
+      code_challenge_method: "S256",
+      state: "test_state",
+      scope: "invalid_scope",
+    });
+
+    const res = await fetch(`${BASE}/api/mcp/authorize?${params}`, {
+      redirect: "manual",
+    });
+    expect(res.status).toBe(400);
+
+    const data = await res.json();
+    expect(data.error).toContain("Invalid scope");
+  });
+
+  it("returns 401 when client_id is unknown", async () => {
+    const params = new URLSearchParams({
+      response_type: "code",
+      client_id: "nonexistent_client_xyz",
+      redirect_uri: "http://localhost:9999/callback",
+      code_challenge: "test_challenge",
+      code_challenge_method: "S256",
+      state: "test_state",
+    });
+
+    const res = await fetch(`${BASE}/api/mcp/authorize?${params}`, {
+      redirect: "manual",
+    });
+    expect(res.status).toBe(401);
+
+    const data = await res.json();
+    expect(data.error).toContain("Unknown client_id");
+  });
+
+  it("returns 400 when redirect_uri does not match registered URIs", async () => {
+    // First register a client
+    const registerRes = await fetch(`${BASE}/api/mcp/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        client_name: "E2E Redirect Test",
+        redirect_uris: ["http://localhost:9999/callback"],
+      }),
+    });
+    const client = await registerRes.json();
+
+    // Try to authorize with a different redirect_uri
+    const params = new URLSearchParams({
+      response_type: "code",
+      client_id: client.client_id,
+      redirect_uri: "http://localhost:8888/different",
+      code_challenge: "test_challenge",
+      code_challenge_method: "S256",
+      state: "test_state",
+    });
+
+    const res = await fetch(`${BASE}/api/mcp/authorize?${params}`, {
+      redirect: "manual",
+    });
+    expect(res.status).toBe(400);
+
+    const data = await res.json();
+    expect(data.error).toContain("redirect_uri does not match");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MCP OAuth Callback — /api/mcp/callback (error paths)
+// ---------------------------------------------------------------------------
+
+describe("MCP OAuth Callback — Error Paths", () => {
+  it("returns 400 when state is missing", async () => {
+    const res = await fetch(`${BASE}/api/mcp/callback`, {
+      redirect: "manual",
+    });
+    expect(res.status).toBe(400);
+
+    const data = await res.json();
+    expect(data.error).toContain("Missing state parameter");
+  });
+
+  it("returns 401 when not authenticated", async () => {
+    // Note: In E2E_SKIP_AUTH mode, this may behave differently.
+    // We're testing the state validation path here.
+    const res = await fetch(`${BASE}/api/mcp/callback?state=invalid_state_xyz`, {
+      redirect: "manual",
+    });
+
+    // Could be 401 (no auth) or 400 (invalid state) depending on E2E config
+    expect([400, 401]).toContain(res.status);
+  });
+});
