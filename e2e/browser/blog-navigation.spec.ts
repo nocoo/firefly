@@ -21,8 +21,10 @@ test.describe("Blog navigation", () => {
 
     const categoryLink = page.locator("a[href^='/category/']").first();
     if (await categoryLink.isVisible()) {
-      await categoryLink.click();
-      await expect(page.url()).toContain("/category/");
+      await Promise.all([
+        page.waitForURL(/\/category\//, { timeout: 10_000 }),
+        categoryLink.click(),
+      ]);
       await expect(page.locator("h1, h2").first()).toBeVisible();
     }
   });
@@ -32,8 +34,10 @@ test.describe("Blog navigation", () => {
 
     const tagLink = page.locator("a[href^='/tag/']").first();
     if (await tagLink.isVisible()) {
-      await tagLink.click();
-      await expect(page.url()).toContain("/tag/");
+      await Promise.all([
+        page.waitForURL(/\/tag\//, { timeout: 10_000 }),
+        tagLink.click(),
+      ]);
       await expect(page.locator("h1, h2").first()).toBeVisible();
     }
   });

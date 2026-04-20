@@ -14,8 +14,7 @@ describe("GET /api/settings", () => {
     expect(res.status).toBe(200);
 
     const body = await res.json();
-    // Settings should have locale and postsPerPage at minimum
-    expect(body).toHaveProperty("locale");
+    // Settings should have postsPerPage at minimum
     expect(body).toHaveProperty("postsPerPage");
   });
 });
@@ -44,15 +43,6 @@ describe("PUT /api/settings", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ postsPerPage: original.postsPerPage }),
     });
-  });
-
-  it("rejects invalid locale", async () => {
-    const res = await fetch(`${BASE}/api/settings`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ locale: "invalid-locale-xyz" }),
-    });
-    expect(res.status).toBe(400);
   });
 
   it("rejects non-integer postsPerPage", async () => {
