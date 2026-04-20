@@ -20,8 +20,6 @@ function getAssetsHostname(): string {
 }
 
 const nextConfig: NextConfig = {
-  cacheHandler: require.resolve("./src/lib/cache-handler.js"),
-  cacheMaxMemorySize: 0, // Disable default in-memory cache (we use our own)
   allowedDevOrigins: (process.env.ALLOWED_DEV_ORIGINS ?? "").split(",").filter(Boolean),
   env: {
     NEXT_PUBLIC_APP_VERSION: pkg.version,
