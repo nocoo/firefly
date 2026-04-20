@@ -1,10 +1,11 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
-import { isEmailAllowed } from "./auth-utils";
+import { isEmailAllowed, isE2EMode } from "./auth-utils";
+import type { Session } from "next-auth";
 
 export { isEmailAllowed } from "./auth-utils";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+export const { handlers, signIn, signOut, auth: nextAuth } = NextAuth({
   providers: [Google],
   pages: {
     signIn: "/login",
@@ -35,6 +36,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     strategy: "jwt",
   },
 });
+
+/**
+ * Mock session for E2E testing.
+ * Returned by auth() when E2E_SKIP_AUTH=true and CI=true (or NODE_ENV != production).
+ */
+const E2E_MOCK_SESSION: Session = {
+  user: {
+    name: "E2E Test User",
+    email: "e2e@test.local",
+    image: null,
+  },
+  expires: new Date(Date.now() + 86400000).toISOString(), // 24 hours from now
+};
+
+/**
+ * Wrapper around NextAuth's auth() that returns a mock session in E2E mode.
+ * This allows admin API routes to work correctly during E2E tests.
+ */
+export async function auth(): Promise<Session | null> {
+  if (isE2EMode()) {
+    return E2E_MOCK_SESSION;
+  }
+  return nextAuth();
+}
 
 /**
  * Server-side helper: returns true when the current request has an

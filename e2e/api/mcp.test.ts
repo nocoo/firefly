@@ -823,14 +823,15 @@ describe("MCP OAuth Callback — Error Paths", () => {
     expect(data.error).toContain("Missing state parameter");
   });
 
-  it("returns 401 when not authenticated", async () => {
-    // Note: In E2E_SKIP_AUTH mode, this may behave differently.
-    // We're testing the state validation path here.
+  it("returns error when not authenticated or invalid state", async () => {
+    // Note: In E2E_SKIP_AUTH mode, auth() returns a mock session.
+    // The callback validates state and email authorization.
     const res = await fetch(`${BASE}/api/mcp/callback?state=invalid_state_xyz`, {
       redirect: "manual",
     });
 
-    // Could be 401 (no auth) or 400 (invalid state) depending on E2E config
-    expect([400, 401]).toContain(res.status);
+    // Could be 400 (invalid state), 401 (no auth), or 403 (email not authorized)
+    // depending on E2E config and which check fails first
+    expect([400, 401, 403]).toContain(res.status);
   });
 });

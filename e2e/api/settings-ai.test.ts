@@ -74,16 +74,16 @@ describe("PUT /api/settings/ai", () => {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        provider: "openai",
-        sdkType: "openai",
+        provider: "anthropic",
+        sdkType: "anthropic",
       }),
     });
 
     expect(res.status).toBe(200);
 
     const body = await res.json();
-    expect(body.provider).toBe("openai");
-    expect(body.sdkType).toBe("openai");
+    expect(body.provider).toBe("anthropic");
+    expect(body.sdkType).toBe("anthropic");
   });
 
   it("clears provider when empty string", async () => {
