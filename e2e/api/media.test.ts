@@ -2,7 +2,8 @@
  * L2 API E2E — Media endpoints
  *
  * Covers: GET /api/media, GET /api/media/[id], POST /api/media,
- *         DELETE /api/media/[id], PATCH /api/media/associate
+ *         DELETE /api/media/[id], PATCH /api/media/associate,
+ *         GET /api/media/years
  *
  * Note: Requires R2 test bucket to be configured.
  */
@@ -263,5 +264,29 @@ describe("PATCH /api/media/associate", () => {
 
     const body = await res.json();
     expect(body).toHaveProperty("error");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/media/years
+// ---------------------------------------------------------------------------
+
+describe("GET /api/media/years", () => {
+  it("returns list of years with counts", async () => {
+    const res = await fetch(`${BASE}/api/media/years`);
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body).toHaveProperty("years");
+    expect(Array.isArray(body.years)).toBe(true);
+
+    // If there are years, each should have year and count
+    if (body.years.length > 0) {
+      const first = body.years[0];
+      expect(first).toHaveProperty("year");
+      expect(first).toHaveProperty("count");
+      expect(typeof first.year).toBe("number");
+      expect(typeof first.count).toBe("number");
+    }
   });
 });
