@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.5.16 (2026-04-20)
+
+- fix: address issues from dependency cleanup commits
+- chore: remove redundant ai dependency
+- refactor: replace ulid with crypto.randomUUID()
+- chore: remove custom LRU cache handler
+- chore: remove unused hono and @hono/node-server dependencies
+
+
 ## v2.5.15 (2026-04-20)
 
 - test(e2e): drop locale assertions and fix navigation race
