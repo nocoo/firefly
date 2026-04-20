@@ -147,6 +147,27 @@ describe('sanitizeFtsQuery', () => {
     // Should handle malformed quotes gracefully
     expect(typeof result).toBe('string');
   });
+
+  it('skips tokens that become empty after cleaning special chars', () => {
+    // A word that is entirely special characters
+    const result = sanitizeFtsQuery(':+^');
+    // All chars are FTS5 special and get removed
+    expect(result).toBe('');
+  });
+
+  it('handles word with only special chars before *', () => {
+    // A prefix word where the base is only special characters
+    const result = sanitizeFtsQuery(':*');
+    expect(result).toBe('');
+  });
+
+  it('handles multi-token word where one token becomes empty', () => {
+    // hello:world is treated as a single word by Intl.Segmenter,
+    // and : is removed by FTS5_SPECIAL replacement
+    const result = sanitizeFtsQuery('hello:world test');
+    expect(result).toContain('"helloworld"');
+    expect(result).toContain('"test"');
+  });
 });
 
 // ─── handleFtsSync Tests ────────────────────────────────────────────────────
@@ -571,8 +592,36 @@ describe('handleFtsSearch', () => {
     expect(json.page).toBe(1);
   });
 
-  it('handles Infinity pageSize', async () => {
-    const mockAll = vi.fn().mockResolvedValue({ results: [] });
+  it('handles missing search_snippet in results', async () => {
+    const mockAll = vi.fn().mockResolvedValue({
+      results: [
+        {
+          id: 'post-1',
+          title: 'Test',
+          slug: 'test',
+          // No search_snippet field
+        },
+      ],
+    });
+    const mockFirst = vi.fn().mockResolvedValue({ count: 1 });
+    const mockBind = vi.fn().mockReturnValue({
+      all: mockAll,
+      first: mockFirst,
+      bind: vi.fn().mockReturnThis(),
+    });
+    const db = makeDb({
+      prepare: vi.fn().mockReturnValue({ bind: mockBind }),
+    });
+
+    const res = await handleFtsSearch({ query: 'test' }, db as unknown as D1Database);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.posts).toHaveLength(1);
+    expect(json.snippets).toEqual({});
+  });
+
+  it('handles undefined searchResult.results', async () => {
+    const mockAll = vi.fn().mockResolvedValue({});  // No results field
     const mockFirst = vi.fn().mockResolvedValue({ count: 0 });
     const mockBind = vi.fn().mockReturnValue({
       all: mockAll,
@@ -583,13 +632,9 @@ describe('handleFtsSearch', () => {
       prepare: vi.fn().mockReturnValue({ bind: mockBind }),
     });
 
-    const res = await handleFtsSearch(
-      { query: 'test', pageSize: Infinity },
-      db as unknown as D1Database,
-    );
-
+    const res = await handleFtsSearch({ query: 'test' }, db as unknown as D1Database);
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.pageSize).toBe(20); // Falls back to default
+    expect(json.posts).toEqual([]);
   });
 });
