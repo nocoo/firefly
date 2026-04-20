@@ -10,7 +10,7 @@
  */
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
-describe("GET /api/analytics", () => {
+describe.concurrent("GET /api/analytics", () => {
   it("returns summary data with default 30-day range", async () => {
     const res = await fetch(`${BASE}/api/analytics`);
     expect(res.status).toBe(200);
@@ -120,7 +120,7 @@ describe("GET /api/analytics", () => {
   });
 });
 
-describe("GET /api/analytics/source", () => {
+describe.concurrent("GET /api/analytics/source", () => {
   it("returns human detail data", async () => {
     const res = await fetch(`${BASE}/api/analytics/source?type=human&days=7`);
     expect(res.status).toBe(200);

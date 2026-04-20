@@ -5,7 +5,7 @@
  */
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
-describe("GET /api/tags", () => {
+describe.concurrent("GET /api/tags", () => {
   it("returns list of tags", async () => {
     const res = await fetch(`${BASE}/api/tags`);
     expect(res.status).toBe(200);
@@ -15,7 +15,7 @@ describe("GET /api/tags", () => {
   });
 });
 
-describe("GET /api/tags/[slug]", () => {
+describe.concurrent("GET /api/tags/[slug]", () => {
   it("returns 404 for non-existent slug", async () => {
     const res = await fetch(`${BASE}/api/tags/nonexistent-tag-xyz`);
     expect(res.status).toBe(404);

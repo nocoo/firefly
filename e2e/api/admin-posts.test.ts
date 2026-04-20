@@ -10,7 +10,7 @@ const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 // GET /api/admin/posts
 // ---------------------------------------------------------------------------
 
-describe("GET /api/admin/posts", () => {
+describe.concurrent("GET /api/admin/posts", () => {
   it("returns list of all posts (including drafts)", async () => {
     const res = await fetch(`${BASE}/api/admin/posts`);
     expect(res.status).toBe(200);
@@ -65,7 +65,7 @@ describe("GET /api/admin/posts", () => {
 // PATCH /api/admin/posts/batch
 // ---------------------------------------------------------------------------
 
-describe("PATCH /api/admin/posts/batch", () => {
+describe.concurrent("PATCH /api/admin/posts/batch", () => {
   it("returns 400 when ids is empty", async () => {
     const res = await fetch(`${BASE}/api/admin/posts/batch`, {
       method: "PATCH",
@@ -153,7 +153,7 @@ describe("PATCH /api/admin/posts/batch", () => {
 // GET /api/admin/search
 // ---------------------------------------------------------------------------
 
-describe("GET /api/admin/search", () => {
+describe.concurrent("GET /api/admin/search", () => {
   it("returns empty results for empty query", async () => {
     const res = await fetch(`${BASE}/api/admin/search?q=`);
     expect(res.status).toBe(200);

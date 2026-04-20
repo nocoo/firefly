@@ -9,7 +9,7 @@ const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 // GET /api/md
 // ---------------------------------------------------------------------------
 
-describe("GET /api/md", () => {
+describe.concurrent("GET /api/md", () => {
   it("returns markdown content with correct headers", async () => {
     const res = await fetch(`${BASE}/api/md`);
     expect(res.status).toBe(200);
@@ -35,7 +35,7 @@ describe("GET /api/md", () => {
 // GET /api/md/[year]/[month]/[slug]
 // ---------------------------------------------------------------------------
 
-describe("GET /api/md/[year]/[month]/[slug]", () => {
+describe.concurrent("GET /api/md/[year]/[month]/[slug]", () => {
   let testPostSlug: string;
   let testYear: string;
   let testMonth: string;

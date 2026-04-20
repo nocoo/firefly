@@ -6,7 +6,7 @@
  */
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
-describe("GET /api/categories", () => {
+describe.concurrent("GET /api/categories", () => {
   it("returns list of categories", async () => {
     const res = await fetch(`${BASE}/api/categories`);
     expect(res.status).toBe(200);
@@ -16,7 +16,7 @@ describe("GET /api/categories", () => {
   });
 });
 
-describe("GET /api/categories/[slug]", () => {
+describe.concurrent("GET /api/categories/[slug]", () => {
   it("returns 404 for non-existent slug", async () => {
     const res = await fetch(`${BASE}/api/categories/nonexistent-category-xyz`);
     expect(res.status).toBe(404);
@@ -50,7 +50,7 @@ describe("GET /api/categories/[slug]", () => {
 // PUT /api/categories/reorder
 // ---------------------------------------------------------------------------
 
-describe("PUT /api/categories/reorder", () => {
+describe.concurrent("PUT /api/categories/reorder", () => {
   it("returns 400 when ids is empty", async () => {
     const res = await fetch(`${BASE}/api/categories/reorder`, {
       method: "PUT",

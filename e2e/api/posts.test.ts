@@ -6,7 +6,7 @@
  */
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
-describe("GET /api/posts", () => {
+describe.concurrent("GET /api/posts", () => {
   it("returns paginated list of published posts", async () => {
     const res = await fetch(`${BASE}/api/posts`);
     expect(res.status).toBe(200);
@@ -34,14 +34,14 @@ describe("GET /api/posts", () => {
   });
 });
 
-describe("GET /api/posts/[slug]", () => {
+describe.concurrent("GET /api/posts/[slug]", () => {
   it("returns 404 for non-existent slug", async () => {
     const res = await fetch(`${BASE}/api/posts/this-slug-does-not-exist-xyz`);
     expect(res.status).toBe(404);
   });
 });
 
-describe("POST /api/posts", () => {
+describe.concurrent("POST /api/posts", () => {
   it("creates a new draft post", async () => {
     const slug = `e2e-test-post-${Date.now()}`;
     const res = await fetch(`${BASE}/api/posts`, {
@@ -92,7 +92,7 @@ describe("POST /api/posts", () => {
   });
 });
 
-describe("PUT /api/posts/[slug]", () => {
+describe.concurrent("PUT /api/posts/[slug]", () => {
   it("updates an existing post", async () => {
     // Create
     const slug = `e2e-update-post-${Date.now()}`;
@@ -133,7 +133,7 @@ describe("PUT /api/posts/[slug]", () => {
   });
 });
 
-describe("DELETE /api/posts/[slug]", () => {
+describe.concurrent("DELETE /api/posts/[slug]", () => {
   it("deletes an existing post", async () => {
     // Create
     const slug = `e2e-delete-post-${Date.now()}`;

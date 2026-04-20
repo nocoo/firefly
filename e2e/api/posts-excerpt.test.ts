@@ -10,7 +10,7 @@
  */
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
-describe("POST /api/posts/[slug]/excerpt", () => {
+describe.concurrent("POST /api/posts/[slug]/excerpt", () => {
   it("returns 200 with excerpt or 400 when AI is not configured", async () => {
     const slug = `excerpt-test-${Date.now()}`;
 

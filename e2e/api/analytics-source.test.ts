@@ -9,7 +9,7 @@ const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 // GET /api/analytics/source
 // ---------------------------------------------------------------------------
 
-describe("GET /api/analytics/source", () => {
+describe.concurrent("GET /api/analytics/source", () => {
   it("returns 400 when type is missing", async () => {
     const res = await fetch(`${BASE}/api/analytics/source`);
     expect(res.status).toBe(400);
