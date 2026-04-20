@@ -17,14 +17,13 @@ test.describe("Admin AI agents list page", () => {
   test("shows agent list or empty state", async ({ page }) => {
     await page.goto("/admin/ai-agents", { waitUntil: "networkidle" });
 
-    // Should show list of agents (table rows) or empty state message
-    const agentRow = page.locator(
-      '[data-testid="agents-list"], table, [role="row"]',
-    );
-    const emptyText = page.getByText(/No agents|暂无/);
-    const hasRows = await agentRow.count() > 0;
+    // Should show list of agents (table) or empty state message
+    // Empty state text: "还没有 AI 代理"
+    const agentTable = page.locator("table");
+    const emptyText = page.getByText(/还没有.*代理|No agents/i);
+    const hasTable = await agentTable.count() > 0;
     const hasEmptyText = await emptyText.count() > 0;
-    expect(hasRows || hasEmptyText).toBe(true);
+    expect(hasTable || hasEmptyText).toBe(true);
   });
 
   test("has create agent button", async ({ page }) => {
