@@ -27,9 +27,8 @@ export default defineConfig({
           testTimeout: 30_000,
           hookTimeout: 30_000,
           fileParallelism: true,
-          poolOptions: {
-            threads: { maxThreads: 6, minThreads: 2 },
-          },
+          maxWorkers: 8,
+          minWorkers: 2,
         },
       },
       {

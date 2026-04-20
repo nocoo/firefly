@@ -56,7 +56,7 @@ async function mcpRequest(
 // Tests
 // ---------------------------------------------------------------------------
 
-describe("MCP Metadata Discovery", () => {
+describe.concurrent("MCP Metadata Discovery", () => {
   it("GET /.well-known/oauth-authorization-server returns valid metadata", async () => {
     const res = await fetch(
       `${BASE}/.well-known/oauth-authorization-server`,
@@ -73,7 +73,7 @@ describe("MCP Metadata Discovery", () => {
   });
 });
 
-describe("MCP Client Registration", () => {
+describe.concurrent("MCP Client Registration", () => {
   it("POST /api/mcp/register with valid data returns 201", async () => {
     const res = await fetch(`${BASE}/api/mcp/register`, {
       method: "POST",
@@ -120,7 +120,7 @@ describe("MCP Client Registration", () => {
   });
 });
 
-describe("MCP Token Exchange — Error Paths", () => {
+describe.concurrent("MCP Token Exchange — Error Paths", () => {
   it("rejects unsupported grant_type", async () => {
     const form = new URLSearchParams();
     form.set("grant_type", "password");
@@ -154,7 +154,7 @@ describe("MCP Token Exchange — Error Paths", () => {
   });
 });
 
-describe("MCP Main Endpoint — Auth", () => {
+describe.concurrent("MCP Main Endpoint — Auth", () => {
   it("returns 401 without Authorization header", async () => {
     const res = await fetch(`${BASE}/api/mcp`, {
       method: "POST",
@@ -197,7 +197,7 @@ describe("MCP Main Endpoint — Auth", () => {
   });
 });
 
-describe("MCP Main Endpoint — Tool Calls", () => {
+describe.concurrent("MCP Main Endpoint — Tool Calls", () => {
   let tokenId: string;
   let accessToken: string;
 
@@ -688,7 +688,7 @@ describe("MCP Admin Token API", () => {
 // MCP OAuth Flow — /api/mcp/authorize (error paths)
 // ---------------------------------------------------------------------------
 
-describe("MCP OAuth Authorize — Error Paths", () => {
+describe.concurrent("MCP OAuth Authorize — Error Paths", () => {
   it("returns 400 when missing required parameters", async () => {
     const res = await fetch(`${BASE}/api/mcp/authorize`, {
       redirect: "manual",
@@ -812,7 +812,7 @@ describe("MCP OAuth Authorize — Error Paths", () => {
 // MCP OAuth Callback — /api/mcp/callback (error paths)
 // ---------------------------------------------------------------------------
 
-describe("MCP OAuth Callback — Error Paths", () => {
+describe.concurrent("MCP OAuth Callback — Error Paths", () => {
   it("returns 400 when state is missing", async () => {
     const res = await fetch(`${BASE}/api/mcp/callback`, {
       redirect: "manual",
