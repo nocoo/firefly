@@ -16,6 +16,7 @@ jobs:
     with:
       bun-version: "1.2.15"
       test-command: "bun run test:coverage"
+      osv-config: "osv-scanner.toml"
       # L2/L3/Worker are defined locally for full secret control
       enable-l2: "false"
       enable-l3: "false"
