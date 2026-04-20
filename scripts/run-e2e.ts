@@ -130,8 +130,8 @@ function buildNextOnce(env: Record<string, string | undefined>): void {
   // so we use `bun run build` + `next start` which has no such restriction and
   // better matches production behavior.
   // Note: `bun run build` triggers prebuild scripts (e.g., cache-handler compilation).
-  console.log(`▸ Building Next.js for E2E...`);
-  const build = Bun.spawnSync([BUN, "run", "build"], {
+  console.log(`▸ Building Next.js for E2E (turbopack)...`);
+  const build = Bun.spawnSync([BUN, "x", "next", "build", "--turbo"], {
     cwd: process.cwd(),
     env,
     stdout: "ignore",
