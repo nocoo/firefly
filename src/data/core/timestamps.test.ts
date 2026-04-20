@@ -42,17 +42,9 @@ describe("newId", () => {
     expect(id1).not.toBe(id2);
   });
 
-  it("returns a ULID (26 chars, Crockford Base32)", () => {
+  it("returns a UUID v4 (36 chars, hyphenated hex)", () => {
     const id = newId();
-    expect(id).toHaveLength(26);
-    expect(id).toMatch(/^[0-9A-Z]+$/);
-  });
-
-  it("ids are time-sortable (first id < second id)", async () => {
-    // ULIDs are time-sortable; wait briefly to ensure different timestamps
-    const id1 = newId();
-    await new Promise((r) => setTimeout(r, 2));
-    const id2 = newId();
-    expect(id1 < id2).toBe(true);
+    expect(id).toHaveLength(36);
+    expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
   });
 });

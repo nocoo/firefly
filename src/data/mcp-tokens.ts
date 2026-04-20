@@ -3,9 +3,8 @@
 // ---------------------------------------------------------------------------
 
 import type { Db } from "@/lib/db";
-import { nowEpoch } from "@/data/core/timestamps";
+import { nowEpoch, newId } from "@/data/core/timestamps";
 import type { McpToken, McpTokenScope } from "@/models/types";
-import { ulid } from "ulid";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -71,7 +70,7 @@ export async function createMcpToken(
   db: Db,
   input: CreateMcpTokenInput,
 ): Promise<McpToken> {
-  const id = ulid();
+  const id = newId();
   const now = nowEpoch();
 
   const sql = `

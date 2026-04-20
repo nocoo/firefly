@@ -5,8 +5,7 @@
 
 import type { Db } from "@/lib/db";
 import type { AiAgent, AiAgentWithCategory } from "@/models/types";
-import { nowEpoch } from "@/data/core/timestamps";
-import { ulid } from "ulid";
+import { nowEpoch, newId } from "@/data/core/timestamps";
 
 // ---------------------------------------------------------------------------
 // Input types (camelCase)
@@ -33,7 +32,7 @@ export async function createAiAgent(
   db: Db,
   input: CreateAiAgentInput,
 ): Promise<AiAgent> {
-  const id = ulid();
+  const id = newId();
   const now = nowEpoch();
 
   const sql = `

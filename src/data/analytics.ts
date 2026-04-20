@@ -13,7 +13,7 @@ import type {
   AiBotDetailResponse,
   OtherBotDetailResponse,
 } from "@/models/analytics-types";
-import { ulid } from "ulid";
+import { newId } from "@/data/core/timestamps";
 
 // ---------------------------------------------------------------------------
 // Record a page view
@@ -40,7 +40,7 @@ export async function recordPageView(
   db: Db,
   input: RecordPageViewInput,
 ): Promise<void> {
-  const id = ulid();
+  const id = newId();
   await db.execute(
     `INSERT INTO page_views (id, post_id, path, referrer, user_agent, ip_hash, country, city, device_type, browser, os, is_bot, bot_name, bot_category, session_id)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,

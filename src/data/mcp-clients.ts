@@ -3,9 +3,8 @@
 // ---------------------------------------------------------------------------
 
 import type { Db } from "@/lib/db";
-import { nowEpoch } from "@/data/core/timestamps";
+import { nowEpoch, newId } from "@/data/core/timestamps";
 import type { McpClient } from "@/models/types";
-import { ulid } from "ulid";
 
 // ---------------------------------------------------------------------------
 // Input types
@@ -22,7 +21,7 @@ export interface CreateMcpClientInput {
 // ---------------------------------------------------------------------------
 
 export function generateClientId(): string {
-  return `firefly_mcp_${ulid()}`;
+  return `firefly_mcp_${newId()}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -33,7 +32,7 @@ export async function createMcpClient(
   db: Db,
   input: CreateMcpClientInput,
 ): Promise<McpClient> {
-  const id = ulid();
+  const id = newId();
   const clientId = generateClientId();
   const now = nowEpoch();
 

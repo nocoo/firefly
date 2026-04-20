@@ -2,14 +2,12 @@
 // Timestamp and ID generation utilities
 // ---------------------------------------------------------------------------
 
-import { ulid } from "ulid";
-
 /** Current time as Unix epoch seconds (integer). */
 export function nowEpoch(): number {
   return Math.floor(Date.now() / 1000);
 }
 
-/** Generate a new ULID (26-char, Crockford Base32, time-sortable). */
+/** Generate a new UUID v4 (36-char, lowercase, unique). */
 export function newId(): string {
-  return ulid();
+  return crypto.randomUUID();
 }
