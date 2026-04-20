@@ -6,7 +6,6 @@ import { Github, Facebook, Linkedin, Mail, FileUser, X, Folder, Tags, Archive } 
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/entities/post";
 import type { SocialLink } from "@/data/settings";
-import { useLocale } from "@/i18n/context";
 import { SocialLink as SocialLinkComponent } from "./social-link";
 import { SearchInput } from "./search-input";
 
@@ -45,8 +44,6 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
   variant, open, onClose, categories, tags, archives,
   siteName, siteTagline, socialLinks,
 }, ref) {
-  const { t } = useLocale();
-
   const isDrawer = variant === "drawer";
   const isDrawerOpen = isDrawer && open;
 
@@ -62,7 +59,7 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
       className={className}
       inert={isDrawer && !open ? true : undefined}
       aria-hidden={isDrawer && !open ? true : undefined}
-      {...(isDrawer ? { role: "dialog", "aria-modal": open ? true : undefined, "aria-label": t("blog.sidebar.menuLabel") } : {})}
+      {...(isDrawer ? { role: "dialog", "aria-modal": open ? true : undefined, "aria-label": "导航菜单" } : {})}
     >
       <div className="blog-sidebar-inner">
         {/* Drawer close button — CSS hides this for desktop variant */}
@@ -108,7 +105,7 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
           <nav className="blog-sidebar-section">
             <h3 className="blog-sidebar-heading">
               <Folder className="blog-sidebar-heading-icon" strokeWidth={1.5} />
-              {t("blog.sidebar.categories")}
+              分类
             </h3>
             <ul className="blog-sidebar-list">
               {categories.map((cat) => (
@@ -128,7 +125,7 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
           <nav className="blog-sidebar-section">
             <h3 className="blog-sidebar-heading">
               <Tags className="blog-sidebar-heading-icon" strokeWidth={1.5} />
-              {t("blog.sidebar.tags")}
+              标签
             </h3>
             <div className="blog-tag-cloud">
               {(() => {
@@ -160,7 +157,7 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
           <nav className="blog-sidebar-section">
             <h3 className="blog-sidebar-heading">
               <Archive className="blog-sidebar-heading-icon" strokeWidth={1.5} />
-              {t("blog.sidebar.archives")}
+              归档
             </h3>
             <ul className="blog-sidebar-list">
               {(() => {
@@ -185,7 +182,7 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
                     {recent.map((a) => (
                       <li key={`${a.year}-${a.month}`}>
                         <Link href={`/archive/${a.year}-${String(a.month).padStart(2, "0")}`} prefetch={false}>
-                          <span>{a.year} {t("blog.sidebar.yearSuffix")} {a.month} {t("blog.sidebar.monthSuffix")}</span>
+                          <span>{a.year} 年 {a.month} 月</span>
                           <span className="blog-sidebar-count">{a.count}</span>
                         </Link>
                       </li>
@@ -193,7 +190,7 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
                     {olderEntries.map(([year, count]) => (
                       <li key={year}>
                         <Link href={`/archive/${year}`} prefetch={false}>
-                          <span>{year} {t("blog.sidebar.yearSuffix")}</span>
+                          <span>{year} 年</span>
                           <span className="blog-sidebar-count">{count}</span>
                         </Link>
                       </li>

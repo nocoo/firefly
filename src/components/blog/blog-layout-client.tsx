@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/entities/post";
 import type { SocialLink } from "@/data/settings";
-import type { Locale } from "@/i18n/translations";
 import { BlogSidebar } from "./blog-sidebar";
 import { BlogFooter } from "./blog-footer";
 import { Menu } from "lucide-react";
@@ -18,7 +17,6 @@ interface BlogLayoutClientProps {
   categories: Category[];
   tags: Tag[];
   archives: MonthlyArchive[];
-  locale: Locale;
   siteName: string;
   siteTagline: string;
   socialLinks: SocialLink[];
@@ -26,7 +24,7 @@ interface BlogLayoutClientProps {
 }
 
 export function BlogLayoutClient({
-  categories, tags, archives, locale, siteName, siteTagline, socialLinks, children,
+  categories, tags, archives, siteName, siteTagline, socialLinks, children,
 }: BlogLayoutClientProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const drawerRef = useRef<HTMLElement>(null);
@@ -142,7 +140,7 @@ export function BlogLayoutClient({
 
       <main id="main" className="blog-main">
         {children}
-        <BlogFooter locale={locale} siteName={siteName} />
+        <BlogFooter siteName={siteName} />
       </main>
     </>
   );

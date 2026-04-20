@@ -6,7 +6,8 @@ import { RotateCcw } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
 import type { PostYearCount } from "@/data/entities/post";
 import { Select } from "@/components/ui/select";
-import { useLocale } from "@/i18n/context";
+
+const MONTH_LABELS = ["", "一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"];
 
 interface PostFiltersProps {
   categories: Category[];
@@ -19,7 +20,6 @@ const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 export function PostFilters({ categories, tags, yearCounts }: PostFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t } = useLocale();
 
   const updateFilter = useCallback(
     (key: string, value: string) => {
@@ -61,11 +61,11 @@ export function PostFilters({ categories, tags, yearCounts }: PostFiltersProps) 
         onChange={(e) => updateFilter("status", e.target.value)}
         className="w-auto"
       >
-        <option value="">{t("admin.filters.allStatus")}</option>
-        <option value="published">{t("admin.filters.published")}</option>
-        <option value="draft">{t("admin.filters.draft")}</option>
-        <option value="private">{t("admin.filters.private")}</option>
-        <option value="archived">{t("admin.filters.archived")}</option>
+        <option value="">全部状态</option>
+        <option value="published">已发布</option>
+        <option value="draft">草稿</option>
+        <option value="private">私密</option>
+        <option value="archived">已归档</option>
       </Select>
 
       {/* Category filter */}
@@ -74,7 +74,7 @@ export function PostFilters({ categories, tags, yearCounts }: PostFiltersProps) 
         onChange={(e) => updateFilter("category", e.target.value)}
         className="w-auto"
       >
-        <option value="">{t("admin.filters.allCategories")}</option>
+        <option value="">全部分类</option>
         {categories.map((cat) => (
           <option key={cat.id} value={cat.id}>
             {cat.name}
@@ -89,7 +89,7 @@ export function PostFilters({ categories, tags, yearCounts }: PostFiltersProps) 
           onChange={(e) => updateFilter("tag", e.target.value)}
           className="w-auto"
         >
-          <option value="">{t("admin.filters.allTags")}</option>
+          <option value="">全部标签</option>
           {tags.map((tag) => (
             <option key={tag.id} value={tag.id}>
               {tag.name}
@@ -104,7 +104,7 @@ export function PostFilters({ categories, tags, yearCounts }: PostFiltersProps) 
         onChange={(e) => updateFilter("year", e.target.value)}
         className="w-auto"
       >
-        <option value="">{t("admin.filters.allYears")}</option>
+        <option value="">全部年份</option>
         {yearCounts.map(({ year, count }) => (
           <option key={year} value={String(year)}>
             {year} ({count})
@@ -119,10 +119,10 @@ export function PostFilters({ categories, tags, yearCounts }: PostFiltersProps) 
         className="w-auto"
         disabled={!currentYear}
       >
-        <option value="">{t("admin.filters.allMonths")}</option>
+        <option value="">全部月份</option>
         {MONTHS.map((m) => (
           <option key={m} value={String(m)}>
-            {t(`blog.month.${m}`)}
+            {MONTH_LABELS[m]}
           </option>
         ))}
       </Select>
@@ -135,7 +135,7 @@ export function PostFilters({ categories, tags, yearCounts }: PostFiltersProps) 
           className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] border border-border bg-secondary px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
           <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.5} />
-          {t("admin.filters.resetFilters")}
+          重置
         </button>
       )}
     </div>

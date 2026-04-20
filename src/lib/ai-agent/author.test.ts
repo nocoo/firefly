@@ -28,7 +28,6 @@ import type { SiteSettings } from "@/data/settings";
 
 function createMockSettings(overrides: Partial<SiteSettings> = {}): SiteSettings {
   return {
-    locale: "zh",
     postsPerPage: 10,
     commentsEnabled: false,
     fontStyle: "pingfang",

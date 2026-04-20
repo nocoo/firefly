@@ -4,7 +4,6 @@ import { useMemo, useState, useCallback } from "react";
 import { Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { renderMarkdown } from "@/models/markdown";
-import { useLocale } from "@/i18n/context";
 import { ArticleBody } from "@/components/blog/article-body";
 import { ReferenceCard } from "@/components/blog/reference-card";
 
@@ -33,8 +32,6 @@ export function MarkdownPreview({
     () => (content ? renderMarkdown(content) : ""),
     [content],
   );
-  const { t } = useLocale();
-
   // Sync preview theme with global dark mode on mount
   const { resolvedTheme } = useTheme();
   const [previewDark, setPreviewDark] = useState(resolvedTheme === "dark");
@@ -46,7 +43,7 @@ export function MarkdownPreview({
     return (
       <div className="flex h-full items-center justify-center">
         <p className="text-sm text-muted-foreground">
-          {t("admin.preview.emptyState")}
+          开始编写以查看实时预览
         </p>
       </div>
     );
@@ -61,7 +58,7 @@ export function MarkdownPreview({
         type="button"
         onClick={togglePreviewTheme}
         className="blog-preview-toggle"
-        aria-label={previewDark ? t("theme.light") : t("theme.dark")}
+        aria-label={previewDark ? "浅色" : "深色"}
       >
         {previewDark ? (
           <Sun className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -88,7 +85,7 @@ export function MarkdownPreview({
               <div className="mb-8 overflow-hidden rounded-[var(--radius-widget)]">
                 <img
                   src={featuredImage}
-                  alt={title || t("admin.preview.featuredImageAlt")}
+                  alt={title || "封面图片"}
                   className="w-full object-cover"
                 />
               </div>

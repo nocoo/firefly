@@ -13,7 +13,6 @@ import { PostFilters } from "@/components/admin/post-filters";
 import { DeletePostButton } from "@/components/admin/delete-post-button";
 import { PostGridCard } from "@/components/admin/post-grid-card";
 import { Select } from "@/components/ui/select";
-import { useLocale } from "@/i18n/context";
 import { useSetPageSubtitle } from "@/components/admin/page-subtitle-context";
 
 // ---------------------------------------------------------------------------
@@ -47,11 +46,11 @@ function getViewModeServerSnapshot(): ViewMode {
   return "list";
 }
 
-const STATUS_LABEL_KEYS: Record<PostStatus, string> = {
-  draft: "admin.posts.status.draft",
-  published: "admin.posts.status.published",
-  private: "admin.posts.status.private",
-  archived: "admin.posts.status.archived",
+const STATUS_LABELS: Record<PostStatus, string> = {
+  draft: "草稿",
+  published: "已发布",
+  private: "私密",
+  archived: "已归档",
 };
 
 function getPreviewUrl(post: PostWithTags): string {
@@ -97,14 +96,13 @@ export function AdminPostsClient({
   currentSortBy,
   currentSortOrder,
 }: AdminPostsClientProps) {
-  const { t } = useLocale();
   const viewMode = useSyncExternalStore(
     subscribeViewMode,
     getViewModeSnapshot,
     getViewModeServerSnapshot,
   );
 
-  useSetPageSubtitle(t("admin.posts.total", { n: total }));
+  useSetPageSubtitle(`共 ${total} 篇文章`);
 
   const handleViewModeChange = (mode: ViewMode) => {
     localStorage.setItem(VIEW_MODE_KEY, mode);
@@ -145,7 +143,7 @@ export function AdminPostsClient({
           <div className="flex items-center rounded-lg border border-border bg-background p-0.5">
             <button
               onClick={() => handleViewModeChange("list")}
-              aria-label={t("admin.posts.viewList")}
+              aria-label="列表视图"
               className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
                 viewMode === "list"
                   ? "bg-accent text-foreground"
@@ -156,7 +154,7 @@ export function AdminPostsClient({
             </button>
             <button
               onClick={() => handleViewModeChange("grid")}
-              aria-label={t("admin.posts.viewGrid")}
+              aria-label="网格视图"
               className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
                 viewMode === "grid"
                   ? "bg-accent text-foreground"
@@ -171,7 +169,7 @@ export function AdminPostsClient({
             href="/admin/posts/new"
             className="inline-flex items-center gap-2 rounded-[var(--radius-widget)] bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            {t("admin.posts.new")}
+            新建文章
           </Link>
         </div>
       </div>
@@ -229,7 +227,6 @@ function BulkActionBar({
   categories: Category[];
   onClearSelection: () => void;
 }) {
-  const { t } = useLocale();
   const router = useRouter();
   const [bulkStatus, setBulkStatus] = useState("");
   const [bulkCategory, setBulkCategory] = useState("");
@@ -256,7 +253,7 @@ function BulkActionBar({
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? t("admin.posts.bulk.failed"));
+        throw new Error(data.error ?? "批量更新失败");
       }
 
       const data = await res.json();
@@ -266,11 +263,11 @@ function BulkActionBar({
       router.refresh();
 
       if (data.changed > 0) {
-        toast.success(t("admin.posts.bulk.success", { n: data.changed }));
+        toast.success(`已更新 ${data.changed} 篇文章`);
       }
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : t("admin.posts.bulk.failed"),
+        err instanceof Error ? err.message : "批量更新失败",
       );
     } finally {
       setApplying(false);
@@ -284,13 +281,13 @@ function BulkActionBar({
       {/* Selection count + dismiss */}
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-foreground">
-          {t("admin.posts.bulk.selected", { n: selectedIds.size })}
+          {`已选 ${selectedIds.size} 篇`}
         </span>
         <button
           type="button"
           onClick={onClearSelection}
           className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
-          aria-label={t("admin.posts.bulk.deselectAll")}
+          aria-label="取消全选"
         >
           <X className="h-3.5 w-3.5" strokeWidth={1.5} />
         </button>
@@ -301,7 +298,7 @@ function BulkActionBar({
       {/* Bulk status */}
       <div className="flex items-center gap-1.5">
         <label className="text-xs text-muted-foreground whitespace-nowrap">
-          {t("admin.posts.bulk.setStatus")}
+          设置状态
         </label>
         <Select
           value={bulkStatus}
@@ -309,17 +306,17 @@ function BulkActionBar({
           className="w-auto !h-8 !py-1 text-xs"
         >
           <option value="">—</option>
-          <option value="published">{t("admin.filters.published")}</option>
-          <option value="draft">{t("admin.filters.draft")}</option>
-          <option value="private">{t("admin.filters.private")}</option>
-          <option value="archived">{t("admin.filters.archived")}</option>
+          <option value="published">已发布</option>
+          <option value="draft">草稿</option>
+          <option value="private">私密</option>
+          <option value="archived">已归档</option>
         </Select>
       </div>
 
       {/* Bulk category */}
       <div className="flex items-center gap-1.5">
         <label className="text-xs text-muted-foreground whitespace-nowrap">
-          {t("admin.posts.bulk.setCategory")}
+          设置分类
         </label>
         <Select
           value={bulkCategory}
@@ -327,7 +324,7 @@ function BulkActionBar({
           className="w-auto !h-8 !py-1 text-xs"
         >
           <option value="">—</option>
-          <option value="__none__">{t("admin.posts.bulk.noCategory")}</option>
+          <option value="__none__">无分类</option>
           {categories.map((cat) => (
             <option key={cat.id} value={cat.id}>
               {cat.name}
@@ -343,9 +340,7 @@ function BulkActionBar({
         disabled={applying || !hasUpdates}
         className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {applying
-          ? t("admin.posts.bulk.applying")
-          : t("admin.posts.bulk.apply")}
+        {applying ? "应用中..." : "应用"}
       </button>
     </div>
   );
@@ -421,7 +416,6 @@ function SortableHeader({
 // ---------------------------------------------------------------------------
 
 function CopyLinkButton({ post }: { post: PostWithTags }) {
-  const { t } = useLocale();
   const url = typeof window !== "undefined"
     ? `${window.location.origin}${getPreviewUrl(post)}`
     : getPreviewUrl(post);
@@ -429,9 +423,9 @@ function CopyLinkButton({ post }: { post: PostWithTags }) {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(url);
-      toast.success(t("admin.posts.linkCopied"));
+      toast.success("链接已复制到剪贴板");
     } catch {
-      toast.error(t("admin.posts.linkCopyFailed"));
+      toast.error("复制链接失败");
     }
   };
 
@@ -440,7 +434,7 @@ function CopyLinkButton({ post }: { post: PostWithTags }) {
       type="button"
       onClick={handleCopy}
       className="inline-flex items-center justify-center rounded-[var(--radius-widget)] p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-      title={t("admin.posts.copyLink")}
+      title="复制链接"
     >
       <Link2 className="h-3.5 w-3.5" strokeWidth={1.5} />
     </button>
@@ -473,8 +467,6 @@ function ListView({
   onToggleSelect: (id: string) => void;
   onToggleAll: (allIds: string[]) => void;
 }) {
-  const { t } = useLocale();
-
   const allIds = posts.map((p) => p.id);
   const allSelected = posts.length > 0 && allIds.every((id) => selectedIds.has(id));
   const someSelected = posts.length > 0 && allIds.some((id) => selectedIds.has(id));
@@ -495,23 +487,19 @@ function ListView({
                   }}
                   onChange={() => onToggleAll(allIds)}
                   className="h-4 w-4 rounded border-border text-primary focus:ring-ring cursor-pointer"
-                  aria-label={
-                    allSelected
-                      ? t("admin.posts.bulk.deselectAll")
-                      : t("admin.posts.bulk.selectAll")
-                  }
+                  aria-label={allSelected ? "取消全选" : "全选"}
                 />
               </th>
               <SortableHeader
                 column="title"
-                label={t("admin.posts.table.title")}
+                label="标题"
                 currentSortBy={currentSortBy}
                 currentSortOrder={currentSortOrder}
                 currentParams={currentParams}
               />
               <SortableHeader
                 column="status"
-                label={t("admin.posts.table.status")}
+                label="状态"
                 currentSortBy={currentSortBy}
                 currentSortOrder={currentSortOrder}
                 currentParams={currentParams}
@@ -520,7 +508,7 @@ function ListView({
               />
               <SortableHeader
                 column="category"
-                label={t("admin.posts.table.category")}
+                label="分类"
                 currentSortBy={currentSortBy}
                 currentSortOrder={currentSortOrder}
                 currentParams={currentParams}
@@ -529,7 +517,7 @@ function ListView({
               />
               <SortableHeader
                 column="comment_count"
-                label={t("admin.posts.table.comments")}
+                label="评论"
                 currentSortBy={currentSortBy}
                 currentSortOrder={currentSortOrder}
                 currentParams={currentParams}
@@ -537,7 +525,7 @@ function ListView({
               />
               <SortableHeader
                 column="tags"
-                label={t("admin.posts.table.tags")}
+                label="标签"
                 currentSortBy={currentSortBy}
                 currentSortOrder={currentSortOrder}
                 currentParams={currentParams}
@@ -546,7 +534,7 @@ function ListView({
               />
               <SortableHeader
                 column="published_at"
-                label={t("admin.posts.table.publishedAt")}
+                label="发布时间"
                 currentSortBy={currentSortBy}
                 currentSortOrder={currentSortOrder}
                 currentParams={currentParams}
@@ -554,14 +542,14 @@ function ListView({
               />
               <SortableHeader
                 column="created_at"
-                label={t("admin.posts.table.createdAt")}
+                label="创建时间"
                 currentSortBy={currentSortBy}
                 currentSortOrder={currentSortOrder}
                 currentParams={currentParams}
                 className="hidden xl:table-cell"
               />
               <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                {t("admin.posts.table.actions")}
+                操作
               </th>
             </tr>
           </thead>
@@ -572,7 +560,7 @@ function ListView({
                   colSpan={9}
                   className="px-4 py-8 text-center text-muted-foreground"
                 >
-                  {t("admin.posts.noResults")}
+                  未找到文章
                 </td>
               </tr>
             ) : (
@@ -607,7 +595,7 @@ function ListView({
                       <span
                         className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[post.status as PostStatus] ?? ""}`}
                       >
-                        {t(STATUS_LABEL_KEYS[post.status as PostStatus] ?? post.status)}
+                        {STATUS_LABELS[post.status as PostStatus] ?? post.status}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
@@ -653,7 +641,7 @@ function ListView({
                           className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                         >
                           <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
-                          {t("admin.posts.edit")}
+                          编辑
                         </Link>
                         <CopyLinkButton post={post} />
                         <a
@@ -661,7 +649,7 @@ function ListView({
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center justify-center rounded-[var(--radius-widget)] p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                          title={t("admin.posts.openInNewTab")}
+                          title="在新标签页打开"
                         >
                           <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.5} />
                         </a>
@@ -701,8 +689,6 @@ function Pagination({
   currentPage: number;
   currentParams: Record<string, string | undefined>;
 }) {
-  const { t } = useLocale();
-
   const buildHref = (page: number) => {
     const sp = new URLSearchParams();
     for (const [key, value] of Object.entries(currentParams)) {
@@ -717,7 +703,7 @@ function Pagination({
   return (
     <div className="flex items-center justify-between">
       <p className="text-sm text-muted-foreground">
-        {t("admin.pagination.page", { page: currentPage, total: totalPages })}
+        {`第 ${currentPage} 页 / 共 ${totalPages} 页`}
       </p>
       <div className="flex flex-wrap gap-1">
         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -751,7 +737,6 @@ function GridView({
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
 }) {
-  const { t } = useLocale();
   const [posts, setPosts] = useState<PostWithCategory[]>([]);
   const [_page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -844,19 +829,19 @@ function GridView({
 
       {loading && (
         <div className="py-4 text-center text-sm text-muted-foreground">
-          {t("admin.posts.loadingMore")}
+          加载中...
         </div>
       )}
 
       {!hasMore && posts.length > 0 && (
         <div className="py-4 text-center text-sm text-muted-foreground">
-          {t("admin.posts.noMorePosts")}
+          没有更多文章
         </div>
       )}
 
       {!loading && posts.length === 0 && (
         <div className="py-8 text-center text-muted-foreground">
-          {t("admin.posts.noResults")}
+          未找到文章
         </div>
       )}
     </>

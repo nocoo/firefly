@@ -1,13 +1,11 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { t, type Locale } from "@/i18n/translations";
 
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
   /** Base path without trailing slash, e.g. "/" or "/category/tech" or "/archive/2026-02" */
   basePath: string;
-  locale: Locale;
   /** When provided, generates query-string pagination (?key=val&page=N)
    *  instead of path-segment pagination (/basePath/page/N). */
   searchParams?: Record<string, string>;
@@ -17,7 +15,6 @@ export function Pagination({
   currentPage,
   totalPages,
   basePath,
-  locale,
   searchParams,
 }: PaginationProps) {
   if (totalPages <= 1) return null;
@@ -48,11 +45,11 @@ export function Pagination({
   return (
     <nav
       className="flex items-center justify-center gap-1 py-8"
-      aria-label={t(locale, "blog.pagination.ariaLabel")}
+      aria-label="分页"
     >
       {/* Previous */}
       {currentPage > 1 ? (
-        <Link href={href(currentPage - 1)} prefetch={false} className={`${linkClass} ${inactiveClass}`} aria-label={t(locale, "blog.pagination.prev")}>
+        <Link href={href(currentPage - 1)} prefetch={false} className={`${linkClass} ${inactiveClass}`} aria-label="上一页">
           <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
         </Link>
       ) : (
@@ -82,7 +79,7 @@ export function Pagination({
 
       {/* Next */}
       {currentPage < totalPages ? (
-        <Link href={href(currentPage + 1)} prefetch={false} className={`${linkClass} ${inactiveClass}`} aria-label={t(locale, "blog.pagination.next")}>
+        <Link href={href(currentPage + 1)} prefetch={false} className={`${linkClass} ${inactiveClass}`} aria-label="下一页">
           <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
         </Link>
       ) : (

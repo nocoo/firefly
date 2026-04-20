@@ -11,7 +11,6 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { useLocale } from "@/i18n/context";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -63,7 +62,6 @@ function formatTime(timestamp: number): string {
 // ---------------------------------------------------------------------------
 
 export function SystemMemoryCard() {
-  const { t } = useLocale();
   const [stats, setStats] = useState<MemoryStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -141,7 +139,7 @@ export function SystemMemoryCard() {
       <div className="border-b border-border/50 px-4 py-3">
         <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
           <Activity className="h-4 w-4" />
-          {t("admin.system.memoryTitle") ?? "System Memory"}
+          系统内存
         </h3>
       </div>
 

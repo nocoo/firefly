@@ -6,7 +6,6 @@ import Image from "next/image";
 import { ArrowLeft, Upload, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import type { AiAgent, Category } from "@/models/types";
-import { useLocale } from "@/i18n/context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -28,7 +27,6 @@ function slugify(name: string): string {
 
 export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentFormProps) {
   const router = useRouter();
-  const { t } = useLocale();
   const isNew = !agent;
 
   // Form state
@@ -64,15 +62,15 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
 
   const handleSave = async () => {
     if (!name.trim()) {
-      toast.error(t("admin.aiAgents.errorNameRequired"));
+      toast.error("请输入名称");
       return;
     }
     if (!slug.trim()) {
-      toast.error(t("admin.aiAgents.errorSlugRequired"));
+      toast.error("请输入标识符");
       return;
     }
     if (!categoryId) {
-      toast.error(t("admin.aiAgents.errorCategoryRequired"));
+      toast.error("请选择分类");
       return;
     }
 
@@ -118,7 +116,7 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
           prompt: data.prompt,
         });
       } else {
-        toast.success(t("admin.aiAgents.saved"));
+        toast.success("代理保存成功");
         router.push("/admin/ai-agents");
         router.refresh();
       }
@@ -214,12 +212,10 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" onClick={() => router.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          {t("admin.common.back")}
+          返回
         </Button>
         <h1 className="text-xl font-semibold text-foreground">
-          {isNew
-            ? t("admin.aiAgents.createTitle")
-            : t("admin.aiAgents.editTitle")}
+          {isNew ? "创建 AI 代理" : "编辑 AI 代理"}
         </h1>
       </div>
 
@@ -231,12 +227,12 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
             {/* Name */}
             <div>
               <label className="text-sm font-medium text-foreground">
-                {t("admin.aiAgents.form.name")} *
+                名称 *
               </label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={t("admin.aiAgents.form.namePlaceholder")}
+                placeholder="如：科技写手"
                 className="mt-1"
               />
             </div>
@@ -244,23 +240,23 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
             {/* Slug */}
             <div>
               <label className="text-sm font-medium text-foreground">
-                {t("admin.aiAgents.form.slug")} *
+                标识符 *
               </label>
               <Input
                 value={slug}
                 onChange={(e) => handleSlugChange(e.target.value)}
-                placeholder={t("admin.aiAgents.form.slugPlaceholder")}
+                placeholder="如：tech-writer"
                 className="mt-1 font-mono text-sm"
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                {t("admin.aiAgents.form.slugHelp")}
+                URL 友好的标识符（小写字母、数字、连字符）
               </p>
             </div>
 
             {/* Category */}
             <div>
               <label className="text-sm font-medium text-foreground">
-                {t("admin.aiAgents.form.category")} *
+                分类 *
               </label>
               <Select
                 value={categoryId}
@@ -269,7 +265,7 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
                 disabled={!isNew}
               >
                 <option value="">
-                  {t("admin.aiAgents.form.selectCategory")}
+                  选择分类...
                 </option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
@@ -278,21 +274,19 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
                 ))}
               </Select>
               <p className="mt-1 text-xs text-muted-foreground">
-                {isNew
-                  ? t("admin.aiAgents.form.categoryHelp")
-                  : t("admin.aiAgents.form.categoryLocked")}
+                {isNew ? "代理只能在此分类下创建文章" : "分类创建后无法更改"}
               </p>
             </div>
 
             {/* Description */}
             <div>
               <label className="text-sm font-medium text-foreground">
-                {t("admin.aiAgents.form.description")}
+                描述
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder={t("admin.aiAgents.form.descriptionPlaceholder")}
+                placeholder="代理的可选描述"
                 rows={3}
                 className="mt-1 w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               />
@@ -310,7 +304,7 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
                   </code>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {t("admin.aiAgents.form.authorIdHelp")}
+                  通过 MCP 创建文章时，在 author_id 字段使用此 ID
                 </p>
               </div>
             )}
@@ -320,7 +314,7 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
           {!isNew && (
             <div className="space-y-4">
               <label className="text-sm font-medium text-foreground">
-                {t("admin.aiAgents.form.avatar")}
+                头像
               </label>
               <div className="flex items-start gap-4">
                 {/* Avatar preview */}
@@ -369,12 +363,10 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
                     disabled={uploadingAvatar}
                   >
                     <Upload className="mr-2 h-4 w-4" />
-                    {avatarUrl
-                      ? t("admin.aiAgents.form.changeAvatar")
-                      : t("admin.aiAgents.form.uploadAvatar")}
+                    {avatarUrl ? "更换头像" : "上传头像"}
                   </Button>
                   <p className="text-xs text-muted-foreground">
-                    {t("admin.aiAgents.form.avatarHelp")}
+                    正方形图片，至少 256×256 像素
                   </p>
                 </div>
               </div>
@@ -386,13 +378,13 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
         <div className="mt-6 flex items-center gap-3 border-t border-border pt-6">
           <Button onClick={handleSave} disabled={saving}>
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isNew ? t("admin.aiAgents.form.create") : t("admin.aiAgents.form.save")}
+            {isNew ? "创建代理" : "保存更改"}
           </Button>
           <Button
             variant="outline"
             onClick={() => router.push("/admin/ai-agents")}
           >
-            {t("admin.common.cancel")}
+            取消
           </Button>
         </div>
       </div>
@@ -404,7 +396,6 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
           agentId={newAgent.agentId}
           prompt={newAgent.prompt}
           onClose={handleAgentModalClose}
-          t={t}
         />
       )}
     </div>

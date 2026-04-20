@@ -12,7 +12,6 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Search, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useLocale } from "@/i18n/context";
 import type { PostWithCategory } from "@/models/types";
 import type { PostStatus } from "@/models/types";
 import { STATUS_COLORS } from "@/lib/status-colors";
@@ -69,11 +68,11 @@ export function CommandPaletteProvider({
 // Status badge styles (matches admin-posts-client)
 // ---------------------------------------------------------------------------
 
-const STATUS_LABEL_KEYS: Record<PostStatus, string> = {
-  draft: "admin.posts.status.draft",
-  published: "admin.posts.status.published",
-  private: "admin.posts.status.private",
-  archived: "admin.posts.status.archived",
+const STATUS_LABELS: Record<PostStatus, string> = {
+  draft: "草稿",
+  published: "已发布",
+  private: "私密",
+  archived: "已归档",
 };
 
 // ---------------------------------------------------------------------------
@@ -101,7 +100,6 @@ export function CommandPalette() {
   const abortRef = useRef<AbortController | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const router = useRouter();
-  const { t } = useLocale();
 
   // Reset state when opening/closing
   useEffect(() => {
@@ -255,7 +253,7 @@ export function CommandPalette() {
             type="text"
             value={query}
             onChange={(e) => handleInputChange(e.target.value)}
-            placeholder={t("admin.search.placeholder")}
+            placeholder="搜索文章..."
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0"
           />
           <kbd className="hidden sm:inline-flex h-5 items-center rounded border border-border bg-background px-1.5 text-2xs font-medium text-muted-foreground">
@@ -270,7 +268,7 @@ export function CommandPalette() {
         >
           {hasQuery && !loading && posts.length === 0 && (
             <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-              {t("admin.search.noResults")}
+              没有找到结果
             </div>
           )}
 
@@ -299,10 +297,7 @@ export function CommandPalette() {
                         STATUS_COLORS[post.status as PostStatus] ?? "",
                       )}
                     >
-                      {t(
-                        STATUS_LABEL_KEYS[post.status as PostStatus] ??
-                          post.status,
-                      )}
+                      {STATUS_LABELS[post.status as PostStatus] ?? post.status}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">

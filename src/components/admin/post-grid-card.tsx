@@ -8,8 +8,14 @@ import type { PostWithCategory, PostStatus } from "@/models/types";
 import { postPath, formatDateDisplay } from "@/lib/seo";
 import { STATUS_COLORS } from "@/lib/status-colors";
 import { DeletePostButton } from "./delete-post-button";
-import { useLocale } from "@/i18n/context";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+
+const POST_STATUS_LABEL: Record<string, string> = {
+  draft: "草稿",
+  published: "已发布",
+  private: "私密",
+  archived: "已归档",
+};
 
 interface PostGridCardProps {
   post: PostWithCategory;
@@ -29,7 +35,6 @@ export const PostGridCard = memo(function PostGridCard({
   selected,
   onToggleSelect,
 }: PostGridCardProps) {
-  const { t } = useLocale();
   const previewUrl = getPreviewUrl(post);
   const date = post.published_at ? formatDateDisplay(post.published_at) : "—";
 
@@ -90,7 +95,7 @@ export const PostGridCard = memo(function PostGridCard({
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
           className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-widget)] bg-card/90 text-card-foreground transition-colors hover:bg-card"
-          title={t("admin.posts.preview")}
+          title="预览"
         >
           <Eye className="h-4 w-4" strokeWidth={1.5} />
         </a>
@@ -98,7 +103,7 @@ export const PostGridCard = memo(function PostGridCard({
           href={`/admin/posts/${post.id}/edit`}
           onClick={(e) => e.stopPropagation()}
           className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-widget)] bg-card/90 text-card-foreground transition-colors hover:bg-card"
-          title={t("admin.posts.edit")}
+          title="编辑"
         >
           <Pencil className="h-4 w-4" strokeWidth={1.5} />
         </Link>
@@ -121,7 +126,7 @@ export const PostGridCard = memo(function PostGridCard({
           <span
             className={`inline-block rounded-full px-1.5 py-0.5 text-2xs font-medium leading-none ${STATUS_COLORS[post.status as PostStatus] ?? ""}`}
           >
-            {t(`admin.posts.status.${post.status}`)}
+            {POST_STATUS_LABEL[post.status] ?? post.status}
           </span>
           <span className="text-xs text-muted-foreground">{date}</span>
         </div>

@@ -3,7 +3,6 @@
 // ---------------------------------------------------------------------------
 
 import type { Metadata } from "next";
-import type { Locale } from "@/i18n/translations";
 
 /**
  * Site URL — read from AUTH_URL env var (deployment-level config).
@@ -11,6 +10,12 @@ import type { Locale } from "@/i18n/translations";
  * than in the DB, because it must be available at build/start time.
  */
 export const SITE_URL = process.env.AUTH_URL ?? "http://localhost:3000";
+
+/** OpenGraph locale (underscore format). */
+export const OG_LOCALE = "zh_CN";
+
+/** BCP 47 language tag (hyphen format). */
+export const HTML_LANG = "zh-CN";
 
 /**
  * Subset of SiteSettings needed by SEO helpers.
@@ -26,20 +31,6 @@ export interface SiteIdentity {
 }
 
 // ---------------------------------------------------------------------------
-// Locale → SEO format mapping
-// ---------------------------------------------------------------------------
-
-/** Map internal locale to OpenGraph locale (underscore format). */
-export function ogLocale(locale: Locale): string {
-  return locale === "zh" ? "zh_CN" : "en_US";
-}
-
-/** Map internal locale to BCP 47 language tag (hyphen format). */
-export function htmlLang(locale: Locale): string {
-  return locale === "zh" ? "zh-CN" : "en";
-}
-
-// ---------------------------------------------------------------------------
 // Page metadata builder
 // ---------------------------------------------------------------------------
 
@@ -47,7 +38,6 @@ export interface PageMetaInput {
   title: string;
   description: string;
   path: string;
-  locale?: Locale | undefined;
   image?: string | undefined;
   type?: "website" | "article" | undefined;
   publishedTime?: string | undefined;
@@ -63,8 +53,6 @@ export function buildPageMeta(
 ): Metadata {
   const url = `${SITE_URL}${input.path}`;
   const ogType = input.type ?? "website";
-  const locale = input.locale ?? "zh";
-  const lang = htmlLang(locale);
 
   // Use authorOverride if provided, otherwise fall back to site author
   const author = input.authorOverride ?? { name: site.siteAuthor, url: SITE_URL };
@@ -76,14 +64,14 @@ export function buildPageMeta(
     ...(input.keywords?.length ? { keywords: input.keywords } : {}),
     alternates: {
       canonical: url,
-      languages: { [lang]: url },
+      languages: { [HTML_LANG]: url },
     },
     openGraph: {
       title: input.title,
       description: input.description,
       url,
       siteName: site.siteName,
-      locale: ogLocale(locale),
+      locale: OG_LOCALE,
       type: ogType,
       ...(input.image ? { images: [{ url: input.image }] } : {}),
       ...(ogType === "article" && input.publishedTime
@@ -119,14 +107,13 @@ export function formatDate(epoch: number): string {
 
 /**
  * Format a unix epoch timestamp to a display string.
- * zh → "2026年3月22日", en → "Mar 22, 2026".
+ * 中文格式："2026年3月22日"
  */
-export function formatDateDisplay(epoch: number, locale?: Locale): string {
+export function formatDateDisplay(epoch: number): string {
   const d = new Date(epoch * 1000);
-  const bcp47 = locale === "zh" ? "zh-CN" : "en-US";
-  return d.toLocaleDateString(bcp47, {
+  return d.toLocaleDateString("zh-CN", {
     year: "numeric",
-    month: locale === "zh" ? "long" : "short",
+    month: "long",
     day: "numeric",
   });
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { useLocale } from "@/i18n/context";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -42,7 +41,6 @@ export function ImageUploadZone({
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current); }, []);
-  const { t } = useLocale();
 
   const upload = useCallback(
     async (file: File) => {
@@ -63,7 +61,7 @@ export function ImageUploadZone({
 
         if (!res.ok) {
           const data = await res.json();
-          throw new Error(data.error ?? t("admin.upload.failed"));
+          throw new Error(data.error ?? "上传失败");
         }
 
         const data = await res.json();
@@ -76,12 +74,12 @@ export function ImageUploadZone({
         onResultsChange((prev) => [newResult, ...prev]);
         setCopiedField(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : t("admin.upload.failed"));
+        setError(err instanceof Error ? err.message : "上传失败");
       } finally {
         setUploading(false);
       }
     },
-    [t, postId, onResultsChange],
+    [postId, onResultsChange],
   );
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -150,7 +148,7 @@ export function ImageUploadZone({
       >
         <label className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
           <span>
-            {uploading ? t("admin.upload.uploading") : t("admin.upload.uploadImage")}
+            {uploading ? "上传中..." : "📎 上传图片"}
           </span>
           <input
             type="file"
@@ -161,7 +159,7 @@ export function ImageUploadZone({
           />
         </label>
         {!uploading && (
-          <span className="text-muted-foreground/60">{t("admin.upload.dragDrop")}</span>
+          <span className="text-muted-foreground/60">或拖拽上传</span>
         )}
       </div>
 
@@ -192,7 +190,7 @@ export function ImageUploadZone({
                   onClick={() => copyToClipboard(result.url, `url-${result.id}`)}
                   className="rounded px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                 >
-                  {copiedField === `url-${result.id}` ? t("admin.upload.copied") : t("admin.upload.copyUrl")}
+                  {copiedField === `url-${result.id}` ? "已复制！" : "复制链接"}
                 </button>
                 <button
                   type="button"
@@ -202,8 +200,8 @@ export function ImageUploadZone({
                   className="rounded px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                 >
                   {copiedField === `md-${result.id}`
-                    ? t("admin.upload.copied")
-                    : t("admin.upload.copyMarkdown")}
+                    ? "已复制！"
+                    : "复制 Markdown"}
                 </button>
               </div>
 
@@ -212,7 +210,7 @@ export function ImageUploadZone({
                 type="button"
                 onClick={() => dismiss(result.id)}
                 className="shrink-0 rounded p-1 text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"
-                aria-label={t("admin.upload.dismiss")}
+                aria-label="关闭"
               >
                 <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

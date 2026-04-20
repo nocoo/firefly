@@ -8,8 +8,6 @@ import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { buildPageMeta, SITE_URL, postPath } from "@/lib/seo";
 import { collectionPageJsonLd } from "@/lib/jsonld";
-import { getLocale } from "@/i18n/server";
-import { t } from "@/i18n/translations";
 import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
 import { EmptyState } from "@/components/blog/empty-state";
 import { Folder } from "lucide-react";
@@ -25,22 +23,19 @@ export async function generateMetadata({
   const { slug } = await params;
   const db = getDb();
   const category = await getCategoryBySlug(db, slug);
-  const locale = await getLocale();
 
   if (!category) return { title: "Not Found" };
 
   const settings = await getSiteSettings(db);
   return buildPageMeta({
     title: category.name,
-    description: category.description ?? t(locale, "blog.category.metaDescription", { name: category.name }),
+    description: category.description ?? `${category.name}分类下的文章`,
     path: `/category/${category.slug}`,
-    locale,
   }, settings);
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
-  const locale = await getLocale();
 
   const db = getDb();
   const category = await getCategoryBySlug(db, slug);
@@ -71,7 +66,6 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               url: `${SITE_URL}${postPath(p.slug, p.published_at)}`,
               name: p.title,
             })),
-            locale,
           ),
         }}
       />
@@ -86,19 +80,18 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           </p>
         )}
         <p className="mt-1 text-xs text-blog-muted">
-          {t(locale, "blog.category.postCount", { n: category.post_count })}
+          {`${category.post_count} 篇文章`}
         </p>
       </header>
 
       <section>
         {posts.length === 0 ? (
-          <EmptyState icon={Folder} message={t(locale, "blog.category.noPosts")} />
+          <EmptyState icon={Folder} message="该分类下暂无文章。" />
         ) : (
           posts.map((post, i) => (
             <PostCard
               key={post.id}
               post={post}
-              locale={locale}
               author={getPostAuthor(post, settings)}
               priority={i === 0 && !!post.featured_image}
             />
@@ -110,7 +103,6 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         currentPage={1}
         totalPages={totalPages}
         basePath={`/category/${slug}`}
-        locale={locale}
       />
     </>
   );

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useState, useCallback } from "react";
 import { Pencil, Trash2, ExternalLink, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
-import { useLocale } from "@/i18n/context";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { useSetPageSubtitle } from "@/components/admin/page-subtitle-context";
 
@@ -39,7 +38,6 @@ export function TaxonomyManager({
   apiBase,
 }: TaxonomyManagerProps) {
   const router = useRouter();
-  const { t } = useLocale();
   const [editing, setEditing] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -60,13 +58,11 @@ export function TaxonomyManager({
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
 
-  const label = type === "category"
-    ? t("admin.taxonomy.category")
-    : t("admin.taxonomy.tag");
+  const label = type === "category" ? "分类" : "标签";
 
   const totalText = type === "category"
-    ? t("admin.taxonomy.total.categories", { n: initialItems.length })
-    : t("admin.taxonomy.total.tags", { n: initialItems.length });
+    ? `共 ${initialItems.length} 个分类`
+    : `共 ${initialItems.length} 个标签`;
 
   useSetPageSubtitle(totalText);
 
@@ -99,7 +95,7 @@ export function TaxonomyManager({
 
   const handleSave = async () => {
     if (!name.trim() || !slug.trim()) {
-      setError(t("admin.taxonomy.nameSlugRequired"));
+      setError("名称和别名为必填项");
       return;
     }
 
@@ -130,13 +126,13 @@ export function TaxonomyManager({
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? t("admin.taxonomy.failedSave", { type }));
+        throw new Error(data.error ?? `保存${label}失败`);
       }
 
       resetForm();
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("admin.taxonomy.unknownError"));
+      setError(err instanceof Error ? err.message : "未知错误");
     } finally {
       setSaving(false);
     }
@@ -155,21 +151,19 @@ export function TaxonomyManager({
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? t("admin.taxonomy.failedDelete", { type }));
+        throw new Error(data.error ?? `删除${label}失败`);
       }
 
-      toast.success(t("admin.taxonomy.delete"), {
+      toast.success("删除", {
         description: item.name,
       });
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("admin.taxonomy.unknownError"));
+      toast.error(err instanceof Error ? err.message : "未知错误");
     }
   };
 
-  const emptyMessage = type === "category"
-    ? t("admin.taxonomy.noCategories")
-    : t("admin.taxonomy.noTags");
+  const emptyMessage = type === "category" ? "暂无分类" : "暂无标签";
 
   /** Show enriched post stats (total / published / draft) when available, otherwise fall back to post_count. */
   const hasStats = type === "category" && orderedItems.some((i) => i.total_posts !== undefined);
@@ -195,13 +189,13 @@ export function TaxonomyManager({
           body: JSON.stringify({ ids: reordered.map((i) => i.id) }),
         });
         if (!res.ok) throw new Error("Failed to save order");
-        toast.success(t("admin.taxonomy.reorderSaved"));
+        toast.success("排序已保存");
       } catch {
         setOrderedItems(previous);
-        toast.error(t("admin.taxonomy.unknownError"));
+        toast.error("未知错误");
       }
     },
-    [orderedItems, apiBase, t],
+    [orderedItems, apiBase],
   );
 
   // ---------------------------------------------------------------------------
@@ -245,7 +239,7 @@ export function TaxonomyManager({
       </td>
       <td className="px-4 py-3 text-center text-muted-foreground">
         {hasStats ? (
-          <span title={`${t("admin.taxonomy.statsPublished")}: ${item.published_posts ?? 0}, ${t("admin.taxonomy.statsDraft")}: ${item.draft_posts ?? 0}`}>
+          <span title={`已发布: ${item.published_posts ?? 0}, 草稿: ${item.draft_posts ?? 0}`}>
             {item.total_posts ?? 0}
             <span className="text-xs text-muted-foreground/60 ml-1">
               ({item.published_posts ?? 0}/{item.draft_posts ?? 0})
@@ -263,7 +257,7 @@ export function TaxonomyManager({
               className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.5} />
-              {t("admin.taxonomy.viewAll")}
+              查看全部
             </Link>
           )}
           <button
@@ -271,14 +265,14 @@ export function TaxonomyManager({
             className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
-            {t("admin.taxonomy.edit")}
+            编辑
           </button>
           <button
             onClick={() => setDeleteTarget(item)}
             className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
           >
             <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
-            {t("admin.taxonomy.delete")}
+            删除
           </button>
         </div>
       </td>
@@ -303,7 +297,7 @@ export function TaxonomyManager({
           onClick={startCreate}
           className="inline-flex items-center gap-2 rounded-[var(--radius-widget)] bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
-          {t("admin.taxonomy.newItem", { label })}
+          {`新建${label}`}
         </button>
       )}
 
@@ -311,21 +305,21 @@ export function TaxonomyManager({
       {(creating || editing) && (
         <div className="rounded-[var(--radius-widget)] border border-border bg-secondary/50 p-4 space-y-3">
           <h3 className="text-sm font-medium text-foreground">
-            {editing ? t("admin.taxonomy.editItem", { label }) : t("admin.taxonomy.newItem", { label })}
+            {editing ? `编辑${label}` : `新建${label}`}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={t("admin.taxonomy.name")}
+              placeholder="名称"
               className="rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <input
               type="text"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
-              placeholder={t("admin.taxonomy.slug")}
+              placeholder="别名"
               className="rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
@@ -333,7 +327,7 @@ export function TaxonomyManager({
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder={t("admin.taxonomy.description")}
+            placeholder="描述（可选）"
             className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <div className="flex gap-2">
@@ -342,13 +336,13 @@ export function TaxonomyManager({
               disabled={saving}
               className="inline-flex items-center rounded-[var(--radius-widget)] bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
-              {saving ? t("admin.taxonomy.saving") : t("admin.taxonomy.save")}
+              {saving ? "保存中..." : "保存"}
             </button>
             <button
               onClick={resetForm}
               className="inline-flex items-center rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent"
             >
-              {t("admin.taxonomy.cancel")}
+              取消
             </button>
           </div>
         </div>
@@ -363,19 +357,19 @@ export function TaxonomyManager({
                 <th className="w-16 pl-2 pr-0 py-3" />
               )}
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                {t("admin.taxonomy.table.name")}
+                名称
               </th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
-                {t("admin.taxonomy.table.slug")}
+                别名
               </th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
-                {t("admin.taxonomy.table.description")}
+                描述
               </th>
               <th className="px-4 py-3 text-center font-medium text-muted-foreground">
-                {t("admin.taxonomy.table.posts")}
+                文章数
               </th>
               <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                {t("admin.taxonomy.table.actions")}
+                操作
               </th>
             </tr>
           </thead>
@@ -404,11 +398,11 @@ export function TaxonomyManager({
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-        title={deleteTarget ? t("admin.taxonomy.confirmDelete", { type: label, name: deleteTarget.name }) : ""}
+        title={deleteTarget ? `确认删除${label}「${deleteTarget.name}」？此操作不可撤销。` : ""}
         description=""
         destructive
-        confirmLabel={t("admin.confirm.delete")}
-        cancelLabel={t("admin.confirm.cancel")}
+        confirmLabel="删除"
+        cancelLabel="取消"
         onConfirm={() => { if (deleteTarget) handleDelete(deleteTarget); }}
       />
     </div>

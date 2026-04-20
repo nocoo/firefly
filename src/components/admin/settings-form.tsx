@@ -1,13 +1,10 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { useLocale } from "@/i18n/context";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import type { SiteSettings, FontStyle } from "@/data/settings";
-import type { Locale } from "@/i18n/translations";
 
 interface SettingsFormProps {
   settings: SiteSettings;
@@ -21,8 +18,6 @@ const internalUrls = [
 ];
 
 export function SettingsForm({ settings }: SettingsFormProps) {
-  const { t } = useLocale();
-  const [locale, setLocale] = useState<Locale>(settings.locale);
   const [postsPerPage, setPostsPerPage] = useState(String(settings.postsPerPage));
   const [commentsEnabled, setCommentsEnabled] = useState(settings.commentsEnabled);
   const [fontStyle, setFontStyle] = useState<FontStyle>(settings.fontStyle);
@@ -53,7 +48,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
     try {
       const n = Number(postsPerPage);
       if (Number.isNaN(n) || !Number.isInteger(n) || n < 1 || n > 100) {
-        setMessage({ type: "error", text: t("admin.settings.invalidPostsPerPage") });
+        setMessage({ type: "error", text: "每页文章数必须为 1 到 100 之间的整数。" });
         setSaving(false);
         return;
       }
@@ -62,7 +57,6 @@ export function SettingsForm({ settings }: SettingsFormProps) {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          locale,
           postsPerPage: n,
           commentsEnabled,
           fontStyle,
@@ -71,14 +65,14 @@ export function SettingsForm({ settings }: SettingsFormProps) {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? t("admin.settings.saveFailed"));
+        throw new Error(data.error ?? "保存设置失败。");
       }
 
-      setMessage({ type: "success", text: t("admin.settings.saved") });
+      setMessage({ type: "success", text: "设置已保存。" });
     } catch (error) {
       setMessage({
         type: "error",
-        text: error instanceof Error ? error.message : t("admin.settings.saveFailed"),
+        text: error instanceof Error ? error.message : "保存设置失败。",
       });
     } finally {
       setSaving(false);
@@ -90,34 +84,16 @@ export function SettingsForm({ settings }: SettingsFormProps) {
       {/* Card 1: Display Settings */}
       <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-5">
         <h2 className="text-base font-medium text-foreground">
-          {t("admin.settings.displaySettings")}
+          显示设置
         </h2>
-
-        {/* Locale */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">
-            {t("admin.settings.locale")}
-          </label>
-          <p className="text-xs text-muted-foreground">
-            {t("admin.settings.localeHint")}
-          </p>
-          <Select
-            value={locale}
-            onChange={(e) => setLocale(e.target.value as Locale)}
-            className="max-w-xs"
-          >
-            <option value="zh">中文</option>
-            <option value="en">English</option>
-          </Select>
-        </div>
 
         {/* Posts per page */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">
-            {t("admin.settings.postsPerPage")}
+            每页文章数
           </label>
           <p className="text-xs text-muted-foreground">
-            {t("admin.settings.postsPerPageHint")}
+            每页显示的文章数量（1–100）。
           </p>
           <Input
             type="number"
@@ -132,17 +108,17 @@ export function SettingsForm({ settings }: SettingsFormProps) {
         {/* Font style */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">
-            {t("admin.settings.fontStyle")}
+            正文字体风格
           </label>
           <p className="text-xs text-muted-foreground">
-            {t("admin.settings.fontStyleHint")}
+            博客正文的排版风格。苹方：全苹方（默认）；经典：宋体正文 + 楷体标题；衬线：全宋体；无衬线：全黑体。
           </p>
           <SegmentedControl
             options={[
-              { value: "pingfang", label: t("admin.settings.fontStylePingfang") },
-              { value: "classic", label: t("admin.settings.fontStyleClassic") },
-              { value: "serif", label: t("admin.settings.fontStyleSerif") },
-              { value: "sans", label: t("admin.settings.fontStyleSans") },
+              { value: "pingfang", label: "苹方" },
+              { value: "classic", label: "经典" },
+              { value: "serif", label: "衬线" },
+              { value: "sans", label: "无衬线" },
             ]}
             value={fontStyle}
             onChange={(v) => setFontStyle(v as FontStyle)}
@@ -153,21 +129,21 @@ export function SettingsForm({ settings }: SettingsFormProps) {
       {/* Card 2: Content Settings */}
       <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-5">
         <h2 className="text-base font-medium text-foreground">
-          {t("admin.settings.contentSettings")}
+          内容设置
         </h2>
 
         {/* Comments enabled */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">
-            {t("admin.settings.commentsEnabled")}
+            评论功能
           </label>
           <p className="text-xs text-muted-foreground">
-            {t("admin.settings.commentsEnabledHint")}
+            全局评论开关。关闭后所有文章的评论区都将隐藏。
           </p>
           <SegmentedControl
             options={[
-              { value: "on", label: t("admin.settings.commentsOn") },
-              { value: "off", label: t("admin.settings.commentsOff") },
+              { value: "on", label: "开启" },
+              { value: "off", label: "关闭" },
             ]}
             value={commentsEnabled ? "on" : "off"}
             onChange={(v) => setCommentsEnabled(v === "on")}
@@ -179,10 +155,10 @@ export function SettingsForm({ settings }: SettingsFormProps) {
       <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-4">
         <div>
           <h2 className="text-base font-medium text-foreground">
-            {t("admin.settings.internalUrls")}
+            内部功能链接
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            {t("admin.settings.internalUrlsHint")}
+            这些链接可用于提交搜索引擎或订阅 RSS。点击复制按钮快速复制。
           </p>
         </div>
         <div className="space-y-2">
@@ -204,7 +180,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
                   type="button"
                   onClick={() => copyUrl(fullUrl)}
                   className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
-                  title={t("admin.upload.copyUrl")}
+                  title="复制链接"
                 >
                   {isCopied ? (
                     <svg className="h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,7 +225,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
         disabled={saving}
         onClick={handleSave}
       >
-        {saving ? t("admin.settings.saving") : t("admin.settings.save")}
+        {saving ? "保存中..." : "保存设置"}
       </Button>
     </div>
   );

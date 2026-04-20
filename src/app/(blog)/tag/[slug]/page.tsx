@@ -8,8 +8,6 @@ import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { buildPageMeta, SITE_URL, postPath } from "@/lib/seo";
 import { collectionPageJsonLd } from "@/lib/jsonld";
-import { getLocale } from "@/i18n/server";
-import { t } from "@/i18n/translations";
 import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
 import { EmptyState } from "@/components/blog/empty-state";
 import { Tag } from "lucide-react";
@@ -25,16 +23,14 @@ export async function generateMetadata({
   const { slug } = await params;
   const db = getDb();
   const tag = await getTagBySlug(db, slug);
-  const locale = await getLocale();
 
   if (!tag) return { title: "Not Found" };
 
   const settings = await getSiteSettings(db);
   const meta = buildPageMeta({
     title: `#${tag.name}`,
-    description: t(locale, "blog.tag.metaDescription", { name: tag.name }),
+    description: `标签为 ${tag.name} 的文章`,
     path: `/tag/${tag.slug}`,
-    locale,
   }, settings);
 
   // Thin-content tags: noindex to avoid low-quality pages in search index
@@ -47,7 +43,6 @@ export async function generateMetadata({
 
 export default async function TagPage({ params }: TagPageProps) {
   const { slug } = await params;
-  const locale = await getLocale();
 
   const db = getDb();
   const tag = await getTagBySlug(db, slug);
@@ -78,7 +73,6 @@ export default async function TagPage({ params }: TagPageProps) {
               url: `${SITE_URL}${postPath(p.slug, p.published_at)}`,
               name: p.title,
             })),
-            locale,
           ),
         }}
       />
@@ -88,19 +82,18 @@ export default async function TagPage({ params }: TagPageProps) {
           #{tag.name}
         </h1>
         <p className="mt-1 text-xs text-blog-muted">
-          {t(locale, "blog.category.postCount", { n: tag.post_count })}
+          {`${tag.post_count} 篇文章`}
         </p>
       </header>
 
       <section>
         {posts.length === 0 ? (
-          <EmptyState icon={Tag} message={t(locale, "blog.tag.noPosts")} />
+          <EmptyState icon={Tag} message="该标签下暂无文章。" />
         ) : (
           posts.map((post, i) => (
             <PostCard
               key={post.id}
               post={post}
-              locale={locale}
               author={getPostAuthor(post, settings)}
               priority={i === 0 && !!post.featured_image}
             />
@@ -112,7 +105,6 @@ export default async function TagPage({ params }: TagPageProps) {
         currentPage={1}
         totalPages={totalPages}
         basePath={`/tag/${slug}`}
-        locale={locale}
       />
     </>
   );

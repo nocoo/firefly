@@ -25,7 +25,6 @@ import {
   PieChart,
   Pie,
 } from "recharts";
-import { useLocale } from "@/i18n/context";
 import { useSetPageSubtitle } from "@/components/admin/page-subtitle-context";
 
 // ---------------------------------------------------------------------------
@@ -126,13 +125,12 @@ const COLORS = [
 // ---------------------------------------------------------------------------
 
 export function SystemMonitorDashboard() {
-  const { t } = useLocale();
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
 
-  useSetPageSubtitle(t("admin.system.subtitle"));
+  useSetPageSubtitle("性能与缓存监控");
 
   const formatTimeAgo = useCallback(
     (timestamp: number): string => {
@@ -140,12 +138,12 @@ export function SystemMonitorDashboard() {
       const mins = Math.floor(diff / 60000);
       const hours = Math.floor(diff / 3600000);
       const days = Math.floor(diff / 86400000);
-      if (days > 0) return t("admin.system.timeAgo.days", { n: days });
-      if (hours > 0) return t("admin.system.timeAgo.hours", { n: hours });
-      if (mins > 0) return t("admin.system.timeAgo.minutes", { n: mins });
-      return t("admin.system.timeAgo.justNow");
+      if (days > 0) return `${days}天前`;
+      if (hours > 0) return `${hours}小时前`;
+      if (mins > 0) return `${mins}分钟前`;
+      return "刚刚";
     },
-    [t],
+    [],
   );
 
   const fetchStats = useCallback(async () => {
@@ -226,14 +224,14 @@ export function SystemMonitorDashboard() {
       {/* Header with refresh button */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          {lastUpdated && t("admin.system.lastUpdated", { time: formatTimeAgo(lastUpdated) })}
+          {lastUpdated && `上次更新：${formatTimeAgo(lastUpdated)}`}
         </div>
         <button
           onClick={fetchStats}
           className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-secondary transition-colors"
         >
           <RefreshCw className="h-4 w-4" />
-          {t("admin.system.refresh")}
+          刷新
         </button>
       </div>
 
@@ -241,34 +239,31 @@ export function SystemMonitorDashboard() {
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={HardDrive}
-          label={t("admin.system.heapUsed")}
+          label="堆内存使用"
           value={`${memory.current.heapUsedMB} MB`}
-          subtext={t("admin.system.heapPercent", {
-            percent: Math.round((memory.current.heapUsedMB / memory.current.heapTotalMB) * 100),
-            total: memory.current.heapTotalMB,
-          })}
+          subtext={`占比 ${Math.round((memory.current.heapUsedMB / memory.current.heapTotalMB) * 100)}%，共 ${memory.current.heapTotalMB} MB`}
           trend={memory.current.heapUsedMB > memory.summary.avgHeapMB ? "up" : "down"}
           index={0}
         />
         <StatCard
           icon={Cpu}
-          label={t("admin.system.rss")}
+          label="RSS（总内存）"
           value={`${memory.current.rssMB} MB`}
-          subtext={t("admin.system.rssDesc")}
+          subtext="进程总内存"
           index={1}
         />
         <StatCard
           icon={TrendingUp}
-          label={t("admin.system.peakAvg")}
+          label="峰值 / 平均"
           value={`${memory.summary.peakHeapMB} MB`}
-          subtext={t("admin.system.avgLabel", { value: memory.summary.avgHeapMB })}
+          subtext={`平均：${memory.summary.avgHeapMB} MB`}
           index={2}
         />
         <StatCard
           icon={Clock}
-          label={t("admin.system.uptime")}
+          label="运行时间"
           value={formatUptime(memory.summary.uptimeSeconds)}
-          subtext={t("admin.system.samples", { count: memory.summary.sampleCount })}
+          subtext={`已采集 ${memory.summary.sampleCount} 个样本`}
           index={3}
         />
       </div>
@@ -278,7 +273,7 @@ export function SystemMonitorDashboard() {
         <div className="border-b border-border/50 px-6 py-4">
           <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
             <Activity className="h-4 w-4" />
-            {t("admin.system.memoryTrend")}
+            内存使用趋势（48小时）
           </h3>
         </div>
         <div className="p-6">
@@ -322,7 +317,7 @@ export function SystemMonitorDashboard() {
                       labelFormatter={(_, payload) => payload[0]?.payload?.fullTime ?? ""}
                       formatter={(value, name) => [
                         `${value} MB`,
-                        name === "heap" ? t("admin.system.heapLabel") : t("admin.system.rssLabel"),
+                        name === "heap" ? "堆内存" : "RSS（总内存）",
                       ]}
                     />
                     <Area
@@ -348,20 +343,20 @@ export function SystemMonitorDashboard() {
                     className="h-3 w-3 rounded-full"
                     style={{ backgroundColor: COLORS[0] }}
                   />
-                  {t("admin.system.heapLabel")}
+                  堆内存
                 </span>
                 <span className="flex items-center gap-2">
                   <span
                     className="h-3 w-3 rounded-full"
                     style={{ backgroundColor: COLORS[1] }}
                   />
-                  {t("admin.system.rssLabel")}
+                  RSS（总内存）
                 </span>
               </div>
             </>
           ) : (
             <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-              {t("admin.system.samples", { count: memory.summary.sampleCount })}
+              {`已采集 ${memory.summary.sampleCount} 个样本`}
             </div>
           )}
         </div>
@@ -374,31 +369,31 @@ export function SystemMonitorDashboard() {
           <div className="border-b border-border/50 px-6 py-4">
             <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
               <Database className="h-4 w-4" />
-              {t("admin.system.cacheOverview")}
+              Next.js 缓存概览
             </h3>
           </div>
           <div className="p-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">{t("admin.system.totalEntries")}</div>
+                <div className="text-xs text-muted-foreground">缓存条目数</div>
                 <div className="text-2xl font-semibold tabular-nums">
                   {cache.totalEntries}
                 </div>
               </div>
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">{t("admin.system.totalSize")}</div>
+                <div className="text-xs text-muted-foreground">缓存总大小</div>
                 <div className="text-2xl font-semibold tabular-nums">
                   {formatBytes(cache.totalSizeBytes)}
                 </div>
               </div>
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">{t("admin.system.oldestEntry")}</div>
+                <div className="text-xs text-muted-foreground">最早条目</div>
                 <div className="text-sm">
                   {cache.oldestEntry ? formatTimeAgo(cache.oldestEntry) : "—"}
                 </div>
               </div>
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">{t("admin.system.newestEntry")}</div>
+                <div className="text-xs text-muted-foreground">最新条目</div>
                 <div className="text-sm">
                   {cache.newestEntry ? formatTimeAgo(cache.newestEntry) : "—"}
                 </div>
@@ -409,7 +404,7 @@ export function SystemMonitorDashboard() {
             {cacheKindData.length > 0 && (
               <div className="mt-6">
                 <div className="text-xs text-muted-foreground mb-2">
-                  {t("admin.system.entriesByType")}
+                  按类型分布
                 </div>
                 <div className="h-48">
                   <ResponsiveContainer width="100%" height="100%">
@@ -448,7 +443,7 @@ export function SystemMonitorDashboard() {
           <div className="border-b border-border/50 px-6 py-4">
             <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
               <Layers className="h-4 w-4" />
-              {t("admin.system.cacheSizeByType")}
+              缓存大小分布
             </h3>
           </div>
           <div className="p-6">
@@ -481,7 +476,7 @@ export function SystemMonitorDashboard() {
                       }}
                       formatter={(_, __, props) => [
                         props.payload.sizeLabel,
-                        t("admin.system.colSize"),
+                        "大小",
                       ]}
                     />
                     <Bar dataKey="sizeMB" radius={[0, 4, 4, 0]}>
@@ -497,7 +492,7 @@ export function SystemMonitorDashboard() {
               </div>
             ) : (
               <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-                {t("admin.system.noCacheEntries")}
+                暂无缓存条目
               </div>
             )}
           </div>
@@ -510,19 +505,19 @@ export function SystemMonitorDashboard() {
           <div className="border-b border-border/50 px-6 py-4">
             <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
               <Database className="h-4 w-4" />
-              {t("admin.system.topCacheEntries")}
+              缓存条目排行（按大小）
             </h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="px-6 py-3 text-left font-medium">{t("admin.system.colKey")}</th>
-                  <th className="px-4 py-3 text-left font-medium">{t("admin.system.colKind")}</th>
-                  <th className="px-4 py-3 text-right font-medium">{t("admin.system.colSize")}</th>
-                  <th className="px-4 py-3 text-right font-medium">{t("admin.system.colAccesses")}</th>
-                  <th className="px-4 py-3 text-right font-medium">{t("admin.system.colLastAccess")}</th>
-                  <th className="px-4 py-3 text-left font-medium">{t("admin.system.colTags")}</th>
+                  <th className="px-6 py-3 text-left font-medium">键</th>
+                  <th className="px-4 py-3 text-left font-medium">类型</th>
+                  <th className="px-4 py-3 text-right font-medium">大小</th>
+                  <th className="px-4 py-3 text-right font-medium">访问次数</th>
+                  <th className="px-4 py-3 text-right font-medium">最后访问</th>
+                  <th className="px-4 py-3 text-left font-medium">标签</th>
                 </tr>
               </thead>
               <tbody>
@@ -575,7 +570,7 @@ export function SystemMonitorDashboard() {
       )}
 
       {/* Memory Recommendation */}
-      <MemoryRecommendation memory={memory} cache={cache} t={t} />
+      <MemoryRecommendation memory={memory} cache={cache} />
     </div>
   );
 }
@@ -628,11 +623,9 @@ function StatCard({
 function MemoryRecommendation({
   memory,
   cache,
-  t,
 }: {
   memory: SystemStats["memory"];
   cache: CacheStats;
-  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const heapPercent = (memory.current.heapUsedMB / memory.current.heapTotalMB) * 100;
   const rssGB = memory.current.rssMB / 1024;
@@ -644,10 +637,10 @@ function MemoryRecommendation({
   // Check heap usage
   if (heapPercent > 85) {
     status = "critical";
-    recommendations.push(t("admin.system.heapHigh"));
+    recommendations.push("堆内存使用率过高（>85%）。建议减少缓存或增加内存限制。");
   } else if (heapPercent > 70) {
     status = "warning";
-    recommendations.push(t("admin.system.heapWarning"));
+    recommendations.push("堆内存使用率偏高（>70%）。请持续关注内存压力。");
   }
 
   // Check RSS vs container limit (assume 4GB based on Railway config)
@@ -655,31 +648,25 @@ function MemoryRecommendation({
   if (rssGB > containerLimitGB * 0.8) {
     status = "critical";
     recommendations.push(
-      t("admin.system.rssHigh", {
-        value: rssGB.toFixed(1),
-        limit: containerLimitGB,
-      }),
+      `RSS（${rssGB.toFixed(1)}GB）接近容器限制（${containerLimitGB}GB）。存在 OOM 风险。`,
     );
   } else if (rssGB > containerLimitGB * 0.6) {
     if (status !== "critical") status = "warning";
     recommendations.push(
-      t("admin.system.rssWarning", {
-        value: rssGB.toFixed(1),
-        percent: Math.round((rssGB / containerLimitGB) * 100),
-      }),
+      `RSS（${rssGB.toFixed(1)}GB）已达容器限制的 ${Math.round((rssGB / containerLimitGB) * 100)}%。`,
     );
   }
 
   // Check cache size
   if (cacheGB > 0.5) {
     recommendations.push(
-      t("admin.system.cacheHint", { size: formatBytes(cache.totalSizeBytes) }),
+      `缓存占用 ${formatBytes(cache.totalSizeBytes)}。可考虑在 next.config.js 中设置 cacheMaxMemorySize。`,
     );
   }
 
   // Healthy status
   if (recommendations.length === 0) {
-    recommendations.push(t("admin.system.healthy"));
+    recommendations.push("内存使用正常，无需立即处理。");
   }
 
   const bgColor = {
@@ -698,7 +685,7 @@ function MemoryRecommendation({
     <div className={`rounded-[var(--radius-widget)] p-6 ${bgColor}`}>
       <h3 className={`flex items-center gap-2 text-sm font-medium ${textColor}`}>
         <Activity className="h-4 w-4" />
-        {t("admin.system.memoryAssessment")}
+        内存评估
       </h3>
       <ul className="mt-3 space-y-1.5 text-sm">
         {recommendations.map((rec, i) => (

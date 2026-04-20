@@ -21,7 +21,6 @@ import {
   H_BAR_MARGIN,
 } from "./chart-helpers";
 import { DashboardResponsiveContainer } from "./responsive-container";
-import { useLocale } from "@/i18n/context";
 
 interface HumanTabProps {
   data: HumanDetailResponse;
@@ -93,8 +92,6 @@ function BarTooltip({
 // ---------------------------------------------------------------------------
 
 export function HumanTab({ data }: HumanTabProps) {
-  const { t } = useLocale();
-
   // Pre-compute donut data with fill + percent
   const deviceTotal = data.devices.reduce((s, d) => s + d.count, 0);
   const donutData = data.devices.map((d, i) => ({
@@ -109,7 +106,7 @@ export function HumanTab({ data }: HumanTabProps) {
       {/* Recent 24h banner */}
       <div className="rounded-[var(--radius-widget)] bg-secondary p-3 text-center">
         <span className="text-sm text-muted-foreground">
-          {t("admin.analytics.recent24h")}:
+          近 24 小时:
         </span>{" "}
         <span className="text-lg font-semibold font-display tabular-nums">
           {formatNumber(data.recent24h)}
@@ -118,7 +115,7 @@ export function HumanTab({ data }: HumanTabProps) {
 
       {/* Two-column: Top Pages + Referrers */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Panel title={t("admin.analytics.topPages")}>
+        <Panel title="热门页面">
           <RankedTable
             rows={data.topPages.map((p) => {
               const row: { label: string; value: number; muted?: boolean; href?: string } = {
@@ -129,13 +126,13 @@ export function HumanTab({ data }: HumanTabProps) {
               if (p.isPost) row.href = p.path;
               return row;
             })}
-            valueLabel={t("admin.analytics.tableViews")}
-            nameLabel={t("admin.analytics.tablePage")}
-            noData={t("admin.analytics.noData")}
+            valueLabel="浏览量"
+            nameLabel="页面"
+            noData="暂无数据"
           />
         </Panel>
 
-        <Panel title={t("admin.analytics.topReferrers")}>
+        <Panel title="热门来源">
           <RankedTable
             rows={data.topReferrers
               .filter((r) => r.referrer.trim() !== "")
@@ -143,18 +140,18 @@ export function HumanTab({ data }: HumanTabProps) {
                 label: formatReferrer(r.referrer),
                 value: r.views,
               }))}
-            valueLabel={t("admin.analytics.tableViews")}
-            nameLabel={t("admin.analytics.tableReferrer")}
-            noData={t("admin.analytics.noData")}
+            valueLabel="浏览量"
+            nameLabel="来源"
+            noData="暂无数据"
           />
         </Panel>
       </div>
 
       {/* 2x2 grid: Devices, Browsers, OS, Countries */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Panel title={t("admin.analytics.devices")}>
+        <Panel title="设备">
           {donutData.length === 0 ? (
-            <NoData text={t("admin.analytics.noData")} />
+            <NoData text="暂无数据" />
           ) : (
             <div className="flex flex-col items-center">
               <div className="h-[160px] w-full max-w-[200px]">
@@ -203,9 +200,9 @@ export function HumanTab({ data }: HumanTabProps) {
           )}
         </Panel>
 
-        <Panel title={t("admin.analytics.browsers")}>
+        <Panel title="浏览器">
           {data.browsers.length === 0 ? (
-            <NoData text={t("admin.analytics.noData")} />
+            <NoData text="暂无数据" />
           ) : (
             <HorizontalBarList
               data={data.browsers.map((b) => ({
@@ -217,9 +214,9 @@ export function HumanTab({ data }: HumanTabProps) {
           )}
         </Panel>
 
-        <Panel title={t("admin.analytics.os")}>
+        <Panel title="操作系统">
           {data.os.length === 0 ? (
-            <NoData text={t("admin.analytics.noData")} />
+            <NoData text="暂无数据" />
           ) : (
             <HorizontalBarList
               data={data.os.map((o) => ({
@@ -231,9 +228,9 @@ export function HumanTab({ data }: HumanTabProps) {
           )}
         </Panel>
 
-        <Panel title={t("admin.analytics.countries")}>
+        <Panel title="国家">
           {data.countries.length === 0 ? (
-            <NoData text={t("admin.analytics.noData")} />
+            <NoData text="暂无数据" />
           ) : (
             <HorizontalBarList
               data={data.countries.map((c) => ({

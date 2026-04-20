@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
-import { SITE_URL, ogLocale, htmlLang } from "@/lib/seo";
-import { getLocale } from "@/i18n/server";
-import { LocaleProvider } from "@/i18n/context";
+import { SITE_URL, OG_LOCALE, HTML_LANG } from "@/lib/seo";
 import { getDb } from "@/lib/db";
 import { getSiteSettings } from "@/data/settings";
 import "./globals.css";
@@ -16,12 +14,7 @@ export const revalidate = 300;
 
 export async function generateMetadata(): Promise<Metadata> {
   const db = getDb();
-  const [locale, settings] = await Promise.all([
-    getLocale(),
-    getSiteSettings(db),
-  ]);
-  const og = ogLocale(locale);
-  const lang = htmlLang(locale);
+  const settings = await getSiteSettings(db);
   const fullTitle = settings.siteTagline
     ? `${settings.siteName} – ${settings.siteTagline}`
     : settings.siteName;
@@ -54,14 +47,14 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     alternates: {
       canonical: SITE_URL,
-      languages: { [lang]: SITE_URL },
+      languages: { [HTML_LANG]: SITE_URL },
       types: {
         "application/rss+xml": "/feed.xml",
       },
     },
     openGraph: {
       type: "website",
-      locale: og,
+      locale: OG_LOCALE,
       url: SITE_URL,
       siteName: settings.siteName,
       title: fullTitle,
@@ -87,14 +80,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const db = getDb();
-  const [locale, settings] = await Promise.all([
-    getLocale(),
-    getSiteSettings(db),
-  ]);
+  const settings = await getSiteSettings(db);
 
   return (
     <html
-      lang={htmlLang(locale)}
+      lang={HTML_LANG}
       data-font-style={settings.fontStyle}
       suppressHydrationWarning
     >
@@ -109,9 +99,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <LocaleProvider locale={locale}>
-            {children}
-          </LocaleProvider>
+          {children}
         </ThemeProvider>
       </body>
     </html>

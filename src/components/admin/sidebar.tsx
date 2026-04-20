@@ -27,54 +27,53 @@ import {
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IconButton } from "@/components/ui/icon-button";
-import { useLocale } from "@/i18n/context";
 import { useCommandPalette } from "@/components/admin/command-palette";
 
 // ── Navigation data model ──
 
 interface NavItem {
-  titleKey: string;
+  title: string;
   href: string;
   icon: React.ElementType;
   external?: boolean;
 }
 
 interface NavGroup {
-  labelKey: string;
+  label: string;
   items: NavItem[];
   defaultOpen?: boolean;
 }
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    labelKey: "admin.nav.overview",
+    label: "概览",
     defaultOpen: true,
     items: [
-      { titleKey: "admin.nav.dashboard", href: "/admin", icon: LayoutDashboard },
-      { titleKey: "admin.nav.systemMonitor", href: "/admin/system", icon: Activity },
-      { titleKey: "admin.sidebar.visitSite", href: "/", icon: ExternalLink, external: true },
+      { title: "仪表盘", href: "/admin", icon: LayoutDashboard },
+      { title: "系统监控", href: "/admin/system", icon: Activity },
+      { title: "访问站点", href: "/", icon: ExternalLink, external: true },
     ],
   },
   {
-    labelKey: "admin.nav.content",
+    label: "内容",
     defaultOpen: true,
     items: [
-      { titleKey: "admin.nav.posts", href: "/admin/posts", icon: FileText },
-      { titleKey: "admin.nav.categories", href: "/admin/categories", icon: FolderOpen },
-      { titleKey: "admin.nav.tags", href: "/admin/tags", icon: Tags },
-      { titleKey: "admin.nav.media", href: "/admin/media", icon: Image },
+      { title: "文章", href: "/admin/posts", icon: FileText },
+      { title: "分类", href: "/admin/categories", icon: FolderOpen },
+      { title: "标签", href: "/admin/tags", icon: Tags },
+      { title: "媒体库", href: "/admin/media", icon: Image },
     ],
   },
   {
-    labelKey: "admin.nav.system",
+    label: "系统",
     defaultOpen: true,
     items: [
-      { titleKey: "admin.nav.settings", href: "/admin/settings", icon: Settings },
-      { titleKey: "admin.nav.siteIdentity", href: "/admin/site-identity", icon: Fingerprint },
-      { titleKey: "admin.nav.aiSettings", href: "/admin/ai-settings", icon: Bot },
-      { titleKey: "admin.nav.aiAgents", href: "/admin/ai-agents", icon: Users },
-      { titleKey: "admin.nav.mcpTokens", href: "/admin/mcp", icon: KeyRound },
-      { titleKey: "admin.nav.backup", href: "/admin/backup", icon: CloudUpload },
+      { title: "通用设置", href: "/admin/settings", icon: Settings },
+      { title: "站点身份", href: "/admin/site-identity", icon: Fingerprint },
+      { title: "AI 设置", href: "/admin/ai-settings", icon: Bot },
+      { title: "AI 代理", href: "/admin/ai-agents", icon: Users },
+      { title: "MCP 令牌", href: "/admin/mcp", icon: KeyRound },
+      { title: "备份", href: "/admin/backup", icon: CloudUpload },
     ],
   },
 ];
@@ -91,7 +90,6 @@ function NavGroupSection({
   isActive: (href: string) => boolean;
 }) {
   const [open, setOpen] = useState(group.defaultOpen ?? true);
-  const { t } = useLocale();
 
   return (
     <div className="mt-2">
@@ -100,7 +98,7 @@ function NavGroupSection({
         className="flex w-full items-center justify-between px-3 py-2.5"
       >
         <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground/70">
-          {t(group.labelKey)}
+          {group.label}
         </span>
         <span className="flex h-7 w-7 shrink-0 items-center justify-center">
           <ChevronUp
@@ -137,7 +135,7 @@ function NavGroupSection({
                   className={className}
                 >
                   <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-                  <span>{t(item.titleKey)}</span>
+                  <span>{item.title}</span>
                 </a>
               ) : (
                 <Link
@@ -146,7 +144,7 @@ function NavGroupSection({
                   className={className}
                 >
                   <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-                  <span>{t(item.titleKey)}</span>
+                  <span>{item.title}</span>
                 </Link>
               );
             })}
@@ -171,7 +169,6 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
   const pathname = usePathname();
-  const { t } = useLocale();
   const { setOpen: openSearch } = useCommandPalette();
 
   const isActive = (href: string) => {
@@ -210,7 +207,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
           {/* Expand button */}
           <IconButton
             onClick={onToggle}
-            aria-label={t("admin.sidebar.expand")}
+            aria-label="展开侧边栏"
             size="lg"
             className="mb-2"
           >
@@ -224,7 +221,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
           {/* Search */}
           <button
             onClick={() => openSearch(true)}
-            title={t("admin.search.trigger")}
+            title="搜索"
             className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <Search className="h-4 w-4" strokeWidth={1.5} />
@@ -245,7 +242,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  title={t(item.titleKey)}
+                  title={item.title}
                   className={className}
                 >
                   <item.icon className="h-4 w-4" strokeWidth={1.5} />
@@ -254,7 +251,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  title={t(item.titleKey)}
+                  title={item.title}
                   className={className}
                 >
                   <item.icon className="h-4 w-4" strokeWidth={1.5} />
@@ -266,7 +263,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
           {/* User avatar */}
           <div className="py-3 flex justify-center w-full">
             <Avatar className="h-9 w-9">
-              {user.image && <AvatarImage src={user.image} alt={user.name ?? t("admin.sidebar.userFallback")} />}
+              {user.image && <AvatarImage src={user.image} alt={user.name ?? "用户"} />}
               <AvatarFallback className="text-xs">{initials}</AvatarFallback>
             </Avatar>
           </div>
@@ -286,7 +283,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
                   className="h-6 w-6"
                 />
                 <span className="text-lg font-bold tracking-tighter text-foreground">
-                  {t("admin.sidebar.firefly")}
+                  Firefly
                 </span>
                 <span className="rounded-md bg-secondary px-1.5 py-0.5 font-mono text-2xs font-medium text-muted-foreground leading-none">
                   v{APP_VERSION}
@@ -294,7 +291,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
               </div>
               <IconButton
                 onClick={onToggle}
-                aria-label={t("admin.sidebar.collapse")}
+                aria-label="收起侧边栏"
                 size="sm"
               >
                 <PanelLeft
@@ -313,7 +310,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-normal text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <Search className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-              <span className="flex-1 text-left">{t("admin.search.trigger")}</span>
+              <span className="flex-1 text-left">搜索</span>
               <kbd className="hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-border bg-background px-1.5 text-2xs font-medium text-muted-foreground">
                 ⌘K
               </kbd>
@@ -324,7 +321,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
           <nav className="flex-1 overflow-y-auto px-3 pt-1">
             {NAV_GROUPS.map((group) => (
               <NavGroupSection
-                key={group.labelKey}
+                key={group.label}
                 group={group}
                 isActive={isActive}
               />
@@ -335,12 +332,12 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
           <div className="px-4 py-3">
             <div className="flex items-center gap-3">
               <Avatar className="h-9 w-9 shrink-0">
-                {user.image && <AvatarImage src={user.image} alt={user.name ?? t("admin.sidebar.userFallback")} />}
+                {user.image && <AvatarImage src={user.image} alt={user.name ?? "用户"} />}
                 <AvatarFallback className="text-xs">{initials}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  {user.name ?? t("admin.sidebar.adminFallback")}
+                  {user.name ?? "管理员"}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
                   {user.email}
@@ -348,7 +345,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
               </div>
               <IconButton
                 onClick={() => signOut({ callbackUrl: "/login" })}
-                aria-label={t("admin.sidebar.signOut")}
+                aria-label="退出登录"
                 className="shrink-0"
               >
                 <LogOut

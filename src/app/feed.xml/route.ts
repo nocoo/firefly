@@ -2,8 +2,7 @@ import { getDb } from "@/lib/db";
 import { listPosts } from "@/data/entities/post";
 import { getSiteSettings } from "@/data/settings";
 import { renderMarkdown } from "@/models/markdown";
-import { SITE_URL, postPath, htmlLang } from "@/lib/seo";
-import { getLocale } from "@/i18n/server";
+import { SITE_URL, postPath, HTML_LANG } from "@/lib/seo";
 import { escapeXml } from "@/lib/xml";
 import { getPostAuthor } from "@/lib/ai-agent/author";
 import { createCache } from "@/lib/cache";
@@ -25,12 +24,11 @@ export async function GET() {
   }
 
   const db = getDb();
-  const [{ posts }, locale, settings] = await Promise.all([
+  const [{ posts }, settings] = await Promise.all([
     listPosts(db, {
       status: "published",
       pageSize: 50,
     }),
-    getLocale(),
     getSiteSettings(db),
   ]);
 
@@ -70,7 +68,7 @@ export async function GET() {
     <title>${escapeXml(settings.siteName)}</title>
     <link>${SITE_URL}</link>
     <description>${escapeXml(settings.siteDescription)}</description>
-    <language>${htmlLang(locale)}</language>
+    <language>${HTML_LANG}</language>
     ${managingEditor}
     <ttl>60</ttl>
     <atom:link href="${SITE_URL}/feed.xml" rel="self" type="application/rss+xml"/>

@@ -4,10 +4,8 @@ import { listPosts } from "@/data/entities/post";
 import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
-import { SITE_URL, ogLocale, htmlLang, postPath } from "@/lib/seo";
+import { SITE_URL, OG_LOCALE, HTML_LANG, postPath } from "@/lib/seo";
 import { websiteJsonLd, collectionPageJsonLd } from "@/lib/jsonld";
-import { getLocale } from "@/i18n/server";
-import { t } from "@/i18n/translations";
 import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
 import { EmptyState } from "@/components/blog/empty-state";
 import { FileText } from "lucide-react";
@@ -15,11 +13,7 @@ import { getPostAuthor } from "@/lib/ai-agent/author";
 
 export async function generateMetadata(): Promise<Metadata> {
   const db = getDb();
-  const [locale, settings] = await Promise.all([
-    getLocale(),
-    getSiteSettings(db),
-  ]);
-  const lang = htmlLang(locale);
+  const settings = await getSiteSettings(db);
 
   // Do NOT set a page-level title here — the root layout defines
   // title.default = "SiteName – Tagline" which is used automatically.
@@ -36,14 +30,14 @@ export async function generateMetadata(): Promise<Metadata> {
     description,
     alternates: {
       canonical: SITE_URL,
-      languages: { [lang]: SITE_URL },
+      languages: { [HTML_LANG]: SITE_URL },
     },
     openGraph: {
       title: fullTitle,
       description,
       url: SITE_URL,
       siteName: settings.siteName,
-      locale: ogLocale(locale),
+      locale: OG_LOCALE,
       type: "website",
     },
     twitter: {
@@ -57,8 +51,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
-  const locale = await getLocale();
-
   const db = getDb();
   const settings = await getSiteSettings(db);
   const { posts, total } = await listPosts(db, {
@@ -74,7 +66,7 @@ export default async function Home() {
       <ListOriginTracker />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: websiteJsonLd(settings, locale) }}
+        dangerouslySetInnerHTML={{ __html: websiteJsonLd(settings) }}
       />
       <script
         type="application/ld+json"
@@ -86,20 +78,18 @@ export default async function Home() {
               url: `${SITE_URL}${postPath(p.slug, p.published_at)}`,
               name: p.title,
             })),
-            locale,
           ),
         }}
       />
 
       <section>
         {posts.length === 0 ? (
-          <EmptyState icon={FileText} message={t(locale, "blog.home.noPosts")} />
+          <EmptyState icon={FileText} message="暂无文章。" />
         ) : (
           posts.map((post, i) => (
             <PostCard
               key={post.id}
               post={post}
-              locale={locale}
               author={getPostAuthor(post, settings)}
               priority={i === 0 && !!post.featured_image}
             />
@@ -111,7 +101,6 @@ export default async function Home() {
         currentPage={1}
         totalPages={totalPages}
         basePath="/"
-        locale={locale}
       />
     </>
   );

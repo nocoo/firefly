@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { AiAgentWithCategory, Category } from "@/models/types";
-import { useLocale } from "@/i18n/context";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,21 +39,19 @@ function DeleteAgentDialog({
   open,
   onOpenChange,
   onConfirm,
-  t,
 }: {
   agent: AgentWithAvatarUrl | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
-  t: (key: string) => string;
 }) {
   if (!agent) return null;
   return (
     <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={t("admin.aiAgents.deleteAgent")}
-      description={t("admin.aiAgents.deleteConfirm").replace("{name}", agent.name)}
+      title="删除代理"
+      description={`确定删除「${agent.name}」吗？此操作不可撤销。`}
       destructive
       onConfirm={onConfirm}
     />
@@ -99,13 +96,11 @@ export function NewAgentModal({
   agentId,
   prompt,
   onClose,
-  t,
 }: {
   agentName: string;
   agentId: string;
   prompt: string;
   onClose: () => void;
-  t: (key: string) => string;
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/50">
@@ -113,14 +108,14 @@ export function NewAgentModal({
         <div className="border-b border-border px-6 py-4">
           <h2 className="text-lg font-semibold text-foreground">{agentName}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {t("admin.aiAgents.agentCreated")}
+            代理创建成功！复制以下信息以连接。
           </p>
         </div>
         <div className="space-y-4 px-6 py-4">
           {/* Author ID */}
           <div>
             <label className="text-xs font-medium text-muted-foreground">
-              {t("admin.aiAgents.authorId")}
+              作者 ID
             </label>
             <div className="mt-1 flex items-center gap-2 rounded-md border border-border bg-secondary px-3 py-2">
               <code className="flex-1 text-xs font-mono text-foreground break-all select-all">
@@ -133,7 +128,7 @@ export function NewAgentModal({
           {/* Prompt */}
           <div>
             <label className="text-xs font-medium text-muted-foreground">
-              {t("admin.aiAgents.promptTitle")}
+              连接提示
             </label>
             <div className="mt-1 rounded-md border border-border bg-secondary">
               <div className="flex items-center justify-end px-3 py-1.5 border-b border-border">
@@ -147,7 +142,7 @@ export function NewAgentModal({
         </div>
         <div className="border-t border-border px-6 py-3 flex justify-end">
           <Button variant="default" onClick={onClose}>
-            {t("common.done")}
+            完成
           </Button>
         </div>
       </div>
@@ -164,13 +159,11 @@ function AgentRow({
   onEdit,
   onShowPrompt,
   onDelete,
-  t,
 }: {
   agent: AgentWithAvatarUrl;
   onEdit: () => void;
   onShowPrompt: () => void;
   onDelete: () => void;
-  t: (key: string) => string;
 }) {
   return (
     <tr className="border-b border-border last:border-0 hover:bg-accent/50 transition-colors">
@@ -219,14 +212,14 @@ function AgentRow({
           <button
             onClick={onEdit}
             className="p-1.5 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            title={t("admin.aiAgents.edit")}
+            title="编辑"
           >
             <Pencil className="h-4 w-4" />
           </button>
           <button
             onClick={onShowPrompt}
             className="p-1.5 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            title={t("admin.aiAgents.showPrompt")}
+            title="显示提示词"
           >
             <FileText className="h-4 w-4" />
           </button>
@@ -234,7 +227,7 @@ function AgentRow({
             <button
               onClick={onDelete}
               className="p-1.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-              title={t("admin.aiAgents.delete")}
+              title="删除"
             >
               <Trash2 className="h-4 w-4" />
             </button>
@@ -255,7 +248,6 @@ export function AiAgentsManager({
   mcpUrl,
 }: AiAgentsManagerProps) {
   const router = useRouter();
-  const { t } = useLocale();
   const [agents, setAgents] = useState(initialAgents);
   const [newAgent, setNewAgent] = useState<{
     agentName: string;
@@ -312,9 +304,9 @@ export function AiAgentsManager({
       });
       if (!res.ok) throw new Error("Failed to delete");
       setAgents((prev) => prev.filter((a) => a.id !== agent.id));
-      toast.success(t("admin.aiAgents.deleted"));
+      toast.success("代理已删除");
     } catch {
-      toast.error(t("admin.aiAgents.deleteFailed"));
+      toast.error("删除代理失败");
     }
   };
 
@@ -358,15 +350,15 @@ export function AiAgentsManager({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-foreground">
-            {t("admin.aiAgents.title")}
+            AI 代理作者
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {t("admin.aiAgents.subtitle")}
+            管理可发布内容的 AI 代理
           </p>
         </div>
         <Button onClick={handleCreate}>
           <Plus className="mr-2 h-4 w-4" />
-          {t("admin.aiAgents.create")}
+          创建代理
         </Button>
       </div>
 
@@ -375,11 +367,11 @@ export function AiAgentsManager({
         <div className="flex flex-col items-center justify-center rounded-[var(--radius-card)] bg-secondary py-12">
           <Users className="h-12 w-12 text-muted-foreground/50" />
           <p className="mt-4 text-sm text-muted-foreground">
-            {t("admin.aiAgents.empty")}
+            还没有 AI 代理。创建一个以允许 AI 发布内容。
           </p>
           <Button variant="outline" className="mt-4" onClick={handleCreate}>
             <Plus className="mr-2 h-4 w-4" />
-            {t("admin.aiAgents.create")}
+            创建代理
           </Button>
         </div>
       ) : (
@@ -388,16 +380,16 @@ export function AiAgentsManager({
             <thead>
               <tr className="border-b border-border">
                 <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
-                  {t("admin.aiAgents.name")}
+                  名称
                 </th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
-                  {t("admin.aiAgents.category")}
+                  绑定分类
                 </th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
                   Author ID
                 </th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
-                  {t("admin.aiAgents.posts")}
+                  文章数
                 </th>
                 <th className="px-4 py-2 w-24"></th>
               </tr>
@@ -410,7 +402,6 @@ export function AiAgentsManager({
                   onEdit={() => handleEdit(agent.id)}
                   onShowPrompt={() => handleShowPrompt(agent)}
                   onDelete={() => setConfirmDelete(agent)}
-                  t={t}
                 />
               ))}
             </tbody>
@@ -425,7 +416,6 @@ export function AiAgentsManager({
           agentId={newAgent.agentId}
           prompt={newAgent.prompt}
           onClose={() => setNewAgent(null)}
-          t={t}
         />
       )}
 
@@ -436,7 +426,6 @@ export function AiAgentsManager({
           agentId={showPromptFor.agentId}
           prompt={showPromptFor.prompt}
           onClose={() => setShowPromptFor(null)}
-          t={t}
         />
       )}
 
@@ -457,7 +446,6 @@ export function AiAgentsManager({
         onConfirm={() => {
           if (confirmDelete) handleDelete(confirmDelete);
         }}
-        t={t}
       />
     </div>
   );

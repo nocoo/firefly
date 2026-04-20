@@ -9,26 +9,26 @@ import { AdminSidebar } from "@/components/admin/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { IconButton } from "@/components/ui/icon-button";
 import { Toaster } from "@/components/ui/sonner";
-import { useLocale } from "@/i18n/context";
 import { PageSubtitleProvider, usePageSubtitle } from "@/components/admin/page-subtitle-context";
 import {
   CommandPaletteProvider,
   CommandPalette,
 } from "@/components/admin/command-palette";
 
-// Map admin routes to i18n title keys
-const PAGE_TITLE_KEYS: Record<string, string> = {
-  "/admin": "admin.nav.dashboard",
-  "/admin/posts": "admin.nav.posts",
-  "/admin/categories": "admin.nav.categories",
-  "/admin/tags": "admin.nav.tags",
-  "/admin/media": "admin.nav.media",
-  "/admin/site-identity": "admin.nav.siteIdentity",
-  "/admin/settings": "admin.nav.settings",
-  "/admin/ai-settings": "admin.nav.aiSettings",
-  "/admin/mcp": "admin.nav.mcpTokens",
-  "/admin/backup": "admin.backup.title",
-  "/admin/system": "admin.nav.systemMonitor",
+// Map admin routes to page titles
+const PAGE_TITLES: Record<string, string> = {
+  "/admin": "仪表盘",
+  "/admin/posts": "文章",
+  "/admin/categories": "分类",
+  "/admin/tags": "标签",
+  "/admin/media": "媒体库",
+  "/admin/site-identity": "站点身份",
+  "/admin/settings": "通用设置",
+  "/admin/ai-settings": "AI 设置",
+  "/admin/ai-agents": "AI 代理",
+  "/admin/mcp": "MCP 令牌",
+  "/admin/backup": "备份管理",
+  "/admin/system": "系统监控",
 };
 
 interface AdminShellProps {
@@ -49,7 +49,6 @@ export function AdminShell({ user, children }: AdminShellProps) {
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const { t } = useLocale();
 
   // Auto-collapse once when entering tablet range; user toggle still works.
   // Uses a ref to track previous isTablet so we only fire on the transition.
@@ -62,13 +61,12 @@ export function AdminShell({ user, children }: AdminShellProps) {
   }, [isTablet]);
 
   // Resolve page title from pathname
-  const titleKey =
-    PAGE_TITLE_KEYS[pathname] ??
-    Object.entries(PAGE_TITLE_KEYS).find(([key]) =>
+  const title =
+    PAGE_TITLES[pathname] ??
+    Object.entries(PAGE_TITLES).find(([key]) =>
       key !== "/admin" && pathname.startsWith(key),
     )?.[1] ??
-    "admin.pageTitle.admin";
-  const title = t(titleKey);
+    "管理";
 
   // Close mobile sidebar on route change — intentional setState in effect
   // to sync UI with navigation (external event from Next.js router).
@@ -168,7 +166,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
               ref={sidebarRef}
               role="dialog"
               aria-modal="true"
-              aria-label={t("admin.sidebar.openNav")}
+              aria-label="打开导航"
               className="fixed inset-0 z-40"
             >
               <div
@@ -193,7 +191,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
               title={title}
               isMobile={isMobile}
               onOpenMobile={() => setMobileOpen(true)}
-              openNavLabel={t("admin.sidebar.openNav")}
+              openNavLabel="打开导航"
               hamburgerRef={hamburgerRef}
             />
 

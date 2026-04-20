@@ -18,7 +18,6 @@ const { parseRow, parseSocialLinks, DEFAULTS } = _testHelpers;
 
 const sampleRow = {
   id: 1,
-  locale: "zh",
   posts_per_page: 10,
   comments_enabled: 0,
   font_style: "pingfang",
@@ -40,7 +39,6 @@ const sampleRow = {
 describe("parseRow", () => {
   it("parses a default row", () => {
     expect(parseRow(sampleRow)).toEqual({
-      locale: "zh",
       postsPerPage: 10,
       commentsEnabled: false,
       fontStyle: "pingfang",
@@ -56,11 +54,10 @@ describe("parseRow", () => {
     });
   });
 
-  it("parses en locale and comments enabled", () => {
+  it("parses comments enabled", () => {
     expect(
-      parseRow({ ...sampleRow, locale: "en", comments_enabled: 1 }),
+      parseRow({ ...sampleRow, comments_enabled: 1 }),
     ).toEqual({
-      locale: "en",
       postsPerPage: 10,
       commentsEnabled: true,
       fontStyle: "pingfang",
@@ -79,10 +76,6 @@ describe("parseRow", () => {
   it("clamps invalid posts_per_page to default", () => {
     expect(parseRow({ ...sampleRow, posts_per_page: 0 }).postsPerPage).toBe(10);
     expect(parseRow({ ...sampleRow, posts_per_page: -5 }).postsPerPage).toBe(10);
-  });
-
-  it("falls back to zh for unknown locale", () => {
-    expect(parseRow({ ...sampleRow, locale: "fr" }).locale).toBe("zh");
   });
 
   it("falls back to pingfang for unknown font_style", () => {
@@ -225,7 +218,6 @@ describe("getSiteSettings", () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleRow);
 
     const result = await getSiteSettings(db);
-    expect(result.locale).toBe("zh");
     expect(result.postsPerPage).toBe(10);
     expect(result.commentsEnabled).toBe(false);
     expect(db.firstOrNull).toHaveBeenCalledOnce();
@@ -255,10 +247,10 @@ describe("getSiteSettings", () => {
 
     vi.mocked(db.firstOrNull).mockResolvedValue({
       ...sampleRow,
-      locale: "en",
+      site_name: "Renamed",
     });
     const result = await getSiteSettings(db);
-    expect(result.locale).toBe("en");
+    expect(result.siteName).toBe("Renamed");
     expect(db.firstOrNull).toHaveBeenCalledTimes(2);
   });
 });
@@ -275,19 +267,18 @@ describe("updateSiteSettings", () => {
     invalidateSettingsCache();
   });
 
-  it("updates locale", async () => {
+  it("updates fontStyle", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
     vi.mocked(db.firstOrNull).mockResolvedValue({
       ...sampleRow,
-      locale: "en",
+      font_style: "serif",
     });
 
-    const result = await updateSiteSettings(db, { locale: "en" });
-    expect(result.locale).toBe("en");
+    const result = await updateSiteSettings(db, { fontStyle: "serif" });
+    expect(result.fontStyle).toBe("serif");
 
     const sql = vi.mocked(db.execute).mock.calls[0][0] as string;
-    expect(sql).toContain("locale = ?");
-    expect(sql).toContain("updated_at = unixepoch()");
+    expect(sql).toContain("font_style = ?");
   });
 
   it("clamps postsPerPage to 1-100", async () => {
@@ -315,20 +306,6 @@ describe("updateSiteSettings", () => {
 
     await updateSiteSettings(db, {});
     expect(db.execute).not.toHaveBeenCalled();
-  });
-
-  it("updates fontStyle", async () => {
-    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
-    vi.mocked(db.firstOrNull).mockResolvedValue({
-      ...sampleRow,
-      font_style: "serif",
-    });
-
-    const result = await updateSiteSettings(db, { fontStyle: "serif" });
-    expect(result.fontStyle).toBe("serif");
-
-    const sql = vi.mocked(db.execute).mock.calls[0][0] as string;
-    expect(sql).toContain("font_style = ?");
   });
 
   it("updates site identity fields", async () => {

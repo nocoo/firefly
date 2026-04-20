@@ -7,8 +7,6 @@ import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { buildPageMeta, SITE_URL, postPath } from "@/lib/seo";
 import { collectionPageJsonLd } from "@/lib/jsonld";
-import { getLocale } from "@/i18n/server";
-import { t } from "@/i18n/translations";
 import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
 import { EmptyState } from "@/components/blog/empty-state";
 import { FileText } from "lucide-react";
@@ -24,15 +22,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (Number.isNaN(page) || page < 2) return { title: "Not Found" };
 
   const db = getDb();
-  const [locale, settings] = await Promise.all([
-    getLocale(),
-    getSiteSettings(db),
-  ]);
+  const settings = await getSiteSettings(db);
   return buildPageMeta({
     title: `Page ${page}`,
     description: `${settings.siteDescription} — Page ${page}`,
     path: `/page/${page}`,
-    locale,
   }, settings);
 }
 
@@ -40,8 +34,6 @@ export default async function HomePaged({ params }: PageProps) {
   const { page: pageStr } = await params;
   const page = parseInt(pageStr, 10);
   if (Number.isNaN(page) || page < 2) notFound();
-
-  const locale = await getLocale();
 
   const db = getDb();
   const settings = await getSiteSettings(db);
@@ -67,20 +59,18 @@ export default async function HomePaged({ params }: PageProps) {
               url: `${SITE_URL}${postPath(p.slug, p.published_at)}`,
               name: p.title,
             })),
-            locale,
           ),
         }}
       />
 
       <section>
         {posts.length === 0 ? (
-          <EmptyState icon={FileText} message={t(locale, "blog.home.noPosts")} />
+          <EmptyState icon={FileText} message="暂无文章。" />
         ) : (
           posts.map((post, i) => (
             <PostCard
               key={post.id}
               post={post}
-              locale={locale}
               author={getPostAuthor(post, settings)}
               priority={i === 0 && !!post.featured_image}
             />
@@ -92,7 +82,6 @@ export default async function HomePaged({ params }: PageProps) {
         currentPage={page}
         totalPages={totalPages}
         basePath="/"
-        locale={locale}
       />
     </>
   );

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale } from "@/i18n/context";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -35,7 +34,6 @@ interface AiSettingsFormProps {
 // ---------------------------------------------------------------------------
 
 export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
-  const { t } = useLocale();
   const [provider, setProvider] = useState<AiProvider | "">(settings.provider);
   const [model, setModel] = useState(settings.model);
   const [apiKey, setApiKey] = useState("");
@@ -80,15 +78,15 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? t("admin.ai.saveFailed"));
+        throw new Error(data.error ?? "保存 AI 设置失败。");
       }
 
       setApiKey(""); // clear raw key input after save
-      setMessage({ type: "success", text: t("admin.ai.saved") });
+      setMessage({ type: "success", text: "AI 设置已保存。" });
     } catch (error) {
       setMessage({
         type: "error",
-        text: error instanceof Error ? error.message : t("admin.ai.saveFailed"),
+        text: error instanceof Error ? error.message : "保存 AI 设置失败。",
       });
     } finally {
       setSaving(false);
@@ -97,7 +95,7 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
 
   const handleTest = async () => {
     if (!provider || (!settings.hasApiKey && !apiKey)) {
-      setMessage({ type: "error", text: t("admin.ai.configureFirst") });
+      setMessage({ type: "error", text: "请先配置服务商和 API Key。" });
       return;
     }
 
@@ -119,14 +117,12 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
 
       setMessage({
         type: "success",
-        text: t("admin.ai.testSuccess", { model: data.model }),
+        text: `连接成功！模型：${data.model}`,
       });
     } catch (error) {
       setMessage({
         type: "error",
-        text: t("admin.ai.testFailed", {
-          error: error instanceof Error ? error.message : "Unknown error",
-        }),
+        text: `连接失败：${error instanceof Error ? error.message : "Unknown error"}`,
       });
     } finally {
       setTesting(false);
@@ -138,23 +134,23 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
       {/* Card 1: Provider & Model */}
       <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-5">
         <h2 className="text-base font-medium text-foreground">
-          {t("admin.ai.providerSection")}
+          服务商 & 模型
         </h2>
 
         {/* Provider */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">
-            {t("admin.ai.provider")}
+            AI 服务商
           </label>
           <p className="text-xs text-muted-foreground">
-            {t("admin.ai.providerHint")}
+            选择 AI 服务商。内置服务商会自动填充 URL 和协议。
           </p>
           <Select
             value={provider}
             onChange={(e) => handleProviderChange(e.target.value as AiProvider | "")}
             className="max-w-xs"
           >
-            <option value="">{t("admin.ai.providerPlaceholder")}</option>
+            <option value="">请选择服务商</option>
             {providers.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.label}
@@ -167,10 +163,10 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
         {provider && (
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
-              {t("admin.ai.model")}
+              模型
             </label>
             <p className="text-xs text-muted-foreground">
-              {t("admin.ai.modelHint")}
+              留空则使用服务商的默认模型。
               {selectedProvider && selectedProvider.defaultModel && (
                 <> ({selectedProvider.defaultModel})</>
               )}
@@ -197,7 +193,7 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
                 type="text"
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
-                placeholder={t("admin.ai.modelPlaceholder")}
+                placeholder="例如 claude-sonnet-4-20250514"
                 className="max-w-sm"
               />
             )}
@@ -209,22 +205,22 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
       {provider && (
         <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-5">
           <h2 className="text-base font-medium text-foreground">
-            {t("admin.ai.authSection")}
+            认证
           </h2>
 
           {/* API Key */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
-              {t("admin.ai.apiKey")}
+              API Key
             </label>
             <p className="text-xs text-muted-foreground">
-              {t("admin.ai.apiKeyHint")}
+              API 密钥将会安全存储。
             </p>
             <Input
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder={settings.hasApiKey ? settings.apiKey : t("admin.ai.apiKeyPlaceholder")}
+              placeholder={settings.hasApiKey ? settings.apiKey : "sk-..."}
               className="max-w-md"
             />
           </div>
@@ -235,22 +231,22 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
       {isCustom && (
         <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-5">
           <h2 className="text-base font-medium text-foreground">
-            {t("admin.ai.customSection")}
+            自定义服务商
           </h2>
 
           {/* Base URL */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
-              {t("admin.ai.baseURL")}
+              Base URL
             </label>
             <p className="text-xs text-muted-foreground">
-              {t("admin.ai.baseURLHint")}
+              自定义服务商的 API 端点。
             </p>
             <Input
               type="url"
               value={baseURL}
               onChange={(e) => setBaseURL(e.target.value)}
-              placeholder={t("admin.ai.baseURLPlaceholder")}
+              placeholder="https://api.example.com/v1"
               className="max-w-md"
             />
           </div>
@@ -258,10 +254,10 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
           {/* SDK Type */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
-              {t("admin.ai.sdkType")}
+              SDK 协议
             </label>
             <p className="text-xs text-muted-foreground">
-              {t("admin.ai.sdkTypeHint")}
+              API 使用的协议类型。
             </p>
             <Select
               value={sdkType}
@@ -295,7 +291,7 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
             disabled={saving}
             onClick={handleSave}
           >
-            {saving ? t("admin.ai.saving") : t("admin.ai.save")}
+            {saving ? "保存中..." : "保存设置"}
           </Button>
           <Button
             type="button"
@@ -303,7 +299,7 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
             disabled={testing || saving}
             onClick={handleTest}
           >
-            {testing ? t("admin.ai.testing") : t("admin.ai.testConnection")}
+            {testing ? "测试中..." : "测试连接"}
           </Button>
         </div>
       )}

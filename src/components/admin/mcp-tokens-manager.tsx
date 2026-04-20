@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { KeyRound, Plus, Copy, Check, Terminal, Trash2, Shield, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import type { McpToken, McpTokenScope } from "@/models/types";
-import { useLocale } from "@/i18n/context";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { Select } from "@/components/ui/select";
 
@@ -67,13 +66,7 @@ function CodeBlock({ code, lang }: { code: string; lang?: string }) {
 // Setup guide section
 // ---------------------------------------------------------------------------
 
-function SetupGuide({
-  mcpUrl,
-  t,
-}: {
-  mcpUrl: string;
-  t: (key: string) => string;
-}) {
+function SetupGuide({ mcpUrl }: { mcpUrl: string }) {
   const [activeTab, setActiveTab] = useState<"claude" | "cursor" | "cli">(
     "claude",
   );
@@ -122,10 +115,10 @@ function SetupGuide({
         </div>
         <div>
           <h3 className="text-sm font-semibold text-foreground">
-            {t("admin.mcpTokens.guideTitle")}
+            配置指南
           </h3>
           <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
-            {t("admin.mcpTokens.guideDesc")}
+            通过 Model Context Protocol 将 AI Agent 连接到博客。在下方创建令牌，然后将配置粘贴到客户端。
           </p>
         </div>
       </div>
@@ -133,7 +126,7 @@ function SetupGuide({
       {/* Endpoint URL */}
       <div className="space-y-1.5">
         <label className="text-xs font-medium text-muted-foreground">
-          {t("admin.mcpTokens.guideEndpoint")}
+          MCP 端点
         </label>
         <div className="flex items-center gap-2 rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2">
           <code className="flex-1 text-xs font-mono text-foreground break-all">
@@ -145,9 +138,9 @@ function SetupGuide({
 
       {/* Steps */}
       <ol className="space-y-1 text-xs text-muted-foreground leading-relaxed list-decimal list-inside">
-        <li>{t("admin.mcpTokens.guideStep1")}</li>
-        <li>{t("admin.mcpTokens.guideStep2")}</li>
-        <li>{t("admin.mcpTokens.guideStep3")}</li>
+        <li>在下方创建令牌 — 名称与客户端对应（如 &quot;Claude Code&quot;）。</li>
+        <li>复制令牌（仅显示一次），替换配置中的 YOUR_TOKEN。</li>
+        <li>将配置粘贴到客户端的 MCP 设置文件中，然后重启客户端。</li>
       </ol>
 
       {/* Config tabs */}
@@ -175,7 +168,7 @@ function SetupGuide({
 
       {/* Available tools summary */}
       <p className="text-xs text-muted-foreground">
-        {t("admin.mcpTokens.guideTools")}
+        16 个工具可用 — 文章（增删改查 + AI 摘要）、标签（增删改查）、分类（增删改查）。
       </p>
     </div>
   );
@@ -187,7 +180,6 @@ function SetupGuide({
 
 export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
   const router = useRouter();
-  const { t } = useLocale();
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [clientName, setClientName] = useState("");
@@ -220,7 +212,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
         const data = await res.json();
         throw new Error(data.error ?? "Failed to revoke token");
       }
-      toast.success(t("admin.mcpTokens.revoked"));
+      toast.success("令牌已撤销");
       router.refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to revoke token");
@@ -236,7 +228,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
         const data = await res.json();
         throw new Error(data.error ?? "Failed to delete token");
       }
-      toast.success(t("admin.mcpTokens.deleted"));
+      toast.success("令牌已删除");
       router.refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete token");
@@ -253,7 +245,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
         throw new Error(data.error ?? "Failed to delete revoked tokens");
       }
       const data = await res.json();
-      toast.success(t("admin.mcpTokens.bulkDeleted", { count: data.deleted }));
+      toast.success(`已删除 ${data.deleted} 个已撤销令牌`);
       router.refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete revoked tokens");
@@ -296,7 +288,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
         const data = await res.json();
         throw new Error(data.error ?? "Failed to update scope");
       }
-      toast.success(t("admin.mcpTokens.scopeUpdated"));
+      toast.success("权限已更新");
       router.refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update scope");
@@ -306,7 +298,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
   return (
     <div className="space-y-8">
       {/* Setup guide */}
-      <SetupGuide mcpUrl={mcpUrl} t={t} />
+      <SetupGuide mcpUrl={mcpUrl} />
 
       <hr className="border-border" />
 
@@ -321,7 +313,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
       {newToken && (
         <div className="rounded-[var(--radius-widget)] border border-green-500/50 bg-green-500/10 px-4 py-3 text-sm">
           <p className="font-medium text-green-700 dark:text-green-400 mb-2">
-            {t("admin.mcpTokens.tokenCreated")}
+            令牌创建成功！请立即复制 — 此后将无法再次查看。
           </p>
           <div className="flex items-center gap-2">
             <code className="flex-1 rounded bg-secondary px-2 py-1 text-xs font-mono break-all">
@@ -330,13 +322,13 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
             <CopyButton text={newToken.access_token} />
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            {t("admin.mcpTokens.tokenOnce")}
+            此令牌仅显示一次，请安全保存。
           </p>
           <button
             onClick={() => setNewToken(null)}
             className="mt-2 text-xs text-muted-foreground underline hover:text-foreground"
           >
-            {t("admin.mcpTokens.dismiss")}
+            关闭
           </button>
         </div>
       )}
@@ -345,7 +337,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
       <div className="flex items-end gap-3">
         <div className="flex-1">
           <label className="text-sm font-medium text-foreground">
-            {t("admin.mcpTokens.clientName")}
+            客户端名称
           </label>
           <input
             type="text"
@@ -358,15 +350,15 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
         </div>
         <div className="w-32 shrink-0">
           <label className="text-sm font-medium text-foreground">
-            {t("admin.mcpTokens.scope")}
+            权限
           </label>
           <Select
             value={createScope}
             onChange={(e) => setCreateScope(e.target.value as McpTokenScope)}
             className="mt-1"
           >
-            <option value="full">{t("admin.mcpTokens.scopeFull")}</option>
-            <option value="author">{t("admin.mcpTokens.scopeAuthor")}</option>
+            <option value="full">完整</option>
+            <option value="author">作者</option>
           </Select>
         </div>
         <button
@@ -375,9 +367,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
           className="inline-flex items-center gap-2 rounded-[var(--radius-widget)] bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           <Plus className="h-4 w-4" />
-          {creating
-            ? t("admin.mcpTokens.creating")
-            : t("admin.mcpTokens.create")}
+          {creating ? "创建中…" : "创建令牌"}
         </button>
       </div>
 
@@ -388,7 +378,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
             className="h-10 w-10 mb-3 opacity-40"
             strokeWidth={1.5}
           />
-          <p className="text-sm">{t("admin.mcpTokens.empty")}</p>
+          <p className="text-sm">暂无 MCP 令牌。创建一个以连接 AI Agent。</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -400,7 +390,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
                 className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                {t("admin.mcpTokens.bulkDelete", { count: revokedCount })}
+                {`删除 ${revokedCount} 个已撤销`}
               </button>
             </div>
           )}
@@ -409,25 +399,24 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
               <thead>
                 <tr className="border-b border-border bg-secondary/50">
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    {t("admin.mcpTokens.colClient")}
+                    客户端
                   </th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
-                    {t("admin.mcpTokens.colPreview")}
+                    令牌
                   </th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    {t("admin.mcpTokens.colScope")}
+                    权限
                   </th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
-                    {t("admin.mcpTokens.colLastUsed")}
+                    最后使用
                   </th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden lg:table-cell">
-                    {t("admin.mcpTokens.colCreated")}
+                    创建时间
                   </th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    {t("admin.mcpTokens.colStatus")}
+                    状态
                   </th>
                   <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                    {t("admin.mcpTokens.colAction")}
                   </th>
                 </tr>
               </thead>
@@ -437,10 +426,10 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
                   const isExpired =
                     token.expires_at < Math.floor(Date.now() / 1000);
                   const status = isRevoked
-                    ? t("admin.mcpTokens.statusRevoked")
+                    ? "已撤销"
                     : isExpired
-                      ? t("admin.mcpTokens.statusExpired")
-                      : t("admin.mcpTokens.statusActive");
+                      ? "已过期"
+                      : "有效";
                   const statusClass =
                     isRevoked || isExpired
                       ? "text-muted-foreground"
@@ -467,9 +456,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
                             ) : (
                               <Shield className="h-3.5 w-3.5" />
                             )}
-                            {token.scope === "author"
-                              ? t("admin.mcpTokens.scopeAuthor")
-                              : t("admin.mcpTokens.scopeFull")}
+                            {token.scope === "author" ? "作者" : "完整"}
                           </span>
                         ) : (
                           <Select
@@ -477,8 +464,8 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
                             onChange={(e) => handleScopeChange(token.id, e.target.value as McpTokenScope)}
                             className="h-7 py-1 pl-2 pr-8 text-xs"
                           >
-                            <option value="full">{t("admin.mcpTokens.scopeFull")}</option>
-                            <option value="author">{t("admin.mcpTokens.scopeAuthor")}</option>
+                            <option value="full">完整</option>
+                            <option value="author">作者</option>
                           </Select>
                         )}
                       </td>
@@ -499,14 +486,14 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
                             onClick={() => setDeleteTargetId(token.id)}
                             className="text-xs text-destructive hover:text-destructive/80 transition-colors"
                           >
-                            {t("admin.mcpTokens.delete")}
+                            删除
                           </button>
                         ) : (
                           <button
                             onClick={() => setRevokeTargetId(token.id)}
                             className="text-xs text-destructive hover:text-destructive/80 transition-colors"
                           >
-                            {t("admin.mcpTokens.revoke")}
+                            撤销
                           </button>
                         )}
                       </td>
@@ -523,11 +510,11 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
       <ConfirmDialog
         open={!!revokeTargetId}
         onOpenChange={(open) => { if (!open) setRevokeTargetId(null); }}
-        title={t("admin.mcpTokens.confirmRevoke")}
+        title="确定撤销此令牌吗？使用该令牌的 Agent 将立即失去访问权限。"
         description=""
         destructive
-        confirmLabel={t("admin.mcpTokens.revoke")}
-        cancelLabel={t("admin.confirm.cancel")}
+        confirmLabel="撤销"
+        cancelLabel="取消"
         onConfirm={() => { if (revokeTargetId) handleRevoke(revokeTargetId); }}
       />
 
@@ -535,11 +522,11 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
       <ConfirmDialog
         open={!!deleteTargetId}
         onOpenChange={(open) => { if (!open) setDeleteTargetId(null); }}
-        title={t("admin.mcpTokens.confirmDelete")}
+        title="确定要永久删除此令牌吗？此操作无法撤销。"
         description=""
         destructive
-        confirmLabel={t("admin.mcpTokens.delete")}
-        cancelLabel={t("admin.confirm.cancel")}
+        confirmLabel="删除"
+        cancelLabel="取消"
         onConfirm={() => { if (deleteTargetId) handleDelete(deleteTargetId); }}
       />
 
@@ -547,11 +534,11 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
       <ConfirmDialog
         open={showBulkDelete}
         onOpenChange={setShowBulkDelete}
-        title={t("admin.mcpTokens.confirmBulkDelete", { count: revokedCount })}
+        title={`永久删除 ${revokedCount} 个已撤销令牌？`}
         description=""
         destructive
-        confirmLabel={t("admin.mcpTokens.deleteBulkConfirm")}
-        cancelLabel={t("admin.confirm.cancel")}
+        confirmLabel="全部删除"
+        cancelLabel="取消"
         onConfirm={handleBulkDelete}
       />
     </div>

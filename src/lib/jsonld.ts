@@ -3,22 +3,21 @@
 // ---------------------------------------------------------------------------
 
 import type { PostWithCategory } from "@/models/types";
-import type { Locale } from "@/i18n/translations";
 import type { SiteIdentity } from "./seo";
-import { SITE_URL, postPath, formatDateISO, htmlLang } from "./seo";
+import { SITE_URL, postPath, formatDateISO, HTML_LANG } from "./seo";
 
 // ---------------------------------------------------------------------------
 // WebSite (home page)
 // ---------------------------------------------------------------------------
 
-export function websiteJsonLd(site: SiteIdentity, locale: Locale = "zh"): string {
+export function websiteJsonLd(site: SiteIdentity): string {
   return JSON.stringify({
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: site.siteName,
     url: SITE_URL,
     description: site.siteDescription,
-    inLanguage: htmlLang(locale),
+    inLanguage: HTML_LANG,
     author: {
       "@type": "Person",
       name: site.siteAuthor,
@@ -40,7 +39,6 @@ export function blogPostingJsonLd(
   post: PostWithCategory,
   site: SiteIdentity,
   tagNames?: string[],
-  locale: Locale = "zh",
   authorOverride?: BlogPostingAuthor,
 ): string {
   const url = `${SITE_URL}${postPath(post.slug, post.published_at)}`;
@@ -56,7 +54,7 @@ export function blogPostingJsonLd(
       : formatDateISO(post.created_at),
     dateModified: formatDateISO(post.updated_at),
     description: post.excerpt ?? "",
-    inLanguage: htmlLang(locale),
+    inLanguage: HTML_LANG,
     ...(post.featured_image ? { image: post.featured_image } : {}),
     author: {
       "@type": "Person",
@@ -116,14 +114,13 @@ export function collectionPageJsonLd(
   name: string,
   path: string,
   items: CollectionItem[],
-  locale: Locale = "zh",
 ): string {
   return JSON.stringify({
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name,
     url: `${SITE_URL}${path}`,
-    inLanguage: htmlLang(locale),
+    inLanguage: HTML_LANG,
     mainEntity: {
       "@type": "ItemList",
       numberOfItems: items.length,

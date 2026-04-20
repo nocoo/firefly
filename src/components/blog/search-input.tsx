@@ -2,11 +2,9 @@
 
 import { useRef, useEffect } from "react";
 import { Search } from "lucide-react";
-import { useLocale } from "@/i18n/context";
 
 export function SearchInput() {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { t } = useLocale();
 
   // Progressive enhancement: "/" key focuses search input
   useEffect(() => {
@@ -28,7 +26,7 @@ export function SearchInput() {
         ref={inputRef}
         name="q"
         type="search"
-        placeholder={t("blog.search.placeholder")}
+        placeholder="搜索..."
         className="blog-search-input"
       />
       <kbd className="blog-search-kbd">/</kbd>

@@ -10,8 +10,6 @@ import { ArticleBody } from "@/components/blog/article-body";
 import { ContentImageLightbox } from "@/components/blog/content-image-lightbox";
 import { ReferenceCard } from "@/components/blog/reference-card";
 import { formatDateDisplay } from "@/lib/seo";
-import { getLocale } from "@/i18n/server";
-import { t } from "@/i18n/translations";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -34,12 +32,11 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
 
   if (!post) notFound();
 
-  const locale = await getLocale();
   const tags = await getPostTags(db, post.id);
   const html = renderMarkdown(post.content, { optimizeImages: true, postTitle: post.title });
   const date = post.published_at
-    ? formatDateDisplay(post.published_at, locale)
-    : t(locale, "blog.post.draft");
+    ? formatDateDisplay(post.published_at)
+    : "草稿";
 
   return (
     <>
@@ -76,7 +73,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
                 <> · {post.category_name}</>
               )}
               {post.reading_time && (
-                <> · {t(locale, "blog.post.minRead", { n: post.reading_time })}</>
+                <> · {`${post.reading_time} 分钟阅读`}</>
               )}
             </div>
           </header>

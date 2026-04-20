@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { FileText, FolderOpen, Tags } from "lucide-react";
-import { useLocale } from "@/i18n/context";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useSetPageSubtitle } from "@/components/admin/page-subtitle-context";
 import type {
@@ -27,11 +26,11 @@ import { SystemMemoryCard } from "./system-memory-card";
 // Tab labels (i18n key mapping)
 // ---------------------------------------------------------------------------
 
-const TAB_KEYS: Record<SourceType, string> = {
-  human: "admin.analytics.tabHuman",
-  search: "admin.analytics.tabSearch",
-  ai: "admin.analytics.tabAi",
-  other: "admin.analytics.tabOther",
+const TAB_LABELS: Record<SourceType, string> = {
+  human: "人类",
+  search: "搜索",
+  ai: "AI",
+  other: "其他",
 };
 
 // ---------------------------------------------------------------------------
@@ -49,7 +48,6 @@ export function AnalyticsDashboard({
 }: {
   contentStats?: ContentStats;
 } = {}) {
-  const { t } = useLocale();
   const [days, setDays] = useState(30);
   const [summary, setSummary] = useState<AnalyticsSummaryResponse | null>(null);
   const [sourceCache, setSourceCache] = useState<
@@ -67,18 +65,18 @@ export function AnalyticsDashboard({
       setError(null);
       try {
         const res = await fetch(`/api/analytics?days=${d}`);
-        if (!res.ok) throw new Error(t("admin.analytics.fetchError"));
+        if (!res.ok) throw new Error("获取分析数据失败");
         const json: AnalyticsSummaryResponse = await res.json();
         setSummary(json);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : t("admin.analytics.fetchError"),
+          err instanceof Error ? err.message : "获取分析数据失败",
         );
       } finally {
         setSummaryLoading(false);
       }
     },
-    [t],
+    [],
   );
 
   // Fetch source detail
@@ -89,7 +87,7 @@ export function AnalyticsDashboard({
         const res = await fetch(
           `/api/analytics/source?type=${type}&days=${d}`,
         );
-        if (!res.ok) throw new Error(t("admin.analytics.fetchError"));
+        if (!res.ok) throw new Error("获取分析数据失败");
         const json: SourceDetailResponse = await res.json();
         setSourceCache((prev) => ({ ...prev, [type]: json }));
       } catch {
@@ -98,7 +96,7 @@ export function AnalyticsDashboard({
         setTabLoading(false);
       }
     },
-    [t],
+    [],
   );
 
   // Initial load & period change: summary + active tab
@@ -130,7 +128,7 @@ export function AnalyticsDashboard({
   if (error && !summary) {
     return (
       <div className="flex items-center justify-center py-20 text-destructive">
-        {t("admin.analytics.fetchError")}
+        获取分析数据失败
       </div>
     );
   }
@@ -185,7 +183,7 @@ export function AnalyticsDashboard({
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <span>{t(TAB_KEYS[type])}</span>
+                <span>{TAB_LABELS[type]}</span>
                 <span
                   className={`tabular-nums rounded-full px-1.5 py-0.5 text-2xs leading-none ${
                     activeTab === type
@@ -215,19 +213,19 @@ export function AnalyticsDashboard({
           <div className="space-y-2">
             <ContentStatCard
               icon={FileText}
-              label={t("admin.dashboard.publishedPosts")}
+              label="已发布文章"
               value={contentStats.postCount}
               index={0}
             />
             <ContentStatCard
               icon={FolderOpen}
-              label={t("admin.dashboard.categories")}
+              label="分类"
               value={contentStats.categoryCount}
               index={1}
             />
             <ContentStatCard
               icon={Tags}
-              label={t("admin.dashboard.tags")}
+              label="标签"
               value={contentStats.tagCount}
               index={2}
             />

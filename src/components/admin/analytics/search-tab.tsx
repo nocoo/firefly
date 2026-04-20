@@ -21,7 +21,6 @@ import {
   CHART_MARGIN,
 } from "./chart-helpers";
 import { DashboardResponsiveContainer } from "./responsive-container";
-import { useLocale } from "@/i18n/context";
 
 interface SearchTabProps {
   data: SearchDetailResponse;
@@ -98,8 +97,6 @@ function BotTimelineTooltip({
 // ---------------------------------------------------------------------------
 
 export function SearchTab({ data }: SearchTabProps) {
-  const { t } = useLocale();
-
   // Group dailyByBot into per-date rows for multi-line chart
   const botNames = [...new Set(data.dailyByBot.map((r) => r.botName))];
   const dailyMap = new Map<string, Record<string, number>>();
@@ -125,9 +122,9 @@ export function SearchTab({ data }: SearchTabProps) {
     <div className="space-y-4">
       {/* Bot breakdown */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Panel title={t("admin.analytics.botBreakdown")}>
+        <Panel title="爬虫分布">
           {donutData.length === 0 ? (
-            <NoData text={t("admin.analytics.noData")} />
+            <NoData text="暂无数据" />
           ) : (
             <div className="flex flex-col items-center">
               <div className="h-[160px] w-full max-w-[200px]">
@@ -176,7 +173,7 @@ export function SearchTab({ data }: SearchTabProps) {
           )}
         </Panel>
 
-        <Panel title={t("admin.analytics.topCrawledPages")}>
+        <Panel title="热门抓取页面">
           <RankedTable
             rows={data.topPages.map((p) => {
               const row: { label: string; value: number; muted?: boolean; href?: string } = {
@@ -187,16 +184,16 @@ export function SearchTab({ data }: SearchTabProps) {
               if (p.isPost) row.href = p.path;
               return row;
             })}
-            valueLabel={t("admin.analytics.tableViews")}
-            nameLabel={t("admin.analytics.tablePage")}
-            noData={t("admin.analytics.noData")}
+            valueLabel="浏览量"
+            nameLabel="页面"
+            noData="暂无数据"
           />
         </Panel>
       </div>
 
       {/* Crawl Timeline */}
       {timelineData.length > 0 && botNames.length > 0 && (
-        <Panel title={t("admin.analytics.crawlTimeline")}>
+        <Panel title="抓取时间线">
           {/* Inline legend */}
           <div className="mb-3 flex flex-wrap items-center gap-3">
             {botNames.map((name, i) => (
@@ -254,19 +251,19 @@ export function SearchTab({ data }: SearchTabProps) {
 
       {/* Crawler vs Page cross-table */}
       {data.crawlerVsPage.length > 0 && (
-        <Panel title={t("admin.analytics.crawlerVsPage")}>
+        <Panel title="爬虫与页面">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-muted-foreground">
                   <th className="pb-2 font-medium">
-                    {t("admin.analytics.tableBot")}
+                    爬虫
                   </th>
                   <th className="pb-2 font-medium">
-                    {t("admin.analytics.tablePage")}
+                    页面
                   </th>
                   <th className="pb-2 font-medium text-right">
-                    {t("admin.analytics.tableViews")}
+                    浏览量
                   </th>
                 </tr>
               </thead>

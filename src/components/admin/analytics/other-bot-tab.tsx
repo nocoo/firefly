@@ -4,7 +4,6 @@ import type { OtherBotDetailResponse } from "@/models/analytics-types";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { PIE_COLORS, formatNumber } from "./chart-helpers";
 import { DashboardResponsiveContainer } from "./responsive-container";
-import { useLocale } from "@/i18n/context";
 
 interface OtherBotTabProps {
   data: OtherBotDetailResponse;
@@ -103,8 +102,6 @@ function DonutWithLegend({
 // ---------------------------------------------------------------------------
 
 export function OtherBotTab({ data }: OtherBotTabProps) {
-  const { t } = useLocale();
-
   // Pre-compute donut data for category breakdown
   const categoryTotal = data.byCategory.reduce((s, c) => s + c.count, 0);
   const categoryDonut = data.byCategory.map((c, i) => ({
@@ -135,9 +132,9 @@ export function OtherBotTab({ data }: OtherBotTabProps) {
   return (
     <div className="space-y-4">
       {/* Category breakdown */}
-      <Panel title={t("admin.analytics.categoryBreakdown")}>
+      <Panel title="分类统计">
         {categoryDonut.length === 0 ? (
-          <NoData text={t("admin.analytics.noData")} />
+          <NoData text="暂无数据" />
         ) : (
           <DonutWithLegend data={categoryDonut} />
         )}
@@ -145,17 +142,17 @@ export function OtherBotTab({ data }: OtherBotTabProps) {
 
       {/* Two-column: Social + Monitor */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Panel title={t("admin.analytics.socialBots")}>
+        <Panel title="社交爬虫">
           {socialDonut.length === 0 ? (
-            <NoData text={t("admin.analytics.noData")} />
+            <NoData text="暂无数据" />
           ) : (
             <DonutWithLegend data={socialDonut} />
           )}
         </Panel>
 
-        <Panel title={t("admin.analytics.monitorBots")}>
+        <Panel title="监控爬虫">
           {monitorDonut.length === 0 ? (
-            <NoData text={t("admin.analytics.noData")} />
+            <NoData text="暂无数据" />
           ) : (
             <DonutWithLegend data={monitorDonut} />
           )}
@@ -164,19 +161,19 @@ export function OtherBotTab({ data }: OtherBotTabProps) {
 
       {/* Unknown bots with user agent */}
       {data.unknownBots.length > 0 && (
-        <Panel title={t("admin.analytics.unknownBots")}>
+        <Panel title="未知爬虫">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-muted-foreground">
                   <th className="pb-2 font-medium">
-                    {t("admin.analytics.tableBot")}
+                    爬虫
                   </th>
                   <th className="pb-2 font-medium">
-                    {t("admin.analytics.tableUserAgent")}
+                    User Agent
                   </th>
                   <th className="pb-2 font-medium text-right">
-                    {t("admin.analytics.tableViews")}
+                    浏览量
                   </th>
                 </tr>
               </thead>

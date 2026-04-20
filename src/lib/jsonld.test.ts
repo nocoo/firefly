@@ -13,15 +13,10 @@ const testSite: SiteIdentity = {
 };
 
 describe("websiteJsonLd", () => {
-  it("uses zh-CN inLanguage by default", () => {
+  it("uses zh-CN inLanguage", () => {
     const result = JSON.parse(websiteJsonLd(testSite));
     expect(result.inLanguage).toBe("zh-CN");
     expect(result["@type"]).toBe("WebSite");
-  });
-
-  it("uses en inLanguage when locale is en", () => {
-    const result = JSON.parse(websiteJsonLd(testSite, "en"));
-    expect(result.inLanguage).toBe("en");
   });
 
   it("includes site name and URL from identity", () => {
@@ -62,14 +57,9 @@ describe("blogPostingJsonLd", () => {
     category_slug: "tech",
   };
 
-  it("uses zh-CN inLanguage by default", () => {
+  it("uses zh-CN inLanguage", () => {
     const result = JSON.parse(blogPostingJsonLd(post, testSite));
     expect(result.inLanguage).toBe("zh-CN");
-  });
-
-  it("uses en inLanguage when locale is en", () => {
-    const result = JSON.parse(blogPostingJsonLd(post, testSite, undefined, "en"));
-    expect(result.inLanguage).toBe("en");
   });
 
   it("includes headline and URL", () => {
@@ -87,7 +77,7 @@ describe("blogPostingJsonLd", () => {
 
   it("uses authorOverride when provided", () => {
     const result = JSON.parse(
-      blogPostingJsonLd(post, testSite, undefined, "zh", { name: "Claude Daily" }),
+      blogPostingJsonLd(post, testSite, undefined, { name: "Claude Daily" }),
     );
     expect(result.author.name).toBe("Claude Daily");
     expect(result.author.url).toBeUndefined();
@@ -97,7 +87,7 @@ describe("blogPostingJsonLd", () => {
 
   it("uses authorOverride with custom URL when provided", () => {
     const result = JSON.parse(
-      blogPostingJsonLd(post, testSite, undefined, "zh", {
+      blogPostingJsonLd(post, testSite, undefined, {
         name: "Claude Daily",
         url: "https://example.com/agents/claude-daily",
       }),
@@ -155,13 +145,8 @@ describe("collectionPageJsonLd", () => {
     expect(result.mainEntity.itemListElement[1].name).toBe("Post 2");
   });
 
-  it("uses zh-CN inLanguage by default", () => {
+  it("uses zh-CN inLanguage", () => {
     const result = JSON.parse(collectionPageJsonLd("Test", "/test", []));
     expect(result.inLanguage).toBe("zh-CN");
-  });
-
-  it("uses en inLanguage when locale is en", () => {
-    const result = JSON.parse(collectionPageJsonLd("Test", "/test", [], "en"));
-    expect(result.inLanguage).toBe("en");
   });
 });

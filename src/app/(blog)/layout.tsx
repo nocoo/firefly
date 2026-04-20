@@ -6,7 +6,6 @@ import { getSiteSettings } from "@/data/settings";
 import { isAdminSession } from "@/lib/auth";
 import { BlogGlobalBar } from "@/components/blog/blog-global-bar";
 import { BlogLayoutClient } from "@/components/blog/blog-layout-client";
-import { getLocale } from "@/i18n/server";
 
 export default async function BlogLayout({
   children,
@@ -14,11 +13,10 @@ export default async function BlogLayout({
   children: React.ReactNode;
 }) {
   const db = getDb();
-  const [categories, tags, archives, locale, settings, isAdmin] = await Promise.all([
+  const [categories, tags, archives, settings, isAdmin] = await Promise.all([
     listCategories(db),
     listTags(db),
     listMonthlyArchives(db),
-    getLocale(),
     getSiteSettings(db),
     isAdminSession(),
   ]);
@@ -41,7 +39,6 @@ export default async function BlogLayout({
           categories={activeCategories}
           tags={activeTags}
           archives={archives}
-          locale={locale}
           siteName={settings.siteName}
           siteTagline={settings.siteTagline}
           socialLinks={settings.socialLinks}

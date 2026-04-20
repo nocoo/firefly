@@ -16,7 +16,6 @@ vi.mock("@/lib/seo", async (importOriginal) => {
 
 vi.mock("@/data/settings", () => ({
   getSiteSettings: vi.fn().mockResolvedValue({
-    locale: "en",
     postsPerPage: 10,
     commentsEnabled: false,
     fontStyle: "pingfang",
@@ -80,10 +79,6 @@ vi.mock("@/data/entities/post", () => ({
   }),
 }));
 
-vi.mock("@/i18n/server", () => ({
-  getLocale: vi.fn().mockResolvedValue("en"),
-}));
-
 vi.mock("@/models/markdown", () => ({
   renderMarkdown: vi.fn((content: string) => `<p>${content}</p>`),
 }));
@@ -142,7 +137,7 @@ describe("GET /feed.xml", () => {
 
     expect(xml).toContain("<title>Test Blog</title>");
     expect(xml).toContain("<description>A blog about testing</description>");
-    expect(xml).toContain("<language>en</language>");
+    expect(xml).toContain("<language>zh-CN</language>");
   });
 
   it("includes managingEditor when authorEmail is set", async () => {

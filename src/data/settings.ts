@@ -1,5 +1,4 @@
 import type { Db } from "@/lib/db";
-import type { Locale } from "@/i18n/translations";
 import { buildSetClauses } from "@/data/core/sql";
 import type { FieldDef } from "@/data/core/types";
 
@@ -20,7 +19,6 @@ export interface SocialLink {
 /** Raw row shape from the DB */
 interface SiteSettingsRow {
   id: number;
-  locale: string;
   posts_per_page: number;
   comments_enabled: number;
   font_style: string;
@@ -37,7 +35,6 @@ interface SiteSettingsRow {
 
 /** Parsed application-level settings */
 export interface SiteSettings {
-  locale: Locale;
   postsPerPage: number;
   commentsEnabled: boolean;
   fontStyle: FontStyle;
@@ -53,7 +50,6 @@ export interface SiteSettings {
 }
 
 const DEFAULTS: SiteSettings = {
-  locale: "zh",
   postsPerPage: 10,
   commentsEnabled: false,
   fontStyle: "pingfang",
@@ -95,7 +91,6 @@ function parseSocialLinks(raw: string): SocialLink[] {
 
 function parseRow(row: SiteSettingsRow): SiteSettings {
   return {
-    locale: row.locale === "en" ? "en" : "zh",
     postsPerPage: row.posts_per_page > 0 ? row.posts_per_page : 10,
     commentsEnabled: row.comments_enabled === 1,
     fontStyle: FONT_STYLES.includes(row.font_style as FontStyle)
@@ -140,7 +135,6 @@ export function invalidateSettingsCache(): void {
 // ---------------------------------------------------------------------------
 
 export interface UpdateSiteSettingsInput {
-  locale?: Locale;
   postsPerPage?: number;
   commentsEnabled?: boolean;
   fontStyle?: FontStyle;
@@ -157,7 +151,6 @@ export interface UpdateSiteSettingsInput {
 
 // Field map for buildSetClauses (D5: camelCase → snake_case)
 const settingsFields: Record<string, FieldDef> = {
-  locale: { column: "locale" },
   postsPerPage: { column: "posts_per_page" },
   commentsEnabled: { column: "comments_enabled" },
   fontStyle: { column: "font_style" },
@@ -179,7 +172,6 @@ function normalizeSettingsInput(
 ): Record<string, unknown> {
   const normalized: Record<string, unknown> = {};
 
-  if (input.locale !== undefined) normalized.locale = input.locale;
   if (input.postsPerPage !== undefined) {
     normalized.postsPerPage = Math.max(1, Math.min(100, input.postsPerPage));
   }

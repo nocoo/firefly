@@ -23,8 +23,6 @@ import { ArticleBody } from "@/components/blog/article-body";
 import { ContentImageLightbox } from "@/components/blog/content-image-lightbox";
 import { ReferenceCard } from "@/components/blog/reference-card";
 import { ArticleNav } from "@/components/blog/article-nav";
-import { getLocale } from "@/i18n/server";
-import { t } from "@/i18n/translations";
 import { getPostAuthor, getPostAuthorForMeta } from "@/lib/ai-agent/author";
 
 // Deduplicate getPostBySlug across generateMetadata + page component
@@ -47,10 +45,9 @@ export async function generateMetadata({
 
   if (!post) return { title: "Not Found" };
 
-  const [tags, settings, locale] = await Promise.all([
+  const [tags, settings] = await Promise.all([
     getPostTags(db, post.id),
     getSiteSettings(db),
-    getLocale(),
   ]);
 
   // Resolve author (agent or site author) - now synchronous with JOINed data
@@ -61,7 +58,6 @@ export async function generateMetadata({
     title: post.title,
     description: post.excerpt ?? "",
     path,
-    locale,
     image: post.featured_image ?? undefined,
     type: "article",
     publishedTime: post.published_at
@@ -91,7 +87,6 @@ export default async function PostPage({ params }: PostPageProps) {
     }
   }
 
-  const locale = await getLocale();
   const tags = await getPostTags(db, post.id);
   const settings = await getSiteSettings(db);
   const isAdmin = await isAdminSession();
@@ -113,11 +108,11 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const html = renderMarkdown(post.content, { optimizeImages: true, postTitle: post.title });
   const date = post.published_at
-    ? formatDateDisplay(post.published_at, locale)
-    : t(locale, "blog.post.draft");
+    ? formatDateDisplay(post.published_at)
+    : "草稿";
 
   const breadcrumbs = [
-    { name: t(locale, "blog.post.home"), href: "/" },
+    { name: "首页", href: "/" },
     ...(post.category_name && post.category_slug
       ? [{ name: post.category_name, href: `/category/${post.category_slug}` }]
       : []),
@@ -133,7 +128,7 @@ export default async function PostPage({ params }: PostPageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: blogPostingJsonLd(post, settings, tagNames, locale, jsonLdAuthor) }}
+        dangerouslySetInnerHTML={{ __html: blogPostingJsonLd(post, settings, tagNames, jsonLdAuthor) }}
       />
       <script
         type="application/ld+json"
@@ -185,7 +180,7 @@ export default async function PostPage({ params }: PostPageProps) {
               {post.reading_time && (
                 <span className="blog-byline-item">
                   <Clock className="blog-byline-icon" strokeWidth={1.5} />
-                  {t(locale, "blog.post.minRead", { n: post.reading_time })}
+                  {`${post.reading_time} 分钟阅读`}
                 </span>
               )}
               {isAdmin && (
@@ -194,7 +189,7 @@ export default async function PostPage({ params }: PostPageProps) {
                   className="blog-byline-item blog-byline-edit"
                 >
                   <SquarePen className="blog-byline-icon" strokeWidth={1.5} />
-                  {t(locale, "blog.post.editPost")}
+                  编辑
                 </Link>
               )}
             </div>
@@ -246,7 +241,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
       {showComments && (
         <Suspense>
-          <CommentsSection postId={post.id} locale={locale} isAdmin={isAdmin} />
+          <CommentsSection postId={post.id} isAdmin={isAdmin} />
         </Suspense>
       )}
 
@@ -255,7 +250,6 @@ export default async function PostPage({ params }: PostPageProps) {
         prevTitle={adjacent.prev?.title ?? null}
         nextHref={nextHref}
         nextTitle={adjacent.next?.title ?? null}
-        locale={locale}
       />
     </>
   );
@@ -267,15 +261,13 @@ export default async function PostPage({ params }: PostPageProps) {
 
 async function CommentsSection({
   postId,
-  locale,
   isAdmin,
 }: {
   postId: string;
-  locale: import("@/i18n/translations").Locale;
   isAdmin: boolean;
 }) {
   const db = getDb();
   const comments = await listCommentsByPost(db, postId);
   const tree = buildCommentTree(comments);
-  return <Comments comments={tree} locale={locale} isAdmin={isAdmin} />;
+  return <Comments comments={tree} isAdmin={isAdmin} />;
 }

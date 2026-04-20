@@ -1,16 +1,14 @@
 import type { CommentTree } from "@/models/types";
 import { formatDateDisplay } from "@/lib/seo";
-import { t, type Locale } from "@/i18n/translations";
 import { DeleteCommentButton } from "@/components/blog/delete-comment-button";
 
 interface CommentItemProps {
   comment: CommentTree;
-  locale: Locale;
   depth?: number;
   isAdmin?: boolean;
 }
 
-function CommentItem({ comment, locale, depth = 0, isAdmin }: CommentItemProps) {
+function CommentItem({ comment, depth = 0, isAdmin }: CommentItemProps) {
   const maxNestingDepth = 3;
   const effectiveDepth = Math.min(depth, maxNestingDepth);
 
@@ -36,15 +34,15 @@ function CommentItem({ comment, locale, depth = 0, isAdmin }: CommentItemProps) 
           </span>
           <span>&middot;</span>
           <time dateTime={new Date(comment.created_at * 1000).toISOString()}>
-            {formatDateDisplay(comment.created_at, locale)}
+            {formatDateDisplay(comment.created_at)}
           </time>
           {isAdmin && (
             <DeleteCommentButton
               commentId={comment.id}
               authorName={comment.author_name}
-              confirmMessage={t(locale, "blog.comments.confirmDelete")}
-              deleteLabel={t(locale, "blog.comments.delete")}
-              failedMessage={t(locale, "blog.comments.deleteFailed")}
+              confirmMessage="确认删除 {name} 的评论？"
+              deleteLabel="删除"
+              failedMessage="删除评论失败"
             />
           )}
         </div>
@@ -59,7 +57,6 @@ function CommentItem({ comment, locale, depth = 0, isAdmin }: CommentItemProps) 
             <CommentItem
               key={child.id}
               comment={child}
-              locale={locale}
               depth={depth + 1}
               {...(isAdmin ? { isAdmin } : {})}
             />
@@ -72,21 +69,20 @@ function CommentItem({ comment, locale, depth = 0, isAdmin }: CommentItemProps) 
 
 interface CommentsProps {
   comments: CommentTree[];
-  locale: Locale;
   isAdmin?: boolean;
 }
 
-export function Comments({ comments, locale, isAdmin }: CommentsProps) {
+export function Comments({ comments, isAdmin }: CommentsProps) {
   if (comments.length === 0) return null;
 
   return (
     <section className="mt-12 border-t border-blog-separator pt-6">
       <h2 className="mb-4 text-lg font-semibold text-blog-text">
-        {t(locale, "blog.comments.title")}
+        评论
       </h2>
       <div className="divide-y divide-blog-separator">
         {comments.map((comment) => (
-          <CommentItem key={comment.id} comment={comment} locale={locale} {...(isAdmin ? { isAdmin } : {})} />
+          <CommentItem key={comment.id} comment={comment} {...(isAdmin ? { isAdmin } : {})} />
         ))}
       </div>
     </section>

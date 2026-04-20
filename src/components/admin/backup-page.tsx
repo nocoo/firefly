@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { useLocale } from "@/i18n/context";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -112,8 +111,6 @@ function HistoryRow({ entry }: { entry: BackyBackupEntry }) {
 // ---------------------------------------------------------------------------
 
 export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
-  const { t } = useLocale();
-
   // Push config state
   const [configured, setConfigured] = useState(!!initialConfig);
   const [webhookUrl, setWebhookUrl] = useState(initialConfig?.webhookUrl ?? "");
@@ -154,7 +151,7 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? t("admin.backup.saveFailed"));
+        throw new Error(data.error ?? "保存失败");
       }
 
       // Refresh to get masked key
@@ -167,9 +164,9 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
       setEditMode(false);
       setEditUrl("");
       setEditKey("");
-      setMessage({ type: "success", text: t("admin.backup.saved") });
+      setMessage({ type: "success", text: "配置已保存" });
     } catch (error) {
-      setMessage({ type: "error", text: error instanceof Error ? error.message : t("admin.backup.saveFailed") });
+      setMessage({ type: "error", text: error instanceof Error ? error.message : "保存失败" });
     } finally {
       setSaving(false);
     }
@@ -201,12 +198,12 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
       const res = await fetch("/api/backup/test", { method: "POST" });
       const data = await res.json();
       if (data.ok) {
-        setMessage({ type: "success", text: t("admin.backup.testSuccess") });
+        setMessage({ type: "success", text: "连接成功" });
       } else {
-        setMessage({ type: "error", text: `${t("admin.backup.testFailed")} (${data.status})` });
+        setMessage({ type: "error", text: `连接失败 (${data.status})` });
       }
     } catch {
-      setMessage({ type: "error", text: t("admin.backup.testFailed") });
+      setMessage({ type: "error", text: "连接失败" });
     } finally {
       setTesting(false);
     }
@@ -223,7 +220,7 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
       setPushDetail(detail);
 
       if (detail.ok) {
-        setMessage({ type: "success", text: t("admin.backup.pushSuccess") });
+        setMessage({ type: "success", text: "推送成功" });
         if (detail.history) {
           setHistory(detail.history);
         }
@@ -231,7 +228,7 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
         setMessage({ type: "error", text: detail.message });
       }
     } catch {
-      setMessage({ type: "error", text: t("admin.backup.pushFailed") });
+      setMessage({ type: "error", text: "推送失败" });
     } finally {
       setPushing(false);
     }
@@ -307,11 +304,11 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
         <div className="flex items-center gap-2">
           <CloudUpload className="h-5 w-5 text-purple-500" />
           <h2 className="text-lg font-medium text-foreground">
-            {t("admin.backup.push.title")}
+            远程备份
           </h2>
         </div>
         <p className="text-sm text-muted-foreground">
-          {t("admin.backup.push.description")}
+          将博客数据推送至 Backy 远程备份服务。
         </p>
 
         {editMode ? (
@@ -335,17 +332,17 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
                 type="password"
                 value={editKey}
                 onChange={(e) => setEditKey(e.target.value)}
-                placeholder={configured ? t("admin.backup.push.apiKeyUnchanged") : "Bearer token"}
+                placeholder={configured ? "留空则保持不变" : "Bearer token"}
               />
             </div>
             <div className="flex gap-2">
               <Button onClick={handleSave} disabled={saving || !editUrl || (!configured && !editKey)}>
-                {saving ? t("admin.backup.saving") : t("admin.backup.save")}
+                {saving ? "保存中..." : "保存"}
               </Button>
               {configured && (
                 <Button variant="ghost" onClick={cancelEdit}>
                   <X className="h-4 w-4 mr-1" />
-                  {t("admin.backup.cancel")}
+                  取消
                 </Button>
               )}
             </div>
@@ -378,11 +375,11 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={handleTest} disabled={testing}>
                 <Plug className="h-3.5 w-3.5 mr-1.5" />
-                {testing ? t("admin.backup.testing") : t("admin.backup.testConnection")}
+                {testing ? "测试中..." : "测试连接"}
               </Button>
               <Button size="sm" onClick={handlePush} disabled={pushing}>
                 <CloudUpload className="h-3.5 w-3.5 mr-1.5" />
-                {pushing ? t("admin.backup.pushing") : t("admin.backup.pushBackup")}
+                {pushing ? "推送中..." : "推送备份"}
               </Button>
             </div>
 
@@ -412,7 +409,7 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
             <div className="border-t border-border pt-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-foreground">
-                  {t("admin.backup.history.title")}
+                  备份记录
                 </h3>
                 <Button
                   variant="ghost"
@@ -421,7 +418,7 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
                   disabled={loadingHistory}
                 >
                   <RefreshCw className={cn("h-3.5 w-3.5 mr-1", loadingHistory && "animate-spin")} />
-                  {t("admin.backup.history.refresh")}
+                  刷新
                 </Button>
               </div>
 
@@ -434,12 +431,12 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    {t("admin.backup.history.empty")}
+                    暂无备份记录
                   </p>
                 )
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  {t("admin.backup.history.hint")}
+                  推送备份后将显示远程备份记录。
                 </p>
               )}
             </div>
@@ -452,11 +449,11 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
         <div className="flex items-center gap-2">
           <KeyRound className="h-5 w-5 text-yellow-500" />
           <h2 className="text-lg font-medium text-foreground">
-            {t("admin.backup.pull.title")}
+            拉取 Webhook
           </h2>
         </div>
         <p className="text-sm text-muted-foreground">
-          {t("admin.backup.pull.description")}
+          生成凭证供 Backy 定时拉取触发备份推送。
         </p>
 
         {pullKey ? (
@@ -498,7 +495,7 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
                 disabled={pullKeyLoading}
               >
                 <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                {t("admin.backup.pull.regenerate")}
+                重新生成
               </Button>
               <Button
                 variant="ghost"
@@ -507,7 +504,7 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
                 disabled={pullKeyLoading}
               >
                 <Trash2 className="h-3.5 w-3.5 mr-1.5 text-red-500" />
-                {t("admin.backup.pull.revoke")}
+                撤销
               </Button>
             </div>
           </div>
@@ -518,7 +515,7 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
             disabled={pullKeyLoading}
           >
             <KeyRound className="h-4 w-4 mr-2" />
-            {t("admin.backup.pull.generate")}
+            生成凭证
           </Button>
         )}
       </div>

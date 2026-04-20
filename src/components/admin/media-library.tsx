@@ -27,7 +27,8 @@ import { formatFileSize } from "@/models/backup";
 import { ConfirmDialog } from "./confirm-dialog";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
 import { Select } from "@/components/ui/select";
-import { useLocale } from "@/i18n/context";
+
+const MONTH_LABELS = ["", "一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"];
 
 // ---------------------------------------------------------------------------
 // Types
@@ -124,7 +125,6 @@ export function MediaLibrary({
   initialTotal,
   initialYearCounts,
 }: MediaLibraryProps) {
-  const { t } = useLocale();
   const [media, setMedia] = useState<MediaWithUrl[]>(initialMedia);
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
@@ -222,30 +222,30 @@ export function MediaLibrary({
         method: "DELETE",
       });
       if (!res.ok) {
-        toast.error(t("admin.media.deleteError"));
+        toast.error("删除图片失败");
         return;
       }
       setMedia((prev) => prev.filter((m) => m.id !== deleteTarget.id));
       setTotal((prev) => prev - 1);
-      toast.success(t("admin.media.deleted"));
+      toast.success("图片已删除");
     } catch {
-      toast.error(t("admin.media.deleteError"));
+      toast.error("删除图片失败");
     } finally {
       setDeleting(false);
       setDeleteTarget(null);
     }
-  }, [deleteTarget, t]);
+  }, [deleteTarget]);
 
   const copyToClipboard = useCallback(
     async (text: string) => {
       try {
         await navigator.clipboard.writeText(text);
-        toast.success(t("admin.media.copied"));
+        toast.success("已复制！");
       } catch {
         // Silently ignore clipboard failures
       }
     },
-    [t],
+    [],
   );
 
   // ---------------------------------------------------------------------------
@@ -298,8 +298,7 @@ export function MediaLibrary({
           if (!res.ok) {
             const data = await res.json();
             toast.error(
-              t("admin.media.uploadFailed").replace("{filename}", file.name) +
-                (data.error ? `: ${data.error}` : ""),
+              `上传失败：${file.name}` + (data.error ? `: ${data.error}` : ""),
             );
             continue;
           }
@@ -313,23 +312,16 @@ export function MediaLibrary({
           setTotal((prev) => prev + 1);
           successCount++;
         } catch {
-          toast.error(
-            t("admin.media.uploadFailed").replace("{filename}", file.name),
-          );
+          toast.error(`上传失败：${file.name}`);
         }
       }
 
       setUploading(false);
       if (successCount > 0) {
-        toast.success(
-          t("admin.media.uploadComplete").replace(
-            "{count}",
-            String(successCount),
-          ),
-        );
+        toast.success(`已上传 ${successCount} 个文件`);
       }
     },
-    [t],
+    [],
   );
 
   const formatDate = (epoch: number) => {
@@ -353,7 +345,7 @@ export function MediaLibrary({
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 rounded-[var(--radius-widget)] border-2 border-dashed border-primary bg-primary/5 backdrop-blur-sm">
           <Upload className="h-10 w-10 text-primary" />
           <p className="text-sm font-medium text-primary">
-            {t("admin.media.dropToUpload")}
+            拖放文件上传
           </p>
         </div>
       )}
@@ -362,9 +354,7 @@ export function MediaLibrary({
       {uploading && (
         <div className="mb-4 flex items-center gap-2 rounded-[var(--radius-widget)] border border-border bg-secondary px-4 py-2 text-sm text-muted-foreground">
           <Upload className="h-4 w-4 animate-pulse" />
-          {t("admin.media.uploadProgress")
-            .replace("{current}", String(uploadProgress.current))
-            .replace("{total}", String(uploadProgress.total))}
+          {`上传中 ${uploadProgress.current}/${uploadProgress.total}...`}
         </div>
       )}
 
@@ -378,7 +368,7 @@ export function MediaLibrary({
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder={t("admin.media.searchPlaceholder")}
+            placeholder="搜索文件..."
             className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary pl-8 pr-8 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
           {searchInput && (
@@ -401,7 +391,7 @@ export function MediaLibrary({
           onChange={(e) => updateFilter("mimeType", e.target.value)}
           className="w-auto"
         >
-          <option value="">{t("admin.media.allTypes")}</option>
+          <option value="">所有类型</option>
           <option value="image/jpeg">JPEG</option>
           <option value="image/png">PNG</option>
           <option value="image/webp">WebP</option>
@@ -415,7 +405,7 @@ export function MediaLibrary({
           onChange={(e) => updateFilter("year", e.target.value)}
           className="w-auto"
         >
-          <option value="">{t("admin.filters.allYears")}</option>
+          <option value="">全部年份</option>
           {initialYearCounts.map(({ year, count }) => (
             <option key={year} value={String(year)}>
               {year} ({count})
@@ -430,10 +420,10 @@ export function MediaLibrary({
           className="w-auto"
           disabled={!filters.year}
         >
-          <option value="">{t("admin.filters.allMonths")}</option>
+          <option value="">全部月份</option>
           {MONTHS.map((m) => (
             <option key={m} value={String(m)}>
-              {t(`blog.month.${m}`)}
+              {MONTH_LABELS[m]}
             </option>
           ))}
         </Select>
@@ -447,11 +437,11 @@ export function MediaLibrary({
           }}
           className="w-auto"
         >
-          <option value="created_at-desc">{t("admin.media.sortNewest")}</option>
-          <option value="created_at-asc">{t("admin.media.sortOldest")}</option>
-          <option value="size-desc">{t("admin.media.sortLargest")}</option>
-          <option value="size-asc">{t("admin.media.sortSmallest")}</option>
-          <option value="filename-asc">{t("admin.media.sortName")}</option>
+          <option value="created_at-desc">最新优先</option>
+          <option value="created_at-asc">最早优先</option>
+          <option value="size-desc">最大优先</option>
+          <option value="size-asc">最小优先</option>
+          <option value="filename-asc">名称 A–Z</option>
         </Select>
 
         {/* Reset */}
@@ -462,32 +452,26 @@ export function MediaLibrary({
             className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] border border-border bg-secondary px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.5} />
-            {t("admin.filters.resetFilters")}
+            重置
           </button>
         )}
       </div>
 
       {/* ── Count ── */}
       <p className="mb-4 text-sm text-muted-foreground">
-        {fetching
-          ? "..."
-          : t("admin.media.showing")
-              .replace("{count}", String(media.length))
-              .replace("{total}", String(total))}
+        {fetching ? "..." : `显示 ${media.length} / ${total}`}
       </p>
 
       {/* ── Empty state ── */}
       {media.length === 0 && !fetching && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <p className="text-lg font-medium text-foreground">
-            {hasActiveFilters(filters)
-              ? t("admin.media.noResults")
-              : t("admin.media.empty")}
+            {hasActiveFilters(filters) ? "无匹配结果" : "暂无媒体文件"}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             {hasActiveFilters(filters)
-              ? t("admin.media.noResultsHint")
-              : t("admin.media.emptyHint")}
+              ? "请调整筛选条件。"
+              : "通过文章编辑器上传图片。"}
           </p>
         </div>
       )}
@@ -542,7 +526,7 @@ export function MediaLibrary({
                         copyToClipboard(item.url);
                       }}
                       className="flex items-center justify-center rounded p-1 text-white/80 hover:text-white hover:bg-white/20 transition-colors"
-                      title={t("admin.media.copyUrl")}
+                      title="复制链接"
                     >
                       <Copy className="h-3 w-3" />
                     </button>
@@ -555,7 +539,7 @@ export function MediaLibrary({
                         );
                       }}
                       className="flex items-center justify-center rounded p-1 text-white/80 hover:text-white hover:bg-white/20 transition-colors"
-                      title={t("admin.media.copyMarkdown")}
+                      title="复制 Markdown"
                     >
                       <FileCode2 className="h-3 w-3" />
                     </button>
@@ -566,7 +550,7 @@ export function MediaLibrary({
                         setDeleteTarget(item);
                       }}
                       className="ml-auto flex items-center justify-center rounded p-1 text-red-400 hover:text-red-300 hover:bg-white/20 transition-colors"
-                      title={t("admin.media.delete")}
+                      title="删除"
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>
@@ -587,7 +571,7 @@ export function MediaLibrary({
             disabled={loading}
             className="rounded-[var(--radius-widget)] border border-border bg-secondary px-6 py-2 text-sm text-foreground hover:bg-accent transition-colors disabled:opacity-50"
           >
-            {loading ? "..." : t("admin.media.loadMore")}
+            {loading ? "..." : "加载更多"}
           </button>
         </div>
       )}
@@ -648,7 +632,7 @@ export function MediaLibrary({
                 className="flex items-center justify-center gap-1.5 rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-xs text-foreground transition-colors hover:bg-accent"
               >
                 <Copy className="h-3.5 w-3.5" />
-                {t("admin.media.copyUrl")}
+                复制链接
               </button>
               <button
                 type="button"
@@ -660,7 +644,7 @@ export function MediaLibrary({
                 className="flex items-center justify-center gap-1.5 rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-xs text-foreground transition-colors hover:bg-accent"
               >
                 <FileCode2 className="h-3.5 w-3.5" />
-                {t("admin.media.copyMarkdown")}
+                复制 Markdown
               </button>
               <button
                 type="button"
@@ -671,7 +655,7 @@ export function MediaLibrary({
                 className="flex items-center justify-center gap-1.5 rounded-[var(--radius-widget)] border border-destructive/30 px-3 py-2 text-xs text-destructive transition-colors hover:bg-destructive/10"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                {t("admin.media.delete")}
+                删除
               </button>
             </div>
           </>
@@ -684,9 +668,9 @@ export function MediaLibrary({
         onOpenChange={(open) => {
           if (!open) setDeleteTarget(null);
         }}
-        title={t("admin.media.delete")}
-        description={t("admin.media.confirmDelete")}
-        confirmLabel={deleting ? "..." : t("admin.media.delete")}
+        title="删除"
+        description="确定删除此图片？该操作将从存储中永久移除。"
+        confirmLabel={deleting ? "..." : "删除"}
         destructive
         onConfirm={handleDelete}
       />

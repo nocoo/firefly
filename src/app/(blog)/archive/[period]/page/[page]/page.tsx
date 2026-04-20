@@ -7,8 +7,6 @@ import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { buildPageMeta, SITE_URL, postPath } from "@/lib/seo";
 import { collectionPageJsonLd } from "@/lib/jsonld";
-import { getLocale } from "@/i18n/server";
-import { t } from "@/i18n/translations";
 import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
 import { EmptyState } from "@/components/blog/empty-state";
 import { parseArchivePeriod } from "../../parse-archive-period";
@@ -28,19 +26,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!parsed) return { title: "Not Found" };
 
   const db = getDb();
-  const [settings, locale] = await Promise.all([
-    getSiteSettings(db),
-    getLocale(),
-  ]);
+  const settings = await getSiteSettings(db);
   const label = parsed.month
-    ? `${parsed.year} ${t(locale, "blog.sidebar.yearSuffix")} ${parsed.month} ${t(locale, "blog.sidebar.monthSuffix")}`
-    : `${parsed.year} ${t(locale, "blog.sidebar.yearSuffix")}`;
+    ? `${parsed.year} 年 ${parsed.month} 月`
+    : `${parsed.year} 年`;
 
   return buildPageMeta({
     title: `${label} – Page ${page}`,
     description: label,
     path: `/archive/${period}/page/${page}`,
-    locale,
   }, settings);
 }
 
@@ -52,7 +46,6 @@ export default async function ArchivePaged({ params }: Props) {
   const parsed = parseArchivePeriod(period);
   if (!parsed) notFound();
 
-  const locale = await getLocale();
   const db = getDb();
 
   const settings = await getSiteSettings(db);
@@ -69,8 +62,8 @@ export default async function ArchivePaged({ params }: Props) {
   if (page > totalPages) notFound();
 
   const label = parsed.month
-    ? `${parsed.year} ${t(locale, "blog.sidebar.yearSuffix")} ${parsed.month} ${t(locale, "blog.sidebar.monthSuffix")}`
-    : `${parsed.year} ${t(locale, "blog.sidebar.yearSuffix")}`;
+    ? `${parsed.year} 年 ${parsed.month} 月`
+    : `${parsed.year} 年`;
 
   return (
     <>
@@ -85,7 +78,6 @@ export default async function ArchivePaged({ params }: Props) {
               url: `${SITE_URL}${postPath(p.slug, p.published_at)}`,
               name: p.title,
             })),
-            locale,
           ),
         }}
       />
@@ -95,19 +87,18 @@ export default async function ArchivePaged({ params }: Props) {
           {label}
         </h1>
         <p className="mt-1 text-xs text-blog-muted">
-          {t(locale, "blog.category.postCount", { n: total })}
+          {`${total} 篇文章`}
         </p>
       </header>
 
       <section>
         {posts.length === 0 ? (
-          <EmptyState icon={Archive} message={t(locale, "blog.archive.noPosts")} />
+          <EmptyState icon={Archive} message="该时期暂无文章。" />
         ) : (
           posts.map((post, i) => (
             <PostCard
               key={post.id}
               post={post}
-              locale={locale}
               author={getPostAuthor(post, settings)}
               priority={i === 0 && !!post.featured_image}
             />
@@ -119,7 +110,6 @@ export default async function ArchivePaged({ params }: Props) {
         currentPage={page}
         totalPages={totalPages}
         basePath={`/archive/${period}`}
-        locale={locale}
       />
     </>
   );

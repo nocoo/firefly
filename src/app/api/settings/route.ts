@@ -7,7 +7,6 @@ import {
   type UpdateSiteSettingsInput,
   type FontStyle,
 } from "@/data/settings";
-import { LOCALES, type Locale } from "@/i18n/translations";
 
 const FONT_STYLES: FontStyle[] = ["pingfang", "classic", "serif", "sans"];
 
@@ -47,14 +46,6 @@ export async function PUT(request: NextRequest) {
     }
 
     const input: UpdateSiteSettingsInput = {};
-
-    // Validate locale
-    if (body.locale !== undefined) {
-      if (!LOCALES.includes(body.locale as Locale)) {
-        return errorResponse(`Invalid locale. Must be one of: ${LOCALES.join(", ")}`);
-      }
-      input.locale = body.locale as Locale;
-    }
 
     // Validate postsPerPage
     if (body.postsPerPage !== undefined) {

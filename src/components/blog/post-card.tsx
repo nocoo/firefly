@@ -3,7 +3,6 @@ import Image from "next/image";
 import { ArrowRight, Calendar, User } from "lucide-react";
 import type { PostWithAgent } from "@/models/types";
 import { postPath, formatDateDisplay } from "@/lib/seo";
-import { t, type Locale } from "@/i18n/translations";
 import { sanitizeSnippet } from "@/lib/sanitize-snippet";
 
 export interface PostCardAuthor {
@@ -13,7 +12,6 @@ export interface PostCardAuthor {
 
 interface PostCardProps {
   post: PostWithAgent;
-  locale: Locale;
   /** Author info for the byline (name + optional avatar) */
   author?: PostCardAuthor;
   /** Mark the featured image as high-priority (LCP) */
@@ -22,11 +20,11 @@ interface PostCardProps {
   snippet?: string;
 }
 
-export function PostCard({ post, locale, author, priority, snippet }: PostCardProps) {
+export function PostCard({ post, author, priority, snippet }: PostCardProps) {
   const href = postPath(post.slug, post.published_at);
   const date = post.published_at
-    ? formatDateDisplay(post.published_at, locale)
-    : t(locale, "blog.post.draft");
+    ? formatDateDisplay(post.published_at)
+    : "草稿";
 
   return (
     <article className="blog-entry">
@@ -45,7 +43,7 @@ export function PostCard({ post, locale, author, priority, snippet }: PostCardPr
       <div className="blog-byline">
         <span className="blog-byline-item">
           <Calendar className="blog-byline-icon" />
-          <span>{t(locale, "blog.post.published")}</span>{" "}
+          <span>发布于</span>{" "}
           {post.published_at ? (
             <time dateTime={new Date(post.published_at * 1000).toISOString()}>
               {date}
@@ -104,9 +102,9 @@ export function PostCard({ post, locale, author, priority, snippet }: PostCardPr
           href={href}
           prefetch={false}
           className="blog-read-more"
-          aria-label={`${t(locale, "blog.post.continueReading")} — ${post.title}`}
+          aria-label={`继续阅读 — ${post.title}`}
         >
-          {t(locale, "blog.post.continueReading")}
+          继续阅读
           <ArrowRight className="ml-1 inline h-4 w-4" />
         </Link>
       )}

@@ -12,7 +12,6 @@ import { ConfirmDialog } from "./confirm-dialog";
 import { Select } from "@/components/ui/select";
 import { ArticleBody } from "@/components/blog/article-body";
 import { SegmentedControl } from "@/components/ui/segmented-control";
-import { useLocale } from "@/i18n/context";
 
 interface PostFormProps {
   post?: PostWithCategory & { tagIds: string[] };
@@ -22,7 +21,6 @@ interface PostFormProps {
 
 export function PostForm({ post, categories, tags }: PostFormProps) {
   const router = useRouter();
-  const { t } = useLocale();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -107,13 +105,13 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       });
       if (!res.ok) {
         const data = await res.json();
-        toast.error(data.error || t("admin.postForm.failedSave"));
+        toast.error(data.error || "保存文章失败");
         return;
       }
       const { excerpt: generated } = await res.json();
       setExcerpt(generated ?? "");
     } catch {
-      toast.error(t("admin.postForm.failedSave"));
+      toast.error("保存文章失败");
     } finally {
       setIsGenerating(false);
     }
@@ -131,7 +129,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       });
       if (!res.ok) {
         const data = await res.json();
-        toast.error(data.error || t("admin.postForm.failedSave"));
+        toast.error(data.error || "保存文章失败");
         return;
       }
       const data = await res.json();
@@ -141,7 +139,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       setBodyText(data.bodyText ?? "");
       setHasFetched(true);
     } catch {
-      toast.error(t("admin.postForm.failedSave"));
+      toast.error("保存文章失败");
     } finally {
       setIsUnfurling(false);
     }
@@ -171,14 +169,14 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       });
       if (!res.ok) {
         const data = await res.json();
-        toast.error(data.error || t("admin.postForm.failedSave"));
+        toast.error(data.error || "保存文章失败");
         return;
       }
       const data = await res.json();
       if (data.title) setReferenceTitle(data.title);
       if (data.description) setReferenceDescription(data.description);
     } catch {
-      toast.error(t("admin.postForm.failedSave"));
+      toast.error("保存文章失败");
     } finally {
       setIsEnhancing(false);
     }
@@ -218,12 +216,12 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       const res = await fetch(`/api/posts/${post.slug}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? t("admin.postForm.failedDelete"));
+        throw new Error(data.error ?? "删除文章失败");
       }
       router.push("/admin/posts");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("admin.postForm.failedDeleteGeneric"));
+      setError(err instanceof Error ? err.message : "删除失败");
     } finally {
       setSaving(false);
     }
@@ -284,7 +282,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
 
       if (!res.ok) {
         const errData = await res.json();
-        throw new Error(errData.error ?? t("admin.postForm.failedSave"));
+        throw new Error(errData.error ?? "保存文章失败");
       }
 
       // Backfill post_id on media uploaded during new post creation
@@ -300,10 +298,10 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
               body: JSON.stringify({ mediaIds, postId: newPostId }),
             });
             if (!assocRes.ok) {
-              toast.error(t("admin.media.associateError"));
+              toast.error("文章已保存，但未能关联上传的图片。可从媒体库手动关联。");
             }
           } catch {
-            toast.error(t("admin.media.associateError"));
+            toast.error("文章已保存，但未能关联上传的图片。可从媒体库手动关联。");
           }
         }
       }
@@ -311,7 +309,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       router.push("/admin/posts");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("admin.postForm.unknownError"));
+      setError(err instanceof Error ? err.message : "未知错误");
     } finally {
       setSaving(false);
     }
@@ -333,7 +331,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           htmlFor="title"
           className="text-sm font-medium text-foreground"
         >
-          {t("admin.postForm.title")}
+          标题
         </label>
         <input
           id="title"
@@ -342,7 +340,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           onChange={(e) => handleTitleChange(e.target.value)}
           required
           className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder={t("admin.postForm.titlePlaceholder")}
+          placeholder="文章标题"
         />
       </div>
 
@@ -352,7 +350,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           htmlFor="slug"
           className="text-sm font-medium text-foreground"
         >
-          {t("admin.postForm.slug")}
+          {"别名"}
         </label>
         <input
           id="slug"
@@ -361,7 +359,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           onChange={(e) => setSlug(e.target.value)}
           required
           className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder={t("admin.postForm.slugPlaceholder")}
+          placeholder={"url-slug"}
         />
       </div>
 
@@ -369,13 +367,13 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <label id="content-label" htmlFor="content" className="text-sm font-medium text-foreground">
-            {t("admin.postForm.content")}
+            {"内容 (Markdown)"}
           </label>
           {/* Tab switcher — hidden on lg+ where preview is side-by-side */}
           <SegmentedControl
             options={[
-              { value: "write", label: t("admin.postForm.write") },
-              { value: "preview", label: t("admin.postForm.preview") },
+              { value: "write", label: "编辑" },
+              { value: "preview", label: "预览" },
             ]}
             value={previewMode ? "preview" : "write"}
             onChange={(v) => setPreviewMode(v === "preview")}
@@ -390,7 +388,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
                 <ArticleBody html={previewHtml} />
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  {t("admin.postForm.nothingToPreview")}
+                  {"暂无内容可预览"}
                 </p>
               )}
             </div>
@@ -409,7 +407,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
                 required
                 rows={20}
                 className="w-full min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
-                placeholder={t("admin.postForm.contentPlaceholder")}
+                placeholder={"使用 Markdown 编写文章内容..."}
               />
             </>
           )}
@@ -429,7 +427,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             required
             rows={20}
             className="w-full min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
-            placeholder={t("admin.postForm.contentPlaceholder")}
+            placeholder={"使用 Markdown 编写文章内容..."}
           />
         </div>
       </div>
@@ -441,9 +439,9 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             htmlFor="excerpt"
             className="text-sm font-medium text-foreground"
           >
-            {t("admin.postForm.excerpt")}{" "}
+            {"摘要"}{" "}
             <span className="text-muted-foreground font-normal">
-              {t("admin.postForm.excerptHint")}
+              {"（可选，留空则自动生成）"}
             </span>
           </label>
           {isEditing && (
@@ -454,8 +452,8 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
               className="text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
             >
               {isGenerating
-                ? t("admin.postForm.excerptGenerating")
-                : t("admin.postForm.excerptGenerate")}
+                ? "生成中..."
+                : "✨ AI 生成"}
             </button>
           )}
         </div>
@@ -465,7 +463,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           onChange={(e) => setExcerpt(e.target.value)}
           rows={3}
           className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder={t("admin.postForm.excerptPlaceholder")}
+          placeholder={"文章的简要描述..."}
         />
       </div>
 
@@ -477,17 +475,17 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             htmlFor="status"
             className="text-sm font-medium text-foreground"
           >
-            {t("admin.postForm.status")}
+            {"状态"}
           </label>
           <Select
             id="status"
             value={status}
             onChange={(e) => setStatus(e.target.value as PostStatus)}
           >
-            <option value="draft">{t("admin.postForm.statusDraft")}</option>
-            <option value="published">{t("admin.postForm.statusPublished")}</option>
-            <option value="private">{t("admin.postForm.statusPrivate")}</option>
-            <option value="archived">{t("admin.postForm.statusArchived")}</option>
+            <option value="draft">{"草稿"}</option>
+            <option value="published">{"已发布"}</option>
+            <option value="private">{"私密"}</option>
+            <option value="archived">{"已归档"}</option>
           </Select>
         </div>
 
@@ -497,14 +495,14 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             htmlFor="category"
             className="text-sm font-medium text-foreground"
           >
-            {t("admin.postForm.category")}
+            {"分类"}
           </label>
           <Select
             id="category"
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
           >
-            <option value="">{t("admin.postForm.noCategory")}</option>
+            <option value="">{"无分类"}</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
@@ -520,9 +518,9 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           htmlFor="published_at"
           className="text-sm font-medium text-foreground"
         >
-          {t("admin.postForm.publishedAt")}{" "}
+          {"发布日期"}{" "}
           <span className="text-muted-foreground font-normal">
-            {t("admin.postForm.publishedAtHint")}
+            {"（留空则首次发布时自动设置）"}
           </span>
         </label>
         <input
@@ -536,7 +534,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
 
       {/* Tags */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">{t("admin.postForm.tags")}</label>
+        <label className="text-sm font-medium text-foreground">{"标签"}</label>
         <div className="flex flex-wrap gap-2">
           {tags.map((tag) => (
             <button
@@ -554,7 +552,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           ))}
           {tags.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              {t("admin.postForm.noTags")}
+              {"暂无标签"}
             </p>
           )}
         </div>
@@ -566,8 +564,8 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           htmlFor="featured_image"
           className="text-sm font-medium text-foreground"
         >
-          {t("admin.postForm.featuredImage")}{" "}
-          <span className="text-muted-foreground font-normal">{t("admin.postForm.featuredImageHint")}</span>
+          {"封面图片 URL"}{" "}
+          <span className="text-muted-foreground font-normal">{"（可选）"}</span>
         </label>
         <input
           id="featured_image"
@@ -582,8 +580,8 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       {/* Reference URL */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-foreground">
-          {t("admin.postForm.referenceUrl")}{" "}
-          <span className="text-muted-foreground font-normal">{t("admin.postForm.referenceUrlHint")}</span>
+          {"引用链接"}{" "}
+          <span className="text-muted-foreground font-normal">{"（可选）"}</span>
         </label>
         <div className="flex gap-2">
           <input
@@ -600,10 +598,10 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             className="inline-flex items-center rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent disabled:opacity-50"
           >
             {isUnfurling
-              ? t("admin.postForm.fetching")
+              ? "获取中..."
               : hasFetched
-                ? t("admin.postForm.refetch")
-                : t("admin.postForm.fetch")}
+                ? "重新获取"
+                : "获取"}
           </button>
           {(referenceUrl || hasFetched) && (
             <button
@@ -611,7 +609,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
               onClick={handleClearReference}
               className="inline-flex items-center rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
             >
-              {t("admin.postForm.clear")}
+              {"清除"}
             </button>
           )}
         </div>
@@ -619,7 +617,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           <div className="space-y-2 rounded-[var(--radius-widget)] border border-border p-3">
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <label className="text-xs text-muted-foreground">{t("admin.postForm.referenceTitle")}</label>
+                <label className="text-xs text-muted-foreground">{"标题"}</label>
                 <button
                   type="button"
                   onClick={handleEnhanceReference}
@@ -627,8 +625,8 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
                   className="text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
                 >
                   {isEnhancing
-                    ? t("admin.postForm.enhancing")
-                    : t("admin.postForm.aiEnhance")}
+                    ? "翻译中..."
+                    : "✨ AI 翻译"}
                 </button>
               </div>
               <input
@@ -639,7 +637,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">{t("admin.postForm.referenceDescription")}</label>
+              <label className="text-xs text-muted-foreground">{"描述"}</label>
               <textarea
                 value={referenceDescription}
                 onChange={(e) => setReferenceDescription(e.target.value)}
@@ -649,7 +647,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             </div>
             {referenceImage && (
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">{t("admin.postForm.referenceImage")}</label>
+                <label className="text-xs text-muted-foreground">{"图片"}</label>
                 <img
                   src={referenceImage}
                   alt={referenceTitle || "Reference"}
@@ -668,14 +666,14 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           disabled={saving}
           className="inline-flex items-center gap-2 rounded-[var(--radius-widget)] bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
-          {saving ? t("admin.postForm.saving") : isEditing ? t("admin.postForm.updatePost") : t("admin.postForm.createPost")}
+          {saving ? "保存中..." : isEditing ? "更新文章" : "创建文章"}
         </button>
         <button
           type="button"
           onClick={() => router.push("/admin/posts")}
           className="inline-flex items-center rounded-[var(--radius-widget)] border border-border bg-secondary px-4 py-2 text-sm text-foreground transition-colors hover:bg-accent"
         >
-          {t("admin.postForm.cancel")}
+          {"取消"}
         </button>
         {isEditing && (
           <button
@@ -684,7 +682,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             disabled={saving}
             className="ml-auto inline-flex items-center rounded-[var(--radius-widget)] bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50"
           >
-            {t("admin.postForm.deletePost")}
+            {"删除文章"}
           </button>
         )}
       </div>
@@ -694,11 +692,11 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         <ConfirmDialog
           open={deleteConfirmOpen}
           onOpenChange={setDeleteConfirmOpen}
-          title={post ? t("admin.postForm.confirmDelete", { title: post.title }) : ""}
+          title={post ? `确认删除「${title}」？此操作不可撤销。` : ""}
           description=""
           destructive
-          confirmLabel={t("admin.confirm.delete")}
-          cancelLabel={t("admin.confirm.cancel")}
+          confirmLabel={"删除"}
+          cancelLabel={"取消"}
           onConfirm={handleDelete}
         />
       )}

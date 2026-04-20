@@ -3,7 +3,6 @@
 import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Monitor } from "lucide-react";
-import { useLocale } from "@/i18n/context";
 import { IconButton } from "@/components/ui/icon-button";
 
 const ICON_PROPS = {
@@ -23,7 +22,6 @@ function useMounted(): boolean {
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-  const { t } = useLocale();
   const mounted = useMounted();
 
   const cycleTheme = () => {
@@ -35,15 +33,15 @@ export function ThemeToggle() {
 
   const label =
     theme === "light"
-      ? t("theme.light")
+      ? "浅色"
       : theme === "dark"
-        ? t("theme.dark")
-        : t("theme.system");
+        ? "深色"
+        : "跟随系统";
 
   // Render a static placeholder until mounted to avoid hydration mismatch
   if (!mounted) {
     return (
-      <IconButton aria-label={t("theme.toggle", { label: t("theme.system") })}>
+      <IconButton aria-label={`切换主题（当前：跟随系统）`}>
         <Monitor {...ICON_PROPS} />
       </IconButton>
     );
@@ -52,7 +50,7 @@ export function ThemeToggle() {
   return (
     <IconButton
       onClick={cycleTheme}
-      aria-label={t("theme.toggle", { label })}
+      aria-label={`切换主题（当前：${label}）`}
     >
       {theme === "dark" ? (
         <Moon {...ICON_PROPS} />

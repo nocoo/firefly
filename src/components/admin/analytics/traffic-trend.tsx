@@ -17,7 +17,6 @@ import {
   CHART_MARGIN,
 } from "./chart-helpers";
 import { DashboardResponsiveContainer } from "./responsive-container";
-import { useLocale } from "@/i18n/context";
 
 interface TrafficTrendProps {
   daily: AnalyticsDailyTrend[];
@@ -83,20 +82,18 @@ const LEGEND_ITEMS: { key: string; label: string; color: string }[] = [
 // ---------------------------------------------------------------------------
 
 export function TrafficTrend({ daily }: TrafficTrendProps) {
-  const { t } = useLocale();
-
   if (daily.length === 0) {
     return (
-      <DataCard title={t("admin.analytics.trafficOverTime")}>
+      <DataCard title="流量趋势">
         <p className="text-sm text-muted-foreground py-4">
-          {t("admin.analytics.noData")}
+          暂无数据
         </p>
       </DataCard>
     );
   }
 
   return (
-    <DataCard title={t("admin.analytics.trafficOverTime")}>
+    <DataCard title="流量趋势">
       {/* Inline legend */}
       <div className="mb-3 flex items-center gap-4">
         {LEGEND_ITEMS.map(({ key, label, color }) => (
@@ -157,7 +154,7 @@ export function TrafficTrend({ daily }: TrafficTrendProps) {
             <Area
               type="monotone"
               dataKey="human"
-              name={t("admin.analytics.humanVisitors")}
+              name="人类访客"
               stroke={SOURCE_COLORS.human}
               strokeWidth={2}
               fill="url(#gradHuman)"
@@ -166,7 +163,7 @@ export function TrafficTrend({ daily }: TrafficTrendProps) {
             <Area
               type="monotone"
               dataKey="search"
-              name={t("admin.analytics.searchEngines")}
+              name="搜索引擎"
               stroke={SOURCE_COLORS.search}
               strokeWidth={2}
               fill="url(#gradSearch)"
@@ -175,7 +172,7 @@ export function TrafficTrend({ daily }: TrafficTrendProps) {
             <Area
               type="monotone"
               dataKey="ai"
-              name={t("admin.analytics.aiBots")}
+              name="AI 爬虫"
               stroke={SOURCE_COLORS.ai}
               strokeWidth={2}
               fill="url(#gradAi)"
@@ -184,7 +181,7 @@ export function TrafficTrend({ daily }: TrafficTrendProps) {
             <Area
               type="monotone"
               dataKey="otherBot"
-              name={t("admin.analytics.otherBots")}
+              name="其他爬虫"
               stroke={SOURCE_COLORS.other}
               strokeWidth={2}
               fill="url(#gradOther)"

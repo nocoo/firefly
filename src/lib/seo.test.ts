@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
-  ogLocale,
-  htmlLang,
   buildPageMeta,
   SITE_URL,
+  HTML_LANG,
+  OG_LOCALE,
   type SiteIdentity,
 } from "./seo";
 
@@ -16,28 +16,18 @@ const testSite: SiteIdentity = {
   twitterHandle: "@test",
 };
 
-describe("ogLocale", () => {
-  it("maps zh to zh_CN", () => {
-    expect(ogLocale("zh")).toBe("zh_CN");
+describe("locale constants", () => {
+  it("HTML_LANG is zh-CN", () => {
+    expect(HTML_LANG).toBe("zh-CN");
   });
 
-  it("maps en to en_US", () => {
-    expect(ogLocale("en")).toBe("en_US");
-  });
-});
-
-describe("htmlLang", () => {
-  it("maps zh to zh-CN", () => {
-    expect(htmlLang("zh")).toBe("zh-CN");
-  });
-
-  it("maps en to en", () => {
-    expect(htmlLang("en")).toBe("en");
+  it("OG_LOCALE is zh_CN", () => {
+    expect(OG_LOCALE).toBe("zh_CN");
   });
 });
 
 describe("buildPageMeta", () => {
-  it("uses zh locale by default", () => {
+  it("uses zh-CN locale", () => {
     const meta = buildPageMeta({
       title: "Test",
       description: "Test description",
@@ -46,18 +36,6 @@ describe("buildPageMeta", () => {
 
     expect(meta.openGraph?.locale).toBe("zh_CN");
     expect(meta.alternates?.languages).toEqual({ "zh-CN": `${SITE_URL}/test` });
-  });
-
-  it("uses en locale when specified", () => {
-    const meta = buildPageMeta({
-      title: "Test",
-      description: "Test description",
-      path: "/test",
-      locale: "en",
-    }, testSite);
-
-    expect(meta.openGraph?.locale).toBe("en_US");
-    expect(meta.alternates?.languages).toEqual({ en: `${SITE_URL}/test` });
   });
 
   it("sets canonical URL from path", () => {
@@ -129,7 +107,7 @@ describe("buildPageMeta", () => {
     }, testSite);
 
     expect(meta.authors).toEqual([{ name: "Claude Daily", url: `${SITE_URL}/agents/claude-daily` }]);
-    expect(meta.openGraph?.siteName).toBe("Test Blog"); // siteName unchanged
+    expect(meta.openGraph?.siteName).toBe("Test Blog");
   });
 
   it("uses authorOverride in article OG authors", () => {
@@ -159,16 +137,8 @@ describe("buildPageMeta", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Title composition regression tests
-// ---------------------------------------------------------------------------
-// Root layout uses: title: { default: fullTitle, template: `%s | ${siteName}` }
-// Child pages must NOT include siteName in their title to avoid duplication.
-
 describe("title composition (regression)", () => {
   it("paginated page title should NOT contain siteName", () => {
-    // Correct: "Page 2"  →  template produces "Page 2 | Test Blog"
-    // Wrong:   "Test Blog – Page 2"  →  "Test Blog – Page 2 | Test Blog"
     const page = 2;
     const title = `Page ${page}`;
 
@@ -207,10 +177,7 @@ describe("title composition (regression)", () => {
     expect(meta.title).not.toContain(testSite.siteName);
   });
 
-  it("OG title can differ from page title (for homepage pattern)", () => {
-    // Homepage sets OG title to "SiteName – Tagline" but no page-level title
-    // (so layout default is used). This test documents that buildPageMeta
-    // passes through the exact title to both page and OG.
+  it("OG title equals page title", () => {
     const meta = buildPageMeta({
       title: "Page 2",
       description: "Desc",

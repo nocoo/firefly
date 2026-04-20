@@ -2,7 +2,6 @@
 
 import type { AnalyticsOverview, DeltaValue } from "@/models/analytics-types";
 import { formatNumber, formatDelta } from "./chart-helpers";
-import { useLocale } from "@/i18n/context";
 
 interface OverviewCardsProps {
   overview: AnalyticsOverview;
@@ -10,55 +9,54 @@ interface OverviewCardsProps {
 }
 
 export function OverviewCards({ overview, days }: OverviewCardsProps) {
-  const { t } = useLocale();
   return (
     <div className="space-y-2">
       <div className="flex items-baseline justify-between px-1">
         <h3 className="text-sm font-medium text-foreground">
-          {t("admin.analytics.overview")}
+          概览
         </h3>
         <span className="text-xs text-muted-foreground">
-          {t("admin.analytics.periodLabel", { days })}
+          {`最近 ${days} 天`}
         </span>
       </div>
       <div className="space-y-2">
         <StatCard
-          label={t("admin.analytics.totalViews")}
+          label="总浏览量"
           value={overview.total}
           delta={overview.totalDelta}
           days={days}
           index={0}
         />
         <StatCard
-          label={t("admin.analytics.humanVisitors")}
+          label="人类访客"
           value={overview.human}
           delta={overview.humanDelta}
           days={days}
           index={1}
         />
         <StatCard
-          label={t("admin.analytics.uniqueVisitors")}
+          label="独立访客"
           value={overview.uniqueVisitors}
           delta={overview.uniqueVisitorsDelta}
           days={days}
           index={2}
         />
         <StatCard
-          label={t("admin.analytics.searchEngines")}
+          label="搜索引擎"
           value={overview.search}
           delta={overview.searchDelta}
           days={days}
           index={3}
         />
         <StatCard
-          label={t("admin.analytics.aiBots")}
+          label="AI 爬虫"
           value={overview.ai}
           delta={overview.aiDelta}
           days={days}
           index={4}
         />
         <StatCard
-          label={t("admin.analytics.otherBots")}
+          label="其他爬虫"
           value={overview.otherBot}
           delta={overview.otherBotDelta}
           days={days}
@@ -82,7 +80,6 @@ function StatCard({
   days: number;
   index?: number;
 }) {
-  const { t } = useLocale();
   const d = formatDelta(delta, value);
   return (
     <div
@@ -107,7 +104,7 @@ function StatCard({
         {formatNumber(value)}
       </p>
       <p className="text-2xs text-muted-foreground/60">
-        {t("admin.analytics.vsPrev", { days })}
+        {`较前 ${days} 天`}
       </p>
     </div>
   );

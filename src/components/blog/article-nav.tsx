@@ -3,8 +3,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { Locale } from "@/i18n/translations";
-import { t } from "@/i18n/translations";
 import { getListOrigin } from "@/components/blog/list-origin-tracker";
 
 interface ArticleNavProps {
@@ -12,15 +10,14 @@ interface ArticleNavProps {
   prevTitle: string | null;
   nextHref: string | null;
   nextTitle: string | null;
-  locale: Locale;
 }
 
 interface BackLink {
   href: string;
-  labelKey: string;
+  label: string;
 }
 
-const BACK_DEFAULT: BackLink = { href: "/", labelKey: "blog.post.backToAll" };
+const BACK_DEFAULT: BackLink = { href: "/", label: "← 返回所有文章" };
 
 /**
  * Resolve the "back" link from sessionStorage (written by ListOriginTracker).
@@ -31,17 +28,17 @@ function resolveBackLink(): BackLink {
   if (!path) return BACK_DEFAULT;
 
   if (path.startsWith("/category/")) {
-    return { href: path, labelKey: "blog.post.backToCategory" };
+    return { href: path, label: "← 返回分类" };
   }
   if (path.startsWith("/tag/")) {
-    return { href: path, labelKey: "blog.post.backToTag" };
+    return { href: path, label: "← 返回标签" };
   }
   if (path.startsWith("/archive/")) {
-    return { href: path, labelKey: "blog.post.backToArchive" };
+    return { href: path, label: "← 返回归档" };
   }
   // Paginated home: /page/2 etc.
   if (path.startsWith("/page/")) {
-    return { href: path, labelKey: "blog.post.backToAll" };
+    return { href: path, label: "← 返回所有文章" };
   }
 
   return BACK_DEFAULT;
@@ -83,7 +80,6 @@ export function ArticleNav({
   prevTitle,
   nextHref,
   nextTitle,
-  locale,
 }: ArticleNavProps) {
   const router = useRouter();
   const back = useSyncExternalStore(
@@ -140,7 +136,7 @@ export function ArticleNav({
           prefetch={false}
           className="text-sm text-blog-text transition-colors hover:text-blog-accent"
         >
-          {t(locale, back.labelKey)}{" "}
+          {back.label}{" "}
           <kbd className="blog-kbd hidden sm:inline" aria-hidden="true">H</kbd>
         </Link>
 
@@ -153,12 +149,12 @@ export function ArticleNav({
               className="text-blog-text transition-colors hover:text-blog-accent"
               title={prevTitle ?? undefined}
             >
-              ← {t(locale, "blog.post.prevPost")}{" "}
+              ← 上一篇{" "}
               <kbd className="blog-kbd hidden sm:inline" aria-hidden="true">J</kbd>
             </Link>
           ) : (
             <span className="text-blog-text/30">
-              ← {t(locale, "blog.post.prevPost")}{" "}
+              ← 上一篇{" "}
               <kbd className="blog-kbd hidden sm:inline" aria-hidden="true">J</kbd>
             </span>
           )}
@@ -170,12 +166,12 @@ export function ArticleNav({
               className="text-blog-text transition-colors hover:text-blog-accent"
               title={nextTitle ?? undefined}
             >
-              {t(locale, "blog.post.nextPost")}{" "}
+              下一篇{" "}
               <kbd className="blog-kbd hidden sm:inline" aria-hidden="true">K</kbd> →
             </Link>
           ) : (
             <span className="text-blog-text/30">
-              {t(locale, "blog.post.nextPost")}{" "}
+              下一篇{" "}
               <kbd className="blog-kbd hidden sm:inline" aria-hidden="true">K</kbd> →
             </span>
           )}

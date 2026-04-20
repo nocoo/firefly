@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useLocale } from "@/i18n/context";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -22,8 +21,6 @@ interface SiteIdentityFormProps {
 }
 
 export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
-  const { t } = useLocale();
-
   // Identity state
   const [siteName, setSiteName] = useState(settings.siteName);
   const [siteTagline, setSiteTagline] = useState(settings.siteTagline);
@@ -62,7 +59,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
 
         if (!res.ok) {
           const data = await res.json();
-          throw new Error(data.error ?? t("admin.upload.failed"));
+          throw new Error(data.error ?? "上传失败");
         }
 
         const data = await res.json();
@@ -74,13 +71,13 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
         }
       } catch (err) {
         setLogoError(
-          err instanceof Error ? err.message : t("admin.upload.failed"),
+          err instanceof Error ? err.message : "上传失败",
         );
       } finally {
         setLogoUploading(false);
       }
     },
-    [t, logoUploading, logoRemoving],
+    [logoUploading, logoRemoving],
   );
 
   const removeLogo = useCallback(async () => {
@@ -93,18 +90,18 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? t("admin.upload.failed"));
+        throw new Error(data.error ?? "上传失败");
       }
 
       setCurrentLogoUrl(null);
     } catch (err) {
       setLogoError(
-        err instanceof Error ? err.message : t("admin.upload.failed"),
+        err instanceof Error ? err.message : "上传失败",
       );
     } finally {
       setLogoRemoving(false);
     }
-  }, [t, logoUploading, logoRemoving]);
+  }, [logoUploading, logoRemoving]);
 
   const handleLogoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -152,14 +149,14 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? t("admin.settings.saveFailed"));
+        throw new Error(data.error ?? "保存设置失败。");
       }
 
-      setMessage({ type: "success", text: t("admin.settings.saved") });
+      setMessage({ type: "success", text: "设置已保存。" });
     } catch (error) {
       setMessage({
         type: "error",
-        text: error instanceof Error ? error.message : t("admin.settings.saveFailed"),
+        text: error instanceof Error ? error.message : "保存设置失败。",
       });
     } finally {
       setSaving(false);
@@ -172,10 +169,10 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
       <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-4">
         <div>
           <h2 className="text-base font-medium text-foreground">
-            {t("admin.settings.siteLogo")}
+            站点图标
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            {t("admin.settings.siteLogoHint")}
+            上传一张正方形图片，将用作站点 favicon 和登录页头像。
           </p>
         </div>
 
@@ -219,9 +216,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
             >
               <label className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
                 <span>
-                  {logoUploading
-                    ? t("admin.upload.uploading")
-                    : t("admin.settings.siteLogoUpload")}
+                  {logoUploading ? "上传中..." : "上传图标"}
                 </span>
                 <input
                   type="file"
@@ -233,13 +228,13 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
               </label>
               {!logoUploading && (
                 <span className="text-muted-foreground/60">
-                  {t("admin.upload.dragDrop")}
+                  或拖拽上传
                 </span>
               )}
             </div>
 
             <p className="text-xs text-muted-foreground">
-              {t("admin.settings.siteLogoRequireSquare")}
+              图片必须为正方形（宽高相等）。
             </p>
 
             {currentLogoUrl && (
@@ -249,9 +244,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
                 disabled={logoBusy}
                 className="self-start text-xs text-destructive hover:text-destructive/80 transition-colors disabled:opacity-50"
               >
-                {logoRemoving
-                  ? t("admin.settings.saving")
-                  : t("admin.settings.siteLogoRemove")}
+                {logoRemoving ? "保存中..." : "移除"}
               </button>
             )}
           </div>
@@ -265,21 +258,21 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
       {/* Card 2: Site Info */}
       <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-5">
         <h2 className="text-base font-medium text-foreground">
-          {t("admin.settings.siteInfoSection")}
+          站点信息
         </h2>
 
         {/* Site Name */}
         <div className="space-y-1">
           <label className="text-sm font-medium text-foreground">
-            {t("admin.settings.siteName")}
+            站点名称
           </label>
           <p className="text-xs text-muted-foreground">
-            {t("admin.settings.siteNameHint")}
+            博客名称，显示在标题栏、侧边栏和 Meta 标签中。
           </p>
           <Input
             value={siteName}
             onChange={(e) => setSiteName(e.target.value)}
-            placeholder={t("admin.settings.siteNamePlaceholder")}
+            placeholder="我的博客"
             maxLength={255}
             className="max-w-md"
           />
@@ -288,15 +281,15 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
         {/* Site Tagline */}
         <div className="space-y-1">
           <label className="text-sm font-medium text-foreground">
-            {t("admin.settings.siteTagline")}
+            标语
           </label>
           <p className="text-xs text-muted-foreground">
-            {t("admin.settings.siteTaglineHint")}
+            显示在侧边栏的简短座右铭或标语。
           </p>
           <Input
             value={siteTagline}
             onChange={(e) => setSiteTagline(e.target.value)}
-            placeholder={t("admin.settings.siteTaglinePlaceholder")}
+            placeholder="一个关于……的个人博客"
             maxLength={500}
             className="max-w-md"
           />
@@ -305,16 +298,16 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
         {/* Site Description */}
         <div className="space-y-1">
           <label className="text-sm font-medium text-foreground">
-            {t("admin.settings.siteDescription")}
+            站点描述
           </label>
           <p className="text-xs text-muted-foreground">
-            {t("admin.settings.siteDescriptionHint")}
+            用于 Meta Description 和 llms.txt。建议不超过几句话。
           </p>
           <textarea
             className="flex min-h-[80px] w-full max-w-lg rounded-md border border-border bg-secondary px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             value={siteDescription}
             onChange={(e) => setSiteDescription(e.target.value)}
-            placeholder={t("admin.settings.siteDescriptionPlaceholder")}
+            placeholder="一个关于技术、设计和生活的博客。"
             maxLength={1000}
             rows={3}
           />
@@ -324,21 +317,21 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
       {/* Card 3: Author Info */}
       <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-5">
         <h2 className="text-base font-medium text-foreground">
-          {t("admin.settings.authorSection")}
+          作者信息
         </h2>
 
         {/* Author Name */}
         <div className="space-y-1">
           <label className="text-sm font-medium text-foreground">
-            {t("admin.settings.siteAuthor")}
+            作者名称
           </label>
           <p className="text-xs text-muted-foreground">
-            {t("admin.settings.siteAuthorHint")}
+            文章和 RSS 订阅中显示的主要作者名称。
           </p>
           <Input
             value={siteAuthor}
             onChange={(e) => setSiteAuthor(e.target.value)}
-            placeholder={t("admin.settings.siteAuthorPlaceholder")}
+            placeholder="张三"
             maxLength={255}
             className="max-w-md"
           />
@@ -347,16 +340,16 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
         {/* Author Email */}
         <div className="space-y-1">
           <label className="text-sm font-medium text-foreground">
-            {t("admin.settings.authorEmail")}
+            作者邮箱
           </label>
           <p className="text-xs text-muted-foreground">
-            {t("admin.settings.authorEmailHint")}
+            用于 RSS 订阅的 managingEditor 字段。可选。
           </p>
           <Input
             type="email"
             value={authorEmail}
             onChange={(e) => setAuthorEmail(e.target.value)}
-            placeholder={t("admin.settings.authorEmailPlaceholder")}
+            placeholder="hello@example.com"
             maxLength={255}
             className="max-w-md"
           />
@@ -365,17 +358,17 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
         {/* Twitter Handle */}
         <div className="space-y-1">
           <label className="text-sm font-medium text-foreground">
-            {t("admin.settings.twitterHandle")}
+            Twitter/X 用户名
           </label>
           <p className="text-xs text-muted-foreground">
-            {t("admin.settings.twitterHandleHint")}
+            用于 Twitter Card Meta 标签。无需 @ 前缀。
           </p>
           <div className="flex items-center gap-1 max-w-xs">
             <span className="text-sm text-muted-foreground">@</span>
             <Input
               value={twitterHandle}
               onChange={(e) => setTwitterHandle(e.target.value.replace(/^@/, ""))}
-              placeholder={t("admin.settings.twitterHandlePlaceholder")}
+              placeholder="username"
               maxLength={50}
             />
           </div>
@@ -386,10 +379,10 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
       <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-4">
         <div>
           <h2 className="text-base font-medium text-foreground">
-            {t("admin.settings.socialLinks")}
+            社交链接
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            {t("admin.settings.socialLinksHint")}
+            显示在博客侧边栏的链接。选择平台并输入 URL。
           </p>
         </div>
 
@@ -416,7 +409,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
                   next[idx] = { ...next[idx], name: e.target.value };
                   setSocialLinks(next);
                 }}
-                placeholder={t("admin.settings.socialLinkName")}
+                placeholder="名称"
                 className="w-28 shrink-0"
               />
               <Input
@@ -426,14 +419,14 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
                   next[idx] = { ...next[idx], url: e.target.value };
                   setSocialLinks(next);
                 }}
-                placeholder={t("admin.settings.socialLinkUrl")}
+                placeholder="链接"
                 className="flex-1"
               />
               <button
                 type="button"
                 onClick={() => setSocialLinks(socialLinks.filter((_, i) => i !== idx))}
                 className="shrink-0 rounded px-2 py-2 text-xs text-destructive hover:text-destructive/80 transition-colors"
-                title={t("admin.settings.socialLinkRemove")}
+                title="移除"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -450,7 +443,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
           }
           className="text-xs text-primary hover:text-primary/80 transition-colors"
         >
-          + {t("admin.settings.socialLinkAdd")}
+          + 添加链接
         </button>
       </div>
 
@@ -471,7 +464,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
         disabled={saving}
         onClick={handleSave}
       >
-        {saving ? t("admin.settings.saving") : t("admin.settings.save")}
+        {saving ? "保存中..." : "保存设置"}
       </Button>
     </div>
   );
