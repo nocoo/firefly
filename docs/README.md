@@ -37,6 +37,7 @@ Modern blog platform built with Next.js, Cloudflare D1, and R2. Migrated from Wo
 | 13 | [Analytics Dashboard Redesign](./13-analytics-redesign.md) | Multi-source traffic analytics |
 | 20 | [Full-Text Search](./20-full-text-search.md) | D1/FTS5 full-text search |
 | 21 | [AI Agent Authors](./21-ai-agent-authors.md) | Static API keys for AI writing agents |
+| 22 | [Quality System](./22-quality-system.md) | Six-dimensional testing pyramid & CI |
 
 ## Archive
 
