@@ -267,12 +267,9 @@ async function main() {
   // --- Run tests ---
   let exitCode = 0;
 
-  // L2 (API E2E) and L3 (browser E2E) hit different servers and use uniquely
-  // suffixed entities. They share a remote test DB, so an occasional read in
-  // L3 may collide with an L2 mutation — mitigated by playwright retries=1.
-  // Running them concurrently halves wall time.
-  const tasks: Promise<number>[] = [];
-
+  // L2 and L3 share a remote test DB (Cloudflare D1). Running them concurrently
+  // produced flaky preview/admin-list tests because L2 deletes posts that L3 is
+  // about to read. Keep them sequential.
   if (!browserOnly) {
     console.log("\n▸ Running API E2E tests (L2)...\n");
     const apiTest = spawn(
@@ -284,7 +281,8 @@ async function main() {
         stderr: "inherit",
       },
     );
-    tasks.push(apiTest.exited);
+    const apiResult = await apiTest.exited;
+    if (apiResult !== 0) exitCode = 1;
   }
 
   if (!apiOnly) {
@@ -298,11 +296,9 @@ async function main() {
         stderr: "inherit",
       },
     );
-    tasks.push(browserTest.exited);
+    const browserResult = await browserTest.exited;
+    if (browserResult !== 0) exitCode = 1;
   }
-
-  const results = await Promise.all(tasks);
-  if (results.some((r) => r !== 0)) exitCode = 1;
 
   // --- Cleanup ---
   cleanup();
