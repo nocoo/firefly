@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # ─────────────────────────────────────────────────────
+  # L1 + G1 + G2 — Core quality gate from base-ci
+  # ─────────────────────────────────────────────────────
+  quality:
+    uses: nocoo/base-ci/.github/workflows/bun-quality.yml@v2026
+    with:
+      bun-version: "1.2.15"
+      test-command: "bun run test:coverage"
+      # L2/L3/Worker are defined locally for full secret control
+      enable-l2: "false"
+      enable-l3: "false"
+      enable-worker: "false"
+    secrets: inherit
+
+  # ─────────────────────────────────────────────────────
+  # L2: API E2E (real HTTP against test D1/R2)
+  # Runs in PARALLEL with quality for faster CI.
+  #
+  # ISOLATION: Uses remote test Worker (firefly.worker.hexly.ai)
+  # which connects to test D1 database. R2 uses test bucket.
+  # ─────────────────────────────────────────────────────
+  api-e2e:
+    name: "L2 API E2E"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Worker — remote test Worker (run-e2e.ts detects WORKER_URL and skips local wrangler)
+      WORKER_URL: ${{ secrets.WORKER_URL }}
+      WORKER_SECRET: ${{ secrets.WORKER_SECRET }}
+      # R2 — test bucket
+      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET_NAME: ${{ secrets.R2_TEST_BUCKET_NAME }}
+      R2_PUBLIC_URL: ${{ secrets.R2_PUBLIC_URL }}
+      R2_KEY_PREFIX: ${{ secrets.R2_KEY_PREFIX }}
+      # Auth
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      AUTH_URL: "http://localhost:17028"
+      AUTH_ALLOWED_EMAILS: ${{ secrets.AUTH_ALLOWED_EMAILS }}
+      # E2E mode
+      E2E_SKIP_AUTH: "true"
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.15"
+
+      - run: bun install --frozen-lockfile
+
+      - name: "L2: API E2E tests"
+        run: bun run test:e2e:api
+
+  # ─────────────────────────────────────────────────────
+  # L3: Browser E2E (Playwright against test D1/R2)
+  # Runs in PARALLEL with quality for faster CI.
+  #
+  # ISOLATION: Same as L2 — uses remote test Worker.
+  # ─────────────────────────────────────────────────────
+  browser-e2e:
+    name: "L3 Browser E2E"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      # Worker — remote test Worker
+      WORKER_URL: ${{ secrets.WORKER_URL }}
+      WORKER_SECRET: ${{ secrets.WORKER_SECRET }}
+      # R2 — test bucket
+      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET_NAME: ${{ secrets.R2_TEST_BUCKET_NAME }}
+      R2_PUBLIC_URL: ${{ secrets.R2_PUBLIC_URL }}
+      R2_KEY_PREFIX: ${{ secrets.R2_KEY_PREFIX }}
+      # Auth
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      AUTH_URL: "http://localhost:27028"
+      AUTH_ALLOWED_EMAILS: ${{ secrets.AUTH_ALLOWED_EMAILS }}
+      # E2E mode
+      E2E_SKIP_AUTH: "true"
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.15"
+
+      - run: bun install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+
+      - name: "L3: Playwright E2E tests"
+        run: bun run test:e2e:browser
+
+  # ─────────────────────────────────────────────────────
+  # Worker: Edge Worker unit tests
+  # Runs in PARALLEL with quality for faster CI.
+  # ─────────────────────────────────────────────────────
+  worker-tests:
+    name: "Worker Tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.15"
+
+      - run: bun install --frozen-lockfile
+
+      - name: "Worker: Unit tests"
+        run: bun run test
