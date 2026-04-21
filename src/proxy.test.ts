@@ -197,9 +197,14 @@ describe("isProtectedApiRoute — existing behavior", () => {
     expect(isProtectedApiRoute("/api/auth/callback", "POST")).toBe(false);
   });
 
-  it("does not protect /api/mcp routes", () => {
+  it("protects POST /api/mcp/register", () => {
+    expect(isProtectedApiRoute("/api/mcp/register", "POST")).toBe(true);
+  });
+
+  it("does not protect /api/mcp routes (except register POST)", () => {
     expect(isProtectedApiRoute("/api/mcp", "POST")).toBe(false);
     expect(isProtectedApiRoute("/api/mcp/tools", "GET")).toBe(false);
+    expect(isProtectedApiRoute("/api/mcp/register", "GET")).toBe(false);
   });
 
   it("does not protect non-api routes", () => {
@@ -494,23 +499,17 @@ describe("proxy — rate limiting", () => {
     expect(Number(res.init.headers["Retry-After"])).toBeGreaterThanOrEqual(1);
   });
 
-  it("returns 429 after 10 requests on /api/mcp/register POST", async () => {
+  it("returns 401 for unauthenticated /api/mcp/register POST (auth guard runs before rate limit)", async () => {
     const ip = "10.10.10.2";
-    for (let i = 0; i < 10; i++) {
-      const req = makeRequest("/api/mcp/register", undefined, "POST", {
-        "x-forwarded-for": ip,
-      });
-      await proxy(req);
-    }
-    const blocked = makeRequest("/api/mcp/register", undefined, "POST", {
+    const req = makeRequest("/api/mcp/register", undefined, "POST", {
       "x-forwarded-for": ip,
     });
-    const res = (await proxy(blocked)) as unknown as {
+    const res = (await proxy(req)) as unknown as {
       type: string;
       init: { status: number };
     };
     expect(res.type).toBe("json");
-    expect(res.init.status).toBe(429);
+    expect(res.init.status).toBe(401);
   });
 
   it("does not rate-limit /api/auth requests", async () => {
