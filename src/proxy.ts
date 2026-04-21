@@ -48,10 +48,12 @@ function isProtectedRoute(pathname: string): boolean {
 // ---------------------------------------------------------------------------
 
 const MCP_REGISTER_PATH = "/api/mcp/register";
+const MCP_TOKEN_PATH = "/api/mcp/token";
 // Per-minute caps for public endpoints. MCP registration is a sensitive
 // onboarding action so it's throttled more aggressively.
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const MCP_REGISTER_LIMIT = 10;
+const MCP_TOKEN_LIMIT = 20;
 const PUBLIC_API_LIMIT = 60;
 
 interface RateLimitConfig {
@@ -74,6 +76,11 @@ function getRateLimitConfig(
   // /api/mcp/register: stricter cap. Only POST onboards a new client.
   if (pathname === MCP_REGISTER_PATH && method === "POST") {
     return { limit: MCP_REGISTER_LIMIT, windowMs: RATE_LIMIT_WINDOW_MS };
+  }
+
+  // /api/mcp/token: token exchange endpoint, rate-limited to prevent brute-force.
+  if (pathname === MCP_TOKEN_PATH) {
+    return { limit: MCP_TOKEN_LIMIT, windowMs: RATE_LIMIT_WINDOW_MS };
   }
 
   // All other /api/mcp routes are exempt (own auth + token-bound).
