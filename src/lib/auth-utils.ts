@@ -27,17 +27,17 @@ export function isEmailAllowed(email: string): boolean {
 /**
  * Whether the E2E auth bypass is active.
  *
- * Production guard: even if `E2E_SKIP_AUTH=true` somehow leaks into a
+ * Production guard: even if `E2E_SKIP_AUTH` somehow leaks into a
  * production environment, this returns false so auth is never bypassed.
  *
- * Exception: CI environments (CI=true) are allowed to bypass auth even
- * in production mode, because E2E tests use production builds.
+ * `next start` forces NODE_ENV=production, so we cannot gate on NODE_ENV
+ * alone. Instead we require both E2E_SKIP_AUTH=true AND E2E_TEST_RUNNER=true.
+ * The latter is set exclusively by scripts/run-e2e.ts — it will never
+ * appear in a real production deployment.
  */
 export function isE2EMode(): boolean {
-  if (process.env.E2E_SKIP_AUTH !== "true") return false;
-  // Allow in development/test mode
-  if (process.env.NODE_ENV !== "production") return true;
-  // Allow in CI environment (E2E tests use production builds)
-  if (process.env.CI === "true") return true;
-  return false;
+  return (
+    process.env.E2E_SKIP_AUTH === "true" &&
+    process.env.E2E_TEST_RUNNER === "true"
+  );
 }

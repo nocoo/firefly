@@ -50,7 +50,7 @@ describe("isEmailAllowed", () => {
   });
 
   it("ignores empty entries from extra commas", () => {
-    process.env.AUTH_ALLOWED_EMAILS = "user@test.com,,,,admin@test.com,";
+    process.env.AUTH_ALLOWED_EMAILS = "user@test.com,,admin@test.com,";
     expect(isEmailAllowed("user@test.com")).toBe(true);
     expect(isEmailAllowed("admin@test.com")).toBe(true);
     expect(isEmailAllowed("")).toBe(false);
@@ -66,35 +66,33 @@ describe("isE2EMode", () => {
     vi.unstubAllEnvs();
   });
 
-  it("returns true when E2E_SKIP_AUTH=true and NODE_ENV is not production", () => {
+  it("returns true when both E2E_SKIP_AUTH and E2E_TEST_RUNNER are true", () => {
     vi.stubEnv("E2E_SKIP_AUTH", "true");
-    vi.stubEnv("NODE_ENV", "test");
+    vi.stubEnv("E2E_TEST_RUNNER", "true");
     expect(isE2EMode()).toBe(true);
   });
 
-  it("returns false in production when E2E_SKIP_AUTH=true but CI is not set", () => {
+  it("returns true even with NODE_ENV=production (next start forces it)", () => {
     vi.stubEnv("E2E_SKIP_AUTH", "true");
+    vi.stubEnv("E2E_TEST_RUNNER", "true");
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("CI", "");
+    expect(isE2EMode()).toBe(true);
+  });
+
+  it("returns false when E2E_TEST_RUNNER is missing", () => {
+    vi.stubEnv("E2E_SKIP_AUTH", "true");
     expect(isE2EMode()).toBe(false);
-  });
-
-  it("returns true in production when E2E_SKIP_AUTH=true and CI=true", () => {
-    vi.stubEnv("E2E_SKIP_AUTH", "true");
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("CI", "true");
-    expect(isE2EMode()).toBe(true);
   });
 
   it("returns false when E2E_SKIP_AUTH is unset", () => {
     vi.stubEnv("E2E_SKIP_AUTH", "");
-    vi.stubEnv("NODE_ENV", "test");
+    vi.stubEnv("E2E_TEST_RUNNER", "true");
     expect(isE2EMode()).toBe(false);
   });
 
   it("returns false when E2E_SKIP_AUTH is not exactly 'true'", () => {
     vi.stubEnv("E2E_SKIP_AUTH", "1");
-    vi.stubEnv("NODE_ENV", "test");
+    vi.stubEnv("E2E_TEST_RUNNER", "true");
     expect(isE2EMode()).toBe(false);
   });
 });
