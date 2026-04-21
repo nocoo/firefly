@@ -1,16 +1,40 @@
-// ---------------------------------------------------------------------------
-// Sliding-window IP rate limiter (in-memory, process-scoped)
-// ---------------------------------------------------------------------------
-//
-// This rate limiter is intended for protecting public API endpoints from
-// abuse. It maintains a per-key (typically client IP) ring of request
-// timestamps and counts how many fall inside the active window.
-//
-// Notes & trade-offs:
-// - In-memory: state is lost on restart and not shared across processes.
-//   Suitable for single-instance deployments or as a first line of defense.
-// - Cleanup runs opportunistically on every call. We also drop fully-expired
-//   entries to prevent unbounded memory growth from one-shot visitors.
+/**
+ * @module rate-limit
+ *
+ * Sliding-window IP rate limiter (**in-memory, per-process**).
+ *
+ * This module provides a lightweight rate limiter intended for protecting
+ * public API endpoints from abuse. It maintains a per-key (typically client
+ * IP) ring of request timestamps and counts how many fall inside the active
+ * window.
+ *
+ * ### ⚠️ Per-process limitation
+ *
+ * All state lives in a **process-local `Map`**. This means:
+ *
+ * - Each Node.js process / serverless isolate / container replica maintains
+ *   its own **independent** counters. A client can effectively multiply its
+ *   true limit by the number of instances behind a load balancer.
+ * - State is **lost on restart** — a rolling deploy resets all counters.
+ * - The limiter is therefore best suited as a **first line of defense** in
+ *   single-instance deployments, or as a per-isolate safety net layered
+ *   beneath a distributed rate limiter.
+ *
+ * ### Alternatives for cross-instance rate limiting
+ *
+ * For globally consistent rate limiting across multiple replicas, consider:
+ *
+ * - **Upstash Redis** (`@upstash/ratelimit`) — Redis-backed sliding window
+ *   with built-in multi-region support.
+ * - **Cloudflare Workers KV / Durable Objects** — edge-native shared state.
+ * - **D1 / external database** — transactional counter table (higher latency).
+ *
+ * ### Cleanup
+ *
+ * Expired entries are pruned opportunistically on every call, and a periodic
+ * full sweep runs every 60 s to prevent unbounded memory growth from
+ * one-shot visitors.
+ */
 
 interface Bucket {
   // Timestamps (ms) of recent requests, oldest first.
@@ -50,9 +74,19 @@ export interface RateLimitResult {
  * fits inside the configured window. When `allowed` is false, the request was
  * NOT recorded — the caller should reject it.
  *
+ * **Important:** This limiter is **per-process / per-isolate**. In a
+ * multi-instance deployment (e.g. multiple Railway replicas, Cloudflare
+ * Workers isolates, or Node cluster workers), each instance tracks its own
+ * counters independently. A client routed round-robin across *N* instances
+ * can make up to *N × limit* requests within a single window before being
+ * blocked everywhere. For globally consistent enforcement, pair this with a
+ * distributed store such as Upstash Redis, D1, or Workers KV.
+ *
  * @param key      Identifier to throttle on (e.g. client IP).
  * @param limit    Maximum number of requests allowed inside the window.
  * @param windowMs Window length in milliseconds.
+ * @returns An object indicating whether the request is allowed, how many
+ *          requests remain in the current window, and when the window resets.
  */
 export function rateLimit(
   key: string,
