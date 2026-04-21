@@ -66,35 +66,33 @@ describe("isE2EMode", () => {
     vi.unstubAllEnvs();
   });
 
-  it("returns true when E2E_SKIP_AUTH=true and NODE_ENV is not production", () => {
+  it("returns true when both E2E_SKIP_AUTH and E2E_TEST_RUNNER are true", () => {
     vi.stubEnv("E2E_SKIP_AUTH", "true");
-    vi.stubEnv("NODE_ENV", "test");
+    vi.stubEnv("E2E_TEST_RUNNER", "true");
     expect(isE2EMode()).toBe(true);
   });
 
-  it("returns false in production when E2E_SKIP_AUTH=true but CI is not set", () => {
+  it("returns true even with NODE_ENV=production (next start forces it)", () => {
     vi.stubEnv("E2E_SKIP_AUTH", "true");
+    vi.stubEnv("E2E_TEST_RUNNER", "true");
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("CI", "");
-    expect(isE2EMode()).toBe(false);
+    expect(isE2EMode()).toBe(true);
   });
 
-  it("returns false in production even when E2E_SKIP_AUTH=true and CI=true", () => {
+  it("returns false when E2E_TEST_RUNNER is missing", () => {
     vi.stubEnv("E2E_SKIP_AUTH", "true");
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("CI", "true");
     expect(isE2EMode()).toBe(false);
   });
 
   it("returns false when E2E_SKIP_AUTH is unset", () => {
     vi.stubEnv("E2E_SKIP_AUTH", "");
-    vi.stubEnv("NODE_ENV", "test");
+    vi.stubEnv("E2E_TEST_RUNNER", "true");
     expect(isE2EMode()).toBe(false);
   });
 
   it("returns false when E2E_SKIP_AUTH is not exactly 'true'", () => {
     vi.stubEnv("E2E_SKIP_AUTH", "1");
-    vi.stubEnv("NODE_ENV", "test");
+    vi.stubEnv("E2E_TEST_RUNNER", "true");
     expect(isE2EMode()).toBe(false);
   });
 });

@@ -207,7 +207,7 @@ function startNextServer(
     [BUN, "run", "next", "start", "-p", String(port)],
     {
       cwd: process.cwd(),
-      env: { ...env, PORT: String(port) },
+      env: { ...env, PORT: String(port), E2E_TEST_RUNNER: "true" },
       stdout: "ignore",
       stderr: "ignore",
     },
