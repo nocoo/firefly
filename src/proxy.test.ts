@@ -445,6 +445,16 @@ describe("getRateLimitConfig", () => {
     expect(getRateLimitConfig("/api/mcp/register", "GET")).toBeNull();
   });
 
+  it("applies rate limit to /api/mcp/token", () => {
+    const cfg = getRateLimitConfig("/api/mcp/token", "POST");
+    expect(cfg).toEqual({ limit: 20, windowMs: 60_000 });
+    // Any method should be rate-limited
+    expect(getRateLimitConfig("/api/mcp/token", "GET")).toEqual({
+      limit: 20,
+      windowMs: 60_000,
+    });
+  });
+
   it("exempts other /api/mcp routes", () => {
     expect(getRateLimitConfig("/api/mcp", "POST")).toBeNull();
     expect(getRateLimitConfig("/api/mcp/tools", "GET")).toBeNull();
