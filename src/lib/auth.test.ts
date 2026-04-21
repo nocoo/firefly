@@ -50,7 +50,7 @@ describe("isEmailAllowed", () => {
   });
 
   it("ignores empty entries from extra commas", () => {
-    process.env.AUTH_ALLOWED_EMAILS = "user@test.com,,,,admin@test.com,";
+    process.env.AUTH_ALLOWED_EMAILS = "user@test.com,,admin@test.com,";
     expect(isEmailAllowed("user@test.com")).toBe(true);
     expect(isEmailAllowed("admin@test.com")).toBe(true);
     expect(isEmailAllowed("")).toBe(false);
@@ -79,11 +79,11 @@ describe("isE2EMode", () => {
     expect(isE2EMode()).toBe(false);
   });
 
-  it("returns true in production when E2E_SKIP_AUTH=true and CI=true", () => {
+  it("returns false in production even when E2E_SKIP_AUTH=true and CI=true", () => {
     vi.stubEnv("E2E_SKIP_AUTH", "true");
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("CI", "true");
-    expect(isE2EMode()).toBe(true);
+    expect(isE2EMode()).toBe(false);
   });
 
   it("returns false when E2E_SKIP_AUTH is unset", () => {
