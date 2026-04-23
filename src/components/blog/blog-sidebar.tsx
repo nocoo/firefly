@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import Link from "next/link";
 import { Github, Facebook, Linkedin, Mail, FileUser, Folder, Tags, Archive } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
@@ -35,10 +36,10 @@ interface BlogSidebarProps {
   onDrawerClose?: () => void;
 }
 
-export function BlogSidebar({
+export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function BlogSidebar({
   categories, tags, archives, siteName, siteTagline, socialLinks,
   drawerOpen = false, isMobile = false,
-}: BlogSidebarProps) {
+}, ref) {
   // On mobile when closed, hide from a11y tree + disable keyboard focus
   const inert = isMobile && !drawerOpen;
   // Modal semantics only meaningful while the drawer is actually displayed
@@ -48,11 +49,13 @@ export function BlogSidebar({
 
   return (
     <aside
+      ref={ref}
       id="blog-sidebar"
       className={`blog-sidebar blog-sidebar-desktop${drawerOpen ? " blog-sidebar-open" : ""}`}
       aria-label="Site navigation"
       aria-hidden={inert ? true : undefined}
       inert={inert || undefined}
+      tabIndex={-1}
       {...modalProps}
     >
       {/* top-left: identity (lizheng pattern) */}
@@ -187,4 +190,4 @@ export function BlogSidebar({
       </div>
     </aside>
   );
-}
+});

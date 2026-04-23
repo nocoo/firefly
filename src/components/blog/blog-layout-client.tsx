@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
@@ -24,6 +24,14 @@ function isPostDetailRoute(pathname: string | null): boolean {
 }
 
 const MOBILE_QUERY = "(max-width: 768px)";
+const FOCUSABLE_SEL = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  '[tabindex]:not([tabindex="-1"])',
+].join(",");
 
 function subscribeMobile(callback: () => void): () => void {
   const mql = window.matchMedia(MOBILE_QUERY);
@@ -51,30 +59,76 @@ export function BlogLayoutClient({
     setTrackedPath(pathname);
     if (drawerOpen) setDrawerOpen(false);
   }
-  // Force-close the drawer if we leave the mobile breakpoint, otherwise
-  // toggle/backdrop disappear and body stays scroll-locked.
   if (!isMobile && drawerOpen) {
     setDrawerOpen(false);
   }
 
-  // Close on Escape; lock body scroll while drawer is open
+  const sidebarRef = useRef<HTMLElement | null>(null);
+  const toggleRef = useRef<HTMLButtonElement | null>(null);
+
+  // While drawer is open: lock body scroll, Escape to close, focus into
+  // sidebar, restore focus on close, and trap Tab inside sidebar.
   useEffect(() => {
     if (!drawerOpen) return;
+
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const sidebar = sidebarRef.current;
+    const toggle = toggleRef.current;
+
+    // Move focus into the drawer
+    const firstFocusable = sidebar?.querySelector<HTMLElement>(FOCUSABLE_SEL);
+    (firstFocusable ?? sidebar)?.focus({ preventScroll: true });
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setDrawerOpen(false);
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setDrawerOpen(false);
+        return;
+      }
+      if (e.key !== "Tab" || !sidebar) return;
+      const items = Array.from(sidebar.querySelectorAll<HTMLElement>(FOCUSABLE_SEL))
+        .filter((el) => el.offsetParent !== null || el === sidebar);
+      if (items.length === 0) {
+        e.preventDefault();
+        sidebar.focus({ preventScroll: true });
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (e.shiftKey && (active === first || !sidebar.contains(active))) {
+        e.preventDefault();
+        last.focus({ preventScroll: true });
+      } else if (!e.shiftKey && (active === last || !sidebar.contains(active))) {
+        e.preventDefault();
+        first.focus({ preventScroll: true });
+      }
     };
+
     window.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
     return () => {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
+      // Restore focus to the trigger if focus is still inside the (now-closed) drawer
+      if (sidebar?.contains(document.activeElement)) {
+        (toggle ?? previouslyFocused)?.focus({ preventScroll: true });
+      } else if (previouslyFocused && document.contains(previouslyFocused)) {
+        previouslyFocused.focus({ preventScroll: true });
+      }
     };
   }, [drawerOpen]);
+
+  // While the drawer is open on mobile, mark page chrome as inert so AT
+  // and keyboard users can't reach background content.
+  const mainInert = isMobile && drawerOpen;
 
   return (
     <>
       <button
+        ref={toggleRef}
         type="button"
         className="blog-sidebar-toggle"
         aria-label={drawerOpen ? "关闭侧边栏" : "打开侧边栏"}
@@ -94,6 +148,7 @@ export function BlogLayoutClient({
       )}
 
       <BlogSidebar
+        ref={sidebarRef}
         categories={categories}
         tags={tags}
         archives={archives}
@@ -105,7 +160,12 @@ export function BlogLayoutClient({
         onDrawerClose={() => setDrawerOpen(false)}
       />
 
-      <main id="main" className="blog-main">
+      <main
+        id="main"
+        className="blog-main"
+        inert={mainInert || undefined}
+        aria-hidden={mainInert ? true : undefined}
+      >
         <div className={`blog-main-inner${isPostDetail ? " blog-main-inner-post" : ""}`}>
           {children}
         </div>
