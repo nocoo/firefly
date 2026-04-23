@@ -29,7 +29,7 @@ export function PostCard({ post, author, priority, snippet }: PostCardProps) {
   return (
     <article className="blog-entry">
       {/* Post title */}
-      <h2 className="text-xl font-semibold leading-snug md:text-2xl">
+      <h2 className="text-lg font-semibold leading-snug tracking-tight md:text-xl">
         <Link
           href={href}
           prefetch={false}
