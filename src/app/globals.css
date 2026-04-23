@@ -142,11 +142,13 @@
  * ==========================================================================
  */
 :root {
-  /* Base font stacks (immutable — presets compose from these) */
-  --ff-sans: "PingFang SC", "Helvetica Neue", helvetica, arial, "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
-  --ff-serif: Georgia, "Times New Roman", "Heti Song", serif;
-  --ff-kai: Georgia, "Times New Roman", "Heti Kai", serif;
-  --ff-mono: "SFMono-Regular", consolas, "Liberation Mono", menlo, courier, monospace;
+  /* Base font stacks (immutable — presets compose from these)
+   * Western faces: IBM Plex (loaded via next/font, falls back gracefully).
+   * CJK faces: PingFang SC / system Songti / Kaiti for serif/kai. */
+  --ff-sans: var(--font-ibm-plex-sans), "PingFang SC", "Helvetica Neue", helvetica, arial, "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --ff-serif: var(--font-ibm-plex-serif), Georgia, "Times New Roman", "Heti Song", serif;
+  --ff-kai: var(--font-ibm-plex-serif), Georgia, "Times New Roman", "Heti Kai", serif;
+  --ff-mono: var(--font-ibm-plex-mono), "SFMono-Regular", consolas, "Liberation Mono", menlo, courier, monospace;
 
   /* Admin layout tokens */
   --sidebar-width: 260px;

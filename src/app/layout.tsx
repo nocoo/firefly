@@ -1,9 +1,30 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
+import { IBM_Plex_Sans, IBM_Plex_Mono, IBM_Plex_Serif } from "next/font/google";
 import { SITE_URL, OG_LOCALE, HTML_LANG } from "@/lib/seo";
 import { getDb } from "@/lib/db";
 import { getSiteSettings } from "@/data/settings";
 import "./globals.css";
+
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-ibm-plex-sans",
+  display: "swap",
+});
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-ibm-plex-mono",
+  display: "swap",
+});
+const ibmPlexSerif = IBM_Plex_Serif({
+  subsets: ["latin"],
+  weight: ["400", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-ibm-plex-serif",
+  display: "swap",
+});
 
 /**
  * Revalidate every 5 minutes so metadata changes (site name, description,
@@ -86,11 +107,12 @@ export default async function RootLayout({
     <html
       lang={HTML_LANG}
       data-font-style={settings.fontStyle}
+      className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} ${ibmPlexSerif.variable}`}
       suppressHydrationWarning
     >
       <head>
-        <meta name="theme-color" content="#FAF8F5" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#1C1A17" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#f5f4f3" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#13151a" media="(prefers-color-scheme: dark)" />
       </head>
       <body className="antialiased">
         <ThemeProvider
