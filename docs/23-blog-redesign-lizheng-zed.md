@@ -25,6 +25,10 @@
 | 6 | post-card.tsx：砍 bleed | ✅ |
 | 7 | blog-footer.tsx：仿 zed 5 列 + hatching + outline watermark | ✅ |
 | 8 | dev server 视觉验收 | ✅ |
+| 9 | 放大 site title（clamp 1.75–2.5rem） | ✅ |
+| 10 | Footer 提升到 page-wrapper 之外，蓝色背景 100% 宽 | ✅ |
+| 11 | 补全分割线 + 端点圆环（sidebar 段间 cross-divider；post entry 全宽线 + 端环） | ✅ |
+| 12 | sidebar headings 字号 + 间距收敛（mono + 虚线下划线） | ✅ |
 
 ## 测试策略
 覆盖率配置（`vitest.config.ts`）排除了 `src/components/**` 与 `src/app/**`，本轮改动均为视觉层（CSS + React 组件），不影响单元测试覆盖率门槛（90/90/90/90）。验收以 dev server 视觉走查为主。
@@ -39,6 +43,8 @@
 | `9767fa6` | tighten post-card title |
 | `b9bf3cd` | rewrite footer as zed 5-column with hatching watermark |
 | `<doc>`   | finalize tracking doc with status + commit log |
+| `a64d8aa` | site title bigger, sidebar rhythm, full-bleed dividers |
+| `8b732a4` | footer spans 100% viewport width |
 
 ## 验收
 - typecheck pass、66 个测试文件 1279 用例全绿（每次 commit pre-commit 触发）
