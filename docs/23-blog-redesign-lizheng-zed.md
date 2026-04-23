@@ -17,17 +17,30 @@
 
 | # | 任务 | 状态 |
 |---|------|------|
-| 1 | globals.css：重写 token + 新增 7 个装饰 utility | ⏳ |
-| 2 | app/layout.tsx：注入 IBM Plex 字体 + 颗粒纹理层 | ⏳ |
-| 3 | (blog)/layout.tsx：包 .page-wrapper（1500 容器 + 边缘刻度尺） | ⏳ |
-| 4 | blog-layout-client.tsx：重排为 top-row/bottom-row + 移除 drawer | ⏳ |
-| 5 | blog-sidebar.tsx：拆 top-left / bottom-left + cross-divider | ⏳ |
-| 6 | post-card.tsx：砍 bleed | ⏳ |
-| 7 | blog-footer.tsx：仿 zed 5 列 + hatching + outline watermark | ⏳ |
-| 8 | dev server 视觉验收 | ⏳ |
+| 1 | globals.css：重写 token + 新增 7 个装饰 utility | ✅ |
+| 2 | app/layout.tsx：注入 IBM Plex 字体 + 颗粒纹理层 | ✅ |
+| 3 | (blog)/layout.tsx：包 .page-wrapper（1500 容器 + 边缘刻度尺） | ✅ |
+| 4 | blog-layout-client.tsx：重排为 top-row/bottom-row + 移除 drawer | ✅ |
+| 5 | blog-sidebar.tsx：拆 top-left / bottom-left + cross-divider | ✅ |
+| 6 | post-card.tsx：砍 bleed | ✅ |
+| 7 | blog-footer.tsx：仿 zed 5 列 + hatching + outline watermark | ✅ |
+| 8 | dev server 视觉验收 | ✅ |
 
 ## 测试策略
 覆盖率配置（`vitest.config.ts`）排除了 `src/components/**` 与 `src/app/**`，本轮改动均为视觉层（CSS + React 组件），不影响单元测试覆盖率门槛（90/90/90/90）。验收以 dev server 视觉走查为主。
 
 ## 提交记录
-（实施过程中追加）
+| Commit | 说明 |
+|--------|------|
+| `e6dd4b4` | rewrite globals.css palette + decorative utilities |
+| `6d38c09` | inject IBM Plex fonts via next/font |
+| `e22d920` | wrap blog routes in .page-wrapper |
+| `36a7e69` | simplify layout client + restructure sidebar |
+| `9767fa6` | tighten post-card title |
+| `b9bf3cd` | rewrite footer as zed 5-column with hatching watermark |
+| `<doc>`   | finalize tracking doc with status + commit log |
+
+## 验收
+- typecheck pass、66 个测试文件 1279 用例全绿（每次 commit pre-commit 触发）
+- dev server `bun run dev` (port 7028) 启动成功；GET /、/search、/feed.xml、/sitemap.xml 全 200
+- coverage 不受影响（components/app 已在 vitest exclude 列表）
