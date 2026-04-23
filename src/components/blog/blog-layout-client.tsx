@@ -5,7 +5,6 @@ import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/entities/post";
 import type { SocialLink } from "@/data/settings";
 import { BlogSidebar } from "./blog-sidebar";
-import { BlogFooter } from "./blog-footer";
 
 interface BlogLayoutClientProps {
   categories: Category[];
@@ -48,7 +47,6 @@ export function BlogLayoutClient({
         <div className={`blog-main-inner${isPostDetail ? " blog-main-inner-post" : ""}`}>
           {children}
         </div>
-        <BlogFooter siteName={siteName} />
       </main>
     </>
   );

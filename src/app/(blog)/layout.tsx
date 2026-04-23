@@ -6,6 +6,7 @@ import { getSiteSettings } from "@/data/settings";
 import { isAdminSession } from "@/lib/auth";
 import { BlogGlobalBar } from "@/components/blog/blog-global-bar";
 import { BlogLayoutClient } from "@/components/blog/blog-layout-client";
+import { BlogFooter } from "@/components/blog/blog-footer";
 
 export default async function BlogLayout({
   children,
@@ -47,6 +48,7 @@ export default async function BlogLayout({
             {children}
           </BlogLayoutClient>
         </div>
+        <BlogFooter siteName={settings.siteName} />
       </div>
     </div>
   );
