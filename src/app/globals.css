@@ -519,14 +519,66 @@
   }
 }
 
-/* Mobile sidebar: stacked rows at top of page (lizheng pattern) */
+/* Mobile sidebar: hidden by default, slide-in drawer when toggled */
+.blog-sidebar-toggle { display: none; }
+.blog-sidebar-backdrop { display: none; }
+
 @media (max-width: 768px) {
+  .blog-sidebar-toggle {
+    position: fixed;
+    top: 0.75em;
+    left: 0.75em;
+    z-index: 30;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5em;
+    height: 2.5em;
+    border-radius: 0.5em;
+    background: var(--blog-bg);
+    color: var(--blog-text);
+    border: 1px solid var(--blog-separator);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+  }
+  .blog-sidebar-toggle:hover { background: var(--blog-separator); }
+
+  .blog-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 28;
+    animation: blog-fade-in 150ms ease-out;
+  }
+
   .blog-sidebar-desktop {
     display: block;
-    width: 100%;
-    padding: 1.5rem 1.25rem;
-    border-bottom: 1px solid var(--blog-separator);
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(85vw, 320px);
+    padding: 3.5rem 1.25rem 1.5rem;
+    border-right: 1px solid var(--blog-separator);
+    border-bottom: none;
+    background: var(--blog-sidebar);
+    z-index: 29;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease-out;
   }
+  .blog-sidebar-desktop.blog-sidebar-open {
+    transform: translateX(0);
+  }
+  /* Hide the parent-drawn right border on mobile */
+  .blog-max-width::after { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blog-sidebar-desktop { transition: none; }
+  .blog-sidebar-backdrop { animation: none; }
 }
 
 /* ─── Cross-divider — horizontal line + 7×7 end-ring punch

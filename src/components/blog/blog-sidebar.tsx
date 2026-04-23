@@ -30,13 +30,17 @@ interface BlogSidebarProps {
   siteName: string;
   siteTagline: string;
   socialLinks: SocialLink[];
+  drawerOpen?: boolean;
 }
 
 export function BlogSidebar({
-  categories, tags, archives, siteName, siteTagline, socialLinks,
+  categories, tags, archives, siteName, siteTagline, socialLinks, drawerOpen = false,
 }: BlogSidebarProps) {
   return (
-    <aside className="blog-sidebar blog-sidebar-desktop" aria-label="Site navigation">
+    <aside
+      className={`blog-sidebar blog-sidebar-desktop${drawerOpen ? " blog-sidebar-open" : ""}`}
+      aria-label="Site navigation"
+    >
       {/* top-left: identity (lizheng pattern) */}
       <div className="blog-sidebar-top">
         <h1 className="blog-site-title">
