@@ -67,13 +67,40 @@ export function BlogLayoutClient({
   const toggleRef = useRef<HTMLButtonElement | null>(null);
 
   // While drawer is open: lock body scroll, Escape to close, focus into
-  // sidebar, restore focus on close, and trap Tab inside sidebar.
+  // sidebar, restore focus on close, trap Tab inside sidebar, and mark
+  // every page-chrome sibling outside the dialog ancestry as inert so
+  // AT/virtual-cursor users can't reach skip-link, global bar, or footer.
   useEffect(() => {
     if (!drawerOpen) return;
 
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const sidebar = sidebarRef.current;
     const toggle = toggleRef.current;
+
+    // Inert everything in <body> that doesn't contain the sidebar
+    const inerted: { el: HTMLElement; prevInert: boolean; prevAriaHidden: string | null }[] = [];
+    if (sidebar) {
+      const ancestors = new Set<Node>();
+      for (let n: Node | null = sidebar; n; n = n.parentNode) ancestors.add(n);
+      const walk = (parent: HTMLElement) => {
+        for (const child of Array.from(parent.children)) {
+          if (!(child instanceof HTMLElement)) continue;
+          if (child === sidebar) continue;
+          if (ancestors.has(child)) {
+            walk(child);
+            continue;
+          }
+          inerted.push({
+            el: child,
+            prevInert: child.inert,
+            prevAriaHidden: child.getAttribute("aria-hidden"),
+          });
+          child.inert = true;
+          child.setAttribute("aria-hidden", "true");
+        }
+      };
+      walk(document.body);
+    }
 
     // Move focus into the drawer
     const firstFocusable = sidebar?.querySelector<HTMLElement>(FOCUSABLE_SEL);
@@ -112,6 +139,11 @@ export function BlogLayoutClient({
     return () => {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
+      for (const { el, prevInert, prevAriaHidden } of inerted) {
+        el.inert = prevInert;
+        if (prevAriaHidden === null) el.removeAttribute("aria-hidden");
+        else el.setAttribute("aria-hidden", prevAriaHidden);
+      }
       // Restore focus to the trigger if focus is still inside the (now-closed) drawer
       if (sidebar?.contains(document.activeElement)) {
         (toggle ?? previouslyFocused)?.focus({ preventScroll: true });
@@ -121,8 +153,8 @@ export function BlogLayoutClient({
     };
   }, [drawerOpen]);
 
-  // While the drawer is open on mobile, mark page chrome as inert so AT
-  // and keyboard users can't reach background content.
+  // <main> still gets the static inert/aria-hidden as a defense-in-depth
+  // (covers the brief gap before the effect runs).
   const mainInert = isMobile && drawerOpen;
 
   return (
