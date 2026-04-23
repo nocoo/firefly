@@ -900,6 +900,8 @@ hr.blog-hr::after,  .blog-content hr::after  { right: -4px; }
   padding: 2.5rem 1.5rem 0;
   position: relative;
   z-index: 1;
+  max-width: var(--blog-layout-max);
+  margin: 0 auto;
 }
 .zed-footer-col {
   padding: 0 1.25rem 2rem;

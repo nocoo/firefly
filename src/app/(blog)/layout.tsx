@@ -48,8 +48,8 @@ export default async function BlogLayout({
             {children}
           </BlogLayoutClient>
         </div>
-        <BlogFooter siteName={settings.siteName} />
       </div>
+      <BlogFooter siteName={settings.siteName} />
     </div>
   );
 }
