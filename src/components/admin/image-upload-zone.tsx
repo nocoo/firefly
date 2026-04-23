@@ -140,7 +140,7 @@ export function ImageUploadZone({
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        className={`flex items-center gap-2 rounded-[var(--radius-widget)] border border-dashed px-3 py-2 text-xs transition-colors ${
+        className={`flex items-center gap-2 rounded-widget border border-dashed px-3 py-2 text-xs transition-colors ${
           dragOver
             ? "border-primary bg-primary/5"
             : "border-border hover:border-muted-foreground"
@@ -174,7 +174,7 @@ export function ImageUploadZone({
           {results.map((result) => (
             <div
               key={result.id}
-              className="flex items-center gap-3 rounded-[var(--radius-widget)] border border-border bg-secondary/50 px-3 py-2"
+              className="flex items-center gap-3 rounded-widget border border-border bg-secondary/50 px-3 py-2"
             >
               {/* Thumbnail */}
               <img

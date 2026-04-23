@@ -48,7 +48,7 @@ function CopyButton({ text, className }: { text: string; className?: string }) {
 
 function CodeBlock({ code, lang }: { code: string; lang?: string }) {
   return (
-    <div className="group relative rounded-[var(--radius-widget)] bg-secondary border border-border">
+    <div className="group relative rounded-widget bg-secondary border border-border">
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-border">
         <span className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">
           {lang ?? "config"}
@@ -128,7 +128,7 @@ function SetupGuide({ mcpUrl }: { mcpUrl: string }) {
         <label className="text-xs font-medium text-muted-foreground">
           MCP 端点
         </label>
-        <div className="flex items-center gap-2 rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2">
+        <div className="flex items-center gap-2 rounded-widget border border-border bg-secondary px-3 py-2">
           <code className="flex-1 text-xs font-mono text-foreground break-all">
             {mcpUrl}
           </code>
@@ -304,14 +304,14 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
 
       {/* Error banner */}
       {error && (
-        <div className="rounded-[var(--radius-widget)] border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-widget border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
       {/* New token banner */}
       {newToken && (
-        <div className="rounded-[var(--radius-widget)] border border-green-500/50 bg-green-500/10 px-4 py-3 text-sm">
+        <div className="rounded-widget border border-green-500/50 bg-green-500/10 px-4 py-3 text-sm">
           <p className="font-medium text-green-700 dark:text-green-400 mb-2">
             令牌创建成功！请立即复制 — 此后将无法再次查看。
           </p>
@@ -344,7 +344,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
             value={clientName}
             onChange={(e) => setClientName(e.target.value)}
             placeholder="e.g. Claude Code"
-            className="mt-1 w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="mt-1 w-full rounded-widget border border-border bg-secondary px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             onKeyDown={(e) => e.key === "Enter" && handleCreate()}
           />
         </div>
@@ -364,7 +364,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
         <button
           onClick={handleCreate}
           disabled={creating || !clientName.trim()}
-          className="inline-flex items-center gap-2 rounded-[var(--radius-widget)] bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-widget bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           <Plus className="h-4 w-4" />
           {creating ? "创建中…" : "创建令牌"}
@@ -394,7 +394,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
               </button>
             </div>
           )}
-          <div className="overflow-x-auto rounded-[var(--radius-widget)] border border-border bg-secondary">
+          <div className="overflow-x-auto rounded-widget border border-border bg-secondary">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-secondary/50">

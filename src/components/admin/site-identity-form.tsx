@@ -166,7 +166,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
   return (
     <div className="space-y-6">
       {/* Card 1: Site Logo */}
-      <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-4">
+      <div className="rounded-card bg-secondary p-5 md:p-6 space-y-4">
         <div>
           <h2 className="text-base font-medium text-foreground">
             站点图标
@@ -208,7 +208,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
               onDrop={handleLogoDrop}
               onDragOver={handleLogoDragOver}
               onDragLeave={handleLogoDragLeave}
-              className={`flex items-center gap-2 rounded-[var(--radius-widget)] border border-dashed px-3 py-2 text-xs transition-colors ${
+              className={`flex items-center gap-2 rounded-widget border border-dashed px-3 py-2 text-xs transition-colors ${
                 logoDragOver
                   ? "border-primary bg-primary/5"
                   : "border-border hover:border-muted-foreground"
@@ -256,7 +256,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
       </div>
 
       {/* Card 2: Site Info */}
-      <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-5">
+      <div className="rounded-card bg-secondary p-5 md:p-6 space-y-5">
         <h2 className="text-base font-medium text-foreground">
           站点信息
         </h2>
@@ -315,7 +315,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
       </div>
 
       {/* Card 3: Author Info */}
-      <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-5">
+      <div className="rounded-card bg-secondary p-5 md:p-6 space-y-5">
         <h2 className="text-base font-medium text-foreground">
           作者信息
         </h2>
@@ -376,7 +376,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
       </div>
 
       {/* Card 4: Social Links */}
-      <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-4">
+      <div className="rounded-card bg-secondary p-5 md:p-6 space-y-4">
         <div>
           <h2 className="text-base font-medium text-foreground">
             社交链接

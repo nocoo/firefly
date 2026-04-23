@@ -132,7 +132,7 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
   return (
     <div className="space-y-6">
       {/* Card 1: Provider & Model */}
-      <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-5">
+      <div className="rounded-card bg-secondary p-5 md:p-6 space-y-5">
         <h2 className="text-base font-medium text-foreground">
           服务商 & 模型
         </h2>
@@ -203,7 +203,7 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
 
       {/* Card 2: Authentication */}
       {provider && (
-        <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-5">
+        <div className="rounded-card bg-secondary p-5 md:p-6 space-y-5">
           <h2 className="text-base font-medium text-foreground">
             认证
           </h2>
@@ -229,7 +229,7 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
 
       {/* Card 3: Custom Provider Settings */}
       {isCustom && (
-        <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-5">
+        <div className="rounded-card bg-secondary p-5 md:p-6 space-y-5">
           <h2 className="text-base font-medium text-foreground">
             自定义服务商
           </h2>

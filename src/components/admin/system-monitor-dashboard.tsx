@@ -216,7 +216,7 @@ export function SystemMonitorDashboard() {
       </div>
 
       {/* Memory Trend Chart */}
-      <div className="rounded-[var(--radius-widget)] bg-secondary">
+      <div className="rounded-widget bg-secondary">
         <div className="border-b border-border/50 px-6 py-4">
           <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
             <Activity className="h-4 w-4" />
@@ -336,7 +336,7 @@ function StatCard({
 }) {
   return (
     <div
-      className="rounded-[var(--radius-widget)] bg-secondary p-4 animate-fade-up"
+      className="rounded-widget bg-secondary p-4 animate-fade-up"
       style={{ animationDelay: `${index * 60}ms` }}
     >
       <div className="flex items-center justify-between">
@@ -412,7 +412,7 @@ function MemoryRecommendation({
   }[status];
 
   return (
-    <div className={`rounded-[var(--radius-widget)] p-6 ${bgColor}`}>
+    <div className={`rounded-widget p-6 ${bgColor}`}>
       <h3 className={`flex items-center gap-2 text-sm font-medium ${textColor}`}>
         <Activity className="h-4 w-4" />
         内存评估
@@ -434,7 +434,7 @@ function LoadingSkeleton() {
     <div className="space-y-6">
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-[var(--radius-widget)] bg-secondary p-4">
+          <div key={i} className="rounded-widget bg-secondary p-4">
             <div className="animate-pulse space-y-2">
               <div className="h-4 w-20 rounded bg-muted" />
               <div className="h-8 w-24 rounded bg-muted" />
@@ -443,7 +443,7 @@ function LoadingSkeleton() {
           </div>
         ))}
       </div>
-      <div className="rounded-[var(--radius-widget)] bg-secondary p-6">
+      <div className="rounded-widget bg-secondary p-6">
         <div className="animate-pulse">
           <div className="h-4 w-32 rounded bg-muted mb-4" />
           <div className="h-64 rounded bg-muted" />

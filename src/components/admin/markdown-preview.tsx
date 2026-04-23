@@ -82,7 +82,7 @@ export function MarkdownPreview({
         header={
           <>
             {featuredImage && (
-              <div className="mb-8 overflow-hidden rounded-[var(--radius-widget)]">
+              <div className="mb-8 overflow-hidden rounded-widget">
                 <img
                   src={featuredImage}
                   alt={title || "封面图片"}

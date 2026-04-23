@@ -28,7 +28,7 @@ function DonutTooltip({
   const item = payload[0] as (typeof payload)[number];
 
   return (
-    <div className="rounded-[var(--radius-widget)] border border-border bg-popover p-2.5 shadow-sm">
+    <div className="rounded-widget border border-border bg-popover p-2.5 shadow-sm">
       <div className="flex items-center gap-2">
         <div
           className="h-3 w-3 rounded-full"
@@ -210,7 +210,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[var(--radius-widget)] bg-secondary p-4">
+    <div className="rounded-widget bg-secondary p-4">
       <h3 className="text-sm font-medium text-foreground mb-3">{title}</h3>
       {children}
     </div>

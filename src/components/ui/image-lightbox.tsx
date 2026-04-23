@@ -66,7 +66,7 @@ export function ImageLightbox({
       {/* Content — stop propagation so clicking inside doesn't close */}
       <div
         className={
-          "relative flex max-h-[90vh] max-w-[90vw] overflow-hidden rounded-[var(--radius-card)] shadow-2xl" +
+          "relative flex max-h-[90vh] max-w-[90vw] overflow-hidden rounded-card shadow-2xl" +
           (hasPanel
             ? " flex-col bg-card md:flex-row"
             : " items-center justify-center")

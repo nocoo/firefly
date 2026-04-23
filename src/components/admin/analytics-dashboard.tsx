@@ -171,7 +171,7 @@ export function AnalyticsDashboard({
         {/* Source tabs */}
         <div className="space-y-4">
           {/* Tab bar */}
-          <div className="flex gap-1 rounded-[var(--radius-widget)] border border-border bg-secondary p-1">
+          <div className="flex gap-1 rounded-widget border border-border bg-secondary p-1">
             {SOURCE_TYPES.map((type) => (
               <button
                 key={type}
@@ -279,7 +279,7 @@ function AnalyticsSkeleton() {
         <div className="flex items-center justify-end">
           <SkeletonPulse className="h-8 w-[120px]" />
         </div>
-        <div className="rounded-[var(--radius-widget)] bg-secondary p-4 space-y-3">
+        <div className="rounded-widget bg-secondary p-4 space-y-3">
           <SkeletonPulse className="h-4 w-36" />
           <SkeletonPulse className="h-[260px] w-full" />
         </div>
@@ -290,7 +290,7 @@ function AnalyticsSkeleton() {
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
-            className="flex items-center gap-3 rounded-[var(--radius-widget)] bg-secondary p-4"
+            className="flex items-center gap-3 rounded-widget bg-secondary p-4"
           >
             <SkeletonPulse className="h-9 w-9 rounded-lg" />
             <div className="space-y-1.5 flex-1">
@@ -303,7 +303,7 @@ function AnalyticsSkeleton() {
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="rounded-[var(--radius-widget)] bg-secondary p-4 space-y-2"
+              className="rounded-widget bg-secondary p-4 space-y-2"
             >
               <SkeletonPulse className="h-3 w-20" />
               <SkeletonPulse className="h-6 w-16" />
@@ -323,7 +323,7 @@ function TabSkeleton() {
         {Array.from({ length: 2 }).map((_, i) => (
           <div
             key={i}
-            className="rounded-[var(--radius-widget)] bg-secondary p-4 space-y-3"
+            className="rounded-widget bg-secondary p-4 space-y-3"
           >
             <SkeletonPulse className="h-4 w-28" />
             {Array.from({ length: 5 }).map((_, j) => (
@@ -353,7 +353,7 @@ function ContentStatCard({
 }) {
   return (
     <div
-      className="flex items-center gap-3 rounded-[var(--radius-widget)] bg-secondary p-4 animate-fade-up"
+      className="flex items-center gap-3 rounded-widget bg-secondary p-4 animate-fade-up"
       style={{ animationDelay: `${index * 60}ms` }}
     >
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-background">

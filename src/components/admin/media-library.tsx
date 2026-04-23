@@ -342,7 +342,7 @@ export function MediaLibrary({
     >
       {/* ── Drag overlay ── */}
       {dragOver && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 rounded-[var(--radius-widget)] border-2 border-dashed border-primary bg-primary/5 backdrop-blur-sm">
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 rounded-widget border-2 border-dashed border-primary bg-primary/5 backdrop-blur-sm">
           <Upload className="h-10 w-10 text-primary" />
           <p className="text-sm font-medium text-primary">
             拖放文件上传
@@ -352,7 +352,7 @@ export function MediaLibrary({
 
       {/* ── Upload progress indicator ── */}
       {uploading && (
-        <div className="mb-4 flex items-center gap-2 rounded-[var(--radius-widget)] border border-border bg-secondary px-4 py-2 text-sm text-muted-foreground">
+        <div className="mb-4 flex items-center gap-2 rounded-widget border border-border bg-secondary px-4 py-2 text-sm text-muted-foreground">
           <Upload className="h-4 w-4 animate-pulse" />
           {`上传中 ${uploadProgress.current}/${uploadProgress.total}...`}
         </div>
@@ -369,7 +369,7 @@ export function MediaLibrary({
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="搜索文件..."
-            className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary pl-8 pr-8 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full rounded-widget border border-border bg-secondary pl-8 pr-8 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
           {searchInput && (
             <button
@@ -449,7 +449,7 @@ export function MediaLibrary({
           <button
             type="button"
             onClick={resetFilters}
-            className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] border border-border bg-secondary px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="inline-flex items-center gap-1 rounded-widget border border-border bg-secondary px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.5} />
             重置
@@ -569,7 +569,7 @@ export function MediaLibrary({
             type="button"
             onClick={loadMore}
             disabled={loading}
-            className="rounded-[var(--radius-widget)] border border-border bg-secondary px-6 py-2 text-sm text-foreground hover:bg-accent transition-colors disabled:opacity-50"
+            className="rounded-widget border border-border bg-secondary px-6 py-2 text-sm text-foreground hover:bg-accent transition-colors disabled:opacity-50"
           >
             {loading ? "..." : "加载更多"}
           </button>
@@ -629,7 +629,7 @@ export function MediaLibrary({
               <button
                 type="button"
                 onClick={() => copyToClipboard(preview.url)}
-                className="flex items-center justify-center gap-1.5 rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-xs text-foreground transition-colors hover:bg-accent"
+                className="flex items-center justify-center gap-1.5 rounded-widget border border-border bg-secondary px-3 py-2 text-xs text-foreground transition-colors hover:bg-accent"
               >
                 <Copy className="h-3.5 w-3.5" />
                 复制链接
@@ -641,7 +641,7 @@ export function MediaLibrary({
                     `![${preview.filename}](${preview.url})`,
                   )
                 }
-                className="flex items-center justify-center gap-1.5 rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-xs text-foreground transition-colors hover:bg-accent"
+                className="flex items-center justify-center gap-1.5 rounded-widget border border-border bg-secondary px-3 py-2 text-xs text-foreground transition-colors hover:bg-accent"
               >
                 <FileCode2 className="h-3.5 w-3.5" />
                 复制 Markdown
@@ -652,7 +652,7 @@ export function MediaLibrary({
                   setPreview(null);
                   setDeleteTarget(preview);
                 }}
-                className="flex items-center justify-center gap-1.5 rounded-[var(--radius-widget)] border border-destructive/30 px-3 py-2 text-xs text-destructive transition-colors hover:bg-destructive/10"
+                className="flex items-center justify-center gap-1.5 rounded-widget border border-destructive/30 px-3 py-2 text-xs text-destructive transition-colors hover:bg-destructive/10"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 删除

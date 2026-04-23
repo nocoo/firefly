@@ -300,7 +300,7 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
   return (
     <div className="space-y-6">
       {/* ── Card 1: Remote Backup (Push) ── */}
-      <div className="rounded-[var(--radius-card)] bg-secondary p-6 space-y-6">
+      <div className="rounded-card bg-secondary p-6 space-y-6">
         <div className="flex items-center gap-2">
           <CloudUpload className="h-5 w-5 text-purple-500" />
           <h2 className="text-lg font-medium text-foreground">
@@ -445,7 +445,7 @@ export function BackupPage({ initialConfig, initialPullKey }: BackupPageProps) {
       </div>
 
       {/* ── Card 2: Pull Webhook ── */}
-      <div className="rounded-[var(--radius-card)] bg-secondary p-6 space-y-6">
+      <div className="rounded-card bg-secondary p-6 space-y-6">
         <div className="flex items-center gap-2">
           <KeyRound className="h-5 w-5 text-yellow-500" />
           <h2 className="text-lg font-medium text-foreground">

@@ -320,7 +320,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
   const editorFields = (
     <>
       {error && (
-        <div className="rounded-[var(--radius-widget)] border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-widget border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       )}
@@ -339,7 +339,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
           required
-          className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder="文章标题"
         />
       </div>
@@ -358,7 +358,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
           required
-          className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder={"url-slug"}
         />
       </div>
@@ -383,7 +383,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         {/* Mobile: tab-based preview */}
         <div className="lg:hidden">
           {previewMode ? (
-            <div className="blog-preview-theme min-h-[480px] rounded-[var(--radius-widget)] border border-border overflow-y-auto">
+            <div className="blog-preview-theme min-h-[480px] rounded-widget border border-border overflow-y-auto">
               {content ? (
                 <ArticleBody html={previewHtml} />
               ) : (
@@ -406,7 +406,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
                 onChange={(e) => setContent(e.target.value)}
                 required
                 rows={20}
-                className="w-full min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
+                className="w-full min-h-[480px] rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
                 placeholder={"使用 Markdown 编写文章内容..."}
               />
             </>
@@ -426,7 +426,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             onChange={(e) => setContent(e.target.value)}
             required
             rows={20}
-            className="w-full min-h-[480px] rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
+            className="w-full min-h-[480px] rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
             placeholder={"使用 Markdown 编写文章内容..."}
           />
         </div>
@@ -462,7 +462,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           value={excerpt}
           onChange={(e) => setExcerpt(e.target.value)}
           rows={3}
-          className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder={"文章的简要描述..."}
         />
       </div>
@@ -528,7 +528,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           type="datetime-local"
           value={publishedAtLocal}
           onChange={(e) => setPublishedAtLocal(e.target.value)}
-          className="w-full sm:w-auto rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full sm:w-auto rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
@@ -572,7 +572,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           type="url"
           value={featuredImage}
           onChange={(e) => setFeaturedImage(e.target.value)}
-          className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder="https://..."
         />
       </div>
@@ -588,14 +588,14 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             type="url"
             value={referenceUrl}
             onChange={(e) => setReferenceUrl(e.target.value)}
-            className="flex-1 rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="flex-1 rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             placeholder="https://github.com/..."
           />
           <button
             type="button"
             onClick={handleUnfurl}
             disabled={isUnfurling || !referenceUrl.trim()}
-            className="inline-flex items-center rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent disabled:opacity-50"
+            className="inline-flex items-center rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent disabled:opacity-50"
           >
             {isUnfurling
               ? "获取中..."
@@ -607,14 +607,14 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             <button
               type="button"
               onClick={handleClearReference}
-              className="inline-flex items-center rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
+              className="inline-flex items-center rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
             >
               {"清除"}
             </button>
           )}
         </div>
         {hasFetched && (
-          <div className="space-y-2 rounded-[var(--radius-widget)] border border-border p-3">
+          <div className="space-y-2 rounded-widget border border-border p-3">
             <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <label className="text-xs text-muted-foreground">{"标题"}</label>
@@ -633,7 +633,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
                 type="text"
                 value={referenceTitle}
                 onChange={(e) => setReferenceTitle(e.target.value)}
-                className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-widget border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div className="space-y-1">
@@ -642,7 +642,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
                 value={referenceDescription}
                 onChange={(e) => setReferenceDescription(e.target.value)}
                 rows={2}
-                className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-widget border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             {referenceImage && (
@@ -664,14 +664,14 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         <button
           type="submit"
           disabled={saving}
-          className="inline-flex items-center gap-2 rounded-[var(--radius-widget)] bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-widget bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
           {saving ? "保存中..." : isEditing ? "更新文章" : "创建文章"}
         </button>
         <button
           type="button"
           onClick={() => router.push("/admin/posts")}
-          className="inline-flex items-center rounded-[var(--radius-widget)] border border-border bg-secondary px-4 py-2 text-sm text-foreground transition-colors hover:bg-accent"
+          className="inline-flex items-center rounded-widget border border-border bg-secondary px-4 py-2 text-sm text-foreground transition-colors hover:bg-accent"
         >
           {"取消"}
         </button>
@@ -680,7 +680,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             type="button"
             onClick={() => setDeleteConfirmOpen(true)}
             disabled={saving}
-            className="ml-auto inline-flex items-center rounded-[var(--radius-widget)] bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50"
+            className="ml-auto inline-flex items-center rounded-widget bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50"
           >
             {"删除文章"}
           </button>
@@ -715,7 +715,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
 
       {/* Right: Live preview — visible only on lg+ */}
       {/* height = 100vh - header(--header-height) - shell-padding(12px) - content-padding(40px) */}
-      <div className="sticky top-0 hidden h-[calc(100vh-var(--header-height)-12px-40px)] w-1/2 min-w-0 overflow-y-auto rounded-[var(--radius-widget)] border border-border lg:block">
+      <div className="sticky top-0 hidden h-[calc(100vh-var(--header-height)-12px-40px)] w-1/2 min-w-0 overflow-y-auto rounded-widget border border-border lg:block">
         <MarkdownPreview
           title={title}
           excerpt={excerpt}
