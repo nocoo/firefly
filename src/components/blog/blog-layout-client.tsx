@@ -65,6 +65,7 @@ export function BlogLayoutClient({
 
   const sidebarRef = useRef<HTMLElement | null>(null);
   const toggleRef = useRef<HTMLButtonElement | null>(null);
+  const backdropRef = useRef<HTMLDivElement | null>(null);
 
   // While drawer is open: lock body scroll, Escape to close, focus into
   // sidebar, restore focus on close, trap Tab inside sidebar, and mark
@@ -77,15 +78,20 @@ export function BlogLayoutClient({
     const sidebar = sidebarRef.current;
     const toggle = toggleRef.current;
 
-    // Inert everything in <body> that doesn't contain the sidebar
+    // Inert everything in <body> that doesn't contain the sidebar.
+    // Skip the backdrop and toggle button — both must remain interactive
+    // so the user can dismiss the drawer.
     const inerted: { el: HTMLElement; prevInert: boolean; prevAriaHidden: string | null }[] = [];
     if (sidebar) {
       const ancestors = new Set<Node>();
       for (let n: Node | null = sidebar; n; n = n.parentNode) ancestors.add(n);
+      const backdrop = backdropRef.current;
       const walk = (parent: HTMLElement) => {
         for (const child of Array.from(parent.children)) {
           if (!(child instanceof HTMLElement)) continue;
           if (child === sidebar) continue;
+          if (child === backdrop) continue;
+          if (child === toggle) continue;
           if (ancestors.has(child)) {
             walk(child);
             continue;
@@ -173,6 +179,7 @@ export function BlogLayoutClient({
 
       {drawerOpen && (
         <div
+          ref={backdropRef}
           className="blog-sidebar-backdrop"
           aria-hidden="true"
           onClick={() => setDrawerOpen(false)}
