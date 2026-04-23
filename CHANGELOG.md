@@ -1,5 +1,51 @@
 # Changelog
 
+## v2.6.0 (2026-04-23)
+
+- fix(blog): keep backdrop and toggle interactive when drawer is open
+- fix(blog): inert all page chrome outside drawer dialog
+- fix(blog): true modal semantics for mobile drawer
+- fix(blog): drawer scroll-lock leak + a11y + dead footer link
+- feat(blog): mobile drawer for sidebar (collapsed by default ≤768px)
+- style(blog): sidebar borders, footer prune, layout polish
+- style(blog): sidebar/separator/footer micro-adjustments
+- docs(blog): log round-2 redesign commits in tracking doc
+- fix(blog): footer spans 100% viewport width
+- style(blog): site title bigger, sidebar rhythm, full-bleed dividers
+- fix(blog): hoist footer to .page-wrapper so it spans full 1500 width
+- docs: finalize blog-redesign tracking doc with status + commit log
+- feat(blog): rewrite footer as zed.dev 5-column with hatching watermark
+- feat(blog): tighten post-card title (lg/xl + tracking-tight) — bleed already removed via CSS
+- feat(blog): simplify layout client + restructure sidebar (lizheng pattern)
+- feat(blog): wrap blog routes in .page-wrapper for 1500 max + edge ruler ticks
+- feat(blog): inject IBM Plex fonts via next/font + update theme-color
+- feat(blog): rewrite globals.css palette + decorative utilities (lizheng + zed)
+- Merge pull request #60 from nocoo/fix/add-csp-header
+- Merge pull request #56 from nocoo/fix/e2e-auth-bypass-guard
+- fix(auth): use E2E_TEST_RUNNER guard instead of NODE_ENV check
+- fix(security): add Content-Security-Policy header
+- fix(security): add Content-Security-Policy header
+- fix(auth): harden E2E bypass to reject production
+- Merge pull request #59 from nocoo/fix/rate-limit-cross-instance-note
+- docs(security): document in-memory rate limiter limitation
+- Merge pull request #58 from nocoo/fix/mcp-register-auth
+- Merge pull request #57 from nocoo/fix/mcp-token-rate-limit
+- ci: upgrade base-ci to v2026.1
+- fix(security): require auth for MCP client registration
+- fix(security): add rate limiting to /api/mcp/token
+- docs: update autoresearch ideas backlog
+- Revert L2+L3 parallel; keep retries=1 \u2014 sequential safer
+- Run L2 and L3 in parallel with playwright retries=1
+- Skip rebuild when .next is fresh (mtime check)
+- describe.concurrent across stateless L2 files
+- Playwright: workers=10, fullyParallel
+- Use turbopack for E2E build (5s faster than webpack)
+- describe.concurrent for mcp.test.ts + maxWorkers=8
+- Vitest projects: parallel L2 + serial racy files
+- Build Next.js once for both API+browser servers
+- Baseline: L1=1.03s, L2+L3=107.9s (build 2x + tests sequential)
+
+
 ## v2.5.17 (2026-04-20)
 
 - fix(test): fix AI agents empty state detection in L3 test
