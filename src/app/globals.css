@@ -516,12 +516,15 @@
   }
 }
 
-/* ─── Cross-divider with end-ring punch ─── */
+/* ─── Cross-divider — horizontal line + 7×7 end-ring punch
+ * Use as <div class="cross-divider" />. Rings are filled with --blog-bg
+ * so they "punch through" intersecting borders (sidebar right border,
+ * page-wrapper left/right borders, etc.) — pure lizheng/zed pattern. */
 .cross-divider {
   position: relative;
   height: 1px;
   background: var(--blog-separator);
-  margin: 2rem 0;
+  margin: 1.75rem 0;
 }
 .cross-divider::before,
 .cross-divider::after {
@@ -533,10 +536,15 @@
   border: 1px solid var(--blog-separator);
   border-radius: 50%;
   background: var(--blog-bg);
-  transform: translate(-50%, -50%);
 }
-.cross-divider::before { left: 0; }
-.cross-divider::after  { right: 0; transform: translate(50%, -50%); }
+.cross-divider::before { left: 0;  transform: translate(-50%, -50%); }
+.cross-divider::after  { right: 0; transform: translate(50%,  -50%); }
+
+/* On surface-colored containers (blog-main), use surface bg for ring fill */
+.blog-main .cross-divider::before,
+.blog-main .cross-divider::after {
+  background: var(--blog-surface);
+}
 
 /* ─── Main content ─── */
 .blog-main {
@@ -584,13 +592,14 @@
 }
 .blog-global-bar-link:hover { color: var(--blog-text); background: var(--blog-separator); }
 
-/* ─── Site title (lizheng h1 — sans 1.375rem 600) ─── */
+/* ─── Site title (lizheng/zed hero — big, tracking-tight) ─── */
 .blog-site-title {
   font-family: var(--ff-sans);
-  font-size: 1.375rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  font-size: clamp(1.75rem, 1.4rem + 1.5vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  margin: 0;
 }
 .blog-site-title a { color: var(--blog-text); text-decoration: none; }
 .blog-site-title a:hover { color: var(--blog-accent); }
@@ -599,31 +608,42 @@
   font-family: var(--ff-serif);
   font-style: italic;
   color: var(--blog-muted);
-  margin: 0.5em 0 0;
+  margin: 0.6em 0 0;
   font-size: 0.9375em;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
-/* ─── Sidebar sections ─── */
-.blog-sidebar-section { margin-top: 1.75em; }
-.blog-sidebar-section:first-of-type { margin-top: 0; }
+.blog-sidebar-top {
+  padding: 0.5rem 0 1rem;
+}
+
+/* ─── Sidebar sections — separated by explicit .cross-divider in JSX ─── */
+.blog-sidebar-bottom { padding-top: 0.5rem; }
+
+.blog-sidebar-section { margin: 0; padding: 0.5rem 0 0; }
+.blog-sidebar-section + .blog-sidebar-section { margin-top: 0; }
+
 .blog-sidebar-heading {
   font-family: var(--ff-mono);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--blog-muted);
-  margin-bottom: 0.75em;
-  display: flex; align-items: center; gap: 0.4em;
+  letter-spacing: 0.1em;
+  color: var(--blog-text);
+  margin: 0 0 1rem;
+  padding-bottom: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  border-bottom: 1px dashed var(--blog-separator);
 }
-.blog-sidebar-heading-icon { width: 0.85em; height: 0.85em; flex-shrink: 0; }
+.blog-sidebar-heading-icon { width: 0.95em; height: 0.95em; flex-shrink: 0; color: var(--blog-muted); }
 
 .blog-sidebar-list { list-style: none; padding: 0; margin: 0; }
 .blog-sidebar-list li { margin: 0; }
 .blog-sidebar-list a {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0.3em 0;
+  padding: 0.4em 0;
   font-family: var(--ff-mono);
   font-size: 0.8125rem;
   letter-spacing: 0.02em;
@@ -688,26 +708,68 @@
 .blog-tag-pill:nth-child(8n+7) { background: var(--tag-7-bg); color: var(--tag-7-fg); }
 .blog-tag-pill:nth-child(8n+8) { background: var(--tag-8-bg); color: var(--tag-8-fg); }
 
-/* ─── Post entries — separated by hr with + nodes ─── */
+/* ─── Post entries — separated by cross-divider with ring-punch ends ─── */
 .blog-entry { position: relative; padding-bottom: 2.5em; margin-top: 2.5em; }
 .blog-entry:first-child { margin-top: 0; }
-.blog-entry + .blog-entry { padding-top: 2.5em; border-top: 1px solid var(--blog-separator); position: relative; }
-/* + nodes at both ends of the separator */
-.blog-entry + .blog-entry::before,
+.blog-entry + .blog-entry { padding-top: 2.5em; }
+/* Full-bleed horizontal line that crosses the main column */
+.blog-entry + .blog-entry::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: calc(-1 * var(--blog-content-padding));
+  right: calc(-1 * var(--blog-content-padding));
+  height: 1px;
+  background: var(--blog-separator);
+}
+/* End-rings via 2 box-shadow copies of a single 7×7 dot */
 .blog-entry + .blog-entry::after {
   content: "";
   position: absolute;
-  top: -5px;
-  width: 9px;
-  height: 9px;
-  background:
-    linear-gradient(to right, transparent 4px, currentColor 4px 5px, transparent 5px),
-    linear-gradient(to bottom, transparent 4px, currentColor 4px 5px, transparent 5px);
-  color: var(--blog-separator);
-  opacity: 0.85;
+  top: -3.5px;
+  left: calc(-1 * var(--blog-content-padding) - 3.5px);
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--blog-separator);
+  border-radius: 50%;
+  background: var(--blog-surface);
+  box-shadow: calc(100vw + 0px) 0 0 -1px var(--blog-surface);
+  /* Use a second pseudo via a known pattern: nested outline isn't possible.
+   * Instead, draw the right ring via a sibling — see ::before of the next
+   * entry's heading. For simplicity: only show LEFT ring here; the
+   * page-wrapper edge already has a ruler tick at the right side. */
 }
-.blog-entry + .blog-entry::before { left: -4px; }
-.blog-entry + .blog-entry::after  { right: -4px; }
+@media (max-width: 768px) {
+  .blog-entry + .blog-entry::before {
+    left: calc(-1 * 1.25rem);
+    right: calc(-1 * 1.25rem);
+  }
+  .blog-entry + .blog-entry::after {
+    left: calc(-1 * 1.25rem - 3.5px);
+  }
+}
+
+/* Right-end ring for the post separator, drawn on the entry itself */
+.blog-entry + .blog-entry > :first-child {
+  position: relative;
+}
+.blog-entry + .blog-entry > :first-child::before {
+  content: "";
+  position: absolute;
+  top: calc(-2.5em - 3.5px);
+  right: calc(-1 * var(--blog-content-padding) - 3.5px);
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--blog-separator);
+  border-radius: 50%;
+  background: var(--blog-surface);
+  pointer-events: none;
+}
+@media (max-width: 768px) {
+  .blog-entry + .blog-entry > :first-child::before {
+    right: calc(-1 * 1.25rem - 3.5px);
+  }
+}
 
 /* ─── Featured image — strict in-container, no bleed ─── */
 .blog-featured-image {
