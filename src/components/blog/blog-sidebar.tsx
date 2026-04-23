@@ -88,89 +88,83 @@ export function BlogSidebar({
         )}
 
         {tags.length > 0 && (
-          <>
-            <div className="cross-divider" aria-hidden="true" />
-            <nav className="blog-sidebar-section">
-              <h3 className="blog-sidebar-heading">
-                <Tags className="blog-sidebar-heading-icon" strokeWidth={1.5} />
-                标签
-              </h3>
-              <div className="blog-tag-cloud">
-                {(() => {
-                  const counts = tags.map((tg) => tg.post_count ?? 0);
-                  const maxCount = Math.max(...counts, 1);
-                  const minSize = 0.8125;
-                  const maxSize = 1.375;
-                  return tags.map((tag) => {
-                    const weight = (tag.post_count ?? 0) / maxCount;
-                    const size = minSize + weight * (maxSize - minSize);
-                    return (
-                      <Link
-                        key={tag.id}
-                        href={`/tag/${tag.slug}`}
-                        prefetch={false}
-                        style={{ fontSize: `${size}em` }}
-                      >
-                        {tag.name}
-                      </Link>
-                    );
-                  });
-                })()}
-              </div>
-            </nav>
-          </>
+          <nav className="blog-sidebar-section">
+            <h3 className="blog-sidebar-heading">
+              <Tags className="blog-sidebar-heading-icon" strokeWidth={1.5} />
+              标签
+            </h3>
+            <div className="blog-tag-cloud">
+              {(() => {
+                const counts = tags.map((tg) => tg.post_count ?? 0);
+                const maxCount = Math.max(...counts, 1);
+                const minSize = 0.8125;
+                const maxSize = 1.375;
+                return tags.map((tag) => {
+                  const weight = (tag.post_count ?? 0) / maxCount;
+                  const size = minSize + weight * (maxSize - minSize);
+                  return (
+                    <Link
+                      key={tag.id}
+                      href={`/tag/${tag.slug}`}
+                      prefetch={false}
+                      style={{ fontSize: `${size}em` }}
+                    >
+                      {tag.name}
+                    </Link>
+                  );
+                });
+              })()}
+            </div>
+          </nav>
         )}
 
         {archives.length > 0 && (
-          <>
-            <div className="cross-divider" aria-hidden="true" />
-            <nav className="blog-sidebar-section">
-              <h3 className="blog-sidebar-heading">
-                <Archive className="blog-sidebar-heading-icon" strokeWidth={1.5} />
-                归档
-              </h3>
-              <ul className="blog-sidebar-list">
-                {(() => {
-                  const now = new Date();
-                  const cutoffYear = now.getFullYear() - 1;
+          <nav className="blog-sidebar-section">
+            <h3 className="blog-sidebar-heading">
+              <Archive className="blog-sidebar-heading-icon" strokeWidth={1.5} />
+              归档
+            </h3>
+            <ul className="blog-sidebar-list">
+              {(() => {
+                const now = new Date();
+                const cutoffYear = now.getFullYear() - 1;
 
-                  const recent: MonthlyArchive[] = [];
-                  const olderByYear = new Map<number, number>();
+                const recent: MonthlyArchive[] = [];
+                const olderByYear = new Map<number, number>();
 
-                  for (const a of archives) {
-                    if (a.year >= cutoffYear) {
-                      recent.push(a);
-                    } else {
-                      olderByYear.set(a.year, (olderByYear.get(a.year) ?? 0) + a.count);
-                    }
+                for (const a of archives) {
+                  if (a.year >= cutoffYear) {
+                    recent.push(a);
+                  } else {
+                    olderByYear.set(a.year, (olderByYear.get(a.year) ?? 0) + a.count);
                   }
+                }
 
-                  const olderEntries = [...olderByYear.entries()].sort((a, b) => b[0] - a[0]);
+                const olderEntries = [...olderByYear.entries()].sort((a, b) => b[0] - a[0]);
 
-                  return (
-                    <>
-                      {recent.map((a) => (
-                        <li key={`${a.year}-${a.month}`}>
-                          <Link href={`/archive/${a.year}-${String(a.month).padStart(2, "0")}`} prefetch={false}>
-                            <span>{a.year} 年 {a.month} 月</span>
-                            <span className="blog-sidebar-count">{a.count}</span>
-                          </Link>
-                        </li>
-                      ))}
-                      {olderEntries.map(([year, count]) => (
-                        <li key={year}>
-                          <Link href={`/archive/${year}`} prefetch={false}>
-                            <span>{year} 年</span>
-                            <span className="blog-sidebar-count">{count}</span>
-                          </Link>
-                        </li>
-                      ))}
-                    </>
-                  );
-                })()}
-              </ul>
-            </nav>
-          </>
+                return (
+                  <>
+                    {recent.map((a) => (
+                      <li key={`${a.year}-${a.month}`}>
+                        <Link href={`/archive/${a.year}-${String(a.month).padStart(2, "0")}`} prefetch={false}>
+                          <span>{a.year} 年 {a.month} 月</span>
+                          <span className="blog-sidebar-count">{a.count}</span>
+                        </Link>
+                      </li>
+                    ))}
+                    {olderEntries.map(([year, count]) => (
+                      <li key={year}>
+                        <Link href={`/archive/${year}`} prefetch={false}>
+                          <span>{year} 年</span>
+                          <span className="blog-sidebar-count">{count}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </>
+                );
+              })()}
+            </ul>
+          </nav>
         )}
       </div>
     </aside>

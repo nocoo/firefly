@@ -35,18 +35,6 @@ const COLUMNS: FooterColumn[] = [
       { label: "llms.txt", href: "/llms.txt" },
     ],
   },
-  {
-    heading: "关于",
-    links: [
-      { label: "管理", href: "/admin" },
-    ],
-  },
-  {
-    heading: "Social",
-    links: [
-      { label: "GitHub ↗", href: "https://github.com", external: true },
-    ],
-  },
 ];
 
 export function BlogFooter({ siteName }: BlogFooterProps) {
