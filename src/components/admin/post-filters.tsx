@@ -132,7 +132,7 @@ export function PostFilters({ categories, tags, yearCounts }: PostFiltersProps) 
         <button
           type="button"
           onClick={resetAllFilters}
-          className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] border border-border bg-secondary px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="inline-flex items-center gap-1 rounded-widget border border-border bg-secondary px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
           <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.5} />
           重置

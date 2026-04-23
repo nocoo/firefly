@@ -254,7 +254,7 @@ export function TaxonomyManager({
           {(item.total_posts ?? item.post_count) > 0 && (
             <Link
               href={`/admin/posts?${type === "category" ? "category" : "tag"}=${item.id}`}
-              className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="inline-flex items-center gap-1 rounded-widget px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.5} />
               查看全部
@@ -262,14 +262,14 @@ export function TaxonomyManager({
           )}
           <button
             onClick={() => startEdit(item)}
-            className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="inline-flex items-center gap-1 rounded-widget px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
             编辑
           </button>
           <button
             onClick={() => setDeleteTarget(item)}
-            className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-widget px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
           >
             <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
             删除
@@ -286,7 +286,7 @@ export function TaxonomyManager({
   return (
     <div className="space-y-4">
       {error && (
-        <div className="rounded-[var(--radius-widget)] border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-widget border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       )}
@@ -295,7 +295,7 @@ export function TaxonomyManager({
       {!creating && !editing && (
         <button
           onClick={startCreate}
-          className="inline-flex items-center gap-2 rounded-[var(--radius-widget)] bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          className="inline-flex items-center gap-2 rounded-widget bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
           {`新建${label}`}
         </button>
@@ -303,7 +303,7 @@ export function TaxonomyManager({
 
       {/* Create/Edit form */}
       {(creating || editing) && (
-        <div className="rounded-[var(--radius-widget)] border border-border bg-secondary/50 p-4 space-y-3">
+        <div className="rounded-widget border border-border bg-secondary/50 p-4 space-y-3">
           <h3 className="text-sm font-medium text-foreground">
             {editing ? `编辑${label}` : `新建${label}`}
           </h3>
@@ -313,14 +313,14 @@ export function TaxonomyManager({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="名称"
-              className="rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <input
               type="text"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
               placeholder="别名"
-              className="rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <input
@@ -328,19 +328,19 @@ export function TaxonomyManager({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="描述（可选）"
-            className="w-full rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <div className="flex gap-2">
             <button
               onClick={handleSave}
               disabled={saving}
-              className="inline-flex items-center rounded-[var(--radius-widget)] bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+              className="inline-flex items-center rounded-widget bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
               {saving ? "保存中..." : "保存"}
             </button>
             <button
               onClick={resetForm}
-              className="inline-flex items-center rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent"
+              className="inline-flex items-center rounded-widget border border-border bg-secondary px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent"
             >
               取消
             </button>
@@ -349,7 +349,7 @@ export function TaxonomyManager({
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-[var(--radius-widget)] border border-border bg-secondary">
+      <div className="overflow-x-auto rounded-widget border border-border bg-secondary">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-secondary/50">

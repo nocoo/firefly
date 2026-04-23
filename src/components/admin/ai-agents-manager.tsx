@@ -364,7 +364,7 @@ export function AiAgentsManager({
 
       {/* Table or empty state */}
       {agents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-[var(--radius-card)] bg-secondary py-12">
+        <div className="flex flex-col items-center justify-center rounded-card bg-secondary py-12">
           <Users className="h-12 w-12 text-muted-foreground/50" />
           <p className="mt-4 text-sm text-muted-foreground">
             还没有 AI 代理。创建一个以允许 AI 发布内容。
@@ -375,7 +375,7 @@ export function AiAgentsManager({
           </Button>
         </div>
       ) : (
-        <div className="rounded-[var(--radius-card)] bg-secondary p-1 overflow-x-auto">
+        <div className="rounded-card bg-secondary p-1 overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">

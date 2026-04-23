@@ -82,7 +82,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
   return (
     <div className="space-y-6">
       {/* Card 1: Display Settings */}
-      <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-5">
+      <div className="rounded-card bg-secondary p-5 md:p-6 space-y-5">
         <h2 className="text-base font-medium text-foreground">
           显示设置
         </h2>
@@ -127,7 +127,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
       </div>
 
       {/* Card 2: Content Settings */}
-      <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-5">
+      <div className="rounded-card bg-secondary p-5 md:p-6 space-y-5">
         <h2 className="text-base font-medium text-foreground">
           内容设置
         </h2>
@@ -152,7 +152,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
       </div>
 
       {/* Card 3: Internal URLs */}
-      <div className="rounded-[var(--radius-card)] bg-secondary p-5 md:p-6 space-y-4">
+      <div className="rounded-card bg-secondary p-5 md:p-6 space-y-4">
         <div>
           <h2 className="text-base font-medium text-foreground">
             内部功能链接
@@ -168,7 +168,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
             return (
               <div
                 key={path}
-                className="flex items-center gap-2 rounded-[var(--radius-widget)] border border-border bg-secondary px-3 py-2"
+                className="flex items-center gap-2 rounded-widget border border-border bg-secondary px-3 py-2"
               >
                 <span className="min-w-0 flex-1 truncate font-mono text-xs text-foreground">
                   {fullUrl}

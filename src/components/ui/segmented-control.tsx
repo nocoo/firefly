@@ -27,7 +27,7 @@ export function SegmentedControl<T extends string | number>({
   return (
     <div
       className={cn(
-        "flex rounded-[var(--radius-widget)] border border-border bg-secondary p-0.5",
+        "flex rounded-widget border border-border bg-secondary p-0.5",
         className,
       )}
     >

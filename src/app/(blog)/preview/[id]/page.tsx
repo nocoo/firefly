@@ -41,7 +41,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
   return (
     <>
       {/* Preview banner */}
-      <div className="mb-6 rounded-[var(--radius-widget)] border border-yellow-300 bg-yellow-50 px-4 py-2 text-sm text-yellow-800 dark:border-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300">
+      <div className="mb-6 rounded-widget border border-yellow-300 bg-yellow-50 px-4 py-2 text-sm text-yellow-800 dark:border-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300">
         Preview Mode — This post is <strong>{post.status}</strong>.
         {" "}
         <Link

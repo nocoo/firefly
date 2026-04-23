@@ -45,7 +45,7 @@ function DonutTooltip({
   const item = payload[0] as (typeof payload)[number];
 
   return (
-    <div className="rounded-[var(--radius-widget)] border border-border bg-popover p-2.5 shadow-sm">
+    <div className="rounded-widget border border-border bg-popover p-2.5 shadow-sm">
       <div className="flex items-center gap-2">
         <div
           className="h-3 w-3 rounded-full"
@@ -72,7 +72,7 @@ function BarTooltip({
   const name = entry.payload?.name ?? "";
 
   return (
-    <div className="rounded-[var(--radius-widget)] border border-border bg-popover p-2.5 shadow-sm">
+    <div className="rounded-widget border border-border bg-popover p-2.5 shadow-sm">
       <div className="flex items-center gap-2 text-xs">
         <div
           className="h-2 w-2 rounded-full"
@@ -104,7 +104,7 @@ export function HumanTab({ data }: HumanTabProps) {
   return (
     <div className="space-y-4">
       {/* Recent 24h banner */}
-      <div className="rounded-[var(--radius-widget)] bg-secondary p-3 text-center">
+      <div className="rounded-widget bg-secondary p-3 text-center">
         <span className="text-sm text-muted-foreground">
           近 24 小时:
         </span>{" "}
@@ -258,7 +258,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[var(--radius-widget)] bg-secondary p-4">
+    <div className="rounded-widget bg-secondary p-4">
       <h3 className="text-sm font-medium text-foreground mb-3">{title}</h3>
       {children}
     </div>

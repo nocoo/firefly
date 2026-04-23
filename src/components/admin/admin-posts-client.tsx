@@ -167,7 +167,7 @@ export function AdminPostsClient({
 
           <Link
             href="/admin/posts/new"
-            className="inline-flex items-center gap-2 rounded-[var(--radius-widget)] bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center gap-2 rounded-widget bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             新建文章
           </Link>
@@ -277,7 +277,7 @@ function BulkActionBar({
   const hasUpdates = bulkStatus !== "" || bulkCategory !== "";
 
   return (
-    <div className="sticky top-0 z-20 flex flex-wrap items-center gap-3 rounded-[var(--radius-widget)] border border-primary/30 bg-primary/5 px-4 py-3 shadow-sm backdrop-blur-sm">
+    <div className="sticky top-0 z-20 flex flex-wrap items-center gap-3 rounded-widget border border-primary/30 bg-primary/5 px-4 py-3 shadow-sm backdrop-blur-sm">
       {/* Selection count + dismiss */}
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-foreground">
@@ -338,7 +338,7 @@ function BulkActionBar({
         type="button"
         onClick={handleApply}
         disabled={applying || !hasUpdates}
-        className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center gap-1 rounded-widget bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {applying ? "应用中..." : "应用"}
       </button>
@@ -433,7 +433,7 @@ function CopyLinkButton({ post }: { post: PostWithTags }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="inline-flex items-center justify-center rounded-[var(--radius-widget)] p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      className="inline-flex items-center justify-center rounded-widget p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
       title="复制链接"
     >
       <Link2 className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -474,7 +474,7 @@ function ListView({
   return (
     <>
       {/* Table */}
-      <div className="overflow-x-auto rounded-[var(--radius-widget)] border border-border bg-secondary">
+      <div className="overflow-x-auto rounded-widget border border-border bg-secondary">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-secondary/50">
@@ -638,7 +638,7 @@ function ListView({
                       <div className="flex items-center justify-end gap-1">
                         <Link
                           href={`/admin/posts/${post.id}/edit`}
-                          className="inline-flex items-center gap-1 rounded-[var(--radius-widget)] px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                          className="inline-flex items-center gap-1 rounded-widget px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                         >
                           <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
                           编辑
@@ -648,7 +648,7 @@ function ListView({
                           href={getPreviewUrl(post)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center rounded-[var(--radius-widget)] p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                          className="inline-flex items-center justify-center rounded-widget p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                           title="在新标签页打开"
                         >
                           <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -710,7 +710,7 @@ function Pagination({
           <Link
             key={page}
             href={buildHref(page)}
-            className={`inline-flex h-8 min-w-[2rem] items-center justify-center rounded-[var(--radius-widget)] border px-2 text-sm transition-colors ${
+            className={`inline-flex h-8 min-w-[2rem] items-center justify-center rounded-widget border px-2 text-sm transition-colors ${
               page === currentPage
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-border bg-secondary text-foreground hover:bg-accent"

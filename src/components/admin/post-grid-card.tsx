@@ -94,7 +94,7 @@ export const PostGridCard = memo(function PostGridCard({
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
-          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-widget)] bg-card/90 text-card-foreground transition-colors hover:bg-card"
+          className="flex h-8 w-8 items-center justify-center rounded-widget bg-card/90 text-card-foreground transition-colors hover:bg-card"
           title="预览"
         >
           <Eye className="h-4 w-4" strokeWidth={1.5} />
@@ -102,7 +102,7 @@ export const PostGridCard = memo(function PostGridCard({
         <Link
           href={`/admin/posts/${post.id}/edit`}
           onClick={(e) => e.stopPropagation()}
-          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-widget)] bg-card/90 text-card-foreground transition-colors hover:bg-card"
+          className="flex h-8 w-8 items-center justify-center rounded-widget bg-card/90 text-card-foreground transition-colors hover:bg-card"
           title="编辑"
         >
           <Pencil className="h-4 w-4" strokeWidth={1.5} />
