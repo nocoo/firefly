@@ -31,15 +31,29 @@ interface BlogSidebarProps {
   siteTagline: string;
   socialLinks: SocialLink[];
   drawerOpen?: boolean;
+  isMobile?: boolean;
+  onDrawerClose?: () => void;
 }
 
 export function BlogSidebar({
-  categories, tags, archives, siteName, siteTagline, socialLinks, drawerOpen = false,
+  categories, tags, archives, siteName, siteTagline, socialLinks,
+  drawerOpen = false, isMobile = false,
 }: BlogSidebarProps) {
+  // On mobile when closed, hide from a11y tree + disable keyboard focus
+  const inert = isMobile && !drawerOpen;
+  // Modal semantics only meaningful while the drawer is actually displayed
+  const modalProps = isMobile && drawerOpen
+    ? { role: "dialog" as const, "aria-modal": true as const }
+    : {};
+
   return (
     <aside
+      id="blog-sidebar"
       className={`blog-sidebar blog-sidebar-desktop${drawerOpen ? " blog-sidebar-open" : ""}`}
       aria-label="Site navigation"
+      aria-hidden={inert ? true : undefined}
+      inert={inert || undefined}
+      {...modalProps}
     >
       {/* top-left: identity (lizheng pattern) */}
       <div className="blog-sidebar-top">

@@ -23,7 +23,6 @@ const COLUMNS: FooterColumn[] = [
     heading: "内容",
     links: [
       { label: "首页", href: "/" },
-      { label: "归档", href: "/archive/all" },
       { label: "搜索", href: "/search" },
     ],
   },
