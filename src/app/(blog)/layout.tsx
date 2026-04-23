@@ -34,17 +34,19 @@ export default async function BlogLayout({
         Skip to content
       </a>
       <BlogGlobalBar isAdmin={isAdmin} />
-      <div className="blog-max-width">
-        <BlogLayoutClient
-          categories={activeCategories}
-          tags={activeTags}
-          archives={archives}
-          siteName={settings.siteName}
-          siteTagline={settings.siteTagline}
-          socialLinks={settings.socialLinks}
-        >
-          {children}
-        </BlogLayoutClient>
+      <div className="page-wrapper">
+        <div className="blog-max-width">
+          <BlogLayoutClient
+            categories={activeCategories}
+            tags={activeTags}
+            archives={archives}
+            siteName={settings.siteName}
+            siteTagline={settings.siteTagline}
+            socialLinks={settings.socialLinks}
+          >
+            {children}
+          </BlogLayoutClient>
+        </div>
       </div>
     </div>
   );
