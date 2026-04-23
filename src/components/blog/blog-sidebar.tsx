@@ -1,15 +1,11 @@
-"use client";
-
-import { forwardRef } from "react";
 import Link from "next/link";
-import { Github, Facebook, Linkedin, Mail, FileUser, X, Folder, Tags, Archive } from "lucide-react";
+import { Github, Facebook, Linkedin, Mail, FileUser, Folder, Tags, Archive } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/entities/post";
 import type { SocialLink } from "@/data/settings";
 import { SocialLink as SocialLinkComponent } from "./social-link";
 import { SearchInput } from "./search-input";
 
-// ─── X (Twitter) icon — not in lucide ───
 function XIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -18,7 +14,6 @@ function XIcon({ className }: { className?: string }) {
   );
 }
 
-// ─── Brand → icon mapping ───
 const BRAND_ICONS: Record<string, { icon: React.ComponentType<{ className?: string }>; isLucide: boolean }> = {
   x: { icon: XIcon, isLucide: false },
   facebook: { icon: Facebook, isLucide: true },
@@ -29,9 +24,6 @@ const BRAND_ICONS: Record<string, { icon: React.ComponentType<{ className?: stri
 };
 
 interface BlogSidebarProps {
-  variant: "desktop" | "drawer";
-  open?: boolean;
-  onClose?: () => void;
   categories: Category[];
   tags: Tag[];
   archives: MonthlyArchive[];
@@ -40,44 +32,18 @@ interface BlogSidebarProps {
   socialLinks: SocialLink[];
 }
 
-export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function BlogSidebar({
-  variant, open, onClose, categories, tags, archives,
-  siteName, siteTagline, socialLinks,
-}, ref) {
-  const isDrawer = variant === "drawer";
-  const isDrawerOpen = isDrawer && open;
-
-  const className = [
-    "blog-sidebar",
-    isDrawer ? "blog-sidebar-drawer" : "blog-sidebar-desktop",
-    isDrawerOpen ? "blog-sidebar-drawer-open" : "",
-  ].filter(Boolean).join(" ");
-
+export function BlogSidebar({
+  categories, tags, archives, siteName, siteTagline, socialLinks,
+}: BlogSidebarProps) {
   return (
-    <aside
-      ref={ref}
-      className={className}
-      inert={isDrawer && !open ? true : undefined}
-      aria-hidden={isDrawer && !open ? true : undefined}
-      {...(isDrawer ? { role: "dialog", "aria-modal": open ? true : undefined, "aria-label": "导航菜单" } : {})}
-    >
-      <div className="blog-sidebar-inner">
-        {/* Drawer close button — CSS hides this for desktop variant */}
-        <button
-          className="blog-sidebar-close"
-          onClick={onClose}
-          aria-label="Close menu"
-        >
-          <X className="h-5 w-5" strokeWidth={1.5} />
-        </button>
-
-        {/* Site identity */}
-        <div className="blog-site-title">
+    <aside className="blog-sidebar blog-sidebar-desktop" aria-label="Site navigation">
+      {/* top-left: identity (lizheng pattern) */}
+      <div className="blog-sidebar-top">
+        <h1 className="blog-site-title">
           <Link href="/" prefetch={false}>{siteName}</Link>
-        </div>
+        </h1>
         {siteTagline && <p className="blog-tagline">{siteTagline}</p>}
 
-        {/* Social links */}
         {socialLinks.length > 0 && (
           <div className="blog-social">
             {socialLinks.map((link) => {
@@ -96,11 +62,14 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
             })}
           </div>
         )}
+      </div>
 
-        {/* Search */}
+      <div className="cross-divider" aria-hidden="true" />
+
+      {/* bottom-left: search + nav modules */}
+      <div className="blog-sidebar-bottom">
         <SearchInput />
 
-        {/* Categories */}
         {categories.length > 0 && (
           <nav className="blog-sidebar-section">
             <h3 className="blog-sidebar-heading">
@@ -120,7 +89,6 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
           </nav>
         )}
 
-        {/* Tags — weighted tag cloud */}
         {tags.length > 0 && (
           <nav className="blog-sidebar-section">
             <h3 className="blog-sidebar-heading">
@@ -132,7 +100,7 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
                 const counts = tags.map((tg) => tg.post_count ?? 0);
                 const maxCount = Math.max(...counts, 1);
                 const minSize = 0.8125;
-                const maxSize = 1.5;
+                const maxSize = 1.375;
                 return tags.map((tag) => {
                   const weight = (tag.post_count ?? 0) / maxCount;
                   const size = minSize + weight * (maxSize - minSize);
@@ -152,7 +120,6 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
           </nav>
         )}
 
-        {/* Archives — recent 2 years by month, older years aggregated */}
         {archives.length > 0 && (
           <nav className="blog-sidebar-section">
             <h3 className="blog-sidebar-heading">
@@ -204,4 +171,4 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
       </div>
     </aside>
   );
-});
+}

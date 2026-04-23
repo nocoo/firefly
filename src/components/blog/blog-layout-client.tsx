@@ -1,17 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/entities/post";
 import type { SocialLink } from "@/data/settings";
 import { BlogSidebar } from "./blog-sidebar";
 import { BlogFooter } from "./blog-footer";
-import { Menu } from "lucide-react";
-import { IconButton } from "@/components/ui/icon-button";
-
-// Matches --breakpoint-desktop in globals.css @theme.
-// Read at runtime so the single source of truth stays in CSS.
-const DESKTOP_QUERY = "(min-width: 1200px)";
 
 interface BlogLayoutClientProps {
   categories: Category[];
@@ -23,113 +17,25 @@ interface BlogLayoutClientProps {
   children: React.ReactNode;
 }
 
+/**
+ * Detect post-detail routes so the inner content max-width tightens to 936px.
+ * List pages (home, tag, category, archive, search) keep the wider 1180px.
+ */
+function isPostDetailRoute(pathname: string | null): boolean {
+  if (!pathname) return false;
+  // Matches /YYYY/MM/slug — 4-digit year + 2-digit month + slug
+  return /^\/\d{4}\/\d{2}\/[^/]+$/.test(pathname) || pathname.startsWith("/preview/");
+}
+
 export function BlogLayoutClient({
   categories, tags, archives, siteName, siteTagline, socialLinks, children,
 }: BlogLayoutClientProps) {
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const drawerRef = useRef<HTMLElement>(null);
-  const hamburgerRef = useRef<HTMLButtonElement>(null);
-
-  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
-
-  // State convergence: auto-close drawer when entering desktop layout.
-  // This is not a layout decision — CSS already hides the drawer at >= 1200px.
-  // This cleans up React state so backdrop and scroll-lock don't leak.
-  useEffect(() => {
-    const mql = window.matchMedia(DESKTOP_QUERY);
-    const handler = (e: MediaQueryListEvent) => {
-      if (e.matches) setDrawerOpen(false);
-    };
-    mql.addEventListener("change", handler);
-    return () => mql.removeEventListener("change", handler);
-  }, []);
-
-  // Scroll lock — single owner
-  useEffect(() => {
-    document.body.style.overflow = drawerOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [drawerOpen]);
-
-  // Escape key to close + focus trap inside drawer
-  useEffect(() => {
-    if (!drawerOpen) return;
-
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        setDrawerOpen(false);
-        hamburgerRef.current?.focus();
-        return;
-      }
-
-      if (e.key === "Tab" && drawerRef.current) {
-        const focusable = drawerRef.current.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
-        );
-        if (focusable.length === 0) return;
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [drawerOpen]);
-
-  // Move focus into drawer on open, return to hamburger on close
-  useEffect(() => {
-    if (drawerOpen) {
-      // Focus the close button inside the drawer
-      const close = drawerRef.current?.querySelector<HTMLElement>(".blog-sidebar-close");
-      close?.focus();
-    }
-  }, [drawerOpen]);
+  const pathname = usePathname();
+  const isPostDetail = isPostDetailRoute(pathname);
 
   return (
     <>
-      {/* Desktop sidebar — always in DOM, CSS shows/hides via media query */}
       <BlogSidebar
-        variant="desktop"
-        categories={categories}
-        tags={tags}
-        archives={archives}
-        siteName={siteName}
-        siteTagline={siteTagline}
-        socialLinks={socialLinks}
-      />
-
-      {/* Hamburger — always in DOM, CSS shows/hides via media query */}
-      <div className="blog-mobile-bar">
-        <IconButton ref={hamburgerRef} onClick={() => setDrawerOpen(true)} aria-label="Open menu">
-          <Menu className="h-5 w-5" strokeWidth={1.5} />
-        </IconButton>
-      </div>
-
-      {/* Drawer backdrop — click to close, not a semantic button */}
-      {drawerOpen && (
-        <div
-          className="blog-sidebar-backdrop"
-          onClick={closeDrawer}
-        />
-      )}
-
-      {/* Drawer sidebar — always in DOM, CSS + inert control visibility */}
-      <BlogSidebar
-        ref={drawerRef}
-        variant="drawer"
-        open={drawerOpen}
-        onClose={() => {
-          setDrawerOpen(false);
-          hamburgerRef.current?.focus();
-        }}
         categories={categories}
         tags={tags}
         archives={archives}
@@ -139,7 +45,9 @@ export function BlogLayoutClient({
       />
 
       <main id="main" className="blog-main">
-        {children}
+        <div className={`blog-main-inner${isPostDetail ? " blog-main-inner-post" : ""}`}>
+          {children}
+        </div>
         <BlogFooter siteName={siteName} />
       </main>
     </>
