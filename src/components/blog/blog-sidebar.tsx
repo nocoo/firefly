@@ -64,32 +64,27 @@ export function BlogSidebar({
         )}
       </div>
 
-      <div className="cross-divider" aria-hidden="true" />
-
       {/* bottom-left: search + nav modules */}
       <div className="blog-sidebar-bottom">
         <SearchInput />
 
         {categories.length > 0 && (
-          <>
-            <div className="cross-divider" aria-hidden="true" />
-            <nav className="blog-sidebar-section">
-              <h3 className="blog-sidebar-heading">
-                <Folder className="blog-sidebar-heading-icon" strokeWidth={1.5} />
-                分类
-              </h3>
-              <ul className="blog-sidebar-list">
-                {categories.map((cat) => (
-                  <li key={cat.id}>
-                    <Link href={`/category/${cat.slug}`} prefetch={false}>
-                      <span>{cat.name}</span>
-                      <span className="blog-sidebar-count">{cat.post_count}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          </>
+          <nav className="blog-sidebar-section">
+            <h3 className="blog-sidebar-heading">
+              <Folder className="blog-sidebar-heading-icon" strokeWidth={1.5} />
+              分类
+            </h3>
+            <ul className="blog-sidebar-list">
+              {categories.map((cat) => (
+                <li key={cat.id}>
+                  <Link href={`/category/${cat.slug}`} prefetch={false}>
+                    <span>{cat.name}</span>
+                    <span className="blog-sidebar-count">{cat.post_count}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
         )}
 
         {tags.length > 0 && (

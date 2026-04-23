@@ -551,7 +551,7 @@
   background: var(--blog-surface);
   flex: 1;
   min-width: 0;
-  padding: var(--blog-content-padding);
+  padding: var(--blog-content-padding) var(--blog-content-padding) 0;
   position: relative;
   min-height: 100vh;
   width: 100%;
@@ -571,7 +571,7 @@
 }
 @media (prefers-reduced-motion: reduce) { .blog-main { animation: none; } }
 @media (max-width: 768px) {
-  .blog-main { padding: 1.5rem 1.25rem; }
+  .blog-main { padding: 1.5rem 1.25rem 0; }
 }
 
 /* ─── Global bar (top-right) ─── */
@@ -592,13 +592,13 @@
 }
 .blog-global-bar-link:hover { color: var(--blog-text); background: var(--blog-separator); }
 
-/* ─── Site title (lizheng/zed hero — big, tracking-tight) ─── */
+/* ─── Site title (lizheng/zed hero — moderate, tracking-tight) ─── */
 .blog-site-title {
   font-family: var(--ff-sans);
-  font-size: clamp(1.75rem, 1.4rem + 1.5vw, 2.5rem);
+  font-size: clamp(1.125rem, 1rem + 0.6vw, 1.5rem);
   font-weight: 700;
-  letter-spacing: -0.035em;
-  line-height: 1.05;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
   margin: 0;
 }
 .blog-site-title a { color: var(--blog-text); text-decoration: none; }
@@ -614,11 +614,31 @@
 }
 
 .blog-sidebar-top {
-  padding: 0.5rem 0 1rem;
+  padding: 0 0 0.75rem;
 }
 
 /* ─── Sidebar sections — separated by explicit .cross-divider in JSX ─── */
-.blog-sidebar-bottom { padding-top: 0.5rem; }
+.blog-sidebar-bottom { padding-top: 0; }
+
+/* Sidebar cross-dividers extend full-bleed across the sidebar padding,
+ * so the line touches both ends and rings sit on top of the column borders. */
+.blog-sidebar-desktop .cross-divider {
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+  z-index: 3;
+}
+.blog-sidebar-desktop .cross-divider::before,
+.blog-sidebar-desktop .cross-divider::after {
+  z-index: 4;
+}
+@media (max-width: 768px) {
+  .blog-sidebar-desktop .cross-divider {
+    margin-left: -1.25rem;
+    margin-right: -1.25rem;
+  }
+}
 
 .blog-sidebar-section { margin: 0; padding: 0.5rem 0 0; }
 .blog-sidebar-section + .blog-sidebar-section { margin-top: 0; }
@@ -708,67 +728,12 @@
 .blog-tag-pill:nth-child(8n+7) { background: var(--tag-7-bg); color: var(--tag-7-fg); }
 .blog-tag-pill:nth-child(8n+8) { background: var(--tag-8-bg); color: var(--tag-8-fg); }
 
-/* ─── Post entries — separated by cross-divider with ring-punch ends ─── */
+/* ─── Post entries — simple dashed separator ─── */
 .blog-entry { position: relative; padding-bottom: 2.5em; margin-top: 2.5em; }
 .blog-entry:first-child { margin-top: 0; }
-.blog-entry + .blog-entry { padding-top: 2.5em; }
-/* Full-bleed horizontal line that crosses the main column */
-.blog-entry + .blog-entry::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: calc(-1 * var(--blog-content-padding));
-  right: calc(-1 * var(--blog-content-padding));
-  height: 1px;
-  background: var(--blog-separator);
-}
-/* End-rings via 2 box-shadow copies of a single 7×7 dot */
-.blog-entry + .blog-entry::after {
-  content: "";
-  position: absolute;
-  top: -3.5px;
-  left: calc(-1 * var(--blog-content-padding) - 3.5px);
-  width: 7px;
-  height: 7px;
-  border: 1px solid var(--blog-separator);
-  border-radius: 50%;
-  background: var(--blog-surface);
-  box-shadow: calc(100vw + 0px) 0 0 -1px var(--blog-surface);
-  /* Use a second pseudo via a known pattern: nested outline isn't possible.
-   * Instead, draw the right ring via a sibling — see ::before of the next
-   * entry's heading. For simplicity: only show LEFT ring here; the
-   * page-wrapper edge already has a ruler tick at the right side. */
-}
-@media (max-width: 768px) {
-  .blog-entry + .blog-entry::before {
-    left: calc(-1 * 1.25rem);
-    right: calc(-1 * 1.25rem);
-  }
-  .blog-entry + .blog-entry::after {
-    left: calc(-1 * 1.25rem - 3.5px);
-  }
-}
-
-/* Right-end ring for the post separator, drawn on the entry itself */
-.blog-entry + .blog-entry > :first-child {
-  position: relative;
-}
-.blog-entry + .blog-entry > :first-child::before {
-  content: "";
-  position: absolute;
-  top: calc(-2.5em - 3.5px);
-  right: calc(-1 * var(--blog-content-padding) - 3.5px);
-  width: 7px;
-  height: 7px;
-  border: 1px solid var(--blog-separator);
-  border-radius: 50%;
-  background: var(--blog-surface);
-  pointer-events: none;
-}
-@media (max-width: 768px) {
-  .blog-entry + .blog-entry > :first-child::before {
-    right: calc(-1 * 1.25rem - 3.5px);
-  }
+.blog-entry + .blog-entry {
+  padding-top: 2.5em;
+  border-top: 1px dashed var(--blog-separator);
 }
 
 /* ─── Featured image — strict in-container, no bleed ─── */
@@ -882,16 +847,23 @@ hr.blog-hr::after,  .blog-content hr::after  { right: -4px; }
   position: relative;
   background: var(--blog-accent);
   color: #fff;
-  margin-top: 4rem;
+  margin-top: 0;
   overflow: hidden;
 }
+/* Hatching covers the entire blue area as a background layer */
 .zed-footer::before {
-  /* Top hairline + end rings (cross-divider style) */
   content: "";
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.25);
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0,
+    transparent 7px,
+    rgba(255, 255, 255, 0.1) 7px,
+    rgba(255, 255, 255, 0.1) 8px
+  );
+  pointer-events: none;
+  z-index: 0;
 }
 .zed-footer-cols {
   display: grid;
@@ -947,7 +919,7 @@ hr.blog-hr::after,  .blog-content hr::after  { right: -4px; }
   display: inline-block; margin-left: 0.25em; font-size: 0.85em;
 }
 
-/* Hatching watermark band */
+/* Hatching watermark band — hatching now covers entire .zed-footer */
 .zed-footer-watermark {
   position: relative;
   height: 200px;
@@ -956,17 +928,7 @@ hr.blog-hr::after,  .blog-content hr::after  { right: -4px; }
   align-items: center;
   justify-content: center;
   overflow: hidden;
-}
-.zed-footer-watermark::before {
-  content: "";
-  position: absolute; inset: 0;
-  background-image: repeating-linear-gradient(
-    45deg,
-    transparent 0,
-    transparent 7px,
-    rgba(255, 255, 255, 0.1) 7px,
-    rgba(255, 255, 255, 0.1) 8px
-  );
+  z-index: 1;
 }
 .zed-footer-watermark-text {
   position: relative;
@@ -1184,7 +1146,7 @@ hr.blog-hr::after,  .blog-content hr::after  { right: -4px; }
   display: flex;
   align-items: center;
   gap: 0.5em;
-  margin-top: 2.5em;
+  margin-top: 0.5em;
   padding: 0.5em 0;
   border-bottom: 1px solid var(--blog-separator);
   transition: border-color 0.15s;
