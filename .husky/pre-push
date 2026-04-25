@@ -1,10 +1,8 @@
 # === Quality Gate: pre-push ===
-# L1 Coverage + G1 Lint + G2 Security + Test DB check + Worker unit tests
+# L1 Coverage (root + worker) + G1 Lint + G2 Security + Test DB check
 # L2 API E2E runs in CI only (requires remote worker)
-echo "▸ L1: unit tests (coverage ≥90%)"
+echo "▸ L1: unit tests (coverage ≥90%, includes worker subpackage)"
 bun run test:coverage
-echo "▸ L1: worker unit tests"
-(cd worker && bun run test)
 echo "▸ G1: lint"
 bun run lint
 echo "▸ G2: security"
