@@ -110,6 +110,48 @@ describe("blogPostingJsonLd", () => {
     const result = JSON.parse(blogPostingJsonLd(post, testSite));
     expect(result.timeRequired).toBe("PT5M");
   });
+
+  it("falls back to created_at when published_at is null", () => {
+    const draft: PostWithCategory = { ...post, published_at: null };
+    const result = JSON.parse(blogPostingJsonLd(draft, testSite));
+    expect(result.datePublished).toBe(new Date(draft.created_at * 1000).toISOString());
+  });
+
+  it("omits image when featured_image is null", () => {
+    const noImg: PostWithCategory = { ...post, featured_image: null };
+    const result = JSON.parse(blogPostingJsonLd(noImg, testSite));
+    expect(result).not.toHaveProperty("image");
+  });
+
+  it("omits timeRequired when reading_time is null", () => {
+    const noRead: PostWithCategory = { ...post, reading_time: null };
+    const result = JSON.parse(blogPostingJsonLd(noRead, testSite));
+    expect(result).not.toHaveProperty("timeRequired");
+  });
+
+  it("omits articleSection when category_name is null", () => {
+    const noCat: PostWithCategory = {
+      ...post,
+      category_id: null,
+      category_name: null,
+      category_slug: null,
+    };
+    const result = JSON.parse(blogPostingJsonLd(noCat, testSite));
+    expect(result).not.toHaveProperty("articleSection");
+  });
+
+  it("omits keywords when tagNames is undefined or empty", () => {
+    const noTags = JSON.parse(blogPostingJsonLd(post, testSite));
+    const emptyTags = JSON.parse(blogPostingJsonLd(post, testSite, []));
+    expect(noTags).not.toHaveProperty("keywords");
+    expect(emptyTags).not.toHaveProperty("keywords");
+  });
+
+  it("uses empty string when excerpt is null", () => {
+    const noExcerpt: PostWithCategory = { ...post, excerpt: null };
+    const result = JSON.parse(blogPostingJsonLd(noExcerpt, testSite));
+    expect(result.description).toBe("");
+  });
 });
 
 describe("breadcrumbJsonLd", () => {

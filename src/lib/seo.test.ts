@@ -4,6 +4,11 @@ import {
   SITE_URL,
   HTML_LANG,
   OG_LOCALE,
+  formatDate,
+  formatDateDisplay,
+  formatDateISO,
+  extractYearMonth,
+  postPath,
   type SiteIdentity,
 } from "./seo";
 
@@ -186,5 +191,44 @@ describe("title composition (regression)", () => {
 
     const og = meta.openGraph as Record<string, unknown>;
     expect(og.title).toBe("Page 2");
+  });
+});
+
+describe("date helpers", () => {
+  const epoch = Date.UTC(2026, 0, 15) / 1000;
+
+  it("formatDate returns YYYY-MM-DD", () => {
+    expect(formatDate(epoch)).toBe("2026-01-15");
+  });
+
+  it("formatDateDisplay returns Chinese long-form date", () => {
+    expect(formatDateDisplay(epoch)).toBe("2026年1月15日");
+  });
+
+  it("formatDateISO returns ISO 8601", () => {
+    expect(formatDateISO(epoch)).toBe("2026-01-15T00:00:00.000Z");
+  });
+
+  it("extractYearMonth zero-pads single-digit months", () => {
+    expect(extractYearMonth(epoch)).toEqual({ year: "2026", month: "01" });
+    expect(extractYearMonth(Date.UTC(2026, 9, 5) / 1000)).toEqual({
+      year: "2026",
+      month: "10",
+    });
+  });
+});
+
+describe("postPath", () => {
+  it("returns /slug for unpublished posts (null)", () => {
+    expect(postPath("hello", null)).toBe("/hello");
+  });
+
+  it("treats publishedAt=0 as unpublished", () => {
+    expect(postPath("hello", 0)).toBe("/hello");
+  });
+
+  it("returns /YYYY/MM/slug for published posts", () => {
+    const epoch = Date.UTC(2026, 2, 1) / 1000;
+    expect(postPath("hello", epoch)).toBe("/2026/03/hello");
   });
 });
