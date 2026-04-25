@@ -246,9 +246,14 @@ describe("summarizeUnfurl", () => {
   it("returns null and does not throw when AI call fails", async () => {
     mockedGetAiSettings.mockResolvedValue(mockSettings);
     mockedGenerateText.mockRejectedValue(new Error("Network error"));
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     const result = await summarizeUnfurl("Title", "Desc", "Body");
     expect(result).toBeNull();
+    expect(warn).toHaveBeenCalledWith(
+      "[summarizeUnfurl] AI enhancement failed:",
+      expect.any(Error),
+    );
   });
 
   it("returns null when AI returns empty text", async () => {

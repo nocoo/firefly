@@ -144,6 +144,7 @@ describe("PostService.create", () => {
     vi.mocked(setPostTags).mockRejectedValue(new Error("tag failure"));
     vi.mocked(refreshCategoryPostCount).mockResolvedValue();
     vi.mocked(refreshAllTagPostCounts).mockResolvedValue();
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     // Should NOT throw even though setPostTags failed
     const result = await PostService.create(db, {
@@ -156,6 +157,7 @@ describe("PostService.create", () => {
     });
 
     expect(result.title).toBe("Hello World");
+    expect(errSpy).toHaveBeenCalled();
   });
 
   // L104: Cover branch where post.excerpt is null (uses ?? undefined fallback)
@@ -277,12 +279,14 @@ describe("PostService.update", () => {
     vi.mocked(refreshCategoryPostCount).mockRejectedValue(
       new Error("refresh failed"),
     );
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const result = await PostService.update(db, "post-1", {
       categoryId: "cat-2",
     });
 
     expect(result?.category_id).toBe("cat-2");
+    expect(errSpy).toHaveBeenCalled();
   });
 
   // L148: Cover branch where categoryId is undefined but category changed (null → cat-1)

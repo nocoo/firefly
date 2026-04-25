@@ -294,11 +294,13 @@ describe("handleCreate", () => {
     });
     const { handleCreate } = createCrudHandlers(config);
     const ctx = createMockContext();
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const result = await handleCreate(ctx, { name: "New" });
     // afterCreate is best-effort — failure is logged, entity still returned
     const data = parseToolResult(result) as MockEntity;
     expect(data.id).toBe("e-1");
+    expect(errSpy).toHaveBeenCalled();
   });
 });
 
@@ -413,11 +415,13 @@ describe("handleUpdate", () => {
       },
     });
     const { handleUpdate } = createCrudHandlers(config);
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const result = await handleUpdate(ctx, { id: "e-1", name: "Updated" });
     // afterUpdate is best-effort — failure is logged, update still returned
     const data = parseToolResult(result) as MockEntity;
     expect(data.name).toBe("Updated");
+    expect(errSpy).toHaveBeenCalled();
   });
 
   it("returns error when entity not found", async () => {

@@ -136,10 +136,12 @@ describe("createTaxonomySlugHandlers", () => {
 
     it("handles generic error (500)", async () => {
       getBySlug.mockRejectedValue(new Error("unexpected"));
+      const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const res = await handlers.GET(makeRequest("GET"), makeParams());
       expect(res.status).toBe(500);
       const data = await res.json();
       expect(data.error).toBe("Internal server error");
+      expect(errSpy).toHaveBeenCalled();
     });
   });
 
@@ -210,12 +212,14 @@ describe("createTaxonomySlugHandlers", () => {
       getBySlug.mockResolvedValue(sampleEntity);
       parseUpdateBody.mockReturnValue({ name: "X" });
       update.mockRejectedValue(new Error("oops"));
+      const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       const res = await handlers.PUT(
         makeRequest("PUT", { name: "X" }),
         makeParams(),
       );
       expect(res.status).toBe(500);
+      expect(errSpy).toHaveBeenCalled();
     });
   });
 
@@ -281,9 +285,11 @@ describe("createTaxonomySlugHandlers", () => {
     it("handles generic error during deletion", async () => {
       getBySlug.mockResolvedValue(sampleEntity);
       del.mockRejectedValue(new Error("boom"));
+      const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       const res = await handlers.DELETE(makeRequest("DELETE"), makeParams());
       expect(res.status).toBe(500);
+      expect(errSpy).toHaveBeenCalled();
     });
   });
 });

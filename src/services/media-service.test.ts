@@ -211,9 +211,11 @@ describe("MediaService.delete", () => {
     vi.mocked(getMediaById).mockResolvedValue(sampleAttachment);
     vi.mocked(deleteMedia).mockResolvedValue(true);
     vi.mocked(r2.delete).mockRejectedValue(new Error("R2 error"));
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     // Should NOT throw
     const result = await MediaService.delete(db, r2, "att-1");
     expect(result).toBe(true);
+    expect(errSpy).toHaveBeenCalled();
   });
 });
