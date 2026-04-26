@@ -1,6 +1,48 @@
 # Autoresearch Ideas: L1+L2+L3 优化
 
-## 已完成 ✅
+## UT (test:coverage) 已落地（2026-04）
+
+基线 1.87s → 0.77-0.85s (-57%)
+
+### Round 1–2
+- `pool=threads` + 顶层 `isolate=false`：Vitest 4 复用 worker 模块图
+- `coverage.reporter=['text-summary']`：跳过 per-file 表格
+- 移除 `globals: true`（所有测试都显式 import）
+
+### Round 3 额外加速
+- **折叠 Vitest projects 为单一顶层 config**：避免两个 project 各自 boot 一个 worker pool（0.89s→0.80s）
+- **`maxWorkers: 12`**（8 cores hyperthread 到 16）把全局 70 个文件的 import 带宽丢到更多线程（0.80s→0.77s）
+- **`maxConcurrency: 20`**：让 `describe.concurrent` 嵌套 it 能更多并发
+- coverage 同时覆盖 `src/**` 与 `worker/src/**`，>95%
+
+## UT 探索过的死路
+- `pool: vmThreads / vmForks / forks` 都慢于 threads
+- `maxWorkers=2/4/6/8/10/14/16` 都不如 12；减少 worker + isolate=false 造成 mock 跨文件污染导致测试失败
+- `fileParallelism: false` 1.5s+
+- `coverage.skipFull/clean=false/excludeAfterRemap/processingConcurrency/allowExternal` 都在噪声内
+- `deps.optimizer.ssr.enabled` / `optimizeDeps.include` 无收益
+- `server.deps.inline=true` 1.3s+（必须转换所有 node_modules）
+- `server.preTransformRequests=false` 噪声
+- `bunx --bun vitest` Bun runtime 跑 vitest segfault
+- `unplugin-swc` SWC 转换器 — 与 esbuild 持平或略慢
+- `@vitest/coverage-istanbul` — 1.5s+ 远慢于 v8
+- `sequence.concurrent: true` — 造成大量 mock 污染导致测试失败
+- `esbuild.target: esnext` / `legalComments: none` 噪声
+- `execArgv: ['--no-warnings']` 噪声
+- 别名 `next/server` 到小 stub：只能微幅提升，但会掊盖生产行为差异，风险大于收益
+- 显示 `cacheDir` — 与默认一致无变化
+
+## 危险陷阱 ⚠️
+- **`maxWorkers` / `fileParallelism` 不能放在 project 配置里**：vitest 静默运行 0 个测试，需在 `test:` 顶层
+- **顶层 `maxWorkers` 减少 + `isolate: false`**：jest mock 会跨文件污染。sweet spot 是默认或略高 （10-12）
+- **`sequence.concurrent: true`**：同一文件内的 mock 会被并发 it 破坏
+
+## UT 仍可尝试（低优先级）
+- 拆分 `src/data/entities/post.test.ts`（1725 行）、`src/services/unfurl.test.ts`（833 行）提高负载平衡——但 isolate=false 下拆分可能增加跨线程 import 重复费用
+- 迁移到 bun:test（需重写 vi.fn / vi.mock 为 bun 等价品，大工作量）
+- 预编译所有 src 为单一 bundle，让 vitest 跳过逐文件 transform（复杂）
+
+
 
 ### 构建复用
 - **Build once, two servers**: `startNextServer` 调用两次时只 build 一次

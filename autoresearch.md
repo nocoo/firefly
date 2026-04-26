@@ -46,13 +46,51 @@
 
 所有覆盖率指标仍然在 95%+ 以上。
 
-## 剩余时间分析
-当前测试时间 ~1.1s 主要由以下组成：
-- transform: ~3.3s (TypeScript 编译，Vitest 开销)
-- import: ~5.3s (模块加载，Vitest 开销)
-- tests: ~0.6s (实际测试执行)
+## 已完成优化 (Round 2)
 
-进一步优化空间有限，因为：
-1. 所有测试执行时间都在 0-8ms 范围内
-2. transform/import 是 Vitest 的固有开销
-3. 没有发现其他等待网络请求的测试
+### 3. Vitest 4 升级后的并行 + 单进程优化 ✅
+**改动**:
+1. `vitest.config.ts` 设 `pool: "threads"` + `isolate: false`（v4 顶层配置）— 复用 worker 模块图，省去文件级隔离开销。
+2. 用 Vitest 4 `projects` 把 `worker/test/**` 作为独立 project 拼进根 vitest 配置，单进程同时跑 src+worker（之前是两个 vitest 进程串行）。
+3. coverage `reporter: ["text-summary"]` 跳过冗长的 per-file 表格输出。
+4. coverage `include` 同时覆盖 `src/**` 与 `worker/src/**`，所有覆盖率指标 >95%。
+5. `test`/`test:coverage` 改为直接调用 vitest（移除 wrapper 脚本依赖）。
+
+**效果**: 1.87s → 0.89s（-52%）。
+
+## 结果总结 (Round 2)
+| 指标 | 基线 | 优化后 |
+|------|------|--------|
+| Duration (test:coverage) | 1.87s | 0.77-0.82s (-58%) |
+| Tests | 1404 (src 1308 + worker 96) | 1404 |
+| Lines coverage | 99.34% | 99.34% |
+| Branches | 97.69% | 97.69% |
+| Functions | 97.6% | 97.6% |
+
+进一步优化需要大性能改造（迁移到 bun:test 或安装 SWC 转换器），风险高且收益小。
+
+## Round 3 补充优化 ✅
+
+### 4. 折叠 src + worker projects 为单一顶层 vitest 配置✅
+**问题**: 两个 vitest project 各自 spawn worker pool 〈= 8 + 8 = 16 worker boots 〉。
+**修复**: 拆除 `projects: [...]`, 合并 includes 为 `["src/**/*.test.ts", "worker/test/**/*.test.ts"]`，在顶层 `test:` 设 `pool/isolate/maxConcurrency/maxWorkers`。
+**效果**: 0.89s → 0.80s（-10%）。
+
+### 5. maxWorkers=12 平衡并行 import 开销 ✅
+**本地 16 核 CPU，默认 worker count = min(8, cores)**。
+合并 project 后加 `maxWorkers: 12`（不在 project 里），把 70 个文件的 import 负载分散到更多线程。
+**效果**: 0.80s → 0.77s。进一步增到 14/16 反而变慢（10/12 是甜蜜点）。
+
+### 6. maxConcurrency=20
+默认 5，调高让 `describe.concurrent` 里的嵌套 it 能更多并发（轻度收益）。
+
+## 探索过的死路 (Round 2)
+- `pool: vmThreads` — 慢于 threads (~1.0s)
+- `maxWorkers=2` / `=4` / `=8` — 等于或慢于默认
+- `fileParallelism: false` — 1.5s+，单线程明显更慢
+- `coverage.skipFull/clean=false/processingConcurrency=16` — 噪声范围内
+- 应用 `pool=threads` 到 worker vitest — 因已与 src 并行重叠，无收益
+
+## 危险陷阱 ⚠️
+- **`maxWorkers` / `fileParallelism` / `minWorkers` 不能放在 project 级配置**：vitest 静默运行 0 个测试但报告 "PASS"，需要在 `test:` 顶层。
+- **顶层 `maxWorkers` 减少 + `isolate: false`**：会造成跨文件状态泄漏，导致测试失败。默认 worker count（8）+ isolate=false 是边缘平衡，减少 worker 会让 concurrent 测试间的 mock/全局状态互相污染。
