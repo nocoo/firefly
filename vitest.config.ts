@@ -14,9 +14,11 @@ export default defineConfig({
     env: { R2_PUBLIC_URL: "https://assets.example.com" },
     coverage: {
       provider: "v8",
+      // AST-aware remapping is the default in vitest v4+; no opt-in needed.
       reporter: ["text-summary"],
       include: ["src/**/*.ts", "worker/src/**/*.ts"],
       exclude: [
+        // Test files and type declarations — not production code
         "src/**/*.test.ts",
         "src/**/*.d.ts",
         "worker/src/**/*.d.ts",
