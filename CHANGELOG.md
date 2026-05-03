@@ -1,5 +1,44 @@
 # Changelog
 
+## v2.6.1 (2026-05-03)
+
+- fix(L3): use precise h1 selectors to avoid strict mode violations
+- fix(L3): fix CI failures — strict h1 selector + year filter assertion
+- docs: update L3 test count after deepening (139 → 158)
+- test(L3): deepen taxonomy pagination — heading content on page 2
+- test(L3): deepen RSS feed — item structure validation + URL format check
+- test(L3): deepen admin media — year/mime filters + lightbox metadata panel
+- test(L3): deepen admin taxonomy — create form toggle + edit form + post count
+- test(L3): deepen pagination — current page indicator + previous page nav
+- test(L3): deepen blog navigation — post card content + click navigation + archive
+- test(L3): deepen tag page — post click navigation + noindex directive
+- test(L3): deepen category page — post click navigation + card content
+- docs: update quality system metrics to current state
+- test(L3): add taxonomy and archive pagination browser E2E tests
+- test(L3): add homepage pagination browser E2E tests
+- test(L3): add tag page browser E2E tests
+- test(L3): add category page browser E2E tests
+- Merge pull request #67 from nocoo/fix/coverage-config
+- chore: align coverage config with pew best practices
+- chore: add lockfile sync check to pre-push hook
+- chore: pin bun 1.3 via mise to fix Railway lockfile mismatch
+- Merge pull request #66 from nocoo/deps/nextjs-16.2.4-65
+- deps: upgrade next to 16.2.4
+- docs(autoresearch): UT coverage optimization session
+- perf(test): consolidate src+worker into single vitest run
+- chore(test): emit worker coverage from root test:coverage
+- test(noise): silence expected stderr in error-path cases
+- test(coverage): pull pure logic back into coverage scope
+- chore(test): run worker subpackage from root test scripts
+- chore(husky): run worker unit tests in pre-push
+- chore(deps): pin vitest and @vitest/coverage-v8 to 4.1.2
+- fix(security): override postcss to >=8.5.10 for GHSA-qx2v-qp2m-jg93
+- Merge pull request #64 from nocoo/fix/issue-63
+- fix(ui): anchor collapsed sidebar logo to prevent jitter
+- Merge pull request #62 from nocoo/fix/issue-61
+- fix(ui): use rounded-card/rounded-widget utilities from theme tokens
+
+
 ## v2.6.0 (2026-04-23)
 
 - fix(blog): keep backdrop and toggle interactive when drawer is open
