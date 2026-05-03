@@ -69,6 +69,52 @@ test.describe("Blog tag page", () => {
     expect(title).toMatch(/#/);
   });
 
+  test("clicking a post card navigates to the post detail page", async ({
+    page,
+  }) => {
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    const tagLink = page.locator("a[href^='/tag/']").first();
+    if ((await tagLink.count()) === 0) return;
+
+    const href = await tagLink.getAttribute("href");
+    await page.goto(href!, { waitUntil: "networkidle" });
+
+    const postLink = page.locator("article h2 a").first();
+    if ((await postLink.count()) === 0) return;
+
+    const postHref = await postLink.getAttribute("href");
+    expect(postHref).toMatch(/\/\d{4}\/\d{2}\//);
+
+    await postLink.click();
+    await page.waitForURL(/\/\d{4}\/\d{2}\//, { timeout: 10_000 });
+    await expect(page.locator("h1")).toBeVisible();
+  });
+
+  test("thin-content tag has noindex robots directive", async ({ page }) => {
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    const tagLink = page.locator("a[href^='/tag/']").first();
+    if ((await tagLink.count()) === 0) return;
+
+    const href = await tagLink.getAttribute("href");
+    await page.goto(href!, { waitUntil: "networkidle" });
+
+    const robots = page.locator('meta[name="robots"]');
+    const postCountText = await page.getByText(/篇文章/).textContent();
+    const count = parseInt(postCountText ?? "0", 10);
+
+    if (count < 3) {
+      await expect(robots).toHaveAttribute("content", /noindex/);
+    } else {
+      const robotsCount = await robots.count();
+      if (robotsCount > 0) {
+        const content = await robots.getAttribute("content");
+        expect(content).not.toMatch(/noindex/);
+      }
+    }
+  });
+
   test("non-existent tag returns 404", async ({ page }) => {
     const response = await page.goto("/tag/non-existent-slug-12345", {
       waitUntil: "networkidle",
