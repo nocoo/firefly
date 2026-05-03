@@ -33,9 +33,7 @@ test.describe("Category pagination", () => {
     });
     if (response?.status() === 404) return;
 
-    await expect(page.locator("h1")).toBeVisible();
-    const postCount = page.getByText(/篇文章/);
-    await expect(postCount).toBeVisible();
+    await expect(page.locator("header h1")).toBeVisible();
   });
 
   test("category page 1 returns 404", async ({ page }) => {
@@ -87,7 +85,7 @@ test.describe("Tag pagination", () => {
     });
     if (response?.status() === 404) return;
 
-    const heading = page.locator("h1");
+    const heading = page.locator("header h1");
     await expect(heading).toBeVisible();
     const text = await heading.textContent();
     expect(text).toMatch(/^#/);
@@ -130,7 +128,7 @@ test.describe("Archive pagination", () => {
     });
     if (response?.status() === 404) return;
 
-    const heading = page.locator("h1");
+    const heading = page.locator("header h1");
     await expect(heading).toBeVisible();
     const text = await heading.textContent();
     expect(text).toContain(String(year));

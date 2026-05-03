@@ -11,7 +11,7 @@ test.describe("Blog tag page", () => {
     await page.goto(href!, { waitUntil: "networkidle" });
     await expect(page).toHaveURL(/\/tag\//);
 
-    const heading = page.locator("h1");
+    const heading = page.locator("header h1");
     await expect(heading).toBeVisible();
     const headingText = await heading.textContent();
     expect(headingText).toMatch(/^#/);
@@ -88,7 +88,7 @@ test.describe("Blog tag page", () => {
 
     await postLink.click();
     await page.waitForURL(/\/\d{4}\/\d{2}\//, { timeout: 10_000 });
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
   });
 
   test("thin-content tag has noindex robots directive", async ({ page }) => {

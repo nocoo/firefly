@@ -11,7 +11,7 @@ test.describe("Blog category page", () => {
     await page.goto(href!, { waitUntil: "networkidle" });
     await expect(page).toHaveURL(/\/category\//);
 
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("header h1")).toBeVisible();
     const postCount = page.getByText(/篇文章/);
     await expect(postCount).toBeVisible();
   });
@@ -86,7 +86,7 @@ test.describe("Blog category page", () => {
 
     await postLink.click();
     await page.waitForURL(/\/\d{4}\/\d{2}\//, { timeout: 10_000 });
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
   });
 
   test("post cards display title, date, and excerpt", async ({ page }) => {

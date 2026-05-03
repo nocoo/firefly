@@ -37,7 +37,7 @@ test.describe("Blog navigation", () => {
 
     await postLink.click();
     await page.waitForURL(/\/\d{4}\/\d{2}\//, { timeout: 10_000 });
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
   });
 
   test("category page loads", async ({ page }) => {
@@ -68,11 +68,9 @@ test.describe("Blog navigation", () => {
   });
 
   test("archive page loads with year heading", async ({ page }) => {
-    // No /archive index exists; use current year as the archive period
     const year = new Date().getFullYear();
     await page.goto(`/archive/${year}`);
-    // Archive page should show the year in the heading
-    const heading = page.locator("h1").first();
+    const heading = page.locator("header h1").first();
     await expect(heading).toBeVisible();
     const headingText = await heading.textContent();
     expect(headingText).toContain(String(year));
