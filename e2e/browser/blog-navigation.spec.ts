@@ -72,7 +72,7 @@ test.describe("Blog navigation", () => {
     const year = new Date().getFullYear();
     await page.goto(`/archive/${year}`);
     // Archive page should show the year in the heading
-    const heading = page.locator("h1");
+    const heading = page.locator("h1").first();
     await expect(heading).toBeVisible();
     const headingText = await heading.textContent();
     expect(headingText).toContain(String(year));

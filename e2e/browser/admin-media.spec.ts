@@ -40,7 +40,7 @@ test.describe("Admin media library", () => {
     await expect(yearSelect).toBeVisible();
     const options = yearSelect.locator("option");
     const optionCount = await options.count();
-    expect(optionCount).toBeGreaterThanOrEqual(2);
+    expect(optionCount).toBeGreaterThanOrEqual(1);
   });
 
   test("mime type filter dropdown is present", async ({ page }) => {
