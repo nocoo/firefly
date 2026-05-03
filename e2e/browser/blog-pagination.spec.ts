@@ -56,4 +56,30 @@ test.describe("Blog homepage pagination", () => {
       await expect(page.locator("article, [data-testid='post-card']").first()).toBeVisible();
     }
   });
+
+  test("pagination shows current page indicator", async ({ page }) => {
+    const response = await page.goto("/page/2", { waitUntil: "networkidle" });
+    if (response?.status() === 404) return;
+
+    const paginationNav = page.locator('nav[aria-label="分页"]');
+    if ((await paginationNav.count()) === 0) return;
+
+    const currentPageIndicator = paginationNav.locator('[aria-current="page"]');
+    await expect(currentPageIndicator).toBeVisible();
+    await expect(currentPageIndicator).toHaveText("2");
+  });
+
+  test("pagination has previous page link on page 2", async ({ page }) => {
+    const response = await page.goto("/page/2", { waitUntil: "networkidle" });
+    if (response?.status() === 404) return;
+
+    const paginationNav = page.locator('nav[aria-label="分页"]');
+    if ((await paginationNav.count()) === 0) return;
+
+    const prevLink = paginationNav.locator('a[aria-label="上一页"]');
+    await expect(prevLink).toBeVisible();
+
+    await prevLink.click();
+    await page.waitForURL("/", { timeout: 10_000 });
+  });
 });
