@@ -8,9 +8,7 @@ test.describe("RSS feed", () => {
     const contentType = response?.headers()["content-type"] ?? "";
     expect(contentType).toMatch(/xml|rss/);
 
-    // Use response body (raw text) instead of page.content() which HTML-wraps XML
     const body = await response!.text();
-    // RSS feed should contain standard RSS/Atom elements
     expect(body).toMatch(/<rss|<feed|<channel/);
   });
 
@@ -18,7 +16,32 @@ test.describe("RSS feed", () => {
     const response = await page.goto("/feed.xml");
     const body = await response!.text();
 
-    // Channel/feed should always have a title, even with zero entries
     expect(body).toMatch(/<title>/);
+    expect(body).toMatch(/<link>/);
+    expect(body).toMatch(/<description>/);
+  });
+
+  test("feed items have required elements", async ({ page }) => {
+    const response = await page.goto("/feed.xml");
+    const body = await response!.text();
+
+    if (!body.includes("<item>")) return;
+
+    expect(body).toMatch(/<item>[\s\S]*<title>[\s\S]*<\/title>[\s\S]*<\/item>/);
+    expect(body).toMatch(/<item>[\s\S]*<link>[\s\S]*<\/link>[\s\S]*<\/item>/);
+    expect(body).toMatch(/<item>[\s\S]*<pubDate>[\s\S]*<\/pubDate>[\s\S]*<\/item>/);
+  });
+
+  test("feed item links use correct post URL format", async ({ page }) => {
+    const response = await page.goto("/feed.xml");
+    const body = await response!.text();
+
+    const linkMatches = body.match(/<item>[\s\S]*?<link>(.*?)<\/link>/g);
+    if (!linkMatches || linkMatches.length === 0) return;
+
+    for (const match of linkMatches) {
+      const url = match.match(/<link>(.*?)<\/link>/)?.[1] ?? "";
+      expect(url).toMatch(/\/\d{4}\/\d{2}\//);
+    }
   });
 });
