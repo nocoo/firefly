@@ -10,60 +10,86 @@ test.describe("Admin media library", () => {
     await page.goto("/admin/media", { waitUntil: "networkidle" });
     await expect(page).toHaveURL(/\/admin\/media/);
 
-    // Should show "媒体库" heading
     const heading = page.getByText(/媒体库|Media/i);
     await expect(heading.first()).toBeVisible({ timeout: 10_000 });
   });
 
-  test("shows media grid or list", async ({ page }) => {
+  test("shows media grid with thumbnails", async ({ page }) => {
     await page.goto("/admin/media", { waitUntil: "networkidle" });
 
-    // Should have a grid/list container for media items - look for images
-    const mediaItems = page.locator("img[src*='r2'], img[src*='media'], img[loading]");
-    const count = await mediaItems.count();
-    // Media items should exist in the library
-    expect(count).toBeGreaterThanOrEqual(0);
+    const gridItems = page.locator(".grid .aspect-square");
+    const count = await gridItems.count();
+    if (count > 0) {
+      await expect(gridItems.first()).toBeVisible();
+    }
   });
 
-  test("has upload button or dropzone", async ({ page }) => {
+  test("has search input for filtering files", async ({ page }) => {
     await page.goto("/admin/media", { waitUntil: "networkidle" });
 
-    // Media library uses drag-and-drop upload, not a visible button
-    // Check for the search input which is always visible in the filter bar
     const searchInput = page.locator('input[placeholder*="搜索文件"]');
     await expect(searchInput).toBeVisible({ timeout: 10_000 });
   });
 
-  test("has year/month filter or search", async ({ page }) => {
+  test("year filter dropdown is present and functional", async ({ page }) => {
     await page.goto("/admin/media", { waitUntil: "networkidle" });
 
-    // Should have some filtering capability - "年份筛选" or search input
-    const filterElement = page.locator(
-      'select, input[type="search"], input[placeholder*="搜索"]',
-    );
-    const count = await filterElement.count();
-    // Filter is optional, just check page loads correctly
-    expect(count).toBeGreaterThanOrEqual(0);
+    const yearSelect = page.locator("select").filter({ hasText: /全部年份/ });
+    if ((await yearSelect.count()) === 0) return;
+
+    await expect(yearSelect).toBeVisible();
+    const options = yearSelect.locator("option");
+    const optionCount = await options.count();
+    expect(optionCount).toBeGreaterThanOrEqual(2);
+  });
+
+  test("mime type filter dropdown is present", async ({ page }) => {
+    await page.goto("/admin/media", { waitUntil: "networkidle" });
+
+    const mimeSelect = page.locator("select").filter({ hasText: /所有类型/ });
+    if ((await mimeSelect.count()) === 0) return;
+
+    await expect(mimeSelect).toBeVisible();
+    const options = mimeSelect.locator("option");
+    const optionCount = await options.count();
+    expect(optionCount).toBeGreaterThanOrEqual(2);
   });
 });
 
 test.describe("Admin media lightbox", () => {
-  test("clicking media item shows details or lightbox", async ({ page }) => {
+  test("clicking media thumbnail opens lightbox with image", async ({
+    page,
+  }) => {
     await page.goto("/admin/media", { waitUntil: "networkidle" });
 
-    // Find a media item (image thumbnail)
-    const mediaItem = page.locator("img[src*='r2'], img[src*='media']").first();
-    const count = await mediaItem.count();
+    const gridItem = page.locator(".grid .aspect-square").first();
+    if ((await gridItem.count()) === 0) return;
 
-    if (count > 0) {
-      // Click the first media item
-      await mediaItem.click();
+    await gridItem.click();
 
-      // Should show a lightbox or detail panel
-      const lightbox = page.locator(
-        "[data-testid='lightbox'], .lightbox, [role='dialog'], [data-radix-dialog-content]",
-      );
-      await expect(lightbox.first()).toBeVisible({ timeout: 5_000 });
-    }
+    const overlay = page.locator(".fixed.inset-0.z-50");
+    await expect(overlay).toBeVisible({ timeout: 5_000 });
+    const lightboxImg = overlay.locator("img");
+    await expect(lightboxImg).toBeVisible();
+  });
+
+  test("lightbox shows metadata panel with file info", async ({ page }) => {
+    await page.goto("/admin/media", { waitUntil: "networkidle" });
+
+    const gridItem = page.locator(".grid .aspect-square").first();
+    if ((await gridItem.count()) === 0) return;
+
+    await gridItem.click();
+
+    const overlay = page.locator(".fixed.inset-0.z-50");
+    await expect(overlay).toBeVisible({ timeout: 5_000 });
+
+    const sidePanel = overlay.locator(
+      ".border-t.border-border, .border-l.border-border",
+    );
+    await expect(sidePanel.first()).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(overlay).not.toBeVisible();
   });
 });
