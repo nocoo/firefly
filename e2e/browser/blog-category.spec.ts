@@ -67,6 +67,44 @@ test.describe("Blog category page", () => {
     await expect(ogTitle).toHaveAttribute("content", /.+/);
   });
 
+  test("clicking a post card navigates to the post detail page", async ({
+    page,
+  }) => {
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    const categoryLink = page.locator("a[href^='/category/']").first();
+    if ((await categoryLink.count()) === 0) return;
+
+    const href = await categoryLink.getAttribute("href");
+    await page.goto(href!, { waitUntil: "networkidle" });
+
+    const postLink = page.locator("article h2 a").first();
+    if ((await postLink.count()) === 0) return;
+
+    const postHref = await postLink.getAttribute("href");
+    expect(postHref).toMatch(/\/\d{4}\/\d{2}\//);
+
+    await postLink.click();
+    await page.waitForURL(/\/\d{4}\/\d{2}\//, { timeout: 10_000 });
+    await expect(page.locator("h1")).toBeVisible();
+  });
+
+  test("post cards display title, date, and excerpt", async ({ page }) => {
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    const categoryLink = page.locator("a[href^='/category/']").first();
+    if ((await categoryLink.count()) === 0) return;
+
+    const href = await categoryLink.getAttribute("href");
+    await page.goto(href!, { waitUntil: "networkidle" });
+
+    const article = page.locator("article").first();
+    if ((await article.count()) === 0) return;
+
+    await expect(article.locator("h2")).toBeVisible();
+    await expect(article.locator("time")).toBeVisible();
+  });
+
   test("non-existent category returns 404", async ({ page }) => {
     const response = await page.goto("/category/non-existent-slug-12345", {
       waitUntil: "networkidle",
