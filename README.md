@@ -40,7 +40,6 @@ Copy `.env.example` to `.env` and configure:
 | `CF_ACCOUNT_ID` | ✅ | Cloudflare account ID |
 | `CF_API_TOKEN` | ✅ | Cloudflare API token with D1/R2 access |
 | `CF_D1_DATABASE_ID` | ✅ | Production D1 database ID |
-| `CF_D1_TEST_DATABASE_ID` | ✅ | Test D1 database ID (for E2E tests) |
 | `WORKER_URL` | ✅ | D1 proxy Worker URL |
 | `WORKER_SECRET` | ✅ | Worker authentication secret |
 | `AUTH_SECRET` | ✅ | NextAuth.js secret (32+ chars) |
@@ -92,8 +91,8 @@ Coverage: L1 99%+, L2 100% routes, Worker 100%.
 GitHub Actions runs four parallel jobs on push/PR:
 
 - **quality**: L1 + G1 + G2 (from [base-ci](https://github.com/nocoo/base-ci))
-- **api-e2e**: L2 API E2E against test Worker
-- **browser-e2e**: L3 Playwright against test Worker
+- **api-e2e**: L2 API E2E (fully local — wrangler dev + filesystem R2)
+- **browser-e2e**: L3 Playwright (fully local — wrangler dev + filesystem R2)
 - **worker-tests**: Worker unit tests
 
 All jobs must pass before merge.
