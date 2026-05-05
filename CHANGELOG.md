@@ -1,5 +1,21 @@
 # Changelog
 
+## v2.6.2 (2026-05-05)
+
+- fix: address review feedback — config cleanup, env visibility, SQL splitter
+- fix: set R2_PUBLIC_URL per run mode and update stale roadmap refs
+- chore: remove deprecated apply-migration.ts and stale README refs
+- feat: add E2E-only R2 read route and fix image remote patterns
+- refactor: extract local E2E helpers into shared module
+- fix: use E2E_TEST_RUNNER flag instead of NODE_ENV for R2 adapter gate
+- fix: strip PRAGMA and split batch SQL for local D1 (Miniflare compat)
+- docs: update CI workflow and documentation for local E2E
+- refactor: remove [env.test] and remote test resource dependencies
+- refactor: rewrite E2E runner for fully local test infrastructure
+- feat: add local filesystem R2 adapter for E2E testing
+- test: raise coverage gate to 95%
+
+
 ## v2.6.1 (2026-05-03)
 
 - fix(L3): use precise h1 selectors to avoid strict mode violations
