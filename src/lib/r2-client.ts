@@ -4,10 +4,10 @@
 // This is integration glue over @aws-sdk/client-s3 and is tested via E2E,
 // not unit tests. Pure validation/key-generation logic lives in r2.ts.
 //
-// E2E local mode: when E2E_R2_LOCAL_DIR is set and E2E_SKIP_AUTH=true (non-
-// production), all R2 operations go to a local filesystem directory instead
-// of Cloudflare. This allows fully local E2E testing without any remote R2
-// bucket. The runner cleans the directory before each E2E run.
+// E2E local mode: when E2E_R2_LOCAL_DIR is set and E2E_SKIP_AUTH=true and
+// E2E_TEST_RUNNER=true, all R2 operations go to a local filesystem directory
+// instead of Cloudflare. This allows fully local E2E testing without any
+// remote R2 bucket. The runner cleans the directory before each E2E run.
 // ---------------------------------------------------------------------------
 
 import {
@@ -17,7 +17,7 @@ import {
 } from "@aws-sdk/client-s3";
 
 import { writeFile, mkdir, unlink } from "node:fs/promises";
-import { dirname, resolve, normalize } from "node:path";
+import { dirname } from "node:path";
 
 import {
   validateUpload,
@@ -25,56 +25,7 @@ import {
   type UploadResult,
 } from "./r2";
 
-// ---------------------------------------------------------------------------
-// Local E2E filesystem adapter (never active in production)
-// ---------------------------------------------------------------------------
-
-/**
- * Whether R2 operations should go to a local directory instead of Cloudflare.
- * Gated by three conditions:
- *   1. E2E_R2_LOCAL_DIR env var is set (runner injects the path)
- *   2. E2E_SKIP_AUTH=true (E2E mode)
- *   3. E2E_TEST_RUNNER=true (set only by scripts/run-e2e.ts, never in
- *      real production — Next.js production builds set NODE_ENV=production
- *      even during E2E, so we use this runner-specific flag instead)
- */
-function isLocalE2EMode(): boolean {
-  return !!(
-    process.env.E2E_R2_LOCAL_DIR &&
-    process.env.E2E_SKIP_AUTH === "true" &&
-    process.env.E2E_TEST_RUNNER === "true"
-  );
-}
-
-/**
- * Validate and resolve an R2 key to a safe local filesystem path.
- * Rejects path traversal (../), absolute paths, backslashes, and any key
- * that resolves outside the E2E R2 root directory.
- */
-function resolveLocalPath(key: string): string {
-  const localDir = process.env.E2E_R2_LOCAL_DIR;
-  if (!localDir) {
-    throw new Error("E2E_R2_LOCAL_DIR is not set");
-  }
-
-  // Reject obvious path traversal patterns
-  if (key.includes("..") || key.startsWith("/") || key.includes("\\")) {
-    throw new Error(
-      `Invalid R2 key: path traversal or absolute path rejected: ${key}`,
-    );
-  }
-
-  // Normalize and verify the resolved path stays within the root
-  const root = resolve(localDir);
-  const target = resolve(root, normalize(key));
-  if (!target.startsWith(root + "/") && target !== root) {
-    throw new Error(
-      `Invalid R2 key: resolved path escapes local R2 root: ${key}`,
-    );
-  }
-
-  return target;
-}
+import { isLocalE2EMode, resolveLocalR2Path } from "./e2e-local";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -164,7 +115,7 @@ async function putObject(
 ): Promise<{ key: string; url: string }> {
   // Local E2E mode: write to filesystem instead of Cloudflare R2
   if (isLocalE2EMode()) {
-    const filePath = resolveLocalPath(key);
+    const filePath = resolveLocalR2Path(key);
     await mkdir(dirname(filePath), { recursive: true });
     await writeFile(filePath, body);
     const publicUrl = getR2PublicUrl();
@@ -243,7 +194,7 @@ export async function uploadBufferToR2(
 export async function deleteFromR2(key: string): Promise<void> {
   // Local E2E mode: delete from filesystem
   if (isLocalE2EMode()) {
-    const filePath = resolveLocalPath(key);
+    const filePath = resolveLocalR2Path(key);
     try {
       await unlink(filePath);
     } catch (err) {
