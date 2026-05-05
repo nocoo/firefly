@@ -3,9 +3,8 @@
  *
  * Covers: POST /api/upload
  *
- * Note: This test requires an R2 test bucket to be configured.
- * .env.test overrides R2_BUCKET_NAME to point to the test bucket;
- * CF_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY are inherited from .env.
+ * Note: R2 operations use the local filesystem adapter during E2E runs
+ * (E2E_R2_LOCAL_DIR injected by the runner). No remote R2 bucket required.
  */
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 

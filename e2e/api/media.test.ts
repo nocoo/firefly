@@ -5,7 +5,8 @@
  *         DELETE /api/media/[id], PATCH /api/media/associate,
  *         GET /api/media/years
  *
- * Note: Requires R2 test bucket to be configured.
+ * Note: R2 operations use the local filesystem adapter during E2E runs.
+ * No remote R2 bucket required.
  */
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 

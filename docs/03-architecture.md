@@ -86,7 +86,7 @@
 | L3 System | Playwright 1.58 (chromium) | manual/CI | ✅ |
 | G1 Static | tsc --noEmit + ESLint strict + --max-warnings=0 | pre-commit | ✅ 0 errors |
 | G2 Security | osv-scanner 2.3 + gitleaks 8.30 | pre-push | ✅ 0 vulns, 0 leaks |
-| D1 Isolation | firefly-db-test via worker [env.test] | E2E only | ✅ |
+| D1 Isolation | Local Miniflare SQLite via `wrangler dev --local` | E2E only | ✅ |
 
 ## Architecture Patterns
 

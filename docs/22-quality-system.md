@@ -74,27 +74,19 @@ jobs:
 
 ### 环境隔离
 
-CI 使用独立的测试资源：
+E2E 使用完全本地的测试基础设施，零远程 Cloudflare 资源依赖：
 
-| 资源 | 生产 | 测试 |
-|------|------|------|
-| D1 Database | `CF_D1_DATABASE_ID` | `CF_D1_TEST_DATABASE_ID` (via test Worker) |
-| R2 Bucket | `R2_BUCKET_NAME` | `R2_TEST_BUCKET_NAME` |
-| Worker | `firefly.worker.hexly.ai` | 同上 (连接 test D1) |
+| 资源 | 生产 | E2E 测试 |
+|------|------|----------|
+| D1 Database | 远程 `lizhengme-db` via Worker | 本地 Miniflare SQLite (`.wrangler/e2e-d1`) |
+| R2 Storage | 远程 `lizhengblog` via S3 SDK | 本地文件系统 (`.wrangler/e2e-r2`) |
+| Worker | `firefly.worker.hexly.ai` | 本地 `wrangler dev --local` |
 
 ### GitHub Secrets
 
 | Secret | 用途 |
 |--------|------|
-| `WORKER_URL` | 测试 Worker URL |
-| `WORKER_SECRET` | Worker 认证密钥 |
-| `CF_ACCOUNT_ID` | Cloudflare 账户 ID |
-| `R2_ACCESS_KEY_ID` | R2 访问密钥 ID |
-| `R2_SECRET_ACCESS_KEY` | R2 访问密钥 |
-| `R2_TEST_BUCKET_NAME` | 测试 R2 bucket |
-| `R2_PUBLIC_URL` | R2 公开 URL |
-| `R2_KEY_PREFIX` | R2 key 前缀 |
-| `AUTH_SECRET` | NextAuth 密钥 |
+| `AUTH_SECRET` | NextAuth 密钥 (Next.js 启动需要) |
 | `AUTH_ALLOWED_EMAILS` | 允许的 E2E 测试邮箱 |
 
 ---
@@ -113,14 +105,16 @@ cp .env.example .env
 
 ### E2E 测试环境
 
-`.env.test` 覆盖以下变量用于 E2E 测试：
+E2E runner (`scripts/run-e2e.ts`) 自动注入所有必要的环境变量：
 
 ```bash
-WORKER_URL=http://localhost:8787    # 本地 Worker (或远程 test Worker)
+WORKER_URL=http://localhost:8787    # 本地 Worker (wrangler dev --local)
 WORKER_SECRET=test-secret
 E2E_SKIP_AUTH=true                  # 跳过认证
 CI=true                             # 启用 E2E 模式
-R2_BUCKET_NAME=lizhengblog-test     # 测试 R2 bucket
+R2_BUCKET_NAME=local-e2e            # 本地 R2 adapter
+R2_PUBLIC_URL=http://localhost:17028/__e2e-r2
+E2E_R2_LOCAL_DIR=.wrangler/e2e-r2   # 文件系统 R2 替身
 ```
 
 ---

@@ -54,9 +54,10 @@ Personal blog platform built with Next.js + Cloudflare Workers.
 **修复**: 回滚改动，保留 `file.name` 原样写入 DB。R2 key 本身已经用 UUID（`generateFireflyR2Key`），存储层的去重不需要改 DB 展示名。
 **教训**: 修改一个字段的写入值前，必须追踪该字段的所有读取场景（展示、搜索、排序、导出）。"存储 key" 和 "展示名" 是两个不同职责，不能混为一谈。纯函数测试只覆盖了 helper 本身的正确性，没有覆盖集成行为（"上传后媒体记录仍可按原文件名搜索"），所以回归未被测试拦住。
 
-### 2026-04-13: DB 迁移未同步到 test 环境导致 CI E2E 失败
-**问题**: 添加 `ai_agents` 表后直接 release，CI 的 L2 E2E 测试失败，因为 test D1 数据库还没有新表。Next.js build 阶段会 prefetch sitemap 等静态路由，触发数据库查询，schema 不匹配导致 500。
-**修复**: 手动在 test D1 执行迁移 + 部署 test worker，然后 rerun CI。
+### 2026-04-13: DB 迁移未同步到 test 环境导致 CI E2E 失败 (SUPERSEDED)
+**注意**: 此问题已通过 `wrangler dev --local --persist-to` 全本地 E2E 解决。E2E runner 每次启动前清盘并自动 apply 迁移，不再依赖远程 test D1。
+**原始问题**: 添加 `ai_agents` 表后直接 release，CI 的 L2 E2E 测试失败，因为 test D1 数据库还没有新表。Next.js build 阶段会 prefetch sitemap 等静态路由，触发数据库查询，schema 不匹配导致 500。
+**原始修复**: 手动在 test D1 执行迁移 + 部署 test worker，然后 rerun CI。
 **教训**: 涉及 DB schema 变更时，release 前必须：1) 先在 test D1 执行迁移 2) 部署 test worker 3) 本地验证 E2E 能过（或至少 build 能过）。pre-push 只跑 L1/G1/G2，无法发现 L2 E2E 问题，所以 schema 变更需要额外的手动验证步骤。
 
 ### 2026-04-13: PRAGMA foreign_keys 在迁移 runner 中无效

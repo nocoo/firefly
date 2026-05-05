@@ -190,7 +190,7 @@ export async function proxy(request: NextRequest) {
   // --- Auth guard: protect admin routes and write API endpoints ---
   if (isProtectedRoute(pathname) || isProtectedApiRoute(pathname, method)) {
     // E2E auth bypass — only active when E2E_SKIP_AUTH is explicitly set.
-    // Never set in production; .env.test sets it for local E2E runs.
+    // Never set in production; E2E runner injects it for local E2E runs.
     if (isE2EMode()) {
       return NextResponse.next();
     }
