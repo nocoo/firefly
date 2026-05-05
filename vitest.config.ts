@@ -9,14 +9,14 @@ export default defineConfig({
     isolate: false,
     maxConcurrency: 20,
     maxWorkers: 12,
-    include: ["src/**/*.test.ts", "worker/test/**/*.test.ts", "scripts/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
     exclude: ["e2e/**", "**/node_modules/**", ".claude/**"],
     env: { R2_PUBLIC_URL: "https://assets.example.com" },
     coverage: {
       provider: "v8",
       // AST-aware remapping is the default in vitest v4+; no opt-in needed.
       reporter: ["text-summary"],
-      include: ["src/**/*.ts", "worker/src/**/*.ts"],
+      include: ["src/**/*.ts"],
       exclude: [
         // Test files and type declarations — not production code
         "src/**/*.test.ts",
