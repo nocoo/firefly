@@ -32,15 +32,17 @@ import {
 /**
  * Whether R2 operations should go to a local directory instead of Cloudflare.
  * Gated by three conditions:
- *   1. E2E_R2_LOCAL_DIR env var is set
+ *   1. E2E_R2_LOCAL_DIR env var is set (runner injects the path)
  *   2. E2E_SKIP_AUTH=true (E2E mode)
- *   3. NODE_ENV is not "production"
+ *   3. E2E_TEST_RUNNER=true (set only by scripts/run-e2e.ts, never in
+ *      real production — Next.js production builds set NODE_ENV=production
+ *      even during E2E, so we use this runner-specific flag instead)
  */
 function isLocalE2EMode(): boolean {
   return !!(
     process.env.E2E_R2_LOCAL_DIR &&
     process.env.E2E_SKIP_AUTH === "true" &&
-    process.env.NODE_ENV !== "production"
+    process.env.E2E_TEST_RUNNER === "true"
   );
 }
 
