@@ -1,16 +1,16 @@
 #!/usr/bin/env bun
 /**
- * E2E Runner — starts test worker + Next.js dev server, runs E2E tests, tears down.
+ * E2E Runner — starts local wrangler worker + Next.js, runs E2E tests, tears down.
+ *
+ * All test infrastructure is local — no remote Cloudflare resources required:
+ *   - D1: wrangler dev --local --persist-to .wrangler/e2e-d1 (Miniflare SQLite)
+ *   - R2: filesystem adapter via E2E_R2_LOCAL_DIR (see src/lib/r2-client.ts)
+ *   - Auth: bypassed via E2E_SKIP_AUTH=true
  *
  * Usage:
  *   bun scripts/run-e2e.ts              # Run all E2E (API + browser)
  *   bun scripts/run-e2e.ts --api-only   # Run API E2E only (L2)
  *   bun scripts/run-e2e.ts --browser-only # Run browser E2E only (L3)
- *
- * CI Mode:
- *   When WORKER_URL is set (e.g., CI environment), the runner skips starting
- *   a local wrangler worker and uses the remote worker directly. This enables
- *   L2 tests to run in GitHub Actions against the deployed test worker.
  *
  * Port convention:
  *   Dev:     7028
@@ -19,8 +19,8 @@
  *   Worker:  8787  (wrangler default, local only)
  */
 import { spawn, type Subprocess } from "bun";
-import { readFileSync, existsSync, statSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, existsSync, statSync, readdirSync, rmSync } from "node:fs";
+import { join, resolve } from "node:path";
 
 // Use the current bun binary path for spawning subprocesses
 const BUN = process.execPath;
@@ -37,8 +37,12 @@ const args = process.argv.slice(2);
 const apiOnly = args.includes("--api-only");
 const browserOnly = args.includes("--browser-only");
 
-// CI mode: when WORKER_URL is pre-set, skip local worker startup
-const ciMode = !!process.env.WORKER_URL;
+// ---------------------------------------------------------------------------
+// Persist directories — cleaned before each run
+// ---------------------------------------------------------------------------
+
+const PERSIST_D1 = resolve("worker/.wrangler/e2e-d1");
+const PERSIST_R2 = resolve(".wrangler/e2e-r2");
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -102,19 +106,21 @@ process.on("SIGINT", () => {
 });
 
 function startWorker(): Subprocess {
-  console.log(`▸ Starting test worker on port ${WORKER_PORT}...`);
+  console.log(`▸ Starting local worker on port ${WORKER_PORT}...`);
   const proc = spawn(
     [
       WRANGLER,
       "dev",
-      "--env",
-      "test",
+      "--local",
+      `--persist-to=${PERSIST_D1}`,
       "--port",
       String(WORKER_PORT),
+      "--var",
+      "WORKER_SECRET:test-secret",
     ],
     {
       cwd: `${process.cwd()}/worker`,
-      env: process.env,
+      env: { ...process.env, WRANGLER_LOG: "error" },
       stdout: "ignore",
       stderr: "ignore",
     },
@@ -217,35 +223,49 @@ function startNextServer(
 }
 
 async function main() {
-  const testEnv = loadEnvFile(".env.test");
+  // --- Clean persist directories for a fresh run ---
+  for (const dir of [PERSIST_D1, PERSIST_R2]) {
+    rmSync(dir, { recursive: true, force: true });
+  }
+  console.log("▸ Cleaned persist directories (D1 + R2)");
+
+  // --- Build env: load .env as base, then inject E2E overrides ---
   const prodEnv = loadEnvFile(".env");
+  const env: Record<string, string | undefined> = {
+    ...prodEnv,
+    ...process.env,
+    // Worker — always local
+    WORKER_URL: `http://localhost:${WORKER_PORT}`,
+    WORKER_SECRET: "test-secret",
+    // Auth — bypassed
+    E2E_SKIP_AUTH: "true",
+    CI: "true",
+    // R2 — local filesystem adapter (see src/lib/r2-client.ts)
+    R2_BUCKET_NAME: "local-e2e",
+    R2_PUBLIC_URL: `http://localhost:${API_E2E_PORT}/__e2e-r2`,
+    R2_KEY_PREFIX: "e2e/",
+    E2E_R2_LOCAL_DIR: PERSIST_R2,
+  };
 
-  // Merge: prod env as base, test env overrides, process.env has highest priority
-  const env = { ...prodEnv, ...testEnv, ...process.env };
+  // --- Start local worker ---
+  startWorker();
+  await waitForWorkerReady();
 
-  // --- Start test worker (skip in CI mode) ---
-  if (ciMode) {
-    console.log(`▸ CI mode: using remote worker at ${process.env.WORKER_URL}`);
-  } else {
-    startWorker();
-    await waitForWorkerReady();
-
-    // --- Apply DB migrations to local D1 ---
-    console.log("▸ Applying DB migrations to local D1...");
-    try {
-      const { applyAll } = await import("./migrations/runner.ts");
-      const result = await applyAll("local");
-      console.log(
-        `▸ Migrations: ${result.applied.length} applied, ${result.skipped.length} already up-to-date`,
-      );
-    } catch (err) {
-      console.error("❌ Migration failed:", err);
-      cleanup();
-      process.exit(1);
-    }
+  // --- Apply DB migrations to local D1 ---
+  console.log("▸ Applying DB migrations to local D1...");
+  try {
+    const { applyAll } = await import("./migrations/runner.ts");
+    const result = await applyAll("local");
+    console.log(
+      `▸ Migrations: ${result.applied.length} applied, ${result.skipped.length} already up-to-date`,
+    );
+  } catch (err) {
+    console.error("❌ Migration failed:", err);
+    cleanup();
+    process.exit(1);
   }
 
-  // --- Start Next.js dev server(s) ---
+  // --- Start Next.js server(s) ---
   // In default (all) mode, start two servers: API on 17028, browser on 27028.
   // In --api-only or --browser-only mode, start one server on the appropriate port.
   const apiPort = API_E2E_PORT;
@@ -267,9 +287,8 @@ async function main() {
   // --- Run tests ---
   let exitCode = 0;
 
-  // L2 and L3 share a remote test DB (Cloudflare D1). Running them concurrently
-  // produced flaky preview/admin-list tests because L2 deletes posts that L3 is
-  // about to read. Keep them sequential.
+  // L2 and L3 share a local D1. Running them concurrently can produce flaky
+  // tests because L2 deletes posts that L3 is about to read. Keep sequential.
   if (!browserOnly) {
     console.log("\n▸ Running API E2E tests (L2)...\n");
     const apiTest = spawn(
