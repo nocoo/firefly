@@ -213,7 +213,7 @@ function startNextServer(
     [BUN, "run", "next", "start", "-p", String(port)],
     {
       cwd: process.cwd(),
-      env: { ...env, PORT: String(port), E2E_TEST_RUNNER: "true" },
+      env: { ...env, PORT: String(port) },
       stdout: "ignore",
       stderr: "ignore",
     },
@@ -247,6 +247,8 @@ async function main() {
     // Auth — bypassed
     E2E_SKIP_AUTH: "true",
     CI: "true",
+    // E2E gate — activates local R2 adapter and /__e2e-r2 read route
+    E2E_TEST_RUNNER: "true",
     // R2 — local filesystem adapter (see src/lib/r2-client.ts)
     R2_BUCKET_NAME: "local-e2e",
     R2_PUBLIC_URL: `http://localhost:${r2Port}/__e2e-r2`,

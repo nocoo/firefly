@@ -9,6 +9,103 @@ import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 // ---------------------------------------------------------------------------
+// SQL statement splitter (quote/comment-aware)
+// ---------------------------------------------------------------------------
+
+/**
+ * Split a SQL string into individual statements on semicolons, correctly
+ * handling single-quoted strings, double-quoted identifiers, `--` line
+ * comments, and `/* ... * /` block comments. Statements are trimmed and
+ * empty entries are removed.
+ */
+export function splitSqlStatements(sql: string): string[] {
+  const statements: string[] = [];
+  let current = "";
+  let i = 0;
+
+  while (i < sql.length) {
+    const ch = sql[i];
+
+    // -- line comment: skip to end of line
+    if (ch === "-" && sql[i + 1] === "-") {
+      const eol = sql.indexOf("\n", i);
+      if (eol === -1) break; // rest is comment
+      i = eol + 1;
+      current += "\n";
+      continue;
+    }
+
+    // /* block comment */: skip to closing */
+    if (ch === "/" && sql[i + 1] === "*") {
+      const end = sql.indexOf("*/", i + 2);
+      if (end === -1) break; // unclosed comment, skip rest
+      i = end + 2;
+      current += " ";
+      continue;
+    }
+
+    // Single-quoted string literal
+    if (ch === "'") {
+      current += ch;
+      i++;
+      while (i < sql.length) {
+        if (sql[i] === "'" && sql[i + 1] === "'") {
+          // escaped quote ('')
+          current += "''";
+          i += 2;
+        } else if (sql[i] === "'") {
+          current += "'";
+          i++;
+          break;
+        } else {
+          current += sql[i];
+          i++;
+        }
+      }
+      continue;
+    }
+
+    // Double-quoted identifier
+    if (ch === '"') {
+      current += ch;
+      i++;
+      while (i < sql.length) {
+        if (sql[i] === '"' && sql[i + 1] === '"') {
+          current += '""';
+          i += 2;
+        } else if (sql[i] === '"') {
+          current += '"';
+          i++;
+          break;
+        } else {
+          current += sql[i];
+          i++;
+        }
+      }
+      continue;
+    }
+
+    // Statement terminator
+    if (ch === ";") {
+      const trimmed = current.trim();
+      if (trimmed) statements.push(trimmed);
+      current = "";
+      i++;
+      continue;
+    }
+
+    current += ch;
+    i++;
+  }
+
+  // Trailing statement without semicolon
+  const trimmed = current.trim();
+  if (trimmed) statements.push(trimmed);
+
+  return statements;
+}
+
+// ---------------------------------------------------------------------------
 // Interface
 // ---------------------------------------------------------------------------
 
@@ -98,13 +195,9 @@ export class WorkerHttpAdapter implements DbAdapter {
 
     if (!cleaned) return;
 
-    // Miniflare's D1.exec() doesn't handle multi-line SQL reliably.
-    // Since PRAGMA is stripped, there's no need for a shared connection.
-    // Split into individual statements and execute each separately.
-    const statements = cleaned
-      .split(";")
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
+    // Split into individual statements using a quote/comment-aware splitter.
+    // Miniflare's D1.exec() can't handle multi-statement SQL.
+    const statements = splitSqlStatements(cleaned);
 
     for (const stmt of statements) {
       await this.post("/api/v1/execute", stmt);

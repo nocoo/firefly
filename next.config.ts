@@ -21,6 +21,8 @@ function getAssetsOrigin(): { protocol: "http" | "https"; hostname: string } {
   }
 }
 
+const assetsOrigin = getAssetsOrigin();
+
 const nextConfig: NextConfig = {
   allowedDevOrigins: (process.env.ALLOWED_DEV_ORIGINS ?? "").split(",").filter(Boolean),
   env: {
@@ -29,8 +31,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: getAssetsOrigin().protocol,
-        hostname: getAssetsOrigin().hostname,
+        protocol: assetsOrigin.protocol,
+        hostname: assetsOrigin.hostname,
       },
     ],
   },

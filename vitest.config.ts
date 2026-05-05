@@ -9,7 +9,7 @@ export default defineConfig({
     isolate: false,
     maxConcurrency: 20,
     maxWorkers: 12,
-    include: ["src/**/*.test.ts", "worker/test/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "worker/test/**/*.test.ts", "scripts/**/*.test.ts"],
     exclude: ["e2e/**", "**/node_modules/**", ".claude/**"],
     env: { R2_PUBLIC_URL: "https://assets.example.com" },
     coverage: {
