@@ -86,7 +86,29 @@ export class WorkerHttpAdapter implements DbAdapter {
   }
 
   async execute(sql: string): Promise<void> {
-    await this.post("/api/v1/execute", sql);
+    // Strip PRAGMA statements — Miniflare's local D1.exec() does not
+    // support PRAGMA. This is safe because the local DB is always fresh
+    // (cleaned before each E2E run), so FK constraints during table
+    // reconstruction are irrelevant.
+    const cleaned = sql
+      .split("\n")
+      .filter((line) => !/^\s*PRAGMA\b/i.test(line))
+      .join("\n")
+      .trim();
+
+    if (!cleaned) return;
+
+    // Miniflare's D1.exec() doesn't handle multi-line SQL reliably.
+    // Since PRAGMA is stripped, there's no need for a shared connection.
+    // Split into individual statements and execute each separately.
+    const statements = cleaned
+      .split(";")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
+    for (const stmt of statements) {
+      await this.post("/api/v1/execute", stmt);
+    }
   }
 
   async query<T = Record<string, unknown>>(sql: string): Promise<T[]> {
