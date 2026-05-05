@@ -3,8 +3,8 @@
  * DB migration CLI for Firefly.
  *
  * Usage:
- *   bun scripts/migrations/migrate.ts up [--target prod|test|local]
- *   bun scripts/migrations/migrate.ts status [--target prod|test|local]
+ *   bun scripts/migrations/migrate.ts up [--target prod|local]
+ *   bun scripts/migrations/migrate.ts status [--target prod|local]
  *
  * Default target is "prod".
  */
@@ -15,7 +15,7 @@ const command = args.find((a) => !a.startsWith("--")) ?? "up";
 const targetIdx = args.indexOf("--target");
 const target = targetIdx >= 0 ? args[targetIdx + 1] : "prod";
 
-const VALID_TARGETS = ["prod", "test", "local"];
+const VALID_TARGETS = ["prod", "local"];
 
 if (!VALID_TARGETS.includes(target)) {
   console.error(
@@ -24,7 +24,7 @@ if (!VALID_TARGETS.includes(target)) {
   process.exit(1);
 }
 
-const t = target as "prod" | "test" | "local";
+const t = target as "prod" | "local";
 
 if (command === "status") {
   await status(t);

@@ -2,8 +2,8 @@
  * Database adapter abstraction for the migration system.
  *
  * Two implementations:
- * - CfRestAdapter  — remote Cloudflare D1 via REST API (prod / test)
- * - WorkerHttpAdapter — local wrangler dev worker via HTTP
+ * - CfRestAdapter     — remote Cloudflare D1 via REST API (prod)
+ * - WorkerHttpAdapter — local wrangler dev worker via HTTP (local E2E)
  */
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
@@ -135,7 +135,7 @@ function loadEnvFile(path: string): Record<string, string> {
   return env;
 }
 
-export function createAdapter(target: "prod" | "test" | "local"): DbAdapter {
+export function createAdapter(target: "prod" | "local"): DbAdapter {
   if (target === "local") {
     return new WorkerHttpAdapter(
       "http://localhost:8787",
@@ -143,7 +143,7 @@ export function createAdapter(target: "prod" | "test" | "local"): DbAdapter {
     );
   }
 
-  // Remote targets need CF credentials from .env
+  // Remote prod target needs CF credentials from .env
   const root = resolve(import.meta.dir, "../..");
   const env = { ...loadEnvFile(resolve(root, ".env")) };
 
@@ -156,14 +156,6 @@ export function createAdapter(target: "prod" | "test" | "local"): DbAdapter {
     );
   }
 
-  if (target === "test") {
-    const dbId =
-      env.CF_D1_TEST_DATABASE_ID ?? process.env.CF_D1_TEST_DATABASE_ID;
-    if (!dbId) throw new Error("Missing CF_D1_TEST_DATABASE_ID");
-    return new CfRestAdapter(accountId, apiToken, dbId, `test (${dbId})`);
-  }
-
-  // prod
   const dbId = env.CF_D1_DATABASE_ID ?? process.env.CF_D1_DATABASE_ID;
   if (!dbId) throw new Error("Missing CF_D1_DATABASE_ID");
   return new CfRestAdapter(accountId, apiToken, dbId, `prod (${dbId})`);

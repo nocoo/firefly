@@ -1,6 +1,5 @@
 # === Quality Gate: pre-push ===
-# L1 Coverage (root + worker) + G1 Lint + G2 Security + Test DB check
-# L2 API E2E runs in CI only (requires remote worker)
+# L1 Coverage (root + worker) + G1 Lint + G2 Security
 echo "▸ Lockfile sync check"
 bun install --frozen-lockfile --silent
 echo "▸ L1: unit tests (coverage ≥90%, includes worker subpackage)"
@@ -9,5 +8,3 @@ echo "▸ G1: lint"
 bun run lint
 echo "▸ G2: security"
 bun run security
-echo "▸ Test DB schema check (prevents CI E2E failures from missing migrations)"
-bun scripts/check-test-db.ts

@@ -215,7 +215,7 @@ async function applyOne(
 // ---------------------------------------------------------------------------
 
 export async function applyAll(
-  target: "prod" | "test" | "local",
+  target: "prod" | "local",
 ): Promise<ApplyResult> {
   const adapter = createAdapter(target);
   console.log(`▸ Target: ${adapter.label}`);
@@ -271,7 +271,7 @@ export async function applyAll(
 }
 
 export async function status(
-  target: "prod" | "test" | "local",
+  target: "prod" | "local",
 ): Promise<void> {
   const adapter = createAdapter(target);
   console.log(`▸ Target: ${adapter.label}\n`);

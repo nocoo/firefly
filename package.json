@@ -21,7 +21,6 @@
     "test:e2e:browser": "bun scripts/run-e2e.ts --browser-only",
     "migrate": "bun scripts/migrations/migrate.ts up",
     "migrate:status": "bun scripts/migrations/migrate.ts status",
-    "migrate:test": "bun scripts/migrations/migrate.ts up --target test",
     "migrate:local": "bun scripts/migrations/migrate.ts up --target local",
     "prepare": "husky",
     "release": "bun scripts/release.ts"
