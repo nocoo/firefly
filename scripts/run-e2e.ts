@@ -231,6 +231,13 @@ async function main() {
 
   // --- Build env: load .env as base, then inject E2E overrides ---
   const prodEnv = loadEnvFile(".env");
+
+  // R2_PUBLIC_URL must point to a Next.js server that will actually be running.
+  // --api-only  → only 17028 is started
+  // --browser-only → only 27028 is started
+  // default       → both started; 17028 serves R2 reads for both L2 and L3
+  const r2Port = browserOnly ? BROWSER_E2E_PORT : API_E2E_PORT;
+
   const env: Record<string, string | undefined> = {
     ...prodEnv,
     ...process.env,
@@ -242,7 +249,7 @@ async function main() {
     CI: "true",
     // R2 — local filesystem adapter (see src/lib/r2-client.ts)
     R2_BUCKET_NAME: "local-e2e",
-    R2_PUBLIC_URL: `http://localhost:${API_E2E_PORT}/__e2e-r2`,
+    R2_PUBLIC_URL: `http://localhost:${r2Port}/__e2e-r2`,
     R2_KEY_PREFIX: "e2e/",
     E2E_R2_LOCAL_DIR: PERSIST_R2,
   };
