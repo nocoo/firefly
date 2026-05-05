@@ -6,16 +6,18 @@ const pkg = JSON.parse(readFileSync("./package.json", "utf-8")) as {
 };
 
 /**
- * Extract hostname from R2_PUBLIC_URL for Next.js image optimization whitelist.
- * Falls back to "localhost" if not configured (dev mode).
+ * Extract hostname and protocol from R2_PUBLIC_URL for Next.js image
+ * optimization whitelist. Falls back to http + localhost (dev/E2E mode).
  */
-function getAssetsHostname(): string {
+function getAssetsOrigin(): { protocol: "http" | "https"; hostname: string } {
   const url = process.env.R2_PUBLIC_URL;
-  if (!url) return "localhost";
+  if (!url) return { protocol: "http", hostname: "localhost" };
   try {
-    return new URL(url).hostname;
+    const parsed = new URL(url);
+    const proto = parsed.protocol === "http:" ? "http" : "https";
+    return { protocol: proto, hostname: parsed.hostname };
   } catch {
-    return "localhost";
+    return { protocol: "http", hostname: "localhost" };
   }
 }
 
@@ -27,8 +29,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: getAssetsHostname(),
+        protocol: getAssetsOrigin().protocol,
+        hostname: getAssetsOrigin().hostname,
       },
     ],
   },
