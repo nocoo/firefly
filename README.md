@@ -61,7 +61,7 @@ bun run test:watch     # L1: Watch mode
 bun run test:coverage  # L1: With coverage report (90% threshold)
 bun run test:e2e:api   # L2: API E2E tests
 bun run test:e2e:browser # L3: Browser E2E tests (Playwright)
-cd worker && bun test  # Worker: Edge Worker unit tests
+cd worker && vitest run  # Worker: Edge Worker unit tests
 ```
 
 ### Quality System
