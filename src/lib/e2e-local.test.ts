@@ -89,4 +89,12 @@ describe("resolveLocalR2Path", () => {
     const out = resolveLocalR2Path("uploads/img.png");
     expect(out).toBe("/tmp/firefly-e2e-r2/uploads/img.png");
   });
+
+  it("allows empty key resolving exactly to the root (target === root)", () => {
+    // Empty key normalises to '.', which resolves to the root itself.
+    // The escapes-root guard's right operand (target !== root) must be false
+    // here so the throw branch is skipped.
+    const out = resolveLocalR2Path("");
+    expect(out).toBe("/tmp/firefly-e2e-r2");
+  });
 });
