@@ -13,6 +13,29 @@ vi.mock("ai", () => ({
   generateText: vi.fn(),
 }));
 
+// ---------------------------------------------------------------------------
+// Backward-compatible registry shims
+// ---------------------------------------------------------------------------
+
+describe("getProviderConfig", () => {
+  it("returns undefined for the special \"custom\" id", async () => {
+    const { getProviderConfig } = await import("./ai");
+    expect(getProviderConfig("custom")).toBeUndefined();
+  });
+
+  it("returns undefined for an unknown provider id", async () => {
+    const { getProviderConfig } = await import("./ai");
+    expect(getProviderConfig("definitely-not-a-real-provider")).toBeUndefined();
+  });
+
+  it("returns provider info for a known built-in provider id", async () => {
+    const { getProviderConfig, ALL_PROVIDER_IDS } = await import("./ai");
+    const knownId = ALL_PROVIDER_IDS.find((id) => id !== "custom");
+    expect(knownId).toBeDefined();
+    expect(getProviderConfig(knownId!)).toBeDefined();
+  });
+});
+
 vi.mock("@/lib/db", () => ({
   getDb: vi.fn(() => ({})),
 }));
