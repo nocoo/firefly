@@ -335,6 +335,26 @@ describe("getAnalyticsDailyTrend", () => {
     expect(result.length).toBeGreaterThanOrEqual(2);
     expect(result[0].human).toBe(0);
   });
+
+  it("maps DB rows through the row-shaping callback (other_bot → otherBot)", async () => {
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10);
+    vi.mocked(db.query).mockResolvedValue({
+      results: [
+        { date: yesterday, human: 5, search: 2, ai: 1, other_bot: 3 },
+      ],
+      meta: { changes: 0, duration: 1 },
+    });
+
+    const result = await getAnalyticsDailyTrend(db, 3);
+    const row = result.find((r) => r.date === yesterday);
+    expect(row).toBeDefined();
+    expect(row!.human).toBe(5);
+    expect(row!.search).toBe(2);
+    expect(row!.ai).toBe(1);
+    expect(row!.otherBot).toBe(3);
+  });
 });
 
 describe("getAnalyticsAggregates", () => {
