@@ -143,6 +143,20 @@ describe("getMemoryStats", () => {
 });
 
 describe("register", () => {
+  it("uses 10s collection interval in development mode", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    try {
+      const { getMemoryStats, getMemoryHistory } = await freshModule();
+      getMemoryStats(); // arms the interval (1 initial sample)
+      // In development, the interval fires every 10s instead of 60s.
+      vi.advanceTimersByTime(10_000 * 3);
+      // 1 initial + 3 ticks = 4 samples
+      expect(getMemoryHistory().length).toBeGreaterThanOrEqual(3);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it("starts collection when NEXT_RUNTIME=nodejs", async () => {
     const original = process.env.NEXT_RUNTIME;
     process.env.NEXT_RUNTIME = "nodejs";
