@@ -1578,6 +1578,51 @@ describe("updatePost branch coverage", () => {
     expect(params).toContain("New Title");
   });
 
+  it("clears referenceUrl=null + preserves explicit referenceDescription only", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({
+        ...samplePostWithCategory,
+        reference_url: "https://old.com",
+        reference_description: "Old",
+      })
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", {
+      referenceUrl: null,
+      referenceDescription: "Keep This Desc",
+    });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("reference_description = ?");
+    expect(params).toContain("Keep This Desc");
+    // title + image should be auto-cleared
+    expect(sql).toContain("reference_title = ?");
+    expect(sql).toContain("reference_image = ?");
+  });
+
+  it("clears referenceUrl=null + preserves explicit referenceImage only", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({
+        ...samplePostWithCategory,
+        reference_url: "https://old.com",
+        reference_image: "old.png",
+      })
+      .mockResolvedValueOnce(samplePostWithCategory);
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
+
+    await updatePost(db, "post-1", {
+      referenceUrl: null,
+      referenceImage: "keep.png",
+    });
+
+    const [sql, params] = vi.mocked(db.execute).mock.calls[0];
+    expect(sql).toContain("reference_image = ?");
+    expect(params).toContain("keep.png");
+    expect(sql).toContain("reference_title = ?");
+    expect(sql).toContain("reference_description = ?");
+  });
+
   it("updates referenceDescription when provided", async () => {
     vi.mocked(db.firstOrNull)
       .mockResolvedValueOnce(samplePostWithCategory)
