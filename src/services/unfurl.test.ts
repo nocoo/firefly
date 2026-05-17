@@ -446,6 +446,34 @@ describe("fetchHtml", () => {
     }
   });
 
+  it("aborts and wraps timeout when fetch exceeds the 10s budget", async () => {
+    vi.useFakeTimers();
+    try {
+      globalThis.fetch = vi.fn((_, init?: RequestInit) => {
+        return new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => {
+            reject(new DOMException("aborted", "AbortError"));
+          });
+        });
+      }) as unknown as typeof fetch;
+
+      const promise = fetchHtml("https://example.com");
+      // Catch eagerly so unhandled rejection doesn't leak.
+      let caught: unknown = null;
+      const p = promise.catch((e) => {
+        caught = e;
+      });
+      // Advance past FETCH_TIMEOUT_MS (10s) — abort callback fires.
+      await vi.advanceTimersByTimeAsync(11_000);
+      await p;
+      expect(caught).toBeInstanceOf(UnfurlError);
+      expect((caught as UnfurlError).statusCode).toBe(502);
+      expect((caught as UnfurlError).message).toContain("Failed to fetch URL");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("re-throws UnfurlError directly from fetch catch", async () => {
     // Simulate validateUrl throwing UnfurlError inside the loop
     // by having fetch throw an UnfurlError (not a generic Error)
