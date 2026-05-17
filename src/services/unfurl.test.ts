@@ -180,6 +180,13 @@ describe("resolveAndValidateHostname", () => {
     await expect(resolveAndValidateHostname("nonexistent.invalid")).rejects.toThrow("DNS resolution failed");
   });
 
+  it("handles non-Error DNS rejection (string thrown)", async () => {
+    mockedLookup.mockRejectedValue("raw string failure");
+    await expect(
+      resolveAndValidateHostname("weird.example.com"),
+    ).rejects.toThrow("DNS resolution failed");
+  });
+
   it("throws on DNS timeout", async () => {
     // Use fake timers to test the actual timeout path in Promise.race
     vi.useFakeTimers();
