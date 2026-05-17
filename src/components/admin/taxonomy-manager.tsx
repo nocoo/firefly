@@ -1,26 +1,20 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { useState, useCallback } from "react";
-import { Pencil, Trash2, ExternalLink, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { useSetPageSubtitle } from "@/components/admin/page-subtitle-context";
+import {
+  TaxonomyForm,
+  type TaxonomyFormState,
+} from "./taxonomy-manager-form";
+import {
+  TaxonomyTable,
+  type TaxonomyItem,
+} from "./taxonomy-manager-table";
 
-export interface TaxonomyItem {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string | null;
-  post_count: number;
-  /** Total posts (all statuses). Only present for categories. */
-  total_posts?: number;
-  /** Published posts. Only present for categories. */
-  published_posts?: number;
-  /** Draft posts. Only present for categories. */
-  draft_posts?: number;
-}
+export type { TaxonomyItem } from "./taxonomy-manager-table";
 
 interface TaxonomyManagerProps {
   type: "category" | "tag";
@@ -28,9 +22,7 @@ interface TaxonomyManagerProps {
   apiBase: string;
 }
 
-// ---------------------------------------------------------------------------
-// TaxonomyManager
-// ---------------------------------------------------------------------------
+const EMPTY_FORM: TaxonomyFormState = { name: "", slug: "", description: "" };
 
 export function TaxonomyManager({
   type,
@@ -42,59 +34,52 @@ export function TaxonomyManager({
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState<TaxonomyFormState>(EMPTY_FORM);
 
   // Local item order (for optimistic reordering via up/down buttons)
   const [orderedItems, setOrderedItems] = useState(initialItems);
   // Sync when server data changes (e.g. after create/delete/edit)
-  if (initialItems !== orderedItems && initialItems.length !== orderedItems.length) {
+  if (
+    initialItems !== orderedItems &&
+    initialItems.length !== orderedItems.length
+  ) {
     setOrderedItems(initialItems);
   }
 
-  const sortable = type === "category";
-  const colCount = sortable ? 6 : 5;
-
-  // Form state
-  const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
-  const [description, setDescription] = useState("");
-
   const label = type === "category" ? "分类" : "标签";
-
-  const totalText = type === "category"
-    ? `共 ${initialItems.length} 个分类`
-    : `共 ${initialItems.length} 个标签`;
-
+  const totalText =
+    type === "category"
+      ? `共 ${initialItems.length} 个分类`
+      : `共 ${initialItems.length} 个标签`;
   useSetPageSubtitle(totalText);
 
-  const resetForm = () => {
-    setName("");
-    setSlug("");
-    setDescription("");
+  const resetForm = useCallback(() => {
+    setForm(EMPTY_FORM);
     setEditing(null);
     setCreating(false);
     setError(null);
-  };
+  }, []);
 
   const startEdit = (item: TaxonomyItem) => {
     setCreating(false);
     setEditing(item.id);
-    setName(item.name);
-    setSlug(item.slug);
-    setDescription(item.description ?? "");
+    setForm({
+      name: item.name,
+      slug: item.slug,
+      description: item.description ?? "",
+    });
     setError(null);
   };
 
   const startCreate = () => {
     setEditing(null);
     setCreating(true);
-    setName("");
-    setSlug("");
-    setDescription("");
+    setForm(EMPTY_FORM);
     setError(null);
   };
 
   const handleSave = async () => {
-    if (!name.trim() || !slug.trim()) {
+    if (!form.name.trim() || !form.slug.trim()) {
       setError("名称和别名为必填项");
       return;
     }
@@ -104,21 +89,18 @@ export function TaxonomyManager({
 
     try {
       const body: Record<string, string> = {
-        name: name.trim(),
-        slug: slug.trim(),
+        name: form.name.trim(),
+        slug: form.slug.trim(),
       };
-      if (description.trim()) body.description = description.trim();
+      if (form.description.trim()) body.description = form.description.trim();
 
-      const url = editing ? `${apiBase}/${slug}` : apiBase;
-      const method = editing ? "PUT" : "POST";
-
-      // For edit, use the original slug to find the item
       const editItem = editing
         ? orderedItems.find((i) => i.id === editing)
         : null;
-      const editUrl = editItem ? `${apiBase}/${editItem.slug}` : url;
+      const url = editItem ? `${apiBase}/${editItem.slug}` : apiBase;
+      const method = editing ? "PUT" : "POST";
 
-      const res = await fetch(editing ? editUrl : url, {
+      const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -138,39 +120,22 @@ export function TaxonomyManager({
     }
   };
 
-  // Delete confirmation state
   const [deleteTarget, setDeleteTarget] = useState<TaxonomyItem | null>(null);
 
   const handleDelete = async (item: TaxonomyItem) => {
     setDeleteTarget(null);
-
     try {
-      const res = await fetch(`${apiBase}/${item.slug}`, {
-        method: "DELETE",
-      });
-
+      const res = await fetch(`${apiBase}/${item.slug}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error ?? `删除${label}失败`);
       }
-
-      toast.success("删除", {
-        description: item.name,
-      });
+      toast.success("删除", { description: item.name });
       router.refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "未知错误");
     }
   };
-
-  const emptyMessage = type === "category" ? "暂无分类" : "暂无标签";
-
-  /** Show enriched post stats (total / published / draft) when available, otherwise fall back to post_count. */
-  const hasStats = type === "category" && orderedItems.some((i) => i.total_posts !== undefined);
-
-  // ---------------------------------------------------------------------------
-  // Reordering (categories only) — simple up/down buttons
-  // ---------------------------------------------------------------------------
 
   const move = useCallback(
     async (index: number, direction: -1 | 1) => {
@@ -179,7 +144,10 @@ export function TaxonomyManager({
 
       const previous = orderedItems;
       const reordered = [...orderedItems];
-      [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
+      [reordered[index], reordered[target]] = [
+        reordered[target],
+        reordered[index],
+      ];
       setOrderedItems(reordered);
 
       try {
@@ -198,91 +166,6 @@ export function TaxonomyManager({
     [orderedItems, apiBase],
   );
 
-  // ---------------------------------------------------------------------------
-  // Render helpers
-  // ---------------------------------------------------------------------------
-
-  const renderRowContent = (item: TaxonomyItem, index?: number) => (
-    <>
-      {sortable && index !== undefined && (
-        <td className="w-16 pl-2 pr-0 py-3">
-          <div className="flex items-center gap-0.5">
-            <button
-              type="button"
-              onClick={() => move(index, -1)}
-              disabled={index === 0}
-              aria-label="Move up"
-              className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
-            >
-              <ChevronUp className="h-4 w-4" strokeWidth={1.5} />
-            </button>
-            <button
-              type="button"
-              onClick={() => move(index, 1)}
-              disabled={index === orderedItems.length - 1}
-              aria-label="Move down"
-              className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
-            >
-              <ChevronDown className="h-4 w-4" strokeWidth={1.5} />
-            </button>
-          </div>
-        </td>
-      )}
-      <td className="px-4 py-3 font-medium text-foreground">
-        {item.name}
-      </td>
-      <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
-        {item.slug}
-      </td>
-      <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
-        {item.description ?? "—"}
-      </td>
-      <td className="px-4 py-3 text-center text-muted-foreground">
-        {hasStats ? (
-          <span title={`已发布: ${item.published_posts ?? 0}, 草稿: ${item.draft_posts ?? 0}`}>
-            {item.total_posts ?? 0}
-            <span className="text-xs text-muted-foreground/60 ml-1">
-              ({item.published_posts ?? 0}/{item.draft_posts ?? 0})
-            </span>
-          </span>
-        ) : (
-          item.post_count
-        )}
-      </td>
-      <td className="px-4 py-3 text-right">
-        <div className="flex items-center justify-end gap-1">
-          {(item.total_posts ?? item.post_count) > 0 && (
-            <Link
-              href={`/admin/posts?${type === "category" ? "category" : "tag"}=${item.id}`}
-              className="inline-flex items-center gap-1 rounded-widget px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.5} />
-              查看全部
-            </Link>
-          )}
-          <button
-            onClick={() => startEdit(item)}
-            className="inline-flex items-center gap-1 rounded-widget px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
-            编辑
-          </button>
-          <button
-            onClick={() => setDeleteTarget(item)}
-            className="inline-flex items-center gap-1 rounded-widget px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
-          >
-            <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
-            删除
-          </button>
-        </div>
-      </td>
-    </>
-  );
-
-  // ---------------------------------------------------------------------------
-  // JSX
-  // ---------------------------------------------------------------------------
-
   return (
     <div className="space-y-4">
       {error && (
@@ -291,7 +174,6 @@ export function TaxonomyManager({
         </div>
       )}
 
-      {/* Create button */}
       {!creating && !editing && (
         <button
           onClick={startCreate}
@@ -301,109 +183,43 @@ export function TaxonomyManager({
         </button>
       )}
 
-      {/* Create/Edit form */}
       {(creating || editing) && (
-        <div className="rounded-widget border border-border bg-secondary/50 p-4 space-y-3">
-          <h3 className="text-sm font-medium text-foreground">
-            {editing ? `编辑${label}` : `新建${label}`}
-          </h3>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="名称"
-              className="rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            <input
-              type="text"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              placeholder="别名"
-              className="rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-          <input
-            type="text"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="描述（可选）"
-            className="w-full rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-          <div className="flex gap-2">
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="inline-flex items-center rounded-widget bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-            >
-              {saving ? "保存中..." : "保存"}
-            </button>
-            <button
-              onClick={resetForm}
-              className="inline-flex items-center rounded-widget border border-border bg-secondary px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent"
-            >
-              取消
-            </button>
-          </div>
-        </div>
+        <TaxonomyForm
+          label={label}
+          editing={!!editing}
+          state={form}
+          saving={saving}
+          onChange={setForm}
+          onSave={handleSave}
+          onCancel={resetForm}
+        />
       )}
 
-      {/* Table */}
-      <div className="overflow-x-auto rounded-widget border border-border bg-secondary">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-secondary/50">
-              {sortable && (
-                <th className="w-16 pl-2 pr-0 py-3" />
-              )}
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                名称
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
-                别名
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
-                描述
-              </th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground">
-                文章数
-              </th>
-              <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                操作
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {orderedItems.length === 0 ? (
-              <tr>
-                <td colSpan={colCount} className="px-4 py-8 text-center text-muted-foreground">
-                  {emptyMessage}
-                </td>
-              </tr>
-            ) : (
-              orderedItems.map((item, index) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-border last:border-0 hover:bg-accent/50 transition-colors"
-                >
-                  {renderRowContent(item, sortable ? index : undefined)}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <TaxonomyTable
+        type={type}
+        items={orderedItems}
+        onMove={move}
+        onEdit={startEdit}
+        onDelete={setDeleteTarget}
+      />
 
-      {/* Delete confirmation dialog */}
       <ConfirmDialog
         open={!!deleteTarget}
-        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-        title={deleteTarget ? `确认删除${label}「${deleteTarget.name}」？此操作不可撤销。` : ""}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title={
+          deleteTarget
+            ? `确认删除${label}「${deleteTarget.name}」？此操作不可撤销。`
+            : ""
+        }
         description=""
         destructive
         confirmLabel="删除"
         cancelLabel="取消"
-        onConfirm={() => { if (deleteTarget) handleDelete(deleteTarget); }}
+        onConfirm={() => {
+          if (deleteTarget) handleDelete(deleteTarget);
+        }}
       />
     </div>
   );
