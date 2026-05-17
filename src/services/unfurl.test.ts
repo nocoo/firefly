@@ -80,6 +80,10 @@ describe("validateUrl", () => {
     expect(() => validateUrl("http://169.254.0.1")).toThrow("private network");
   });
 
+  it("rejects IPv6 unspecified address ::", () => {
+    expect(() => validateUrl("http://[::]")).toThrow("private network");
+  });
+
   it("rejects IPv6 loopback ::1", () => {
     expect(() => validateUrl("http://[::1]")).toThrow("private network");
   });
