@@ -1,124 +1,27 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import Image from "next/image";
-import {
-  Trash2,
-  Copy,
-  FileCode2,
-  Search,
-  X,
-  RotateCcw,
-  Calendar,
-  HardDrive,
-  ImageIcon,
-  RulerIcon,
-  FileArchive,
-  FileText,
-  FileAudio,
-  FileVideo,
-  File,
-  Upload,
-} from "lucide-react";
-import type { Attachment } from "@/models/types";
+import { Upload } from "lucide-react";
 import type { YearCount } from "@/data/entities/media";
-import { formatFileSize } from "@/models/backup";
 import { ConfirmDialog } from "./confirm-dialog";
-import { ImageLightbox } from "@/components/ui/image-lightbox";
-import { Select } from "@/components/ui/select";
-
-const MONTH_LABELS = ["", "一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"];
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-interface MediaWithUrl extends Attachment {
-  url: string;
-}
+import {
+  buildQuery,
+  EMPTY_FILTERS,
+  hasActiveFilters,
+  type Filters,
+  type MediaWithUrl,
+} from "./media-library-helpers";
+import { MediaLibraryFilterBar } from "./media-library-filter-bar";
+import { MediaLibraryGrid } from "./media-library-grid";
+import { MediaLibraryPreview } from "./media-library-preview";
+import { useMediaUpload } from "./media-library-upload";
 
 interface MediaLibraryProps {
   initialMedia: MediaWithUrl[];
   initialTotal: number;
   initialYearCounts: YearCount[];
 }
-
-interface Filters {
-  search: string;
-  mimeType: string;
-  year: string;
-  month: string;
-  sortBy: string;
-  sortOrder: string;
-}
-
-const EMPTY_FILTERS: Filters = {
-  search: "",
-  mimeType: "",
-  year: "",
-  month: "",
-  sortBy: "created_at",
-  sortOrder: "desc",
-};
-
-const PAGE_SIZE = 120;
-
-const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/** Whether a MIME type is a renderable image */
-function isImageMime(mime: string): boolean {
-  return mime.startsWith("image/") && !mime.includes("svg");
-}
-
-/** Return the appropriate lucide icon for a given MIME type */
-function FileTypeIcon({ mime, className }: { mime: string; className?: string }) {
-  if (mime.startsWith("image/")) return <ImageIcon className={className} />;
-  if (mime.startsWith("audio/")) return <FileAudio className={className} />;
-  if (mime.startsWith("video/")) return <FileVideo className={className} />;
-  if (mime === "application/pdf") return <FileText className={className} />;
-  if (
-    mime === "application/zip" ||
-    mime === "application/x-rar-compressed" ||
-    mime === "application/gzip" ||
-    mime === "application/x-7z-compressed" ||
-    mime === "application/x-tar"
-  ) return <FileArchive className={className} />;
-  return <File className={className} />;
-}
-
-function buildQuery(filters: Filters, page: number): string {
-  const sp = new URLSearchParams();
-  sp.set("page", String(page));
-  sp.set("page_size", String(PAGE_SIZE));
-  if (filters.search) sp.set("search", filters.search);
-  if (filters.mimeType) sp.set("mime_type", filters.mimeType);
-  if (filters.year) sp.set("year", filters.year);
-  if (filters.year && filters.month) sp.set("month", filters.month);
-  if (filters.sortBy && filters.sortBy !== "created_at")
-    sp.set("sort_by", filters.sortBy);
-  if (filters.sortOrder && filters.sortOrder !== "desc")
-    sp.set("sort_order", filters.sortOrder);
-  return sp.toString();
-}
-
-function hasActiveFilters(f: Filters): boolean {
-  return (
-    f.search !== "" ||
-    f.mimeType !== "" ||
-    f.year !== "" ||
-    f.sortBy !== "created_at" ||
-    f.sortOrder !== "desc"
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
 
 export function MediaLibrary({
   initialMedia,
@@ -134,17 +37,16 @@ export function MediaLibrary({
   const [preview, setPreview] = useState<MediaWithUrl | null>(null);
   const pageRef = useRef(1);
 
-  // Filters
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [searchInput, setSearchInput] = useState("");
-  const searchRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Drag-and-drop upload
-  const [dragOver, setDragOver] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
-  const dragCounterRef = useRef(0);
+  // Drag-and-drop upload (delegates to dedicated hook)
+  const handleUploadComplete = useCallback((item: MediaWithUrl) => {
+    setMedia((prev) => [item, ...prev]);
+    setTotal((prev) => prev + 1);
+  }, []);
+  const upload = useMediaUpload(handleUploadComplete);
 
   // Re-fetch when filters change
   const fetchMedia = useCallback(
@@ -169,7 +71,7 @@ export function MediaLibrary({
     [],
   );
 
-  // Debounced search
+  // Debounced search input → filters.search
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
@@ -193,17 +95,17 @@ export function MediaLibrary({
     fetchMedia(filters, 1, false);
   }, [filters, fetchMedia]);
 
-  const updateFilter = useCallback(
-    (key: keyof Filters, value: string) => {
-      setFilters((prev) => {
-        const next = { ...prev, [key]: value };
-        // Clear month when year is cleared
-        if (key === "year" && !value) next.month = "";
-        return next;
-      });
-    },
-    [],
-  );
+  const updateFilter = useCallback((key: keyof Filters, value: string) => {
+    setFilters((prev) => {
+      const next = { ...prev, [key]: value };
+      if (key === "year" && !value) next.month = "";
+      return next;
+    });
+  }, []);
+
+  const handleSortChange = useCallback((sortBy: string, sortOrder: string) => {
+    setFilters((prev) => ({ ...prev, sortBy, sortOrder }));
+  }, []);
 
   const resetFilters = useCallback(() => {
     setSearchInput("");
@@ -236,333 +138,76 @@ export function MediaLibrary({
     }
   }, [deleteTarget]);
 
-  const copyToClipboard = useCallback(
-    async (text: string) => {
-      try {
-        await navigator.clipboard.writeText(text);
-        toast.success("已复制！");
-      } catch {
-        // Silently ignore clipboard failures
-      }
-    },
-    [],
-  );
-
-  // ---------------------------------------------------------------------------
-  // Drag-and-drop upload
-  // ---------------------------------------------------------------------------
-
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    dragCounterRef.current += 1;
-    if (dragCounterRef.current === 1) setDragOver(true);
+  const copyToClipboard = useCallback(async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("已复制！");
+    } catch {
+      // Silently ignore clipboard failures
+    }
   }, []);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
+  const handlePreviewDelete = useCallback((item: MediaWithUrl) => {
+    setPreview(null);
+    setDeleteTarget(item);
   }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    dragCounterRef.current -= 1;
-    if (dragCounterRef.current === 0) setDragOver(false);
-  }, []);
-
-  const handleDrop = useCallback(
-    async (e: React.DragEvent) => {
-      e.preventDefault();
-      dragCounterRef.current = 0;
-      setDragOver(false);
-
-      const files = Array.from(e.dataTransfer.files);
-      if (files.length === 0) return;
-
-      setUploading(true);
-      setUploadProgress({ current: 0, total: files.length });
-
-      let successCount = 0;
-
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        setUploadProgress({ current: i + 1, total: files.length });
-
-        try {
-          const formData = new FormData();
-          formData.append("file", file);
-
-          const res = await fetch("/api/media", {
-            method: "POST",
-            body: formData,
-          });
-
-          if (!res.ok) {
-            const data = await res.json();
-            toast.error(
-              `上传失败：${file.name}` + (data.error ? `: ${data.error}` : ""),
-            );
-            continue;
-          }
-
-          const data = await res.json();
-          const newItem: MediaWithUrl = {
-            ...data,
-            url: data.url,
-          };
-          setMedia((prev) => [newItem, ...prev]);
-          setTotal((prev) => prev + 1);
-          successCount++;
-        } catch {
-          toast.error(`上传失败：${file.name}`);
-        }
-      }
-
-      setUploading(false);
-      if (successCount > 0) {
-        toast.success(`已上传 ${successCount} 个文件`);
-      }
-    },
-    [],
-  );
-
-  const formatDate = (epoch: number) => {
-    return new Date(epoch * 1000).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   return (
     <div
-      onDragEnter={handleDragEnter}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
+      onDragEnter={upload.onDragEnter}
+      onDragOver={upload.onDragOver}
+      onDragLeave={upload.onDragLeave}
+      onDrop={upload.onDrop}
       className="relative"
     >
-      {/* ── Drag overlay ── */}
-      {dragOver && (
+      {upload.dragOver && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 rounded-widget border-2 border-dashed border-primary bg-primary/5 backdrop-blur-sm">
           <Upload className="h-10 w-10 text-primary" />
-          <p className="text-sm font-medium text-primary">
-            拖放文件上传
-          </p>
+          <p className="text-sm font-medium text-primary">拖放文件上传</p>
         </div>
       )}
 
-      {/* ── Upload progress indicator ── */}
-      {uploading && (
+      {upload.uploading && (
         <div className="mb-4 flex items-center gap-2 rounded-widget border border-border bg-secondary px-4 py-2 text-sm text-muted-foreground">
           <Upload className="h-4 w-4 animate-pulse" />
-          {`上传中 ${uploadProgress.current}/${uploadProgress.total}...`}
+          {`上传中 ${upload.uploadProgress.current}/${upload.uploadProgress.total}...`}
         </div>
       )}
 
-      {/* ── Filter bar ── */}
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        {/* Search */}
-        <div className="relative flex-1 min-w-[180px]">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-          <input
-            ref={searchRef}
-            type="text"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="搜索文件..."
-            className="w-full rounded-widget border border-border bg-secondary pl-8 pr-8 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-          {searchInput && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearchInput("");
-                searchRef.current?.focus();
-              }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <X className="h-3.5 w-3.5" strokeWidth={1.5} />
-            </button>
-          )}
-        </div>
+      <MediaLibraryFilterBar
+        filters={filters}
+        searchInput={searchInput}
+        initialYearCounts={initialYearCounts}
+        onSearchInputChange={setSearchInput}
+        onUpdateFilter={updateFilter}
+        onSortChange={handleSortChange}
+        onReset={resetFilters}
+      />
 
-        {/* Type filter */}
-        <Select
-          value={filters.mimeType}
-          onChange={(e) => updateFilter("mimeType", e.target.value)}
-          className="w-auto"
-        >
-          <option value="">所有类型</option>
-          <option value="image/jpeg">JPEG</option>
-          <option value="image/png">PNG</option>
-          <option value="image/webp">WebP</option>
-          <option value="image/gif">GIF</option>
-          <option value="image/svg">SVG</option>
-        </Select>
-
-        {/* Year filter */}
-        <Select
-          value={filters.year}
-          onChange={(e) => updateFilter("year", e.target.value)}
-          className="w-auto"
-        >
-          <option value="">全部年份</option>
-          {initialYearCounts.map(({ year, count }) => (
-            <option key={year} value={String(year)}>
-              {year} ({count})
-            </option>
-          ))}
-        </Select>
-
-        {/* Month filter */}
-        <Select
-          value={filters.month}
-          onChange={(e) => updateFilter("month", e.target.value)}
-          className="w-auto"
-          disabled={!filters.year}
-        >
-          <option value="">全部月份</option>
-          {MONTHS.map((m) => (
-            <option key={m} value={String(m)}>
-              {MONTH_LABELS[m]}
-            </option>
-          ))}
-        </Select>
-
-        {/* Sort */}
-        <Select
-          value={`${filters.sortBy}-${filters.sortOrder}`}
-          onChange={(e) => {
-            const [by, order] = e.target.value.split("-");
-            setFilters((prev) => ({ ...prev, sortBy: by, sortOrder: order }));
-          }}
-          className="w-auto"
-        >
-          <option value="created_at-desc">最新优先</option>
-          <option value="created_at-asc">最早优先</option>
-          <option value="size-desc">最大优先</option>
-          <option value="size-asc">最小优先</option>
-          <option value="filename-asc">名称 A–Z</option>
-        </Select>
-
-        {/* Reset */}
-        {hasActiveFilters(filters) && (
-          <button
-            type="button"
-            onClick={resetFilters}
-            className="inline-flex items-center gap-1 rounded-widget border border-border bg-secondary px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.5} />
-            重置
-          </button>
-        )}
-      </div>
-
-      {/* ── Count ── */}
       <p className="mb-4 text-sm text-muted-foreground">
         {fetching ? "..." : `显示 ${media.length} / ${total}`}
       </p>
 
-      {/* ── Empty state ── */}
       {media.length === 0 && !fetching && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <p className="text-lg font-medium text-foreground">
             {hasActiveFilters(filters) ? "无匹配结果" : "暂无媒体文件"}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {hasActiveFilters(filters)
-              ? "请调整筛选条件。"
-              : "通过文章编辑器上传图片。"}
+            {hasActiveFilters(filters) ? "请调整筛选条件。" : "通过文章编辑器上传图片。"}
           </p>
         </div>
       )}
 
-      {/* ── Grid ── */}
       {media.length > 0 && (
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-2 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-16">
-          {media.map((item) => (
-            <div
-              key={item.id}
-              className="group relative aspect-square overflow-hidden rounded-[var(--radius-sm)] border border-border bg-secondary cursor-pointer"
-              onClick={() => setPreview(item)}
-            >
-              {/* Thumbnail */}
-              {isImageMime(item.mime_type) ? (
-                <Image
-                  src={item.url}
-                  alt={item.alt_text ?? item.filename}
-                  fill
-                  sizes="(max-width: 640px) 33vw, (max-width: 768px) 20vw, (max-width: 1024px) 12.5vw, (max-width: 1280px) 10vw, (max-width: 1536px) 8.3vw, 6.25vw"
-                  className="object-cover transition-transform group-hover:scale-105"
-                />
-              ) : (
-                <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-muted-foreground">
-                  <FileTypeIcon mime={item.mime_type} className="h-8 w-8" />
-                  <span className="max-w-full truncate px-1.5 text-3xs">
-                    {item.filename.split(".").pop()?.toUpperCase()}
-                  </span>
-                </div>
-              )}
-
-              {/* Hover overlay */}
-              <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
-                {/* Info */}
-                <div className="p-1.5">
-                  <p className="truncate text-2xs font-medium text-white leading-tight">
-                    {item.filename}
-                  </p>
-                  <div className="mt-0.5 flex items-center gap-1.5 text-3xs text-white/70">
-                    {item.size != null && (
-                      <span>{formatFileSize(item.size)}</span>
-                    )}
-                    <span>{formatDate(item.created_at)}</span>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="mt-1 flex items-center gap-0.5">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        copyToClipboard(item.url);
-                      }}
-                      className="flex items-center justify-center rounded p-1 text-white/80 hover:text-white hover:bg-white/20 transition-colors"
-                      title="复制链接"
-                    >
-                      <Copy className="h-3 w-3" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        copyToClipboard(
-                          `![${item.filename}](${item.url})`,
-                        );
-                      }}
-                      className="flex items-center justify-center rounded p-1 text-white/80 hover:text-white hover:bg-white/20 transition-colors"
-                      title="复制 Markdown"
-                    >
-                      <FileCode2 className="h-3 w-3" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteTarget(item);
-                      }}
-                      className="ml-auto flex items-center justify-center rounded p-1 text-red-400 hover:text-red-300 hover:bg-white/20 transition-colors"
-                      title="删除"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <MediaLibraryGrid
+          media={media}
+          onPreview={setPreview}
+          onCopy={copyToClipboard}
+          onDelete={setDeleteTarget}
+        />
       )}
 
-      {/* ── Load more ── */}
       {media.length < total && media.length > 0 && (
         <div className="mt-6 flex justify-center">
           <button
@@ -576,93 +221,13 @@ export function MediaLibrary({
         </div>
       )}
 
-      {/* ── Preview lightbox ── */}
-      <ImageLightbox
-        src={preview?.url ?? ""}
-        alt={preview?.alt_text ?? preview?.filename ?? ""}
-        open={!!preview}
+      <MediaLibraryPreview
+        preview={preview}
         onClose={() => setPreview(null)}
-        previewContent={
-          preview && !isImageMime(preview.mime_type)
-            ? (
-              <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
-                <FileTypeIcon mime={preview.mime_type} className="h-16 w-16" />
-                <span className="text-sm font-medium">{preview.filename}</span>
-              </div>
-            )
-            : undefined
-        }
-      >
-        {preview && (
-          <>
-            <h3 className="truncate text-sm font-semibold text-foreground">
-              {preview.filename}
-            </h3>
+        onCopy={copyToClipboard}
+        onDelete={handlePreviewDelete}
+      />
 
-            <div className="flex flex-col gap-2.5 text-xs text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <FileTypeIcon mime={preview.mime_type} className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{preview.mime_type}</span>
-              </div>
-              {preview.size != null && (
-                <div className="flex items-center gap-2">
-                  <HardDrive className="h-3.5 w-3.5 shrink-0" />
-                  <span>{formatFileSize(preview.size)}</span>
-                </div>
-              )}
-              {preview.width != null && preview.height != null && (
-                <div className="flex items-center gap-2">
-                  <RulerIcon className="h-3.5 w-3.5 shrink-0" />
-                  <span>
-                    {preview.width} x {preview.height}
-                  </span>
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <Calendar className="h-3.5 w-3.5 shrink-0" />
-                <span>{formatDate(preview.created_at)}</span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="mt-auto flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => copyToClipboard(preview.url)}
-                className="flex items-center justify-center gap-1.5 rounded-widget border border-border bg-secondary px-3 py-2 text-xs text-foreground transition-colors hover:bg-accent"
-              >
-                <Copy className="h-3.5 w-3.5" />
-                复制链接
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  copyToClipboard(
-                    `![${preview.filename}](${preview.url})`,
-                  )
-                }
-                className="flex items-center justify-center gap-1.5 rounded-widget border border-border bg-secondary px-3 py-2 text-xs text-foreground transition-colors hover:bg-accent"
-              >
-                <FileCode2 className="h-3.5 w-3.5" />
-                复制 Markdown
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setPreview(null);
-                  setDeleteTarget(preview);
-                }}
-                className="flex items-center justify-center gap-1.5 rounded-widget border border-destructive/30 px-3 py-2 text-xs text-destructive transition-colors hover:bg-destructive/10"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                删除
-              </button>
-            </div>
-          </>
-        )}
-      </ImageLightbox>
-
-      {/* ── Delete confirmation ── */}
       <ConfirmDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => {
