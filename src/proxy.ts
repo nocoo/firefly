@@ -131,7 +131,22 @@ function isProtectedApiRoute(pathname: string, method: string): boolean {
 }
 
 export async function proxy(request: NextRequest) {
-  // --- HTTPS redirect: force HTTP → HTTPS in production ---
+  return (
+    httpsRedirect(request) ??
+    skipStaticAssets(request) ??
+    markdownNegotiation(request) ??
+    (await authGuard(request)) ??
+    rateLimitGuard(request) ??
+    (await wordpressRedirect(request)) ??
+    trackAnalyticsAndContinue(request)
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Stage 1: HTTPS redirect (production only, public hosts)
+// ---------------------------------------------------------------------------
+
+function httpsRedirect(request: NextRequest): NextResponse | null {
   // Skip when:
   // - No x-forwarded-proto (direct localhost access)
   // - Already HTTPS
@@ -139,7 +154,8 @@ export async function proxy(request: NextRequest) {
   // - E2E mode explicitly enabled
   const proto = request.headers.get("x-forwarded-proto");
   const host = request.headers.get("host") ?? "";
-  const isLocalhost = host.startsWith("localhost") || host.startsWith("127.0.0.1");
+  const isLocalhost =
+    host.startsWith("localhost") || host.startsWith("127.0.0.1");
   if (
     proto === "http" &&
     process.env.NODE_ENV === "production" &&
@@ -150,139 +166,191 @@ export async function proxy(request: NextRequest) {
     url.protocol = "https";
     return NextResponse.redirect(url, 301);
   }
+  return null;
+}
 
+// ---------------------------------------------------------------------------
+// Stage 2: Short-circuit static assets / _next internals
+// (Exception: /index.php/* paths are WP legacy URLs needing redirect lookup.)
+// ---------------------------------------------------------------------------
+
+function skipStaticAssets(request: NextRequest): NextResponse | null {
   const { pathname } = request.nextUrl;
-  const method = request.method;
-
-  // Skip static assets and Next.js internals.
-  // Exception: /index.php/* paths are WordPress legacy URLs that need redirect
-  // lookup, so they must NOT be short-circuited here.
   if (
     pathname.startsWith("/_next/") ||
     (pathname.includes(".") && !pathname.startsWith("/index.php"))
   ) {
     return NextResponse.next();
   }
+  return null;
+}
 
-  // --- Markdown content negotiation: rewrite blog posts when Accept: text/markdown ---
+// ---------------------------------------------------------------------------
+// Stage 3: Markdown content negotiation (Accept: text/markdown)
+// ---------------------------------------------------------------------------
+
+function markdownNegotiation(request: NextRequest): NextResponse | null {
   const accept = request.headers.get("accept") ?? "";
-  if (accept.includes("text/markdown") && !markdownRejected(accept)) {
-    // Homepage
-    if (pathname === "/" || pathname === "") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/api/md";
-      const response = NextResponse.rewrite(url);
-      response.headers.set("Vary", "Accept");
-      return response;
-    }
-
-    const postMatch = pathname.match(BLOG_POST_ROUTE);
-    if (postMatch?.groups) {
-      const { year, month, slug } = postMatch.groups;
-      const url = request.nextUrl.clone();
-      url.pathname = `/api/md/${year}/${month}/${slug}`;
-      const response = NextResponse.rewrite(url);
-      response.headers.set("Vary", "Accept");
-      return response;
-    }
+  if (!accept.includes("text/markdown") || markdownRejected(accept)) {
+    return null;
   }
 
-  // --- Auth guard: protect admin routes and write API endpoints ---
-  if (isProtectedRoute(pathname) || isProtectedApiRoute(pathname, method)) {
-    // E2E auth bypass — only active when E2E_SKIP_AUTH is explicitly set.
-    // Never set in production; E2E runner injects it for local E2E runs.
-    if (isE2EMode()) {
-      return NextResponse.next();
-    }
+  const { pathname } = request.nextUrl;
 
-    const session = await auth();
-    if (!session) {
-      if (pathname.startsWith("/api/")) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-      const loginUrl = request.nextUrl.clone();
-      loginUrl.pathname = "/login";
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-    return NextResponse.next();
+  // Homepage
+  if (pathname === "/" || pathname === "") {
+    return rewriteWithVary(request, "/api/md");
   }
 
-  // --- Rate limit: public API endpoints (post-auth, only public paths) ---
-  // Protected routes have already returned above, so reaching this point
-  // guarantees we're handling a public request.
-  const rlConfig = getRateLimitConfig(pathname, method);
-  if (rlConfig) {
-    const ip = extractClientIp(request);
-    const result = rateLimit(`${pathname}:${ip}`, rlConfig.limit, rlConfig.windowMs);
-    if (!result.allowed) {
-      const retryAfterSec = Math.max(1, Math.ceil(result.resetMs / 1000));
-      return NextResponse.json(
-        { error: "Too Many Requests" },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(retryAfterSec),
-            "X-RateLimit-Limit": String(rlConfig.limit),
-            "X-RateLimit-Remaining": "0",
-            "X-RateLimit-Reset": String(retryAfterSec),
-          },
-        },
-      );
-    }
+  const postMatch = pathname.match(BLOG_POST_ROUTE);
+  if (postMatch?.groups) {
+    const { year, month, slug } = postMatch.groups;
+    return rewriteWithVary(request, `/api/md/${year}/${month}/${slug}`);
+  }
+  return null;
+}
+
+function rewriteWithVary(
+  request: NextRequest,
+  newPath: string,
+): NextResponse {
+  const url = request.nextUrl.clone();
+  url.pathname = newPath;
+  const response = NextResponse.rewrite(url);
+  response.headers.set("Vary", "Accept");
+  return response;
+}
+
+// ---------------------------------------------------------------------------
+// Stage 4: Auth guard — protect admin routes and write API endpoints
+// ---------------------------------------------------------------------------
+
+async function authGuard(
+  request: NextRequest,
+): Promise<NextResponse | null> {
+  const { pathname } = request.nextUrl;
+  const method = request.method;
+
+  if (!isProtectedRoute(pathname) && !isProtectedApiRoute(pathname, method)) {
+    return null;
   }
 
-  // --- WordPress redirect lookup (public routes only) ---
+  // E2E auth bypass — only active when E2E_SKIP_AUTH is explicitly set.
+  // Never set in production; E2E runner injects it for local E2E runs.
+  if (isE2EMode()) return NextResponse.next();
+
+  const session = await auth();
+  if (!session) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+  return NextResponse.next();
+}
+
+// ---------------------------------------------------------------------------
+// Stage 5: Rate limit public API endpoints (only public paths reach here)
+// ---------------------------------------------------------------------------
+
+function rateLimitGuard(request: NextRequest): NextResponse | null {
+  const { pathname } = request.nextUrl;
+  const rlConfig = getRateLimitConfig(pathname, request.method);
+  if (!rlConfig) return null;
+
+  const ip = extractClientIp(request);
+  const result = rateLimit(
+    `${pathname}:${ip}`,
+    rlConfig.limit,
+    rlConfig.windowMs,
+  );
+  if (result.allowed) return null;
+
+  const retryAfterSec = Math.max(1, Math.ceil(result.resetMs / 1000));
+  return NextResponse.json(
+    { error: "Too Many Requests" },
+    {
+      status: 429,
+      headers: {
+        "Retry-After": String(retryAfterSec),
+        "X-RateLimit-Limit": String(rlConfig.limit),
+        "X-RateLimit-Remaining": "0",
+        "X-RateLimit-Reset": String(retryAfterSec),
+      },
+    },
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Stage 6: WordPress legacy redirect lookup (public routes only)
+// ---------------------------------------------------------------------------
+
+async function wordpressRedirect(
+  request: NextRequest,
+): Promise<NextResponse | null> {
+  const { pathname } = request.nextUrl;
+  if (pathname.startsWith("/api/") || pathname.startsWith("/login")) {
+    return null;
+  }
+
+  // Hard redirect: /feed → /feed.xml (RSS subscribers from WordPress era)
   if (
-    !pathname.startsWith("/api/") &&
-    !pathname.startsWith("/login")
+    pathname === "/feed" ||
+    pathname === "/feed/" ||
+    pathname === "/index.php/feed" ||
+    pathname === "/index.php/feed/"
   ) {
-    // Hard redirect: /feed → /feed.xml (RSS subscribers from WordPress era)
-    if (pathname === "/feed" || pathname === "/feed/" ||
-        pathname === "/index.php/feed" || pathname === "/index.php/feed/") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/feed.xml";
-      return NextResponse.redirect(url, 301);
-    }
-
-    try {
-      const workerUrl = process.env.WORKER_URL;
-      const workerSecret = process.env.WORKER_SECRET;
-
-      if (workerUrl && workerSecret) {
-        let map = redirectCache.get();
-        if (!map) {
-          const db = createDb(workerUrl, workerSecret);
-          const { results } = await db.query<RedirectRow>(
-            "SELECT id, source_path, target_path, status_code FROM redirects",
-          );
-          map = new Map(results.map((r) => [r.source_path, r]));
-          redirectCache.set(map);
-        }
-
-        // Try exact match, then with trailing slash (WP URLs stored with slash)
-        const redirect = map.get(pathname) ?? map.get(pathname + "/");
-        if (redirect) {
-          // Fire-and-forget: increment hit counter
-          const db = createDb(workerUrl, workerSecret);
-          db.execute(
-            "UPDATE redirects SET hit_count = hit_count + 1 WHERE id = ?",
-            [redirect.id],
-          ).catch(() => {
-            // Ignore errors on hit counter update
-          });
-
-          const url = request.nextUrl.clone();
-          url.pathname = redirect.target_path;
-          return NextResponse.redirect(url, redirect.status_code);
-        }
-      }
-    } catch {
-      // If redirect lookup fails, continue normally
-    }
+    const url = request.nextUrl.clone();
+    url.pathname = "/feed.xml";
+    return NextResponse.redirect(url, 301);
   }
 
-  // --- Analytics: track public page views (fire-and-forget) ---
+  try {
+    const workerUrl = process.env.WORKER_URL;
+    const workerSecret = process.env.WORKER_SECRET;
+    if (!workerUrl || !workerSecret) return null;
+
+    let map = redirectCache.get();
+    if (!map) {
+      const db = createDb(workerUrl, workerSecret);
+      const { results } = await db.query<RedirectRow>(
+        "SELECT id, source_path, target_path, status_code FROM redirects",
+      );
+      map = new Map(results.map((r) => [r.source_path, r]));
+      redirectCache.set(map);
+    }
+
+    // Try exact match, then with trailing slash (WP URLs stored with slash)
+    const redirect = map.get(pathname) ?? map.get(pathname + "/");
+    if (!redirect) return null;
+
+    // Fire-and-forget: increment hit counter
+    const db = createDb(workerUrl, workerSecret);
+    db.execute(
+      "UPDATE redirects SET hit_count = hit_count + 1 WHERE id = ?",
+      [redirect.id],
+    ).catch(() => {
+      // Ignore errors on hit counter update
+    });
+
+    const url = request.nextUrl.clone();
+    url.pathname = redirect.target_path;
+    return NextResponse.redirect(url, redirect.status_code);
+  } catch {
+    // If redirect lookup fails, continue normally
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Stage 7: Fire-and-forget analytics + continue
+// ---------------------------------------------------------------------------
+
+function trackAnalyticsAndContinue(request: NextRequest): NextResponse {
+  const { pathname } = request.nextUrl;
   if (
     !pathname.startsWith("/api/") &&
     !pathname.startsWith("/admin") &&
@@ -300,7 +368,6 @@ export async function proxy(request: NextRequest) {
       // Never let analytics break the response
     });
   }
-
   return NextResponse.next();
 }
 
