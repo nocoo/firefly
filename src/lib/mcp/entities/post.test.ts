@@ -272,6 +272,21 @@ describe("post entity handlers", () => {
       expect(createCallArgs).not.toHaveProperty("published_at");
     });
 
+    it("maps ai_agent_id to aiAgentId (mapCreateInput)", async () => {
+      vi.mocked(PostService.create).mockResolvedValue(samplePostWithAgent);
+
+      await handlers.handleCreate(ctx, {
+        title: "New",
+        slug: "new",
+        content: "body",
+        ai_agent_id: "agent-99",
+      });
+
+      const createCallArgs = vi.mocked(PostService.create).mock.calls[0][1];
+      expect(createCallArgs).toHaveProperty("aiAgentId", "agent-99");
+      expect(createCallArgs).not.toHaveProperty("ai_agent_id");
+    });
+
     it("omits tagIds when no tag_ids provided", async () => {
       vi.mocked(PostService.create).mockResolvedValue(samplePostWithAgent);
 
@@ -303,6 +318,20 @@ describe("post entity handlers", () => {
   // ---- update (via PostService) ----
 
   describe("handleUpdate", () => {
+    it("maps ai_agent_id to aiAgentId (mapUpdateInput)", async () => {
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
+      vi.mocked(PostService.update).mockResolvedValue(samplePostWithAgent);
+
+      await handlers.handleUpdate(ctx, {
+        slug: "test-post",
+        ai_agent_id: "agent-x",
+      });
+
+      const callArgs = vi.mocked(PostService.update).mock.calls[0][2];
+      expect(callArgs).toHaveProperty("aiAgentId", "agent-x");
+      expect(callArgs).not.toHaveProperty("ai_agent_id");
+    });
+
     it("maps new_slug to slug and tag_ids to tagIds", async () => {
       vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
       vi.mocked(PostService.update).mockResolvedValue(samplePostWithAgent);
