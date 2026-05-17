@@ -171,6 +171,25 @@ describe("register", () => {
     }
   });
 
+  it("is idempotent when register is called twice (already-running guard)", async () => {
+    const original = process.env.NEXT_RUNTIME;
+    process.env.NEXT_RUNTIME = "nodejs";
+    try {
+      const { register, getMemoryHistory } = await freshModule();
+      vi.spyOn(console, "log").mockImplementation(() => {});
+      await register();
+      const after1 = getMemoryHistory().length;
+      // Second register() must hit the "already running" early return,
+      // so no extra initial sample is appended.
+      await register();
+      const after2 = getMemoryHistory().length;
+      expect(after2).toBe(after1);
+    } finally {
+      if (original === undefined) delete process.env.NEXT_RUNTIME;
+      else process.env.NEXT_RUNTIME = original;
+    }
+  });
+
   it("is a no-op outside Node.js runtime (e.g. Edge)", async () => {
     const original = process.env.NEXT_RUNTIME;
     process.env.NEXT_RUNTIME = "edge";
