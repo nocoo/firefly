@@ -122,6 +122,17 @@ describe("validateMcpToken", () => {
     }
   });
 
+  it("swallows updateLastUsed rejection (best-effort tracking)", async () => {
+    vi.mocked(getValidTokenByHash).mockResolvedValue(sampleToken);
+    vi.mocked(updateLastUsed).mockRejectedValue(new Error("db down"));
+
+    const result = await validateMcpToken(db, "Bearer firefly_at_abc");
+    // Must still report valid — the catch handler swallows the rejection.
+    expect(result.valid).toBe(true);
+    // Allow microtask flush for the catch handler to fire.
+    await new Promise((r) => setTimeout(r, 5));
+  });
+
   it("calls updateLastUsed on valid token", async () => {
     vi.mocked(getValidTokenByHash).mockResolvedValue(sampleToken);
 
