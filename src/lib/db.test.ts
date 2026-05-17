@@ -257,6 +257,52 @@ describe("db.batch", () => {
 });
 
 // ---------------------------------------------------------------------------
+// call()
+// ---------------------------------------------------------------------------
+
+describe("db.call", () => {
+  const url = "https://w.test";
+  const secret = "s";
+  let originalFetch: typeof globalThis.fetch;
+
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+  });
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  it("posts to the given path with the supplied body and returns parsed JSON", async () => {
+    const fetchMock = mockFetch(200, { ok: true, value: 42 });
+    globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch;
+
+    const db = createDb(url, secret);
+    const result = await db.call<{ ok: boolean; value: number }>(
+      "/api/v1/custom",
+      { foo: "bar" },
+    );
+    expect(result).toEqual({ ok: true, value: 42 });
+
+    const [reqUrl, reqInit] = fetchMock.mock.calls[0] as [
+      string,
+      RequestInit,
+    ];
+    expect(reqUrl).toBe(`${url}/api/v1/custom`);
+    expect(JSON.parse(reqInit.body as string)).toEqual({ foo: "bar" });
+  });
+
+  it("throws DbError on non-OK response", async () => {
+    const fetchMock = mockFetch(500, { error: "boom" });
+    globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch;
+
+    const db = createDb(url, secret);
+    await expect(db.call("/api/v1/custom", {})).rejects.toBeInstanceOf(
+      DbError,
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
 // getDb() / resetDb() singleton
 // ---------------------------------------------------------------------------
 
