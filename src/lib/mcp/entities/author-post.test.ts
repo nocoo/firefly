@@ -109,6 +109,13 @@ describe("createAuthorPostEntity", () => {
       ).rejects.toThrow("author_id is required");
     });
 
+    it("requires author_id even when called with no opts (undefined)", async () => {
+      await expect(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (entity.dataLayer.list as any)(db, undefined),
+      ).rejects.toThrow("author_id is required");
+    });
+
     it("validates author exists", async () => {
       vi.mocked(getAiAgentById).mockResolvedValue(null);
 
@@ -133,6 +140,13 @@ describe("createAuthorPostEntity", () => {
     it("requires author_id", async () => {
       await expect(
         entity.dataLayer.getById(db, "post-1", {}),
+      ).rejects.toThrow("author_id is required");
+    });
+
+    it("requires author_id when args is undefined", async () => {
+      await expect(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (entity.dataLayer.getById as any)(db, "post-1", undefined),
       ).rejects.toThrow("author_id is required");
     });
 
