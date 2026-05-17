@@ -33,6 +33,22 @@ describe("trackPageView", () => {
     process.env.WORKER_SECRET = "test-secret";
   });
 
+  it("reuses the cached Db singleton across consecutive calls", async () => {
+    const input = {
+      path: "/",
+      userAgent: null,
+      ip: null,
+      referrer: null,
+      country: null,
+      city: null,
+    };
+    // First call — lazily initialises _trackingDb.
+    await trackPageView(input);
+    // Second call without reset — should hit the `if (_trackingDb)` cache branch.
+    await trackPageView(input);
+    expect(mockRecordPageView).toHaveBeenCalledTimes(2);
+  });
+
   it("calls recordPageView with parsed bot and device info", async () => {
     await trackPageView({
       path: "/2026/03/hello-world",
