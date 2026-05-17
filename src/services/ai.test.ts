@@ -71,6 +71,21 @@ const mockSettings = {
 };
 
 describe("generateExcerpt", () => {
+  it("forwards baseURL and sdkType to resolveAiConfig when set", async () => {
+    mockedGetAiSettings.mockResolvedValue({
+      ...mockSettings,
+      baseURL: "https://custom.example.com",
+      sdkType: "anthropic" as unknown as "",
+    });
+    mockedGenerateText.mockResolvedValue({
+      text: "Summary",
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    await generateExcerpt("T", "C");
+
+    expect(mockedCreateAiModel).toHaveBeenCalled();
+  });
+
   it("returns trimmed AI-generated text", async () => {
     mockedGetAiSettings.mockResolvedValue(mockSettings);
     mockedGenerateText.mockResolvedValue({
