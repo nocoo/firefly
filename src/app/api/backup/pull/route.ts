@@ -29,6 +29,52 @@ export async function HEAD(request: Request) {
   return new Response(null, { status: 200 });
 }
 
+/** Build the multipart FormData payload pushed to Backy. */
+function buildBackupForm(args: {
+  buffer: ArrayBuffer | Uint8Array;
+  fileName: string;
+  tag: string;
+}): FormData {
+  const form = new FormData();
+  const blob = new Blob([new Uint8Array(args.buffer as ArrayBuffer)], {
+    type: "application/gzip",
+  });
+  form.append("file", blob, args.fileName);
+  form.append("environment", getBackyEnvironment());
+  form.append("tag", args.tag);
+  return form;
+}
+
+/** Read response body as JSON if possible, falling back to text or null. */
+async function readErrorBody(res: Response): Promise<unknown> {
+  const text = await res.text().catch(() => "");
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text || null;
+  }
+}
+
+/** Best-effort fetch of remote history (non-critical, 5s timeout). */
+async function fetchBackupHistory(
+  webhookUrl: string,
+  apiKey: string,
+): Promise<BackyHistoryResponse | undefined> {
+  try {
+    const historyRes = await fetch(webhookUrl, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (historyRes.ok) {
+      return (await historyRes.json()) as BackyHistoryResponse;
+    }
+  } catch {
+    // Non-critical
+  }
+  return undefined;
+}
+
 /**
  * POST /api/backup/pull
  *
@@ -78,16 +124,8 @@ export async function POST(request: Request) {
     );
     const fileName = `firefly-backup-${datetime}-${rand}.json.gz`;
 
-    // Push to Backy
-    const form = new FormData();
-    const blob = new Blob([new Uint8Array(buffer)], {
-      type: "application/gzip",
-    });
-    form.append("file", blob, fileName);
-    form.append("environment", getBackyEnvironment());
-    form.append("tag", tag);
-
     // Push to Backy (30s timeout to prevent hanging on network issues)
+    const form = buildBackupForm({ buffer, fileName, tag });
     const res = await fetch(config.webhookUrl, {
       method: "POST",
       headers: { Authorization: `Bearer ${config.apiKey}` },
@@ -98,19 +136,12 @@ export async function POST(request: Request) {
     const durationMs = Date.now() - start;
 
     if (!res.ok) {
-      let body: unknown;
-      const text = await res.text().catch(() => "");
-      try {
-        body = JSON.parse(text);
-      } catch {
-        body = text || null;
-      }
       return jsonResponse(
         {
           error: "Backup push failed",
           durationMs,
           status: res.status,
-          body,
+          body: await readErrorBody(res),
         },
         502,
       );
@@ -119,20 +150,7 @@ export async function POST(request: Request) {
     // Consume response body
     await res.json().catch(() => null);
 
-    // Fetch history inline (non-critical, 5s timeout)
-    let history: BackyHistoryResponse | undefined;
-    try {
-      const historyRes = await fetch(config.webhookUrl, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${config.apiKey}` },
-        signal: AbortSignal.timeout(5_000),
-      });
-      if (historyRes.ok) {
-        history = (await historyRes.json()) as BackyHistoryResponse;
-      }
-    } catch {
-      // Non-critical
-    }
+    const history = await fetchBackupHistory(config.webhookUrl, config.apiKey);
 
     return jsonResponse({
       ok: true,

@@ -1,25 +1,7 @@
 import { getDb } from "@/lib/db";
 import { getSiteSettings } from "@/data/settings";
 
-export async function GET() {
-  const db = getDb();
-  const settings = await getSiteSettings(db);
-  const siteName = settings.siteName;
-
-  const XSL = `<?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet version="2.0"
-  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xmlns:sitemap="http://www.sitemaps.org/schemas/sitemap/0.9">
-
-  <xsl:output method="html" encoding="UTF-8" indent="yes"/>
-
-  <xsl:template match="/">
-    <html lang="en">
-      <head>
-        <meta charset="UTF-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1"/>
-        <title>Sitemap — ${siteName}</title>
-        <style>
+const XSL_STYLES = `
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -67,7 +49,23 @@ export async function GET() {
             th, td { padding: 0.5rem 0.625rem; font-size: 0.75rem; }
             .hide-mobile { display: none; }
           }
-        </style>
+`;
+
+function buildSitemapXsl(siteName: string): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="2.0"
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns:sitemap="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <xsl:output method="html" encoding="UTF-8" indent="yes"/>
+
+  <xsl:template match="/">
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>Sitemap — ${siteName}</title>
+        <style>${XSL_STYLES}</style>
       </head>
       <body>
         <div class="container">
@@ -118,8 +116,14 @@ export async function GET() {
     </html>
   </xsl:template>
 </xsl:stylesheet>`;
+}
 
-  return new Response(XSL, {
+export async function GET() {
+  const db = getDb();
+  const settings = await getSiteSettings(db);
+  const xsl = buildSitemapXsl(settings.siteName);
+
+  return new Response(xsl, {
     headers: {
       "Content-Type": "application/xslt+xml; charset=utf-8",
       "Cache-Control": "public, max-age=86400, s-maxage=86400",
