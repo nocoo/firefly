@@ -407,6 +407,30 @@ describe("getHumanDetail", () => {
     expect(result.topPages).toEqual([]);
   });
 
+  it("maps device rows through the device_type → deviceType shaping callback", async () => {
+    // Mock the 7 parallel queries; only the devices one (3rd) has data.
+    // Order in code: topPages, topReferrers, devices, browsers, os, countries, cities.
+    const empty = { results: [], meta: { changes: 0, duration: 1 } };
+    vi.mocked(db.query)
+      .mockResolvedValueOnce(empty) // topPages
+      .mockResolvedValueOnce(empty) // topReferrers
+      .mockResolvedValueOnce({
+        results: [
+          { device_type: "desktop", count: 10 },
+          { device_type: "mobile", count: 3 },
+        ],
+        meta: { changes: 0, duration: 1 },
+      })
+      .mockResolvedValue(empty); // rest
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+
+    const result = await getHumanDetail(db, 30);
+    expect(result.devices).toEqual([
+      { deviceType: "desktop", count: 10 },
+      { deviceType: "mobile", count: 3 },
+    ]);
+  });
+
   it("returns recent24h=0 when db.firstOrNull returns null (L553 null coalescing)", async () => {
     const emptyResults = { results: [], meta: { changes: 0, duration: 1 } };
     vi.mocked(db.query).mockResolvedValue(emptyResults);
