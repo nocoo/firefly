@@ -117,6 +117,14 @@ describe("db.query", () => {
     await expect(db.query("SELECT 1")).rejects.toThrow("Network error: ECONNREFUSED");
   });
 
+  it("stringifies non-Error fetch rejections in the Network error message", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue("raw string"));
+
+    await expect(db.query("SELECT 1")).rejects.toThrow(
+      "Network error: raw string",
+    );
+  });
+
   it("throws DbError when json() fails on error response", async () => {
     vi.stubGlobal(
       "fetch",
