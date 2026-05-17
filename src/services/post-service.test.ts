@@ -236,6 +236,47 @@ describe("PostService.update", () => {
     expect(refreshAllTagPostCounts).toHaveBeenCalledWith(db);
   });
 
+  it("skips extra tag refresh when status changes AND tagIds explicitly provided", async () => {
+    vi.mocked(getPostById).mockResolvedValue({
+      ...samplePost,
+      status: "draft",
+    });
+    vi.mocked(updatePost).mockResolvedValue(samplePost);
+    vi.mocked(setPostTags).mockResolvedValue();
+    vi.mocked(refreshAllTagPostCounts).mockResolvedValue();
+    vi.mocked(refreshCategoryPostCount).mockResolvedValue();
+
+    await PostService.update(db, "post-1", {
+      status: "published",
+      tagIds: ["tag-1"],
+    });
+
+    // refreshAllTagPostCounts should fire exactly once (from the tagIds branch),
+    // not twice — the statusChanged block must skip its own refresh.
+    expect(refreshAllTagPostCounts).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips extra category refresh when status changes AND category also changes", async () => {
+    vi.mocked(getPostById).mockResolvedValue({
+      ...samplePost,
+      status: "draft",
+      category_id: "cat-old",
+    });
+    vi.mocked(updatePost).mockResolvedValue(samplePost);
+    vi.mocked(refreshCategoryPostCount).mockResolvedValue();
+    vi.mocked(refreshAllTagPostCounts).mockResolvedValue();
+
+    await PostService.update(db, "post-1", {
+      status: "published",
+      categoryId: "cat-new",
+    });
+
+    // The category-changed branch already refreshes both old and new categories.
+    // The statusChanged block must skip its own categoryId refresh — so the
+    // total number of refreshCategoryPostCount calls is 2 (old + new), not 3.
+    expect(refreshCategoryPostCount).toHaveBeenCalledTimes(2);
+  });
+
   it("sets tags when tagIds provided", async () => {
     vi.mocked(getPostById).mockResolvedValue(samplePost);
     vi.mocked(updatePost).mockResolvedValue(samplePost);
