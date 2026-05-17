@@ -1,20 +1,26 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { ArrowLeft, Upload, Loader2, X } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { AiAgent, Category } from "@/models/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { NewAgentModal } from "@/components/admin/ai-agents-manager";
+import { AgentAvatarUploader } from "./ai-agent-avatar-uploader";
 
 interface AiAgentFormProps {
   agent: AiAgent | null;
   categories: Category[];
   initialAvatarUrl: string | null;
+}
+
+interface NewAgentInfo {
+  agentName: string;
+  agentId: string;
+  prompt: string;
 }
 
 function slugify(name: string): string {
@@ -25,7 +31,27 @@ function slugify(name: string): string {
     .slice(0, 64);
 }
 
-export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentFormProps) {
+function buildSaveBody(args: {
+  isNew: boolean;
+  name: string;
+  slug: string;
+  description: string;
+  categoryId: string;
+}): Record<string, unknown> {
+  const { isNew, name, slug, description, categoryId } = args;
+  const base = {
+    name: name.trim(),
+    slug: slug.trim(),
+    description: description.trim() || null,
+  };
+  return isNew ? { ...base, categoryId } : base;
+}
+
+export function AiAgentForm({
+  agent,
+  categories,
+  initialAvatarUrl,
+}: AiAgentFormProps) {
   const router = useRouter();
   const isNew = !agent;
 
@@ -38,15 +64,8 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
 
   // UI state
   const [saving, setSaving] = useState(false);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [newAgent, setNewAgent] = useState<{
-    agentName: string;
-    agentId: string;
-    prompt: string;
-  } | null>(null);
+  const [newAgent, setNewAgent] = useState<NewAgentInfo | null>(null);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(!!agent);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-generate slug from name (only if not manually edited)
   useEffect(() => {
@@ -61,35 +80,19 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
   };
 
   const handleSave = async () => {
-    if (!name.trim()) {
-      toast.error("请输入名称");
-      return;
-    }
-    if (!slug.trim()) {
-      toast.error("请输入标识符");
-      return;
-    }
-    if (!categoryId) {
-      toast.error("请选择分类");
-      return;
-    }
+    if (!name.trim()) return toast.error("请输入名称");
+    if (!slug.trim()) return toast.error("请输入标识符");
+    if (!categoryId) return toast.error("请选择分类");
 
     setSaving(true);
     try {
-      // API expects camelCase fields
-      const body = isNew
-        ? {
-            name: name.trim(),
-            slug: slug.trim(),
-            description: description.trim() || null,
-            categoryId,
-          }
-        : {
-            name: name.trim(),
-            slug: slug.trim(),
-            description: description.trim() || null,
-          };
-
+      const body = buildSaveBody({
+        isNew,
+        name,
+        slug,
+        description,
+        categoryId,
+      });
       const url = isNew
         ? "/api/admin/ai-agents"
         : `/api/admin/ai-agents/${agent.id}`;
@@ -109,7 +112,6 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
       const data = await res.json();
 
       if (isNew) {
-        // API returns { agent: { id, name, ... }, prompt }
         setNewAgent({
           agentName: data.agent.name,
           agentId: data.agent.id,
@@ -121,82 +123,9 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
         router.refresh();
       }
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to save agent",
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to save agent");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !agent) return;
-
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
-      return;
-    }
-
-    setUploadingAvatar(true);
-    try {
-      const formData = new FormData();
-      // API expects field name "file"
-      formData.append("file", file);
-
-      const res = await fetch(`/api/admin/ai-agents/${agent.id}/avatar`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? "Failed to upload avatar");
-      }
-
-      const data = await res.json();
-      // API returns { version, urls } - build URL client-side using shared helper
-      // We need CDN base URL and key prefix from the response URLs
-      const url128 = data.urls?.[128];
-      if (url128) {
-        setAvatarUrl(url128);
-      }
-      toast.success("Avatar uploaded");
-      router.refresh();
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to upload avatar",
-      );
-    } finally {
-      setUploadingAvatar(false);
-      // Clear the input
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-
-  const handleAvatarDelete = async () => {
-    if (!agent) return;
-
-    setUploadingAvatar(true);
-    try {
-      const res = await fetch(`/api/admin/ai-agents/${agent.id}/avatar`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to delete avatar");
-      }
-
-      setAvatarUrl(null);
-      toast.success("Avatar removed");
-      router.refresh();
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to delete avatar",
-      );
-    } finally {
-      setUploadingAvatar(false);
     }
   };
 
@@ -208,7 +137,6 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" onClick={() => router.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -219,16 +147,12 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
         </h1>
       </div>
 
-      {/* Form */}
       <div className="rounded-lg bg-secondary p-6">
         <div className="grid gap-6 md:grid-cols-2">
           {/* Left column: Basic info */}
           <div className="space-y-4">
-            {/* Name */}
             <div>
-              <label className="text-sm font-medium text-foreground">
-                名称 *
-              </label>
+              <label className="text-sm font-medium text-foreground">名称 *</label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -237,11 +161,8 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
               />
             </div>
 
-            {/* Slug */}
             <div>
-              <label className="text-sm font-medium text-foreground">
-                标识符 *
-              </label>
+              <label className="text-sm font-medium text-foreground">标识符 *</label>
               <Input
                 value={slug}
                 onChange={(e) => handleSlugChange(e.target.value)}
@@ -253,20 +174,15 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
               </p>
             </div>
 
-            {/* Category */}
             <div>
-              <label className="text-sm font-medium text-foreground">
-                分类 *
-              </label>
+              <label className="text-sm font-medium text-foreground">分类 *</label>
               <Select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="mt-1"
                 disabled={!isNew}
               >
-                <option value="">
-                  选择分类...
-                </option>
+                <option value="">选择分类...</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
@@ -278,11 +194,8 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
               </p>
             </div>
 
-            {/* Description */}
             <div>
-              <label className="text-sm font-medium text-foreground">
-                描述
-              </label>
+              <label className="text-sm font-medium text-foreground">描述</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -292,7 +205,6 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
               />
             </div>
 
-            {/* Author ID (only for edit, read-only) */}
             {!isNew && agent && (
               <div>
                 <label className="text-sm font-medium text-foreground">
@@ -311,70 +223,16 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
           </div>
 
           {/* Right column: Avatar (only for edit) */}
-          {!isNew && (
-            <div className="space-y-4">
-              <label className="text-sm font-medium text-foreground">
-                头像
-              </label>
-              <div className="flex items-start gap-4">
-                {/* Avatar preview */}
-                <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-lg border border-border bg-secondary">
-                  {avatarUrl ? (
-                    <>
-                      <Image
-                        src={avatarUrl}
-                        alt={name}
-                        fill
-                        className="object-cover"
-                      />
-                      <button
-                        onClick={handleAvatarDelete}
-                        disabled={uploadingAvatar}
-                        className="absolute right-1 top-1 rounded-full bg-zinc-950/50 p-1 text-white hover:bg-zinc-950/70 transition-colors"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </>
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                      <Upload className="h-8 w-8" />
-                    </div>
-                  )}
-                  {uploadingAvatar && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/50">
-                      <Loader2 className="h-8 w-8 animate-spin text-white" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Upload controls */}
-                <div className="space-y-2">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingAvatar}
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    {avatarUrl ? "更换头像" : "上传头像"}
-                  </Button>
-                  <p className="text-xs text-muted-foreground">
-                    正方形图片，至少 256×256 像素
-                  </p>
-                </div>
-              </div>
-            </div>
+          {!isNew && agent && (
+            <AgentAvatarUploader
+              agentId={agent.id}
+              agentName={name}
+              avatarUrl={avatarUrl}
+              onAvatarChange={setAvatarUrl}
+            />
           )}
         </div>
 
-        {/* Actions */}
         <div className="mt-6 flex items-center gap-3 border-t border-border pt-6">
           <Button onClick={handleSave} disabled={saving}>
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -389,7 +247,6 @@ export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentForm
         </div>
       </div>
 
-      {/* New agent modal */}
       {newAgent && (
         <NewAgentModal
           agentName={newAgent.agentName}
