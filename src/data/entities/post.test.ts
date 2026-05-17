@@ -129,6 +129,20 @@ describe("listPosts", () => {
     expect(params).toContain("cat-1");
   });
 
+  it("filters by aiAgentId", async () => {
+    vi.mocked(db.query).mockResolvedValue({
+      results: [],
+      meta: { changes: 0, duration: 1 },
+    });
+    vi.mocked(db.firstOrNull).mockResolvedValue({ count: 0 });
+
+    await listPosts(db, { aiAgentId: "agent-7" });
+
+    const [sql, params] = vi.mocked(db.query).mock.calls[0];
+    expect(sql).toContain("p.ai_agent_id = ?");
+    expect(params).toContain("agent-7");
+  });
+
   it("filters by tagId via subquery", async () => {
     vi.mocked(db.query).mockResolvedValue({
       results: [],
