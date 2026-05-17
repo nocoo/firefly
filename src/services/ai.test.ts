@@ -197,6 +197,21 @@ describe("generateExcerpt", () => {
 });
 
 describe("summarizeUnfurl", () => {
+  it("forwards baseURL and sdkType to resolveAiConfig when set", async () => {
+    mockedGetAiSettings.mockResolvedValue({
+      ...mockSettings,
+      baseURL: "https://custom.example.com",
+      sdkType: "openai" as unknown as "",
+    });
+    mockedGenerateText.mockResolvedValue({
+      text: '{"title":"t","description":"d"}',
+    } as ReturnType<typeof generateText> extends Promise<infer T> ? T : never);
+
+    const result = await summarizeUnfurl("t", "d", "body");
+    expect(result).toEqual({ title: "t", description: "d" });
+    expect(mockedCreateAiModel).toHaveBeenCalled();
+  });
+
   it("returns parsed title and description from JSON output", async () => {
     mockedGetAiSettings.mockResolvedValue(mockSettings);
     mockedGenerateText.mockResolvedValue({
