@@ -2,13 +2,14 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Plus, Trash2 } from "lucide-react";
+import { KeyRound, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { McpToken, McpTokenScope } from "@/models/types";
-import { ConfirmDialog } from "@/components/admin/confirm-dialog";
-import { Select } from "@/components/ui/select";
-import { CopyButton, McpSetupGuide } from "./mcp-tokens-setup-guide";
+import { McpSetupGuide } from "./mcp-tokens-setup-guide";
 import { McpTokensTable } from "./mcp-tokens-table";
+import { McpTokenCreateForm } from "./mcp-tokens-create-form";
+import { McpNewTokenBanner } from "./mcp-tokens-new-banner";
+import { McpTokensConfirmDialogs } from "./mcp-tokens-confirm-dialogs";
 
 interface McpTokensManagerProps {
   tokens: McpToken[];
@@ -147,58 +148,20 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
       )}
 
       {newToken && (
-        <div className="rounded-widget border border-green-500/50 bg-green-500/10 px-4 py-3 text-sm">
-          <p className="font-medium text-green-700 dark:text-green-400 mb-2">
-            令牌创建成功！请立即复制 — 此后将无法再次查看。
-          </p>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 rounded bg-secondary px-2 py-1 text-xs font-mono break-all">
-              {newToken.access_token}
-            </code>
-            <CopyButton text={newToken.access_token} />
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">此令牌仅显示一次，请安全保存。</p>
-          <button
-            onClick={() => setNewToken(null)}
-            className="mt-2 text-xs text-muted-foreground underline hover:text-foreground"
-          >
-            关闭
-          </button>
-        </div>
+        <McpNewTokenBanner
+          accessToken={newToken.access_token}
+          onClose={() => setNewToken(null)}
+        />
       )}
 
-      <div className="flex items-end gap-3">
-        <div className="flex-1">
-          <label className="text-sm font-medium text-foreground">客户端名称</label>
-          <input
-            type="text"
-            value={clientName}
-            onChange={(e) => setClientName(e.target.value)}
-            placeholder="e.g. Claude Code"
-            className="mt-1 w-full rounded-widget border border-border bg-secondary px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-          />
-        </div>
-        <div className="w-32 shrink-0">
-          <label className="text-sm font-medium text-foreground">权限</label>
-          <Select
-            value={createScope}
-            onChange={(e) => setCreateScope(e.target.value as McpTokenScope)}
-            className="mt-1"
-          >
-            <option value="full">完整</option>
-            <option value="author">作者</option>
-          </Select>
-        </div>
-        <button
-          onClick={handleCreate}
-          disabled={creating || !clientName.trim()}
-          className="inline-flex items-center gap-2 rounded-widget bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
-          <Plus className="h-4 w-4" />
-          {creating ? "创建中…" : "创建令牌"}
-        </button>
-      </div>
+      <McpTokenCreateForm
+        clientName={clientName}
+        scope={createScope}
+        creating={creating}
+        onClientNameChange={setClientName}
+        onScopeChange={setCreateScope}
+        onCreate={handleCreate}
+      />
 
       {tokens.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
@@ -227,45 +190,21 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
         </div>
       )}
 
-      <ConfirmDialog
-        open={!!revokeTargetId}
-        onOpenChange={(open) => {
-          if (!open) setRevokeTargetId(null);
-        }}
-        title="确定撤销此令牌吗？使用该令牌的 Agent 将立即失去访问权限。"
-        description=""
-        destructive
-        confirmLabel="撤销"
-        cancelLabel="取消"
-        onConfirm={() => {
+      <McpTokensConfirmDialogs
+        revokeTargetId={revokeTargetId}
+        deleteTargetId={deleteTargetId}
+        showBulkDelete={showBulkDelete}
+        revokedCount={revokedCount}
+        onRevokeCancel={() => setRevokeTargetId(null)}
+        onDeleteCancel={() => setDeleteTargetId(null)}
+        onBulkDeleteOpenChange={setShowBulkDelete}
+        onRevokeConfirm={() => {
           if (revokeTargetId) handleRevoke(revokeTargetId);
         }}
-      />
-
-      <ConfirmDialog
-        open={!!deleteTargetId}
-        onOpenChange={(open) => {
-          if (!open) setDeleteTargetId(null);
-        }}
-        title="确定要永久删除此令牌吗？此操作无法撤销。"
-        description=""
-        destructive
-        confirmLabel="删除"
-        cancelLabel="取消"
-        onConfirm={() => {
+        onDeleteConfirm={() => {
           if (deleteTargetId) handleDelete(deleteTargetId);
         }}
-      />
-
-      <ConfirmDialog
-        open={showBulkDelete}
-        onOpenChange={setShowBulkDelete}
-        title={`永久删除 ${revokedCount} 个已撤销令牌？`}
-        description=""
-        destructive
-        confirmLabel="全部删除"
-        cancelLabel="取消"
-        onConfirm={handleBulkDelete}
+        onBulkDeleteConfirm={handleBulkDelete}
       />
     </div>
   );
