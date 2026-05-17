@@ -456,4 +456,25 @@ describe("renderMarkdown with optimizeImages", () => {
       vi.resetModules();
     }
   });
+
+  it("optimized mode: falls back to no-optimization when R2_PUBLIC_URL is malformed (URL constructor throws)", async () => {
+    // "::" is not a valid absolute URL — `new URL("::")` throws.
+    // The module-load IIFE must catch and produce an empty whitelist.
+    process.env.R2_PUBLIC_URL = "::";
+    vi.resetModules();
+
+    try {
+      const { renderMarkdown: renderWithMalformed } = await import(
+        "./markdown"
+      );
+      const html = renderWithMalformed(`![Alt](${internalUrl})`, opts);
+      // No optimization — the catch path produced an empty OPTIMIZABLE_HOSTS.
+      expect(html).not.toContain("/_next/image");
+      expect(html).not.toContain("srcset");
+      expect(html).toContain(`src="${internalUrl}"`);
+    } finally {
+      process.env.R2_PUBLIC_URL = originalR2PublicUrl;
+      vi.resetModules();
+    }
+  });
 });
