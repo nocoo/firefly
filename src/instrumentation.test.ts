@@ -96,6 +96,16 @@ describe("getMemoryStats", () => {
     expect(getMemoryHistory().length).toBeGreaterThan(1);
   });
 
+  it("trims memoryHistory to MAX_SAMPLES (2880) when buffer overflows", async () => {
+    const { getMemoryStats, getMemoryHistory } = await freshModule();
+    getMemoryStats(); // arms the interval (1 initial sample collected)
+    // Advance enough ticks to exceed MAX_SAMPLES=2880 and trigger the trim branch.
+    vi.advanceTimersByTime(60_000 * 2900);
+    const history = getMemoryHistory();
+    expect(history.length).toBeLessThanOrEqual(2880);
+    expect(history.length).toBeGreaterThan(2000);
+  });
+
   it("warns when heap usage exceeds threshold (and respects throttle)", async () => {
     const { getMemoryStats } = await freshModule();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
