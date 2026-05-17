@@ -669,6 +669,29 @@ describe("fetchGitHubReadmeImage", () => {
     expect(result).toBe("https://raw.githubusercontent.com/owner/repo/main/img.png");
   });
 
+  it("aborts and returns null when README fetch exceeds the 5s timeout", async () => {
+    vi.useFakeTimers();
+    try {
+      // Mock fetch to never resolve, but reject when the abort signal fires.
+      globalThis.fetch = vi.fn((_, init?: RequestInit) => {
+        return new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => {
+            reject(new DOMException("aborted", "AbortError"));
+          });
+        });
+      }) as unknown as typeof fetch;
+
+      const promise = fetchGitHubReadmeImage(
+        "https://github.com/owner/repo",
+      );
+      // Advance past the 5s README fetch timeout (twice — main + master branch).
+      await vi.advanceTimersByTimeAsync(15_000);
+      expect(await promise).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("returns null when fetch throws an error", async () => {
     globalThis.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
 
