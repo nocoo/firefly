@@ -83,6 +83,22 @@ describe("rateLimit", () => {
     expect(c.remaining).toBe(2);
   });
 
+  it("sweep keeps buckets that still have in-window timestamps after partial expiry", () => {
+    // First request at t=0 with a 90s window
+    rateLimit("survivor", 5, 90_000);
+    // Move forward 50s, second request — still well inside the 90s window
+    vi.advanceTimersByTime(50_000);
+    rateLimit("survivor", 5, 90_000);
+    expect(_testHelpers.size()).toBe(1);
+
+    // Move past sweep interval but only the first timestamp falls outside
+    // the 90s window. The while-loop must shift exactly one entry without
+    // deleting the whole bucket. (cutoff at sweep = 111s - 90s = 21s)
+    vi.advanceTimersByTime(61_000); // total elapsed: 111s
+    rateLimit("other", 5, 90_000); // triggers sweep
+    expect(_testHelpers.size()).toBe(2); // survivor + other both alive
+  });
+
   it("auto-cleans expired entries after the sweep interval", () => {
     rateLimit("temp", 5, 1000);
     expect(_testHelpers.size()).toBe(1);
