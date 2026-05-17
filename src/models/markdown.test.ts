@@ -90,6 +90,15 @@ describe("renderMarkdown", () => {
     expect(html).toContain('alt="5D3L2883"');
   });
 
+  it("returns empty filename when URL parsing throws (out-of-range port)", () => {
+    // Port 99999 is out of range — `new URL("https://example.com:99999/x.png")`
+    // throws. filenameFromUrl's catch must produce an empty fallback so the
+    // image still renders with `alt=""`.
+    const html = renderMarkdown("![](https://example.com:99999/x.png)");
+    expect(html).toContain("src=\"https://example.com:99999/x.png\"");
+    expect(html).toContain("alt=\"\"");
+  });
+
   it("uses postTitle when the image URL has no filename", () => {
     const html = renderMarkdown("![](https://example.com/)", { postTitle: "My Post" });
     expect(html).toContain('alt="My Post"');
