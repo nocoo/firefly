@@ -1,17 +1,29 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { Category, Tag, PostWithCategory, PostStatus } from "@/models/types";
+import type { Category, PostStatus, PostWithCategory, Tag } from "@/models/types";
 import { slugify } from "@/models/post";
-import { renderMarkdown } from "@/models/markdown";
-import { ImageUploadZone, type UploadResult } from "./image-upload-zone";
+import { type UploadResult } from "./image-upload-zone";
 import { MarkdownPreview } from "./markdown-preview";
 import { ConfirmDialog } from "./confirm-dialog";
-import { Select } from "@/components/ui/select";
-import { ArticleBody } from "@/components/blog/article-body";
-import { SegmentedControl } from "@/components/ui/segmented-control";
+import { PostContentEditor } from "./post-form-content-editor";
+import {
+  PostExcerptField,
+  PostFeaturedImageField,
+  PostPublishDateField,
+  PostStatusCategoryRow,
+  PostTagsField,
+} from "./post-form-fields";
+import {
+  PostReferenceFields,
+  type ReferenceState,
+} from "./post-form-reference-fields";
+import {
+  buildSubmitBody,
+  epochToDatetimeLocal,
+} from "./post-form-helpers";
 
 interface PostFormProps {
   post?: PostWithCategory & { tagIds: string[] };
@@ -19,55 +31,16 @@ interface PostFormProps {
   tags: Tag[];
 }
 
-export function PostForm({ post, categories, tags }: PostFormProps) {
-  const router = useRouter();
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [title, setTitle] = useState(post?.title ?? "");
-  const [slug, setSlug] = useState(post?.slug ?? "");
-  const [content, setContent] = useState(post?.content ?? "");
-  const [excerpt, setExcerpt] = useState(post?.excerpt ?? "");
-  const [status, setStatus] = useState<PostStatus>(post?.status ?? "draft");
-  const [categoryId, setCategoryId] = useState(post?.category_id ?? "");
-  const [selectedTags, setSelectedTags] = useState<string[]>(
-    post?.tagIds ?? [],
-  );
-  const [featuredImage, setFeaturedImage] = useState(
-    post?.featured_image ?? "",
-  );
-
-  // Published date state — stored as "YYYY-MM-DDTHH:mm" local string for datetime-local input
-  const [publishedAtLocal, setPublishedAtLocal] = useState(() => {
-    if (!post?.published_at) return "";
-    const d = new Date(post.published_at * 1000);
-    // Format as local datetime string for the input
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  });
-
-  // Reference URL state
-  const [referenceUrl, setReferenceUrl] = useState(post?.reference_url ?? "");
-  const [referenceTitle, setReferenceTitle] = useState(post?.reference_title ?? "");
-  const [referenceDescription, setReferenceDescription] = useState(post?.reference_description ?? "");
-  const [referenceImage, setReferenceImage] = useState(post?.reference_image ?? "");
-  const [isUnfurling, setIsUnfurling] = useState(false);
-  const [isEnhancing, setIsEnhancing] = useState(false);
-  const [bodyText, setBodyText] = useState("");
-  const [hasFetched, setHasFetched] = useState(!!(post?.reference_title || post?.reference_description));
-
-  const isEditing = !!post;
-
-  // ── Shared upload state (controlled, shared across mobile/desktop instances) ──
-  const [uploadedMedia, setUploadedMedia] = useState<UploadResult[]>([]);
-
-  // Pre-populate upload list when editing an existing post.
-  // Uses functional updater to merge with any uploads the user may have
-  // started before the preload response arrived (avoids race condition).
+/** Preload media records for an existing post, merging with anything the
+ *  user already uploaded before the response arrived. */
+function useMediaPreload(
+  postId: string | undefined,
+  setMedia: React.Dispatch<React.SetStateAction<UploadResult[]>>,
+) {
   useEffect(() => {
-    if (!post?.id) return;
+    if (!postId) return;
     let cancelled = false;
-    fetch(`/api/media?post_id=${post.id}`)
+    fetch(`/api/media?post_id=${postId}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (cancelled || !data?.media) return;
@@ -78,10 +51,9 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
             filename: m.filename,
           }),
         );
-        setUploadedMedia((prev) => {
+        setMedia((prev) => {
           const existingIds = new Set(prev.map((r) => r.id));
           const newItems = preloaded.filter((r) => !existingIds.has(r.id));
-          // Keep user's recent uploads at the top, append preloaded after
           return [...prev, ...newItems];
         });
       })
@@ -91,103 +63,64 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
     return () => {
       cancelled = true;
     };
-  }, [post?.id]);
+  }, [postId, setMedia]);
+}
 
-  // AI excerpt generation
-  const [isGenerating, setIsGenerating] = useState(false);
-
-  async function handleGenerateExcerpt() {
-    if (!post?.slug) return;
-    setIsGenerating(true);
-    try {
-      const res = await fetch(`/api/posts/${post.slug}/excerpt`, {
-        method: "POST",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        toast.error(data.error || "保存文章失败");
-        return;
-      }
-      const { excerpt: generated } = await res.json();
-      setExcerpt(generated ?? "");
-    } catch {
-      toast.error("保存文章失败");
-    } finally {
-      setIsGenerating(false);
+/** Associate uploaded media with a freshly created post (best-effort). */
+async function associateMedia(
+  mediaIds: string[],
+  postId: string,
+): Promise<void> {
+  try {
+    const res = await fetch("/api/media/associate", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mediaIds, postId }),
+    });
+    if (!res.ok) {
+      toast.error("文章已保存，但未能关联上传的图片。可从媒体库手动关联。");
     }
+  } catch {
+    toast.error("文章已保存，但未能关联上传的图片。可从媒体库手动关联。");
   }
+}
 
-  // Reference URL unfurl
-  async function handleUnfurl() {
-    if (!referenceUrl.trim()) return;
-    setIsUnfurling(true);
-    try {
-      const res = await fetch("/api/unfurl", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: referenceUrl.trim() }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        toast.error(data.error || "保存文章失败");
-        return;
-      }
-      const data = await res.json();
-      setReferenceTitle(data.title ?? "");
-      setReferenceDescription(data.description ?? "");
-      setReferenceImage(data.image ?? "");
-      setBodyText(data.bodyText ?? "");
-      setHasFetched(true);
-    } catch {
-      toast.error("保存文章失败");
-    } finally {
-      setIsUnfurling(false);
-    }
-  }
+export function PostForm({ post, categories, tags }: PostFormProps) {
+  const router = useRouter();
+  const isEditing = !!post;
 
-  function handleClearReference() {
-    setReferenceUrl("");
-    setReferenceTitle("");
-    setReferenceDescription("");
-    setReferenceImage("");
-    setBodyText("");
-    setHasFetched(false);
-  }
-
-  // AI-enhance reference title + description
-  async function handleEnhanceReference() {
-    setIsEnhancing(true);
-    try {
-      const res = await fetch("/api/unfurl/enhance", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: referenceTitle,
-          description: referenceDescription,
-          bodyText,
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        toast.error(data.error || "保存文章失败");
-        return;
-      }
-      const data = await res.json();
-      if (data.title) setReferenceTitle(data.title);
-      if (data.description) setReferenceDescription(data.description);
-    } catch {
-      toast.error("保存文章失败");
-    } finally {
-      setIsEnhancing(false);
-    }
-  }
-
-  // Markdown preview — tab mode for small screens
-  const [previewMode, setPreviewMode] = useState(false);
-  const previewHtml = useMemo(
-    () => (previewMode && content ? renderMarkdown(content) : ""),
-    [previewMode, content],
+  // ── Form state ──
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [title, setTitle] = useState(post?.title ?? "");
+  const [slug, setSlug] = useState(post?.slug ?? "");
+  const [content, setContent] = useState(post?.content ?? "");
+  const [excerpt, setExcerpt] = useState(post?.excerpt ?? "");
+  const [status, setStatus] = useState<PostStatus>(post?.status ?? "draft");
+  const [categoryId, setCategoryId] = useState(post?.category_id ?? "");
+  const [selectedTags, setSelectedTags] = useState<string[]>(post?.tagIds ?? []);
+  const [featuredImage, setFeaturedImage] = useState(post?.featured_image ?? "");
+  const [publishedAtLocal, setPublishedAtLocal] = useState(() =>
+    epochToDatetimeLocal(post?.published_at),
   );
+
+  // Reference state (compound)
+  const [reference, setReference] = useState<ReferenceState>({
+    url: post?.reference_url ?? "",
+    title: post?.reference_title ?? "",
+    description: post?.reference_description ?? "",
+    image: post?.reference_image ?? "",
+  });
+  const [hasFetched, setHasFetched] = useState(
+    !!(post?.reference_title || post?.reference_description),
+  );
+
+  // ── Shared upload state ──
+  const [uploadedMedia, setUploadedMedia] = useState<UploadResult[]>([]);
+  useMediaPreload(post?.id, setUploadedMedia);
+
+  // ── Delete confirmation ──
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const handleTitleChange = (value: string) => {
     setTitle(value);
@@ -205,12 +138,9 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
     );
   };
 
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-
   const handleDelete = async () => {
     if (!post) return;
     setDeleteConfirmOpen(false);
-
     setSaving(true);
     try {
       const res = await fetch(`/api/posts/${post.slug}`, { method: "DELETE" });
@@ -233,45 +163,21 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
     setError(null);
 
     try {
-      // Convert local datetime string to unix epoch (or null/undefined to omit)
-      const publishedAtEpoch = publishedAtLocal
-        ? Math.floor(new Date(publishedAtLocal).getTime() / 1000)
-        : undefined;
-
-      const body = {
+      const body = buildSubmitBody({
+        isEditing,
         title,
         slug,
         content,
-        excerpt: excerpt || undefined,
+        excerpt,
         status,
-        category_id: categoryId || undefined,
-        featured_image: featuredImage || undefined,
-        tag_ids: selectedTags,
-        // published_at: epoch when set, null to clear (edit), undefined to omit (create)
-        published_at: isEditing
-          ? (publishedAtEpoch ?? null)
-          : publishedAtEpoch,
-        ...(isEditing
-          ? {
-              // Update: null clears, undefined omits.
-              // When URL is empty, clear all 4 reference fields to avoid orphan metadata.
-              reference_url: referenceUrl || null,
-              reference_title: referenceUrl ? (referenceTitle || null) : null,
-              reference_description: referenceUrl ? (referenceDescription || null) : null,
-              reference_image: referenceUrl ? (referenceImage || null) : null,
-            }
-          : {
-              // Create: undefined omits (defaults to NULL in DB)
-              reference_url: referenceUrl || undefined,
-              reference_title: referenceUrl ? (referenceTitle || undefined) : undefined,
-              reference_description: referenceUrl ? (referenceDescription || undefined) : undefined,
-              reference_image: referenceUrl ? (referenceImage || undefined) : undefined,
-            }),
-      };
+        categoryId,
+        featuredImage,
+        selectedTags,
+        publishedAtLocal,
+        reference,
+      });
 
-      const url = isEditing
-        ? `/api/posts/${post.slug}`
-        : "/api/posts";
+      const url = isEditing ? `/api/posts/${post.slug}` : "/api/posts";
       const method = isEditing ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -290,19 +196,10 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         const responseData = await res.json();
         const newPostId = responseData.id as string | undefined;
         if (newPostId) {
-          const mediaIds = uploadedMedia.map((r) => r.id);
-          try {
-            const assocRes = await fetch("/api/media/associate", {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ mediaIds, postId: newPostId }),
-            });
-            if (!assocRes.ok) {
-              toast.error("文章已保存，但未能关联上传的图片。可从媒体库手动关联。");
-            }
-          } catch {
-            toast.error("文章已保存，但未能关联上传的图片。可从媒体库手动关联。");
-          }
+          await associateMedia(
+            uploadedMedia.map((r) => r.id),
+            newPostId,
+          );
         }
       }
 
@@ -315,8 +212,6 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
     }
   };
 
-  // ── Shared form fields ──
-
   const editorFields = (
     <>
       {error && (
@@ -327,10 +222,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
 
       {/* Title */}
       <div className="space-y-2">
-        <label
-          htmlFor="title"
-          className="text-sm font-medium text-foreground"
-        >
+        <label htmlFor="title" className="text-sm font-medium text-foreground">
           标题
         </label>
         <input
@@ -346,10 +238,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
 
       {/* Slug */}
       <div className="space-y-2">
-        <label
-          htmlFor="slug"
-          className="text-sm font-medium text-foreground"
-        >
+        <label htmlFor="slug" className="text-sm font-medium text-foreground">
           {"别名"}
         </label>
         <input
@@ -363,301 +252,50 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         />
       </div>
 
-      {/* Content — Write / Preview tabs (mobile) or always-write (desktop) */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label id="content-label" htmlFor="content" className="text-sm font-medium text-foreground">
-            {"内容 (Markdown)"}
-          </label>
-          {/* Tab switcher — hidden on lg+ where preview is side-by-side */}
-          <SegmentedControl
-            options={[
-              { value: "write", label: "编辑" },
-              { value: "preview", label: "预览" },
-            ]}
-            value={previewMode ? "preview" : "write"}
-            onChange={(v) => setPreviewMode(v === "preview")}
-            className="lg:hidden"
-          />
-        </div>
-        {/* Mobile: tab-based preview */}
-        <div className="lg:hidden">
-          {previewMode ? (
-            <div className="blog-preview-theme min-h-[480px] rounded-widget border border-border overflow-y-auto">
-              {content ? (
-                <ArticleBody html={previewHtml} />
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  {"暂无内容可预览"}
-                </p>
-              )}
-            </div>
-          ) : (
-            <>
-              <ImageUploadZone
-                className="mb-2"
-                results={uploadedMedia}
-                onResultsChange={setUploadedMedia}
-                {...(post?.id ? { postId: post.id } : {})}
-              />
-              <textarea
-                id="content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                required
-                rows={20}
-                className="w-full min-h-[480px] rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
-                placeholder={"使用 Markdown 编写文章内容..."}
-              />
-            </>
-          )}
-        </div>
-        {/* Desktop: always show editor (preview is in right panel) */}
-        <div className="hidden lg:block">
-          <ImageUploadZone
-            className="mb-2"
-            results={uploadedMedia}
-            onResultsChange={setUploadedMedia}
-            {...(post?.id ? { postId: post.id } : {})}
-          />
-          <textarea
-            aria-labelledby="content-label"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            required
-            rows={20}
-            className="w-full min-h-[480px] rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
-            placeholder={"使用 Markdown 编写文章内容..."}
-          />
-        </div>
-      </div>
+      <PostContentEditor
+        content={content}
+        onContentChange={setContent}
+        uploadedMedia={uploadedMedia}
+        onUploadedMediaChange={setUploadedMedia}
+        {...(post?.id ? { postId: post.id } : {})}
+      />
 
-      {/* Excerpt */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <label
-            htmlFor="excerpt"
-            className="text-sm font-medium text-foreground"
-          >
-            {"摘要"}{" "}
-            <span className="text-muted-foreground font-normal">
-              {"（可选，留空则自动生成）"}
-            </span>
-          </label>
-          {isEditing && (
-            <button
-              type="button"
-              onClick={handleGenerateExcerpt}
-              disabled={isGenerating}
-              className="text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
-            >
-              {isGenerating
-                ? "生成中..."
-                : "✨ AI 生成"}
-            </button>
-          )}
-        </div>
-        <textarea
-          id="excerpt"
-          value={excerpt}
-          onChange={(e) => setExcerpt(e.target.value)}
-          rows={3}
-          className="w-full rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder={"文章的简要描述..."}
-        />
-      </div>
+      <PostExcerptField
+        excerpt={excerpt}
+        onExcerptChange={setExcerpt}
+        {...(isEditing && post ? { postSlug: post.slug } : {})}
+      />
 
-      {/* Row: Status + Category */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        {/* Status */}
-        <div className="space-y-2">
-          <label
-            htmlFor="status"
-            className="text-sm font-medium text-foreground"
-          >
-            {"状态"}
-          </label>
-          <Select
-            id="status"
-            value={status}
-            onChange={(e) => setStatus(e.target.value as PostStatus)}
-          >
-            <option value="draft">{"草稿"}</option>
-            <option value="published">{"已发布"}</option>
-            <option value="private">{"私密"}</option>
-            <option value="archived">{"已归档"}</option>
-          </Select>
-        </div>
+      <PostStatusCategoryRow
+        status={status}
+        onStatusChange={setStatus}
+        categoryId={categoryId}
+        onCategoryChange={setCategoryId}
+        categories={categories}
+      />
 
-        {/* Category */}
-        <div className="space-y-2">
-          <label
-            htmlFor="category"
-            className="text-sm font-medium text-foreground"
-          >
-            {"分类"}
-          </label>
-          <Select
-            id="category"
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-          >
-            <option value="">{"无分类"}</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </Select>
-        </div>
-      </div>
+      <PostPublishDateField
+        value={publishedAtLocal}
+        onChange={setPublishedAtLocal}
+      />
 
-      {/* Publish date */}
-      <div className="space-y-2">
-        <label
-          htmlFor="published_at"
-          className="text-sm font-medium text-foreground"
-        >
-          {"发布日期"}{" "}
-          <span className="text-muted-foreground font-normal">
-            {"（留空则首次发布时自动设置）"}
-          </span>
-        </label>
-        <input
-          id="published_at"
-          type="datetime-local"
-          value={publishedAtLocal}
-          onChange={(e) => setPublishedAtLocal(e.target.value)}
-          className="w-full sm:w-auto rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-      </div>
+      <PostTagsField
+        tags={tags}
+        selectedTags={selectedTags}
+        onToggleTag={toggleTag}
+      />
 
-      {/* Tags */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">{"标签"}</label>
-        <div className="flex flex-wrap gap-2">
-          {tags.map((tag) => (
-            <button
-              key={tag.id}
-              type="button"
-              onClick={() => toggleTag(tag.id)}
-              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                selectedTags.includes(tag.id)
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-muted-foreground hover:bg-accent hover:text-foreground"
-              }`}
-            >
-              {tag.name}
-            </button>
-          ))}
-          {tags.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              {"暂无标签"}
-            </p>
-          )}
-        </div>
-      </div>
+      <PostFeaturedImageField
+        value={featuredImage}
+        onChange={setFeaturedImage}
+      />
 
-      {/* Featured Image */}
-      <div className="space-y-2">
-        <label
-          htmlFor="featured_image"
-          className="text-sm font-medium text-foreground"
-        >
-          {"封面图片 URL"}{" "}
-          <span className="text-muted-foreground font-normal">{"（可选）"}</span>
-        </label>
-        <input
-          id="featured_image"
-          type="url"
-          value={featuredImage}
-          onChange={(e) => setFeaturedImage(e.target.value)}
-          className="w-full rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="https://..."
-        />
-      </div>
-
-      {/* Reference URL */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          {"引用链接"}{" "}
-          <span className="text-muted-foreground font-normal">{"（可选）"}</span>
-        </label>
-        <div className="flex gap-2">
-          <input
-            type="url"
-            value={referenceUrl}
-            onChange={(e) => setReferenceUrl(e.target.value)}
-            className="flex-1 rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="https://github.com/..."
-          />
-          <button
-            type="button"
-            onClick={handleUnfurl}
-            disabled={isUnfurling || !referenceUrl.trim()}
-            className="inline-flex items-center rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent disabled:opacity-50"
-          >
-            {isUnfurling
-              ? "获取中..."
-              : hasFetched
-                ? "重新获取"
-                : "获取"}
-          </button>
-          {(referenceUrl || hasFetched) && (
-            <button
-              type="button"
-              onClick={handleClearReference}
-              className="inline-flex items-center rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
-            >
-              {"清除"}
-            </button>
-          )}
-        </div>
-        {hasFetched && (
-          <div className="space-y-2 rounded-widget border border-border p-3">
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <label className="text-xs text-muted-foreground">{"标题"}</label>
-                <button
-                  type="button"
-                  onClick={handleEnhanceReference}
-                  disabled={isEnhancing}
-                  className="text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
-                >
-                  {isEnhancing
-                    ? "翻译中..."
-                    : "✨ AI 翻译"}
-                </button>
-              </div>
-              <input
-                type="text"
-                value={referenceTitle}
-                onChange={(e) => setReferenceTitle(e.target.value)}
-                className="w-full rounded-widget border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">{"描述"}</label>
-              <textarea
-                value={referenceDescription}
-                onChange={(e) => setReferenceDescription(e.target.value)}
-                rows={2}
-                className="w-full rounded-widget border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-            {referenceImage && (
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">{"图片"}</label>
-                <img
-                  src={referenceImage}
-                  alt={referenceTitle || "Reference"}
-                  className="h-20 w-auto rounded object-cover"
-                />
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      <PostReferenceFields
+        state={reference}
+        hasFetched={hasFetched}
+        onChange={setReference}
+        onHasFetchedChange={setHasFetched}
+      />
 
       {/* Actions */}
       <div className="flex items-center gap-3 pt-4 border-t border-border">
@@ -687,7 +325,6 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         )}
       </div>
 
-      {/* Delete confirmation dialog */}
       {isEditing && (
         <ConfirmDialog
           open={deleteConfirmOpen}
@@ -705,7 +342,6 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
 
   return (
     <div className="flex gap-6">
-      {/* Left: Editor form */}
       <form
         onSubmit={handleSubmit}
         className="w-full space-y-6 lg:w-1/2 lg:min-w-0"
@@ -714,17 +350,16 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       </form>
 
       {/* Right: Live preview — visible only on lg+ */}
-      {/* height = 100vh - header(--header-height) - shell-padding(12px) - content-padding(40px) */}
       <div className="sticky top-0 hidden h-[calc(100vh-var(--header-height)-12px-40px)] w-1/2 min-w-0 overflow-y-auto rounded-widget border border-border lg:block">
         <MarkdownPreview
           title={title}
           excerpt={excerpt}
           content={content}
           featuredImage={featuredImage}
-          referenceUrl={referenceUrl}
-          referenceTitle={referenceTitle}
-          referenceDescription={referenceDescription}
-          referenceImage={referenceImage}
+          referenceUrl={reference.url}
+          referenceTitle={reference.title}
+          referenceDescription={reference.description}
+          referenceImage={reference.image}
         />
       </div>
     </div>
