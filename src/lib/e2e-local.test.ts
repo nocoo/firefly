@@ -90,6 +90,16 @@ describe("resolveLocalR2Path", () => {
     expect(out).toBe("/tmp/firefly-e2e-r2/uploads/img.png");
   });
 
+  it("throws when target would escape the root (e.g. localDir='/' edge case)", () => {
+    // When localDir resolves to '/', the guard's prefix check (`root + "/"` = '//')
+    // fails for every legitimate target (e.g. '/foo'), so the escapes-root branch
+    // fires. This documents the defensive guard's behaviour on degenerate roots.
+    process.env.E2E_R2_LOCAL_DIR = "/";
+    expect(() => resolveLocalR2Path("foo")).toThrow(
+      "resolved path escapes local R2 root",
+    );
+  });
+
   it("allows empty key resolving exactly to the root (target === root)", () => {
     // Empty key normalises to '.', which resolves to the root itself.
     // The escapes-root guard's right operand (target !== root) must be false
