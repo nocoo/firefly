@@ -176,6 +176,13 @@ describe("createAuthorPostEntity", () => {
       ).rejects.toThrow("author_id is required");
     });
 
+    it("requires author_id when args is undefined", async () => {
+      await expect(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (entity.dataLayer.getBySlug as any)(db, "test-post", undefined),
+      ).rejects.toThrow("author_id is required");
+    });
+
     it("returns post if owned by author", async () => {
       vi.mocked(getAiAgentById).mockResolvedValue(sampleAgent);
       vi.mocked(getPostBySlug).mockResolvedValue(samplePost);
@@ -303,6 +310,13 @@ describe("createAuthorPostEntity", () => {
     it("requires author_id", async () => {
       await expect(
         entity.dataLayer.delete(db, "post-1", {}),
+      ).rejects.toThrow("author_id is required");
+    });
+
+    it("requires author_id when args is undefined", async () => {
+      await expect(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (entity.dataLayer.delete as any)(db, "post-1", undefined),
       ).rejects.toThrow("author_id is required");
     });
 
