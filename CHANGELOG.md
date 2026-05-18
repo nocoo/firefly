@@ -1,5 +1,67 @@
 # Changelog
 
+## v2.6.3 (2026-05-18)
+
+- chore: stop tracking autoresearch.jsonl (ralph-loop local research log)
+- Split McpTokensManager (242 LOC) into create-form + new-banner + confirm-dialogs
+- Split AiSettingsForm (273 LOC) into provider-card + custom-card + form
+- Cover e2e-local escapes-root throw via degenerate localDir='/' — 100% lines + funcs
+- Cover analytics-human device map callback — functions 100% across codebase
+- Cover markdown filenameFromUrl catch via out-of-range port — lines 99.87
+- Cover markdown.ts OPTIMIZABLE_HOSTS catch branch — lines 99.81
+- Cover unfurl-fetch abort-on-timeout callback — funcs 99.75
+- Cover unfurl-github abort-on-timeout callback — funcs 99.51, lines 99.75
+- Cover resolveLocalR2Path target===root branch — branches 99.51 (>99.5%)
+- Cover IPv6 unspecified address (::) branch in validateUrl — branches 99.42
+- Cover post-service statusChanged + tagIds/categoryChanged branches — branches 99.34
+- Cover instrumentation register() idempotency guard — branches 99.18
+- Cover instrumentation NODE_ENV=development branch (stubEnv) — branches 99.10
+- Cover tracking.ts singleton cache-hit branch — branches 99.02 (>99%)
+- Cover ai_agent_id mapping branch in mcp post entity — branches 98.93
+- Cover undefined-args branches for getBySlug+delete in author-post — branches 98.77
+- Cover db.ts non-Error fetch rejection branch — branches 98.61
+- Cover listPosts aiAgentId filter branch — branches 98.53
+- Cover orphan-reference auto-clear inner branches in updatePost — branches 98.45
+- docs(autoresearch): summarize complexity refactor + coverage session
+- test: cover server-only modules (e2e-local, backup.server) — coverage +1%
+- Cover memoryHistory circular-buffer trim branch — branches 97.30
+- Cover non-Error DNS rejection branch in resolveAndValidateHostname
+- Cover rate-limit sweep partial-expiry branch — branches 97.14
+- Cover updateLastUsed rejection swallow handler in validateMcpToken
+- test: cover row-shaping callback in getAnalyticsDailyTrend
+- Add db.call tests — lines 98.83, funcs 98.06
+- Cover baseURL/sdkType in summarizeUnfurl — branches 97.06
+- Cover undefined-args branches in author-post dataLayer — branches 96.90
+- Cover baseURL/sdkType truthy branches in generateExcerpt — branches 96.73
+- Add tests for getProviderConfig (services/ai.ts) — branches +0.16
+- Decompose remaining non-JSX long functions (sitemap.xsl, backup/pull)
+- Decompose PUT /api/settings (130) into parseSettingsBody + validators
+- Decompose proxy() and createAuthorPostEntity into smaller helpers
+- Split post-form.tsx (732) into 5 modules — all files now &lt;400 lines
+- refactor(admin): split ai-agent-form.tsx (403) into avatar-uploader + form
+- Split taxonomy-manager.tsx (410) into form + table + manager
+- Split ai-agents-manager.tsx (452) into helpers + table + manager
+- Split system-monitor-dashboard.tsx (454) into helpers + chart + dashboard
+- Split site-identity-form.tsx (471) into logo + social + form
+- Split backup-page.tsx (524) into helpers + push-card + pull-card
+- Split mcp-tokens-manager.tsx (546) into setup-guide + table + manager
+- Split media-library.tsx (679) into 6 modules; extract useMediaUpload hook
+- Split unfurl.ts (468) into 6 modules; decompose fetchHtml + extractOgMetadata helpers
+- refactor(analytics): split analytics.ts (785) into 6 modules
+- Split admin-posts-client.tsx (849) into 6 cohesive component files
+- Split post.ts (869) into 7 modules + barrel; decompose updatePost
+- Baseline: 13 files over 400 lines, max 869 (post.ts), coverage 98.61%/96.44%/96.99%
+- ci(security): bump base-ci to v2026.4 with extra-install-dirs=worker (Shai-Hulud defense)
+- Merge pull request #69 from nocoo/fix/osv-fast-xml-builder
+- chore(deps): add overrides for fast-xml-builder/fast-uri (GHSA-5wm8/45c6, GHSA-q3j6/v39h)
+- Merge pull request #68 from nocoo/fix/upgrade-next-1626
+- chore(deps): upgrade next to 16.2.6
+- fix(deps): upgrade hono to 4.12.16+ (GHSA-69xw, GHSA-9vqf)
+- chore(deps): override ip-address>=10.1.1 to fix GHSA-v2v4-37r5-5v8g
+- docs: update test references from bun test to vitest
+- fix(ci): restore e2e and worker vitest configs removed in error
+
+
 ## v2.6.2 (2026-05-05)
 
 - fix: address review feedback — config cleanup, env visibility, SQL splitter
