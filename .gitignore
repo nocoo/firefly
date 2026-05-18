@@ -33,3 +33,6 @@ yarn.lock
 # Claude Code worktrees
 .claude/worktrees/
 src/lib/cache-handler.js
+
+# Ralph-loop research log (locally generated)
+autoresearch.jsonl
