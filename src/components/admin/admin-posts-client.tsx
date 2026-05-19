@@ -128,7 +128,7 @@ export function AdminPostsClient({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    setSelectedIds(new Set()); // eslint-disable-line react-hooks/set-state-in-effect
+    setSelectedIds(new Set());
   }, [currentParams, currentPage]);
 
   const toggleSelect = useCallback((id: string) => {
