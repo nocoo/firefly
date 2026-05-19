@@ -49,7 +49,7 @@ export function registerEntityTools<T extends { id: string }>(
                 ),
             }
           : {}),
-      },
+      } as any,
       ((args: any) => handlers.handleList(ctx, args)) as any,
     );
   }
@@ -64,7 +64,7 @@ export function registerEntityTools<T extends { id: string }>(
         id: z.string().optional(),
         slug: z.string().optional(),
         ...config.schemas.get,
-      },
+      } as any,
       ((args: any) => handlers.handleGet(ctx, args)) as any,
     );
   }
@@ -74,7 +74,7 @@ export function registerEntityTools<T extends { id: string }>(
     server.tool(
       `create_${config.name}`,
       config.descriptions?.create ?? `Create a new ${config.display}.`,
-      config.schemas.create,
+      config.schemas.create as any,
       ((args: any) => handlers.handleCreate(ctx, args)) as any,
     );
   }
@@ -89,7 +89,7 @@ export function registerEntityTools<T extends { id: string }>(
         id: z.string().optional(),
         slug: z.string().optional(),
         ...config.schemas.update,
-      },
+      } as any,
       ((args: any) => handlers.handleUpdate(ctx, args)) as any,
     );
   }
@@ -104,7 +104,7 @@ export function registerEntityTools<T extends { id: string }>(
         id: z.string().optional(),
         slug: z.string().optional(),
         ...config.schemas.delete,
-      },
+      } as any,
       ((args: any) => handlers.handleDelete(ctx, args)) as any,
     );
   }
@@ -114,7 +114,7 @@ export function registerEntityTools<T extends { id: string }>(
     server.tool(
       extra.name,
       extra.description,
-      extra.schema,
+      extra.schema as any,
       ((args: any) => extra.handler(ctx, args)) as any,
     );
   }

@@ -55,7 +55,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
   const wasTablet = useRef(isTablet);
   useEffect(() => {
     if (isTablet && !wasTablet.current) {
-      setCollapsed(true); // eslint-disable-line react-hooks/set-state-in-effect
+      setCollapsed(true);
     }
     wasTablet.current = isTablet;
   }, [isTablet]);
@@ -74,7 +74,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
   useEffect(() => {
     if (prevPathname.current !== pathname) {
       prevPathname.current = pathname;
-      setMobileOpen(false); // eslint-disable-line react-hooks/set-state-in-effect
+      setMobileOpen(false);
     }
   }, [pathname]);
 
