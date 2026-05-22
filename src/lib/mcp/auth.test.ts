@@ -129,8 +129,8 @@ describe("validateMcpToken", () => {
     const result = await validateMcpToken(db, "Bearer firefly_at_abc");
     // Must still report valid — the catch handler swallows the rejection.
     expect(result.valid).toBe(true);
-    // Allow microtask flush for the catch handler to fire.
-    await new Promise((r) => setTimeout(r, 5));
+    // Flush microtask queue so the .catch() handler fires.
+    await vi.waitFor(() => expect(updateLastUsed).toHaveBeenCalled());
   });
 
   it("calls updateLastUsed on valid token", async () => {
@@ -138,9 +138,7 @@ describe("validateMcpToken", () => {
 
     await validateMcpToken(db, "Bearer firefly_at_abc");
 
-    // Allow fire-and-forget to complete
-    await new Promise((r) => setTimeout(r, 10));
-    expect(updateLastUsed).toHaveBeenCalledWith(db, "tok-1");
+    await vi.waitFor(() => expect(updateLastUsed).toHaveBeenCalledWith(db, "tok-1"));
   });
 
   it("hashes token before lookup", async () => {
