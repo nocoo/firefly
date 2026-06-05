@@ -1,5 +1,19 @@
 # Changelog
 
+## v2.6.4 (2026-06-05)
+
+- fix(security): bump vitest 3→4 in worker (#81)
+- fix(security): bump wrangler in worker to fix transitive ws/brace-expansion CVEs (#80)
+- fix(security): bump hono 4.12.19→4.12.23 (#79)
+- fix(security): remove unsafe-eval from CSP script-src
+- fix(test): replace setTimeout with vi.waitFor in auth tests
+- Merge pull request #78 from nocoo/chore/next-16.2.7
+- chore(deps): bump qs to 6.15.2 (GHSA-q8mj-m7cp-5q26)
+- chore(deps): upgrade next to 16.2.7
+- Merge pull request #71 from nocoo/fix/cve-deps
+- fix: update brace-expansion and ws to fix CVEs
+
+
 ## v2.6.3 (2026-05-18)
 
 - chore: stop tracking autoresearch.jsonl (ralph-loop local research log)
