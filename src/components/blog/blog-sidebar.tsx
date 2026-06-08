@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import Link from "next/link";
-import { Github, Facebook, Linkedin, Mail, FileUser, Folder, Tags, Archive } from "lucide-react";
+import { Mail, FileUser, Folder, Tags, Archive } from "lucide-react";
+import { Github, Facebook, Linkedin } from "@/components/icons/brand";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/entities/post";
 import type { SocialLink } from "@/data/settings";

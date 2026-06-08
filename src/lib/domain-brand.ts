@@ -2,7 +2,8 @@
 // Domain brand mapping — icon + color for known domains
 // ---------------------------------------------------------------------------
 
-import { Github, Twitter, Youtube, type LucideIcon } from "lucide-react";
+import { type LucideIcon } from "lucide-react";
+import { Github, Twitter, Youtube } from "@/components/icons/brand";
 
 export interface DomainBrand {
   Icon: LucideIcon;
