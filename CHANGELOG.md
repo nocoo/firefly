@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.6.5 (2026-06-08)
+
+- chore(deps): bump 4 major versions (lucide-react, marked, lint-staged, typescript)
+- chore(deps): bump worker @cloudflare/workers-types 4.20260605.1 → 4.20260608.1
+- chore(deps): bump 13 minor/patch dependencies
+
+
 ## v2.6.4 (2026-06-05)
 
 - fix(security): bump vitest 3→4 in worker (#81)
