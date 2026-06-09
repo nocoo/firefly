@@ -465,3 +465,54 @@ hr.blog-hr::before, hr.blog-hr::after,
   opacity: 0.85;
 }
 hr.blog-hr::before, .blog-content hr::before { left: -4px; }
+
+/* ─── Article TOC (sticky right rail on lg+) ───
+ * Container is hidden on small screens; the post layout adds it as a flex
+ * sibling so the article column stays at its existing max width.            */
+.article-toc {
+  display: none;
+}
+@media (min-width: 1280px) {
+  .article-toc {
+    display: block;
+    position: sticky;
+    top: 1.5rem;
+    width: 14rem;
+    max-height: calc(100vh - 3rem);
+    overflow-y: auto;
+    padding-left: 1.5rem;
+    border-left: 1px solid var(--blog-separator);
+    flex-shrink: 0;
+  }
+}
+.article-toc-heading {
+  font-family: var(--ff-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--blog-text);
+  margin: 0 0 0.75rem;
+}
+.article-toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.article-toc-list li {
+  margin: 0.25em 0;
+  line-height: 1.4;
+}
+.article-toc-list li[data-depth="3"] { padding-left: 1em; }
+.article-toc-list a {
+  font-family: var(--ff-sans);
+  font-size: 0.8125rem;
+  color: var(--blog-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.article-toc-list a:hover { color: var(--blog-text); }
+.article-toc-list li[data-active] a {
+  color: var(--blog-accent);
+  font-weight: 500;
+}

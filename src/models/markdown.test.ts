@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderMarkdown } from "./markdown";
+import { renderMarkdown, extractToc } from "./markdown";
 
 const originalR2PublicUrl = process.env.R2_PUBLIC_URL;
 
@@ -157,6 +157,44 @@ describe("renderMarkdown", () => {
     const html = renderMarkdown(md);
     expect(html).toContain('class="blog-code-block"');
     expect(html).not.toContain("data-lang=");
+  });
+
+  // --- TOC extraction ---
+  it("extractToc returns h2 + h3 entries with stable ids", () => {
+    const md = `# Title (h1, ignored)\n\n## Section One\n\n### Sub A\n\n## Section Two\n\nbody`;
+    const toc = extractToc(md);
+    expect(toc.map((e) => [e.depth, e.text, e.id])).toEqual([
+      [2, "Section One", "section-one"],
+      [3, "Sub A", "sub-a"],
+      [2, "Section Two", "section-two"],
+    ]);
+  });
+
+  it("extractToc skips headings inside fenced code blocks", () => {
+    const md = "## Real\n\n```\n## Fake\n```\n\n## Also Real";
+    const toc = extractToc(md);
+    expect(toc.map((e) => e.text)).toEqual(["Real", "Also Real"]);
+  });
+
+  it("extractToc strips inline markdown in heading text", () => {
+    const md = "## Hello `code` and **bold** [link](http://x)";
+    const toc = extractToc(md);
+    expect(toc[0].text).toBe("Hello code and bold link");
+    expect(toc[0].id).toBe("hello-code-and-bold-link");
+  });
+
+  it("extractToc handles CJK headings (matches heading renderer slug rule)", () => {
+    const md = "## 我的章节\n\n### 子节 一";
+    const toc = extractToc(md);
+    expect(toc).toEqual([
+      { depth: 2, text: "我的章节", id: "我的章节" },
+      { depth: 3, text: "子节 一", id: "子节-一" },
+    ]);
+  });
+
+  it("extractToc returns [] for empty / heading-less input", () => {
+    expect(extractToc("")).toEqual([]);
+    expect(extractToc("just paragraphs\n\nmore text")).toEqual([]);
   });
 
   // --- Lists ---

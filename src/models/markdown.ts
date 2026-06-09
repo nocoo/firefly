@@ -258,3 +258,76 @@ export function renderMarkdown(
   const result = getMarked(optimize, options?.postTitle).parse(markdown, { async: false });
   return (typeof result === "string" ? result : "").trim();
 }
+
+// ---------------------------------------------------------------------------
+// Table of Contents
+// ---------------------------------------------------------------------------
+
+export interface TocEntry {
+  /** Heading depth: 2 for `##`, 3 for `###`. We skip h1 (the post title) and
+   *  h4+ (too deep to be useful in a sidebar TOC). */
+  depth: 2 | 3;
+  /** Plain-text title with markdown stripped. */
+  text: string;
+  /** Anchor id matching the rendered `<h2 id>` / `<h3 id>` produced by the
+   *  same slug rule used by `createRenderer.heading()`. */
+  id: string;
+}
+
+const TOC_SLUG_RE = /[^a-z0-9一-鿿]+/g;
+
+/** Slugify a heading title using the same rule as the heading renderer above
+ *  so TOC anchors and rendered ids stay in lockstep. */
+function slugifyHeading(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/<[^>]+>/g, "")
+    .replace(TOC_SLUG_RE, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/** Strip inline markdown emphasis / code / links to plain text for the TOC
+ *  label. Keep this conservative — we render the label as text, not HTML. */
+function stripInlineMarkdown(text: string): string {
+  return text
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/_([^_]+)_/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/<[^>]+>/g, "");
+}
+
+/**
+ * Extract the table of contents from markdown source — h2 and h3 only.
+ *
+ * Scans line-by-line for ATX headings (`## Foo`, `### Bar`). Setext (==/--
+ * underline) is not used in this codebase, so we don't bother with it.
+ * Skips fenced code blocks so a `### inside JS` example doesn't bleed into
+ * the TOC.
+ */
+export function extractToc(markdown: string): TocEntry[] {
+  if (!markdown) return [];
+
+  const entries: TocEntry[] = [];
+  const lines = markdown.split("\n");
+  let inFence = false;
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    if (line.startsWith("```") || line.startsWith("~~~")) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) continue;
+    const m = line.match(/^(#{2,3})\s+(.+?)\s*#*\s*$/);
+    if (!m) continue;
+    const depth = m[1].length === 2 ? 2 : 3;
+    const text = stripInlineMarkdown(m[2]).trim();
+    if (!text) continue;
+    const id = slugifyHeading(text);
+    if (!id) continue;
+    entries.push({ depth, text, id });
+  }
+  return entries;
+}

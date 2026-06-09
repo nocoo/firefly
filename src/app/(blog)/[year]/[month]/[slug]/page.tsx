@@ -9,7 +9,7 @@ import { getSiteSettings } from "@/data/settings";
 import { isAdminSession } from "@/lib/auth";
 import { listCommentsByPost, buildCommentTree } from "@/data/entities/comment";
 import { FeaturedImage } from "@/components/blog/featured-image";
-import { renderMarkdown } from "@/models/markdown";
+import { renderMarkdown, extractToc } from "@/models/markdown";
 import { Calendar, Folder, Clock, SquarePen, User } from "lucide-react";
 import {
   buildPageMeta,
@@ -26,6 +26,7 @@ import { ReferenceCard } from "@/components/blog/reference-card";
 import { ArticleNav } from "@/components/blog/article-nav";
 import { ReadingProgress } from "@/components/blog/reading-progress";
 import { CodeBlockActions } from "@/components/blog/code-block-actions";
+import { ArticleToc } from "@/components/blog/article-toc";
 import { getPostAuthor, getPostAuthorForMeta } from "@/lib/ai-agent/author";
 
 // Deduplicate getPostBySlug across generateMetadata + page component
@@ -110,6 +111,7 @@ export default async function PostPage({ params }: PostPageProps) {
     : null;
 
   const html = renderMarkdown(post.content, { optimizeImages: true, postTitle: post.title });
+  const toc = extractToc(post.content);
   const date = post.published_at
     ? formatDateDisplay(post.published_at)
     : "草稿";
@@ -139,10 +141,12 @@ export default async function PostPage({ params }: PostPageProps) {
         dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd(breadcrumbs) }}
       />
 
-      <ArticleBody
-        html={html}
-        header={
-          <header>
+      <div className="flex gap-8">
+        <div className="flex-1 min-w-0">
+          <ArticleBody
+            html={html}
+            header={
+              <header>
             <h1 className="text-2xl font-bold leading-tight text-blog-text md:text-3xl">
               {post.title}
             </h1>
@@ -236,6 +240,9 @@ export default async function PostPage({ params }: PostPageProps) {
           ) : undefined
         }
       />
+        </div>
+        <ArticleToc entries={toc} />
+      </div>
       <ContentImageLightbox />
       <CodeBlockActions />
 
