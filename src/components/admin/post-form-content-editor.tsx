@@ -1,6 +1,13 @@
 "use client";
 
-import { useMemo, useState, useRef, forwardRef, useImperativeHandle } from "react";
+import {
+  useMemo,
+  useState,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+  useEffect,
+} from "react";
 import { renderMarkdown } from "@/models/markdown";
 import { ArticleBody } from "@/components/blog/article-body";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -57,25 +64,48 @@ export const PostContentEditor = forwardRef<
 
   const mobileRef = useRef<HTMLTextAreaElement>(null);
   const desktopRef = useRef<HTMLTextAreaElement>(null);
+  /** When set, run focusVisible() once the mobile textarea remounts after we
+   *  flip out of preview mode. Cleared by the effect below. */
+  const pendingFocusRef = useRef(false);
+
+  useEffect(() => {
+    if (!pendingFocusRef.current) return;
+    if (previewMode) return; // still in preview — wait for the next render
+    pendingFocusRef.current = false;
+    focusTargetTextarea();
+  }, [previewMode]);
+
+  const focusTargetTextarea = () => {
+    // `offsetParent` is null when the element (or an ancestor) is
+    // `display: none` — the canonical "is it visible?" check for hidden
+    // siblings. Prefer the visible one; fall back to whichever is mounted.
+    const candidates = [mobileRef.current, desktopRef.current];
+    const visible = candidates.find(
+      (el) => el !== null && el.offsetParent !== null,
+    );
+    const target = visible ?? candidates.find((el) => el !== null) ?? null;
+    if (!target) return;
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+    target.focus({ preventScroll: true });
+  };
 
   useImperativeHandle(
     ref,
     () => ({
       focusVisible: () => {
-        // `offsetParent` is null when the element (or an ancestor) is
-        // `display: none` — the canonical "is it visible?" check for hidden
-        // siblings. Prefer the visible one; fall back to whichever is mounted.
-        const candidates = [mobileRef.current, desktopRef.current];
-        const visible = candidates.find(
-          (el) => el !== null && el.offsetParent !== null,
-        );
-        const target = visible ?? candidates.find((el) => el !== null) ?? null;
-        if (!target) return;
-        target.scrollIntoView({ behavior: "smooth", block: "center" });
-        target.focus({ preventScroll: true });
+        // If the mobile editor is hidden because the user is in preview mode,
+        // flip back to write first; the effect above runs focus after the
+        // textarea remounts. Without this, focusVisible() falls back to the
+        // (hidden) desktop textarea on mobile.
+        if (previewMode) {
+          pendingFocusRef.current = true;
+          setPreviewMode(false);
+          return;
+        }
+        focusTargetTextarea();
       },
     }),
-    [],
+    [previewMode],
   );
 
   const uploadProps = postId ? { postId } : {};
@@ -89,10 +119,21 @@ export const PostContentEditor = forwardRef<
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
+        {/* Two labels: each htmlFor points at the textarea actually visible at
+         *  its viewport, so clicking the label always focuses the editor the
+         *  user sees. `id="content-label"` stays on the visible one so the
+         *  mobile preview pane (which has no native label) can still reference
+         *  it via aria-labelledby if we ever need to. */}
         <label
           id="content-label"
           htmlFor="content-mobile"
-          className="text-sm font-medium text-foreground"
+          className="text-sm font-medium text-foreground lg:hidden"
+        >
+          {"内容 (Markdown)"}
+        </label>
+        <label
+          htmlFor="content-desktop"
+          className="hidden text-sm font-medium text-foreground lg:block"
         >
           {"内容 (Markdown)"}
         </label>
@@ -153,7 +194,6 @@ export const PostContentEditor = forwardRef<
         <Textarea
           ref={desktopRef}
           id="content-desktop"
-          aria-labelledby="content-label"
           value={content}
           onChange={(e) => onContentChange(e.target.value)}
           required
