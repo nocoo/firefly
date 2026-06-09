@@ -142,6 +142,9 @@
  * ==========================================================================
  */
 :root {
+  /* Render native form controls / scrollbars / autofill in light scheme */
+  color-scheme: light;
+
   /* Base font stacks (immutable — presets compose from these)
    * Western faces: IBM Plex (loaded via next/font, falls back gracefully).
    * CJK faces: PingFang SC / system Songti / Kaiti for serif/kai. */
@@ -232,6 +235,8 @@
 }
 
 .dark {
+  color-scheme: dark;
+
   --background: 0 0% 9%;
   --foreground: 0 0% 93%;
   --card: 0 0% 10.6%;
