@@ -3,7 +3,8 @@ import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
 import { createComment } from "@/data/entities/comment";
-import { invalidatePostCaches } from "@/data/entities/post";
+import { getPostById, invalidatePostCaches } from "@/data/entities/post";
+import { getSiteSettings } from "@/data/settings";
 
 /**
  * POST /api/comments — create a new comment.
@@ -13,6 +14,14 @@ import { invalidatePostCaches } from "@/data/entities/post";
  * threaded reply) without inviting moderation queue work. Open submission
  * needs spam protection, captcha, and a moderation flow — out of scope for
  * this round; see docs/24 wave-4 for the explicit decision.
+ *
+ * Availability rule must mirror the page surface (slug page line 103):
+ *   settings.commentsEnabled  AND  post.comment_enabled  AND  status === "published"
+ *
+ * If any of those is false the route returns 403 — even for the admin —
+ * because creating a comment on a post where comments are disabled would
+ * leave the comment orphaned (the page never renders the section to show it).
+ * The not-found post is reported as 404 separately so callers can distinguish.
  */
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -48,6 +57,36 @@ export async function POST(request: NextRequest) {
 
   try {
     const db = getDb();
+
+    // Verify the target post exists, is published, and has comments enabled
+    // both globally and per-post. This must match the visibility rule on the
+    // detail page so an admin can't create a comment that nobody can see.
+    const [post, settings] = await Promise.all([
+      getPostById(db, postId),
+      getSiteSettings(db),
+    ]);
+    if (!post) {
+      return errorResponse("Post not found", 404);
+    }
+    if (post.status !== "published") {
+      return errorResponse("Comments are not allowed on this post", 403);
+    }
+    if (!settings.commentsEnabled || !post.comment_enabled) {
+      return errorResponse("Comments are disabled for this post", 403);
+    }
+
+    // If a reply, the parent must belong to the same post — prevents posting
+    // a child comment that points at an unrelated thread.
+    if (parentId) {
+      const parent = await db.firstOrNull<{ post_id: string }>(
+        "SELECT post_id FROM comments WHERE id = ?",
+        [parentId],
+      );
+      if (!parent || parent.post_id !== postId) {
+        return errorResponse("Invalid parent comment", 400);
+      }
+    }
+
     const comment = await createComment(db, {
       postId,
       authorName,
