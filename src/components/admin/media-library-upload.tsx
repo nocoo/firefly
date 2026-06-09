@@ -4,10 +4,25 @@ import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { MediaWithUrl } from "./media-library-helpers";
 
+export type UploadStatus = "pending" | "uploading" | "success" | "error";
+
+export interface UploadItem {
+  /** Stable per-drop id so React can key entries while the same file is processed. */
+  id: string;
+  name: string;
+  size: number;
+  status: UploadStatus;
+  /** Set when status === "error". */
+  errorMessage?: string;
+}
+
 export interface UploadHandlers {
   dragOver: boolean;
   uploading: boolean;
-  uploadProgress: { current: number; total: number };
+  /** Per-file queue state. Empty between drops. */
+  queue: UploadItem[];
+  /** Clear the queue from the UI (e.g. after the user dismisses it). */
+  dismissQueue: () => void;
   onDragEnter: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDragLeave: (e: React.DragEvent) => void;
@@ -16,18 +31,19 @@ export interface UploadHandlers {
 
 /**
  * Drag-and-drop upload hook. Calls `onUploadComplete` for each successfully
- * uploaded file so the caller can prepend it into the grid.
+ * uploaded file so the caller can prepend it into the grid. Exposes per-file
+ * queue state (pending / uploading / success / error) so the UI can render an
+ * actual upload list instead of a single "X / Y" counter — failures stay
+ * visible until the user dismisses them.
  */
 export function useMediaUpload(
   onUploadComplete: (item: MediaWithUrl) => void,
 ): UploadHandlers {
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState({
-    current: 0,
-    total: 0,
-  });
+  const [queue, setQueue] = useState<UploadItem[]>([]);
   const dragCounterRef = useRef(0);
+  const idCounterRef = useRef(0);
 
   const onDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -45,6 +61,11 @@ export function useMediaUpload(
     if (dragCounterRef.current === 0) setDragOver(false);
   }, []);
 
+  const dismissQueue = useCallback(() => {
+    if (uploading) return;
+    setQueue([]);
+  }, [uploading]);
+
   const onDrop = useCallback(
     async (e: React.DragEvent) => {
       e.preventDefault();
@@ -54,14 +75,26 @@ export function useMediaUpload(
       const files = Array.from(e.dataTransfer.files);
       if (files.length === 0) return;
 
+      // New drop starts a fresh queue (no carry-over from prior runs).
+      const items: UploadItem[] = files.map((f) => ({
+        id: `upload-${++idCounterRef.current}`,
+        name: f.name,
+        size: f.size,
+        status: "pending",
+      }));
+      setQueue(items);
       setUploading(true);
-      setUploadProgress({ current: 0, total: files.length });
 
       let successCount = 0;
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        setUploadProgress({ current: i + 1, total: files.length });
+        const itemId = items[i].id;
+        setQueue((prev) =>
+          prev.map((it) =>
+            it.id === itemId ? { ...it, status: "uploading" } : it,
+          ),
+        );
 
         try {
           const formData = new FormData();
@@ -73,18 +106,36 @@ export function useMediaUpload(
           });
 
           if (!res.ok) {
-            const data = await res.json();
-            toast.error(
-              `上传失败：${file.name}` +
-                (data.error ? `: ${data.error}` : ""),
+            const data = (await res.json()) as { error?: string };
+            const msg = data.error ?? "上传失败";
+            setQueue((prev) =>
+              prev.map((it) =>
+                it.id === itemId
+                  ? { ...it, status: "error", errorMessage: msg }
+                  : it,
+              ),
             );
+            toast.error(`上传失败：${file.name}: ${msg}`);
             continue;
           }
 
           const data = await res.json();
           onUploadComplete({ ...data, url: data.url });
           successCount++;
-        } catch {
+          setQueue((prev) =>
+            prev.map((it) =>
+              it.id === itemId ? { ...it, status: "success" } : it,
+            ),
+          );
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "上传失败";
+          setQueue((prev) =>
+            prev.map((it) =>
+              it.id === itemId
+                ? { ...it, status: "error", errorMessage: msg }
+                : it,
+            ),
+          );
           toast.error(`上传失败：${file.name}`);
         }
       }
@@ -100,7 +151,8 @@ export function useMediaUpload(
   return {
     dragOver,
     uploading,
-    uploadProgress,
+    queue,
+    dismissQueue,
     onDragEnter,
     onDragOver,
     onDragLeave,

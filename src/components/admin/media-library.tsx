@@ -15,6 +15,7 @@ import {
 import { MediaLibraryFilterBar } from "./media-library-filter-bar";
 import { MediaLibraryGrid } from "./media-library-grid";
 import { MediaLibraryPreview } from "./media-library-preview";
+import { MediaUploadQueue } from "./media-library-queue";
 import { useMediaUpload } from "./media-library-upload";
 
 interface MediaLibraryProps {
@@ -167,12 +168,11 @@ export function MediaLibrary({
         </div>
       )}
 
-      {upload.uploading && (
-        <div className="mb-4 flex items-center gap-2 rounded-widget border border-border bg-secondary px-4 py-2 text-sm text-muted-foreground">
-          <Upload className="h-4 w-4 animate-pulse" />
-          {`上传中 ${upload.uploadProgress.current}/${upload.uploadProgress.total}...`}
-        </div>
-      )}
+      <MediaUploadQueue
+        items={upload.queue}
+        uploading={upload.uploading}
+        onDismiss={upload.dismissQueue}
+      />
 
       <MediaLibraryFilterBar
         filters={filters}
