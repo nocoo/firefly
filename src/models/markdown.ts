@@ -192,8 +192,12 @@ function createRenderer(optimizeImages: boolean, postTitle?: string): MarkedExte
 
       code({ text, lang }: Tokens.Code): string {
         const escaped = escapeHtml(text);
-        const langClass = lang ? ` class="language-${escapeAttr(lang)}"` : "";
-        return `<pre><code${langClass}>${escaped}</code></pre>\n`;
+        const langAttr = lang ? ` class="language-${escapeAttr(lang)}"` : "";
+        const langData = lang ? ` data-lang="${escapeAttr(lang)}"` : "";
+        // Wrap with data attributes so the client-side enhancer (see
+        // CodeBlockActions) can attach a copy button and surface the language
+        // label without re-parsing the source.
+        return `<pre class="blog-code-block"${langData}><code${langAttr}>${escaped}</code></pre>\n`;
       },
 
       html(token: Tokens.HTML | Tokens.Tag): string {

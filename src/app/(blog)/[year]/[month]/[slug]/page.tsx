@@ -25,6 +25,7 @@ import { ContentImageLightbox } from "@/components/blog/content-image-lightbox";
 import { ReferenceCard } from "@/components/blog/reference-card";
 import { ArticleNav } from "@/components/blog/article-nav";
 import { ReadingProgress } from "@/components/blog/reading-progress";
+import { CodeBlockActions } from "@/components/blog/code-block-actions";
 import { getPostAuthor, getPostAuthorForMeta } from "@/lib/ai-agent/author";
 
 // Deduplicate getPostBySlug across generateMetadata + page component
@@ -236,6 +237,7 @@ export default async function PostPage({ params }: PostPageProps) {
         }
       />
       <ContentImageLightbox />
+      <CodeBlockActions />
 
       {showComments && (
         <Suspense>

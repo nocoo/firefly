@@ -76,3 +76,49 @@
   /* Dividers */
   & hr { border-color: var(--blog-separator); }
 }
+
+/*
+ * ==========================================================================
+ * Code block actions — copy button + language label, injected client-side
+ * by <CodeBlockActions> as a portal into each <pre.blog-code-block>.
+ * ==========================================================================
+ */
+.blog-code-actions {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-family: var(--ff-mono);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.blog-code-block:hover .blog-code-actions,
+.blog-code-block:focus-within .blog-code-actions {
+  opacity: 1;
+}
+.blog-code-lang {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--blog-muted);
+  user-select: none;
+}
+.blog-code-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75em;
+  height: 1.75em;
+  border: 1px solid var(--blog-separator);
+  border-radius: 4px;
+  background: var(--blog-surface);
+  color: var(--blog-muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+}
+.blog-code-copy:hover {
+  color: var(--blog-text);
+  border-color: var(--blog-text);
+}

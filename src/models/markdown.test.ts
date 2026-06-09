@@ -134,7 +134,7 @@ describe("renderMarkdown", () => {
   it("renders fenced code blocks", () => {
     const md = "```js\nconst x = 1;\n```";
     const html = renderMarkdown(md);
-    expect(html).toContain("<pre>");
+    expect(html).toContain("<pre");
     expect(html).toContain("<code");
     expect(html).toContain("const x = 1;");
   });
@@ -143,6 +143,20 @@ describe("renderMarkdown", () => {
     const md = "```typescript\nconst x: number = 1;\n```";
     const html = renderMarkdown(md);
     expect(html).toMatch(/class="[^"]*language-typescript[^"]*"/);
+  });
+
+  it("tags code blocks with data-lang for client-side enhancement", () => {
+    const md = "```ts\nconst x = 1;\n```";
+    const html = renderMarkdown(md);
+    expect(html).toContain('class="blog-code-block"');
+    expect(html).toContain('data-lang="ts"');
+  });
+
+  it("tags fenced blocks without a language with the blog-code-block class only", () => {
+    const md = "```\nplain text\n```";
+    const html = renderMarkdown(md);
+    expect(html).toContain('class="blog-code-block"');
+    expect(html).not.toContain("data-lang=");
   });
 
   // --- Lists ---
@@ -238,7 +252,7 @@ const x = 1;
     expect(html).toContain("<strong>");
     expect(html).toContain("<em>");
     expect(html).toContain("<a ");
-    expect(html).toContain("<pre>");
+    expect(html).toContain("<pre");
     expect(html).toContain("<blockquote>");
     expect(html).toContain("<ul>");
   });
@@ -438,7 +452,8 @@ describe("renderMarkdown with optimizeImages", () => {
     expect(html).toContain("/_next/image");
     expect(html).toContain("srcset");
     // Code unchanged
-    expect(html).toContain("<pre><code");
+    expect(html).toContain("<pre");
+    expect(html).toContain("<code");
   });
 
   it("optimized mode: only R2 assets domain is optimized, other domains are not", () => {
