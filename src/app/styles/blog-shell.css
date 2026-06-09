@@ -428,6 +428,21 @@
 .blog-content a:hover { background-size: 100% 2px; }
 .blog-content img:not(a img) { cursor: pointer; }
 
+/* Dim content images in dark mode so they don't blast through the page.
+ * brightness keeps tonal range; contrast nudges blacks back so dim doesn't
+ * mean "milky". Hover restores so users can verify true colors. */
+.dark .blog-content img,
+.dark .blog-featured-image img {
+  filter: brightness(0.85) contrast(1.05);
+  transition: filter 0.2s ease-in-out;
+}
+.dark .blog-content img:hover,
+.dark .blog-featured-image:hover img { filter: none; }
+@media (prefers-reduced-motion: reduce) {
+  .dark .blog-content img,
+  .dark .blog-featured-image img { transition: none; }
+}
+
 /* ─── HR with + end nodes ─── */
 hr.blog-hr,
 .blog-content hr {
