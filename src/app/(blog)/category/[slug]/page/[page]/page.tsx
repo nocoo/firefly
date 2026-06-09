@@ -89,7 +89,11 @@ export default async function CategoryPaged({ params }: Props) {
 
       <section>
         {posts.length === 0 ? (
-          <EmptyState icon={Folder} message="该分类下暂无文章。" />
+          <EmptyState
+            icon={Folder}
+            message="该分类下暂无文章。"
+            action={{ label: "返回首页", href: "/" }}
+          />
         ) : (
           posts.map((post, i) => (
             <PostCard

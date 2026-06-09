@@ -84,7 +84,11 @@ export default async function TagPaged({ params }: Props) {
 
       <section>
         {posts.length === 0 ? (
-          <EmptyState icon={Tag} message="该标签下暂无文章。" />
+          <EmptyState
+            icon={Tag}
+            message="该标签下暂无文章。"
+            action={{ label: "返回首页", href: "/" }}
+          />
         ) : (
           posts.map((post, i) => (
             <PostCard

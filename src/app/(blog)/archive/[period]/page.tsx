@@ -87,7 +87,11 @@ export default async function ArchivePage({ params }: ArchivePageProps) {
 
       <section>
         {posts.length === 0 ? (
-          <EmptyState icon={Archive} message="该时期暂无文章。" />
+          <EmptyState
+            icon={Archive}
+            message="该时期暂无文章。"
+            action={{ label: "返回首页", href: "/" }}
+          />
         ) : (
           posts.map((post, i) => (
             <PostCard

@@ -24,7 +24,11 @@ export default async function SearchPage({
   if (!q?.trim()) {
     return (
       <div className="blog-search-results">
-        <EmptyState icon={Search} message="输入关键词搜索文章。" />
+        <EmptyState
+          icon={Search}
+          message="输入关键词搜索文章。"
+          action={{ label: "返回首页", href: "/" }}
+        />
       </div>
     );
   }
@@ -54,6 +58,7 @@ export default async function SearchPage({
         <EmptyState
           icon={Search}
           message="未找到相关结果，请尝试其他关键词。"
+          action={{ label: "返回首页", href: "/" }}
         />
       ) : (
         <>
