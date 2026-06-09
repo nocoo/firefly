@@ -8,6 +8,7 @@ import type { AiAgent, Category } from "@/models/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { NewAgentModal } from "@/components/admin/ai-agents-manager";
 import { AgentAvatarUploader } from "./ai-agent-avatar-uploader";
 
@@ -196,12 +197,12 @@ export function AiAgentForm({
 
             <div>
               <label className="text-sm font-medium text-foreground">描述</label>
-              <textarea
+              <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="代理的可选描述"
                 rows={3}
-                className="mt-1 w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                className="mt-1"
               />
             </div>
 

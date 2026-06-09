@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import type { SiteSettings, SocialLink } from "@/data/settings";
 import { SiteLogoCard } from "./site-logo-card";
 import { SocialLinksCard } from "./social-links-card";
@@ -107,8 +108,8 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
           <p className="text-xs text-muted-foreground">
             用于 Meta Description 和 llms.txt。建议不超过几句话。
           </p>
-          <textarea
-            className="flex min-h-[80px] w-full max-w-lg rounded-md border border-border bg-secondary px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          <Textarea
+            className="max-w-lg"
             value={siteDescription}
             onChange={(e) => setSiteDescription(e.target.value)}
             placeholder="一个关于技术、设计和生活的博客。"

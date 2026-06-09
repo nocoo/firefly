@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 
 export interface ReferenceState {
   url: string;
@@ -151,13 +152,13 @@ export function PostReferenceFields({
           </div>
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground">{"描述"}</label>
-            <textarea
+            <Textarea
               value={state.description}
               onChange={(e) =>
                 onChange({ ...state, description: e.target.value })
               }
               rows={2}
-              className="w-full rounded-widget border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="px-3 py-1.5"
             />
           </div>
           {state.image && (
