@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import type { Category, PostStatus, Tag } from "@/models/types";
 import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 // ---------------------------------------------------------------------------
 // Excerpt field with optional AI generation
@@ -63,12 +64,11 @@ export function PostExcerptField({
           </button>
         )}
       </div>
-      <textarea
+      <Textarea
         id="excerpt"
         value={excerpt}
         onChange={(e) => onExcerptChange(e.target.value)}
         rows={3}
-        className="w-full rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         placeholder={"文章的简要描述..."}
       />
     </div>

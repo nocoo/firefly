@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { renderMarkdown } from "@/models/markdown";
 import { ArticleBody } from "@/components/blog/article-body";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Textarea } from "@/components/ui/textarea";
 import { ImageUploadZone, type UploadResult } from "./image-upload-zone";
 
 interface PostContentEditorProps {
@@ -73,13 +74,13 @@ export function PostContentEditor({
               onResultsChange={onUploadedMediaChange}
               {...uploadProps}
             />
-            <textarea
+            <Textarea
               id="content"
               value={content}
               onChange={(e) => onContentChange(e.target.value)}
               required
               rows={20}
-              className="w-full min-h-[480px] rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
+              className="min-h-[480px] font-mono"
               placeholder={"使用 Markdown 编写文章内容..."}
             />
           </>
@@ -94,13 +95,13 @@ export function PostContentEditor({
           onResultsChange={onUploadedMediaChange}
           {...uploadProps}
         />
-        <textarea
+        <Textarea
           aria-labelledby="content-label"
           value={content}
           onChange={(e) => onContentChange(e.target.value)}
           required
           rows={20}
-          className="w-full min-h-[480px] rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono"
+          className="min-h-[480px] font-mono"
           placeholder={"使用 Markdown 编写文章内容..."}
         />
       </div>
