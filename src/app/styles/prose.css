@@ -33,10 +33,15 @@
   line-height: 1.85;
   overflow-wrap: break-word;
 
-  & p { margin-block: 1.25em; }
+  /* `pretty` lets the browser look ahead a few lines and avoid orphan words
+   * at paragraph ends. CJK long titles benefit from `balance` on headings. */
+  & p { margin-block: 1.25em; text-wrap: pretty; }
 
   /* Headings */
-  & :is(h1, h2, h3, h4, h5, h6) { font-family: var(--ff-heading); }
+  & :is(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--ff-heading);
+    text-wrap: balance;
+  }
   & h1 { font-size: 1.75em; font-weight: 700; letter-spacing: 0.02em; }
   & h2 { font-size: 1.375em; font-weight: 700; letter-spacing: 0.01em; }
   & h3 { font-size: 1.1875em; font-weight: 600; }
