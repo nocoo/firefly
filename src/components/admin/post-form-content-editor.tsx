@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, forwardRef } from "react";
 import { renderMarkdown } from "@/models/markdown";
 import { ArticleBody } from "@/components/blog/article-body";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -13,19 +13,35 @@ interface PostContentEditorProps {
   uploadedMedia: UploadResult[];
   onUploadedMediaChange: React.Dispatch<React.SetStateAction<UploadResult[]>>;
   postId?: string;
+  /** Field-level error message — when set, the textareas render in error
+   *  state with `aria-invalid` and link to the error <p> via aria-describedby. */
+  error?: string | null;
 }
 
 /**
  * Content editor: textarea + image upload zone, with a mobile Write/Preview tab
  * switcher and a desktop layout that delegates the preview to the right column.
+ *
+ * The forwarded ref points at the *currently visible* textarea — desktop on
+ * `lg+`, mobile otherwise. The parent uses it to focus/scroll on save errors.
+ * Mobile and desktop textareas need distinct DOM ids; the shared label uses
+ * `htmlFor="content-mobile"` (only one is in the document at a time on small
+ * screens), and the desktop variant relies on `aria-labelledby="content-label"`.
  */
-export function PostContentEditor({
-  content,
-  onContentChange,
-  uploadedMedia,
-  onUploadedMediaChange,
-  postId,
-}: PostContentEditorProps) {
+export const PostContentEditor = forwardRef<
+  HTMLTextAreaElement,
+  PostContentEditorProps
+>(function PostContentEditor(
+  {
+    content,
+    onContentChange,
+    uploadedMedia,
+    onUploadedMediaChange,
+    postId,
+    error,
+  },
+  ref,
+) {
   const [previewMode, setPreviewMode] = useState(false);
   const previewHtml = useMemo(
     () => (previewMode && content ? renderMarkdown(content) : ""),
@@ -33,13 +49,19 @@ export function PostContentEditor({
   );
 
   const uploadProps = postId ? { postId } : {};
+  const errorId = error ? "content-error" : undefined;
+  const editorClassName = error
+    ? "min-h-[480px] font-mono border-destructive"
+    : "min-h-[480px] font-mono";
+  const ariaInvalidProp = error ? { "aria-invalid": true as const } : {};
+  const ariaDescribedByProp = errorId ? { "aria-describedby": errorId } : {};
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <label
           id="content-label"
-          htmlFor="content"
+          htmlFor="content-mobile"
           className="text-sm font-medium text-foreground"
         >
           {"内容 (Markdown)"}
@@ -75,13 +97,16 @@ export function PostContentEditor({
               {...uploadProps}
             />
             <Textarea
-              id="content"
+              ref={ref}
+              id="content-mobile"
               value={content}
               onChange={(e) => onContentChange(e.target.value)}
               required
               rows={20}
-              className="min-h-[480px] font-mono"
+              className={editorClassName}
               placeholder={"使用 Markdown 编写文章内容..."}
+              {...ariaInvalidProp}
+              {...ariaDescribedByProp}
             />
           </>
         )}
@@ -96,15 +121,26 @@ export function PostContentEditor({
           {...uploadProps}
         />
         <Textarea
+          ref={ref}
+          id="content-desktop"
           aria-labelledby="content-label"
           value={content}
           onChange={(e) => onContentChange(e.target.value)}
           required
           rows={20}
-          className="min-h-[480px] font-mono"
+          className={editorClassName}
           placeholder={"使用 Markdown 编写文章内容..."}
+          {...ariaInvalidProp}
+          {...ariaDescribedByProp}
         />
       </div>
+
+      {error && (
+        <p id={errorId} className="text-xs text-destructive">
+          {error}
+        </p>
+      )}
     </div>
   );
-}
+});
+

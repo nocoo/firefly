@@ -117,7 +117,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
   // ── Field refs (for scroll/focus on field-level errors) ──
   const titleRef = useRef<HTMLInputElement>(null);
   const slugRef = useRef<HTMLInputElement>(null);
-  const contentSectionRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
   const focusField = (field: PostFormField) => {
     const el =
@@ -125,7 +125,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         ? titleRef.current
         : field === "slug"
           ? slugRef.current
-          : contentSectionRef.current;
+          : contentRef.current;
     if (!el) return;
     el.scrollIntoView({ behavior: "smooth", block: "center" });
     if ("focus" in el) (el as HTMLElement).focus({ preventScroll: true });
@@ -290,18 +290,15 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         />
       </FormField>
 
-      <div ref={contentSectionRef}>
-        <PostContentEditor
-          content={content}
-          onContentChange={setContent}
-          uploadedMedia={uploadedMedia}
-          onUploadedMediaChange={setUploadedMedia}
-          {...(post?.id ? { postId: post.id } : {})}
-        />
-        {fieldError?.field === "content" && (
-          <p className="mt-2 text-xs text-destructive">{fieldError.message}</p>
-        )}
-      </div>
+      <PostContentEditor
+        ref={contentRef}
+        content={content}
+        onContentChange={setContent}
+        uploadedMedia={uploadedMedia}
+        onUploadedMediaChange={setUploadedMedia}
+        error={fieldError?.field === "content" ? fieldError.message : null}
+        {...(post?.id ? { postId: post.id } : {})}
+      />
 
       <PostExcerptField
         excerpt={excerpt}
