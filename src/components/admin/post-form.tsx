@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Category, PostStatus, PostWithCategory, Tag } from "@/models/types";
 import { slugify } from "@/models/post";
@@ -343,6 +344,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           disabled={saving}
           className="inline-flex items-center gap-2 rounded-widget bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
+          {saving && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} aria-hidden="true" />}
           {saving ? "保存中..." : isEditing ? "更新文章" : "创建文章"}
         </button>
         <button
