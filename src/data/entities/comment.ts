@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Comment entity — read + delete
+// Comment entity — read + create + delete
 // ---------------------------------------------------------------------------
 
 import type { Db } from "@/lib/db";
@@ -46,6 +46,54 @@ export function buildCommentTree(comments: Comment[]): CommentTree[] {
   }
 
   return roots;
+}
+
+// ---------------------------------------------------------------------------
+// createComment — insert a new top-level or nested comment
+// ---------------------------------------------------------------------------
+
+export interface CreateCommentInput {
+  postId: string;
+  authorName: string;
+  content: string;
+  parentId?: string | null;
+  authorEmail?: string | null;
+  authorUrl?: string | null;
+}
+
+export async function createComment(
+  db: Db,
+  input: CreateCommentInput,
+): Promise<Comment> {
+  const id = crypto.randomUUID();
+  const createdAt = Math.floor(Date.now() / 1000);
+  const parentId = input.parentId ?? null;
+  const authorEmail = input.authorEmail ?? null;
+  const authorUrl = input.authorUrl ?? null;
+
+  await db.execute(
+    `INSERT INTO comments (
+       id, post_id, parent_id, author_name, author_email, author_url,
+       content, wp_id, created_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)`,
+    [id, input.postId, parentId, input.authorName, authorEmail, authorUrl, input.content, createdAt],
+  );
+  await db.execute(
+    "UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?",
+    [input.postId],
+  );
+
+  return {
+    id,
+    post_id: input.postId,
+    parent_id: parentId,
+    author_name: input.authorName,
+    author_email: authorEmail,
+    author_url: authorUrl,
+    content: input.content,
+    wp_id: null,
+    created_at: createdAt,
+  };
 }
 
 // ---------------------------------------------------------------------------

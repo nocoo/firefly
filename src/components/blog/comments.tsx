@@ -1,6 +1,7 @@
 import type { CommentTree } from "@/models/types";
 import { formatDateDisplay } from "@/lib/seo";
 import { DeleteCommentButton } from "@/components/blog/delete-comment-button";
+import { CommentForm } from "@/components/blog/comment-form";
 
 interface CommentItemProps {
   comment: CommentTree;
@@ -80,22 +81,31 @@ function CommentItem({ comment, depth = 0, isAdmin }: CommentItemProps) {
 
 interface CommentsProps {
   comments: CommentTree[];
+  /** Post id is required so the form can submit against the right post. */
+  postId: string;
   isAdmin?: boolean;
 }
 
-export function Comments({ comments, isAdmin }: CommentsProps) {
-  if (comments.length === 0) return null;
+export function Comments({ comments, postId, isAdmin }: CommentsProps) {
+  const isEmpty = comments.length === 0;
 
   return (
     <section className="mt-12 border-t border-blog-separator pt-6">
-      <h2 className="mb-4 text-lg font-semibold text-blog-text">
-        评论
-      </h2>
-      <div className="divide-y divide-blog-separator">
-        {comments.map((comment) => (
-          <CommentItem key={comment.id} comment={comment} {...(isAdmin ? { isAdmin } : {})} />
-        ))}
-      </div>
+      <h2 className="mb-4 text-lg font-semibold text-blog-text">评论</h2>
+      {isEmpty ? (
+        <p className="text-sm text-blog-muted">暂无评论。</p>
+      ) : (
+        <div className="divide-y divide-blog-separator">
+          {comments.map((comment) => (
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              {...(isAdmin ? { isAdmin } : {})}
+            />
+          ))}
+        </div>
+      )}
+      <CommentForm postId={postId} enabled={!!isAdmin} />
     </section>
   );
 }

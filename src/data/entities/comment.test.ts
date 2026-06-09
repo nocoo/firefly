@@ -4,6 +4,7 @@ import { createMockDb } from "@/data/core/test-utils";
 import {
   listCommentsByPost,
   buildCommentTree,
+  createComment,
   deleteComment,
 } from "./comment";
 import type { Comment } from "@/models/types";
@@ -224,5 +225,66 @@ describe("deleteComment", () => {
 
     const [, updateParams] = vi.mocked(db.execute).mock.calls[1];
     expect(updateParams).toEqual([1, "post-1"]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createComment
+// ---------------------------------------------------------------------------
+
+describe("createComment", () => {
+  let db: Db;
+  beforeEach(() => {
+    db = createMockDb();
+    vi.mocked(db.execute).mockResolvedValue({
+      meta: { changes: 1, duration: 1 },
+    } as never);
+  });
+
+  it("inserts a top-level comment with null parent and increments post count", async () => {
+    const result = await createComment(db, {
+      postId: "post-1",
+      authorName: "Zheng",
+      content: "Nice post.",
+    });
+    expect(result.post_id).toBe("post-1");
+    expect(result.parent_id).toBeNull();
+    expect(result.author_email).toBeNull();
+    expect(result.author_url).toBeNull();
+    expect(result.author_name).toBe("Zheng");
+    expect(result.content).toBe("Nice post.");
+    expect(result.id).toMatch(/^[0-9a-f-]+$/);
+    expect(result.created_at).toBeGreaterThan(0);
+
+    expect(db.execute).toHaveBeenCalledTimes(2);
+    // INSERT call carries the same id and params we returned
+    const [insertSql, insertParams] = vi.mocked(db.execute).mock.calls[0];
+    expect(insertSql).toMatch(/INSERT INTO comments/);
+    expect(insertParams?.[0]).toBe(result.id);
+    expect(insertParams?.[1]).toBe("post-1");
+    expect(insertParams?.[2]).toBeNull(); // parent
+    // UPDATE call increments comment_count by 1
+    const [updateSql, updateParams] = vi.mocked(db.execute).mock.calls[1];
+    expect(updateSql).toMatch(/comment_count \+ 1/);
+    expect(updateParams).toEqual(["post-1"]);
+  });
+
+  it("threads parentId, email, url through the insert", async () => {
+    const result = await createComment(db, {
+      postId: "post-1",
+      authorName: "Friend",
+      content: "Reply",
+      parentId: "c-parent",
+      authorEmail: "x@y.com",
+      authorUrl: "https://example.com",
+    });
+    expect(result.parent_id).toBe("c-parent");
+    expect(result.author_email).toBe("x@y.com");
+    expect(result.author_url).toBe("https://example.com");
+
+    const [, insertParams] = vi.mocked(db.execute).mock.calls[0];
+    expect(insertParams?.[2]).toBe("c-parent");
+    expect(insertParams?.[4]).toBe("x@y.com");
+    expect(insertParams?.[5]).toBe("https://example.com");
   });
 });

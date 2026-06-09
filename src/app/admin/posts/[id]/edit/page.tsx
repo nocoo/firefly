@@ -43,7 +43,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
           <h2 className="mb-4 text-lg font-semibold">
             评论 ({comments.length})
           </h2>
-          <Comments comments={commentTree} isAdmin />
+          <Comments comments={commentTree} postId={id} isAdmin />
         </section>
       )}
     </>

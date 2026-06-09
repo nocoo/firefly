@@ -276,5 +276,5 @@ async function CommentsSection({
   const db = getDb();
   const comments = await listCommentsByPost(db, postId);
   const tree = buildCommentTree(comments);
-  return <Comments comments={tree} isAdmin={isAdmin} />;
+  return <Comments comments={tree} postId={postId} isAdmin={isAdmin} />;
 }
