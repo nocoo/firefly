@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
 export interface ReferenceState {
   url: string;
@@ -103,11 +104,11 @@ export function PostReferenceFields({
         <span className="text-muted-foreground font-normal">{"（可选）"}</span>
       </label>
       <div className="flex gap-2">
-        <input
+        <Input
           type="url"
           value={state.url}
           onChange={(e) => onChange({ ...state, url: e.target.value })}
-          className="flex-1 rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="flex-1"
           placeholder="https://github.com/..."
         />
         <button
@@ -143,11 +144,11 @@ export function PostReferenceFields({
                 {isEnhancing ? "翻译中..." : "AI 翻译"}
               </button>
             </div>
-            <input
+            <Input
               type="text"
               value={state.title}
               onChange={(e) => onChange({ ...state, title: e.target.value })}
-              className="w-full rounded-widget border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="px-3 py-1.5"
             />
           </div>
           <div className="space-y-1">
