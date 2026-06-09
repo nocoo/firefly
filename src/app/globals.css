@@ -86,9 +86,6 @@
   --radius-lg: 12px;
   --radius-md: 8px;
   --radius-sm: 6px;
-
-  /* Breakpoints */
-  --breakpoint-desktop: 1200px;
 }
 
 /*
@@ -1005,14 +1002,6 @@ hr.blog-hr::after,  .blog-content hr::after  { right: -4px; }
   .zed-footer-col + .zed-footer-col::before { display: none; }
   .zed-footer-watermark { height: 120px; }
 }
-
-/* ─── Footer (legacy classes — keep for back-compat) ─── */
-.blog-footer {
-  padding: 1.5em 0 0; margin-top: 2em;
-  font-size: 0.8125em; color: var(--blog-muted);
-}
-.blog-footer a { color: var(--blog-muted); text-decoration: none; }
-.blog-footer a:hover { color: var(--blog-text); }
 
 /*
  * Admin preview theme bridge — scoped blog palette inside admin panels.
