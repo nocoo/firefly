@@ -37,9 +37,10 @@ export function Pagination({
   const pages = buildPageSlots(currentPage, totalPages);
 
   const linkClass =
-    "inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm transition-colors";
-  const activeClass = "bg-blog-accent text-white font-medium";
-  const inactiveClass = "text-blog-muted hover:text-blog-text hover:bg-blog-accent/10";
+    "inline-flex h-8 min-w-8 items-center justify-center px-2 font-mono text-sm transition-colors";
+  const activeClass =
+    "text-blog-text font-semibold underline decoration-blog-accent decoration-2 underline-offset-4";
+  const inactiveClass = "text-blog-muted hover:text-blog-text";
   const disabledClass = "text-blog-muted/40 pointer-events-none";
 
   return (
