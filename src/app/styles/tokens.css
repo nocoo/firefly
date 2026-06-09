@@ -246,3 +246,59 @@
   --ff-heading: var(--ff-sans);
   --ff-quote: var(--ff-sans);
 }
+
+/*
+ * ==========================================================================
+ * Blog ↔ admin token bridge (S-01)
+ *
+ * Admin UI primitives (Button, Card, AlertDialog, EmptyState…) read the HSL
+ * admin tokens — --background, --foreground, --card, --secondary, --border,
+ * --muted-foreground, etc. When those primitives drop into a blog surface
+ * (AlertDialog over a post page, ImageLightbox in `.blog-content`) the admin
+ * gray palette shows up against cream — wrong.
+ *
+ * Fix without touching primitives: re-bind the admin tokens inside the blog
+ * shell to HSL equivalents of the blog palette. The blog palette is hex/oklch
+ * so the values are approximated to HSL once here:
+ *   --blog-bg        #f5f4f3  → hsl(30 9% 96%)
+ *   --blog-surface   #fafaf9  → hsl(60 11% 98%)
+ *   --blog-text      #1a1a1a  → hsl(0 0% 10%)
+ *   --blog-muted     #8a8678  → hsl(38 8% 51%)
+ *   --blog-separator #dadde2  → hsl(220 11% 87%)
+ *
+ * `.blog-preview-theme` (admin's blog preview surface) re-pins its own palette
+ * inside its own scope and is unaffected.
+ */
+.blog-shell {
+  --background: 30 9% 96%;
+  --foreground: 0 0% 10%;
+  --card: 60 11% 98%;
+  --card-foreground: 0 0% 10%;
+  --secondary: 60 11% 98%;
+  --secondary-foreground: 0 0% 10%;
+  --popover: 60 11% 98%;
+  --popover-foreground: 0 0% 10%;
+  --muted: 220 11% 87%;
+  --muted-foreground: 38 8% 51%;
+  --accent: 220 11% 87%;
+  --accent-foreground: 0 0% 10%;
+  --border: 220 11% 87%;
+  --input: 220 11% 87%;
+}
+
+.dark .blog-shell {
+  --background: 218 13% 7.5%;
+  --foreground: 0 0% 90%;
+  --card: 220 8% 8%;
+  --card-foreground: 0 0% 90%;
+  --secondary: 220 8% 8%;
+  --secondary-foreground: 0 0% 90%;
+  --popover: 220 8% 8%;
+  --popover-foreground: 0 0% 90%;
+  --muted: 220 9% 14%;
+  --muted-foreground: 220 9% 64%;
+  --accent: 220 9% 14%;
+  --accent-foreground: 0 0% 90%;
+  --border: 220 9% 18%;
+  --input: 220 9% 18%;
+}
