@@ -1,0 +1,73 @@
+/* Prose typography for blog body */
+
+/*
+ * ==========================================================================
+ * Prose typography — CJK-optimized, driven by --ff-body/heading/quote
+ * ==========================================================================
+ */
+.prose-firefly {
+  /* Bridge Tailwind Typography color variables to blog design tokens.
+     Without this, .prose defaults (gray-900) leak through in dark mode. */
+  --tw-prose-body: var(--blog-text);
+  --tw-prose-headings: var(--blog-text);
+  --tw-prose-lead: var(--blog-text);
+  --tw-prose-links: var(--blog-text);
+  --tw-prose-bold: var(--blog-text);
+  --tw-prose-counters: var(--blog-muted);
+  --tw-prose-bullets: var(--blog-muted);
+  --tw-prose-hr: var(--blog-separator);
+  --tw-prose-quotes: var(--blog-text);
+  --tw-prose-quote-borders: var(--blog-separator);
+  --tw-prose-captions: var(--blog-muted);
+  --tw-prose-kbd: var(--blog-text);
+  --tw-prose-kbd-shadows: 0 0 0;
+  --tw-prose-code: var(--blog-text);
+  --tw-prose-pre-code: var(--blog-text);
+  --tw-prose-pre-bg: var(--blog-code-bg);
+  --tw-prose-th-borders: var(--blog-separator);
+  --tw-prose-td-borders: var(--blog-separator);
+
+  font-family: var(--ff-body);
+  color: var(--blog-text);
+  font-size: 1.0625rem;
+  line-height: 1.85;
+  overflow-wrap: break-word;
+
+  & p { margin-block: 1.25em; }
+
+  /* Headings */
+  & :is(h1, h2, h3, h4, h5, h6) { font-family: var(--ff-heading); }
+  & h1 { font-size: 1.75em; font-weight: 700; letter-spacing: 0.02em; }
+  & h2 { font-size: 1.375em; font-weight: 700; letter-spacing: 0.01em; }
+  & h3 { font-size: 1.1875em; font-weight: 600; }
+  & h4 { font-size: 1.0625em; font-weight: 600; }
+  & h5 { font-size: 1em; font-weight: 600; }
+  & h6 { font-size: 0.9375em; font-weight: 600; }
+
+  /* Blockquote */
+  & blockquote    { font-family: var(--ff-quote); font-style: normal; border-left-color: var(--blog-separator); }
+  & blockquote p  { font-style: normal; }
+
+  /* Code */
+  & pre                 { font-family: var(--ff-mono); font-size: 0.8125em; border: 1px solid var(--blog-separator); background: var(--blog-code-bg); }
+  & :not(pre) > code    { font-family: var(--ff-mono); font-size: 0.85em; padding: 0.15em 0.35em; border: 1px solid var(--blog-separator); background: var(--blog-code-bg); }
+  & :not(pre) > code::before,
+  & :not(pre) > code::after { content: none; }
+
+  /* Images */
+  & img { margin-inline: auto; }
+
+  /* Tables */
+  & table       { font-size: 0.875em; border-collapse: collapse; width: 100%; }
+  & thead       { border-bottom: 2px solid var(--blog-separator); }
+  & th          { font-weight: 600; text-align: start; padding: 0.625em 0.75em; }
+  & td          { padding: 0.625em 0.75em; }
+  & :is(th, td) { border: 1px solid var(--blog-separator); }
+
+  /* Links */
+  & a       { color: var(--blog-text); text-decoration-color: var(--blog-accent); text-underline-offset: 3px; transition: text-decoration-color 0.15s; }
+  & a:hover { text-decoration-color: var(--blog-text); }
+
+  /* Dividers */
+  & hr { border-color: var(--blog-separator); }
+}

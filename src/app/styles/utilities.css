@@ -1,0 +1,37 @@
+/* Custom Tailwind v4 utilities */
+
+/*
+ * ==========================================================================
+ * Custom utilities (Tailwind v4 @utility)
+ * ==========================================================================
+ */
+
+@utility text-2xs {
+  font-size: 0.625rem; /* 10px */
+  line-height: 1rem;   /* 16px */
+}
+
+@utility text-3xs {
+  font-size: 0.5625rem; /* 9px */
+  line-height: 0.875rem; /* 14px */
+}
+
+@utility font-display {
+  font-family: var(--ff-sans), system-ui, sans-serif;
+}
+
+@utility font-body {
+  font-family: var(--ff-body), system-ui, sans-serif;
+}
+
+@utility animate-fade-up {
+  animation: fade-up 0.5s ease-out both;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

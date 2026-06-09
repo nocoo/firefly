@@ -1,0 +1,138 @@
+/* zed.dev-inspired multi-column footer */
+
+hr.blog-hr::after,  .blog-content hr::after  { right: -4px; }
+
+/* ─── zed.dev — hatching grid pattern ─── */
+.zed-hatching {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0,
+    transparent 7px,
+    color-mix(in srgb, currentColor 18%, transparent) 7px,
+    color-mix(in srgb, currentColor 18%, transparent) 8px
+  );
+}
+
+/* ─── zed.dev — outline (hollow) text watermark ─── */
+.zed-outline-text {
+  -webkit-text-stroke: 1px currentColor;
+          text-stroke: 1px currentColor;
+  color: transparent;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  user-select: none;
+}
+
+/* ─── zed.dev — multi-column footer with vertical dividers + end rings ─── */
+.zed-footer {
+  position: relative;
+  background: var(--blog-accent);
+  color: #fff;
+  margin-top: 0;
+  overflow: hidden;
+}
+/* Hatching covers the entire blue area as a background layer */
+.zed-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0,
+    transparent 7px,
+    rgba(255, 255, 255, 0.1) 7px,
+    rgba(255, 255, 255, 0.1) 8px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+.zed-footer-cols {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0;
+  padding: 2.5rem 1.5rem 0;
+  position: relative;
+  z-index: 1;
+  max-width: var(--blog-layout-max);
+  margin: 0 auto;
+}
+.zed-footer-col {
+  padding: 0 1.25rem 2rem;
+  position: relative;
+  min-width: 10rem;
+}
+.zed-footer-col + .zed-footer-col {
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+/* Top end-ring on each column boundary (matches zed.dev visual) */
+.zed-footer-col + .zed-footer-col::before {
+  content: "";
+  position: absolute;
+  top: -3.5px; left: -3.5px;
+  width: 7px; height: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  background: var(--blog-accent);
+}
+.zed-footer-heading {
+  font-family: var(--ff-mono);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin: 0 0 1em;
+  color: rgba(255, 255, 255, 0.95);
+}
+.zed-footer-list { list-style: none; padding: 0; margin: 0; }
+.zed-footer-list li { margin: 0.4em 0; }
+.zed-footer-list a {
+  font-family: var(--ff-mono);
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.3);
+  text-underline-offset: 3px;
+  transition: color 0.15s, text-decoration-color 0.15s;
+}
+.zed-footer-list a:hover {
+  color: #fff;
+  text-decoration-color: #fff;
+}
+.zed-footer-list a .external-arrow {
+  display: inline-block; margin-left: 0.25em; font-size: 0.85em;
+}
+
+/* Hatching watermark band — hatching now covers entire .zed-footer */
+.zed-footer-watermark {
+  position: relative;
+  height: 200px;
+  color: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 1;
+}
+.zed-footer-watermark-text {
+  position: relative;
+  font-family: var(--ff-sans);
+  font-size: clamp(4rem, 14vw, 12rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.45);
+          text-stroke: 1px rgba(255, 255, 255, 0.45);
+  color: transparent;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* Footer responsive */
+@media (max-width: 768px) {
+  .zed-footer-cols {
+    grid-template-columns: 1fr;
+    padding: 2rem 1rem 0;
+  }
+  .zed-footer-col { padding: 0 0 1.5rem; min-width: 0; }
+  .zed-footer-col + .zed-footer-col { border-left: none; }
+  .zed-footer-col + .zed-footer-col::before { display: none; }
+  .zed-footer-watermark { height: 120px; }
+}

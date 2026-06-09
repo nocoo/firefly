@@ -1,0 +1,78 @@
+/* Misc: recharts, blog search bar/results, FTS highlight */
+
+/* Recharts — suppress focus outline on click */
+.recharts-wrapper *:focus {
+  outline: none;
+}
+
+/* Blog search bar (sidebar) */
+.blog-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-top: 0.5em;
+  margin-bottom: 2rem;
+  padding: 0.5em 0;
+  border-bottom: 1px solid var(--blog-separator);
+  transition: border-color 0.15s;
+}
+.blog-search:focus-within {
+  border-color: var(--blog-accent);
+}
+.blog-search-icon {
+  width: 1em;
+  height: 1em;
+  color: var(--blog-muted);
+  flex-shrink: 0;
+}
+.blog-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.9375em;
+  color: var(--blog-text);
+  outline: none;
+}
+.blog-search-input::placeholder {
+  color: var(--blog-muted);
+}
+.blog-search-kbd {
+  font-size: 0.75em;
+  color: var(--blog-muted);
+  border: 1px solid var(--blog-separator);
+  border-radius: 0.25em;
+  padding: 0.1em 0.4em;
+  font-family: inherit;
+  line-height: 1;
+}
+/* Native clear button (×) for type="search" — match sidebar muted color */
+.blog-search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0.9em;
+  height: 0.9em;
+  background: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cline x1='18' y1='6' x2='6' y2='18'/%3E%3Cline x1='6' y1='6' x2='18' y2='18'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cline x1='18' y1='6' x2='6' y2='18'/%3E%3Cline x1='6' y1='6' x2='18' y2='18'/%3E%3C/svg%3E");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  cursor: pointer;
+  color: var(--blog-muted);
+}
+
+/* Search results page */
+.blog-search-results h1 {
+  font-size: 1.25em;
+  font-weight: 600;
+  color: var(--blog-text);
+  margin-bottom: 1.5em;
+}
+
+/* FTS snippet highlight */
+.blog-search-results mark,
+.blog-entry mark {
+  background: color-mix(in srgb, var(--blog-accent) 20%, transparent);
+  color: inherit;
+  padding: 0.1em 0.2em;
+  border-radius: 2px;
+}
