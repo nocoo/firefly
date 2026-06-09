@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import type { McpTokenScope } from "@/models/types";
 import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/ui/form-field";
 
 /**
  * Inline create-token form: client-name input + scope select + create button.
@@ -25,28 +26,32 @@ export function McpTokenCreateForm({
 }) {
   return (
     <div className="flex items-end gap-3">
-      <div className="flex-1">
-        <label className="text-sm font-medium text-foreground">客户端名称</label>
+      <FormField
+        id="mcp-client-name"
+        label="客户端名称"
+        className="flex-1 space-y-1"
+      >
         <Input
           type="text"
           value={clientName}
           onChange={(e) => onClientNameChange(e.target.value)}
           placeholder="e.g. Claude Code"
-          className="mt-1"
           onKeyDown={(e) => e.key === "Enter" && onCreate()}
         />
-      </div>
-      <div className="w-32 shrink-0">
-        <label className="text-sm font-medium text-foreground">权限</label>
+      </FormField>
+      <FormField
+        id="mcp-scope"
+        label="权限"
+        className="w-32 shrink-0 space-y-1"
+      >
         <Select
           value={scope}
           onChange={(e) => onScopeChange(e.target.value as McpTokenScope)}
-          className="mt-1"
         >
           <option value="full">完整</option>
           <option value="author">作者</option>
         </Select>
-      </div>
+      </FormField>
       <button
         onClick={onCreate}
         disabled={creating || !clientName.trim()}

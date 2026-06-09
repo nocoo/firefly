@@ -2,6 +2,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
 
 export interface TaxonomyFormState {
   name: string;
@@ -32,25 +33,35 @@ export function TaxonomyForm({
         {editing ? `编辑${label}` : `新建${label}`}
       </h3>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Input
-          type="text"
-          value={state.name}
-          onChange={(e) => onChange({ ...state, name: e.target.value })}
-          placeholder="名称"
-        />
-        <Input
-          type="text"
-          value={state.slug}
-          onChange={(e) => onChange({ ...state, slug: e.target.value })}
-          placeholder="别名"
-        />
+        <FormField id="taxonomy-name" label="名称" className="space-y-1">
+          <Input
+            type="text"
+            value={state.name}
+            onChange={(e) => onChange({ ...state, name: e.target.value })}
+            placeholder="名称"
+          />
+        </FormField>
+        <FormField id="taxonomy-slug" label="别名" className="space-y-1">
+          <Input
+            type="text"
+            value={state.slug}
+            onChange={(e) => onChange({ ...state, slug: e.target.value })}
+            placeholder="别名"
+          />
+        </FormField>
       </div>
-      <Input
-        type="text"
-        value={state.description}
-        onChange={(e) => onChange({ ...state, description: e.target.value })}
-        placeholder="描述（可选）"
-      />
+      <FormField
+        id="taxonomy-description"
+        label="描述（可选）"
+        className="space-y-1"
+      >
+        <Input
+          type="text"
+          value={state.description}
+          onChange={(e) => onChange({ ...state, description: e.target.value })}
+          placeholder="描述（可选）"
+        />
+      </FormField>
       <div className="flex gap-2">
         <Button onClick={onSave} disabled={saving} size="sm">
           {saving ? "保存中..." : "保存"}

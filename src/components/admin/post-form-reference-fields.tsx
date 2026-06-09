@@ -99,12 +99,16 @@ export function PostReferenceFields({
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-foreground">
+      <label
+        htmlFor="reference-url"
+        className="text-sm font-medium text-foreground"
+      >
         {"引用链接"}{" "}
         <span className="text-muted-foreground font-normal">{"（可选）"}</span>
       </label>
       <div className="flex gap-2">
         <Input
+          id="reference-url"
           type="url"
           value={state.url}
           onChange={(e) => onChange({ ...state, url: e.target.value })}
@@ -133,7 +137,12 @@ export function PostReferenceFields({
         <div className="space-y-2 rounded-widget border border-border p-3">
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="text-xs text-muted-foreground">{"标题"}</label>
+              <label
+                htmlFor="reference-title"
+                className="text-xs text-muted-foreground"
+              >
+                {"标题"}
+              </label>
               <button
                 type="button"
                 onClick={handleEnhance}
@@ -145,6 +154,7 @@ export function PostReferenceFields({
               </button>
             </div>
             <Input
+              id="reference-title"
               type="text"
               value={state.title}
               onChange={(e) => onChange({ ...state, title: e.target.value })}
@@ -152,8 +162,14 @@ export function PostReferenceFields({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">{"描述"}</label>
+            <label
+              htmlFor="reference-description"
+              className="text-xs text-muted-foreground"
+            >
+              {"描述"}
+            </label>
             <Textarea
+              id="reference-description"
               value={state.description}
               onChange={(e) =>
                 onChange({ ...state, description: e.target.value })
