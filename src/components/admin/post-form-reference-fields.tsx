@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export interface ReferenceState {
@@ -135,9 +136,10 @@ export function PostReferenceFields({
                 type="button"
                 onClick={handleEnhance}
                 disabled={isEnhancing}
-                className="text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
+                className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
               >
-                {isEnhancing ? "翻译中..." : "✨ AI 翻译"}
+                <Sparkles className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
+                {isEnhancing ? "翻译中..." : "AI 翻译"}
               </button>
             </div>
             <input

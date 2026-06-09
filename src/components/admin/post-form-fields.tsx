@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import type { Category, PostStatus, Tag } from "@/models/types";
 import { Select } from "@/components/ui/select";
@@ -55,9 +56,10 @@ export function PostExcerptField({
             type="button"
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
           >
-            {isGenerating ? "生成中..." : "✨ AI 生成"}
+            <Sparkles className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
+            {isGenerating ? "生成中..." : "AI 生成"}
           </button>
         )}
       </div>

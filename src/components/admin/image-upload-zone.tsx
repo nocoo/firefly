@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { Paperclip } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -147,8 +148,9 @@ export function ImageUploadZone({
         }`}
       >
         <label className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
-          <span>
-            {uploading ? "上传中..." : "📎 上传图片"}
+          <span className="inline-flex items-center gap-1.5">
+            <Paperclip className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+            {uploading ? "上传中..." : "上传图片"}
           </span>
           <input
             type="file"
