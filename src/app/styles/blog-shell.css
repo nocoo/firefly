@@ -516,3 +516,56 @@ hr.blog-hr::before, .blog-content hr::before { left: -4px; }
   color: var(--blog-accent);
   font-weight: 500;
 }
+
+/* ─── Archive monthly heatmap (commit-graph style) ───
+ * `--cell-intensity` (0..1) is set per-cell from JS; we interpolate in HSL
+ * via color-mix so cells inherit theme. */
+.archive-heatmap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1.5rem 0 2rem;
+  font-family: var(--ff-mono);
+}
+.archive-heatmap-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.archive-heatmap-year {
+  font-size: 0.8125rem;
+  color: var(--blog-text-secondary);
+  text-decoration: none;
+  width: 3rem;
+  text-align: right;
+  flex-shrink: 0;
+}
+.archive-heatmap-year:hover { color: var(--blog-accent); }
+.archive-heatmap-cells {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.archive-heatmap-cell {
+  display: block;
+  aspect-ratio: 1;
+  border-radius: 2px;
+  background: color-mix(
+    in oklab,
+    var(--blog-accent) calc(var(--cell-intensity, 0.2) * 100%),
+    var(--blog-separator)
+  );
+  text-decoration: none;
+  transition: outline 0.15s;
+  outline: 1px solid transparent;
+}
+.archive-heatmap-cell:hover {
+  outline-color: var(--blog-text);
+}
+.archive-heatmap-cell-empty {
+  background: var(--blog-separator);
+  opacity: 0.4;
+  pointer-events: none;
+}
