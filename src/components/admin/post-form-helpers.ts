@@ -5,6 +5,26 @@
 import type { PostStatus } from "@/models/types";
 import type { ReferenceState } from "./post-form-reference-fields";
 
+/** Form fields that error messages can be attributed back to. */
+export type PostFormField = "title" | "slug" | "content";
+
+/**
+ * Map an API error message back to the form field it concerns, so the UI can
+ * highlight that field and scroll to it instead of just showing a generic
+ * top-level error.
+ *
+ * Heuristic: scan the lowercased message for keywords. Returns null when the
+ * error isn't tied to a single field (e.g. "Internal server error").
+ */
+export function inferErrorField(message: string): PostFormField | null {
+  const m = message.toLowerCase();
+  if (m.includes("slug")) return "slug";
+  if (m.includes("title")) return "title";
+  if (m.includes("content")) return "content";
+  return null;
+}
+
+
 export interface BuildSubmitBodyArgs {
   isEditing: boolean;
   title: string;
