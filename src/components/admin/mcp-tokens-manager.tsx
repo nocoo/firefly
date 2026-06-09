@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { KeyRound, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { McpToken, McpTokenScope } from "@/models/types";
+import { EmptyState } from "@/components/ui/empty-state";
 import { McpSetupGuide } from "./mcp-tokens-setup-guide";
 import { McpTokensTable } from "./mcp-tokens-table";
 import { McpTokenCreateForm } from "./mcp-tokens-create-form";
@@ -164,10 +165,11 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
       />
 
       {tokens.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-          <KeyRound className="h-10 w-10 mb-3 opacity-40" strokeWidth={1.5} />
-          <p className="text-sm">暂无 MCP 令牌。创建一个以连接 AI Agent。</p>
-        </div>
+        <EmptyState
+          icon={KeyRound}
+          message="暂无 MCP 令牌。创建一个以连接 AI Agent。"
+          variant="admin"
+        />
       ) : (
         <div className="space-y-3">
           {revokedCount > 0 && (

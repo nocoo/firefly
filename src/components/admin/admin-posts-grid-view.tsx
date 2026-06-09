@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { FileX } from "lucide-react";
 import type { PostWithCategory } from "@/models/types";
 import { PostGridCard } from "@/components/admin/post-grid-card";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const GRID_PAGE_SIZE = 36;
 
@@ -113,9 +115,7 @@ export function AdminPostsGridView({
       )}
 
       {!loading && posts.length === 0 && (
-        <div className="py-8 text-center text-muted-foreground">
-          未找到文章
-        </div>
+        <EmptyState icon={FileX} message="未找到文章" variant="admin" />
       )}
     </>
   );
