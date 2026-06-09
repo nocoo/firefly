@@ -35,6 +35,12 @@ export interface UploadHandlers {
  * queue state (pending / uploading / success / error) so the UI can render an
  * actual upload list instead of a single "X / Y" counter — failures stay
  * visible until the user dismisses them.
+ *
+ * Concurrency: only one batch in flight at a time. A drop arriving while a
+ * batch is already running is rejected with a toast — this keeps queue/state
+ * writes from racing across overlapping loops (the older approach would let
+ * a stale loop keep `setUploading`/`setQueue`-ing after a newer batch took
+ * over the visible state). Users can re-drop once the first batch finishes.
  */
 export function useMediaUpload(
   onUploadComplete: (item: MediaWithUrl) => void,
@@ -44,6 +50,10 @@ export function useMediaUpload(
   const [queue, setQueue] = useState<UploadItem[]>([]);
   const dragCounterRef = useRef(0);
   const idCounterRef = useRef(0);
+  /** Mirrors `uploading` but readable synchronously inside event handlers — a
+   *  React state read in onDrop would still be the closure value from when
+   *  the handler was bound. */
+  const uploadingRef = useRef(false);
 
   const onDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -62,9 +72,9 @@ export function useMediaUpload(
   }, []);
 
   const dismissQueue = useCallback(() => {
-    if (uploading) return;
+    if (uploadingRef.current) return;
     setQueue([]);
-  }, [uploading]);
+  }, []);
 
   const onDrop = useCallback(
     async (e: React.DragEvent) => {
@@ -75,6 +85,11 @@ export function useMediaUpload(
       const files = Array.from(e.dataTransfer.files);
       if (files.length === 0) return;
 
+      if (uploadingRef.current) {
+        toast.error("当前批次仍在上传，请等待完成后再试");
+        return;
+      }
+
       // New drop starts a fresh queue (no carry-over from prior runs).
       const items: UploadItem[] = files.map((f) => ({
         id: `upload-${++idCounterRef.current}`,
@@ -83,31 +98,54 @@ export function useMediaUpload(
         status: "pending",
       }));
       setQueue(items);
+      uploadingRef.current = true;
       setUploading(true);
 
       let successCount = 0;
 
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const itemId = items[i].id;
-        setQueue((prev) =>
-          prev.map((it) =>
-            it.id === itemId ? { ...it, status: "uploading" } : it,
-          ),
-        );
+      try {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const itemId = items[i].id;
+          setQueue((prev) =>
+            prev.map((it) =>
+              it.id === itemId ? { ...it, status: "uploading" } : it,
+            ),
+          );
 
-        try {
-          const formData = new FormData();
-          formData.append("file", file);
+          try {
+            const formData = new FormData();
+            formData.append("file", file);
 
-          const res = await fetch("/api/media", {
-            method: "POST",
-            body: formData,
-          });
+            const res = await fetch("/api/media", {
+              method: "POST",
+              body: formData,
+            });
 
-          if (!res.ok) {
-            const data = (await res.json()) as { error?: string };
-            const msg = data.error ?? "上传失败";
+            if (!res.ok) {
+              const data = (await res.json()) as { error?: string };
+              const msg = data.error ?? "上传失败";
+              setQueue((prev) =>
+                prev.map((it) =>
+                  it.id === itemId
+                    ? { ...it, status: "error", errorMessage: msg }
+                    : it,
+                ),
+              );
+              toast.error(`上传失败：${file.name}: ${msg}`);
+              continue;
+            }
+
+            const data = await res.json();
+            onUploadComplete({ ...data, url: data.url });
+            successCount++;
+            setQueue((prev) =>
+              prev.map((it) =>
+                it.id === itemId ? { ...it, status: "success" } : it,
+              ),
+            );
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : "上传失败";
             setQueue((prev) =>
               prev.map((it) =>
                 it.id === itemId
@@ -115,32 +153,14 @@ export function useMediaUpload(
                   : it,
               ),
             );
-            toast.error(`上传失败：${file.name}: ${msg}`);
-            continue;
+            toast.error(`上传失败：${file.name}`);
           }
-
-          const data = await res.json();
-          onUploadComplete({ ...data, url: data.url });
-          successCount++;
-          setQueue((prev) =>
-            prev.map((it) =>
-              it.id === itemId ? { ...it, status: "success" } : it,
-            ),
-          );
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : "上传失败";
-          setQueue((prev) =>
-            prev.map((it) =>
-              it.id === itemId
-                ? { ...it, status: "error", errorMessage: msg }
-                : it,
-            ),
-          );
-          toast.error(`上传失败：${file.name}`);
         }
+      } finally {
+        uploadingRef.current = false;
+        setUploading(false);
       }
 
-      setUploading(false);
       if (successCount > 0) {
         toast.success(`已上传 ${successCount} 个文件`);
       }
