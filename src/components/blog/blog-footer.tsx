@@ -46,31 +46,19 @@ export function BlogFooter({ siteName }: BlogFooterProps) {
         {/* col 1: brand */}
         <div className="zed-footer-col">
           <p className="zed-footer-heading">{siteName}</p>
-          <p style={{ fontFamily: "var(--ff-mono)", fontSize: "0.8125rem", color: "rgba(255,255,255,0.78)", margin: "0.25em 0 1em" }}>
-            © {year}
-          </p>
+          <p className="zed-footer-copyright">© {year}</p>
           <button
             type="button"
             onClick={() => {
-              const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-              window.scrollTo({ top: 0, behavior: prefersReduced ? "auto" : "smooth" });
+              const prefersReduced = window.matchMedia(
+                "(prefers-reduced-motion: reduce)",
+              ).matches;
+              window.scrollTo({
+                top: 0,
+                behavior: prefersReduced ? "auto" : "smooth",
+              });
             }}
-            className="zed-footer-list"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.4em",
-              fontFamily: "var(--ff-mono)",
-              fontSize: "0.8125rem",
-              color: "rgba(255,255,255,0.78)",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: 0,
-              textDecoration: "underline",
-              textDecorationColor: "rgba(255,255,255,0.3)",
-              textUnderlineOffset: "3px",
-            }}
+            className="zed-footer-back-to-top"
             aria-label={t("footer.back-to-top")}
           >
             <ArrowUp className="h-3 w-3" strokeWidth={1.5} />

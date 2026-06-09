@@ -55,7 +55,7 @@
 
   /* Code */
   & pre                 { font-family: var(--ff-mono); font-size: 0.8125em; border: 1px solid var(--blog-separator); background: var(--blog-code-bg); }
-  & :not(pre) > code    { font-family: var(--ff-mono); font-size: 0.85em; padding: 0.15em 0.35em; border: 1px solid var(--blog-separator); background: var(--blog-code-bg); }
+  & :not(pre) > code    { font-family: var(--ff-mono); font-size: 0.875em; padding: 0.2em 0.4em; border: 1px solid var(--blog-separator); background: var(--blog-code-bg); border-radius: 3px; }
   & :not(pre) > code::before,
   & :not(pre) > code::after { content: none; }
 
