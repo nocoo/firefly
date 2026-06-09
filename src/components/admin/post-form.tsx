@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Category, PostStatus, PostWithCategory, Tag } from "@/models/types";
 import { slugify } from "@/models/post";
@@ -23,6 +23,8 @@ import {
 import {
   buildSubmitBody,
   epochToDatetimeLocal,
+  inferErrorField,
+  type PostFormField,
 } from "./post-form-helpers";
 
 interface PostFormProps {
@@ -91,7 +93,13 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
 
   // ── Form state ──
   const [saving, setSaving] = useState(false);
+  /** General save error (when no specific field can be inferred). */
   const [error, setError] = useState<string | null>(null);
+  /** Field-level error: which field is in error + the message to display. */
+  const [fieldError, setFieldError] = useState<{
+    field: PostFormField;
+    message: string;
+  } | null>(null);
   const [title, setTitle] = useState(post?.title ?? "");
   const [slug, setSlug] = useState(post?.slug ?? "");
   const [content, setContent] = useState(post?.content ?? "");
@@ -103,6 +111,23 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
   const [publishedAtLocal, setPublishedAtLocal] = useState(() =>
     epochToDatetimeLocal(post?.published_at),
   );
+
+  // ── Field refs (for scroll/focus on field-level errors) ──
+  const titleRef = useRef<HTMLInputElement>(null);
+  const slugRef = useRef<HTMLInputElement>(null);
+  const contentSectionRef = useRef<HTMLDivElement>(null);
+
+  const focusField = (field: PostFormField) => {
+    const el =
+      field === "title"
+        ? titleRef.current
+        : field === "slug"
+          ? slugRef.current
+          : contentSectionRef.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    if ("focus" in el) (el as HTMLElement).focus({ preventScroll: true });
+  };
 
   // Reference state (compound)
   const [reference, setReference] = useState<ReferenceState>({
@@ -161,6 +186,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
     e.preventDefault();
     setSaving(true);
     setError(null);
+    setFieldError(null);
 
     try {
       const body = buildSubmitBody({
@@ -187,8 +213,19 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       });
 
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error ?? "保存文章失败");
+        const errData = (await res.json()) as { error?: string };
+        const message = errData.error ?? "保存文章失败";
+        const field = inferErrorField(message);
+        if (field) {
+          setFieldError({ field, message });
+          toast.error(message);
+          // Defer to next tick so the field-level error renders first
+          setTimeout(() => focusField(field), 0);
+        } else {
+          setError(message);
+        }
+        setSaving(false);
+        return;
       }
 
       // Backfill post_id on media uploaded during new post creation
@@ -207,7 +244,6 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "未知错误");
-    } finally {
       setSaving(false);
     }
   };
@@ -227,13 +263,27 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         </label>
         <input
           id="title"
+          ref={titleRef}
           type="text"
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
           required
-          className="w-full rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-invalid={fieldError?.field === "title" || undefined}
+          aria-describedby={
+            fieldError?.field === "title" ? "title-error" : undefined
+          }
+          className={`w-full rounded-widget border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+            fieldError?.field === "title"
+              ? "border-destructive"
+              : "border-border"
+          }`}
           placeholder="文章标题"
         />
+        {fieldError?.field === "title" && (
+          <p id="title-error" className="text-xs text-destructive">
+            {fieldError.message}
+          </p>
+        )}
       </div>
 
       {/* Slug */}
@@ -243,22 +293,39 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         </label>
         <input
           id="slug"
+          ref={slugRef}
           type="text"
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
           required
-          className="w-full rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-invalid={fieldError?.field === "slug" || undefined}
+          aria-describedby={
+            fieldError?.field === "slug" ? "slug-error" : undefined
+          }
+          className={`w-full rounded-widget border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+            fieldError?.field === "slug" ? "border-destructive" : "border-border"
+          }`}
           placeholder={"url-slug"}
         />
+        {fieldError?.field === "slug" && (
+          <p id="slug-error" className="text-xs text-destructive">
+            {fieldError.message}
+          </p>
+        )}
       </div>
 
-      <PostContentEditor
-        content={content}
-        onContentChange={setContent}
-        uploadedMedia={uploadedMedia}
-        onUploadedMediaChange={setUploadedMedia}
-        {...(post?.id ? { postId: post.id } : {})}
-      />
+      <div ref={contentSectionRef}>
+        <PostContentEditor
+          content={content}
+          onContentChange={setContent}
+          uploadedMedia={uploadedMedia}
+          onUploadedMediaChange={setUploadedMedia}
+          {...(post?.id ? { postId: post.id } : {})}
+        />
+        {fieldError?.field === "content" && (
+          <p className="mt-2 text-xs text-destructive">{fieldError.message}</p>
+        )}
+      </div>
 
       <PostExcerptField
         excerpt={excerpt}
