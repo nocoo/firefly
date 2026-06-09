@@ -1,0 +1,83 @@
+/*
+ * Print stylesheet — strip chrome, scale prose for paper.
+ *
+ * Audience: someone hitting Cmd+P on a blog post page. They want the article
+ * text, byline, references — not the sidebar, global bar, footer, decorative
+ * grain, or the cross-dividers/ruler ticks that read as visual noise on paper.
+ *
+ * Targets only blog surfaces (`.blog-shell` and descendants). Admin print is
+ * out of scope — admins reach for screenshots, not print.
+ */
+@media print {
+  /* ── Chrome ── */
+  .blog-sidebar-desktop,
+  .blog-global-bar,
+  .blog-sidebar-toggle,
+  .zed-footer,
+  .blog-footer,
+  .article-nav,
+  .comments {
+    display: none !important;
+  }
+
+  /* ── Decoration ── */
+  .blog-shell::after { display: none; }                /* grain noise — already in globals */
+  .page-wrapper { border-left: none; border-right: none; }
+  .page-wrapper::before,
+  .page-wrapper::after { display: none; }              /* edge ruler ticks */
+  .cross-divider { background: #ccc; }
+  .cross-divider::before,
+  .cross-divider::after { display: none; }             /* end-ring punches */
+  hr.blog-hr::before,
+  hr.blog-hr::after,
+  .blog-content hr::before,
+  .blog-content hr::after { display: none; }            /* + end nodes */
+
+  /* ── Layout ── */
+  html, body {
+    background: white !important;
+    color: black !important;
+  }
+  .blog-shell { background: white !important; }
+  .blog-main {
+    background: white !important;
+    padding: 0 !important;
+    width: 100% !important;
+    box-shadow: none !important;
+  }
+  .blog-max-width { display: block !important; }
+  .blog-max-width::after { display: none; }            /* sidebar separator line */
+
+  /* ── Prose ── */
+  .prose-firefly {
+    font-size: 11pt !important;
+    line-height: 1.6 !important;
+    color: black !important;
+  }
+  .prose-firefly :is(h1, h2, h3, h4, h5, h6) {
+    color: black !important;
+    page-break-after: avoid;
+  }
+  .prose-firefly :is(p, li, blockquote) { orphans: 3; widows: 3; }
+  .prose-firefly pre,
+  .prose-firefly img,
+  .prose-firefly figure,
+  .prose-firefly table { page-break-inside: avoid; }
+
+  /* Reveal link targets — readers can't click on paper */
+  .prose-firefly a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    color: #555;
+    word-break: break-all;
+  }
+  .prose-firefly a[href^="#"]::after,
+  .prose-firefly a[href^="javascript:"]::after { content: ""; }
+
+  /* ── Reference card → simplified ── */
+  .reference-card {
+    border: 1px solid #999 !important;
+    page-break-inside: avoid;
+  }
+  .reference-card-image { display: none; }
+}
