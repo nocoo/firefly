@@ -29,6 +29,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { filterCommandsByQuery } from "@/lib/command-filter";
 import type { PostWithCategory } from "@/models/types";
 import type { PostStatus } from "@/models/types";
 import { STATUS_COLORS } from "@/lib/status-colors";
@@ -124,17 +125,11 @@ const NAV_COMMANDS: NavCommand[] = [
 
 /**
  * Filter navigation commands against a free-text query. Empty query returns
- * all commands (the palette shows the full nav list as default). Matches are
- * case-insensitive substring on label OR any keyword — cheap and predictable.
+ * all commands. Match logic lives in `lib/command-filter` so it can be
+ * unit-tested independently of the React shell.
  */
 function filterNavCommands(query: string): NavCommand[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return NAV_COMMANDS;
-  return NAV_COMMANDS.filter(
-    (cmd) =>
-      cmd.label.toLowerCase().includes(q) ||
-      cmd.keywords.some((kw) => kw.toLowerCase().includes(q)),
-  );
+  return filterCommandsByQuery(NAV_COMMANDS, query);
 }
 
 // ---------------------------------------------------------------------------
