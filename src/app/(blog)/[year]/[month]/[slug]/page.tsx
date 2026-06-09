@@ -58,11 +58,17 @@ export async function generateMetadata({
   const authorMeta = getPostAuthorForMeta(post, settings, SITE_URL);
   const path = postPath(post.slug, post.published_at);
 
+  // OG image preference: post's featured_image first, then dynamically
+  // generated /api/og card so every post has a usable share preview even
+  // without a featured image set.
+  const ogFallback = `/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(settings.siteName)}`;
+  const ogImage = post.featured_image ?? ogFallback;
+
   return buildPageMeta({
     title: post.title,
     description: post.excerpt ?? "",
     path,
-    image: post.featured_image ?? undefined,
+    image: ogImage,
     type: "article",
     publishedTime: post.published_at
       ? formatDateISO(post.published_at)
