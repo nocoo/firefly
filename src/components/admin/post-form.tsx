@@ -26,6 +26,8 @@ import {
   inferErrorField,
   type PostFormField,
 } from "./post-form-helpers";
+import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/ui/form-field";
 
 interface PostFormProps {
   post?: PostWithCategory & { tagIds: string[] };
@@ -257,11 +259,12 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
       )}
 
       {/* Title */}
-      <div className="space-y-2">
-        <label htmlFor="title" className="text-sm font-medium text-foreground">
-          标题
-        </label>
-        <input
+      <FormField
+        id="title"
+        label="标题"
+        error={fieldError?.field === "title" ? fieldError.message : null}
+      >
+        <Input
           id="title"
           ref={titleRef}
           type="text"
@@ -272,26 +275,20 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           aria-describedby={
             fieldError?.field === "title" ? "title-error" : undefined
           }
-          className={`w-full rounded-widget border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-            fieldError?.field === "title"
-              ? "border-destructive"
-              : "border-border"
-          }`}
+          className={
+            fieldError?.field === "title" ? "border-destructive" : undefined
+          }
           placeholder="文章标题"
         />
-        {fieldError?.field === "title" && (
-          <p id="title-error" className="text-xs text-destructive">
-            {fieldError.message}
-          </p>
-        )}
-      </div>
+      </FormField>
 
       {/* Slug */}
-      <div className="space-y-2">
-        <label htmlFor="slug" className="text-sm font-medium text-foreground">
-          {"别名"}
-        </label>
-        <input
+      <FormField
+        id="slug"
+        label="别名"
+        error={fieldError?.field === "slug" ? fieldError.message : null}
+      >
+        <Input
           id="slug"
           ref={slugRef}
           type="text"
@@ -302,17 +299,12 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
           aria-describedby={
             fieldError?.field === "slug" ? "slug-error" : undefined
           }
-          className={`w-full rounded-widget border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-            fieldError?.field === "slug" ? "border-destructive" : "border-border"
-          }`}
-          placeholder={"url-slug"}
+          className={
+            fieldError?.field === "slug" ? "border-destructive" : undefined
+          }
+          placeholder="url-slug"
         />
-        {fieldError?.field === "slug" && (
-          <p id="slug-error" className="text-xs text-destructive">
-            {fieldError.message}
-          </p>
-        )}
-      </div>
+      </FormField>
 
       <div ref={contentSectionRef}>
         <PostContentEditor
