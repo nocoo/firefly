@@ -183,17 +183,24 @@ export function TaxonomyManager({
         </button>
       )}
 
-      {(creating || editing) && (
-        <TaxonomyForm
-          label={label}
-          editing={!!editing}
-          state={form}
-          saving={saving}
-          onChange={setForm}
-          onSave={handleSave}
-          onCancel={resetForm}
-        />
-      )}
+      {(creating || editing) && (() => {
+        const currentSlug = editing
+          ? orderedItems.find((it) => it.id === editing)?.slug
+          : undefined;
+        return (
+          <TaxonomyForm
+            label={label}
+            editing={!!editing}
+            state={form}
+            saving={saving}
+            existingSlugs={new Set(orderedItems.map((it) => it.slug))}
+            {...(currentSlug ? { currentSlug } : {})}
+            onChange={setForm}
+            onSave={handleSave}
+            onCancel={resetForm}
+          />
+        );
+      })()}
 
       <TaxonomyTable
         type={type}
