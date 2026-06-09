@@ -53,7 +53,7 @@ export function PostCard({ post, author, priority, snippet }: PostCardProps) {
           )}
         </span>
         {author && (
-          <span className="blog-byline-item blog-byline-author">
+          <span className="blog-byline-item">
             {author.avatarUrl ? (
               <Image
                 src={author.avatarUrl}
