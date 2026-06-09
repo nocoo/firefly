@@ -265,19 +265,11 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         error={fieldError?.field === "title" ? fieldError.message : null}
       >
         <Input
-          id="title"
           ref={titleRef}
           type="text"
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
           required
-          aria-invalid={fieldError?.field === "title" || undefined}
-          aria-describedby={
-            fieldError?.field === "title" ? "title-error" : undefined
-          }
-          className={
-            fieldError?.field === "title" ? "border-destructive" : undefined
-          }
           placeholder="文章标题"
         />
       </FormField>
@@ -289,19 +281,11 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         error={fieldError?.field === "slug" ? fieldError.message : null}
       >
         <Input
-          id="slug"
           ref={slugRef}
           type="text"
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
           required
-          aria-invalid={fieldError?.field === "slug" || undefined}
-          aria-describedby={
-            fieldError?.field === "slug" ? "slug-error" : undefined
-          }
-          className={
-            fieldError?.field === "slug" ? "border-destructive" : undefined
-          }
           placeholder="url-slug"
         />
       </FormField>
