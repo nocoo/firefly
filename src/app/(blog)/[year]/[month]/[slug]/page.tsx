@@ -8,6 +8,7 @@ import { getPostBySlug, getPostTags, getAdjacentPosts } from "@/data/entities/po
 import { getSiteSettings } from "@/data/settings";
 import { isAdminSession } from "@/lib/auth";
 import { listCommentsByPost, buildCommentTree } from "@/data/entities/comment";
+import { FeaturedImage } from "@/components/blog/featured-image";
 import { renderMarkdown } from "@/models/markdown";
 import { Calendar, Folder, Clock, SquarePen, User } from "lucide-react";
 import {
@@ -197,16 +198,11 @@ export default async function PostPage({ params }: PostPageProps) {
         }
         featuredImage={
           post.featured_image ? (
-            <div className="blog-featured-image">
-              <Image
-                src={post.featured_image}
-                alt={post.title}
-                fill
-                sizes="(max-width: 900px) 100vw, min(75vw, 1000px)"
-                priority
-                fetchPriority="high"
-              />
-            </div>
+            <FeaturedImage
+              src={post.featured_image}
+              alt={post.title}
+              priority
+            />
           ) : undefined
         }
         referenceCard={

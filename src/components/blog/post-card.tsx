@@ -4,6 +4,7 @@ import { ArrowRight, Calendar, User } from "lucide-react";
 import type { PostWithAgent } from "@/models/types";
 import { postPath, formatDateDisplay } from "@/lib/seo";
 import { sanitizeSnippet } from "@/lib/sanitize-snippet";
+import { FEATURED_IMAGE_SIZES } from "@/components/blog/featured-image";
 
 export interface PostCardAuthor {
   name: string;
@@ -78,7 +79,7 @@ export function PostCard({ post, author, priority, snippet }: PostCardProps) {
               src={post.featured_image}
               alt={post.title}
               fill
-              sizes="(max-width: 900px) 100vw, min(75vw, 1000px)"
+              sizes={FEATURED_IMAGE_SIZES}
               priority={priority ?? false}
               {...(priority ? { fetchPriority: "high" as const } : {})}
             />

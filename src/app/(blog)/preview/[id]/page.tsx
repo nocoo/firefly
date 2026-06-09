@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
@@ -9,6 +8,7 @@ import { renderMarkdown } from "@/models/markdown";
 import { ArticleBody } from "@/components/blog/article-body";
 import { ContentImageLightbox } from "@/components/blog/content-image-lightbox";
 import { ReferenceCard } from "@/components/blog/reference-card";
+import { FeaturedImage } from "@/components/blog/featured-image";
 import { formatDateDisplay } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -80,16 +80,11 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
         }
         featuredImage={
           post.featured_image ? (
-            <div className="blog-featured-image">
-              <Image
-                src={post.featured_image}
-                alt={post.title}
-                fill
-                sizes="(max-width: 900px) 100vw, min(75vw, 1000px)"
-                priority
-                fetchPriority="high"
-              />
-            </div>
+            <FeaturedImage
+              src={post.featured_image}
+              alt={post.title}
+              priority
+            />
           ) : undefined
         }
         referenceCard={
