@@ -5,12 +5,29 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Search, Loader2 } from "lucide-react";
+import {
+  Search,
+  Loader2,
+  FileText,
+  Tag,
+  Folder,
+  Image,
+  Settings,
+  KeyRound,
+  Users,
+  Activity,
+  Database,
+  BarChart3,
+  Sparkles,
+  Building2,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PostWithCategory } from "@/models/types";
 import type { PostStatus } from "@/models/types";
@@ -74,6 +91,51 @@ const STATUS_LABELS: Record<PostStatus, string> = {
   private: "私密",
   archived: "已归档",
 };
+
+// ---------------------------------------------------------------------------
+// Navigation commands — page-jump targets always available in the palette.
+// Order = display order in the "导航" section. Keywords broaden matching so
+// e.g. "media" matches "媒体库", "settings" matches "站点设置".
+// ---------------------------------------------------------------------------
+
+interface NavCommand {
+  id: string;
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  keywords: string[];
+}
+
+const NAV_COMMANDS: NavCommand[] = [
+  { id: "nav-dashboard", label: "Dashboard", href: "/admin", icon: BarChart3, keywords: ["dashboard", "analytics", "概览", "仪表盘"] },
+  { id: "nav-posts", label: "文章", href: "/admin/posts", icon: FileText, keywords: ["posts", "articles", "文章"] },
+  { id: "nav-new-post", label: "新建文章", href: "/admin/posts/new", icon: FileText, keywords: ["new", "create", "新建", "撰写"] },
+  { id: "nav-media", label: "媒体库", href: "/admin/media", icon: Image, keywords: ["media", "images", "媒体", "图片"] },
+  { id: "nav-categories", label: "分类", href: "/admin/categories", icon: Folder, keywords: ["categories", "分类"] },
+  { id: "nav-tags", label: "标签", href: "/admin/tags", icon: Tag, keywords: ["tags", "标签"] },
+  { id: "nav-site-identity", label: "站点身份", href: "/admin/site-identity", icon: Building2, keywords: ["site", "identity", "branding", "站点", "身份", "品牌"] },
+  { id: "nav-settings", label: "设置", href: "/admin/settings", icon: Settings, keywords: ["settings", "preferences", "设置", "偏好"] },
+  { id: "nav-ai-agents", label: "AI 代理", href: "/admin/ai-agents", icon: Users, keywords: ["ai", "agents", "代理"] },
+  { id: "nav-ai-settings", label: "AI 设置", href: "/admin/ai-settings", icon: Sparkles, keywords: ["ai", "settings", "provider", "ai 设置"] },
+  { id: "nav-mcp", label: "MCP 令牌", href: "/admin/mcp", icon: KeyRound, keywords: ["mcp", "tokens", "api keys", "令牌"] },
+  { id: "nav-backup", label: "备份", href: "/admin/backup", icon: Database, keywords: ["backup", "restore", "备份"] },
+  { id: "nav-system", label: "系统监控", href: "/admin/system", icon: Activity, keywords: ["system", "memory", "monitor", "系统", "监控"] },
+];
+
+/**
+ * Filter navigation commands against a free-text query. Empty query returns
+ * all commands (the palette shows the full nav list as default). Matches are
+ * case-insensitive substring on label OR any keyword — cheap and predictable.
+ */
+function filterNavCommands(query: string): NavCommand[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return NAV_COMMANDS;
+  return NAV_COMMANDS.filter(
+    (cmd) =>
+      cmd.label.toLowerCase().includes(q) ||
+      cmd.keywords.some((kw) => kw.toLowerCase().includes(q)),
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Search result type
@@ -161,6 +223,7 @@ export function CommandPalette() {
 
   const handleInputChange = (value: string) => {
     setQuery(value);
+    setActiveIndex(0);
     clearTimeout(debounceRef.current);
     if (!value.trim()) {
       setResults(null);
@@ -184,25 +247,46 @@ export function CommandPalette() {
     [setOpen, router],
   );
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    const posts = results?.posts ?? [];
+  const navigateTo = useCallback(
+    (href: string) => {
+      setOpen(false);
+      router.push(href);
+    },
+    [setOpen, router],
+  );
 
+  const navCommands = useMemo(() => filterNavCommands(query), [query]);
+  const posts = useMemo(() => results?.posts ?? [], [results]);
+  const snippets = results?.snippets ?? {};
+  const totalItems = navCommands.length + posts.length;
+
+  const handleSelect = useCallback(
+    (index: number) => {
+      if (index < navCommands.length) {
+        navigateTo(navCommands[index].href);
+        return;
+      }
+      const post = posts[index - navCommands.length];
+      if (post) navigateToPost(post.id);
+    },
+    [navCommands, posts, navigateTo, navigateToPost],
+  );
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
-        setActiveIndex((prev) => (prev + 1) % Math.max(posts.length, 1));
+        setActiveIndex((prev) => (prev + 1) % Math.max(totalItems, 1));
         break;
       case "ArrowUp":
         e.preventDefault();
         setActiveIndex((prev) =>
-          prev <= 0 ? Math.max(posts.length - 1, 0) : prev - 1,
+          prev <= 0 ? Math.max(totalItems - 1, 0) : prev - 1,
         );
         break;
       case "Enter":
         e.preventDefault();
-        if (posts[activeIndex]) {
-          navigateToPost(posts[activeIndex].id);
-        }
+        handleSelect(activeIndex);
         break;
       case "Escape":
         e.preventDefault();
@@ -221,9 +305,9 @@ export function CommandPalette() {
 
   if (!open) return null;
 
-  const posts = results?.posts ?? [];
-  const snippets = results?.snippets ?? {};
   const hasQuery = query.trim().length > 0;
+  const showNoResults =
+    hasQuery && !loading && navCommands.length === 0 && posts.length === 0;
 
   return createPortal(
     <div className="fixed inset-0 z-50" onKeyDown={handleKeyDown}>
@@ -253,7 +337,7 @@ export function CommandPalette() {
             type="text"
             value={query}
             onChange={(e) => handleInputChange(e.target.value)}
-            placeholder="搜索文章..."
+            placeholder="搜索文章或跳转页面..."
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0"
           />
           <kbd className="hidden sm:inline-flex h-5 items-center rounded border border-border bg-background px-1.5 text-2xs font-medium text-muted-foreground">
@@ -266,58 +350,101 @@ export function CommandPalette() {
           ref={listRef}
           className="max-h-[min(400px,50vh)] overflow-y-auto overscroll-contain"
         >
-          {hasQuery && !loading && posts.length === 0 && (
+          {showNoResults && (
             <div className="px-4 py-8 text-center text-sm text-muted-foreground">
               没有找到结果
             </div>
           )}
 
+          {/* Navigation section */}
+          {navCommands.length > 0 && (
+            <div className="py-1">
+              <div className="px-4 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
+                导航
+              </div>
+              {navCommands.map((cmd, navIndex) => {
+                const index = navIndex;
+                const Icon = cmd.icon;
+                return (
+                  <button
+                    key={cmd.id}
+                    data-active={index === activeIndex}
+                    onClick={() => handleSelect(index)}
+                    onMouseEnter={() => setActiveIndex(index)}
+                    className={cn(
+                      "flex w-full items-center gap-2 px-4 py-2 text-left transition-colors",
+                      index === activeIndex
+                        ? "bg-secondary text-foreground"
+                        : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
+                    )}
+                  >
+                    <Icon
+                      className="h-4 w-4 shrink-0 text-muted-foreground"
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                    />
+                    <span className="flex-1 truncate text-sm text-foreground">
+                      {cmd.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Posts section */}
           {posts.length > 0 && (
             <div className="py-1">
-              {posts.map((post, index) => (
-                <button
-                  key={post.id}
-                  data-active={index === activeIndex}
-                  onClick={() => navigateToPost(post.id)}
-                  onMouseEnter={() => setActiveIndex(index)}
-                  className={cn(
-                    "flex w-full flex-col gap-1 px-4 py-2.5 text-left transition-colors",
-                    index === activeIndex
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="flex-1 truncate text-sm font-medium text-foreground">
-                      {post.title}
-                    </span>
-                    <span
-                      className={cn(
-                        "inline-flex shrink-0 rounded-full px-2 py-0.5 text-2xs font-medium leading-none",
-                        STATUS_COLORS[post.status as PostStatus] ?? "",
-                      )}
-                    >
-                      {STATUS_LABELS[post.status as PostStatus] ?? post.status}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    {post.category_name && (
-                      <span className="truncate">{post.category_name}</span>
+              <div className="px-4 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
+                文章
+              </div>
+              {posts.map((post, postIndex) => {
+                const index = navCommands.length + postIndex;
+                return (
+                  <button
+                    key={post.id}
+                    data-active={index === activeIndex}
+                    onClick={() => handleSelect(index)}
+                    onMouseEnter={() => setActiveIndex(index)}
+                    className={cn(
+                      "flex w-full flex-col gap-1 px-4 py-2.5 text-left transition-colors",
+                      index === activeIndex
+                        ? "bg-secondary text-foreground"
+                        : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
                     )}
-                    {post.category_name && snippets[post.id] && (
-                      <span aria-hidden="true">·</span>
-                    )}
-                    {snippets[post.id] && (
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="flex-1 truncate text-sm font-medium text-foreground">
+                        {post.title}
+                      </span>
                       <span
-                        className="flex-1 truncate [&>mark]:bg-yellow-200 [&>mark]:text-yellow-900 dark:[&>mark]:bg-yellow-800/40 dark:[&>mark]:text-yellow-200"
-                        dangerouslySetInnerHTML={{
-                          __html: sanitizeSnippet(snippets[post.id]),
-                        }}
-                      />
-                    )}
-                  </div>
-                </button>
-              ))}
+                        className={cn(
+                          "inline-flex shrink-0 rounded-full px-2 py-0.5 text-2xs font-medium leading-none",
+                          STATUS_COLORS[post.status as PostStatus] ?? "",
+                        )}
+                      >
+                        {STATUS_LABELS[post.status as PostStatus] ?? post.status}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {post.category_name && (
+                        <span className="truncate">{post.category_name}</span>
+                      )}
+                      {post.category_name && snippets[post.id] && (
+                        <span aria-hidden="true">·</span>
+                      )}
+                      {snippets[post.id] && (
+                        <span
+                          className="flex-1 truncate [&>mark]:bg-yellow-200 [&>mark]:text-yellow-900 dark:[&>mark]:bg-yellow-800/40 dark:[&>mark]:text-yellow-200"
+                          dangerouslySetInnerHTML={{
+                            __html: sanitizeSnippet(snippets[post.id]),
+                          }}
+                        />
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
