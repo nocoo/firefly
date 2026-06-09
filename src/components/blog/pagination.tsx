@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { buildPageSlots } from "@/lib/pagination";
 
 interface PaginationProps {
   currentPage: number;
@@ -88,56 +89,4 @@ export function Pagination({
       )}
     </nav>
   );
-}
-
-/**
- * Build an array of page numbers and "..." ellipsis markers.
- * Always includes first page, last page, and pages around current (±2).
- * Ensures at least 4 consecutive pages at edges.
- *
- * Examples (current=1, total=20):
- *   [1, 2, 3, 4, "...", 20]
- *
- * (current=6, total=20):
- *   [1, "...", 4, 5, 6, 7, 8, "...", 20]
- *
- * (current=1, total=5):
- *   [1, 2, 3, 4, 5]
- */
-function buildPageSlots(
-  current: number,
-  total: number,
-): (number | "...")[] {
-  // If few enough pages, show all
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }
-
-  const slots = new Set<number>();
-  // Always include first and last
-  slots.add(1);
-  slots.add(total);
-  // Current and neighbors ±2
-  for (let i = current - 2; i <= current + 2; i++) {
-    if (i >= 1 && i <= total) slots.add(i);
-  }
-  // Ensure at least 4 consecutive pages at edges
-  if (current <= 3) {
-    for (let i = 1; i <= Math.min(4, total); i++) slots.add(i);
-  }
-  if (current >= total - 2) {
-    for (let i = Math.max(1, total - 3); i <= total; i++) slots.add(i);
-  }
-
-  const sorted = [...slots].sort((a, b) => a - b);
-  const result: (number | "...")[] = [];
-
-  for (let i = 0; i < sorted.length; i++) {
-    if (i > 0 && sorted[i] - sorted[i - 1] > 1) {
-      result.push("...");
-    }
-    result.push(sorted[i]);
-  }
-
-  return result;
 }
