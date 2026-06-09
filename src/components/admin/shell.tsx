@@ -11,25 +11,28 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { IconButton } from "@/components/ui/icon-button";
 import { Toaster } from "@/components/ui/sonner";
 import { PageSubtitleProvider, usePageSubtitle } from "@/components/admin/page-subtitle-context";
+import { t, type TranslationKey } from "@/lib/i18n";
 import {
   CommandPaletteProvider,
   CommandPalette,
 } from "@/components/admin/command-palette";
 
-// Map admin routes to page titles
-const PAGE_TITLES: Record<string, string> = {
-  "/admin": "仪表盘",
-  "/admin/posts": "文章",
-  "/admin/categories": "分类",
-  "/admin/tags": "标签",
-  "/admin/media": "媒体库",
-  "/admin/site-identity": "站点身份",
-  "/admin/settings": "通用设置",
-  "/admin/ai-settings": "AI 设置",
-  "/admin/ai-agents": "AI 代理",
-  "/admin/mcp": "MCP 令牌",
-  "/admin/backup": "备份管理",
-  "/admin/system": "系统监控",
+// Map admin routes to dictionary keys. Title strings live in the dictionary
+// so they are translatable and share a source of truth with command-palette
+// navigation labels.
+const PAGE_TITLE_KEYS: Record<string, TranslationKey> = {
+  "/admin": "admin.page.dashboard",
+  "/admin/posts": "admin.page.posts",
+  "/admin/categories": "admin.page.categories",
+  "/admin/tags": "admin.page.tags",
+  "/admin/media": "admin.page.media",
+  "/admin/site-identity": "admin.page.site-identity",
+  "/admin/settings": "admin.page.settings",
+  "/admin/ai-settings": "admin.page.ai-settings",
+  "/admin/ai-agents": "admin.page.ai-agents",
+  "/admin/mcp": "admin.page.mcp",
+  "/admin/backup": "admin.page.backup",
+  "/admin/system": "admin.page.system",
 };
 
 interface AdminShellProps {
@@ -62,12 +65,12 @@ export function AdminShell({ user, children }: AdminShellProps) {
   }, [isTablet]);
 
   // Resolve page title from pathname
-  const title =
-    PAGE_TITLES[pathname] ??
-    Object.entries(PAGE_TITLES).find(([key]) =>
+  const titleKey =
+    PAGE_TITLE_KEYS[pathname] ??
+    Object.entries(PAGE_TITLE_KEYS).find(([key]) =>
       key !== "/admin" && pathname.startsWith(key),
-    )?.[1] ??
-    "管理";
+    )?.[1];
+  const title = titleKey ? t(titleKey) : "管理";
 
   // Close mobile sidebar on route change — intentional setState in effect
   // to sync UI with navigation (external event from Next.js router).
