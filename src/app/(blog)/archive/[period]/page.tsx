@@ -5,6 +5,7 @@ import { listPosts } from "@/data/entities/post";
 import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
+import { ListPageHeader } from "@/components/blog/list-page-header";
 import { buildPageMeta, SITE_URL, postPath } from "@/lib/seo";
 import { collectionPageJsonLd } from "@/lib/jsonld";
 import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
@@ -76,14 +77,7 @@ export default async function ArchivePage({ params }: ArchivePageProps) {
         }}
       />
 
-      <header className="mb-8">
-        <h1 className="text-2xl font-bold leading-tight text-blog-text md:text-3xl">
-          {label}
-        </h1>
-        <p className="mt-1 text-xs text-blog-muted">
-          {`${total} 篇文章`}
-        </p>
-      </header>
+      <ListPageHeader title={label} description={`${total} 篇文章`} />
 
       <section>
         {posts.length === 0 ? (

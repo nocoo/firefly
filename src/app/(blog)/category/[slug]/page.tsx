@@ -6,6 +6,7 @@ import { listPosts } from "@/data/entities/post";
 import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
+import { ListPageHeader } from "@/components/blog/list-page-header";
 import { buildPageMeta, SITE_URL, postPath } from "@/lib/seo";
 import { collectionPageJsonLd } from "@/lib/jsonld";
 import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
@@ -70,19 +71,16 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         }}
       />
 
-      <header className="mb-8">
-        <h1 className="text-2xl font-bold leading-tight text-blog-text md:text-3xl">
-          {category.name}
-        </h1>
-        {category.description && (
-          <p className="mt-2 text-sm text-blog-muted">
-            {category.description}
-          </p>
-        )}
-        <p className="mt-1 text-xs text-blog-muted">
-          {`${category.post_count} 篇文章`}
-        </p>
-      </header>
+      <ListPageHeader
+        title={category.name}
+        description={
+          <>
+            {category.description && <span>{category.description}</span>}
+            {category.description && <br />}
+            <span>{`${category.post_count} 篇文章`}</span>
+          </>
+        }
+      />
 
       <section>
         {posts.length === 0 ? (
