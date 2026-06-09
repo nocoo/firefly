@@ -8,7 +8,7 @@ import { slugify } from "@/models/post";
 import { type UploadResult } from "./image-upload-zone";
 import { MarkdownPreview } from "./markdown-preview";
 import { ConfirmDialog } from "./confirm-dialog";
-import { PostContentEditor } from "./post-form-content-editor";
+import { PostContentEditor, type PostContentEditorHandle } from "./post-form-content-editor";
 import {
   PostExcerptField,
   PostFeaturedImageField,
@@ -117,18 +117,17 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
   // ── Field refs (for scroll/focus on field-level errors) ──
   const titleRef = useRef<HTMLInputElement>(null);
   const slugRef = useRef<HTMLInputElement>(null);
-  const contentRef = useRef<HTMLTextAreaElement>(null);
+  const contentRef = useRef<PostContentEditorHandle>(null);
 
   const focusField = (field: PostFormField) => {
-    const el =
-      field === "title"
-        ? titleRef.current
-        : field === "slug"
-          ? slugRef.current
-          : contentRef.current;
+    if (field === "content") {
+      contentRef.current?.focusVisible();
+      return;
+    }
+    const el = field === "title" ? titleRef.current : slugRef.current;
     if (!el) return;
     el.scrollIntoView({ behavior: "smooth", block: "center" });
-    if ("focus" in el) (el as HTMLElement).focus({ preventScroll: true });
+    el.focus({ preventScroll: true });
   };
 
   // Reference state (compound)

@@ -1,11 +1,18 @@
 "use client";
 
-import { useMemo, useState, forwardRef } from "react";
+import { useMemo, useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { renderMarkdown } from "@/models/markdown";
 import { ArticleBody } from "@/components/blog/article-body";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUploadZone, type UploadResult } from "./image-upload-zone";
+
+export interface PostContentEditorHandle {
+  /** Focus + scroll the textarea that's actually visible at the current
+   *  viewport. Mobile and desktop each mount their own; this picks the one
+   *  whose `offsetParent` is non-null (visible) and falls back to the other. */
+  focusVisible: () => void;
+}
 
 interface PostContentEditorProps {
   content: string;
@@ -22,14 +29,14 @@ interface PostContentEditorProps {
  * Content editor: textarea + image upload zone, with a mobile Write/Preview tab
  * switcher and a desktop layout that delegates the preview to the right column.
  *
- * The forwarded ref points at the *currently visible* textarea — desktop on
- * `lg+`, mobile otherwise. The parent uses it to focus/scroll on save errors.
- * Mobile and desktop textareas need distinct DOM ids; the shared label uses
- * `htmlFor="content-mobile"` (only one is in the document at a time on small
- * screens), and the desktop variant relies on `aria-labelledby="content-label"`.
+ * Mobile and desktop each mount a separate Textarea (only one is visible at a
+ * time via Tailwind responsive utilities). The parent uses the imperative
+ * `focusVisible()` handle to focus whichever one the user actually sees on save
+ * errors — without it, a shared ref would clobber to the last-mounted (desktop)
+ * node and mobile errors would scroll to an invisible textarea.
  */
 export const PostContentEditor = forwardRef<
-  HTMLTextAreaElement,
+  PostContentEditorHandle,
   PostContentEditorProps
 >(function PostContentEditor(
   {
@@ -46,6 +53,29 @@ export const PostContentEditor = forwardRef<
   const previewHtml = useMemo(
     () => (previewMode && content ? renderMarkdown(content) : ""),
     [previewMode, content],
+  );
+
+  const mobileRef = useRef<HTMLTextAreaElement>(null);
+  const desktopRef = useRef<HTMLTextAreaElement>(null);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      focusVisible: () => {
+        // `offsetParent` is null when the element (or an ancestor) is
+        // `display: none` — the canonical "is it visible?" check for hidden
+        // siblings. Prefer the visible one; fall back to whichever is mounted.
+        const candidates = [mobileRef.current, desktopRef.current];
+        const visible = candidates.find(
+          (el) => el !== null && el.offsetParent !== null,
+        );
+        const target = visible ?? candidates.find((el) => el !== null) ?? null;
+        if (!target) return;
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+        target.focus({ preventScroll: true });
+      },
+    }),
+    [],
   );
 
   const uploadProps = postId ? { postId } : {};
@@ -97,7 +127,7 @@ export const PostContentEditor = forwardRef<
               {...uploadProps}
             />
             <Textarea
-              ref={ref}
+              ref={mobileRef}
               id="content-mobile"
               value={content}
               onChange={(e) => onContentChange(e.target.value)}
@@ -121,7 +151,7 @@ export const PostContentEditor = forwardRef<
           {...uploadProps}
         />
         <Textarea
-          ref={ref}
+          ref={desktopRef}
           id="content-desktop"
           aria-labelledby="content-label"
           value={content}
@@ -143,4 +173,5 @@ export const PostContentEditor = forwardRef<
     </div>
   );
 });
+
 
