@@ -11,12 +11,17 @@ interface CommentItemProps {
 function CommentItem({ comment, depth = 0, isAdmin }: CommentItemProps) {
   const maxNestingDepth = 3;
   const effectiveDepth = Math.min(depth, maxNestingDepth);
+  const anchorId = `c-${comment.id}`;
+  const isoDate = new Date(comment.created_at * 1000).toISOString();
 
   return (
     <div
-      className={effectiveDepth > 0 ? "ml-6 border-l-2 border-blog-separator pl-4" : ""}
+      id={anchorId}
+      className={
+        effectiveDepth > 0 ? "ml-6 border-l-2 border-blog-separator pl-4" : ""
+      }
     >
-      <div className="py-4">
+      <div className="py-4 scroll-mt-12">
         <div className="mb-2 flex items-center gap-2 text-sm text-blog-text">
           <span className="font-medium text-blog-text">
             {comment.author_url ? (
@@ -33,9 +38,15 @@ function CommentItem({ comment, depth = 0, isAdmin }: CommentItemProps) {
             )}
           </span>
           <span>&middot;</span>
-          <time dateTime={new Date(comment.created_at * 1000).toISOString()}>
-            {formatDateDisplay(comment.created_at)}
-          </time>
+          <a
+            href={`#${anchorId}`}
+            className="text-blog-muted hover:text-blog-accent transition-colors"
+            aria-label="评论链接"
+          >
+            <time dateTime={isoDate}>
+              {formatDateDisplay(comment.created_at)}
+            </time>
+          </a>
           {isAdmin && (
             <DeleteCommentButton
               commentId={comment.id}
