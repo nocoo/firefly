@@ -143,7 +143,7 @@ export default async function PostPage({ params }: PostPageProps) {
               {post.title}
             </h1>
             <div className="blog-byline">
-              <span className="blog-byline-item blog-byline-author">
+              <span className="blog-byline-item">
                 {author.avatarUrl ? (
                   <Image
                     src={author.avatarUrl}
