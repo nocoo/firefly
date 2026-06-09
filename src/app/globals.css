@@ -65,6 +65,11 @@
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
   }
+  /* On blog surfaces, the admin --ring (bright primary blue) clashes with
+   * the cream palette. Match the focus ring to the blog accent instead. */
+  .blog-shell *:focus-visible {
+    outline-color: var(--blog-accent);
+  }
   body {
     @apply bg-background text-foreground;
     font-family: var(--ff-sans);
