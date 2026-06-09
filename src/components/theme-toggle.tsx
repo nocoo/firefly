@@ -4,6 +4,7 @@ import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Monitor } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
+import { t } from "@/lib/i18n";
 
 const ICON_PROPS = {
   className: "h-4 w-4",
@@ -33,15 +34,17 @@ export function ThemeToggle() {
 
   const label =
     theme === "light"
-      ? "浅色"
+      ? t("theme.toggle.label.light")
       : theme === "dark"
-        ? "深色"
-        : "跟随系统";
+        ? t("theme.toggle.label.dark")
+        : t("theme.toggle.label.system");
 
   // Render a static placeholder until mounted to avoid hydration mismatch
   if (!mounted) {
     return (
-      <IconButton aria-label={`切换主题（当前：跟随系统）`}>
+      <IconButton
+        aria-label={`${t("theme.toggle.tip.next")}（${t("theme.toggle.label.system")}）`}
+      >
         <Monitor {...ICON_PROPS} />
       </IconButton>
     );
@@ -50,7 +53,7 @@ export function ThemeToggle() {
   return (
     <IconButton
       onClick={cycleTheme}
-      aria-label={`切换主题（当前：${label}）`}
+      aria-label={`${t("theme.toggle.tip.next")}（${label}）`}
     >
       {theme === "dark" ? (
         <Moon {...ICON_PROPS} />

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowUp } from "lucide-react";
+import { t } from "@/lib/i18n";
 
 interface BlogFooterProps {
   siteName: string;
@@ -20,16 +21,16 @@ interface FooterColumn {
 
 const COLUMNS: FooterColumn[] = [
   {
-    heading: "内容",
+    heading: t("footer.column.content"),
     links: [
-      { label: "首页", href: "/" },
-      { label: "搜索", href: "/search" },
+      { label: t("footer.link.home"), href: "/" },
+      { label: t("footer.link.search"), href: "/search" },
     ],
   },
   {
-    heading: "资源",
+    heading: t("footer.column.resources"),
     links: [
-      { label: "RSS Feed", href: "/feed.xml" },
+      { label: t("footer.link.rss"), href: "/feed.xml" },
       { label: "站点地图", href: "/sitemap.xml" },
       { label: "llms.txt", href: "/llms.txt" },
     ],
@@ -70,10 +71,10 @@ export function BlogFooter({ siteName }: BlogFooterProps) {
               textDecorationColor: "rgba(255,255,255,0.3)",
               textUnderlineOffset: "3px",
             }}
-            aria-label="回到顶部"
+            aria-label={t("footer.back-to-top")}
           >
             <ArrowUp className="h-3 w-3" strokeWidth={1.5} />
-            回到顶部
+            {t("footer.back-to-top")}
           </button>
         </div>
 
