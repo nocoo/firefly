@@ -42,8 +42,13 @@ export function FormField({
   children,
   className,
 }: FormFieldProps) {
-  const descriptionId = description ? `${id}-description` : undefined;
-  const errorId = error ? `${id}-error` : undefined;
+  // If the child already declares its own id, label must point at THAT —
+  // otherwise <label htmlFor> dangles to a non-existent element. The
+  // description/error ids piggyback on the same effective id so all three
+  // (label, helper, error) stay anchored to the same control.
+  const controlId = children.props.id ?? id;
+  const descriptionId = description ? `${controlId}-description` : undefined;
+  const errorId = error ? `${controlId}-error` : undefined;
   const describedBy =
     [descriptionId, errorId].filter(Boolean).join(" ") || undefined;
 
@@ -63,7 +68,7 @@ export function FormField({
     "aria-describedby"?: string;
     "aria-invalid"?: boolean;
   } = {
-    id: children.props.id ?? id,
+    id: controlId,
   };
   if (errorClassName) cloneProps.className = errorClassName;
   if (mergedDescribedBy) cloneProps["aria-describedby"] = mergedDescribedBy;
@@ -75,7 +80,7 @@ export function FormField({
 
   return (
     <div className={cn("space-y-2", className)}>
-      <label htmlFor={id} className="text-sm font-medium text-foreground">
+      <label htmlFor={controlId} className="text-sm font-medium text-foreground">
         {label}
       </label>
       {description && (
