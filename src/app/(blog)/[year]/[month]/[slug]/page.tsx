@@ -24,6 +24,7 @@ import { ArticleBody } from "@/components/blog/article-body";
 import { ContentImageLightbox } from "@/components/blog/content-image-lightbox";
 import { ReferenceCard } from "@/components/blog/reference-card";
 import { ArticleNav } from "@/components/blog/article-nav";
+import { ReadingProgress } from "@/components/blog/reading-progress";
 import { getPostAuthor, getPostAuthorForMeta } from "@/lib/ai-agent/author";
 
 // Deduplicate getPostBySlug across generateMetadata + page component
@@ -127,6 +128,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
   return (
     <>
+      <ReadingProgress />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: blogPostingJsonLd(post, settings, tagNames, jsonLdAuthor) }}
