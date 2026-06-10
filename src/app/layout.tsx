@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { ThemeProvider } from "next-themes";
 import { IBM_Plex_Sans, IBM_Plex_Mono, IBM_Plex_Serif } from "next/font/google";
 import { SITE_URL, OG_LOCALE, HTML_LANG } from "@/lib/seo";
 import { getDb } from "@/lib/db";
 import { getSiteSettings } from "@/data/settings";
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -115,14 +115,7 @@ export default async function RootLayout({
         <meta name="theme-color" content="#13151a" media="(prefers-color-scheme: dark)" />
       </head>
       <body className="antialiased">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );
