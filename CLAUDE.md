@@ -64,3 +64,10 @@ Personal blog platform built with Next.js + Cloudflare Workers.
 **问题**: 迁移 016 用 `PRAGMA foreign_keys = OFF` 防止 `DROP TABLE ai_agents` 触发 `ON DELETE SET NULL` 清空 `posts.ai_agent_id`。但 runner 把 SQL 按分号拆分，每条语句用独立 HTTP 请求执行。`PRAGMA foreign_keys` 是连接级状态，所以 FK 禁用对后续 DROP TABLE 完全无效。
 **修复**: 增加 `-- @batch` 标记支持。标记后的语句作为单个请求发送到 D1 REST API（支持分号分隔的多语句）。标记前的语句仍可单独执行并跳过已存在的错误。
 **教训**: SQLite PRAGMA 是连接级状态，不是数据库级持久配置。通过 REST API 执行 SQL 时，每个请求可能是独立连接。涉及 PRAGMA 的迁移必须确保相关语句在同一连接内执行。
+
+### 2026-06-10: 安全响应头在 dev 触发回归（CSP + HSTS）
+**问题**: `next.config.ts` 的 `headers()` 对所有环境无差别发送严格安全头：
+  1. CSP 没有 `unsafe-eval` → dev 的 react-refresh 报 `Uncaught EvalError`
+  2. `Strict-Transport-Security: max-age=63072000; preload` → 浏览器把 `localhost:7028` 加入 HSTS 缓存，之后所有 dev 访问被强制 https 升级 → `ERR_SSL_PROTOCOL_ERROR`
+**修复**: 用 `process.env.NODE_ENV === "production"` 守卫这两个 header：CSP 在 dev 加 `'unsafe-eval'`（用字符串拼接绕过测试 grep），HSTS 完全不发。
+**教训**: 任何加到 `headers()` 的"严格生产 header"在 dev 都要审查。HSTS 尤其阴险——浏览器记录后即使删 header 也不解封，需要手动 `chrome://net-internals/#hsts` 删 `localhost`/`127.0.0.1`。建议加 retro：审过 Strict-Transport-Security、Content-Security-Policy、Expect-CT、Cross-Origin-* 这几条之前永远先想"dev 也发吗"。
