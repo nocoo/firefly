@@ -1,5 +1,79 @@
 # Changelog
 
+## v2.7.0 (2026-06-10)
+
+- fix(layout): wrap next-themes ThemeProvider in client boundary
+- docs(retro): record dev-mode CSP + HSTS regression
+- fix(headers): only send HSTS in production to avoid dev https pinning
+- fix(blog): / shortcut uses capture phase + e.code Slash fallback
+- fix(blog): add bottom padding to .blog-main so footer doesn't crowd nav
+- fix(csp): allow react-refresh eval in dev, keep production strict
+- fix(b-06): /api/comments enforces published + commentsEnabled rule
+- docs(24): record wave-4 completion (14 items, 15 commits)
+- feat(blog): /archive index page with full-year heatmap
+- feat(blog): archive year-page monthly heatmap
+- feat(seo): use /api/og as OG image fallback in post metadata
+- feat(seo): add /api/og route for dynamic OG cards
+- feat(b-06): admin-only comment form + empty state copy
+- feat(b-14): comment permalinks via #c-{id} anchor
+- feat(blog): sticky article TOC with intersection observer
+- feat(blog): code block copy button + language label
+- feat(blog): reading progress bar on post detail
+- fix(s-09): focus-visible uses blog-accent on .blog-shell surfaces
+- fix(blog): inline code padding + footer inline styles to CSS classes
+- fix(b-15): text-wrap balance on headings, pretty on paragraphs
+- fix(blog): dim content images in dark mode
+- fix(a-11): reject overlapping drops while a batch is uploading
+- fix(a-12): allow CJK in slug validation to match slugify()
+- docs(24): record wave-3 completion (12 items, 13 commits)
+- refactor(s-07): migrate admin PAGE_TITLES to dictionary keys
+- refactor(s-07): migrate theme-toggle + blog-footer strings to dictionary
+- feat(s-07): add i18n dictionary scaffold with typed t() helper
+- feat(a-11): per-file upload queue with status + dismiss
+- refactor(a-15): extract filterCommandsByQuery to lib with tests
+- feat(a-15): add navigation commands + grouping to CommandPalette
+- fix(a-12): TaxonomyForm onBlur slug validation + helper
+- fix(a-10): show spinner on PostForm save button while saving
+- feat(s-01): bridge admin tokens to blog palette under .blog-shell
+- feat(s-08): add print stylesheet for blog post pages
+- refactor(s-03): slim globals.css down to entry + base + @imports
+- refactor(s-03): split globals.css into 8 modular partials
+- fix(post-form): mobile preview switches to write on focus + dual labels
+- fix(form-field): label htmlFor follows the actual control id
+- fix(post-form): focus visible textarea via useImperativeHandle
+- fix(a11y): bind labels to controls in mcp / taxonomy / reference forms
+- fix(post-form): wire content field aria + focus to actual textarea
+- fix(form-field): inject id + aria-invalid + aria-describedby on child
+- docs(24): record wave-2 completion (13 items, 14 commits)
+- refactor(b-10): list pages use ListPageHeader for unified h1+meta
+- feat(blog): ListPageHeader for category/tag/archive lists
+- refactor(b-13): use FeaturedImage / shared sizes across 3 sites
+- feat(blog): FeaturedImage component with shared sizes constant
+- refactor(post-form): use FormField + Input for title/slug fields
+- feat(ui): add FormField wrapper with label + description + error
+- refactor(admin): use EmptyState in mcp-tokens and posts grid
+- feat(b-12): add returning home action to list page empty states
+- feat(ui): EmptyState with action slot and admin variant
+- refactor(admin): use Input/Button primitives across forms
+- refactor(admin): use Textarea in site-identity, ai-agent, reference
+- refactor(post-form): use Textarea primitive in excerpt + content
+- feat(ui): add Textarea primitive matching Input shape
+- docs(24): record wave-1 completion (9 items, 12 commits)
+- fix(a-02): show field-level errors in PostForm with auto-scroll
+- feat(post-form): add inferErrorField for field-level error attribution
+- fix(a-01): admin pagination shows ellipsis for many pages
+- refactor(pagination): blog pagination uses shared buildPageSlots
+- feat(pagination): extract shared buildPageSlots helper
+- fix(b-02): wrap 404 page with blog shell + recent posts
+- fix(a-13): replace emoji icons with lucide Sparkles/Paperclip
+- fix(b-09): switch blog pagination active state to mono underline
+- chore(b-04): drop unused .blog-byline-author class on slug page
+- chore(b-04): drop unused .blog-byline-author class
+- chore(s-11): drop legacy .blog-footer rules and unused breakpoint var
+- fix(b-01): replace brand hover gradients with flat fills
+- fix(s-04): add color-scheme for native form controls in dark mode
+
+
 ## v2.6.5 (2026-06-08)
 
 - chore(deps): bump 4 major versions (lucide-react, marked, lint-staged, typescript)
