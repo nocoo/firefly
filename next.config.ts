@@ -56,6 +56,23 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
+    // HSTS must NOT be sent on plain-http dev — once a browser sees a
+    // valid HSTS header from `localhost:7028`, it pins HTTPS for two years
+    // and every subsequent dev request fails with ERR_SSL_PROTOCOL_ERROR.
+    // (Recovery is browser-specific: chrome://net-internals/#hsts.)
+    // Same logic for the CSP relaxation in `buildScriptSrc` — production
+    // gets the strict headers, dev gets a relaxed subset.
+    const isProd = process.env.NODE_ENV === "production";
+
+    const prodOnlyHeaders = isProd
+      ? [
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+        ]
+      : [];
+
     return [
       {
         source: "/(.*)",
@@ -76,10 +93,7 @@ const nextConfig: NextConfig = {
             key: "X-Content-Type-Options",
             value: "nosniff",
           },
-          {
-            key: "Strict-Transport-Security",
-            value: "max-age=63072000; includeSubDomains; preload",
-          },
+          ...prodOnlyHeaders,
           {
             key: "Referrer-Policy",
             value: "strict-origin-when-cross-origin",
