@@ -202,7 +202,11 @@
   background: var(--blog-surface);
   flex: 1;
   min-width: 0;
-  padding: var(--blog-content-padding) var(--blog-content-padding) 0;
+  /* Bottom padding gives ArticleNav / list pagination breathing room before
+   * the footer kicks in. Top stays at --blog-content-padding to match the
+   * page-wrapper's vertical rhythm; bottom is a touch larger so the footer
+   * reads as a separate band, not a flush continuation of the article. */
+  padding: var(--blog-content-padding) var(--blog-content-padding) 4rem;
   position: relative;
   min-height: 100vh;
   width: 100%;
@@ -222,7 +226,7 @@
 }
 @media (prefers-reduced-motion: reduce) { .blog-main { animation: none; } }
 @media (max-width: 768px) {
-  .blog-main { padding: 1.5rem 1.25rem 0; }
+  .blog-main { padding: 1.5rem 1.25rem 2.5rem; }
 }
 
 /* ─── Global bar (top-right) ─── */
