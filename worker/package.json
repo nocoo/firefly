@@ -11,7 +11,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "4.20260609.1",
+    "@cloudflare/workers-types": "4.20260610.1",
     "@vitest/coverage-v8": "^4.1.8",
     "typescript": "6.0.3",
     "vitest": "^4.1.8",
