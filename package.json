@@ -42,7 +42,7 @@
     "vitest": "4.1.8"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1066.0",
+    "@aws-sdk/client-s3": "^3.1067.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@nocoo/next-ai": "^0.2.1",
     "@radix-ui/react-alert-dialog": "^1.1.16",
