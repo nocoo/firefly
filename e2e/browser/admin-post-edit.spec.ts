@@ -69,7 +69,9 @@ test.describe("Admin post edit page", () => {
 
     // Tag pills render as buttons under a "标签" label. If the test DB has no
     // tags, PostTagsField renders a "暂无标签" placeholder instead.
-    const tagsLabel = page.getByText("标签", { exact: true });
+    // Scope to <label> elements so we don't collide with the admin sidebar's
+    // "标签" navigation link (which renders as <span>标签</span>).
+    const tagsLabel = page.locator("label", { hasText: "标签" }).first();
     await expect(tagsLabel).toBeVisible();
   });
 
