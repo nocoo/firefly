@@ -47,7 +47,7 @@
     "@nocoo/next-ai": "^0.2.1",
     "@radix-ui/react-alert-dialog": "^1.1.16",
     "@radix-ui/react-avatar": "^1.1.12",
-    "@tailwindcss/postcss": "^4.3.0",
+    "@tailwindcss/postcss": "^4.3.1",
     "@tailwindcss/typography": "^0.5.20",
     "ai": "^6.0.202",
     "class-variance-authority": "^0.7.1",
