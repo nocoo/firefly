@@ -7,16 +7,6 @@ import { nowEpoch, newId } from "@/data/core/timestamps";
 import type { McpToken, McpTokenScope } from "@/models/types";
 
 // ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-/** Access token TTL: 30 days in seconds */
-export const ACCESS_TOKEN_TTL = 30 * 24 * 60 * 60;
-
-/** Refresh token TTL: 90 days in seconds */
-export const REFRESH_TOKEN_TTL = 90 * 24 * 60 * 60;
-
-// ---------------------------------------------------------------------------
 // Input types
 // ---------------------------------------------------------------------------
 
@@ -76,8 +66,8 @@ export async function createMcpToken(
   const sql = `
     INSERT INTO mcp_tokens
       (id, access_token_hash, access_token_preview, refresh_token_hash,
-       client_id, user_email, scope, client_name, expires_at, refresh_expires_at, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       client_id, user_email, scope, client_name, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   await db.execute(sql, [
@@ -89,8 +79,6 @@ export async function createMcpToken(
     input.user_email,
     input.scope ?? "full",
     input.client_name ?? null,
-    now + ACCESS_TOKEN_TTL,
-    now + REFRESH_TOKEN_TTL,
     now,
   ]);
 
@@ -117,16 +105,15 @@ export async function getMcpTokenById(
 // getValidTokenByHash
 // ---------------------------------------------------------------------------
 
-/** Look up a valid (not revoked, not expired) token by access_token_hash. */
+/** Look up a non-revoked token by access_token_hash. */
 export async function getValidTokenByHash(
   db: Db,
   accessTokenHash: string,
 ): Promise<McpToken | null> {
-  const now = nowEpoch();
   return db.firstOrNull<McpToken>(
     `SELECT * FROM mcp_tokens
-     WHERE access_token_hash = ? AND revoked = 0 AND expires_at > ?`,
-    [accessTokenHash, now],
+     WHERE access_token_hash = ? AND revoked = 0`,
+    [accessTokenHash],
   );
 }
 
@@ -134,16 +121,15 @@ export async function getValidTokenByHash(
 // getValidTokenByRefreshHash
 // ---------------------------------------------------------------------------
 
-/** Look up a valid token by refresh_token_hash (for token refresh). */
+/** Look up a non-revoked token by refresh_token_hash (for token refresh). */
 export async function getValidTokenByRefreshHash(
   db: Db,
   refreshTokenHash: string,
 ): Promise<McpToken | null> {
-  const now = nowEpoch();
   return db.firstOrNull<McpToken>(
     `SELECT * FROM mcp_tokens
-     WHERE refresh_token_hash = ? AND revoked = 0 AND refresh_expires_at > ?`,
-    [refreshTokenHash, now],
+     WHERE refresh_token_hash = ? AND revoked = 0`,
+    [refreshTokenHash],
   );
 }
 
