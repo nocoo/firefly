@@ -9,7 +9,6 @@ import {
   createMcpToken,
   revokeTokensByClientId,
   getValidTokenByRefreshHash,
-  ACCESS_TOKEN_TTL,
 } from "@/data/mcp-tokens";
 import { getMcpClientByClientId } from "@/data/mcp-clients";
 import type { McpTokenScope } from "@/models/types";
@@ -169,7 +168,6 @@ async function issueTokenPair(
   return jsonResponse({
     access_token: accessToken,
     token_type: "Bearer",
-    expires_in: ACCESS_TOKEN_TTL,
     refresh_token: refreshToken,
     scope,
   });
