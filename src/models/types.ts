@@ -255,8 +255,6 @@ export interface McpToken {
   scope: McpTokenScope;
   client_name: string | null;
   last_used_at: number | null;
-  expires_at: number;
-  refresh_expires_at: number | null;
   revoked: number; // 0 = active, 1 = revoked
   revoked_at: number | null;
   created_at: number;
