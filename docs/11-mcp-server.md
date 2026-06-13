@@ -159,8 +159,6 @@ CREATE TABLE mcp_tokens (
   scope                 TEXT NOT NULL DEFAULT 'mcp:full',
   client_name           TEXT,                        -- denormalized for admin display
   last_used_at          INTEGER,
-  expires_at            INTEGER NOT NULL,            -- access token TTL: 30 days
-  refresh_expires_at    INTEGER,                     -- refresh token TTL: 90 days
   revoked               INTEGER NOT NULL DEFAULT 0,  -- 0=active, 1=revoked
   revoked_at            INTEGER,                     -- unix epoch, set when revoked
   created_at            INTEGER NOT NULL DEFAULT (unixepoch())
@@ -289,7 +287,6 @@ Response:
 {
   "access_token": "firefly_at_...",
   "token_type": "Bearer",
-  "expires_in": 2592000,
   "refresh_token": "firefly_rt_...",
   "scope": "mcp:full"
 }
@@ -313,7 +310,7 @@ Validation (validate-then-consume — never burns a legitimate code on bad input
    If `changes === 0` → race condition, another request consumed it first → reject
 6. Generate `access_token` (prefix `firefly_at_`, 48-char random hex)
 7. Generate `refresh_token` (prefix `firefly_rt_`, 48-char random hex)
-8. Store `SHA256(access_token)` and `SHA256(refresh_token)` in `mcp_tokens`, access TTL 30 days, refresh TTL 90 days
+8. Store `SHA256(access_token)` and `SHA256(refresh_token)` in `mcp_tokens` — tokens do not expire; they remain valid until revoked
 9. Return plaintext tokens to client (only time they're visible)
 
 > **Design rationale**: steps 2-4 validate _before_ consuming. A request with correct `code` but wrong `client_id` or bad `code_verifier` will be rejected without consuming the code. This prevents a malicious or buggy client from burning a legitimate code by guessing part of the flow. The race window between SELECT (step 1) and UPDATE (step 5) is safe because: (a) the code is single-use so only the legitimate holder should know it, and (b) the final `WHERE consumed = 0` in step 5 prevents double-spend.
@@ -336,10 +333,10 @@ Token rotation: each refresh invalidates the previous pair and issues a new pair
 | Token Type | TTL | Prefix | Rotation |
 |------------|-----|--------|----------|
 | Authorization Code | 10 min | (raw hex) | Single-use |
-| Access Token | 30 days | `firefly_at_` | Rotated on refresh |
-| Refresh Token | 90 days | `firefly_rt_` | Rotated on refresh |
+| Access Token | none (until revoked) | `firefly_at_` | Rotated on refresh |
+| Refresh Token | none (until revoked) | `firefly_rt_` | Rotated on refresh |
 
-The long TTL for access tokens (30 days) is intentional for a single-user blog — agents shouldn't need to re-authenticate frequently.
+MCP tokens are issued to long-lived agent clients on a single-user blog. They do not expire on their own — admins revoke them from `/admin/mcp` when needed. Rotation on refresh remains the primary defense against leaked tokens.
 
 ---
 
@@ -361,7 +358,7 @@ File: `src/app/api/mcp/route.ts`
 - `DELETE /api/mcp` — session termination
 - `Mcp-Session-Id` header for stateful session management (requires sticky sessions or external session store)
 
-Authentication: every request must include `Authorization: Bearer <access_token>`. Validate by computing `SHA256(token)` and looking up `access_token_hash` in `mcp_tokens` table (not revoked, not expired). Update `last_used_at` on each valid call.
+Authentication: every request must include `Authorization: Bearer <access_token>`. Validate by computing `SHA256(token)` and looking up `access_token_hash` in `mcp_tokens` table (not revoked). Update `last_used_at` on each valid call.
 
 ### 2.2 Server Identity
 
@@ -1062,7 +1059,6 @@ The page displays all issued MCP tokens with management controls:
 │  │  Token:      firefly_at_a1b2...                    │  │
 │  │  Created:    2026-03-20                                │  │
 │  │  Last used:  2 hours ago                               │  │
-│  │  Expires:    2026-04-19                                │  │
 │  │                                          [Revoke]      │  │
 │  ├────────────────────────────────────────────────────────┤  │
 │  │  ○ Revoked   Cursor                                    │  │
@@ -1106,7 +1102,6 @@ Response:
       "access_token_preview": "firefly_at_a1b2",
       "scope": "mcp:full",
       "last_used_at": 1711234567,
-      "expires_at": 1713826567,
       "revoked": false,
       "revoked_at": null,
       "created_at": 1711234567
@@ -1295,8 +1290,8 @@ export async function POST(req: Request): Promise<Response> {
 
 | Layer | Coverage Target | Key Tests |
 |-------|----------------|-----------|
-| Data (`mcp-*.ts`) | Token CRUD, expiry check, revocation logic | Token validation with expired/revoked/valid states |
-| Auth (`lib/mcp/auth.ts`) | Bearer extraction, token lookup, `last_used_at` update | Missing header, invalid token, expired token |
+| Data (`mcp-*.ts`) | Token CRUD, revocation logic | Token validation with revoked/valid states |
+| Auth (`lib/mcp/auth.ts`) | Bearer extraction, token lookup, `last_used_at` update | Missing header, invalid token, revoked token |
 | Tools (`lib/mcp/tools/*.ts`) | Input validation, data layer delegation | Each tool with valid/invalid inputs |
 | OAuth endpoints | Registration validation, PKCE verification, code exchange | Invalid client_id, expired code, wrong verifier |
 

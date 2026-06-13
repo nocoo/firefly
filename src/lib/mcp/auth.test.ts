@@ -33,8 +33,6 @@ const sampleToken: McpToken = {
   scope: "full",
   client_name: "Claude Code",
   last_used_at: null,
-  expires_at: now + 86400,
-  refresh_expires_at: now + 86400 * 90,
   revoked: 0,
   revoked_at: null,
   created_at: now,

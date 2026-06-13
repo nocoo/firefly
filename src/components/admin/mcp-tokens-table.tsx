@@ -11,12 +11,10 @@ function formatDate(epoch: number | null): string {
 
 function statusFor(token: McpToken): { label: string; cls: string } {
   const isRevoked = token.revoked === 1;
-  const isExpired = token.expires_at < Math.floor(Date.now() / 1000);
-  const label = isRevoked ? "已撤销" : isExpired ? "已过期" : "有效";
-  const cls =
-    isRevoked || isExpired
-      ? "text-muted-foreground"
-      : "text-green-600 dark:text-green-400";
+  const label = isRevoked ? "已撤销" : "有效";
+  const cls = isRevoked
+    ? "text-muted-foreground"
+    : "text-green-600 dark:text-green-400";
   return { label, cls };
 }
 

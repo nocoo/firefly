@@ -19,8 +19,6 @@ import {
   randomHex,
   generateAccessToken,
   generateRefreshToken,
-  ACCESS_TOKEN_TTL,
-  REFRESH_TOKEN_TTL,
   type CreateMcpTokenInput,
 } from "./mcp-tokens";
 
@@ -41,8 +39,6 @@ const sampleToken: McpToken = {
   scope: "full",
   client_name: "Claude Code",
   last_used_at: null,
-  expires_at: now + ACCESS_TOKEN_TTL,
-  refresh_expires_at: now + REFRESH_TOKEN_TTL,
   revoked: 0,
   revoked_at: null,
   created_at: now,
@@ -186,12 +182,12 @@ describe("getValidTokenByHash", () => {
     const [sql, params] = vi.mocked(db.firstOrNull).mock.calls[0];
     expect(sql).toContain("access_token_hash = ?");
     expect(sql).toContain("revoked = 0");
-    expect(sql).toContain("expires_at > ?");
-    expect(params![0]).toBe("hash_at");
+    expect(sql).not.toContain("expires_at");
+    expect(params).toEqual(["hash_at"]);
     expect(result?.access_token_hash).toBe("hash_at");
   });
 
-  it("returns null for expired/revoked/missing token", async () => {
+  it("returns null for revoked/missing token", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(null);
     const result = await getValidTokenByHash(db, "bad_hash");
     expect(result).toBeNull();
@@ -214,8 +210,8 @@ describe("getValidTokenByRefreshHash", () => {
     const [sql, params] = vi.mocked(db.firstOrNull).mock.calls[0];
     expect(sql).toContain("refresh_token_hash = ?");
     expect(sql).toContain("revoked = 0");
-    expect(sql).toContain("refresh_expires_at > ?");
-    expect(params![0]).toBe("hash_rt");
+    expect(sql).not.toContain("refresh_expires_at");
+    expect(params).toEqual(["hash_rt"]);
     expect(result?.refresh_token_hash).toBe("hash_rt");
   });
 

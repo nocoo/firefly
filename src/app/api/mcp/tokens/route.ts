@@ -101,7 +101,6 @@ export async function POST(request: Request) {
       access_token: accessToken,
       refresh_token: refreshToken,
       token_type: "Bearer",
-      expires_in: token.expires_at - Math.floor(Date.now() / 1000),
       scope: token.scope,
       client_name: token.client_name,
     }, 201);
