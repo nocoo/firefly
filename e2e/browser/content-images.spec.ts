@@ -84,23 +84,8 @@ test.describe("Content image optimization & lightbox", () => {
     await seedPost();
   });
 
-  // 1. Inline images have srcset attribute
-  test("inline images have srcset attribute", async ({ page }) => {
-    await page.goto(postUrl(), { waitUntil: "networkidle" });
-
-    const img = page.locator(".blog-content img").first();
-    await expect(img).toBeVisible({ timeout: 10_000 });
-    await expect(img).toHaveAttribute("srcset", /\d+w/);
-  });
-
-  // 2. Inline image src points to /_next/image
-  test("inline image src points to /_next/image", async ({ page }) => {
-    await page.goto(postUrl(), { waitUntil: "networkidle" });
-
-    const img = page.locator(".blog-content img").first();
-    await expect(img).toBeVisible({ timeout: 10_000 });
-    await expect(img).toHaveAttribute("src", /\/_next\/image/);
-  });
+  // 1+2. Inline image srcset + /_next/image src — migrated to
+  //      e2e/bdd/seo-rss.spec.ts (Phase 1.1, see docs/25-l3-bdd-refactor.md §1.2.1).
 
   // 3. Click inline image opens lightbox overlay
   test("click inline image opens lightbox", async ({ page }) => {
@@ -199,25 +184,9 @@ test.describe("Content image optimization & lightbox", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 7. RSS feed — inline images use raw <img> src (no /_next/image)
+// 7. RSS feed inline image rendering — migrated to e2e/bdd/seo-rss.spec.ts
+//    (Phase 1.1, see docs/25-l3-bdd-refactor.md §1.2.1).
 // ---------------------------------------------------------------------------
-
-test.describe("RSS feed image URLs", () => {
-  test("RSS feed images do not use /_next/image proxy", async ({ page }) => {
-    const response = await page.goto("/feed.xml");
-    expect(response?.status()).toBe(200);
-
-    const body = await response!.text();
-
-    // If there are any <img tags in the feed, none should use /_next/image
-    if (body.includes("<img")) {
-      expect(body).not.toContain("/_next/image");
-    }
-
-    // The feed should NOT contain srcset attributes (raw HTML only)
-    expect(body).not.toMatch(/srcset=/);
-  });
-});
 
 // ---------------------------------------------------------------------------
 // 8. Admin media library — lightbox with metadata panel

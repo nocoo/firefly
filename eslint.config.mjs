@@ -26,8 +26,22 @@ export default tseslint.config(
       "no-restricted-syntax": [
         "error",
         {
-          selector: "CallExpression[callee.property.name='skip']",
-          message: "Do not commit .skip tests",
+          // Unconditional `.skip()` / `.skip("reason")` — committed skip.
+          selector:
+            "CallExpression[callee.property.name='skip'][arguments.length<2]",
+          message: "Do not commit unconditional .skip tests",
+        },
+        {
+          // Declared skip such as `test.skip("scenario name", fn)` or
+          // `test.skip(true, "reason")`. Conditional skips
+          // `test.skip(condition, reason)` where the condition is an
+          // expression (MemberExpression / CallExpression / Identifier)
+          // remain allowed — they are how the L3 BDD specs gate empty-data
+          // scenarios per docs/25-l3-bdd-refactor.md §2.4.
+          selector:
+            "CallExpression[callee.property.name='skip'][arguments.0.type='Literal']",
+          message:
+            "Do not commit declared .skip tests; use conditional test.skip(condition, reason) only",
         },
         {
           selector: "CallExpression[callee.property.name='only']",
