@@ -358,7 +358,7 @@ File: `src/app/api/mcp/route.ts`
 - `DELETE /api/mcp` — session termination
 - `Mcp-Session-Id` header for stateful session management (requires sticky sessions or external session store)
 
-Authentication: every request must include `Authorization: Bearer <access_token>`. Validate by computing `SHA256(token)` and looking up `access_token_hash` in `mcp_tokens` table (not revoked, not expired). Update `last_used_at` on each valid call.
+Authentication: every request must include `Authorization: Bearer <access_token>`. Validate by computing `SHA256(token)` and looking up `access_token_hash` in `mcp_tokens` table (not revoked). Update `last_used_at` on each valid call.
 
 ### 2.2 Server Identity
 
@@ -1290,8 +1290,8 @@ export async function POST(req: Request): Promise<Response> {
 
 | Layer | Coverage Target | Key Tests |
 |-------|----------------|-----------|
-| Data (`mcp-*.ts`) | Token CRUD, expiry check, revocation logic | Token validation with expired/revoked/valid states |
-| Auth (`lib/mcp/auth.ts`) | Bearer extraction, token lookup, `last_used_at` update | Missing header, invalid token, expired token |
+| Data (`mcp-*.ts`) | Token CRUD, revocation logic | Token validation with revoked/valid states |
+| Auth (`lib/mcp/auth.ts`) | Bearer extraction, token lookup, `last_used_at` update | Missing header, invalid token, revoked token |
 | Tools (`lib/mcp/tools/*.ts`) | Input validation, data layer delegation | Each tool with valid/invalid inputs |
 | OAuth endpoints | Registration validation, PKCE verification, code exchange | Invalid client_id, expired code, wrong verifier |
 

@@ -117,7 +117,7 @@ async function handleRefreshToken(body: FormData) {
   const refreshHash = await sha256(refreshToken);
   const existingToken = await getValidTokenByRefreshHash(db, refreshHash);
   if (!existingToken) {
-    return oauthError("invalid_grant", "Refresh token is invalid, expired, or revoked");
+    return oauthError("invalid_grant", "Refresh token is invalid or revoked");
   }
 
   // Verify client_id matches
