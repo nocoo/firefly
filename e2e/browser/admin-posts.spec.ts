@@ -1,31 +1,14 @@
 /**
- * L3 E2E: Admin dashboard and posts management
+ * L3 E2E: Admin posts list + post editor (Phase 3.4 source spec).
  *
- * Covers: /admin, /admin/posts, /admin/posts/new, /admin/posts/[id]/edit
+ * Covers: /admin/posts, /admin/posts/new
+ *
+ * Dashboard scenarios and the "analytics page" dashboard smoke were migrated
+ * to e2e/bdd/admin-dashboard.spec.ts in Phase 2.2 (see
+ * docs/25-l3-bdd-refactor.md §1.2.2). The remaining 8 tests below
+ * (posts list + editor) will be migrated in Phase 3.4.
  */
 import { test, expect } from "@playwright/test";
-
-test.describe("Admin dashboard", () => {
-  test("dashboard loads with sidebar navigation", async ({ page }) => {
-    await page.goto("/admin", { waitUntil: "networkidle" });
-    await expect(page).toHaveURL(/\/admin/);
-
-    // Sidebar should be visible with nav links
-    const sidebar = page.locator("aside, nav").first();
-    await expect(sidebar).toBeVisible();
-
-    // Check for common admin nav items
-    await expect(page.locator('a[href*="/admin/posts"]').first()).toBeVisible();
-  });
-
-  test("dashboard shows stats widgets", async ({ page }) => {
-    await page.goto("/admin", { waitUntil: "networkidle" });
-
-    // Dashboard should have some stats or quick actions
-    const heading = page.locator("h1, h2").first();
-    await expect(heading).toBeVisible();
-  });
-});
 
 test.describe("Admin posts list", () => {
   test("posts list page loads", async ({ page }) => {
@@ -111,16 +94,5 @@ test.describe("Admin post editor - new post", () => {
     ).first();
     await titleInput.fill("E2E Test Post Title");
     await expect(titleInput).toHaveValue("E2E Test Post Title");
-  });
-});
-
-test.describe("Admin analytics page", () => {
-  test("analytics page loads", async ({ page }) => {
-    await page.goto("/admin", { waitUntil: "networkidle" });
-
-    // Analytics is typically on the dashboard or a dedicated page
-    // Check for analytics-related content
-    const heading = page.locator("h1, h2").first();
-    await expect(heading).toBeVisible({ timeout: 10_000 });
   });
 });
