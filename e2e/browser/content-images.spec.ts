@@ -16,7 +16,12 @@ import { test, expect } from "@playwright/test";
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:27028";
 
 // ---------------------------------------------------------------------------
-// Helpers — seed and clean up a published post with inline images
+// Helpers — seed a published post with inline images. The seed is intentionally
+// left in the local E2E DB until the runner-level cleanup so we never delete a
+// published post while a concurrent worker (e.g. blog-post-detail.spec.ts'
+// gotoFirstPost) may still be navigating to it. scripts/run-e2e.ts resets the
+// local D1/R2 persist directory between full runs, so the seed does not leak
+// across CI invocations. See docs/25-l3-bdd-refactor.md §8.2.
 // ---------------------------------------------------------------------------
 
 const SLUG = `e2e-img-opt-${Date.now()}`;
@@ -63,10 +68,6 @@ async function seedPost(): Promise<string> {
   return body.id;
 }
 
-async function deletePost(): Promise<void> {
-  await fetch(`${BASE}/api/posts/${SLUG}`, { method: "DELETE" });
-}
-
 function postUrl(): string {
   const d = new Date(NOW_EPOCH * 1000);
   const year = d.getFullYear();
@@ -81,10 +82,6 @@ function postUrl(): string {
 test.describe("Content image optimization & lightbox", () => {
   test.beforeAll(async () => {
     await seedPost();
-  });
-
-  test.afterAll(async () => {
-    await deletePost();
   });
 
   // 1. Inline images have srcset attribute
