@@ -70,10 +70,11 @@ test.describe("Feature: Admin media library page", () => {
   test("Given /admin/media is requested, When I open it, Then the AdminShell h1 (媒体库) is visible", async ({
     page,
   }) => {
+    // Given/When: open the media library page.
     await page.goto("/admin/media", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/media");
 
-    // AdminShell h1 — i18n key "admin.page.media" → "媒体库"
+    // Then: AdminShell h1 — i18n key "admin.page.media" → "媒体库"
     // (src/lib/i18n/index.ts:36, src/components/admin/shell.tsx:28).
     await expect(
       page.getByRole("heading", { level: 1, name: "媒体库" }),
@@ -83,21 +84,24 @@ test.describe("Feature: Admin media library page", () => {
   test("Given /admin/media renders, When I view the grid, Then the filter bar is visible and per-state surfaces 暂无媒体文件 (empty) OR the first grid card (non-empty)", async ({
     page,
   }) => {
+    // Given/When: open the media library page.
     await page.goto("/admin/media", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/media");
 
-    // Positive anchor: filter bar is always rendered regardless of grid state
-    // (media-library.tsx:177). Use the 搜索文件 input as the stable signature —
-    // it has a unique placeholder.
+    // Then: positive anchor — the filter bar is always rendered regardless of
+    // grid state (media-library.tsx:177). Use the 搜索文件 input as the stable
+    // signature; it has a unique placeholder.
     const searchInput = page.getByPlaceholder("搜索文件...");
     await expect(searchInput).toBeVisible({ timeout: 10_000 });
 
-    // CSS locator — grid cards have no role/testid; .grid .aspect-square is
-    // the stable layout signature from media-library-grid.tsx:111 + L26.
+    // When: probe the grid card count. CSS locator — grid cards have no
+    // role/testid; .grid .aspect-square is the stable layout signature from
+    // media-library-grid.tsx:111 + L26.
     const gridCards = page.locator(".grid .aspect-square");
     const cardCount = await gridCards.count();
+    // Then: empty branch surfaces the exact 暂无媒体文件 copy
+    // (media-library.tsx:194); non-empty branch surfaces the first grid card.
     if (cardCount === 0) {
-      // Empty-state copy from media-library.tsx:194 (no active filters).
       await expect(
         page.getByText("暂无媒体文件", { exact: true }),
       ).toBeVisible();
@@ -109,11 +113,12 @@ test.describe("Feature: Admin media library page", () => {
   test("Given /admin/media renders, When I view the filter bar, Then the 搜索文件 placeholder input is visible", async ({
     page,
   }) => {
+    // Given/When: open the media library page.
     await page.goto("/admin/media", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/media");
 
-    // media-library-filter-bar.tsx:43 — placeholder is exactly "搜索文件..."
-    // (note: trailing ellipsis is literal "..." not unicode "…").
+    // Then: media-library-filter-bar.tsx:43 — placeholder is exactly
+    // "搜索文件..." (note: trailing ellipsis is literal "..." not unicode "…").
     await expect(
       page.getByPlaceholder("搜索文件..."),
     ).toBeVisible({ timeout: 10_000 });
@@ -122,12 +127,14 @@ test.describe("Feature: Admin media library page", () => {
   test("Given /admin/media renders, When I view the filter bar, Then the year <select> is visible with 全部年份 and at least one option", async ({
     page,
   }) => {
+    // Given/When: open the media library page.
     await page.goto("/admin/media", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/media");
 
-    // CSS locator: media-library-filter-bar.tsx:75-86 renders 4 <select>
-    // controls — disambiguate by the literal "全部年份" placeholder option.
-    // Component fixed-renders this select; failure is a real regression.
+    // Then: CSS locator — media-library-filter-bar.tsx:75-86 renders 4
+    // <select> controls; disambiguate by the literal "全部年份" placeholder
+    // option. Component fixed-renders this select; failure is a real
+    // regression so hard-assert ≥1 option (no silent skip branch).
     const yearSelect = page.locator("select").filter({ hasText: "全部年份" });
     await expect(yearSelect).toBeVisible({ timeout: 10_000 });
     const optionCount = await yearSelect.locator("option").count();
@@ -140,12 +147,14 @@ test.describe("Feature: Admin media library page", () => {
   test("Given /admin/media renders, When I view the filter bar, Then the mime <select> is visible with 所有类型 and at least two options", async ({
     page,
   }) => {
+    // Given/When: open the media library page.
     await page.goto("/admin/media", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/media");
 
-    // CSS locator: media-library-filter-bar.tsx:61-72 renders the mime select
-    // with a fixed option list (所有类型 + JPEG/PNG/WebP/GIF/SVG = 6 options).
-    // Hard-assert ≥2 — component always renders these.
+    // Then: CSS locator — media-library-filter-bar.tsx:61-72 renders the mime
+    // select with a fixed option list (所有类型 + JPEG/PNG/WebP/GIF/SVG = 6
+    // options). Hard-assert ≥2 — component always renders these (no silent
+    // skip branch).
     const mimeSelect = page.locator("select").filter({ hasText: "所有类型" });
     await expect(mimeSelect).toBeVisible({ timeout: 10_000 });
     const optionCount = await mimeSelect.locator("option").count();
@@ -164,55 +173,65 @@ test.describe("Feature: Admin media library lightbox", () => {
   test("Given /admin/media renders with at least one image-mime card, When I click the first image card, Then the ImageLightbox overlay and its <img> are visible", async ({
     page,
   }) => {
+    // Given: open the media library page.
     await page.goto("/admin/media", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/media");
 
-    // Filter grid cards to those that render an <img> child — non-image mime
-    // types render a FileTypeIcon instead (media-library-grid.tsx:38-45), and
-    // ImageLightbox routes them through previewContent, so no <img> appears
-    // in the overlay (image-lightbox.tsx:92-99).
+    // Given: filter grid cards to those that render an <img> child — non-image
+    // mime types render a FileTypeIcon instead (media-library-grid.tsx:38-45),
+    // and ImageLightbox routes them through previewContent, so no <img>
+    // appears in the overlay (image-lightbox.tsx:92-99).
     const imageCards = page
       .locator(".grid .aspect-square")
       .filter({ has: page.locator("img") });
     const imageCount = await imageCards.count();
+    // Then: empty/non-image-only seed branch skips with explicit reason;
+    // image-card branch proceeds to assert the lightbox.
     test.skip(
       imageCount === 0,
       "No image-mime media available to drive image-lightbox scenario.",
     );
 
+    // When: click the first image card.
     await imageCards.first().click();
 
-    // ImageLightbox root signature — image-lightbox.tsx:62-65.
+    // Then: ImageLightbox root signature — image-lightbox.tsx:62-65.
     const overlay = page.locator(".fixed.inset-0.z-50");
     await expect(overlay).toBeVisible({ timeout: 5_000 });
-    // .first() because the overlay also contains the side-panel which itself
-    // is descendant; we want the main pane <img> from image-lightbox.tsx:93.
+    // Then: .first() because the overlay also contains the side-panel which
+    // is itself a descendant; we want the main pane <img> from
+    // image-lightbox.tsx:93.
     await expect(overlay.locator("img").first()).toBeVisible();
   });
 
   test("Given /admin/media renders with at least one media card, When I click the first card, Then the overlay shows the filename h3 + at least one action button, and Escape closes it", async ({
     page,
   }) => {
+    // Given: open the media library page.
     await page.goto("/admin/media", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/media");
 
-    // Any card type works here — image OR non-image both render the
+    // Given: any card type works here — image OR non-image both render the
     // MediaLibraryPreview side panel with h3 filename + 3 action buttons
     // (media-library-preview.tsx:43, L74-96).
     const cards = page.locator(".grid .aspect-square");
     const cardCount = await cards.count();
+    // Then: empty branch skips with explicit reason; non-empty branch
+    // proceeds to assert the overlay metadata.
     test.skip(
       cardCount === 0,
       "No media available to drive lightbox metadata scenario.",
     );
 
+    // When: click the first card.
     await cards.first().click();
 
+    // Then: overlay surfaces with the filename + at least one action button.
     const overlay = page.locator(".fixed.inset-0.z-50");
     await expect(overlay).toBeVisible({ timeout: 5_000 });
 
-    // Positive metadata assertions — h3 filename (preview.tsx:43-45) + at
-    // least one action button. Scoped to overlay so unrelated page buttons
+    // Then: positive metadata assertions — h3 filename (preview.tsx:43-45) +
+    // at least one action button. Scoped to overlay so unrelated page buttons
     // cannot satisfy.
     await expect(
       overlay.getByRole("heading", { level: 3 }),
@@ -221,7 +240,8 @@ test.describe("Feature: Admin media library lightbox", () => {
       overlay.getByRole("button", { name: "复制链接" }),
     ).toBeVisible();
 
-    // Escape closes overlay — image-lightbox.tsx:38-45 keyboard handler.
+    // When: press Escape. Then: overlay closes — image-lightbox.tsx:38-45
+    // keyboard handler.
     await page.keyboard.press("Escape");
     await expect(overlay).not.toBeVisible();
   });

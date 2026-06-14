@@ -55,10 +55,11 @@ test.describe("Feature: Admin categories page", () => {
   test("Given /admin/categories is requested, When I open it, Then the AdminShell h1 (分类) is visible", async ({
     page,
   }) => {
+    // Given/When: open the categories page.
     await page.goto("/admin/categories", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/categories");
 
-    // AdminShell h1 — i18n key "admin.page.categories" → "分类"
+    // Then: AdminShell h1 — i18n key "admin.page.categories" → "分类"
     // (src/lib/i18n/index.ts).
     await expect(
       page.getByRole("heading", { level: 1, name: "分类" }),
@@ -68,22 +69,23 @@ test.describe("Feature: Admin categories page", () => {
   test("Given /admin/categories renders, When I view the list, Then the table is visible and per-state surfaces 暂无分类 (empty) OR the first 编辑 row action (non-empty)", async ({
     page,
   }) => {
+    // Given/When: open the categories page.
     await page.goto("/admin/categories", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/categories");
 
-    // taxonomy-manager-table.tsx:142-194: <table> is always rendered;
-    // empty branch fills a single <td colSpan=...> with "暂无分类",
-    // non-empty branch fills <tbody> with rows that include 编辑 buttons.
+    // Then: taxonomy-manager-table.tsx:142-194: <table> is always rendered;
+    // empty branch fills a single <td colSpan=...> with "暂无分类", non-empty
+    // branch fills <tbody> with rows that include 编辑 buttons.
     const table = page.getByRole("table");
     await expect(table).toBeVisible({ timeout: 10_000 });
 
-    // State branch — both sides must positively assert a visible element so
-    // the scenario fails if the table renders an unexpected layout.
+    // Then: state branch — empty branch asserts the exact 暂无分类 text scoped
+    // to <table>; non-empty branch asserts the first row 编辑 action. Both
+    // sides must positively assert a visible element so an unexpected layout
+    // fails the scenario.
     const editButtons = table.getByRole("button", { name: "编辑" });
     const editCount = await editButtons.count();
     if (editCount === 0) {
-      // Empty state: scope to <table> so a future unrelated 暂无分类 text
-      // elsewhere on the page cannot satisfy this assertion.
       await expect(
         table.getByText("暂无分类", { exact: true }),
       ).toBeVisible();
@@ -95,61 +97,67 @@ test.describe("Feature: Admin categories page", () => {
   test("Given /admin/categories renders, When I click 新建分类, Then the inline form h3 and 名称/别名 inputs are visible; clicking 取消 collapses the form", async ({
     page,
   }) => {
+    // Given: open the categories page.
     await page.goto("/admin/categories", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/categories");
 
-    // taxonomy-manager.tsx:177-184: button label is exactly "新建分类".
+    // When: click 新建分类 — taxonomy-manager.tsx:177-184 button label is
+    // exactly "新建分类".
     await page
       .getByRole("button", { name: "新建分类", exact: true })
       .click();
 
-    // taxonomy-manager-form.tsx:54-56 → h3 "新建分类" (level 3).
+    // Then: taxonomy-manager-form.tsx:54-56 → h3 "新建分类" (level 3).
     const formHeading = page.getByRole("heading", {
       level: 3,
       name: "新建分类",
     });
     await expect(formHeading).toBeVisible({ timeout: 10_000 });
 
-    // FormField wires htmlFor→id for 名称 (id=taxonomy-name) and
+    // Then: FormField wires htmlFor→id for 名称 (id=taxonomy-name) and
     // 别名 (id=taxonomy-slug) — getByLabel is the stable accessor.
     await expect(page.getByLabel("名称")).toBeVisible();
     await expect(page.getByLabel("别名")).toBeVisible();
 
-    // Cancel button is inside the form (taxonomy-manager-form.tsx:102-104).
+    // When: click 取消 inside the form (taxonomy-manager-form.tsx:102-104).
     await page.getByRole("button", { name: "取消", exact: true }).click();
 
-    // Negative assertion on the form heading (NOT the input) so this still
-    // catches the regression when other 名称 inputs exist on the page later.
+    // Then: negative assertion on the form heading (NOT the input) so this
+    // still catches the regression when other 名称 inputs exist on the page.
     await expect(formHeading).not.toBeVisible();
   });
 
   test("Given /admin/categories renders with at least one category, When I click the first 编辑, Then the inline form h3 (编辑分类) is visible and 名称 has a non-empty value; 取消 collapses the form", async ({
     page,
   }) => {
+    // Given: open the categories page.
     await page.goto("/admin/categories", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/categories");
 
-    // Scope 编辑 buttons to the table — the only edit-buttons on this page
-    // are the row actions. emptyDataGate would be appropriate but the page
-    // has no other "edit" surface, so a direct test.skip is enough.
+    // Given: scope 编辑 buttons to the table — the only edit-buttons on this
+    // page are the row actions. emptyDataGate would be appropriate but the
+    // page has no other "edit" surface, so a direct test.skip is enough.
     const table = page.getByRole("table");
     const editButtons = table.getByRole("button", { name: "编辑" });
     const editCount = await editButtons.count();
+    // Then: empty branch skips with explicit reason; non-empty branch
+    // proceeds to assert the edit form.
     test.skip(
       editCount === 0,
       "No categories available to edit in current seed.",
     );
 
+    // When: click the first row 编辑 button.
     await editButtons.first().click();
 
-    // taxonomy-manager-form.tsx:54-56 → h3 "编辑分类" in edit mode.
+    // Then: taxonomy-manager-form.tsx:54-56 → h3 "编辑分类" in edit mode.
     const formHeading = page.getByRole("heading", {
       level: 3,
       name: "编辑分类",
     });
     await expect(formHeading).toBeVisible({ timeout: 10_000 });
 
-    // Existing row's name must be pre-filled.
+    // Then: existing row's name must be pre-filled.
     const nameInput = page.getByLabel("名称");
     await expect(nameInput).toBeVisible();
     const nameValue = await nameInput.inputValue();
@@ -158,6 +166,7 @@ test.describe("Feature: Admin categories page", () => {
       "edit form populated 名称 input with empty value",
     ).toBeGreaterThan(0);
 
+    // When: click 取消. Then: form heading collapses.
     await page.getByRole("button", { name: "取消", exact: true }).click();
     await expect(formHeading).not.toBeVisible();
   });
@@ -165,11 +174,12 @@ test.describe("Feature: Admin categories page", () => {
   test("Given /admin/categories renders, When I view the table, Then the 文章数 column header is visible", async ({
     page,
   }) => {
+    // Given/When: open the categories page.
     await page.goto("/admin/categories", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/categories");
 
-    // taxonomy-manager-table.tsx:151 — <th>文章数</th>. columnheader role
-    // disambiguates from row-body cells that may render counts as text.
+    // Then: taxonomy-manager-table.tsx:151 — <th>文章数</th>. columnheader
+    // role disambiguates from row-body cells that may render counts as text.
     await expect(
       page.getByRole("columnheader", { name: "文章数" }),
     ).toBeVisible({ timeout: 10_000 });
@@ -184,10 +194,11 @@ test.describe("Feature: Admin tags page", () => {
   test("Given /admin/tags is requested, When I open it, Then the AdminShell h1 (标签) is visible", async ({
     page,
   }) => {
+    // Given/When: open the tags page.
     await page.goto("/admin/tags", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/tags");
 
-    // AdminShell h1 — i18n key "admin.page.tags" → "标签".
+    // Then: AdminShell h1 — i18n key "admin.page.tags" → "标签".
     await expect(
       page.getByRole("heading", { level: 1, name: "标签" }),
     ).toBeVisible({ timeout: 10_000 });
@@ -196,12 +207,16 @@ test.describe("Feature: Admin tags page", () => {
   test("Given /admin/tags renders, When I view the list, Then the table is visible and per-state surfaces 暂无标签 (empty) OR the first 编辑 row action (non-empty)", async ({
     page,
   }) => {
+    // Given/When: open the tags page.
     await page.goto("/admin/tags", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/tags");
 
+    // Then: the table is always rendered.
     const table = page.getByRole("table");
     await expect(table).toBeVisible({ timeout: 10_000 });
 
+    // Then: state branch — empty branch asserts exact 暂无标签 inside the
+    // table; non-empty branch asserts the first row 编辑 action.
     const editButtons = table.getByRole("button", { name: "编辑" });
     const editCount = await editButtons.count();
     if (editCount === 0) {
@@ -216,25 +231,29 @@ test.describe("Feature: Admin tags page", () => {
   test("Given /admin/tags renders, When I click 新建标签, Then the inline form h3 and 名称/别名/描述（可选） inputs are visible; clicking 取消 collapses the form", async ({
     page,
   }) => {
+    // Given: open the tags page.
     await page.goto("/admin/tags", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/tags");
 
+    // When: click 新建标签.
     await page
       .getByRole("button", { name: "新建标签", exact: true })
       .click();
 
+    // Then: form heading appears in create mode.
     const formHeading = page.getByRole("heading", {
       level: 3,
       name: "新建标签",
     });
     await expect(formHeading).toBeVisible({ timeout: 10_000 });
 
-    // Tags form exposes one additional input — description (optional).
+    // Then: tags form exposes one additional input — description (optional).
     // FormField id=taxonomy-description, label "描述（可选）".
     await expect(page.getByLabel("名称")).toBeVisible();
     await expect(page.getByLabel("别名")).toBeVisible();
     await expect(page.getByLabel("描述（可选）")).toBeVisible();
 
+    // When: click 取消. Then: form heading collapses.
     await page.getByRole("button", { name: "取消", exact: true }).click();
     await expect(formHeading).not.toBeVisible();
   });
@@ -242,25 +261,32 @@ test.describe("Feature: Admin tags page", () => {
   test("Given /admin/tags renders with at least one tag, When I click the first 编辑, Then the inline form h3 (编辑标签) is visible and 名称 has a non-empty value; 取消 collapses the form", async ({
     page,
   }) => {
+    // Given: open the tags page.
     await page.goto("/admin/tags", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/tags");
 
+    // Given: scope 编辑 buttons to the table.
     const table = page.getByRole("table");
     const editButtons = table.getByRole("button", { name: "编辑" });
     const editCount = await editButtons.count();
+    // Then: empty branch skips with explicit reason; non-empty branch
+    // proceeds to assert the edit form.
     test.skip(
       editCount === 0,
       "No tags available to edit in current seed.",
     );
 
+    // When: click the first row 编辑 button.
     await editButtons.first().click();
 
+    // Then: form heading appears in edit mode.
     const formHeading = page.getByRole("heading", {
       level: 3,
       name: "编辑标签",
     });
     await expect(formHeading).toBeVisible({ timeout: 10_000 });
 
+    // Then: existing row's name must be pre-filled.
     const nameInput = page.getByLabel("名称");
     await expect(nameInput).toBeVisible();
     const nameValue = await nameInput.inputValue();
@@ -269,6 +295,7 @@ test.describe("Feature: Admin tags page", () => {
       "edit form populated 名称 input with empty value",
     ).toBeGreaterThan(0);
 
+    // When: click 取消. Then: form heading collapses.
     await page.getByRole("button", { name: "取消", exact: true }).click();
     await expect(formHeading).not.toBeVisible();
   });

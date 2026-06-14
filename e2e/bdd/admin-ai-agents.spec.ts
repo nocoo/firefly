@@ -99,10 +99,11 @@ test.describe("Feature: Admin AI agents list page", () => {
   test("Given /admin/ai-agents is requested, When I open it, Then the AdminShell h1 (AI 代理) is visible", async ({
     page,
   }) => {
+    // Given/When: open the AI agents list page.
     await page.goto("/admin/ai-agents", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-agents");
 
-    // AdminShell h1 — i18n key "admin.page.ai-agents" → "AI 代理"
+    // Then: AdminShell h1 — i18n key "admin.page.ai-agents" → "AI 代理"
     // (src/lib/i18n/index.ts:41, src/components/admin/shell.tsx:32). Page
     // also renders AiAgentsManager h1 "AI 代理作者" — exact: true keeps
     // "AI 代理" from substring-matching "AI 代理作者".
@@ -114,17 +115,19 @@ test.describe("Feature: Admin AI agents list page", () => {
   test("Given /admin/ai-agents renders, When I view the list, Then the manager h1 is visible and per-state surfaces the empty-state copy OR the agents table", async ({
     page,
   }) => {
+    // Given/When: open the AI agents list page.
     await page.goto("/admin/ai-agents", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-agents");
 
-    // Positive anchor: AiAgentsManager always renders its own h1.
+    // Then: positive anchor — AiAgentsManager always renders its own h1.
     await expect(
       page.getByRole("heading", { level: 1, name: "AI 代理作者", exact: true }),
     ).toBeVisible({ timeout: 10_000 });
 
-    // ai-agents-manager.tsx:124 — empty state renders the exact copy;
-    // non-empty renders <AiAgentsTable>. Branch positively on visible
-    // signature on each side (never regex OR combinator).
+    // Then: ai-agents-manager.tsx:124 — empty branch renders the exact copy;
+    // non-empty branch renders <AiAgentsTable> with at least the 名称
+    // columnheader. Branch positively on visible signature on each side
+    // (never regex OR combinator).
     const tableCount = await page.getByRole("table").count();
     if (tableCount === 0) {
       await expect(
@@ -144,12 +147,13 @@ test.describe("Feature: Admin AI agents list page", () => {
   test("Given /admin/ai-agents renders, When I view the page, Then the 创建代理 button is visible", async ({
     page,
   }) => {
+    // Given/When: open the AI agents list page.
     await page.goto("/admin/ai-agents", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-agents");
 
-    // ai-agents-manager.tsx:118 (header) + L130 (empty-state card) both
-    // render "创建代理" — .first() picks the header instance regardless
-    // of state. Source spec lived with this duplicate; here we declare it.
+    // Then: ai-agents-manager.tsx:118 (header) + L130 (empty-state card) both
+    // render "创建代理" — .first() picks the header instance regardless of
+    // state. Source spec lived with this duplicate; here we declare it.
     await expect(
       page.getByRole("button", { name: "创建代理" }).first(),
     ).toBeVisible({ timeout: 10_000 });
@@ -158,21 +162,25 @@ test.describe("Feature: Admin AI agents list page", () => {
   test("Given /admin/ai-agents renders with at least one agent, When I view the table, Then all four columnheaders and the first row 编辑 action are visible", async ({
     page,
   }) => {
+    // Given: open the AI agents list page.
     await page.goto("/admin/ai-agents", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-agents");
 
-    // The original test looked for `.agent-card` / `[data-testid="agent-card"]`
-    // / `[role="listitem"]`, none of which exist in ai-agents-table.tsx (the
-    // real component renders a <table>). With a count > 0 guard, the assertion
-    // was never run. This scenario rewrites it against the actual DOM.
+    // Given: the original test looked for `.agent-card` /
+    // `[data-testid="agent-card"]` / `[role="listitem"]`, none of which exist
+    // in ai-agents-table.tsx (the real component renders a <table>). With a
+    // count > 0 guard, the assertion was never run. This scenario rewrites
+    // it against the actual DOM.
     const table = page.getByRole("table");
     const tableCount = await table.count();
+    // Then: empty branch skips with explicit reason; non-empty branch
+    // proceeds to assert all four columnheaders + first row action.
     test.skip(
       tableCount === 0,
       "No AI agents available to populate the table in current seed.",
     );
 
-    // ai-agents-table.tsx:108-120 — four <th>s in this exact order.
+    // Then: ai-agents-table.tsx:108-120 — four <th>s in this exact order.
     await expect(table).toBeVisible();
     await expect(
       page.getByRole("columnheader", { name: "名称" }),
@@ -187,7 +195,7 @@ test.describe("Feature: Admin AI agents list page", () => {
       page.getByRole("columnheader", { name: "文章数" }),
     ).toBeVisible();
 
-    // ai-agents-table.tsx:62-69 — each row has an 编辑 icon-button
+    // Then: ai-agents-table.tsx:62-69 — each row has an 编辑 icon-button
     // (title attr provides accessible name).
     await expect(
       table.getByRole("button", { name: "编辑" }).first(),
@@ -197,13 +205,15 @@ test.describe("Feature: Admin AI agents list page", () => {
   test("Given /admin/ai-agents renders, When I click the 创建代理 button, Then I am navigated to /admin/ai-agents/new", async ({
     page,
   }) => {
+    // Given: open the AI agents list page.
     await page.goto("/admin/ai-agents", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-agents");
 
-    // Hard click — no conditional skip (the button is always rendered, in
-    // either header or empty-state card). ai-agents-manager.tsx:70 routes
+    // When: hard click — no conditional skip (the button is always rendered,
+    // in either header or empty-state card). ai-agents-manager.tsx:70 routes
     // to /admin/ai-agents/new via router.push.
     await page.getByRole("button", { name: "创建代理" }).first().click();
+    // Then: pathname becomes /admin/ai-agents/new (hard assert).
     await page.waitForURL("**/admin/ai-agents/new", { timeout: 10_000 });
     await expectPathname(page, "/admin/ai-agents/new");
   });
@@ -223,12 +233,14 @@ test.describe("Feature: Admin AI agent new form", () => {
   test("Given /admin/ai-agents/new is requested, When I open it, Then pathname matches and the form h1 (创建 AI 代理) is visible", async ({
     page,
   }) => {
+    // Given/When: open the new AI agent form.
     await page.goto("/admin/ai-agents/new", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-agents/new");
 
-    // Form h1 — exact: true distinguishes it from AdminShell h1 "AI 代理"
-    // (PAGE_TITLE_KEYS prefix-matches /admin/ai-agents). "创建 AI 代理"
-    // would otherwise substring-match the AdminShell "AI 代理" as well.
+    // Then: form h1 — exact: true distinguishes it from AdminShell h1
+    // "AI 代理" (PAGE_TITLE_KEYS prefix-matches /admin/ai-agents). "创建
+    // AI 代理" would otherwise substring-match the AdminShell "AI 代理"
+    // as well.
     await expect(
       page.getByRole("heading", { level: 1, name: "创建 AI 代理", exact: true }),
     ).toBeVisible({ timeout: 10_000 });
@@ -237,10 +249,11 @@ test.describe("Feature: Admin AI agent new form", () => {
   test("Given /admin/ai-agents/new renders, When I view the form, Then the 名称 input (placeholder 如：科技写手) is visible", async ({
     page,
   }) => {
+    // Given/When: open the new AI agent form.
     await page.goto("/admin/ai-agents/new", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-agents/new");
 
-    // ai-agent-form.tsx:160 — placeholder is exactly "如：科技写手".
+    // Then: ai-agent-form.tsx:160 — placeholder is exactly "如：科技写手".
     await expect(
       page.getByPlaceholder("如：科技写手"),
     ).toBeVisible({ timeout: 10_000 });
@@ -249,10 +262,11 @@ test.describe("Feature: Admin AI agent new form", () => {
   test("Given /admin/ai-agents/new renders, When I view the form, Then the 标识符 input (placeholder 如：tech-writer) is visible", async ({
     page,
   }) => {
+    // Given/When: open the new AI agent form.
     await page.goto("/admin/ai-agents/new", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-agents/new");
 
-    // ai-agent-form.tsx:170 — placeholder is exactly "如：tech-writer".
+    // Then: ai-agent-form.tsx:170 — placeholder is exactly "如：tech-writer".
     await expect(
       page.getByPlaceholder("如：tech-writer"),
     ).toBeVisible({ timeout: 10_000 });
@@ -261,11 +275,12 @@ test.describe("Feature: Admin AI agent new form", () => {
   test("Given /admin/ai-agents/new renders, When I view the form, Then the 分类 <select> with 选择分类... option is visible", async ({
     page,
   }) => {
+    // Given/When: open the new AI agent form.
     await page.goto("/admin/ai-agents/new", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-agents/new");
 
-    // ai-agent-form.tsx:186 — placeholder option text "选择分类...". The
-    // new-mode form renders exactly one <select> (the category one); use
+    // Then: ai-agent-form.tsx:186 — placeholder option text "选择分类...".
+    // The new-mode form renders exactly one <select> (the category one); use
     // hasText filter to keep the assertion semantic.
     const categorySelect = page
       .locator("select")
@@ -276,10 +291,11 @@ test.describe("Feature: Admin AI agent new form", () => {
   test("Given /admin/ai-agents/new renders, When I view the form, Then the 描述 textarea (placeholder 代理的可选描述) is visible", async ({
     page,
   }) => {
+    // Given/When: open the new AI agent form.
     await page.goto("/admin/ai-agents/new", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-agents/new");
 
-    // ai-agent-form.tsx:203 — placeholder text "代理的可选描述".
+    // Then: ai-agent-form.tsx:203 — placeholder text "代理的可选描述".
     await expect(
       page.getByPlaceholder("代理的可选描述"),
     ).toBeVisible({ timeout: 10_000 });
@@ -288,11 +304,13 @@ test.describe("Feature: Admin AI agent new form", () => {
   test("Given /admin/ai-agents/new renders in new mode, When I view the form, Then the AgentAvatarUploader is NOT rendered (uploader gates on !isNew && agent)", async ({
     page,
   }) => {
+    // Given/When: open the new AI agent form (id === "new" → agent=null →
+    // uploader is gated off).
     await page.goto("/admin/ai-agents/new", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-agents/new");
 
-    // ai-agent-form.tsx:227 — uploader is wrapped in `!isNew && agent`. In
-    // new mode, none of its semantic anchors should be present:
+    // Then: ai-agent-form.tsx:227 — uploader is wrapped in `!isNew && agent`.
+    // In new mode, none of its semantic anchors should be present:
     //   - "头像" label (ai-agent-avatar-uploader.tsx:87)
     //   - input[type=file] (ai-agent-avatar-uploader.tsx:121)
     //   - "上传头像" button (ai-agent-avatar-uploader.tsx:133)
@@ -309,12 +327,13 @@ test.describe("Feature: Admin AI agent new form", () => {
   test("Given /admin/ai-agents/new renders, When I view the form footer, Then the 创建代理 save button is visible", async ({
     page,
   }) => {
+    // Given/When: open the new AI agent form.
     await page.goto("/admin/ai-agents/new", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-agents/new");
 
-    // ai-agent-form.tsx:240 — footer button label is "创建代理" in new mode.
-    // It is the only "创建代理" button on this page (no header dup), so
-    // .first() is not strictly required, but the role+name lookup is exact.
+    // Then: ai-agent-form.tsx:240 — footer button label is "创建代理" in new
+    // mode. It is the only "创建代理" button on this page (no header dup),
+    // so .first() is not strictly required, but the role+name lookup is exact.
     await expect(
       page.getByRole("button", { name: "创建代理" }),
     ).toBeVisible({ timeout: 10_000 });
@@ -323,10 +342,11 @@ test.describe("Feature: Admin AI agent new form", () => {
   test("Given /admin/ai-agents/new renders, When I view the form header, Then the 返回 back button is visible", async ({
     page,
   }) => {
+    // Given/When: open the new AI agent form.
     await page.goto("/admin/ai-agents/new", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-agents/new");
 
-    // ai-agent-form.tsx:143-145 — exact label "返回". Source spec also
+    // Then: ai-agent-form.tsx:143-145 — exact label "返回". Source spec also
     // accepted "取消" as fallback; we pin "返回" per reviewer pin.
     await expect(
       page.getByRole("button", { name: "返回" }),
@@ -336,12 +356,13 @@ test.describe("Feature: Admin AI agent new form", () => {
   test("Given /admin/ai-agents/new renders, When I fill the name with a unique prefix, Then the slug input auto-fills to the slugified value", async ({
     page,
   }) => {
+    // Given: open the new AI agent form.
     await page.goto("/admin/ai-agents/new", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-agents/new");
 
-    // Unique prefix prevents cross-test / cross-worker collision even if a
-    // future test ever submits this form (current test only reads back the
-    // computed slug — never POSTs — so no DB write is performed).
+    // Given: unique prefix prevents cross-test / cross-worker collision even
+    // if a future test ever submits this form (current test only reads back
+    // the computed slug — never POSTs — so no DB write is performed).
     const ts = Date.now();
     const name = `E2E Admin AI Agents ${ts} Test`;
     const expectedSlug = `e2e-admin-ai-agents-${ts}-test`;
@@ -349,8 +370,9 @@ test.describe("Feature: Admin AI agent new form", () => {
     const nameInput = page.getByPlaceholder("如：科技写手");
     const slugInput = page.getByPlaceholder("如：tech-writer");
 
+    // When: fill the name input with the unique-prefixed value.
     await nameInput.fill(name);
-    // toHaveValue polls until the React effect (ai-agent-form.tsx:72-76)
+    // Then: toHaveValue polls until the React effect (ai-agent-form.tsx:72-76)
     // syncs slug — no fixed waitForTimeout needed.
     await expect(slugInput).toHaveValue(expectedSlug, { timeout: 5_000 });
   });
