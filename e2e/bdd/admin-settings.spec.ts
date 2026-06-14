@@ -80,10 +80,11 @@ test.describe("Feature: Admin general settings page", () => {
   test("Given /admin/settings is requested, When I open it, Then the AdminShell h1 (设置) is visible", async ({
     page,
   }) => {
+    // Given/When: open the general settings page.
     await page.goto("/admin/settings", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/settings");
 
-    // AdminShell top-bar <h1> renders i18n key "admin.page.settings" → "设置"
+    // Then: AdminShell top-bar <h1> renders i18n key "admin.page.settings" → "设置"
     // (src/components/admin/shell.tsx:30,250-252 + src/lib/i18n/index.ts:40).
     await expect(
       page.getByRole("heading", { level: 1, name: "设置" }),
@@ -93,11 +94,13 @@ test.describe("Feature: Admin general settings page", () => {
   test("Given /admin/settings renders, When I view it, Then the 每页文章数 label and number input (min=1 max=100) are visible", async ({
     page,
   }) => {
+    // Given/When: open the general settings page.
     await page.goto("/admin/settings", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/settings");
 
-    // The <label> has no for/id link to the Input, so we cannot use getByLabel.
-    // Assert the label copy + the only `input[type="number"]` on the page
+    // Then: the 每页文章数 label and its number input are visible. The <label>
+    // has no for/id link to the Input, so we cannot use getByLabel; assert the
+    // label copy + the only `input[type="number"]` on the page
     // (settings-form.tsx:91-106) together — both must be visible.
     await expect(page.getByText("每页文章数")).toBeVisible({ timeout: 10_000 });
     // CSS attribute selector: <Input type="number"> exposes no role/testid;
@@ -109,9 +112,11 @@ test.describe("Feature: Admin general settings page", () => {
   test("Given /admin/settings renders, When I view it, Then the 正文字体风格 SegmentedControl exposes 苹方 / 经典 / 衬线 / 无衬线", async ({
     page,
   }) => {
+    // Given/When: open the general settings page.
     await page.goto("/admin/settings", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/settings");
 
+    // Then: the 正文字体风格 control and its four font-style segments are visible.
     await expect(page.getByText("正文字体风格")).toBeVisible({
       timeout: 10_000,
     });
@@ -136,10 +141,11 @@ test.describe("Feature: Admin general settings page", () => {
   test("Given /admin/settings renders, When I view it, Then the 保存设置 button is visible", async ({
     page,
   }) => {
+    // Given/When: open the general settings page.
     await page.goto("/admin/settings", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/settings");
 
-    // settings-form.tsx:228 renders the save trigger as a <Button> with
+    // Then: settings-form.tsx:228 renders the save trigger as a <Button> with
     // "保存设置" copy (or "保存中..." while saving).
     await expect(
       page.getByRole("button", { name: "保存设置" }),
@@ -149,12 +155,13 @@ test.describe("Feature: Admin general settings page", () => {
   test("Given /admin/settings renders, When I view it, Then all four internal URL rows (Sitemap / Robots.txt / RSS Feed / LLMs.txt) are visible", async ({
     page,
   }) => {
+    // Given/When: open the general settings page.
     await page.goto("/admin/settings", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/settings");
 
-    // 内部功能链接 card (settings-form.tsx:154-209) renders 4 rows, one per
-    // entry in `internalUrls` (L13-18). Asserting all 4 labels — not just the
-    // section heading — catches regressions where the array is truncated.
+    // Then: the 内部功能链接 card (settings-form.tsx:154-209) renders 4 rows, one
+    // per entry in `internalUrls` (L13-18). Asserting all 4 labels — not just
+    // the section heading — catches regressions where the array is truncated.
     await expect(page.getByText("内部功能链接")).toBeVisible({
       timeout: 10_000,
     });
@@ -173,18 +180,19 @@ test.describe("Feature: Admin AI settings page", () => {
   test("Given /admin/ai-settings is requested, When I open it, Then the h1 (AI 设置) and the 服务商 & 模型 card with provider select are visible", async ({
     page,
   }) => {
+    // Given/When: open the AI settings page.
     await page.goto("/admin/ai-settings", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-settings");
 
-    // AdminShell h1 — i18n key "admin.page.ai-settings" → "AI 设置".
+    // Then: AdminShell h1 — i18n key "admin.page.ai-settings" → "AI 设置".
     await expect(
       page.getByRole("heading", { level: 1, name: "AI 设置" }),
     ).toBeVisible({ timeout: 10_000 });
-    // AiSettingsProviderCard h2 (provider-card.tsx:31).
+    // Then: AiSettingsProviderCard h2 (provider-card.tsx:31).
     await expect(
       page.getByRole("heading", { level: 2, name: "服务商 & 模型" }),
     ).toBeVisible();
-    // The provider <Select> renders the literal placeholder "请选择服务商"
+    // Then: the provider <Select> renders the literal placeholder "请选择服务商"
     // as its first <option> (provider-card.tsx:43).
     const providerSelect = page.locator("select").first();
     await expect(providerSelect).toBeVisible();
@@ -196,11 +204,13 @@ test.describe("Feature: Admin AI settings page", () => {
   test("Given the first non-empty provider option is actively selected, When the form re-renders, Then the 认证 card with an API Key password input is visible", async ({
     page,
   }) => {
+    // Given: open the AI settings page.
     await page.goto("/admin/ai-settings", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-settings");
 
-    // Provider <Select> — first <select> on the page is the provider one
-    // (AiSettingsProviderCard renders before the conditional model Select).
+    // When: actively select the first non-empty provider option. The first
+    // <select> on the page is the provider one (AiSettingsProviderCard renders
+    // before the conditional model Select).
     const providerSelect = page.locator("select").first();
     const providerValues = await providerSelect
       .locator("option")
@@ -209,15 +219,15 @@ test.describe("Feature: Admin AI settings page", () => {
           .map((o) => o.value)
           .filter((v) => v !== ""),
       );
-    // emptyDataGate only justifies a skip if the provider list is genuinely
-    // empty — a defect the test should surface, not silently pass.
+    // Then: branch skips with reason iff the provider list is genuinely empty
+    // — a real defect the test should surface, not silently pass.
     test.skip(
       providerValues.length === 0,
       "AI provider <select> exposed zero non-empty options (provider list misconfigured).",
     );
     await providerSelect.selectOption(providerValues[0]);
 
-    // ai-settings-form.tsx:132-151 — once `provider` is truthy, the 认证
+    // Then: ai-settings-form.tsx:132-151 — once `provider` is truthy, the 认证
     // card with the password Input becomes visible.
     await expect(
       page.getByRole("heading", { level: 2, name: "认证" }),
@@ -230,9 +240,11 @@ test.describe("Feature: Admin AI settings page", () => {
   test("Given the first non-empty provider option is actively selected, When the form re-renders, Then a 模型 control (select or text input) is visible", async ({
     page,
   }) => {
+    // Given: open the AI settings page.
     await page.goto("/admin/ai-settings", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-settings");
 
+    // When: actively select the first non-empty provider option.
     const providerSelect = page.locator("select").first();
     const providerValues = await providerSelect
       .locator("option")
@@ -241,16 +253,17 @@ test.describe("Feature: Admin AI settings page", () => {
           .map((o) => o.value)
           .filter((v) => v !== ""),
       );
+    // Then: skip with reason if the provider list is empty.
     test.skip(
       providerValues.length === 0,
       "AI provider <select> exposed zero non-empty options (provider list misconfigured).",
     );
     await providerSelect.selectOption(providerValues[0]);
 
-    // The 模型 label always renders inside the provider card after selection
-    // (provider-card.tsx:54). The control underneath is either a <Select>
-    // (when the provider has a model catalog) or a text <Input> (otherwise) —
-    // both branches are valid per provider-card.tsx:61-86.
+    // Then: the 模型 label always renders inside the provider card after
+    // selection (provider-card.tsx:54). The control underneath is either a
+    // <Select> (when the provider has a model catalog) or a text <Input>
+    // (otherwise) — both branches are valid per provider-card.tsx:61-86.
     await expect(page.getByText("模型", { exact: true })).toBeVisible({
       timeout: 10_000,
     });
@@ -267,9 +280,11 @@ test.describe("Feature: Admin AI settings page", () => {
   test("Given the first non-empty provider option is actively selected, When the form re-renders, Then the 保存设置 and 测试连接 buttons are visible", async ({
     page,
   }) => {
+    // Given: open the AI settings page.
     await page.goto("/admin/ai-settings", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-settings");
 
+    // When: actively select the first non-empty provider option.
     const providerSelect = page.locator("select").first();
     const providerValues = await providerSelect
       .locator("option")
@@ -278,13 +293,14 @@ test.describe("Feature: Admin AI settings page", () => {
           .map((o) => o.value)
           .filter((v) => v !== ""),
       );
+    // Then: skip with reason if the provider list is empty.
     test.skip(
       providerValues.length === 0,
       "AI provider <select> exposed zero non-empty options (provider list misconfigured).",
     );
     await providerSelect.selectOption(providerValues[0]);
 
-    // ai-settings-form.tsx:172-186 — both buttons are gated on `provider`.
+    // Then: ai-settings-form.tsx:172-186 — both buttons are gated on `provider`.
     await expect(
       page.getByRole("button", { name: "保存设置" }),
     ).toBeVisible({ timeout: 10_000 });
@@ -302,9 +318,11 @@ test.describe("Feature: Admin site identity page", () => {
   test("Given /admin/site-identity is requested, When I open it, Then the AdminShell h1 (站点身份) is visible", async ({
     page,
   }) => {
+    // Given/When: open the site identity page.
     await page.goto("/admin/site-identity", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/site-identity");
 
+    // Then: AdminShell h1.
     await expect(
       page.getByRole("heading", { level: 1, name: "站点身份" }),
     ).toBeVisible({ timeout: 10_000 });
@@ -313,12 +331,13 @@ test.describe("Feature: Admin site identity page", () => {
   test("Given /admin/site-identity renders, When I view it, Then the 站点信息 card exposes a 站点名称 label and text input", async ({
     page,
   }) => {
+    // Given/When: open the site identity page.
     await page.goto("/admin/site-identity", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/site-identity");
 
-    // site-identity-form.tsx:76-90 — 站点信息 card h2 + 站点名称 label paired
-    // with an <Input> (defaults to type="text"). Labels have no for/id link,
-    // so structural locator on the placeholder "我的博客".
+    // Then: site-identity-form.tsx:76-90 — 站点信息 card h2 + 站点名称 label
+    // paired with an <Input> (defaults to type="text"). Labels have no for/id
+    // link, so structural locator on the placeholder "我的博客".
     await expect(
       page.getByRole("heading", { level: 2, name: "站点信息" }),
     ).toBeVisible({ timeout: 10_000 });
@@ -329,10 +348,11 @@ test.describe("Feature: Admin site identity page", () => {
   test("Given /admin/site-identity renders, When I view it, Then the 标语 label and its text input are visible", async ({
     page,
   }) => {
+    // Given/When: open the site identity page.
     await page.goto("/admin/site-identity", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/site-identity");
 
-    // site-identity-form.tsx:92-104 — 标语 label paired with Input whose
+    // Then: site-identity-form.tsx:92-104 — 标语 label paired with Input whose
     // placeholder is "一个关于……的个人博客".
     await expect(page.getByText("标语", { exact: true })).toBeVisible({
       timeout: 10_000,
@@ -345,14 +365,15 @@ test.describe("Feature: Admin site identity page", () => {
   test("Given /admin/site-identity renders, When I view it, Then the 站点图标 card exposes 上传图标 and a file input", async ({
     page,
   }) => {
+    // Given/When: open the site identity page.
     await page.goto("/admin/site-identity", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/site-identity");
 
-    // site-logo-card.tsx:98 — 站点图标 h2 heading.
+    // Then: site-logo-card.tsx:98 — 站点图标 h2 heading.
     await expect(
       page.getByRole("heading", { level: 2, name: "站点图标" }),
     ).toBeVisible({ timeout: 10_000 });
-    // 上传图标 label copy (site-logo-card.tsx:143). The actual <input
+    // Then: 上传图标 label copy (site-logo-card.tsx:143). The actual <input
     // type="file"> is sr-only; assert it is attached (not visible) since the
     // sr-only class hides it from the AT-tree.
     await expect(page.getByText("上传图标")).toBeVisible();
@@ -362,16 +383,19 @@ test.describe("Feature: Admin site identity page", () => {
   test("Given /admin/site-identity renders, When I scroll, Then the 社交链接 card and + 添加链接 trigger are visible", async ({
     page,
   }) => {
+    // Given: open the site identity page.
     await page.goto("/admin/site-identity", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/site-identity");
 
-    // SocialLinksCard is always rendered (site-identity-form.tsx:176).
-    // It may be below the fold, so scroll it into view before asserting.
+    // When: scroll the SocialLinksCard heading into view (it may be below the
+    // fold; SocialLinksCard is always rendered, site-identity-form.tsx:176).
     const heading = page.getByRole("heading", {
       level: 2,
       name: "社交链接",
     });
     await heading.scrollIntoViewIfNeeded();
+
+    // Then: the heading and its + 添加链接 trigger are visible.
     await expect(heading).toBeVisible({ timeout: 10_000 });
     // The "+ 添加链接" trigger is a <button> (social-links-card.tsx:117).
     await expect(
@@ -382,10 +406,12 @@ test.describe("Feature: Admin site identity page", () => {
   test("Given /admin/site-identity renders, When I scroll to the bottom, Then the 保存设置 button is visible", async ({
     page,
   }) => {
+    // Given: open the site identity page.
     await page.goto("/admin/site-identity", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/site-identity");
 
-    // site-identity-form.tsx:188-190 — final form footer save button.
+    // When: scroll the form-footer save button into view.
+    // Then: site-identity-form.tsx:188-190 — final form footer save button.
     const saveButton = page.getByRole("button", { name: "保存设置" });
     await saveButton.scrollIntoViewIfNeeded();
     await expect(saveButton).toBeVisible({ timeout: 10_000 });
@@ -400,10 +426,11 @@ test.describe("Feature: Admin system monitor page", () => {
   test("Given /admin/system is requested, When I open it, Then the AdminShell h1 (系统监控) is visible", async ({
     page,
   }) => {
+    // Given/When: open the system monitor page.
     await page.goto("/admin/system", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/system");
 
-    // AdminShell h1 — i18n key "admin.page.system" → "系统监控".
+    // Then: AdminShell h1 — i18n key "admin.page.system" → "系统监控".
     await expect(
       page.getByRole("heading", { level: 1, name: "系统监控" }),
     ).toBeVisible({ timeout: 10_000 });
@@ -412,12 +439,13 @@ test.describe("Feature: Admin system monitor page", () => {
   test("Given /admin/system renders the dashboard, When I view it, Then the four StatCard labels (堆内存使用 / RSS（总内存） / 峰值 / 平均 / 运行时间) are visible", async ({
     page,
   }) => {
+    // Given/When: open the system monitor page.
     await page.goto("/admin/system", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/system");
 
-    // system-monitor-dashboard.tsx:83-113 renders four StatCard tiles. After
-    // /api/system/memory resolves, the loading skeleton is replaced with the
-    // dashboard. Use generous timeout since the fetch is real.
+    // Then: system-monitor-dashboard.tsx:83-113 renders four StatCard tiles.
+    // After /api/system/memory resolves, the loading skeleton is replaced with
+    // the dashboard. Use generous timeout since the fetch is real.
     //
     // exact: true on every label — the StatCard <div> only contains the label
     // string (Icon contributes no accessible text), so exact matches. The
@@ -442,11 +470,12 @@ test.describe("Feature: Admin system monitor page", () => {
   test("Given /admin/system renders the dashboard, When I view it, Then the 刷新 button is visible", async ({
     page,
   }) => {
+    // Given/When: open the system monitor page.
     await page.goto("/admin/system", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/system");
 
-    // system-monitor-dashboard.tsx:73-80 — refresh trigger is a <button> with
-    // RefreshCw icon and literal "刷新" copy.
+    // Then: system-monitor-dashboard.tsx:73-80 — refresh trigger is a <button>
+    // with RefreshCw icon and literal "刷新" copy.
     await expect(
       page.getByRole("button", { name: /刷新/ }),
     ).toBeVisible({ timeout: 15_000 });
@@ -455,16 +484,17 @@ test.describe("Feature: Admin system monitor page", () => {
   test("Given /admin/system renders the dashboard, When I view the chart card, Then the 内存使用趋势（48小时） heading is visible and either the recharts container or the 已采集 N 个样本 fallback is shown", async ({
     page,
   }) => {
+    // Given/When: open the system monitor page.
     await page.goto("/admin/system", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/system");
 
-    // system-monitor-chart.tsx:45-48 — card header always renders this h3
+    // Then: system-monitor-chart.tsx:45-48 — card header always renders this h3
     // regardless of whether there is chart data.
     await expect(
       page.getByRole("heading", { level: 3, name: /内存使用趋势.*48小时/ }),
     ).toBeVisible({ timeout: 15_000 });
 
-    // Data-state branch (system-monitor-chart.tsx:51-134):
+    // Then: data-state branch (system-monitor-chart.tsx:51-134):
     //   - chartData.length > 1 → <ResponsiveContainer> renders a recharts SVG.
     //   - else → "已采集 N 个样本" fallback text in the card body.
     // Exactly one branch is visible; assert that at least one is.

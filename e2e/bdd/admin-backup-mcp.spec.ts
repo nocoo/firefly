@@ -65,10 +65,11 @@ test.describe("Feature: Admin backup page", () => {
   test("Given /admin/backup is requested, When I open it, Then the AdminShell h1 (备份) is visible", async ({
     page,
   }) => {
+    // Given/When: open the backup page.
     await page.goto("/admin/backup", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/backup");
 
-    // AdminShell h1 — i18n key "admin.page.backup" → "备份"
+    // Then: AdminShell h1 — i18n key "admin.page.backup" → "备份"
     // (src/components/admin/shell.tsx:34 + src/lib/i18n/index.ts:44).
     await expect(
       page.getByRole("heading", { level: 1, name: "备份" }),
@@ -78,12 +79,13 @@ test.describe("Feature: Admin backup page", () => {
   test("Given /admin/backup renders, When I view it, Then the 远程备份 card is visible", async ({
     page,
   }) => {
+    // Given/When: open the backup page.
     await page.goto("/admin/backup", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/backup");
 
-    // BackupPushCard h2 (backup-push-card.tsx:238). 远程备份 is the stable
-    // heading the original "Backy configuration section" test was probing —
-    // the Backy literal itself does not appear in the rendered DOM.
+    // Then: BackupPushCard h2 (backup-push-card.tsx:238). 远程备份 is the
+    // stable heading the original "Backy configuration section" test was
+    // probing — the Backy literal itself does not appear in the rendered DOM.
     await expect(
       page.getByRole("heading", { level: 2, name: "远程备份" }),
     ).toBeVisible({ timeout: 10_000 });
@@ -96,15 +98,19 @@ test.describe("Feature: Admin backup page", () => {
   test("Given the push card is in editMode, When I view it, Then the Webhook URL label and input are visible (skip when configured)", async ({
     page,
   }) => {
+    // Given: open the backup page.
     await page.goto("/admin/backup", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/backup");
 
-    // editMode is the unconfigured branch (backup-push-card.tsx:100,244-279).
-    // The Webhook URL input only renders here. Detect editMode via the
-    // unique "Bearer token" placeholder on the API Key input (only present
-    // when configured is false — configured uses "留空则保持不变").
+    // When: probe push-card mode. editMode is the unconfigured branch
+    // (backup-push-card.tsx:100,244-279). The Webhook URL input only renders
+    // there. Detect editMode via the unique "Bearer token" placeholder on the
+    // API Key input (only present when configured is false — configured uses
+    // "留空则保持不变").
     const editModeProbe = page.locator('input[placeholder="Bearer token"]');
     const isEditMode = (await editModeProbe.count()) > 0;
+    // Then: configured branch skips with explicit reason; editMode branch
+    // asserts the Webhook URL label + input.
     test.skip(
       !isEditMode,
       "Backup push card is in configured read-mode; Webhook URL input only renders in editMode.",
@@ -123,11 +129,15 @@ test.describe("Feature: Admin backup page", () => {
   test("Given the push card is in editMode, When I view it, Then the API Key label and password input are visible (skip when configured)", async ({
     page,
   }) => {
+    // Given: open the backup page.
     await page.goto("/admin/backup", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/backup");
 
+    // When: probe push-card mode (same editMode probe as the Webhook URL test).
     const editModeProbe = page.locator('input[placeholder="Bearer token"]');
     const isEditMode = (await editModeProbe.count()) > 0;
+    // Then: configured branch skips with explicit reason; editMode branch
+    // asserts the API Key label + password input.
     test.skip(
       !isEditMode,
       "Backup push card is in configured read-mode; API Key input only renders in editMode.",
@@ -143,13 +153,16 @@ test.describe("Feature: Admin backup page", () => {
   test("Given the push card renders, When I view it, Then editMode exposes 保存 OR configured mode exposes 测试连接 + 推送备份", async ({
     page,
   }) => {
+    // Given: open the backup page.
     await page.goto("/admin/backup", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/backup");
 
-    // State branch — both legitimate landings should pass without silent
-    // fallback. editMode probe via the same "Bearer token" placeholder.
+    // When: probe push-card mode. Both legitimate landings should pass without
+    // silent fallback. editMode probe via the same "Bearer token" placeholder.
     const editModeProbe = page.locator('input[placeholder="Bearer token"]');
     const isEditMode = (await editModeProbe.count()) > 0;
+
+    // Then: branch on push-card mode and assert the mode-specific action button.
     if (isEditMode) {
       // editMode save button — exact match so it does not also match
       // "推送备份" (which uses 备份, not 保存).
@@ -171,10 +184,11 @@ test.describe("Feature: Admin backup page", () => {
   test("Given the pull card renders, When I view it, Then the 拉取 Webhook h2 is always visible and inner controls branch by pullKey state", async ({
     page,
   }) => {
+    // Given/When: open the backup page.
     await page.goto("/admin/backup", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/backup");
 
-    // 拉取 Webhook card heading is always rendered (backup-pull-card.tsx:46).
+    // Then: 拉取 Webhook card heading is always rendered (backup-pull-card.tsx:46).
     await expect(
       page.getByRole("heading", { level: 2, name: "拉取 Webhook" }),
     ).toBeVisible({ timeout: 10_000 });
@@ -188,7 +202,8 @@ test.describe("Feature: Admin backup page", () => {
       has: page.getByRole("heading", { level: 2, name: "拉取 Webhook" }),
     });
 
-    // State branch: pullKey present → readout view; absent → 生成凭证 button.
+    // Then: pullKey state branch — pullKey present → readout view; absent →
+    // 生成凭证 button.
     const generateButton = pullCard.getByRole("button", { name: /生成凭证/ });
     const regenerateButton = pullCard.getByRole("button", {
       name: /重新生成/,
@@ -223,20 +238,23 @@ test.describe("Feature: Admin backup page", () => {
   test("Given the push card is configured, When I view it, Then the 备份记录 h3 + 刷新 button + (history rows OR empty fallback) are visible (skip when in editMode)", async ({
     page,
   }) => {
+    // Given: open the backup page.
     await page.goto("/admin/backup", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/backup");
 
-    // 备份记录 only renders inside configured mode (backup-push-card.tsx:64-91
-    // is mounted by the configured branch at L318).
+    // When: probe push-card mode. 备份记录 only renders inside configured mode
+    // (backup-push-card.tsx:64-91 is mounted by the configured branch at L318).
     const editModeProbe = page.locator('input[placeholder="Bearer token"]');
     const isEditMode = (await editModeProbe.count()) > 0;
+    // Then: editMode branch skips with explicit reason; configured branch
+    // asserts the history section.
     test.skip(
       isEditMode,
       "Backup push card is in editMode (Backy not configured); 备份记录 section only renders in configured mode.",
     );
 
-    // h3 heading + the inline refresh button (a <Button variant=ghost> with
-    // RefreshCw icon and "刷新" label).
+    // Then: h3 heading + the inline refresh button (a <Button variant=ghost>
+    // with RefreshCw icon and "刷新" label).
     await expect(
       page.getByRole("heading", { level: 3, name: "备份记录" }),
     ).toBeVisible({ timeout: 10_000 });
@@ -257,7 +275,8 @@ test.describe("Feature: Admin backup page", () => {
       historySection.getByRole("button", { name: /刷新/ }),
     ).toBeVisible();
 
-    // Three legitimate render branches (backup-push-card.tsx:74-88):
+    // Then: history sub-branch — three legitimate render branches
+    // (backup-push-card.tsx:74-88):
     //   - history === null              → "推送备份后将显示远程备份记录。"
     //   - history with no entries       → "暂无备份记录"
     //   - history with entries          → .divide-y rows
@@ -294,10 +313,11 @@ test.describe("Feature: Admin MCP tokens page", () => {
   test("Given /admin/mcp is requested, When I open it, Then the AdminShell h1 (MCP 令牌) is visible", async ({
     page,
   }) => {
+    // Given/When: open the MCP tokens page.
     await page.goto("/admin/mcp", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/mcp");
 
-    // AdminShell h1 — i18n key "admin.page.mcp" → "MCP 令牌"
+    // Then: AdminShell h1 — i18n key "admin.page.mcp" → "MCP 令牌"
     // (src/components/admin/shell.tsx:33 + src/lib/i18n/index.ts:43).
     await expect(
       page.getByRole("heading", { level: 1, name: "MCP 令牌" }),
@@ -307,16 +327,17 @@ test.describe("Feature: Admin MCP tokens page", () => {
   test("Given /admin/mcp renders, When I view it, Then the 配置指南 h3 and the MCP 端点 code containing /api/mcp are visible", async ({
     page,
   }) => {
+    // Given/When: open the MCP tokens page.
     await page.goto("/admin/mcp", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/mcp");
 
-    // McpSetupGuide h3 (mcp-tokens-setup-guide.tsx:114).
+    // Then: McpSetupGuide h3 (mcp-tokens-setup-guide.tsx:114).
     await expect(
       page.getByRole("heading", { level: 3, name: "配置指南" }),
     ).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText("MCP 端点")).toBeVisible();
-    // The MCP endpoint URL is rendered into a <code> element next to the
-    // 端点 label and also embedded in the active code snippet. Either
+    // Then: the MCP endpoint URL is rendered into a <code> element next to
+    // the 端点 label and also embedded in the active code snippet. Either
     // occurrence satisfies the "shows MCP URL" assertion.
     await expect(page.getByText(/\/api\/mcp/).first()).toBeVisible();
   });
@@ -324,10 +345,11 @@ test.describe("Feature: Admin MCP tokens page", () => {
   test("Given the setup guide renders, When I switch tabs, Then cURL surfaces a curl -X POST snippet and Claude Code surfaces a mcpServers + YOUR_TOKEN JSON snippet", async ({
     page,
   }) => {
+    // Given: open the MCP tokens page so the setup guide is rendered.
     await page.goto("/admin/mcp", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/mcp");
 
-    // All three tab triggers visible (mcp-tokens-setup-guide.tsx:101-105).
+    // Then: all three tab triggers visible (mcp-tokens-setup-guide.tsx:101-105).
     const claudeTab = page.getByRole("button", { name: "Claude Code" });
     const cursorTab = page.getByRole("button", { name: "Cursor" });
     const cliTab = page.getByRole("button", { name: "cURL" });
@@ -335,33 +357,36 @@ test.describe("Feature: Admin MCP tokens page", () => {
     await expect(cursorTab).toBeVisible();
     await expect(cliTab).toBeVisible();
 
-    // Default tab is "claude" (mcp-tokens-setup-guide.tsx:90): JSON snippet.
-    // The <pre><code> body contains the actual snippet text.
+    // Then: default tab is "claude" (mcp-tokens-setup-guide.tsx:90): JSON
+    // snippet. The <pre><code> body contains the actual snippet text.
     const codeBlock = page.locator("pre code");
     await expect(codeBlock).toContainText("mcpServers");
     await expect(codeBlock).toContainText("YOUR_TOKEN");
 
-    // Click cURL → bash snippet with `curl -X POST`.
+    // When: click cURL → bash snippet with `curl -X POST`.
     await cliTab.click();
+    // Then: the snippet switches to the bash curl command.
     await expect(codeBlock).toContainText("curl -X POST");
 
-    // Click back to Claude Code → JSON snippet again.
+    // When: click back to Claude Code → JSON snippet again.
     await claudeTab.click();
+    // Then: snippet switches back to the mcpServers JSON.
     await expect(codeBlock).toContainText("mcpServers");
   });
 
   test("Given /admin/mcp renders, When I view the token list area, Then it shows the EmptyState copy or the table headers (客户端 / 令牌 / 权限 / 状态)", async ({
     page,
   }) => {
+    // Given/When: open the MCP tokens page.
     await page.goto("/admin/mcp", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/mcp");
 
-    // EmptyState message (mcp-tokens-manager.tsx:170) — exact copy.
+    // Then: EmptyState message (mcp-tokens-manager.tsx:170) — exact copy.
     const emptyState = page.getByText(
       "暂无 MCP 令牌。创建一个以连接 AI Agent。",
     );
-    // Table header row — McpTokensTable renders <th> 客户端 / 令牌 / 权限 / 状态
-    // (mcp-tokens-table.tsx:123-128).
+    // Then: table header row — McpTokensTable renders <th> 客户端 / 令牌 /
+    // 权限 / 状态 (mcp-tokens-table.tsx:123-128).
     const clientHeader = page.getByRole("columnheader", { name: "客户端" });
     const tokenHeader = page.getByRole("columnheader", { name: "令牌" });
     const scopeHeader = page.getByRole("columnheader", { name: "权限" });
@@ -374,6 +399,8 @@ test.describe("Feature: Admin MCP tokens page", () => {
       "token list area rendered neither the EmptyState copy nor the table header row",
     ).toBeGreaterThan(0);
 
+    // Then: empty branch surfaces EmptyState copy; non-empty branch asserts
+    // the table headers (token column hidden on mobile via sm:table-cell).
     if (emptyCount > 0) {
       await expect(emptyState).toBeVisible();
     } else {
@@ -387,11 +414,12 @@ test.describe("Feature: Admin MCP tokens page", () => {
   test("Given /admin/mcp renders, When I view the create form, Then the 客户端名称 label, name input, and 创建令牌 button are visible", async ({
     page,
   }) => {
+    // Given/When: open the MCP tokens page.
     await page.goto("/admin/mcp", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/mcp");
 
-    // FormField wraps the label with htmlFor="mcp-client-name" linking to
-    // the inner <Input id="mcp-client-name"> — so getByLabel is valid here.
+    // Then: FormField wraps the label with htmlFor="mcp-client-name" linking
+    // to the inner <Input id="mcp-client-name"> — so getByLabel is valid here.
     const nameInput = page.getByLabel("客户端名称");
     await expect(nameInput).toBeVisible({ timeout: 10_000 });
     await expect(
@@ -402,16 +430,17 @@ test.describe("Feature: Admin MCP tokens page", () => {
   test("Given /admin/mcp renders, When I view the create form, Then the 权限 label and #mcp-scope select expose 完整 + 作者", async ({
     page,
   }) => {
+    // Given/When: open the MCP tokens page.
     await page.goto("/admin/mcp", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/mcp");
 
-    // Scope label/select is in the create form via FormField id="mcp-scope".
-    // Scoping to the select by id avoids matching the 权限 <th> in the
-    // tokens table (when tokens exist).
+    // Then: scope label/select is in the create form via FormField
+    // id="mcp-scope". Scoping to the select by id avoids matching the 权限
+    // <th> in the tokens table (when tokens exist).
     const scopeSelect = page.locator("select#mcp-scope");
     await expect(scopeSelect).toBeVisible({ timeout: 10_000 });
     await expect(scopeSelect).toHaveValue("full");
-    // Both <option> values exist (mcp-tokens-create-form.tsx:51-52).
+    // Then: both <option> values exist (mcp-tokens-create-form.tsx:51-52).
     await expect(
       scopeSelect.locator('option[value="full"]'),
     ).toHaveText("完整");
@@ -423,11 +452,13 @@ test.describe("Feature: Admin MCP tokens page", () => {
   test("Given the Claude Code tab is active by default, When I view the snippet, Then a pre/code block containing mcpServers and YOUR_TOKEN is visible", async ({
     page,
   }) => {
+    // Given/When: open the MCP tokens page; the Claude Code tab is the
+    // default active tab (mcp-tokens-setup-guide.tsx:90).
     await page.goto("/admin/mcp", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/mcp");
 
-    // mcp-tokens-setup-guide.tsx:90 — default activeTab is "claude" (the
-    // JSON mcpServers config). The <CodeBlock> uses <pre><code>.
+    // Then: the <CodeBlock> uses <pre><code> and renders the JSON mcpServers
+    // config containing both `mcpServers` and the `YOUR_TOKEN` placeholder.
     const codeBlock = page.locator("pre code");
     await expect(codeBlock).toBeVisible({ timeout: 10_000 });
     await expect(codeBlock).toContainText("mcpServers");
