@@ -90,7 +90,8 @@ test.describe("Feature: Login page rendering", () => {
   test("Given /login is requested, When I open it, Then I land on /login or am redirected to /admin", async ({
     page,
   }) => {
-    // Given/When: hit /login with no params
+    // Given: no auth-related query is present.
+    // When: hit /login with no params.
     const branch = await visitLogin(page);
 
     // Then: explicit per-branch assertion (no silent pass)
@@ -108,7 +109,8 @@ test.describe("Feature: Login page rendering", () => {
   test("Given the login page renders, When I view it, Then I see Firefly branding (avatar logo)", async ({
     page,
   }) => {
-    // Given/When: visit /login
+    // Given: the login route is reachable.
+    // When: visit /login.
     const branch = await visitLogin(page);
     const gate = emptyDataGate(
       branch.landed === "login" ? 1 : 0,
@@ -128,7 +130,8 @@ test.describe("Feature: Login page rendering", () => {
   test("Given the login page renders, When I view it, Then I see the 欢迎回来 welcome copy", async ({
     page,
   }) => {
-    // Given/When: visit /login
+    // Given: the login route is reachable.
+    // When: visit /login.
     const branch = await visitLogin(page);
     const gate = emptyDataGate(
       branch.landed === "login" ? 1 : 0,
@@ -144,7 +147,8 @@ test.describe("Feature: Login page rendering", () => {
   test("Given the login page renders, When I view it, Then I see the Google sign-in button", async ({
     page,
   }) => {
-    // Given/When: visit /login
+    // Given: the login route is reachable.
+    // When: visit /login.
     const branch = await visitLogin(page);
     const gate = emptyDataGate(
       branch.landed === "login" ? 1 : 0,
@@ -163,7 +167,8 @@ test.describe("Feature: Login page rendering", () => {
   test("Given the login page renders, When I view it, Then the theme toggle is visible", async ({
     page,
   }) => {
-    // Given/When: visit /login
+    // Given: the login route is reachable.
+    // When: visit /login.
     const branch = await visitLogin(page);
     const gate = emptyDataGate(
       branch.landed === "login" ? 1 : 0,
@@ -182,7 +187,8 @@ test.describe("Feature: Login page rendering", () => {
   test("Given the login page renders, When I view it, Then the GitHub repo link is visible", async ({
     page,
   }) => {
-    // Given/When: visit /login
+    // Given: the login route is reachable.
+    // When: visit /login.
     const branch = await visitLogin(page);
     const gate = emptyDataGate(
       branch.landed === "login" ? 1 : 0,
@@ -200,7 +206,8 @@ test.describe("Feature: Login page rendering", () => {
   test("Given the login page renders, When I view it, Then the page footer is visible", async ({
     page,
   }) => {
-    // Given/When: visit /login
+    // Given: the login route is reachable.
+    // When: visit /login.
     const branch = await visitLogin(page);
     const gate = emptyDataGate(
       branch.landed === "login" ? 1 : 0,
@@ -218,7 +225,8 @@ test.describe("Feature: Login page rendering", () => {
   test("Given the login page renders, When I view it, Then the 安全认证 security indicator is visible", async ({
     page,
   }) => {
-    // Given/When: visit /login
+    // Given: the login route is reachable.
+    // When: visit /login.
     const branch = await visitLogin(page);
     const gate = emptyDataGate(
       branch.landed === "login" ? 1 : 0,
@@ -234,7 +242,8 @@ test.describe("Feature: Login page rendering", () => {
   test("Given /login?error=AccessDenied is requested, When the login page renders, Then the access-denied copy appears", async ({
     page,
   }) => {
-    // Given/When: open /login with an AccessDenied error
+    // Given: an AccessDenied error is signaled via query string.
+    // When: open /login with an AccessDenied error.
     const branch = await visitLogin(page, "?error=AccessDenied");
     const gate = emptyDataGate(
       branch.landed === "login" ? 1 : 0,
@@ -251,7 +260,8 @@ test.describe("Feature: Login page rendering", () => {
   test("Given /login?callbackUrl=/admin/posts, When I open it, Then the callbackUrl is honored in URL or redirect target", async ({
     page,
   }) => {
-    // Given/When: visit /login with a callbackUrl query
+    // Given: a callbackUrl is requested for /admin/posts.
+    // When: visit /login with a callbackUrl query.
     const branch = await visitLogin(page, "?callbackUrl=/admin/posts");
 
     // Then: per branch, the callback must be honored — not just present.
@@ -277,7 +287,8 @@ test.describe("Feature: Admin auth guard with E2E bypass", () => {
   test("Given E2E auth bypass is active, When I open /admin, Then it renders the admin shell without redirecting to login", async ({
     page,
   }) => {
-    // Given/When: visit /admin
+    // Given: E2E auth bypass is active.
+    // When: visit /admin.
     await page.goto("/admin", { waitUntil: "networkidle" });
 
     // Then: pathname is exactly /admin (not /login?callbackUrl=/admin)
@@ -292,14 +303,20 @@ test.describe("Feature: Admin auth guard with E2E bypass", () => {
   test("Given E2E auth bypass is active, When I open /admin/posts, Then it renders without redirecting to login", async ({
     page,
   }) => {
+    // Given: E2E auth bypass is active.
+    // When: visit /admin/posts.
     await page.goto("/admin/posts", { waitUntil: "networkidle" });
+    // Then: the URL settles on /admin/posts (no redirect to /login).
     await expectPathname(page, "/admin/posts");
   });
 
   test("Given E2E auth bypass is active, When I open /admin/settings, Then it renders without redirecting to login", async ({
     page,
   }) => {
+    // Given: E2E auth bypass is active.
+    // When: visit /admin/settings.
     await page.goto("/admin/settings", { waitUntil: "networkidle" });
+    // Then: the URL settles on /admin/settings (no redirect to /login).
     await expectPathname(page, "/admin/settings");
   });
 });

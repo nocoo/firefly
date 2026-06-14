@@ -42,7 +42,8 @@ test.describe("Feature: Admin dashboard shell + content stats", () => {
   test("Given E2E auth bypass is active, When I open /admin, Then the AdminShell sidebar exposes an aside, a nav, and a /admin/posts link", async ({
     page,
   }) => {
-    // Given/When: visit the dashboard
+    // Given: E2E auth bypass is active.
+    // When: visit the dashboard.
     await page.goto("/admin", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin");
 
@@ -70,7 +71,8 @@ test.describe("Feature: Admin dashboard shell + content stats", () => {
   test("Given /admin renders, When I view it, Then the 概览 h1 and the content-stat cards (已发布文章 / 分类 / 标签) are visible", async ({
     page,
   }) => {
-    // Given/When: visit the dashboard
+    // Given: E2E auth bypass is active.
+    // When: visit the dashboard.
     await page.goto("/admin", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin");
 
@@ -104,6 +106,8 @@ test.describe("Feature: Admin dashboard shell + content stats", () => {
     // asserted a generic heading. This scenario preserves that coverage as
     // dashboard readiness — there is no separate analytics page in the
     // current admin shell.
+    // Given: E2E auth bypass is active.
+    // When: visit the dashboard.
     await page.goto("/admin", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin");
 
