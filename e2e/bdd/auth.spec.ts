@@ -45,7 +45,7 @@
  *   Either way the URL must resolve to /login or /admin; any other landing
  *   (500, foreign route) fails the scenario instead of being skipped.
  */
-import { test, expect, emptyDataGate } from "./fixtures";
+import { test, expect, emptyDataGate, expectPathname } from "./fixtures";
 
 // ---------------------------------------------------------------------------
 // Helpers (local — narrow scope, see fixtures.ts policy)
@@ -80,20 +80,6 @@ async function visitLogin(
     true,
   );
   return { landed: isLogin ? "login" : "admin", url: page.url() };
-}
-
-/**
- * Assert that the current page's pathname is exactly `expected`. Path-level
- * comparison: `toHaveURL(/\/admin/)` would also accept
- * `/login?callbackUrl=/admin/posts` (auth-guard failure mode), which is
- * exactly the regression these admin-guard scenarios must catch.
- */
-async function expectPathname(
-  page: import("@playwright/test").Page,
-  expected: string,
-): Promise<void> {
-  const { pathname } = new URL(page.url());
-  expect(pathname).toBe(expected);
 }
 
 // ---------------------------------------------------------------------------

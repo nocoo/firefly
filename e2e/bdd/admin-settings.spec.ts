@@ -70,20 +70,7 @@
  *      chart card. No three-layer page-wide fallback.
  *   5. Mapping spells out the two merges (AI 1+2; System memory+uptime) explicitly.
  */
-import { test, expect } from "./fixtures";
-
-// ---------------------------------------------------------------------------
-// Local helper — path-level URL guard (same pattern as auth.spec.ts /
-// admin-dashboard.spec.ts; not yet promoted to fixtures.ts pending policy).
-// ---------------------------------------------------------------------------
-
-async function expectPathname(
-  page: import("@playwright/test").Page,
-  expected: string,
-): Promise<void> {
-  const { pathname } = new URL(page.url());
-  expect(pathname).toBe(expected);
-}
+import { test, expect, expectPathname } from "./fixtures";
 
 // ---------------------------------------------------------------------------
 // Feature: Admin general settings page

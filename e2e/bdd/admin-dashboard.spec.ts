@@ -32,24 +32,7 @@
  *   - "Admin post editor - new post > can enter title in editor"
  *   (3 migrated + 8 retained = 11 tests in the source file.)
  */
-import { test, expect } from "./fixtures";
-
-// ---------------------------------------------------------------------------
-// Local helper — path-level URL guard (same pattern as auth.spec.ts).
-// ---------------------------------------------------------------------------
-
-/**
- * Assert that the current page's pathname is exactly `expected`. Path-level
- * comparison so that a future regression which redirects /admin* to
- * /login?callbackUrl=/admin cannot pass a loose toHaveURL regex.
- */
-async function expectPathname(
-  page: import("@playwright/test").Page,
-  expected: string,
-): Promise<void> {
-  const { pathname } = new URL(page.url());
-  expect(pathname).toBe(expected);
-}
+import { test, expect, expectPathname } from "./fixtures";
 
 // ---------------------------------------------------------------------------
 // Feature: Admin dashboard shell + content stats

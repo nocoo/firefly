@@ -94,19 +94,11 @@
  *      specs in the same commit + includes all 15 old → new mappings.
  */
 import type { Page } from "@playwright/test";
-import { test, expect } from "./fixtures";
+import { test, expect, expectPathname } from "./fixtures";
 
 // ---------------------------------------------------------------------------
-// Local helpers — path-level URL guard + list-mode entry + edit-page helper.
+// Local helpers — list-mode entry + edit-page helper.
 // ---------------------------------------------------------------------------
-
-async function expectPathname(
-  page: Page,
-  expected: string,
-): Promise<void> {
-  const { pathname } = new URL(page.url());
-  expect(pathname).toBe(expected);
-}
 
 /**
  * Force the admin posts list into the "list" view mode before any navigation.

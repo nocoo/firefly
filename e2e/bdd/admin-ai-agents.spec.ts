@@ -89,19 +89,7 @@
  *   6. slug auto-gen uses expect.toHaveValue() poll instead of waitForTimeout.
  *   7. Back button pinned to 返回 (not the source's 返回/取消 fallback).
  */
-import { test, expect } from "./fixtures";
-
-// ---------------------------------------------------------------------------
-// Local helper — path-level URL guard (shared pattern across the BDD suite).
-// ---------------------------------------------------------------------------
-
-async function expectPathname(
-  page: import("@playwright/test").Page,
-  expected: string,
-): Promise<void> {
-  const { pathname } = new URL(page.url());
-  expect(pathname).toBe(expected);
-}
+import { test, expect, expectPathname } from "./fixtures";
 
 // ---------------------------------------------------------------------------
 // Feature: Admin AI agents list page

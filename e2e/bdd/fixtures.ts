@@ -30,19 +30,16 @@ export async function gotoFirstPost(page: Page): Promise<string | null> {
 }
 
 /**
- * Navigate to an admin route. The L3 runner sets `E2E_SKIP_AUTH=1` so the
- * admin guard accepts unauthenticated sessions; this helper centralises that
- * convention and waits for the admin shell to be ready (the top-bar <h1>
- * page title is rendered by AdminShell once the layout mounts).
+ * Assert the page is currently on the expected pathname, ignoring host,
+ * search, and hash. Admin specs use this to lock down navigation outcomes
+ * so a substring URL check cannot pass on a redirected route.
  */
-export async function gotoAdmin(page: Page, path = ""): Promise<void> {
-  const target = `/admin${path.startsWith("/") ? path : path ? `/${path}` : ""}`;
-  await page.goto(target, { waitUntil: "networkidle" });
-  // Readiness signal: AdminShell renders its <h1> page title once mounted.
-  await page.getByRole("heading", { level: 1 }).first().waitFor({
-    state: "visible",
-    timeout: 10_000,
-  });
+export async function expectPathname(
+  page: Page,
+  expected: string,
+): Promise<void> {
+  const { pathname } = new URL(page.url());
+  expect(pathname).toBe(expected);
 }
 
 export interface EmptyDataGate {

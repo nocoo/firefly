@@ -55,20 +55,7 @@
  *      body, not just `pre code` visibility.
  *   6. Commit body mapping keeps 14 entries with state branches noted in-line.
  */
-import { test, expect } from "./fixtures";
-
-// ---------------------------------------------------------------------------
-// Local helper — path-level URL guard (same pattern as auth.spec.ts /
-// admin-dashboard.spec.ts / admin-settings.spec.ts).
-// ---------------------------------------------------------------------------
-
-async function expectPathname(
-  page: import("@playwright/test").Page,
-  expected: string,
-): Promise<void> {
-  const { pathname } = new URL(page.url());
-  expect(pathname).toBe(expected);
-}
+import { test, expect, expectPathname } from "./fixtures";
 
 // ---------------------------------------------------------------------------
 // Feature: Admin backup page

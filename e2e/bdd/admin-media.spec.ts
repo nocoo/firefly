@@ -60,20 +60,7 @@
  *   6. Commit body spells out both merges explicitly + content-images
  *      attribution completion + old file deletion rationale.
  */
-import { test, expect } from "./fixtures";
-
-// ---------------------------------------------------------------------------
-// Local helper — path-level URL guard (same pattern as admin-taxonomy.spec.ts
-// / admin-settings.spec.ts / admin-backup-mcp.spec.ts).
-// ---------------------------------------------------------------------------
-
-async function expectPathname(
-  page: import("@playwright/test").Page,
-  expected: string,
-): Promise<void> {
-  const { pathname } = new URL(page.url());
-  expect(pathname).toBe(expected);
-}
+import { test, expect, expectPathname } from "./fixtures";
 
 // ---------------------------------------------------------------------------
 // Feature: Admin media library page
