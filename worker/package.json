@@ -11,15 +11,16 @@
     "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "4.20260613.1",
-    "@vitest/coverage-v8": "^4.1.8",
+    "@cloudflare/workers-types": "4.20260615.1",
+    "@vitest/coverage-v8": "^4.1.9",
     "typescript": "6.0.3",
-    "vitest": "^4.1.8",
+    "vitest": "^4.1.9",
     "wrangler": "^4.100.0"
   },
   "overrides": {
     "ws": ">=8.20.1",
     "brace-expansion": ">=5.0.6",
-    "esbuild": ">=0.28.1"
+    "esbuild": ">=0.28.1",
+    "vite": ">=7.3.5"
   }
 }

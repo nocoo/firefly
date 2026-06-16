@@ -28,29 +28,29 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.60.0",
+    "@playwright/test": "^1.61.0",
     "@types/node": "25.9.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitest/coverage-v8": "4.1.8",
+    "@vitest/coverage-v8": "4.1.9",
     "dotenv": "^17.4.2",
     "eslint": "^10.5.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "husky": "^9.1.7",
     "lint-staged": "17.0.7",
     "typescript": "6.0.3",
-    "typescript-eslint": "^8.61.0",
-    "vitest": "4.1.8"
+    "typescript-eslint": "^8.61.1",
+    "vitest": "4.1.9"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1068.0",
+    "@aws-sdk/client-s3": "^3.1069.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@nocoo/next-ai": "^0.2.1",
-    "@radix-ui/react-alert-dialog": "^1.1.16",
-    "@radix-ui/react-avatar": "^1.1.12",
+    "@radix-ui/react-alert-dialog": "^1.1.17",
+    "@radix-ui/react-avatar": "^1.2.0",
     "@tailwindcss/postcss": "^4.3.1",
     "@tailwindcss/typography": "^0.5.20",
-    "ai": "^6.0.205",
+    "ai": "^6.0.206",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "hono": "^4.12.25",
@@ -72,6 +72,7 @@
     "zod": "^4.4.3"
   },
   "overrides": {
+    "@babel/core": ">=7.29.6",
     "picomatch": ">=4.0.4",
     "brace-expansion": ">=5.0.6",
     "ws": ">=8.20.1",
@@ -83,7 +84,8 @@
     "fast-xml-parser": ">=5.7.0",
     "postcss": ">=8.5.10",
     "ip-address": ">=10.1.1",
-    "qs": ">=6.15.2"
+    "qs": ">=6.15.2",
+    "vite": ">=8.0.16"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
