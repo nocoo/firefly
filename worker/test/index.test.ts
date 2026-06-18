@@ -339,6 +339,50 @@ describe('Authentication', () => {
 
     expect(res.status).toBe(200);
   });
+
+  it('rejects token of equal length but different content (constant-time compare)', async () => {
+    // 'Bearer test-secret' is 18 chars; supply a same-length wrong header so
+    // the comparison cannot early-exit on length and must walk the bytes.
+    const wrong = 'Bearer xxxx-xxxxxx';
+    expect(wrong.length).toBe('Bearer test-secret'.length);
+    const env = makeEnv();
+    const res = await worker.fetch(
+      makeRequest('/api/v1/query', {
+        method: 'POST',
+        headers: { Authorization: wrong },
+        body: JSON.stringify({ sql: 'SELECT 1' }),
+      }),
+      env,
+      makeCtx(),
+    );
+
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects token of different length', async () => {
+    const env = makeEnv();
+    const res = await worker.fetch(
+      makeRequest('/api/v1/query', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer test-secret-extra' },
+        body: JSON.stringify({ sql: 'SELECT 1' }),
+      }),
+      env,
+      makeCtx(),
+    );
+
+    expect(res.status).toBe(401);
+  });
+
+  it('uses fallback constant-time compare when subtle.timingSafeEqual is unavailable', async () => {
+    // Vitest runs on Node, which does not expose crypto.subtle.timingSafeEqual.
+    // Assert that — confirming the fallback XOR path is what the previous
+    // accept/reject cases just exercised.
+    const subtle = crypto.subtle as SubtleCrypto & {
+      timingSafeEqual?: (a: BufferSource, b: BufferSource) => boolean;
+    };
+    expect(typeof subtle.timingSafeEqual).toBe('undefined');
+  });
 });
 
 // ─── POST /api/v1/query Tests ───────────────────────────────────────────────

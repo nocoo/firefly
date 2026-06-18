@@ -233,10 +233,40 @@ async function handleExecute(body: unknown, env: Env): Promise<Response> {
 // Auth helper
 // ---------------------------------------------------------------------------
 
-function authenticate(request: Request, env: Env): Response | null {
+/**
+ * Compare two strings in constant time to prevent timing attacks.
+ * Uses crypto.subtle.timingSafeEqual when available (Cloudflare Workers runtime);
+ * falls back to XOR-accumulated diff for environments without it (Node/Vitest).
+ * Length mismatch returns false without leaking timing from byte comparison.
+ */
+async function secureCompare(a: string, b: string): Promise<boolean> {
+  const encoder = new TextEncoder();
+  const bufA = encoder.encode(a);
+  const bufB = encoder.encode(b);
+  if (bufA.byteLength !== bufB.byteLength) return false;
+  const subtle = crypto.subtle as SubtleCrypto & {
+    timingSafeEqual?: (a: BufferSource, b: BufferSource) => boolean;
+  };
+  if (typeof subtle.timingSafeEqual === "function") {
+    return subtle.timingSafeEqual(bufA, bufB);
+  }
+  let diff = 0;
+  for (let i = 0; i < bufA.byteLength; i++) {
+    diff |= (bufA[i] ?? 0) ^ (bufB[i] ?? 0);
+  }
+  return diff === 0;
+}
+
+async function authenticate(
+  request: Request,
+  env: Env,
+): Promise<Response | null> {
   const authHeader = request.headers.get("Authorization");
+  if (!authHeader) {
+    return jsonResponse({ error: "Unauthorized" }, 401);
+  }
   const expected = `Bearer ${env.WORKER_SECRET}`;
-  if (!authHeader || authHeader !== expected) {
+  if (!(await secureCompare(authHeader, expected))) {
     return jsonResponse({ error: "Unauthorized" }, 401);
   }
   return null;
@@ -286,7 +316,7 @@ const worker: ExportedHandler<Env> = {
 
     // Auth: all other /api/v1/* routes require Bearer token
     if (path.startsWith("/api/v1/")) {
-      const authError = authenticate(request, env);
+      const authError = await authenticate(request, env);
       if (authError) return authError;
 
       if (request.method !== "POST") {
