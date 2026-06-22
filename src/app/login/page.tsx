@@ -5,6 +5,7 @@ import { LoginCard } from "@/components/auth/login-card";
 import { getDb } from "@/lib/db";
 import { getSiteSettings } from "@/data/settings";
 import { getLogoUrl } from "@/lib/logo";
+import { resolveCallbackUrl } from "@/lib/safe-callback";
 
 export const metadata: Metadata = {
   title: "Sign In",
@@ -17,9 +18,7 @@ export default async function LoginPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const raw = typeof params.callbackUrl === "string" ? params.callbackUrl : "/admin";
-  // Only allow same-origin relative paths to prevent open-redirect attacks
-  const callbackUrl = raw.startsWith("/") ? raw : "/admin";
+  const callbackUrl = resolveCallbackUrl(params.callbackUrl);
 
   const session = await auth();
   if (session) redirect(callbackUrl);
