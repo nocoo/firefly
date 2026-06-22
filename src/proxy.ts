@@ -171,14 +171,23 @@ function httpsRedirect(request: NextRequest): NextResponse | null {
 
 // ---------------------------------------------------------------------------
 // Stage 2: Short-circuit static assets / _next internals
-// (Exception: /index.php/* paths are WP legacy URLs needing redirect lookup.)
+// (Exceptions:
+//  - /api/* are never static assets — must continue to authGuard, even when
+//    the path contains a dot (e.g. /api/media/<uuid>.png). Treating
+//    dot-in-pathname as "static" let attackers bypass authGuard for any
+//    /api/<...>.<ext> route.
+//  - /index.php/* are WP legacy URLs needing redirect lookup.)
 // ---------------------------------------------------------------------------
 
 function skipStaticAssets(request: NextRequest): NextResponse | null {
   const { pathname } = request.nextUrl;
+  if (pathname.startsWith("/_next/")) {
+    return NextResponse.next();
+  }
   if (
-    pathname.startsWith("/_next/") ||
-    (pathname.includes(".") && !pathname.startsWith("/index.php"))
+    pathname.includes(".") &&
+    !pathname.startsWith("/api/") &&
+    !pathname.startsWith("/index.php")
   ) {
     return NextResponse.next();
   }
@@ -389,4 +398,5 @@ export const _testHelpers = {
   markdownRejected,
   getRateLimitConfig,
   extractClientIp,
+  skipStaticAssets,
 };
