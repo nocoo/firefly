@@ -30,12 +30,14 @@ vi.mock("@/lib/cache", () => ({
 import { NextResponse } from "next/server";
 import { _testHelpers, proxy } from "./proxy";
 import { _testHelpers as rlTestHelpers } from "./lib/rate-limit";
+import { auth } from "@/lib/auth";
 
 const {
   isProtectedApiRoute,
   markdownRejected,
   getRateLimitConfig,
   extractClientIp,
+  skipStaticAssets,
 } = _testHelpers;
 
 // ---------------------------------------------------------------------------
@@ -567,5 +569,131 @@ describe("proxy — rate limiting", () => {
       }),
     )) as unknown as { type: string };
     expect(allowedB.type).not.toBe("json"); // not 429
+  });
+});
+
+// ---------------------------------------------------------------------------
+// skipStaticAssets — middleware bypass regression
+//
+// Background: skipStaticAssets used to call NextResponse.next() for any path
+// containing a dot, which let attackers smuggle write operations onto routes
+// like DELETE /api/media/<uuid>.png past authGuard. The fix excludes /api/*
+// from the dot-based static-asset shortcut. These tests pin that contract.
+// ---------------------------------------------------------------------------
+
+describe("skipStaticAssets — does not short-circuit /api paths", () => {
+  it("does NOT skip /api/media/<uuid>.png (was the bypass)", () => {
+    const req = makeRequest("/api/media/abc-123.png", undefined, "DELETE");
+    expect(skipStaticAssets(req)).toBeNull();
+  });
+
+  it("does NOT skip /api/media/<uuid>.gif", () => {
+    const req = makeRequest("/api/media/abc-123.gif", undefined, "GET");
+    expect(skipStaticAssets(req)).toBeNull();
+  });
+
+  it("does NOT skip /api/posts/<slug>.bak", () => {
+    const req = makeRequest("/api/posts/some-slug.bak", undefined, "PUT");
+    expect(skipStaticAssets(req)).toBeNull();
+  });
+
+  it("does NOT skip /api/admin/posts/<id>.json", () => {
+    const req = makeRequest("/api/admin/posts/x.json", undefined, "DELETE");
+    expect(skipStaticAssets(req)).toBeNull();
+  });
+
+  it("still skips /favicon.ico (real static asset)", () => {
+    const req = makeRequest("/favicon.ico");
+    expect(skipStaticAssets(req)).not.toBeNull();
+  });
+
+  it("still skips /_next/static/chunk.js", () => {
+    const req = makeRequest("/_next/static/chunk.js");
+    expect(skipStaticAssets(req)).not.toBeNull();
+  });
+
+  it("still skips arbitrary asset-like paths with a dot", () => {
+    const req = makeRequest("/images/hero.png");
+    expect(skipStaticAssets(req)).not.toBeNull();
+  });
+
+  it("does NOT skip /index.php/foo (WP legacy redirect lookup)", () => {
+    const req = makeRequest("/index.php/foo");
+    expect(skipStaticAssets(req)).toBeNull();
+  });
+
+  it("does NOT skip clean paths without a dot", () => {
+    const req = makeRequest("/about");
+    expect(skipStaticAssets(req)).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// proxy() — middleware bypass end-to-end (the real regression)
+//
+// Pre-fix: DELETE /api/media/<id>.png would short-circuit at skipStaticAssets
+// and never reach authGuard. authGuard now runs and returns 401 for
+// unauthenticated requests.
+// ---------------------------------------------------------------------------
+
+describe("proxy — protected /api routes with dot in pathname reach authGuard", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    rlTestHelpers.reset();
+    vi.mocked(auth).mockResolvedValue(null);
+  });
+
+  it("returns 401 for unauthenticated DELETE /api/media/<uuid>.png", async () => {
+    const req = makeRequest("/api/media/abc-123.png", undefined, "DELETE");
+    const res = (await proxy(req)) as unknown as {
+      type: string;
+      init: { status: number };
+    };
+    expect(res.type).toBe("json");
+    expect(res.init.status).toBe(401);
+  });
+
+  it("returns 401 for unauthenticated GET /api/media/<uuid>.png", async () => {
+    const req = makeRequest("/api/media/abc-123.png", undefined, "GET");
+    const res = (await proxy(req)) as unknown as {
+      type: string;
+      init: { status: number };
+    };
+    expect(res.type).toBe("json");
+    expect(res.init.status).toBe(401);
+  });
+
+  it("returns 401 for unauthenticated PUT /api/posts/<slug>.bak", async () => {
+    const req = makeRequest("/api/posts/foo.bar", undefined, "PUT");
+    const res = (await proxy(req)) as unknown as {
+      type: string;
+      init: { status: number };
+    };
+    expect(res.type).toBe("json");
+    expect(res.init.status).toBe(401);
+  });
+
+  it("returns 401 for unauthenticated DELETE /api/posts/<slug>.bak", async () => {
+    const req = makeRequest("/api/posts/foo.bar", undefined, "DELETE");
+    const res = (await proxy(req)) as unknown as {
+      type: string;
+      init: { status: number };
+    };
+    expect(res.type).toBe("json");
+    expect(res.init.status).toBe(401);
+  });
+
+  it("still allows real static assets through unchanged", async () => {
+    const req = makeRequest("/favicon.ico");
+    await proxy(req);
+    expect(NextResponse.next).toHaveBeenCalled();
+    expect(NextResponse.json).not.toHaveBeenCalled();
+  });
+
+  it("still allows /_next internals through unchanged", async () => {
+    const req = makeRequest("/_next/static/chunk.js");
+    await proxy(req);
+    expect(NextResponse.next).toHaveBeenCalled();
+    expect(NextResponse.json).not.toHaveBeenCalled();
   });
 });

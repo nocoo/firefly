@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse, notFoundResponse } from "@/lib/api";
 import { getPostBySlug } from "@/data/entities/post";
@@ -9,7 +10,7 @@ interface RouteParams {
   params: Promise<{ slug: string }>;
 }
 
-// GET /api/posts/[slug]
+// GET /api/posts/[slug] — public read of published posts.
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
     const { slug } = await params;
@@ -31,7 +32,13 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 }
 
 // PUT /api/posts/[slug]
+// Auth: in-route check (defense in depth — proxy authGuard also runs).
 export async function PUT(request: NextRequest, { params }: RouteParams) {
+  const session = await auth();
+  if (!session?.user) {
+    return errorResponse("Unauthorized", 401);
+  }
+
   try {
     const { slug } = await params;
     const db = getDb();
@@ -71,7 +78,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 }
 
 // DELETE /api/posts/[slug]
+// Auth: in-route check (defense in depth — proxy authGuard also runs).
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
+  const session = await auth();
+  if (!session?.user) {
+    return errorResponse("Unauthorized", 401);
+  }
+
   try {
     const { slug } = await params;
     const db = getDb();
