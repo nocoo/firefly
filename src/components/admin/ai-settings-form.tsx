@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { AiProvider, SdkType } from "@/services/ai";
+import type { AuthType } from "@nocoo/next-ai";
 import {
   AiSettingsProviderCard,
   type ProviderOption,
@@ -18,6 +19,7 @@ interface AiSettingsFormProps {
     model: string;
     baseURL: string;
     sdkType: SdkType | "";
+    authType: AuthType | "";
   };
   providers: ProviderOption[];
 }
@@ -30,6 +32,7 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
   const [apiKey, setApiKey] = useState("");
   const [baseURL, setBaseURL] = useState(settings.baseURL);
   const [sdkType, setSdkType] = useState<SdkType | "">(settings.sdkType);
+  const [authType, setAuthType] = useState<AuthType | "">(settings.authType);
 
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -44,6 +47,7 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
     if (newProvider !== "custom") {
       setBaseURL("");
       setSdkType("");
+      setAuthType("");
     }
   };
 
@@ -58,6 +62,7 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
       if (isCustom) {
         body.baseURL = baseURL;
         body.sdkType = sdkType;
+        body.authType = authType;
       }
 
       const res = await fetch("/api/settings/ai", {
@@ -99,7 +104,19 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
 
     try {
       const res = await fetch("/api/settings/ai/test", { method: "POST" });
-      const data = await res.json();
+      const raw = await res.text();
+      let data: { error?: string; model?: string } = {};
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        // Edge / gateway returned non-JSON (HTML error page). Fall through
+        // with raw text — first 200 chars is plenty for diagnostics.
+        if (!res.ok) {
+          throw new Error(
+            `服务器返回 HTTP ${res.status}：${raw.slice(0, 200).trim() || "无内容"}`,
+          );
+        }
+      }
 
       if (!res.ok) {
         throw new Error(data.error ?? "Test failed");
@@ -154,8 +171,10 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
         <AiSettingsCustomCard
           baseURL={baseURL}
           sdkType={sdkType}
+          authType={authType}
           onBaseURLChange={setBaseURL}
           onSdkTypeChange={setSdkType}
+          onAuthTypeChange={setAuthType}
         />
       )}
 

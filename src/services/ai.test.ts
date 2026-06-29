@@ -68,6 +68,7 @@ const mockSettings = {
   model: "claude-sonnet-4-20250514",
   baseURL: "",
   sdkType: "" as const,
+  authType: "" as const,
 };
 
 describe("generateExcerpt", () => {

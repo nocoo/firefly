@@ -63,6 +63,16 @@ export async function PUT(request: NextRequest) {
       input.sdkType = "";
     }
 
+    // Validate authType if provided
+    if (body.authType !== undefined && body.authType !== "") {
+      if (body.authType !== "apiKey" && body.authType !== "bearer") {
+        return errorResponse(`Invalid auth type: ${body.authType}`);
+      }
+      input.authType = body.authType;
+    } else if (body.authType === "") {
+      input.authType = "";
+    }
+
     if (body.apiKey !== undefined) {
       input.apiKey = body.apiKey;
     }

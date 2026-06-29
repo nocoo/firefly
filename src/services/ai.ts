@@ -92,6 +92,7 @@ export async function generateExcerpt(
     model: settings.model,
     ...(settings.baseURL ? { baseURL: settings.baseURL } : {}),
     ...(settings.sdkType ? { sdkType: settings.sdkType as SdkType } : {}),
+    ...(settings.authType ? { authType: settings.authType } : {}),
   });
 
   const result = await generateText({
@@ -145,6 +146,7 @@ export async function summarizeUnfurl(
       model: settings.model,
       ...(settings.baseURL ? { baseURL: settings.baseURL } : {}),
       ...(settings.sdkType ? { sdkType: settings.sdkType as SdkType } : {}),
+      ...(settings.authType ? { authType: settings.authType } : {}),
     });
 
     const contextParts: string[] = [];

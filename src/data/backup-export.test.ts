@@ -121,6 +121,7 @@ const sampleSettingsRow = {
   ai_model: "claude-sonnet-4-20250514",
   ai_base_url: "",
   ai_sdk_type: "",
+  ai_auth_type: "",
   updated_at: 1774483200,
 };
 
@@ -226,6 +227,7 @@ describe("SITE_SETTINGS_SQL", () => {
       "ai_model",
       "ai_base_url",
       "ai_sdk_type",
+      "ai_auth_type",
       "updated_at",
     ];
     for (const col of expectedColumns) {

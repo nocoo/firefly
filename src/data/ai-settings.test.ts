@@ -20,6 +20,7 @@ const sampleRow = {
   ai_model: "claude-sonnet-4-20250514",
   ai_base_url: "",
   ai_sdk_type: "",
+  ai_auth_type: "",
 };
 
 // ---------------------------------------------------------------------------
@@ -34,6 +35,7 @@ describe("parseRow", () => {
       model: "claude-sonnet-4-20250514",
       baseURL: "",
       sdkType: "",
+      authType: "",
     });
   });
 
@@ -45,6 +47,7 @@ describe("parseRow", () => {
         ai_model: "my-model",
         ai_base_url: "https://my-api.example.com/v1",
         ai_sdk_type: "openai",
+        ai_auth_type: "",
       }),
     ).toEqual({
       provider: "custom",
@@ -52,7 +55,34 @@ describe("parseRow", () => {
       model: "my-model",
       baseURL: "https://my-api.example.com/v1",
       sdkType: "openai",
+      authType: "",
     });
+  });
+
+  it("parses a bearer authType", () => {
+    expect(
+      parseRow({
+        ai_provider: "custom",
+        ai_api_key: "mnfst_x",
+        ai_model: "auto",
+        ai_base_url: "https://manifest.example.com/v1",
+        ai_sdk_type: "anthropic",
+        ai_auth_type: "bearer",
+      }),
+    ).toMatchObject({ authType: "bearer" });
+  });
+
+  it("coerces unknown authType to empty string", () => {
+    expect(
+      parseRow({
+        ai_provider: "anthropic",
+        ai_api_key: "sk",
+        ai_model: "",
+        ai_base_url: "",
+        ai_sdk_type: "",
+        ai_auth_type: "weird",
+      }),
+    ).toMatchObject({ authType: "" });
   });
 
   it("returns empty strings for empty values", () => {
@@ -63,6 +93,7 @@ describe("parseRow", () => {
         ai_model: "",
         ai_base_url: "",
         ai_sdk_type: "",
+        ai_auth_type: "",
       }),
     ).toEqual(DEFAULTS);
   });
@@ -175,5 +206,19 @@ describe("updateAiSettings", () => {
 
     await updateAiSettings(db, {});
     expect(db.execute).not.toHaveBeenCalled();
+  });
+
+  it("updates authType", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
+    vi.mocked(db.firstOrNull).mockResolvedValue({
+      ...sampleRow,
+      ai_auth_type: "bearer",
+    });
+
+    const result = await updateAiSettings(db, { authType: "bearer" });
+    expect(result.authType).toBe("bearer");
+
+    const sql = vi.mocked(db.execute).mock.calls[0][0] as string;
+    expect(sql).toContain("ai_auth_type = ?");
   });
 });

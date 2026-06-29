@@ -79,6 +79,7 @@ describe("FireflyBackupEnvelope shape", () => {
     ai_model: "gpt-4",
     ai_base_url: "",
     ai_sdk_type: "openai",
+    ai_auth_type: "",
     updated_at: "2026-03-26T00:00:00.000Z",
   };
 

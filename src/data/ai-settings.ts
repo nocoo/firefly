@@ -1,5 +1,6 @@
 import type { Db } from "@/lib/db";
 import type { AiProvider, SdkType } from "@/services/ai";
+import type { AuthType } from "@nocoo/next-ai";
 import { buildSetClauses } from "@/data/core/sql";
 import type { FieldDef } from "@/data/core/types";
 
@@ -14,6 +15,7 @@ interface AiSettingsRow {
   ai_model: string;
   ai_base_url: string;
   ai_sdk_type: string;
+  ai_auth_type: string;
 }
 
 /** Parsed AI settings */
@@ -23,6 +25,7 @@ export interface AiSettings {
   model: string;
   baseURL: string;
   sdkType: SdkType | "";
+  authType: AuthType | "";
 }
 
 const DEFAULTS: AiSettings = {
@@ -31,6 +34,7 @@ const DEFAULTS: AiSettings = {
   model: "",
   baseURL: "",
   sdkType: "",
+  authType: "",
 };
 
 // ---------------------------------------------------------------------------
@@ -43,6 +47,7 @@ const fields: Record<string, FieldDef> = {
   model: { column: "ai_model" },
   baseURL: { column: "ai_base_url" },
   sdkType: { column: "ai_sdk_type" },
+  authType: { column: "ai_auth_type" },
 };
 
 // ---------------------------------------------------------------------------
@@ -50,12 +55,16 @@ const fields: Record<string, FieldDef> = {
 // ---------------------------------------------------------------------------
 
 function parseRow(row: AiSettingsRow): AiSettings {
+  const rawAuth = row.ai_auth_type || "";
+  const authType: AuthType | "" =
+    rawAuth === "bearer" || rawAuth === "apiKey" ? rawAuth : "";
   return {
     provider: (row.ai_provider || "") as AiProvider | "",
     apiKey: row.ai_api_key || "",
     model: row.ai_model || "",
     baseURL: row.ai_base_url || "",
     sdkType: (row.ai_sdk_type || "") as SdkType | "",
+    authType,
   };
 }
 
@@ -64,7 +73,7 @@ function parseRow(row: AiSettingsRow): AiSettings {
  */
 export async function getAiSettings(db: Db): Promise<AiSettings> {
   const row = await db.firstOrNull<AiSettingsRow>(
-    "SELECT ai_provider, ai_api_key, ai_model, ai_base_url, ai_sdk_type FROM site_settings WHERE id = 1",
+    "SELECT ai_provider, ai_api_key, ai_model, ai_base_url, ai_sdk_type, ai_auth_type FROM site_settings WHERE id = 1",
   );
 
   return row ? parseRow(row) : { ...DEFAULTS };
@@ -80,6 +89,7 @@ export interface UpdateAiSettingsInput {
   model?: string;
   baseURL?: string;
   sdkType?: string;
+  authType?: string;
 }
 
 export async function updateAiSettings(

@@ -47,6 +47,7 @@ interface BackupSiteSettingsRow {
   ai_model: string;
   ai_base_url: string;
   ai_sdk_type: string;
+  ai_auth_type: string;
   updated_at: number;
 }
 
@@ -59,7 +60,7 @@ const SITE_SETTINGS_SQL =
   "SELECT locale, posts_per_page, comments_enabled, font_style, " +
   "site_logo_version, site_name, site_tagline, site_description, " +
   "site_author, author_email, twitter_handle, social_links, " +
-  "ai_provider, ai_model, ai_base_url, ai_sdk_type, updated_at " +
+  "ai_provider, ai_model, ai_base_url, ai_sdk_type, ai_auth_type, updated_at " +
   "FROM site_settings WHERE id = 1";
 
 // ---------------------------------------------------------------------------
@@ -176,6 +177,7 @@ function convertSiteSettings(row: BackupSiteSettingsRow): ExportedSiteSettings {
     ai_model: row.ai_model,
     ai_base_url: row.ai_base_url,
     ai_sdk_type: row.ai_sdk_type,
+    ai_auth_type: row.ai_auth_type,
     updated_at: epochToIso(row.updated_at),
   };
 }
@@ -217,6 +219,7 @@ export async function collectBackupData(
     ai_model: "",
     ai_base_url: "",
     ai_sdk_type: "",
+    ai_auth_type: "",
     updated_at: new Date(0).toISOString(),
   };
 

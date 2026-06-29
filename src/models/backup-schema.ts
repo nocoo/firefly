@@ -128,6 +128,7 @@ export interface ExportedSiteSettings {
   ai_model: string;
   ai_base_url: string;
   ai_sdk_type: string;
+  ai_auth_type: string;
   updated_at: string;
 }
 
