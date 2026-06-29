@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.7.2 (2026-06-29)
+
+- feat(ai): add authType (apiKey | bearer) for custom provider
+
+
 ## v2.7.1 (2026-06-29)
 
 - chore(deps): bump @nocoo/next-ai ^0.3.0 -> ^0.4.0
