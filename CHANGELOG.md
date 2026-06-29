@@ -1,5 +1,133 @@
 # Changelog
 
+## v2.7.1 (2026-06-29)
+
+- chore(deps): bump @nocoo/next-ai ^0.3.0 -> ^0.4.0
+- Merge pull request #212 from nocoo/agent/sde-04/cb625234-deps-batch
+- chore(deps): bump @cloudflare/workers-types 4.20260626.1 -> 4.20260628.1
+- chore(deps): bump lucide-react 1.21.0 -> 1.22.0
+- chore(deps): bump ai 7.0.3 -> 7.0.4
+- Merge pull request #207 from nocoo/agent/sde-04/21afbfb0-eslint
+- Merge pull request #206 from nocoo/agent/sde-04/21afbfb0-ai
+- Merge pull request #205 from nocoo/agent/sde-04/21afbfb0-workers-types
+- chore(deps): bump eslint 10.5.0 -> 10.6.0
+- chore(deps): bump ai 7.0.2 -> 7.0.3
+- chore(deps): bump @cloudflare/workers-types 4.20260625.1 -> 4.20260626.1
+- chore(deps): bump @nocoo/next-ai 0.2.1 -> 0.3.0 (ai 6 -> 7)
+- Merge pull request #201 from nocoo/agent/sde-02/6e361e46
+- deps: bump @cloudflare/workers-types to 4.20260625.1
+- deps: bump wrangler to 4.105.0
+- Merge pull request #197 from nocoo/agent/sde-01/0b96de8f
+- deps: bump @types/node to 26.0.1
+- deps: bump @cloudflare/workers-types to 4.20260624.1
+- Merge pull request #194 from nocoo/agent/sde-04/62d1282a
+- deps: bump wrangler to 4.104.0
+- deps: bump @cloudflare/workers-types to 4.20260623.1
+- deps: bump recharts to 3.9.0
+- deps: bump hono to 4.12.27
+- deps: bump ai to 6.0.209
+- deps: bump @playwright/test to 1.61.1
+- deps: bump @aws-sdk/client-s3 to 3.1075.0
+- chore(deps): bump @aws-sdk/client-s3 and typescript-eslint (STU-1120) (#186)
+- Merge pull request #183 from nocoo/agent/sde-02/6be4fcb9
+- Merge pull request #182 from nocoo/agent/sde-01/29628c2f
+- fix(auth): reject protocol-relative callbackUrl on login (STU-1102)
+- fix(api): add in-route auth to media/[id] and posts/[slug] writes
+- fix(proxy): exclude /api/* from skipStaticAssets dot shortcut
+- Merge pull request #181 from nocoo/agent/sde-04/e21978e7
+- chore(deps): bump @cloudflare/workers-types to 4.20260621.1
+- Merge pull request #179 from nocoo/agent/sde-04/33a50629
+- chore(deps): bump lint-staged 17.0.7 → 17.0.8
+- chore(deps): bump @cloudflare/workers-types 4.20260619.1 → 4.20260620.1
+- Merge pull request #176 from nocoo/agent/sde-03/60ecd11a
+- chore(deps): bump @types/node 25.9.3 → 26.0.0 (MAJOR)
+- chore(deps): bump hono 4.12.25 → 4.12.26
+- chore(deps): bump lucide-react 1.20.0 → 1.21.0
+- chore(deps): bump @aws-sdk/client-s3 3.1071.0 → 3.1073.0
+- chore(deps): bump @cloudflare/workers-types 4.20260617.1 → 4.20260619.1
+- chore(deps): bump sharp 0.35.1 → 0.35.2
+- chore(security): bump wrangler to 4.103.0 to fix undici CVE
+- Merge pull request #170 from nocoo/agent/sde-02/fff61c6a
+- chore(ci): pin base-ci reusable workflow to v2026.5 SHA
+- Merge pull request #164 from nocoo/agent/sde-04/88799df8
+- fix(worker): use constant-time compare for Bearer auth
+- Merge pull request #163 from nocoo/agent/sde-02/871d5e53
+- chore(deps): bump @cloudflare/workers-types 4.20260616.1 → 4.20260617.1
+- chore(deps): bump @aws-sdk/client-s3 3.1070.0 → 3.1071.0
+- chore(deps): bump ai 6.0.207 → 6.0.208
+- Merge pull request #158 from nocoo/agent/sde-01/467d91dd
+- chore(deps): bump wrangler 4.100.0 → 4.101.0
+- chore(deps): bump lucide-react 1.18.0 → 1.20.0
+- chore(deps): bump ai 6.0.206 → 6.0.207
+- chore(deps): bump @cloudflare/workers-types 4.20260615.1 → 4.20260616.1
+- chore(deps): bump @aws-sdk/client-s3 3.1069.0 → 3.1070.0
+- chore(deps): batch dependency upgrades 2026-06-16 (incl. 2 security) (#152)
+- Merge pull request #140 from nocoo/agent/sde-03/5e512263
+- chore(deps): bump ai 6.0.204 → 6.0.205
+- test(e2e): split BDD Given and When comments in early admin/auth specs
+- test(e2e): add BDD step comments to Phase 3 admin specs
+- test(e2e): add BDD step comments to Phase 2 admin specs
+- test(e2e): centralize BDD pathname helper
+- Merge pull request #138 from nocoo/agent/sde-01/70e5fada
+- chore(deps): bump @cloudflare/workers-types to 4.20260613.1
+- test(e2e): close out L3 BDD migration to Stage 2 (final)
+- test(e2e): migrate admin posts list/new/edit to BDD (Phase 3.4)
+- test(e2e): migrate admin AI agents to BDD (Phase 3.3)
+- test(e2e): migrate admin media + delete content-images to BDD (Phase 3.2)
+- test(e2e): migrate admin taxonomy to BDD (Phase 3.1)
+- test(e2e): migrate admin backup + MCP tokens to BDD (Phase 2.4)
+- test(e2e): migrate admin settings to BDD (Phase 2.3)
+- test(e2e): migrate admin dashboard + analytics smoke to BDD
+- test(e2e): migrate login + admin auth guard to BDD
+- test(e2e): migrate blog content/pagination/search/preview/lightbox to BDD
+- test(e2e): migrate blog-taxonomy specs to BDD style
+- test(e2e): migrate blog-reading specs to BDD style
+- test(e2e): migrate SEO / RSS / image optimization specs to BDD style
+- test(e2e): avoid content image seed deletion race
+- test(e2e): disambiguate admin post edit tag label selector
+- refactor(e2e): scaffold bdd fixtures and enable mixed testMatch for L3 migration
+- docs: revise L3 BDD refactor plan per review
+- docs: add L3 BDD refactor plan (25-l3-bdd-refactor.md)
+- Merge pull request #136 from nocoo/fix/l3-coverage-gap
+- test(e2e): cover archive index page in L3 specs
+- test(e2e): cover admin post edit page in L3 specs
+- test(e2e): cover blog post detail page in L3 specs
+- Merge pull request #135 from nocoo/agent/sde-01/dfe3e848
+- fix(mcp): remove inline semicolon from migration 017 comment
+- fix(mcp): purge expiry wording from refresh error and design doc
+- chore(mcp): remove expired status from admin UI and update design doc
+- refactor(mcp): drop expires_in from token responses
+- refactor(mcp): remove expiry checks from token data layer
+- refactor(mcp): drop expires_at fields from McpToken type
+- feat(mcp): add migration to drop token expiry columns
+- Merge pull request #134 from nocoo/agent/sde-01/e7910b15
+- chore(deps): bump tailwindcss 4.3.0 → 4.3.1
+- chore(deps): bump lucide-react 1.17.0 → 1.18.0
+- chore(deps): bump eslint 10.4.1 → 10.5.0
+- chore(deps): bump ai 6.0.202 → 6.0.204
+- chore(deps): bump @tailwindcss/postcss 4.3.0 → 4.3.1
+- chore(deps): bump @aws-sdk/client-s3 3.1067.0 → 3.1068.0
+- chore(deps): bump worker @cloudflare/workers-types 4.20260611.1 → 4.20260612.1
+- chore(deps)(security): bump worker esbuild 0.27.3 → 0.28.1
+- Merge pull request #125 from nocoo/agent/sde-01/91b1a394
+- chore(deps): bump worker wrangler 4.99.0 → 4.100.0
+- chore(deps): bump worker @cloudflare/workers-types 4.20260610.1 → 4.20260611.1
+- chore(deps): bump sharp 0.34.5 → 0.35.1
+- chore(deps): bump ai 6.0.200 → 6.0.202
+- chore(deps): bump @aws-sdk/client-s3 3.1066.0 → 3.1067.0
+- Merge pull request #119 from nocoo/agent/sde-01/be434e3e
+- chore(deps): bump ai 6.0.199 → 6.0.200
+- chore(deps): bump @types/node 25.9.2 → 25.9.3
+- chore(deps): bump worker @cloudflare/workers-types 4.20260609.1 → 4.20260610.1
+- chore(deps): bump @aws-sdk/client-s3 3.1065.0 → 3.1066.0
+- Merge pull request #113 from nocoo/agent/sde-02/f1c58116
+- chore(deps): bump worker wrangler 4.98.0 → 4.99.0
+- chore(deps): bump next 16.2.8 → 16.2.9
+- chore(deps): bump ai 6.0.198 → 6.0.199
+- chore(deps): bump worker @cloudflare/workers-types 4.20260608.1 → 4.20260609.1
+- chore(deps): bump @aws-sdk/client-s3 3.1064.0 → 3.1065.0
+
+
 ## v2.7.0 (2026-06-10)
 
 - fix(layout): wrap next-themes ThemeProvider in client boundary
