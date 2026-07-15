@@ -1,10 +1,12 @@
+#!/usr/bin/env sh
+
 # === Quality Gate: pre-push ===
 # L1 Coverage (root + worker) + G1 Lint + G2 Security
 echo "▸ Lockfile sync check"
 bun install --frozen-lockfile --silent
 echo "▸ L1: unit tests (coverage ≥90%, includes worker subpackage)"
 bun run test:coverage
-echo "▸ G1: lint"
+echo "▸ G1: lint (typecheck + Biome + custom gates)"
 bun run lint
 echo "▸ G2: security"
 bun run security
