@@ -46,7 +46,7 @@ interface CommandPaletteContextValue {
 
 const CommandPaletteContext = createContext<CommandPaletteContextValue>({
   open: false,
-  setOpen: () => {},
+  setOpen: () => { /* default no-op until provider mounts */ },
 });
 
 export function useCommandPalette() {
@@ -296,7 +296,7 @@ export function CommandPalette() {
     if (!list) return;
     const active = list.querySelector("[data-active='true']");
     active?.scrollIntoView({ block: "nearest" });
-  }, [activeIndex]);
+  }, []);
 
   if (!open) return null;
 
@@ -361,7 +361,7 @@ export function CommandPalette() {
                 const index = navIndex;
                 const Icon = cmd.icon;
                 return (
-                  <button
+                  <button type="button"
                     key={cmd.id}
                     data-active={index === activeIndex}
                     onClick={() => handleSelect(index)}
@@ -396,7 +396,7 @@ export function CommandPalette() {
               {posts.map((post, postIndex) => {
                 const index = navCommands.length + postIndex;
                 return (
-                  <button
+                  <button type="button"
                     key={post.id}
                     data-active={index === activeIndex}
                     onClick={() => handleSelect(index)}
@@ -428,14 +428,14 @@ export function CommandPalette() {
                       {post.category_name && snippets[post.id] && (
                         <span aria-hidden="true">·</span>
                       )}
-                      {snippets[post.id] && (
+                      {snippets[post.id] ? (
                         <span
                           className="flex-1 truncate [&>mark]:bg-yellow-200 [&>mark]:text-yellow-900 dark:[&>mark]:bg-yellow-800/40 dark:[&>mark]:text-yellow-200"
                           dangerouslySetInnerHTML={{
                             __html: sanitizeSnippet(snippets[post.id]),
                           }}
                         />
-                      )}
+                      ) : null}
                     </div>
                   </button>
                 );

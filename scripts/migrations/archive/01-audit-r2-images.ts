@@ -62,7 +62,7 @@ async function listAllObjects(): Promise<R2Object[]> {
       objects.push({
         key: obj.Key!,
         size: obj.Size!,
-        lastModified: obj.LastModified!.toISOString(),
+        lastModified: obj.LastModified?.toISOString(),
         etag: obj.ETag?.replace(/"/g, "") ?? "",
       });
     }

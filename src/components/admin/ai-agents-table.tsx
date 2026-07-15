@@ -60,14 +60,14 @@ function AgentRow({
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-1">
-          <button
+          <button type="button"
             onClick={onEdit}
             className="p-1.5 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
             title="编辑"
           >
             <Pencil className="h-4 w-4" />
           </button>
-          <button
+          <button type="button"
             onClick={onShowPrompt}
             className="p-1.5 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
             title="显示提示词"
@@ -75,7 +75,7 @@ function AgentRow({
             <FileText className="h-4 w-4" />
           </button>
           {agent.post_count === 0 && (
-            <button
+            <button type="button"
               onClick={onDelete}
               className="p-1.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
               title="删除"

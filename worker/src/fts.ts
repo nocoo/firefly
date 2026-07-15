@@ -52,7 +52,8 @@ export function sanitizeFtsQuery(input: string): string {
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
-  while ((match = phraseRe.exec(trimmed)) !== null) {
+  match = phraseRe.exec(trimmed);
+  while (match !== null) {
     // Process unquoted text before this phrase
     const before = trimmed.slice(lastIndex, match.index).trim();
     if (before) parts.push(...tokenizeUnquoted(before));
@@ -66,6 +67,7 @@ export function sanitizeFtsQuery(input: string): string {
     }
 
     lastIndex = phraseRe.lastIndex;
+    match = phraseRe.exec(trimmed);
   }
 
   // Process remaining unquoted text after the last phrase

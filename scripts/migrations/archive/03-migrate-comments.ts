@@ -66,7 +66,7 @@ function wpDateToUnix(dateStr: string | null): number {
   if (!dateStr || dateStr === "0000-00-00 00:00:00") {
     return Math.floor(Date.now() / 1000);
   }
-  return Math.floor(new Date(dateStr + "Z").getTime() / 1000);
+  return Math.floor(new Date(`${dateStr}Z`).getTime() / 1000);
 }
 
 // ---------------------------------------------------------------------------

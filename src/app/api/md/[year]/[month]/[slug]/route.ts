@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getPostBySlug } from "@/data/entities/post";
 import { SITE_URL, postPath, formatDateISO } from "@/lib/seo";
@@ -33,18 +33,18 @@ export async function GET(
 
   // Build markdown with metadata header
   const lines: string[] = [];
-  lines.push("# " + post.title);
+  lines.push(`# ${post.title}`);
   lines.push("");
   if (post.excerpt) {
-    lines.push("> " + post.excerpt);
+    lines.push(`> ${post.excerpt}`);
     lines.push("");
   }
 
   const meta: string[] = [];
-  if (post.published_at) meta.push("Date: " + formatDateISO(post.published_at));
-  if (post.category_name) meta.push("Category: " + post.category_name);
+  if (post.published_at) meta.push(`Date: ${formatDateISO(post.published_at)}`);
+  if (post.category_name) meta.push(`Category: ${post.category_name}`);
   const url = SITE_URL + postPath(post.slug, post.published_at);
-  meta.push("URL: " + url);
+  meta.push(`URL: ${url}`);
   if (meta.length) {
     lines.push(meta.join(" | "));
     lines.push("");

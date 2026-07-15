@@ -41,7 +41,6 @@ describe("GET /api/media/[id] — in-route auth", () => {
   });
 
   it("returns 401 when session has no user", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(auth).mockResolvedValue({} as any);
 
     const response = await GET(fakeRequest, fakeParams);
@@ -51,7 +50,6 @@ describe("GET /api/media/[id] — in-route auth", () => {
   });
 
   it("reaches data layer when authenticated", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(auth).mockResolvedValue({ user: { email: "admin@example.com" } } as any);
     vi.mocked(getMediaById).mockResolvedValue(null);
 
@@ -78,7 +76,6 @@ describe("DELETE /api/media/[id] — in-route auth", () => {
   });
 
   it("reaches data layer when authenticated", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(auth).mockResolvedValue({ user: { email: "admin@example.com" } } as any);
     vi.mocked(getMediaById).mockResolvedValue(null);
 

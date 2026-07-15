@@ -1,0 +1,161 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.5.3/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"ignoreUnknown": true,
+		"includes": [
+			"**",
+			"!**/node_modules",
+			"!**/dist",
+			"!**/.next",
+			"!**/coverage",
+			"!**/*.min.js",
+			"!**/public",
+			"!next-env.d.ts",
+			"!**/bun.lock",
+			"!scripts/migrations/archive"
+		]
+	},
+	"formatter": { "enabled": false },
+	"assist": { "enabled": false },
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"preset": "recommended",
+			"style": {
+				"useImportType": "error",
+				"useNodejsImportProtocol": "error",
+				"useAsConstAssertion": "error",
+				"useLiteralEnumMembers": "error",
+				"useEnumInitializers": "error",
+				"useArrayLiterals": "error",
+				"useUnifiedTypeSignatures": "error",
+				"noNamespace": "error",
+				"noInferrableTypes": "error",
+				"noNonNullAssertion": "error"
+			},
+			"suspicious": {
+				"noExplicitAny": "error",
+				"noConfusingVoidType": "error",
+				"noExtraNonNullAssertion": "error",
+				"noMisleadingInstantiator": "error",
+				"noUnsafeDeclarationMerging": "error",
+				"noRedeclare": "error",
+				"noPrototypeBuiltins": "error",
+				"noSelfCompare": "error",
+				"noConfusingLabels": "error",
+				"noEmptyBlockStatements": "error",
+				"noEmptyInterface": "error",
+				"noNonNullAssertedOptionalChain": "error",
+				"useAwait": "off",
+				"noTsIgnore": "error",
+				"useAdjacentOverloadSignatures": "error",
+				"noArrayIndexKey": "off"
+			},
+			"complexity": {
+				"noBannedTypes": "error",
+				"noStaticOnlyClass": "error",
+				"noUselessTypeConstraint": "error",
+				"noUselessEmptyExport": "error",
+				"noUselessConstructor": "error",
+				"noUselessThisAlias": "error",
+				"useOptionalChain": "error",
+				"useLiteralKeys": "error",
+				"useRegexLiterals": "error",
+				"noImportantStyles": "off"
+			},
+			"correctness": {
+				"noUnusedVariables": {
+					"level": "error",
+					"options": { "ignoreRestSiblings": true }
+				},
+				"noUnusedImports": "error",
+				"noUnusedFunctionParameters": {
+					"level": "error",
+					"options": { "ignoreRestSiblings": true }
+				},
+				"noEmptyPattern": "error",
+				"useExhaustiveDependencies": "error",
+				"useHookAtTopLevel": "error",
+				"useYield": "error",
+				"noInvalidUseBeforeDeclaration": "error",
+				"noInvalidPositionAtImportRule": "off",
+				"noUnknownProperty": "off"
+			},
+			"security": {
+				"noDangerouslySetInnerHtml": "off"
+			},
+			"performance": {
+				"noImgElement": "off"
+			},
+			"a11y": {
+				"useButtonType": "error",
+				"useSemanticElements": "off",
+				"noSvgWithoutTitle": "off",
+				"useAriaPropsSupportedByRole": "off",
+				"noLabelWithoutControl": "off",
+				"noStaticElementInteractions": "off",
+				"useKeyWithClickEvents": "off",
+				"noAriaHiddenOnFocusable": "off"
+			}
+		}
+	},
+	"javascript": {
+		"globals": ["Bun"]
+	},
+	"css": {
+		"parser": {
+			"cssModules": true,
+			"tailwindDirectives": true
+		}
+	},
+	"overrides": [
+		{
+			"includes": [
+				"**/*.test.ts",
+				"**/*.test.tsx",
+				"**/*.spec.ts",
+				"**/*.spec.tsx",
+				"**/e2e/**"
+			],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noExplicitAny": "off",
+						"noEmptyBlockStatements": "off",
+						"noSkippedTests": "error",
+						"noFocusedTests": "error"
+					},
+					"style": {
+						"useImportType": "off",
+						"noNonNullAssertion": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["**/e2e/**"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noSkippedTests": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["**/*.css"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noDescendingSpecificity": "off"
+					}
+				}
+			}
+		}
+	]
+}

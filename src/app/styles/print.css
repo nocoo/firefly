@@ -17,7 +17,7 @@
   .blog-footer,
   .article-nav,
   .comments {
-    display: none !important;
+    display: none;
   }
 
   /* ── Decoration ── */
@@ -35,27 +35,27 @@
 
   /* ── Layout ── */
   html, body {
-    background: white !important;
-    color: black !important;
+    background: white;
+    color: black;
   }
-  .blog-shell { background: white !important; }
+  .blog-shell { background: white; }
   .blog-main {
-    background: white !important;
-    padding: 0 !important;
-    width: 100% !important;
-    box-shadow: none !important;
+    background: white;
+    padding: 0;
+    width: 100%;
+    box-shadow: none;
   }
-  .blog-max-width { display: block !important; }
+  .blog-max-width { display: block; }
   .blog-max-width::after { display: none; }            /* sidebar separator line */
 
   /* ── Prose ── */
   .prose-firefly {
-    font-size: 11pt !important;
-    line-height: 1.6 !important;
-    color: black !important;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: black;
   }
   .prose-firefly :is(h1, h2, h3, h4, h5, h6) {
-    color: black !important;
+    color: black;
     page-break-after: avoid;
   }
   .prose-firefly :is(p, li, blockquote) { orphans: 3; widows: 3; }
@@ -76,7 +76,7 @@
 
   /* ── Reference card → simplified ── */
   .reference-card {
-    border: 1px solid #999 !important;
+    border: 1px solid #999;
     page-break-inside: avoid;
   }
   .reference-card-image { display: none; }

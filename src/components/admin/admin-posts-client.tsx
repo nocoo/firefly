@@ -72,7 +72,7 @@ function ViewModeToggle({
 }) {
   return (
     <div className="flex items-center rounded-lg border border-border bg-background p-0.5">
-      <button
+      <button type="button"
         onClick={() => onChange("list")}
         aria-label="列表视图"
         className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
@@ -83,7 +83,7 @@ function ViewModeToggle({
       >
         <LayoutList className="h-4 w-4" strokeWidth={1.5} />
       </button>
-      <button
+      <button type="button"
         onClick={() => onChange("grid")}
         aria-label="网格视图"
         className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
@@ -129,7 +129,7 @@ export function AdminPostsClient({
 
   useEffect(() => {
     setSelectedIds(new Set());
-  }, [currentParams, currentPage]);
+  }, []);
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {

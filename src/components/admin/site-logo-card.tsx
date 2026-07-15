@@ -80,7 +80,7 @@ export function SiteLogoCard({ initialLogoUrl }: SiteLogoCardProps) {
     setLogoDragOver(false);
     if (logoBusy) return;
     const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith("image/")) {
+    if (file?.type.startsWith("image/")) {
       uploadLogo(file);
     }
   };

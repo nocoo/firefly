@@ -52,7 +52,7 @@ export function McpTokenCreateForm({
           <option value="author">作者</option>
         </Select>
       </FormField>
-      <button
+      <button type="button"
         onClick={onCreate}
         disabled={creating || !clientName.trim()}
         className="inline-flex items-center gap-2 rounded-widget bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"

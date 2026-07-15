@@ -193,7 +193,7 @@ function convertGutenberg(content: string): string {
         const level = levelMatch ? parseInt(levelMatch[1], 10) : 2;
         const text = decodeEntities(stripTags(blockContent)).trim();
         if (text) {
-          lines.push("", "#".repeat(level) + " " + text, "");
+          lines.push("", `${"#".repeat(level)} ${text}`, "");
         }
         break;
       }
@@ -221,7 +221,7 @@ function convertGutenberg(content: string): string {
         const inner = convertGutenberg(blockContent);
         const quoteLines = inner.split("\n").filter((l) => l.trim() !== "");
         for (const line of quoteLines) {
-          lines.push("> " + line);
+          lines.push(`> ${line}`);
         }
         lines.push("");
         break;
@@ -334,14 +334,14 @@ function convertHtmlTable(html: string): string | null {
 
   // Header row
   const header = rows[0] ?? [];
-  lines.push("| " + header.map((c) => c || " ").join(" | ") + " |");
-  lines.push("| " + header.map(() => "---").join(" | ") + " |");
+  lines.push(`| ${header.map((c) => c || " ").join(" | ")} |`);
+  lines.push(`| ${header.map(() => "---").join(" | ")} |`);
 
   // Data rows
   for (let i = 1; i < rows.length; i++) {
     const padded = rows[i];
     while (padded.length < colCount) padded.push("");
-    lines.push("| " + padded.join(" | ") + " |");
+    lines.push(`| ${padded.join(" | ")} |`);
   }
 
   return lines.join("\n");
@@ -366,31 +366,31 @@ function convertClassicHtml(content: string): string {
   // Blockquote
   result = result.replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi, (_, inner) => {
     const text = inner.replace(/<\/?p[^>]*>/g, "").trim();
-    return "\n" + text.split("\n").map((l: string) => "> " + l.trim()).join("\n") + "\n";
+    return `\n${text.split("\n").map((l: string) => `> ${l.trim()}`).join("\n")}\n`;
   });
 
   // Code blocks: <pre><code>...</code></pre>
   result = result.replace(
     /<pre[^>]*><code>([\s\S]*?)<\/code><\/pre>/gi,
-    (_, code) => "\n```\n" + decodeEntities(code) + "\n```\n",
+    (_, code) => `\n\`\`\`\n${decodeEntities(code)}\n\`\`\`\n`,
   );
 
   // Ordered lists
   result = result.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (_, inner) => {
     const items = inner.match(/<li[^>]*>([\s\S]*?)<\/li>/gi) ?? [];
-    return "\n" + items.map((item: string, i: number) => {
+    return `\n${items.map((item: string, i: number) => {
       const text = convertInlineHtml(item.replace(/<\/?li[^>]*>/g, "")).trim();
       return `${i + 1}. ${text}`;
-    }).join("\n") + "\n";
+    }).join("\n")}\n`;
   });
 
   // Unordered lists
   result = result.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (_, inner) => {
     const items = inner.match(/<li[^>]*>([\s\S]*?)<\/li>/gi) ?? [];
-    return "\n" + items.map((item: string) => {
+    return `\n${items.map((item: string) => {
       const text = convertInlineHtml(item.replace(/<\/?li[^>]*>/g, "")).trim();
       return `- ${text}`;
-    }).join("\n") + "\n";
+    }).join("\n")}\n`;
   });
 
   // Paragraphs

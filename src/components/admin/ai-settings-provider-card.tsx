@@ -54,7 +54,7 @@ export function AiSettingsProviderCard({
           <label className="text-sm font-medium text-foreground">模型</label>
           <p className="text-xs text-muted-foreground">
             留空则使用服务商的默认模型。
-            {selectedProvider && selectedProvider.defaultModel && (
+            {selectedProvider?.defaultModel && (
               <> ({selectedProvider.defaultModel})</>
             )}
           </p>

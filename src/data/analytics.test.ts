@@ -235,8 +235,8 @@ describe("computePeriodDates", () => {
 
   it("has correct span between start and end", () => {
     const { startDate, endDate } = computePeriodDates(7);
-    const start = new Date(startDate + "T00:00:00Z");
-    const end = new Date(endDate + "T00:00:00Z");
+    const start = new Date(`${startDate}T00:00:00Z`);
+    const end = new Date(`${endDate}T00:00:00Z`);
     const diffDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
     expect(diffDays).toBe(6); // 7-day range = 6 day difference (inclusive)
   });

@@ -10,7 +10,7 @@
 // callbacks to `any` where needed — the Zod schema validates inputs at
 // runtime, and the handler functions have their own typed parameters.
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// biome-ignore-all lint/suspicious/noExplicitAny: Zod v4 ShapeOutput + exactOptionalPropertyTypes forces tool callback casts; schemas validate at runtime
 
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
@@ -28,7 +28,7 @@ export function registerEntityTools<T extends { id: string }>(
   ctx: ToolContext,
   options?: RegisterOptions,
 ): void {
-  const plural = config.plural ?? config.name + "s";
+  const plural = config.plural ?? `${config.name}s`;
   const handlers = createCrudHandlers(config);
   const disabled = new Set(options?.disabledOps ?? []);
 

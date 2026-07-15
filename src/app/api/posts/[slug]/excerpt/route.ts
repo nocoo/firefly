@@ -11,7 +11,7 @@
  *   502 LLM call failed
  */
 
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse, notFoundResponse } from "@/lib/api";
 import { getPostBySlug } from "@/data/entities/post";

@@ -49,7 +49,7 @@ function resolveBackLink(): BackLink {
 // and the server snapshot ensures SSR ↔ hydration parity.
 // ---------------------------------------------------------------------------
 
-const noop = () => () => {};
+const noop = () => () => { /* no-op unsubscribe */ };
 
 let _prevOrigin: string | null | undefined;
 let _cachedBack: BackLink = BACK_DEFAULT;
@@ -137,7 +137,7 @@ export function ArticleNav({
           className="text-sm text-blog-text transition-colors hover:text-blog-accent"
         >
           {back.label}{" "}
-          <kbd className="blog-kbd hidden sm:inline" aria-hidden="true">H</kbd>
+          <kbd className="blog-kbd hidden sm:inline" >H</kbd>
         </Link>
 
         {/* Right: prev/next */}
@@ -150,12 +150,12 @@ export function ArticleNav({
               title={prevTitle ?? undefined}
             >
               ← 上一篇{" "}
-              <kbd className="blog-kbd hidden sm:inline" aria-hidden="true">J</kbd>
+              <kbd className="blog-kbd hidden sm:inline" >J</kbd>
             </Link>
           ) : (
             <span className="text-blog-text/30">
               ← 上一篇{" "}
-              <kbd className="blog-kbd hidden sm:inline" aria-hidden="true">J</kbd>
+              <kbd className="blog-kbd hidden sm:inline" >J</kbd>
             </span>
           )}
 
@@ -167,12 +167,12 @@ export function ArticleNav({
               title={nextTitle ?? undefined}
             >
               下一篇{" "}
-              <kbd className="blog-kbd hidden sm:inline" aria-hidden="true">K</kbd> →
+              <kbd className="blog-kbd hidden sm:inline" >K</kbd> →
             </Link>
           ) : (
             <span className="text-blog-text/30">
               下一篇{" "}
-              <kbd className="blog-kbd hidden sm:inline" aria-hidden="true">K</kbd> →
+              <kbd className="blog-kbd hidden sm:inline" >K</kbd> →
             </span>
           )}
         </div>

@@ -121,37 +121,27 @@ describe("parseRow", () => {
   });
 
   it("falls back to empty string when site_tagline is null/undefined", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(parseRow({ ...sampleRow, site_tagline: null as any }).siteTagline).toBe("");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(parseRow({ ...sampleRow, site_tagline: undefined as any }).siteTagline).toBe("");
   });
 
   it("falls back to empty string when site_description is null/undefined", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(parseRow({ ...sampleRow, site_description: null as any }).siteDescription).toBe("");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(parseRow({ ...sampleRow, site_description: undefined as any }).siteDescription).toBe("");
   });
 
   it("falls back to empty string when site_author is null/undefined", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(parseRow({ ...sampleRow, site_author: null as any }).siteAuthor).toBe("");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(parseRow({ ...sampleRow, site_author: undefined as any }).siteAuthor).toBe("");
   });
 
   it("falls back to empty string when author_email is null/undefined", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(parseRow({ ...sampleRow, author_email: null as any }).authorEmail).toBe("");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(parseRow({ ...sampleRow, author_email: undefined as any }).authorEmail).toBe("");
   });
 
   it("falls back to empty string when twitter_handle is null/undefined", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(parseRow({ ...sampleRow, twitter_handle: null as any }).twitterHandle).toBe("");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(parseRow({ ...sampleRow, twitter_handle: undefined as any }).twitterHandle).toBe("");
   });
 
@@ -365,7 +355,7 @@ describe("updateSiteSettings", () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleRow);
 
-    const longEmail = "c".repeat(300) + "@example.com";
+    const longEmail = `${"c".repeat(300)}@example.com`;
     await updateSiteSettings(db, { authorEmail: longEmail });
 
     const params = vi.mocked(db.execute).mock.calls[0][1] as unknown[];
@@ -376,7 +366,7 @@ describe("updateSiteSettings", () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleRow);
 
-    const longHandle = "@" + "d".repeat(70);
+    const longHandle = `@${"d".repeat(70)}`;
     await updateSiteSettings(db, { twitterHandle: longHandle });
 
     const params = vi.mocked(db.execute).mock.calls[0][1] as unknown[];

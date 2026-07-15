@@ -22,9 +22,11 @@ export interface DataLayer<T> {
   ) => Promise<T[] | { items: T[]; total: number }>;
   getById: (db: Db, id: string, args?: unknown) => Promise<T | null>;
   getBySlug: (db: Db, slug: string, args?: unknown) => Promise<T | null>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // Entity implementations use concrete input types; DataLayer is intentionally
+  // loose so EntityConfig can host heterogeneous CRUD modules.
+  // biome-ignore lint/suspicious/noExplicitAny: heterogeneous entity create inputs
   create: (db: Db, input: any) => Promise<T>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: heterogeneous entity update inputs
   update: (db: Db, id: string, input: any) => Promise<T | null>;
   delete: (db: Db, id: string, args?: unknown) => Promise<boolean>;
 }

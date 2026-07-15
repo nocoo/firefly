@@ -75,7 +75,7 @@ function generateUlid(): string {
 
 function wpDateToUnix(dateStr: string | null): number | null {
   if (!dateStr || dateStr === "0000-00-00 00:00:00") return null;
-  return Math.floor(new Date(dateStr + "Z").getTime() / 1000);
+  return Math.floor(new Date(`${dateStr}Z`).getTime() / 1000);
 }
 
 function statusMap(wpStatus: string | null): string {
@@ -125,7 +125,7 @@ function generateExcerpt(content: string, maxLength = 160): string {
   // Strip HTML tags
   const text = content.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
   if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength).replace(/\s\S*$/, "") + "...";
+  return `${text.slice(0, maxLength).replace(/\s\S*$/, "")}...`;
 }
 
 // ---------------------------------------------------------------------------
@@ -174,7 +174,7 @@ async function migrateCategories() {
   let count = 0;
   for (const term of wpTerms) {
     const tax = taxMap.get(term.term_id!);
-    if (!tax || tax.taxonomy !== "category" || tax.count === 0) continue;
+    if (tax?.taxonomy !== "category" || tax.count === 0) continue;
 
     const id = generateUlid();
     let slug = term.slug!;
@@ -216,7 +216,7 @@ async function migrateTags() {
   let count = 0;
   for (const term of wpTerms) {
     const tax = taxMap.get(term.term_id!);
-    if (!tax || tax.taxonomy !== "post_tag" || tax.count === 0) continue;
+    if (tax?.taxonomy !== "post_tag" || tax.count === 0) continue;
 
     const id = generateUlid();
     tagIdMap.set(term.term_id!, id);
@@ -245,7 +245,7 @@ async function migratePosts() {
   const metaMap = new Map<string, Map<string, string>>();
   for (const row of wpPostmeta) {
     if (!metaMap.has(row.post_id!)) metaMap.set(row.post_id!, new Map());
-    metaMap.get(row.post_id!)!.set(row.meta_key!, row.meta_value ?? "");
+    metaMap.get(row.post_id!)?.set(row.meta_key!, row.meta_value ?? "");
   }
 
   // Build category and tag relationships
@@ -268,10 +268,10 @@ async function migratePosts() {
     if (taxonomy === "category") {
       if (!postCategories.has(rel.object_id!))
         postCategories.set(rel.object_id!, []);
-      postCategories.get(rel.object_id!)!.push(termId);
+      postCategories.get(rel.object_id!)?.push(termId);
     } else if (taxonomy === "post_tag") {
       if (!postTags.has(rel.object_id!)) postTags.set(rel.object_id!, []);
-      postTags.get(rel.object_id!)!.push(termId);
+      postTags.get(rel.object_id!)?.push(termId);
     }
   }
 

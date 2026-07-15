@@ -9,7 +9,7 @@ interface PageSubtitleContextValue {
 
 const PageSubtitleContext = createContext<PageSubtitleContextValue>({
   subtitle: null,
-  setSubtitle: () => {},
+  setSubtitle: () => { /* default no-op until provider mounts */ },
 });
 
 export function PageSubtitleProvider({ children }: { children: React.ReactNode }) {

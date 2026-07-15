@@ -174,7 +174,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
         <div className="space-y-3">
           {revokedCount > 0 && (
             <div className="flex justify-end">
-              <button
+              <button type="button"
                 onClick={() => setShowBulkDelete(true)}
                 className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors"
               >

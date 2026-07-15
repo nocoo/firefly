@@ -87,7 +87,7 @@ describe("readingTime", () => {
   });
 
   it("handles code blocks", () => {
-    const md = "```\nconst x = 1;\nconst y = 2;\n```\n" + Array(200).fill("word").join(" ");
+    const md = `\`\`\`\nconst x = 1;\nconst y = 2;\n\`\`\`\n${Array(200).fill("word").join(" ")}`;
     expect(readingTime(md)).toBeGreaterThanOrEqual(1);
   });
 });

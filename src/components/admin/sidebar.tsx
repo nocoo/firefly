@@ -93,7 +93,7 @@ function NavGroupSection({
 
   return (
     <div className="mt-2">
-      <button
+      <button type="button"
         onClick={() => setOpen(!open)}
         className="flex w-full items-center justify-between px-3 py-2.5"
       >
@@ -219,7 +219,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
           </IconButton>
 
           {/* Search */}
-          <button
+          <button type="button"
             onClick={() => openSearch(true)}
             title="搜索"
             className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
@@ -305,7 +305,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
 
           {/* Search */}
           <div className="px-3">
-            <button
+            <button type="button"
               onClick={() => openSearch(true)}
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-normal text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >

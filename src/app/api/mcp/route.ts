@@ -42,8 +42,8 @@ export async function POST(request: Request) {
     await server.connect(transport);
     return await transport.handleRequest(request);
   } finally {
-    transport.close().catch(() => {});
-    server.close().catch(() => {});
+    transport.close().catch(() => { /* ignore close errors */ });
+    server.close().catch(() => { /* ignore close errors */ });
   }
 }
 

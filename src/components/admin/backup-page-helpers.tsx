@@ -40,7 +40,7 @@ export function BackupCopyButton({ text }: { text: string }) {
   }, [text]);
 
   return (
-    <button
+    <button type="button"
       onClick={handleCopy}
       className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
       title="Copy"

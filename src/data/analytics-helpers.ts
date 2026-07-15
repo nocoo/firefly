@@ -50,8 +50,8 @@ export function fillDailyGaps(
   const map = new Map(rows.map((r) => [r.date, r]));
   const result: DailyRow[] = [];
   for (
-    let d = new Date(startDate + "T00:00:00Z");
-    d <= new Date(endDate + "T00:00:00Z");
+    let d = new Date(`${startDate}T00:00:00Z`);
+    d <= new Date(`${endDate}T00:00:00Z`);
     d.setUTCDate(d.getUTCDate() + 1)
   ) {
     const key = d.toISOString().slice(0, 10);
@@ -83,8 +83,8 @@ export function fillDailyByBotGaps(
   const lookup = new Map(rows.map((r) => [`${r.date}|${r.botName}`, r.count]));
   const result: DailyByBotRow[] = [];
   for (
-    let d = new Date(startDate + "T00:00:00Z");
-    d <= new Date(endDate + "T00:00:00Z");
+    let d = new Date(`${startDate}T00:00:00Z`);
+    d <= new Date(`${endDate}T00:00:00Z`);
     d.setUTCDate(d.getUTCDate() + 1)
   ) {
     const date = d.toISOString().slice(0, 10);

@@ -125,8 +125,7 @@ export interface DbAdapter {
 export class CfRestAdapter implements DbAdapter {
   private readonly apiUrl: string;
 
-  constructor(
-    private accountId: string,
+  constructor(accountId: string,
     private apiToken: string,
     databaseId: string,
     public readonly label: string,

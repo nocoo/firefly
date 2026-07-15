@@ -5,7 +5,7 @@ import { generateR2Key, generateFireflyR2Key, getR2KeyPrefix, extractExtension, 
 // Test helpers — real magic byte headers for each format
 // ---------------------------------------------------------------------------
 
-function makeBytes(header: number[], totalSize: number = 1024): Uint8Array {
+function makeBytes(header: number[], totalSize = 1024): Uint8Array {
   const buf = new Uint8Array(totalSize);
   for (let i = 0; i < header.length; i++) buf[i] = header[i];
   return buf;

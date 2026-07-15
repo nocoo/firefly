@@ -88,14 +88,17 @@ export function PostCard({ post, author, priority, snippet }: PostCardProps) {
       )}
 
       {/* Excerpt — snippet overrides when provided */}
-      {(snippet || post.excerpt) && (
-        snippet
-          ? <p className="mt-3 text-base leading-relaxed text-blog-text"
-               dangerouslySetInnerHTML={{ __html: sanitizeSnippet(snippet) }} />
-          : <p className="mt-3 text-base leading-relaxed text-blog-text">
-              {post.excerpt}
-            </p>
-      )}
+      {(snippet || post.excerpt) &&
+        (snippet ? (
+          <p
+            className="mt-3 text-base leading-relaxed text-blog-text"
+            dangerouslySetInnerHTML={{ __html: sanitizeSnippet(snippet) }}
+          />
+        ) : (
+          <p className="mt-3 text-base leading-relaxed text-blog-text">
+            {post.excerpt}
+          </p>
+        ))}
 
       {/* Continue reading link */}
       {(snippet || post.excerpt) && (

@@ -13,8 +13,8 @@
     "test:worker": "cd worker && bun run test",
     "test:worker:coverage": "cd worker && bun run test:coverage",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint . --max-warnings=0",
-    "lint:fix": "eslint . --fix --max-warnings=0",
+    "lint": "biome check --no-errors-on-unmatched --error-on-warnings --max-diagnostics=500 .",
+    "lint:fix": "biome check --write --no-errors-on-unmatched --error-on-warnings --max-diagnostics=500 .",
     "security": "bun scripts/run-security.ts",
     "test:e2e": "bun scripts/run-e2e.ts",
     "test:e2e:api": "bun scripts/run-e2e.ts --api-only",
@@ -27,20 +27,17 @@
     "release": "bun scripts/release.ts"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.61.1",
     "@types/node": "26.1.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitest/coverage-v8": "4.1.10",
     "dotenv": "^17.4.2",
-    "eslint": "^10.7.0",
-    "eslint-plugin-react-hooks": "^7.1.1",
     "husky": "^9.1.7",
     "lint-staged": "17.0.8",
     "typescript": "6.0.3",
-    "typescript-eslint": "^8.64.0",
-    "vitest": "4.1.10"
+    "vitest": "4.1.10",
+    "@biomejs/biome": "2.5.3"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1086.0",
@@ -88,8 +85,8 @@
     "vite": ">=8.0.16"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --max-warnings=0 --no-warn-ignored"
+    "*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,json}": [
+      "biome check --no-errors-on-unmatched --error-on-warnings --max-diagnostics=500 --staged"
     ]
   }
 }

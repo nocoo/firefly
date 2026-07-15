@@ -27,7 +27,7 @@ export function McpNewTokenBanner({
       <p className="mt-1 text-xs text-muted-foreground">
         此令牌仅显示一次，请安全保存。
       </p>
-      <button
+      <button type="button"
         onClick={onClose}
         className="mt-2 text-xs text-muted-foreground underline hover:text-foreground"
       >

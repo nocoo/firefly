@@ -48,7 +48,7 @@ export function createCrudHandlers<T extends { id: string }>(
           )
         : result.items;
       return ok({
-        [config.plural ?? config.name + "s"]: items,
+        [config.plural ?? `${config.name}s`]: items,
         total: result.total,
       });
     }

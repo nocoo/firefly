@@ -49,7 +49,7 @@ function collectMemorySnapshot(): MemorySnapshot {
  * Start collecting memory snapshots at regular intervals.
  * Safe to call multiple times — only starts once.
  */
-function startMemoryCollection(intervalMs: number = 60_000): void {
+function startMemoryCollection(intervalMs = 60_000): void {
   if (collectionInterval || collectionStarted) return; // Already running
   collectionStarted = true;
 

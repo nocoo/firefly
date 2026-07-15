@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { jsonResponse, errorResponse } from "@/lib/api";
 import { summarizeUnfurl } from "@/services/ai";
 

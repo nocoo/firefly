@@ -5,7 +5,7 @@
  */
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
-import { resolve, basename } from "node:path";
+import { resolve, } from "node:path";
 import { createAdapter, type DbAdapter } from "./db-adapter.ts";
 
 // ---------------------------------------------------------------------------
@@ -60,17 +60,18 @@ function discoverMigrations(): MigrationFile[] {
     .filter((f) => SQL_FILE_RE.test(f))
     .sort();
 
-  return files.map((filename) => {
-    const match = filename.match(SQL_FILE_RE)!;
+  return files.flatMap((filename) => {
+    const match = filename.match(SQL_FILE_RE);
+    if (!match) return [];
     const path = resolve(MIGRATIONS_DIR, filename);
     const content = readFileSync(path, "utf-8");
-    return {
+    return [{
       name: filename.replace(/\.sql$/, ""),
       filename,
       path,
       seq: parseInt(match[1], 10),
       checksum: sha256(content),
-    };
+    }];
   });
 }
 
@@ -155,7 +156,7 @@ async function applyOne(
   const sql = readFileSync(migration.path, "utf-8");
   const { preBatchStatements, batchSql } = parseMigration(sql);
 
-  const totalParts =
+  const _totalParts =
     preBatchStatements.length + (batchSql ? 1 : 0);
   const modeDesc = batchSql
     ? `${preBatchStatements.length} pre-batch + batch`

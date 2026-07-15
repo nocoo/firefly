@@ -99,9 +99,7 @@ function createRequest(body: unknown, method = "POST"): NextRequest {
 describe("POST /api/admin/ai-agents", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(auth).mockResolvedValue({ user: { email: "admin@example.com" } } as any);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(getDb).mockReturnValue(mockDb as any);
   });
 
@@ -185,9 +183,7 @@ describe("POST /api/admin/ai-agents", () => {
 describe("PATCH /api/admin/ai-agents/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(auth).mockResolvedValue({ user: { email: "admin@example.com" } } as any);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(getDb).mockReturnValue(mockDb as any);
     vi.mocked(getAiAgentById).mockResolvedValue(mockAgent);
     vi.mocked(getCategoryById).mockResolvedValue(mockCategory);
@@ -356,9 +352,7 @@ describe("PATCH /api/admin/ai-agents/[id]", () => {
 describe("DELETE /api/admin/ai-agents/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(auth).mockResolvedValue({ user: { email: "admin@example.com" } } as any);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(getDb).mockReturnValue(mockDb as any);
   });
 

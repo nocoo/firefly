@@ -68,7 +68,7 @@ function findNodeProcessPid(): number | null {
   try {
     const psOutput = execSync(`pgrep -f "next start" | head -1`, { encoding: "utf-8" });
     const pid = parseInt(psOutput.trim(), 10);
-    if (!isNaN(pid)) return pid;
+    if (!Number.isNaN(pid)) return pid;
   } catch {
     // No process found
   }
@@ -143,14 +143,14 @@ async function main(): Promise<void> {
     detached: false,
   });
 
-  let serverOutput = "";
+  let _serverOutput = "";
   
   serverProcess.stdout?.on("data", (data) => {
-    serverOutput += data.toString();
+    _serverOutput += data.toString();
   });
   
   serverProcess.stderr?.on("data", (data) => {
-    serverOutput += data.toString();
+    _serverOutput += data.toString();
   });
 
   try {
@@ -215,14 +215,14 @@ async function main(): Promise<void> {
   } finally {
     // Cleanup
     try {
-      process.kill(-serverProcess.pid!, "SIGTERM");
+      const pid = serverProcess.pid; if (pid != null) process.kill(-pid, "SIGTERM");
     } catch {
       serverProcess.kill("SIGTERM");
     }
     await sleep(500);
     if (!serverProcess.killed) {
       try {
-        process.kill(-serverProcess.pid!, "SIGKILL");
+        const pid2 = serverProcess.pid; if (pid2 != null) process.kill(-pid2, "SIGKILL");
       } catch {
         serverProcess.kill("SIGKILL");
       }

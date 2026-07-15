@@ -24,7 +24,7 @@ export async function getBackyConfig(db: Db): Promise<BackyConfig | null> {
     "SELECT backy_webhook_url, backy_api_key FROM site_settings WHERE id = 1",
   );
 
-  if (!row || !row.backy_webhook_url) return null;
+  if (!row?.backy_webhook_url) return null;
 
   return {
     webhookUrl: row.backy_webhook_url,
@@ -41,7 +41,7 @@ export async function getBackyPullKey(db: Db): Promise<string | null> {
     "SELECT backy_pull_key FROM site_settings WHERE id = 1",
   );
 
-  if (!row || !row.backy_pull_key) return null;
+  if (!row?.backy_pull_key) return null;
   return row.backy_pull_key;
 }
 

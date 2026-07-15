@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { jsonResponse, errorResponse } from "@/lib/api";
 import { uploadToR2 } from "@/lib/r2-client";
 import { generateFireflyR2Key } from "@/lib/r2";

@@ -103,8 +103,7 @@ export function AnalyticsDashboard({
   useEffect(() => {
     fetchSummary(days);
     fetchSourceDetail(activeTab, days);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [days]);
+  }, [days, fetchSummary, fetchSourceDetail, activeTab]);
 
   // Tab switch handler
   function handleTabChange(type: SourceType) {

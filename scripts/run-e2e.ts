@@ -146,7 +146,7 @@ function sourcesNewestMtime(): number {
         try {
           const m = statSync(p).mtimeMs;
           if (m > newest) newest = m;
-        } catch {}
+        } catch { /* ignore missing path */ }
       }
     }
   }
@@ -162,7 +162,7 @@ function sourcesNewestMtime(): number {
       try {
         const m = statSync(f).mtimeMs;
         if (m > newest) newest = m;
-      } catch {}
+      } catch { /* ignore missing path */ }
     }
   }
   return newest;

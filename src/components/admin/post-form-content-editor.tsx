@@ -4,6 +4,7 @@ import {
   useMemo,
   useState,
   useRef,
+  useCallback,
   forwardRef,
   useImperativeHandle,
   useEffect,
@@ -68,14 +69,7 @@ export const PostContentEditor = forwardRef<
    *  flip out of preview mode. Cleared by the effect below. */
   const pendingFocusRef = useRef(false);
 
-  useEffect(() => {
-    if (!pendingFocusRef.current) return;
-    if (previewMode) return; // still in preview — wait for the next render
-    pendingFocusRef.current = false;
-    focusTargetTextarea();
-  }, [previewMode]);
-
-  const focusTargetTextarea = () => {
+  const focusTargetTextarea = useCallback(() => {
     // `offsetParent` is null when the element (or an ancestor) is
     // `display: none` — the canonical "is it visible?" check for hidden
     // siblings. Prefer the visible one; fall back to whichever is mounted.
@@ -87,7 +81,14 @@ export const PostContentEditor = forwardRef<
     if (!target) return;
     target.scrollIntoView({ behavior: "smooth", block: "center" });
     target.focus({ preventScroll: true });
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!pendingFocusRef.current) return;
+    if (previewMode) return; // still in preview — wait for the next render
+    pendingFocusRef.current = false;
+    focusTargetTextarea();
+  }, [previewMode, focusTargetTextarea]);
 
   useImperativeHandle(
     ref,
@@ -105,7 +106,7 @@ export const PostContentEditor = forwardRef<
         focusTargetTextarea();
       },
     }),
-    [previewMode],
+    [previewMode, focusTargetTextarea],
   );
 
   const uploadProps = postId ? { postId } : {};

@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import sharp from "sharp";
 import { jsonResponse, errorResponse } from "@/lib/api";
 import { validateUpload } from "@/lib/r2";

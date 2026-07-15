@@ -16,8 +16,7 @@ import { buildSetClauses } from "@/data/core/sql";
 // T and UpdateInput are unused here but kept so Config and Entity share the
 // same <T, CreateInput, UpdateInput> parameter list — callers only specify
 // the triple once on `createTaxonomyEntity`.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface TaxonomyConfig<T, CreateInput, UpdateInput> {
+export interface TaxonomyConfig<_T, CreateInput, _UpdateInput> {
   /** SQL table name (e.g. "tags", "categories") */
   table: string;
   /** Human-readable name for error messages (e.g. "Tag", "Category") */

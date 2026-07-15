@@ -85,14 +85,14 @@ function TokenRow({
       </td>
       <td className="px-4 py-3 text-right">
         {isRevoked ? (
-          <button
+          <button type="button"
             onClick={() => onDelete(token.id)}
             className="text-xs text-destructive hover:text-destructive/80 transition-colors"
           >
             删除
           </button>
         ) : (
-          <button
+          <button type="button"
             onClick={() => onRevoke(token.id)}
             className="text-xs text-destructive hover:text-destructive/80 transition-colors"
           >

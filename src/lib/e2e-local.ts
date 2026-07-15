@@ -55,7 +55,7 @@ export function resolveLocalR2Path(key: string): string {
   // Normalize and verify the resolved path stays within the root
   const root = resolve(localDir);
   const target = resolve(root, normalize(key));
-  if (!target.startsWith(root + "/") && target !== root) {
+  if (!target.startsWith(`${root}/`) && target !== root) {
     throw new Error(
       `Invalid R2 key: resolved path escapes local R2 root: ${key}`,
     );

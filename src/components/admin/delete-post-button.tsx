@@ -49,7 +49,7 @@ export function DeletePostButton({ slug, title, iconOnly }: DeletePostButtonProp
   return (
     <>
       {iconOnly ? (
-        <button
+        <button type="button"
           onClick={openConfirm}
           disabled={deleting}
           className="flex h-8 w-8 items-center justify-center rounded-widget bg-white/90 text-destructive transition-colors hover:bg-white disabled:opacity-50"
@@ -58,7 +58,7 @@ export function DeletePostButton({ slug, title, iconOnly }: DeletePostButtonProp
           <Trash2 className="h-4 w-4" strokeWidth={1.5} />
         </button>
       ) : (
-        <button
+        <button type="button"
           onClick={openConfirm}
           disabled={deleting}
           className="inline-flex items-center gap-1 rounded-widget px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"

@@ -118,7 +118,7 @@ async function seedSiteDailyStats() {
   for (const s of sessions) {
     const date = s.created_at.slice(0, 10);
     if (!dailyVisitors.has(date)) dailyVisitors.set(date, new Set());
-    dailyVisitors.get(date)!.add(s.visitor_id);
+    dailyVisitors.get(date)?.add(s.visitor_id);
   }
 
   // Aggregate top referrers by date

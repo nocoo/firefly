@@ -35,12 +35,12 @@ export function ArticleBody({
       {header}
       {featuredImage}
       {referenceCard}
-      {html && (
+      {html ? (
         <div
           className="blog-content prose-firefly prose max-w-none"
           dangerouslySetInnerHTML={{ __html: html }}
         />
-      )}
+      ) : null}
       {footer}
     </article>
   );

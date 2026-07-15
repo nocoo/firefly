@@ -111,7 +111,6 @@ describe("createAuthorPostEntity", () => {
 
     it("requires author_id even when called with no opts (undefined)", async () => {
       await expect(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (entity.dataLayer.list as any)(db, undefined),
       ).rejects.toThrow("author_id is required");
     });
@@ -145,7 +144,6 @@ describe("createAuthorPostEntity", () => {
 
     it("requires author_id when args is undefined", async () => {
       await expect(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (entity.dataLayer.getById as any)(db, "post-1", undefined),
       ).rejects.toThrow("author_id is required");
     });
@@ -178,7 +176,6 @@ describe("createAuthorPostEntity", () => {
 
     it("requires author_id when args is undefined", async () => {
       await expect(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (entity.dataLayer.getBySlug as any)(db, "test-post", undefined),
       ).rejects.toThrow("author_id is required");
     });
@@ -315,7 +312,6 @@ describe("createAuthorPostEntity", () => {
 
     it("requires author_id when args is undefined", async () => {
       await expect(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (entity.dataLayer.delete as any)(db, "post-1", undefined),
       ).rejects.toThrow("author_id is required");
     });

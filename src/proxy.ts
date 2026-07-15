@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { isE2EMode } from "@/lib/auth-utils";
 import { createDb } from "@/lib/db";
@@ -333,7 +333,7 @@ async function wordpressRedirect(
     }
 
     // Try exact match, then with trailing slash (WP URLs stored with slash)
-    const redirect = map.get(pathname) ?? map.get(pathname + "/");
+    const redirect = map.get(pathname) ?? map.get(`${pathname}/`);
     if (!redirect) return null;
 
     // Fire-and-forget: increment hit counter

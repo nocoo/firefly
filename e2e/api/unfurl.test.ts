@@ -107,7 +107,6 @@ describe("POST /api/unfurl", () => {
         res.status === 502 &&
         /failed to fetch url|dns resolution failed/i.test(body.error ?? "");
       if (isOutboundFailure) {
-        // eslint-disable-next-line no-restricted-syntax -- runtime conditional skip, not a forgotten .only/.skip
         ctx.skip();
         return;
       }

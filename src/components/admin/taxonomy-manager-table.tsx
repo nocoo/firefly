@@ -102,14 +102,14 @@ function ActionsCell({
             查看全部
           </Link>
         )}
-        <button
+        <button type="button"
           onClick={onEdit}
           className="inline-flex items-center gap-1 rounded-widget px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
           <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
           编辑
         </button>
-        <button
+        <button type="button"
           onClick={onDelete}
           className="inline-flex items-center gap-1 rounded-widget px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
         >

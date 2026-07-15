@@ -47,7 +47,7 @@ const {
 function makeRequest(
   pathname: string,
   acceptHeader?: string,
-  method: string = "GET",
+  method = "GET",
   extraHeaders?: Record<string, string>,
 ) {
   const headers = new Map<string, string>();

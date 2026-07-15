@@ -126,7 +126,7 @@ describe("maskApiKey", () => {
   });
 
   it("handles long API key (48 chars)", () => {
-    const key = "abcd" + "x".repeat(40) + "wxyz";
+    const key = `abcd${"x".repeat(40)}wxyz`;
     const masked = maskApiKey(key);
     expect(masked.startsWith("abcd")).toBe(true);
     expect(masked.endsWith("wxyz")).toBe(true);

@@ -3,7 +3,7 @@
 // Eliminates duplicated handler scaffolding between tags and categories
 // ---------------------------------------------------------------------------
 
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { getDb, DbError } from "@/lib/db";
 import type { Db } from "@/lib/db";
 import { jsonResponse, errorResponse, notFoundResponse } from "@/lib/api";

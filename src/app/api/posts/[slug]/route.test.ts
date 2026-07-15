@@ -45,7 +45,6 @@ describe("PUT /api/posts/[slug] — in-route auth", () => {
   });
 
   it("returns 401 when session has no user", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(auth).mockResolvedValue({} as any);
 
     const response = await PUT(fakeRequestWithBody({}), fakeParams);
@@ -55,7 +54,6 @@ describe("PUT /api/posts/[slug] — in-route auth", () => {
   });
 
   it("reaches data layer when authenticated", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(auth).mockResolvedValue({ user: { email: "admin@example.com" } } as any);
     vi.mocked(getPostBySlug).mockResolvedValue(null);
 
@@ -82,7 +80,6 @@ describe("DELETE /api/posts/[slug] — in-route auth", () => {
   });
 
   it("reaches data layer when authenticated", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(auth).mockResolvedValue({ user: { email: "admin@example.com" } } as any);
     vi.mocked(getPostBySlug).mockResolvedValue(null);
 

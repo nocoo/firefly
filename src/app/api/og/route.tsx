@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 
 /**
  * GET /api/og — generate a 1200×630 social card (PNG) for any post.

@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Category, PostStatus, PostWithCategory, Tag } from "@/models/types";
 import { slugify } from "@/models/post";
-import { type UploadResult } from "./image-upload-zone";
+import type { UploadResult } from "./image-upload-zone";
 import { MarkdownPreview } from "./markdown-preview";
 import { ConfirmDialog } from "./confirm-dialog";
 import { PostContentEditor, type PostContentEditorHandle } from "./post-form-content-editor";

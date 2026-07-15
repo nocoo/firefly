@@ -95,7 +95,7 @@ export function AgentAvatarUploader({
                 fill
                 className="object-cover"
               />
-              <button
+              <button type="button"
                 onClick={handleDelete}
                 disabled={uploading}
                 className="absolute right-1 top-1 rounded-full bg-zinc-950/50 p-1 text-white hover:bg-zinc-950/70 transition-colors"

@@ -12,7 +12,7 @@ const ICON_PROPS = {
   "aria-hidden": true as const,
 };
 
-const noop = () => () => {};
+const noop = () => () => { /* no-op unsubscribe */ };
 const getTrue = () => true;
 const getFalse = () => false;
 

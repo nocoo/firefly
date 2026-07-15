@@ -123,7 +123,7 @@ if (gitStatus && !dryRun) {
 info("Updating package.json...");
 if (!dryRun) {
   pkg.version = newVersion;
-  writeFileSync(PKG_PATH, JSON.stringify(pkg, null, 2) + "\n");
+  writeFileSync(PKG_PATH, `${JSON.stringify(pkg, null, 2)}\n`);
 }
 success(`package.json → ${newVersion}`);
 
@@ -173,7 +173,7 @@ function getChangelog(): string {
 
   let entry = `## v${newVersion} (${today})\n\n`;
   if (lines.length > 0) {
-    entry += lines.join("\n") + "\n";
+    entry += `${lines.join("\n")}\n`;
   } else {
     entry += "- Version bump\n";
   }

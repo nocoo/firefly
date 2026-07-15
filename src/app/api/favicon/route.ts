@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getSiteSettings } from "@/data/settings";
 import { getLogoUrl, type LogoSize } from "@/lib/logo";

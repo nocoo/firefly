@@ -70,7 +70,7 @@ export function SystemMonitorDashboard() {
         <div className="text-sm text-muted-foreground">
           {lastUpdated && `上次更新：${formatTimeAgo(lastUpdated)}`}
         </div>
-        <button
+        <button type="button"
           onClick={fetchStats}
           className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-secondary transition-colors"
         >

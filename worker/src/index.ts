@@ -32,7 +32,7 @@ const WRITE_RE = /^\s*(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|PRAGMA)\b/i;
 
 function jsonResponse(
   data: unknown,
-  status: number = 200,
+  status = 200,
   headers?: Record<string, string>,
 ): Response {
   return Response.json(data, {
