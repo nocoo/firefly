@@ -36,7 +36,7 @@
 | **L1** | 单元 + 集成测试 | 纯函数、数据层、服务层、组件 | pre-commit | Hard |
 | **L2** | API E2E | 真实 HTTP 请求到运行中的 Next.js 服务器 | pre-push + CI | Hard |
 | **L3** | 系统 E2E | 真实用户端到端流程（Playwright 浏览器自动化） | CI | Hard |
-| **G1** | 静态分析 | 类型检查 (`tsc --noEmit`) + ESLint strict | pre-commit | Hard |
+| **G1** | 静态分析 | 类型检查 (`tsc --noEmit`，TypeScript 7.0.2) + Biome 2.5 + custom gates (`dynamic-delete` / `@ts-expect-error`) | pre-commit | Hard |
 | **G2** | 安全检查 | Secrets 泄露 (gitleaks) + 依赖漏洞 (osv-scanner) | pre-push + CI | Hard |
 | **Worker** | Edge Worker | Cloudflare Worker 边缘逻辑 | CI | Hard |
 
@@ -128,8 +128,10 @@ E2E_R2_LOCAL_DIR=.wrangler/e2e-r2   # 文件系统 R2 替身
 | `bun run test:coverage` | L1 | 覆盖率报告 (90% 门槛) |
 | `bun run test:e2e:api` | L2 | API E2E (启动 server，真 HTTP) |
 | `bun run test:e2e:browser` | L3 | Playwright E2E |
-| `bun run typecheck` | G1 | TypeScript 类型检查 |
-| `bun run lint` | G1 | ESLint strict |
+| `bun run typecheck` | G1 | TypeScript 7 类型检查（root + worker） |
+| `bun run lint` | G1 | typecheck + Biome + custom gates |
+| `bun run gate:dynamic-delete` | G1 | 禁止 `delete obj[computed]` |
+| `bun run gate:ts-expect-error` | G1 | `@ts-expect-error` 必须带 ≥10 字说明 |
 | `cd worker && bun test` | Worker | Worker 单元测试 |
 
 ---
@@ -140,18 +142,18 @@ E2E_R2_LOCAL_DIR=.wrangler/e2e-r2   # 文件系统 R2 替身
 
 ```bash
 # 并行执行
-G1: tsc --noEmit
-G1: lint-staged (ESLint)
+G1a: tsc --noEmit (root + worker)
+G1b: lint-staged (Biome on staged files)
 L1: vitest run
+# 串行
+G1c: gate:dynamic-delete + gate:ts-expect-error（扫 INDEX 快照）
 ```
 
 ### pre-push
 
 ```bash
-# 并行执行
-L1: vitest run --coverage (90% 门槛)
-G1: eslint
-L2: API E2E
+L1: vitest run --coverage (≥95% 门槛)
+G1: bun run lint（typecheck + Biome + gates）
 G2: gitleaks + osv-scanner
 ```
 

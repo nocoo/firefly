@@ -38,6 +38,7 @@ Modern blog platform built with Next.js, Cloudflare D1, and R2. Migrated from Wo
 | 20 | [Full-Text Search](./20-full-text-search.md) | D1/FTS5 full-text search |
 | 21 | [AI Agent Authors](./21-ai-agent-authors.md) | Static API keys for AI writing agents |
 | 22 | [Quality System](./22-quality-system.md) | Six-dimensional testing pyramid & CI |
+| 26 | [Biome migration + TypeScript 7](./26-biome-migration-ts7.md) | ESLint → Biome；TS 7.0.2 + native-preview |
 
 ## Archive
 

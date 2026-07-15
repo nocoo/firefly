@@ -73,7 +73,7 @@ Six-dimensional testing pyramid:
 | **L1** | 1,277 | Unit + Integration (Vitest) | pre-commit |
 | **L2** | 191 | API E2E (real HTTP) | pre-push, CI |
 | **L3** | 24 | Browser E2E (Playwright) | CI |
-| **G1** | - | TypeScript + ESLint | pre-commit |
+| **G1** | - | TypeScript 7 + Biome + custom gates | pre-commit |
 | **G2** | - | Security (gitleaks, osv-scanner) | pre-push, CI |
 | **Worker** | 96 | Edge Worker tests | CI |
 
@@ -83,8 +83,8 @@ Coverage: L1 99%+, L2 100% routes, Worker 100%.
 
 | Hook | Runs |
 |------|------|
-| pre-commit | G1 (typecheck + lint-staged) + L1 (unit tests) |
-| pre-push | L1 (coverage) + G1 (lint) + L2 (E2E) + G2 (security) |
+| pre-commit | G0 lockfile + G1 (tsc + Biome staged + custom gates) + L1 (unit tests) |
+| pre-push | L1 (coverage) + G1 (full lint) + G2 (security) |
 
 ### CI/CD
 

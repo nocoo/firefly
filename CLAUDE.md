@@ -27,6 +27,14 @@ Personal blog platform built with Next.js + Cloudflare Workers.
 - MCP/REST external API: snake_case fields, mapped at boundary via hooks/route handlers
 - Test mock: `createMockDb()` from `@/data/core/test-utils` (single source, no local copies)
 
+### Tooling
+- **TypeScript**: `7.0.2` stable for `tsc` / typecheck / build. Root also has
+  `@typescript/native-preview` so Next 16 skips its embedded typecheck
+  (`build` is `tsc --noEmit && next build --webpack`).
+- **Lint**: Biome 2.5 (`biome check`); no ESLint / typescript-eslint.
+  Custom gates: `gate:dynamic-delete`, `gate:ts-expect-error` (oxc-parser).
+  See `docs/26-biome-migration-ts7.md`.
+
 ## Retrospective
 
 ### 2026-03-27: tsconfig.tsbuildinfo 导致 release 脚本失败
