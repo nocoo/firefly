@@ -13,7 +13,7 @@
     "test:worker": "cd worker && bun run test",
     "test:worker:coverage": "cd worker && bun run test:coverage",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check --no-errors-on-unmatched --error-on-warnings --max-diagnostics=500 .",
+    "lint": "biome check --no-errors-on-unmatched --error-on-warnings --max-diagnostics=500 . && bun run gate:dynamic-delete && bun run gate:ts-expect-error",
     "lint:fix": "biome check --write --no-errors-on-unmatched --error-on-warnings --max-diagnostics=500 .",
     "security": "bun scripts/run-security.ts",
     "test:e2e": "bun scripts/run-e2e.ts",
@@ -24,7 +24,9 @@
     "migrate:status": "bun scripts/migrations/migrate.ts status",
     "migrate:local": "bun scripts/migrations/migrate.ts up --target local",
     "prepare": "husky",
-    "release": "bun scripts/release.ts"
+    "release": "bun scripts/release.ts",
+    "gate:dynamic-delete": "bun run scripts/check-dynamic-delete.ts",
+    "gate:ts-expect-error": "bun run scripts/check-ts-expect-error.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
@@ -37,7 +39,8 @@
     "lint-staged": "17.0.8",
     "typescript": "6.0.3",
     "vitest": "4.1.10",
-    "@biomejs/biome": "2.5.3"
+    "@biomejs/biome": "2.5.3",
+    "oxc-parser": "0.139.0"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1086.0",
