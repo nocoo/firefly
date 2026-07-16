@@ -99,11 +99,13 @@ export function AnalyticsDashboard({
     [],
   );
 
-  // Initial load & period change: summary + active tab
+  // Initial load & period change only. Tab switches go through handleTabChange
+  // so cached tabs are not re-fetched and uncached tabs are not double-fetched.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: activeTab is owned by handleTabChange
   useEffect(() => {
     fetchSummary(days);
     fetchSourceDetail(activeTab, days);
-  }, [days, fetchSummary, fetchSourceDetail, activeTab]);
+  }, [days, fetchSummary, fetchSourceDetail]);
 
   // Tab switch handler
   function handleTabChange(type: SourceType) {

@@ -137,7 +137,9 @@ export function ArticleNav({
           className="text-sm text-blog-text transition-colors hover:text-blog-accent"
         >
           {back.label}{" "}
-          <kbd className="blog-kbd hidden sm:inline" >H</kbd>
+          <kbd className="blog-kbd hidden sm:inline" aria-hidden="true">
+            H
+          </kbd>
         </Link>
 
         {/* Right: prev/next */}
@@ -150,12 +152,16 @@ export function ArticleNav({
               title={prevTitle ?? undefined}
             >
               ← 上一篇{" "}
-              <kbd className="blog-kbd hidden sm:inline" >J</kbd>
+              <kbd className="blog-kbd hidden sm:inline" aria-hidden="true">
+                J
+              </kbd>
             </Link>
           ) : (
             <span className="text-blog-text/30">
               ← 上一篇{" "}
-              <kbd className="blog-kbd hidden sm:inline" >J</kbd>
+              <kbd className="blog-kbd hidden sm:inline" aria-hidden="true">
+                J
+              </kbd>
             </span>
           )}
 
@@ -167,12 +173,18 @@ export function ArticleNav({
               title={nextTitle ?? undefined}
             >
               下一篇{" "}
-              <kbd className="blog-kbd hidden sm:inline" >K</kbd> →
+              <kbd className="blog-kbd hidden sm:inline" aria-hidden="true">
+                K
+              </kbd>{" "}
+              →
             </Link>
           ) : (
             <span className="text-blog-text/30">
               下一篇{" "}
-              <kbd className="blog-kbd hidden sm:inline" >K</kbd> →
+              <kbd className="blog-kbd hidden sm:inline" aria-hidden="true">
+                K
+              </kbd>{" "}
+              →
             </span>
           )}
         </div>

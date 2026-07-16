@@ -127,9 +127,13 @@ export function AdminPostsClient({
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
+  // Clear selection whenever the visible page/filter set changes so batch
+  // actions never operate on ids that are no longer on screen.
   useEffect(() => {
+    void currentParams;
+    void currentPage;
     setSelectedIds(new Set());
-  }, []);
+  }, [currentParams, currentPage]);
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {

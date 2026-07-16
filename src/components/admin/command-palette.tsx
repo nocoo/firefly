@@ -290,13 +290,18 @@ export function CommandPalette() {
     }
   };
 
-  // Scroll active item into view
+  // Scroll active item into view when keyboard selection moves. Depends on
+  // activeIndex (and open) so the first run after the panel mounts still
+  // works — listRef is null while open is false.
   useEffect(() => {
+    if (!open) return;
     const list = listRef.current;
     if (!list) return;
+    // Touch activeIndex so the dependency is used; DOM marks the row via data-active.
+    void activeIndex;
     const active = list.querySelector("[data-active='true']");
     active?.scrollIntoView({ block: "nearest" });
-  }, []);
+  }, [activeIndex, open]);
 
   if (!open) return null;
 
