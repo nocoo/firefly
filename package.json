@@ -45,14 +45,14 @@
     "vitest": "4.1.10"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "3.1086.0",
+    "@aws-sdk/client-s3": "3.1088.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@nocoo/next-ai": "^0.4.0",
     "@radix-ui/react-alert-dialog": "^1.1.19",
     "@radix-ui/react-avatar": "^1.2.2",
     "@tailwindcss/postcss": "^4.3.2",
     "@tailwindcss/typography": "^0.5.20",
-    "ai": "7.0.26",
+    "ai": "7.0.29",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "hono": "^4.12.30",
