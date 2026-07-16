@@ -2,9 +2,13 @@
 
 # === Quality Gate: pre-commit ===
 # G0 lockfile + G1 Static Analysis (typecheck + Biome + custom gates) + L1 unit tests
+#
+# Ordering matters: lint-staged may stash/restore the working tree, so it must
+# NOT run in parallel with vitest/tsc (they would see mixed file versions).
+# Sequence: G0 → G1b lint-staged (serial) → G1a typecheck ∥ L1 tests → G1c gates.
 
 STAGED_FILES=$(git diff --cached --name-only)
-PKG_CHANGES=$(echo "$STAGED_FILES" | grep -E "package\.json|bun\.lock" || true)
+PKG_CHANGES=$(echo "$STAGED_FILES" | grep -E '(^|/)package\.json$|(^|/)bun\.lock$' || true)
 
 if [ -n "$PKG_CHANGES" ]; then
   bun install --frozen-lockfile 2>&1
@@ -18,7 +22,8 @@ fi
 # Detect code / config changes. Docs-only commits skip heavy gates.
 # Keep this superset in sync with lint-staged globs in package.json.
 CODE_CHANGES=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|json)$' || true)
-TSC_AFFECTING=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|mts|cts)$|tsconfig.*\.json$' || true)
+# package.json / lockfile affect types (deps, peer ranges) — always typecheck them.
+TSC_AFFECTING=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|mts|cts)$|tsconfig.*\.json$|(^|/)package\.json$|(^|/)bun\.lock$' || true)
 TS_STAGED=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|mts|cts)$' || true)
 BIOME_STAGED=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|json)$' || true)
 
@@ -27,10 +32,22 @@ if [ -z "$CODE_CHANGES" ]; then
   exit 0
 fi
 
+# G1b first and alone — lint-staged may stash partial worktree state.
+if [ -n "$BIOME_STAGED" ]; then
+  echo "▸ G1b: Biome (lint-staged)"
+  bunx lint-staged 2>&1
+  LINT_EXIT=$?
+  if [ "$LINT_EXIT" -ne 0 ]; then
+    echo "❌ pre-commit FAILED: Biome errors in staged files."
+    exit 1
+  fi
+else
+  LINT_EXIT=0
+fi
+
 TMP_DIR=$(mktemp -d)
 TEST_EXIT_FILE="$TMP_DIR/test_exit"
 TSC_EXIT_FILE="$TMP_DIR/tsc_exit"
-LINT_EXIT_FILE="$TMP_DIR/lint_exit"
 
 (
   bun run test 2>&1
@@ -49,24 +66,11 @@ else
   TSC_PID=""
 fi
 
-if [ -n "$BIOME_STAGED" ]; then
-  (
-    bunx lint-staged 2>&1
-    echo $? > "$LINT_EXIT_FILE"
-  ) &
-  LINT_PID=$!
-else
-  echo 0 > "$LINT_EXIT_FILE"
-  LINT_PID=""
-fi
-
 wait $TEST_PID
 [ -n "$TSC_PID" ] && wait $TSC_PID
-[ -n "$LINT_PID" ] && wait $LINT_PID
 
 TEST_EXIT=$(cat "$TEST_EXIT_FILE")
 TSC_EXIT=$(cat "$TSC_EXIT_FILE")
-LINT_EXIT=$(cat "$LINT_EXIT_FILE")
 rm -rf "$TMP_DIR"
 
 if [ "$TEST_EXIT" -ne 0 ]; then
@@ -76,11 +80,6 @@ fi
 
 if [ "$TSC_EXIT" -ne 0 ]; then
   echo "❌ pre-commit FAILED: TypeScript type check errors."
-  exit 1
-fi
-
-if [ "$LINT_EXIT" -ne 0 ]; then
-  echo "❌ pre-commit FAILED: Biome errors in staged files."
   exit 1
 fi
 
@@ -108,6 +107,11 @@ if [ -n "$TS_STAGED" ]; then
   FIREFLY_GATE_ROOT="$GATE_ROOT" bun run gate:ts-expect-error
   if [ $? -ne 0 ]; then
     echo "❌ pre-commit FAILED: @ts-expect-error gate."
+    exit 1
+  fi
+  FIREFLY_GATE_ROOT="$GATE_ROOT" bun run gate:test-skip
+  if [ $? -ne 0 ]; then
+    echo "❌ pre-commit FAILED: permanent test.skip/.only gate."
     exit 1
   fi
 fi
