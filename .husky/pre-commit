@@ -8,24 +8,42 @@
 # Sequence: G0 → G1b lint-staged (serial) → G1a typecheck ∥ L1 tests → G1c gates.
 
 STAGED_FILES=$(git diff --cached --name-only)
-PKG_CHANGES=$(echo "$STAGED_FILES" | grep -E '(^|/)package\.json$|(^|/)bun\.lock$' || true)
+ROOT_PKG_CHANGES=$(echo "$STAGED_FILES" | grep -E '^(package\.json|bun\.lock)$' || true)
+WORKER_PKG_CHANGES=$(echo "$STAGED_FILES" | grep -E '^worker/(package\.json|bun\.lock)$' || true)
 
-if [ -n "$PKG_CHANGES" ]; then
+if [ -n "$ROOT_PKG_CHANGES" ]; then
   bun install --frozen-lockfile 2>&1
   LOCK_EXIT=$?
   if [ $LOCK_EXIT -ne 0 ]; then
-    echo "❌ pre-commit FAILED: Lockfile out of sync. Run 'bun install' and commit bun.lock."
+    echo "❌ pre-commit FAILED: Root lockfile out of sync. Run 'bun install' and commit bun.lock."
+    exit 1
+  fi
+fi
+
+# worker/ is a separate bun package (own package.json + bun.lock, no workspace),
+# so the root install above does not touch it. Verify its lockfile separately.
+if [ -n "$WORKER_PKG_CHANGES" ]; then
+  (cd worker && bun install --frozen-lockfile 2>&1)
+  WORKER_LOCK_EXIT=$?
+  if [ $WORKER_LOCK_EXIT -ne 0 ]; then
+    echo "❌ pre-commit FAILED: worker/ lockfile out of sync. Run 'cd worker && bun install' and commit worker/bun.lock."
     exit 1
   fi
 fi
 
 # Detect code / config changes. Docs-only commits skip heavy gates.
+# package.json / lockfile changes are dependency upgrades: they can shift
+# types, module resolution, or Biome output, so treat them as code changes.
 # Keep this superset in sync with lint-staged globs in package.json.
-CODE_CHANGES=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|json)$' || true)
+CODE_CHANGES=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|json)$|(^|/)bun\.lock$' || true)
 # package.json / lockfile affect types (deps, peer ranges) — always typecheck them.
 TSC_AFFECTING=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|mts|cts)$|tsconfig.*\.json$|(^|/)package\.json$|(^|/)bun\.lock$' || true)
 TS_STAGED=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|mts|cts)$' || true)
 BIOME_STAGED=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|json)$' || true)
+# G1c gate inputs — dynamic-delete / ts-expect-error scan TS only; test-skip
+# also scans .js/.jsx (Playwright E2E specs can be JS). Track separately so a
+# lone e2e/foo.spec.js commit still runs the skip gate.
+GATE_STAGED=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$' || true)
 
 if [ -z "$CODE_CHANGES" ]; then
   echo "⏭️  pre-commit: no code changes staged — skipping L1/G1 gates"
@@ -83,8 +101,12 @@ if [ "$TSC_EXIT" -ne 0 ]; then
   exit 1
 fi
 
-# G1c: custom gates against INDEX snapshot (not working tree)
-if [ -n "$TS_STAGED" ]; then
+# G1c: custom gates against INDEX snapshot (not working tree). Each gate has
+# its own applicable scope:
+#   - gate:dynamic-delete    → TS/TSX only
+#   - gate:ts-expect-error   → TS/TSX only
+#   - gate:test-skip         → TS/TSX + JS/JSX (Playwright specs can be JS)
+if [ -n "$GATE_STAGED" ]; then
   GATE_ROOT=$(mktemp -d -t firefly-precommit-gate.XXXXXXXX)
   MKTEMP_EXIT=$?
   if [ "$MKTEMP_EXIT" -ne 0 ] || [ -z "$GATE_ROOT" ] || [ ! -d "$GATE_ROOT" ]; then
@@ -99,15 +121,17 @@ if [ -n "$TS_STAGED" ]; then
     exit 1
   fi
 
-  FIREFLY_GATE_ROOT="$GATE_ROOT" bun run gate:dynamic-delete
-  if [ $? -ne 0 ]; then
-    echo "❌ pre-commit FAILED: dynamic delete gate."
-    exit 1
-  fi
-  FIREFLY_GATE_ROOT="$GATE_ROOT" bun run gate:ts-expect-error
-  if [ $? -ne 0 ]; then
-    echo "❌ pre-commit FAILED: @ts-expect-error gate."
-    exit 1
+  if [ -n "$TS_STAGED" ]; then
+    FIREFLY_GATE_ROOT="$GATE_ROOT" bun run gate:dynamic-delete
+    if [ $? -ne 0 ]; then
+      echo "❌ pre-commit FAILED: dynamic delete gate."
+      exit 1
+    fi
+    FIREFLY_GATE_ROOT="$GATE_ROOT" bun run gate:ts-expect-error
+    if [ $? -ne 0 ]; then
+      echo "❌ pre-commit FAILED: @ts-expect-error gate."
+      exit 1
+    fi
   fi
   FIREFLY_GATE_ROOT="$GATE_ROOT" bun run gate:test-skip
   if [ $? -ne 0 ]; then
