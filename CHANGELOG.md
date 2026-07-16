@@ -1,5 +1,56 @@
 # Changelog
 
+## v2.8.0 (2026-07-16)
+
+- Merge remote-tracking branch 'origin/main'
+- fix(husky): close lockfile-only and JS E2E gate escapes
+- fix(husky): serialize lint-staged and typecheck dep upgrades
+- feat(lint): add gate:test-skip to block permanent .skip/.only in tests
+- fix(admin): restore selection, palette scroll, analytics fetch, kbd a11y
+- fix(build): register @/* webpack alias for TypeScript 7
+- Merge pull request #296 from nocoo/agent/sde-02/6a293266
+- chore(deps): bump wrangler 4.110.0 → 4.111.0 (worker)
+- chore(deps): bump @cloudflare/workers-types 5.20260713.1 → 5.20260715.1 (worker)
+- chore(deps): bump ai 7.0.26 → 7.0.29
+- chore(deps): bump @aws-sdk/client-s3 3.1086.0 → 3.1088.0
+- docs: record Biome migration and TypeScript 7 quality-gate changes
+- feat(husky): run Biome, parallel G1 gates, and INDEX snapshot gates
+- build(ts): upgrade to TypeScript 7.0.2 with Next native-preview marker
+- feat(lint): add dynamic-delete and ts-expect-error custom gates
+- chore(lint): switch from ESLint/typescript-eslint to Biome 2.5
+- Merge pull request #288 from nocoo/agent/concierge/0f171328
+- chore(deps): bump @aws-sdk/client-s3 3.1085.0 → 3.1086.0
+- chore(deps): bump @cloudflare/workers-types 5.20260712.1 → 5.20260713.1 (worker)
+- chore(deps): bump ai 7.0.22 → 7.0.26
+- chore(deps): bump typescript-eslint 8.63.0 → 8.64.0
+- Merge pull request #283 from nocoo/agent/sde-04/24585f87
+- chore(deps): upgrade dependencies (batch 2026-07-13 patch/minor)
+- Merge pull request #280 from nocoo/agent/sde-01/0b2b13e7
+- chore(deps): bump @cloudflare/workers-types 5.20260710.1 → 5.20260711.1 (worker)
+- Merge pull request #278 from nocoo/agent/sde-04/179fa159
+- chore(deps): upgrade dependencies (batch 2026-07-11)
+- Merge pull request #272 from nocoo/agent/sde-03/aafda391
+- chore(deps): upgrade dependencies (batch 2026-07-10)
+- Merge pull request #266 from nocoo/agent/sde-01/d8b52c2a
+- chore(deps): upgrade dependencies (batch 2026-07-09)
+- Merge pull request #259 from nocoo/agent/sde-02/a7d36e40
+- chore(deps): upgrade dependencies (batch 2026-07-07)
+- Merge pull request #249 from nocoo/agent/sde-03/360622eb
+- chore(deps): bump @cloudflare/workers-types 5.20260704.1 -> 5.20260705.1
+- Merge PR #247: chore(deps): upgrade dependencies (batch 2026-07-05)
+- chore(deps): upgrade dependencies (batch 2026-07-05)
+- Merge pull request #243 from nocoo/agent/sde-04/04e6150e
+- chore(deps): bump @cloudflare/workers-types 4.20260702.1 -> 5.20260703.1
+- Merge pull request #241 from nocoo/agent/sde-02/97a0ba15
+- chore(deps): upgrade dependencies (batch 2026-07-03)
+- Merge pull request #236 from nocoo/agent/sde-01/f6070c00
+- chore: add root .npmrc for supply chain security baseline
+- chore(deps): upgrade dependencies (batch 2026-07-02) (#235)
+- Merge pull request #227 from nocoo/agent/sde-02/05502cf2
+- chore(deps): upgrade dependencies (batch 2026-07-01)
+- chore(deps): upgrade dependencies (batch 2026-06-30) (#219)
+
+
 ## v2.7.2 (2026-06-29)
 
 - feat(ai): add authType (apiKey | bearer) for custom provider
