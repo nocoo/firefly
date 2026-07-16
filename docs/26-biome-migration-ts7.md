@@ -24,6 +24,7 @@
 | `oxc-parser` | `0.139.0`（pin exact） |
 | `build` | `tsc --noEmit && next build --webpack` |
 | `lint` | `typecheck && biome check … && gate:*` |
+| Next `@/*` paths | Explicit `webpack.resolve.alias` in `next.config.ts` — TS 7 has no `lib/typescript.js`, so Next cannot read `tsconfig.paths` itself |
 
 移除：`eslint`、`@eslint/js`、`typescript-eslint`、`eslint-plugin-react-hooks`、
 `eslint.config.mjs`。

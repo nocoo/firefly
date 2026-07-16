@@ -1,9 +1,13 @@
 import type { NextConfig } from "next";
 import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const pkg = JSON.parse(readFileSync("./package.json", "utf-8")) as {
   version: string;
 };
+
+const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * Extract hostname and protocol from R2_PUBLIC_URL for Next.js image
@@ -54,6 +58,25 @@ const nextConfig: NextConfig = {
         hostname: assetsOrigin.hostname,
       },
     ],
+  },
+  // TypeScript 7.0 no longer ships lib/typescript.js (classic Compiler API).
+  // Next loads that file only to read tsconfig paths for webpack aliases;
+  // with @typescript/native-preview present it skips built-in typecheck, but
+  // path registration still fails silently → @/* becomes unresolved.
+  // Register the project's path alias explicitly so production webpack build
+  // does not depend on the missing Compiler API.
+  webpack: (config) => {
+    config.resolve = config.resolve ?? {};
+    const alias = config.resolve.alias;
+    if (Array.isArray(alias)) {
+      config.resolve.alias = [...alias, { name: "@", alias: path.join(rootDir, "src") }];
+    } else {
+      config.resolve.alias = {
+        ...(alias as Record<string, string | false | string[]> | undefined),
+        "@": path.join(rootDir, "src"),
+      };
+    }
+    return config;
   },
   async headers() {
     // HSTS must NOT be sent on plain-http dev — once a browser sees a
