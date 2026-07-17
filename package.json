@@ -50,7 +50,7 @@
     "@nocoo/next-ai": "^0.4.0",
     "@radix-ui/react-alert-dialog": "^1.1.19",
     "@radix-ui/react-avatar": "^1.2.2",
-    "@tailwindcss/postcss": "^4.3.2",
+    "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/typography": "^0.5.20",
     "ai": "7.0.29",
     "class-variance-authority": "^0.7.1",
