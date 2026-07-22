@@ -11,11 +11,11 @@
     "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20260719.1",
+    "@cloudflare/workers-types": "5.20260721.1",
     "@vitest/coverage-v8": "^4.1.10",
     "typescript": "7.0.2",
     "vitest": "^4.1.10",
-    "wrangler": "4.112.0"
+    "wrangler": "4.113.0"
   },
   "overrides": {
     "ws": ">=8.20.1",
