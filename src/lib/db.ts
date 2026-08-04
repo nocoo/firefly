@@ -112,55 +112,95 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// ---------------------------------------------------------------------------
+// Bounded-concurrency queue (STU-2495)
+// ---------------------------------------------------------------------------
+//
+// On localhost the Next.js → wrangler-dev channel throws `fetch failed`
+// in bursts while the worker log shows every request returning 200 OK
+// (STU-2495 run 30901699318). The failure is on the client side of the
+// localhost pipe, and the bursts coincide with SSR fan-out (Next.js
+// firing many concurrent DB fetches per rendered page × N parallel
+// Playwright workers × N tests per file).
+//
+// FdQueue caps concurrent in-flight fetches to a small pool so wrangler
+// dev's accept backlog and undici's connection pool cannot be overrun by
+// a single burst. New callers wait FIFO. This is a defensive circuit
+// breaker; the underlying flake root cause is not confirmed. Kept
+// scoped to localhost so production request throughput is unchanged.
+class FdQueue {
+  private active = 0;
+  private waiters: Array<() => void> = [];
+  constructor(private readonly max: number) {}
+  async run<T>(fn: () => Promise<T>): Promise<T> {
+    if (this.active >= this.max) {
+      await new Promise<void>((resolve) => this.waiters.push(resolve));
+    }
+    this.active++;
+    try {
+      return await fn();
+    } finally {
+      this.active--;
+      const next = this.waiters.shift();
+      if (next) next();
+    }
+  }
+}
+
+const LOCAL_MAX_CONCURRENCY = 4;
+
 export function createDb(workerUrl: string, workerSecret: string): Db {
   if (!workerUrl) throw new Error("workerUrl is required");
   if (!workerSecret) throw new Error("workerSecret is required");
 
-  // In E2E (`localhost` wrangler-dev) under Playwright fan-out the client
-  // fetch throws `Network error: fetch failed` in bursts while the worker
-  // log shows every request returning 200 OK — an unconfirmed channel
-  // disruption on the Next.js side of the localhost pipe (STU-2495 run
-  // 30896621829). We do not have evidence identifying the specific undici
-  // layer (see DbError.cause on the actual failure to inspect), so this is
-  // a defensive mitigation, not a root-cause fix. `Connection: close` and
-  // the wider retry tail are both scoped to localhost so production is
-  // unchanged.
   const isLocal = LOCALHOST_RE.test(workerUrl);
   const retryDelays = isLocal ? LOCAL_RETRY_DELAYS_MS : REMOTE_RETRY_DELAYS_MS;
 
+  // Bounded queue only on localhost. Production keeps unrestricted
+  // parallel fetches so a single high-fan-out page does not queue up.
+  const queue = isLocal ? new FdQueue(LOCAL_MAX_CONCURRENCY) : null;
+  const gated = <T>(fn: () => Promise<T>): Promise<T> =>
+    queue ? queue.run(fn) : fn();
+
+  // Keep-alive is retained on localhost too: STU-2495 tried `Connection:
+  // close` but the CI evidence (all requests 200 server-side, client fetch
+  // throwing) shows nothing pointing at stale sockets — while an extra
+  // TCP handshake per request only worsens accept-backlog pressure. The
+  // bounded queue above is what actually keeps burst load off the pipe.
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${workerSecret}`,
   };
-  if (isLocal) headers.Connection = "close";
 
   async function postOnce<T>(path: string, body: unknown): Promise<T> {
-    const url = `${workerUrl}${path}`;
-    let res: Response;
-    try {
-      res = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-      });
-    } catch (err) {
-      throw new DbError(
-        `Network error: ${err instanceof Error ? err.message : String(err)}`,
-        undefined,
-        "network",
-        { cause: err },
-      );
-    }
+    return gated<T>(async () => {
+      const url = `${workerUrl}${path}`;
+      let res: Response;
+      try {
+        res = await fetch(url, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(body),
+        });
+      } catch (err) {
+        throw new DbError(
+          `Network error: ${err instanceof Error ? err.message : String(err)}`,
+          undefined,
+          "network",
+          { cause: err },
+        );
+      }
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new DbError(
-        (data as { error?: string }).error ?? `HTTP ${res.status}`,
-        res.status,
-      );
-    }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new DbError(
+          (data as { error?: string }).error ?? `HTTP ${res.status}`,
+          res.status,
+        );
+      }
 
-    return res.json() as Promise<T>;
+      return res.json() as Promise<T>;
+    });
   }
 
   async function postQueryWithRetry<T>(

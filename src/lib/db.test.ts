@@ -38,7 +38,14 @@ describe("createDb", () => {
     );
   });
 
-  it("sets Connection: close on localhost URLs (STU-2495)", async () => {
+  it("does NOT set Connection: close on any URL — keep-alive stays on (STU-2495)", async () => {
+    // The initial STU-2495 mitigation (d7d328c) added `Connection: close`
+    // for localhost, hoping to defeat a suspected stale-socket flake. The
+    // subsequent CI evidence in run 30901699318 showed every request
+    // returning 200 server-side with the client still throwing `fetch
+    // failed`, which does not implicate stale sockets; forcing a fresh
+    // TCP handshake per request only worsens accept-backlog pressure.
+    // Keep-alive is now retained on all URLs; a bounded queue caps burst.
     const fetchMock = mockFetch(200, {
       results: [],
       meta: { changes: 0, duration: 0 },
@@ -48,7 +55,9 @@ describe("createDb", () => {
     const local = createDb("http://localhost:8787", "s");
     await local.query("SELECT 1");
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect((init.headers as Record<string, string>).Connection).toBe("close");
+    expect(
+      (init.headers as Record<string, string>).Connection,
+    ).toBeUndefined();
 
     vi.restoreAllMocks();
   });
@@ -339,6 +348,124 @@ describe("db.query localhost retry budget", () => {
       ),
     ).rejects.toThrow("Network error: fetch failed");
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// db — bounded concurrency queue (STU-2495)
+// ---------------------------------------------------------------------------
+
+describe("db bounded concurrency (localhost)", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function makeGatedFetch(): {
+    fetchMock: ReturnType<typeof vi.fn>;
+    resolveOne: () => boolean;
+    inFlight: () => number;
+    peak: () => number;
+    totalStarted: () => number;
+  } {
+    let inFlight = 0;
+    let peak = 0;
+    let started = 0;
+    const pending: Array<() => void> = [];
+    const fetchMock = vi.fn(() => {
+      inFlight++;
+      started++;
+      peak = Math.max(peak, inFlight);
+      return new Promise<Response>((resolve) => {
+        pending.push(() => {
+          inFlight--;
+          resolve(
+            new Response(
+              JSON.stringify({
+                results: [],
+                meta: { changes: 0, duration: 0 },
+              }),
+              { status: 200 },
+            ),
+          );
+        });
+      });
+    });
+    return {
+      fetchMock,
+      resolveOne: () => {
+        const next = pending.shift();
+        if (!next) return false;
+        next();
+        return true;
+      },
+      inFlight: () => inFlight,
+      peak: () => peak,
+      totalStarted: () => started,
+    };
+  }
+
+  async function flush(): Promise<void> {
+    // Give microtasks + queued waiters a chance to advance.
+    for (let i = 0; i < 4; i++) await Promise.resolve();
+  }
+
+  it("caps concurrent fetches at 4 on localhost", async () => {
+    const g = makeGatedFetch();
+    vi.stubGlobal("fetch", g.fetchMock);
+    const db = createDb("http://localhost:8787", "s");
+
+    const promises = Array.from({ length: 10 }, () => db.query("SELECT 1"));
+    await flush();
+
+    expect(g.inFlight()).toBe(4);
+    expect(g.totalStarted()).toBe(4);
+
+    // Drain: resolve one at a time and let the queue enqueue the next.
+    while (g.totalStarted() < 10 || g.inFlight() > 0) {
+      const drained = g.resolveOne();
+      if (!drained) break;
+      await flush();
+    }
+    await Promise.all(promises);
+
+    expect(g.totalStarted()).toBe(10);
+    expect(g.peak()).toBeLessThanOrEqual(4);
+  });
+
+  it("does NOT cap concurrency on remote URLs", async () => {
+    const g = makeGatedFetch();
+    vi.stubGlobal("fetch", g.fetchMock);
+    const db = createDb("https://firefly.worker.dev", "s");
+
+    const promises = Array.from({ length: 10 }, () => db.query("SELECT 1"));
+    await flush();
+
+    expect(g.inFlight()).toBe(10);
+    while (g.resolveOne()) {
+      // drain all
+    }
+    await Promise.all(promises);
+  });
+
+  it("preserves FIFO order of queued requests on localhost", async () => {
+    const g = makeGatedFetch();
+    vi.stubGlobal("fetch", g.fetchMock);
+    const db = createDb("http://localhost:8787", "s");
+
+    const order: number[] = [];
+    const promises = Array.from({ length: 8 }, (_, i) =>
+      db.query(`SELECT ${i}`).then(() => order.push(i)),
+    );
+    await flush();
+
+    // Drain in FIFO. Each resolve lets a queued waiter start the next
+    // fetch, which must be the next-in-order caller.
+    while (g.resolveOne()) {
+      await flush();
+    }
+    await Promise.all(promises);
+
+    expect(order).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
   });
 });
 
