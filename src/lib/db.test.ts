@@ -4,6 +4,8 @@ import {
   getDb,
   resetDb,
   DbError,
+  _resetLocalQueuesForTest,
+  _internalTestHooks,
   type Db,
   type DbQueryResult,
 } from "./db";
@@ -38,7 +40,14 @@ describe("createDb", () => {
     );
   });
 
-  it("sets Connection: close on localhost URLs (STU-2495)", async () => {
+  it("does NOT set Connection: close on any URL — keep-alive stays on (STU-2495)", async () => {
+    // The initial STU-2495 mitigation (d7d328c) added `Connection: close`
+    // for localhost, hoping to defeat a suspected stale-socket flake. The
+    // subsequent CI evidence in run 30901699318 showed every request
+    // returning 200 server-side with the client still throwing `fetch
+    // failed`, which does not implicate stale sockets; forcing a fresh
+    // TCP handshake per request only worsens accept-backlog pressure.
+    // Keep-alive is now retained on all URLs; a bounded queue caps burst.
     const fetchMock = mockFetch(200, {
       results: [],
       meta: { changes: 0, duration: 0 },
@@ -48,7 +57,9 @@ describe("createDb", () => {
     const local = createDb("http://localhost:8787", "s");
     await local.query("SELECT 1");
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect((init.headers as Record<string, string>).Connection).toBe("close");
+    expect(
+      (init.headers as Record<string, string>).Connection,
+    ).toBeUndefined();
 
     vi.restoreAllMocks();
   });
@@ -339,6 +350,329 @@ describe("db.query localhost retry budget", () => {
       ),
     ).rejects.toThrow("Network error: fetch failed");
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// db — bounded concurrency queue (STU-2495)
+// ---------------------------------------------------------------------------
+
+describe("db bounded concurrency (localhost)", () => {
+  beforeEach(() => {
+    _resetLocalQueuesForTest();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    _resetLocalQueuesForTest();
+  });
+
+  function makeGatedFetch(): {
+    fetchMock: ReturnType<typeof vi.fn>;
+    resolveOne: () => boolean;
+    inFlight: () => number;
+    peak: () => number;
+    totalStarted: () => number;
+  } {
+    let inFlight = 0;
+    let peak = 0;
+    let started = 0;
+    const pending: Array<() => void> = [];
+    // Return a fake Response-shape object with sync json() so the
+    // microtask chain from resolveOne() → postOnce's return is small
+    // and predictable (real Response.json() takes many microtasks and
+    // hides the barging race).
+    function makeFakeResponse(): Response {
+      return {
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            results: [],
+            meta: { changes: 0, duration: 0 },
+          }),
+      } as unknown as Response;
+    }
+    const fetchMock = vi.fn(() => {
+      inFlight++;
+      started++;
+      peak = Math.max(peak, inFlight);
+      return new Promise<Response>((resolve) => {
+        pending.push(() => {
+          inFlight--;
+          resolve(makeFakeResponse());
+        });
+      });
+    });
+    return {
+      fetchMock,
+      resolveOne: () => {
+        const next = pending.shift();
+        if (!next) return false;
+        next();
+        return true;
+      },
+      inFlight: () => inFlight,
+      peak: () => peak,
+      totalStarted: () => started,
+    };
+  }
+
+  async function flush(): Promise<void> {
+    // Give microtasks + queued waiters + Response.json() decoding a
+    // chance to advance. Response.json() involves a real async decode
+    // that takes several microtasks.
+    for (let i = 0; i < 20; i++) await Promise.resolve();
+  }
+
+  it("caps concurrent fetches at 4 on localhost", async () => {
+    const g = makeGatedFetch();
+    vi.stubGlobal("fetch", g.fetchMock);
+    const db = createDb("http://localhost:8787", "s");
+
+    const promises = Array.from({ length: 10 }, () => db.query("SELECT 1"));
+    await flush();
+
+    expect(g.inFlight()).toBe(4);
+    expect(g.totalStarted()).toBe(4);
+
+    // Drain: resolve one at a time and let the queue enqueue the next.
+    while (g.totalStarted() < 10 || g.inFlight() > 0) {
+      const drained = g.resolveOne();
+      if (!drained) break;
+      await flush();
+    }
+    await Promise.all(promises);
+
+    expect(g.totalStarted()).toBe(10);
+    expect(g.peak()).toBeLessThanOrEqual(4);
+  });
+
+  it("does NOT cap concurrency on remote URLs", async () => {
+    const g = makeGatedFetch();
+    vi.stubGlobal("fetch", g.fetchMock);
+    const db = createDb("https://firefly.worker.dev", "s");
+
+    const promises = Array.from({ length: 10 }, () => db.query("SELECT 1"));
+    await flush();
+
+    expect(g.inFlight()).toBe(10);
+    while (g.resolveOne()) {
+      // drain all
+    }
+    await Promise.all(promises);
+  });
+
+  it("preserves FIFO order of queued requests on localhost", async () => {
+    const g = makeGatedFetch();
+    vi.stubGlobal("fetch", g.fetchMock);
+    const db = createDb("http://localhost:8787", "s");
+
+    const order: number[] = [];
+    const promises = Array.from({ length: 8 }, (_, i) =>
+      db.query(`SELECT ${i}`).then(() => order.push(i)),
+    );
+    await flush();
+
+    // Drain in FIFO. Each resolve lets a queued waiter start the next
+    // fetch, which must be the next-in-order caller.
+    while (g.resolveOne()) {
+      await flush();
+    }
+    await Promise.all(promises);
+
+    expect(order).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+  });
+
+  it("release hands the permit directly to a queued waiter (no barging) (STU-2495 R2)", async () => {
+    // Drive the queue directly at its release boundary so the barging
+    // race is deterministic. Going through fn's promise chain hides the
+    // window because fetch → Response.json() adds many microtask hops.
+    //
+    // Scenario: 4 active + 1 queued waiter. When one active finishes
+    // and finally→release() runs, the buggy release does
+    //   active--                            // 4 → 3
+    //   const next = waiters.shift(); next()
+    // If a late caller enters run() AFTER active-- but BEFORE the
+    // waiter's `active++` continuation runs, late sees active=3 < max
+    // and grabs a permit. Then the waiter continuation increments
+    // active again → peak = 5.
+    //
+    // Under fixed direct-handoff release, `active` is NEVER decremented
+    // while a waiter is queued; the released permit sits at `active`
+    // until the waiter consumes it. Late sees active=max, queues.
+    const { FdQueue, LOCAL_MAX_CONCURRENCY } = _internalTestHooks;
+    const q = new FdQueue(LOCAL_MAX_CONCURRENCY);
+    expect(LOCAL_MAX_CONCURRENCY).toBe(4);
+
+    let inFlight = 0;
+    let peak = 0;
+    const releases: Array<() => void> = [];
+    const startOrder: number[] = [];
+    let nextId = 0;
+    const runOne = () => {
+      const id = nextId++;
+      return q.run(async () => {
+        inFlight++;
+        startOrder.push(id);
+        peak = Math.max(peak, inFlight);
+        await new Promise<void>((resolve) => releases.push(resolve));
+        inFlight--;
+      });
+    };
+
+    // 4 acquire + 1 queued waiter (id 4).
+    const early = Array.from({ length: 5 }, () => runOne());
+    for (let i = 0; i < 4; i++) await Promise.resolve();
+    expect(inFlight).toBe(4);
+    expect(startOrder).toEqual([0, 1, 2, 3]);
+
+    // Now cause id 0 to finish AND schedule a late caller to enter
+    // run() at the very next microtask boundary — i.e. before the
+    // waiter's continuation gets scheduled. We synchronously resolve
+    // id 0's release Promise; id 0's fn continuation is queued. Then
+    // in a queueMicrotask that runs BEFORE id 0's finally chain, we
+    // enqueue late. This mimics an unrelated code path calling
+    // db.query() mid-tick, which is exactly the SSR-under-load pattern.
+    releases[0]();
+    let late: Promise<void> | undefined;
+    queueMicrotask(() => {
+      queueMicrotask(() => {
+        late = runOne();
+      });
+    });
+
+    // Let everything settle over generous microtask ticks.
+    for (let i = 0; i < 40; i++) await Promise.resolve();
+
+    // The invariant that must hold under any interleaving: peak never
+    // exceeds 4. This is what breaks with buggy release; it stays 4
+    // with direct handoff.
+    expect(peak).toBeLessThanOrEqual(4);
+
+    // FIFO: the queued waiter (id 4) must have started before any late
+    // caller (id 5+). The late Promise is definitely created; whether
+    // its fn has started depends on whether more permits have been
+    // released, but its start index must be > 4 if it started.
+    expect(late).toBeDefined();
+    expect(startOrder).toContain(4);
+    const idx4 = startOrder.indexOf(4);
+    const idx5 = startOrder.indexOf(5);
+    if (idx5 !== -1) {
+      expect(idx4).toBeLessThan(idx5);
+    }
+
+    // Drain everything.
+    while (releases.length > 0) {
+      const r = releases.shift();
+      if (r) r();
+      for (let i = 0; i < 4; i++) await Promise.resolve();
+    }
+    await Promise.all([...early, ...(late ? [late] : [])]);
+    expect(peak).toBeLessThanOrEqual(4);
+  });
+
+  it("shares a single queue across multiple createDb() clients pointed at the same localhost origin (STU-2495 R2)", async () => {
+    // getDb() singleton, tracking singleton, and per-request createDb()
+    // in proxy.ts all target the same wrangler-dev. They must share one
+    // queue so the combined budget stays at 4, not 4 × N.
+    const g = makeGatedFetch();
+    vi.stubGlobal("fetch", g.fetchMock);
+    const a = createDb("http://localhost:8787", "s");
+    const b = createDb("http://localhost:8787", "s");
+
+    // 4 from each — 8 total — must serialize through one queue.
+    const promises = [
+      ...Array.from({ length: 4 }, () => a.query("SELECT A")),
+      ...Array.from({ length: 4 }, () => b.query("SELECT B")),
+    ];
+    await flush();
+
+    expect(g.inFlight()).toBe(4);
+    expect(g.peak()).toBeLessThanOrEqual(4);
+
+    while (g.resolveOne()) await flush();
+    await Promise.all(promises);
+    expect(g.totalStarted()).toBe(8);
+    expect(g.peak()).toBeLessThanOrEqual(4);
+  });
+
+  it("does NOT share a queue between localhost and 127.0.0.1 — each origin gets its own", async () => {
+    // Registry key is the URL origin, so http://localhost:8787 and
+    // http://127.0.0.1:8787 map to different queues even though they
+    // resolve to the same host. That's fine — the queue is a defensive
+    // burst suppressor, not a global lock; callers who need one shared
+    // budget can pick one canonical form. This test locks the current
+    // behaviour so a future rewrite that changes it does so on purpose.
+    const g = makeGatedFetch();
+    vi.stubGlobal("fetch", g.fetchMock);
+    const a = createDb("http://localhost:8787", "s");
+    const b = createDb("http://127.0.0.1:8787", "s");
+
+    const promises = [
+      ...Array.from({ length: 4 }, () => a.query("SELECT A")),
+      ...Array.from({ length: 4 }, () => b.query("SELECT B")),
+    ];
+    await flush();
+    // Two distinct queues → 8 in flight simultaneously.
+    expect(g.inFlight()).toBe(8);
+
+    while (g.resolveOne()) await flush();
+    await Promise.all(promises);
+  });
+
+  it("registry is shared across separate module instances of db.ts (STU-2495 R3)", async () => {
+    // Turbopack ships a separate `moduleCache` for the server and SSR
+    // runtimes (see .next/server/chunks/[turbopack]_runtime.js and
+    // .../ssr/[turbopack]_runtime.js). A module-scope Map would give
+    // each runtime its own 4-permit queue and the real ceiling per Next
+    // process would be 4 × N. Placing the registry on globalThis under
+    // a Symbol.for() key makes it process-wide.
+    //
+    // Simulate the multi-runtime layout with vi.resetModules() +
+    // dynamic import to get a second, independent module instance of
+    // ./db that shares the same `globalThis` (which is the same host
+    // both Turbopack runtimes see in a single Node.js process).
+    _resetLocalQueuesForTest();
+    const first = await import("./db");
+    vi.resetModules();
+    const second = await import("./db");
+
+    // Sanity — this is truly a fresh module instance.
+    expect(second.createDb).not.toBe(first.createDb);
+    expect(second._internalTestHooks.FdQueue).not.toBe(
+      first._internalTestHooks.FdQueue,
+    );
+
+    // …but the registry itself is shared via Symbol.for, so a queue
+    // created by `first` for a given origin is returned by `second`.
+    expect(second._internalTestHooks.registryKey).toBe(
+      first._internalTestHooks.registryKey,
+    );
+    expect(second._internalTestHooks.getLocalQueues()).toBe(
+      first._internalTestHooks.getLocalQueues(),
+    );
+
+    const g = makeGatedFetch();
+    vi.stubGlobal("fetch", g.fetchMock);
+    const a = first.createDb("http://localhost:8787", "s");
+    const b = second.createDb("http://localhost:8787", "s");
+
+    // 4 + 4 concurrent queries across the two module instances must
+    // still serialize through the process-wide queue.
+    const promises = [
+      ...Array.from({ length: 4 }, () => a.query("SELECT A")),
+      ...Array.from({ length: 4 }, () => b.query("SELECT B")),
+    ];
+    await flush();
+
+    expect(g.inFlight()).toBe(4);
+    expect(g.peak()).toBeLessThanOrEqual(4);
+
+    while (g.resolveOne()) await flush();
+    await Promise.all(promises);
+    expect(g.totalStarted()).toBe(8);
+    expect(g.peak()).toBeLessThanOrEqual(4);
   });
 });
 
