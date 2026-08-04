@@ -116,38 +116,96 @@ function sleep(ms: number): Promise<void> {
 // Bounded-concurrency queue (STU-2495)
 // ---------------------------------------------------------------------------
 //
-// On localhost the Next.js → wrangler-dev channel throws `fetch failed`
-// in bursts while the worker log shows every request returning 200 OK
-// (STU-2495 run 30901699318). The failure is on the client side of the
-// localhost pipe, and the bursts coincide with SSR fan-out (Next.js
-// firing many concurrent DB fetches per rendered page × N parallel
-// Playwright workers × N tests per file).
+// Defensive hypothesis pending CI evidence. What the merged-into-main run
+// 30901699318 actually shows is only that (a) the worker log has every
+// request returning 200 OK and (b) Next.js throws generic
+// `TypeError: fetch failed` in bursts. It does not identify the transport
+// layer that is dropping traffic — accept-backlog / undici pool / kernel
+// FD table are all plausible; we cannot pick one without an `err.cause.code`
+// that isn't just "fetch failed". The queue is a bounded circuit breaker
+// that removes the burst regardless of which layer is failing; it is not a
+// confirmed root-cause fix.
 //
-// FdQueue caps concurrent in-flight fetches to a small pool so wrangler
-// dev's accept backlog and undici's connection pool cannot be overrun by
-// a single burst. New callers wait FIFO. This is a defensive circuit
-// breaker; the underlying flake root cause is not confirmed. Kept
-// scoped to localhost so production request throughput is unchanged.
+// FdQueue caps concurrent in-flight fetches to a small pool. New callers
+// wait FIFO. Kept scoped to localhost so production request throughput is
+// unchanged.
 class FdQueue {
   private active = 0;
   private waiters: Array<() => void> = [];
   constructor(private readonly max: number) {}
+
   async run<T>(fn: () => Promise<T>): Promise<T> {
+    // Acquire. If we go through the waiter path we do NOT increment
+    // `active` here — the releaser hands the permit over directly.
     if (this.active >= this.max) {
       await new Promise<void>((resolve) => this.waiters.push(resolve));
+    } else {
+      this.active++;
     }
-    this.active++;
     try {
       return await fn();
     } finally {
+      this.release();
+    }
+  }
+
+  /** Direct handoff on release: if a waiter is queued it inherits our
+   *  permit, so `active` never dips below capacity in the microtask gap
+   *  and a late caller cannot barge in ahead of the queued waiter. */
+  private release(): void {
+    const next = this.waiters.shift();
+    if (next) {
+      // Permit stays consumed; waiter continuation runs fn() with it.
+      next();
+    } else {
       this.active--;
-      const next = this.waiters.shift();
-      if (next) next();
     }
   }
 }
 
 const LOCAL_MAX_CONCURRENCY = 4;
+
+// Registry keyed by localhost `origin` (protocol + host + port). All
+// `createDb()` calls in this runtime that target the same localhost origin
+// share the same queue so `getDb()` (src/lib/db.ts), the tracking
+// singleton (src/lib/tracking.ts:81-88), and the per-request client in
+// `src/proxy.ts:327,340` do not each get their own 4-permit budget. The
+// registry sits in module scope; on runtimes that duplicate module
+// instances (edge / RSC bundles) the guarantee degrades to per-copy,
+// which we accept — the E2E hot path is a single Node.js server.
+const _localQueues = new Map<string, FdQueue>();
+
+function localhostQueueFor(workerUrl: string): FdQueue | null {
+  if (!LOCALHOST_RE.test(workerUrl)) return null;
+  let key: string;
+  try {
+    key = new URL(workerUrl).origin;
+  } catch {
+    return null;
+  }
+  let q = _localQueues.get(key);
+  if (!q) {
+    q = new FdQueue(LOCAL_MAX_CONCURRENCY);
+    _localQueues.set(key, q);
+  }
+  return q;
+}
+
+/** Test-only: clear the localhost queue registry so each test's
+ *  createDb() sees a fresh queue. Not exported for production callers. */
+export function _resetLocalQueuesForTest(): void {
+  _localQueues.clear();
+}
+
+/** Test-only: expose FdQueue and the registry so barging / handoff
+ *  semantics can be tested directly. Going through the fetch chain
+ *  (fetch → Response.json() → await) burns several microtasks and
+ *  makes the barging race unreproducible in vitest. */
+export const _internalForTest = {
+  FdQueue,
+  localQueues: _localQueues,
+  LOCAL_MAX_CONCURRENCY,
+};
 
 export function createDb(workerUrl: string, workerSecret: string): Db {
   if (!workerUrl) throw new Error("workerUrl is required");
@@ -156,9 +214,8 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
   const isLocal = LOCALHOST_RE.test(workerUrl);
   const retryDelays = isLocal ? LOCAL_RETRY_DELAYS_MS : REMOTE_RETRY_DELAYS_MS;
 
-  // Bounded queue only on localhost. Production keeps unrestricted
-  // parallel fetches so a single high-fan-out page does not queue up.
-  const queue = isLocal ? new FdQueue(LOCAL_MAX_CONCURRENCY) : null;
+  // Shared queue lookup by localhost origin — see `_localQueues` above.
+  const queue = localhostQueueFor(workerUrl);
   const gated = <T>(fn: () => Promise<T>): Promise<T> =>
     queue ? queue.run(fn) : fn();
 

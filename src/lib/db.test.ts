@@ -4,6 +4,8 @@ import {
   getDb,
   resetDb,
   DbError,
+  _resetLocalQueuesForTest,
+  _internalForTest,
   type Db,
   type DbQueryResult,
 } from "./db";
@@ -356,8 +358,13 @@ describe("db.query localhost retry budget", () => {
 // ---------------------------------------------------------------------------
 
 describe("db bounded concurrency (localhost)", () => {
+  beforeEach(() => {
+    _resetLocalQueuesForTest();
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
+    _resetLocalQueuesForTest();
   });
 
   function makeGatedFetch(): {
@@ -371,6 +378,21 @@ describe("db bounded concurrency (localhost)", () => {
     let peak = 0;
     let started = 0;
     const pending: Array<() => void> = [];
+    // Return a fake Response-shape object with sync json() so the
+    // microtask chain from resolveOne() → postOnce's return is small
+    // and predictable (real Response.json() takes many microtasks and
+    // hides the barging race).
+    function makeFakeResponse(): Response {
+      return {
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            results: [],
+            meta: { changes: 0, duration: 0 },
+          }),
+      } as unknown as Response;
+    }
     const fetchMock = vi.fn(() => {
       inFlight++;
       started++;
@@ -378,15 +400,7 @@ describe("db bounded concurrency (localhost)", () => {
       return new Promise<Response>((resolve) => {
         pending.push(() => {
           inFlight--;
-          resolve(
-            new Response(
-              JSON.stringify({
-                results: [],
-                meta: { changes: 0, duration: 0 },
-              }),
-              { status: 200 },
-            ),
-          );
+          resolve(makeFakeResponse());
         });
       });
     });
@@ -405,8 +419,10 @@ describe("db bounded concurrency (localhost)", () => {
   }
 
   async function flush(): Promise<void> {
-    // Give microtasks + queued waiters a chance to advance.
-    for (let i = 0; i < 4; i++) await Promise.resolve();
+    // Give microtasks + queued waiters + Response.json() decoding a
+    // chance to advance. Response.json() involves a real async decode
+    // that takes several microtasks.
+    for (let i = 0; i < 20; i++) await Promise.resolve();
   }
 
   it("caps concurrent fetches at 4 on localhost", async () => {
@@ -466,6 +482,135 @@ describe("db bounded concurrency (localhost)", () => {
     await Promise.all(promises);
 
     expect(order).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+  });
+
+  it("release hands the permit directly to a queued waiter (no barging) (STU-2495 R2)", async () => {
+    // Drive the queue directly at its release boundary so the barging
+    // race is deterministic. Going through fn's promise chain hides the
+    // window because fetch → Response.json() adds many microtask hops.
+    //
+    // Scenario: 4 active + 1 queued waiter. When one active finishes
+    // and finally→release() runs, the buggy release does
+    //   active--                            // 4 → 3
+    //   const next = waiters.shift(); next()
+    // If a late caller enters run() AFTER active-- but BEFORE the
+    // waiter's `active++` continuation runs, late sees active=3 < max
+    // and grabs a permit. Then the waiter continuation increments
+    // active again → peak = 5.
+    //
+    // Under fixed direct-handoff release, `active` is NEVER decremented
+    // while a waiter is queued; the released permit sits at `active`
+    // until the waiter consumes it. Late sees active=max, queues.
+    const { FdQueue, LOCAL_MAX_CONCURRENCY } = _internalForTest;
+    const q = new FdQueue(LOCAL_MAX_CONCURRENCY);
+    expect(LOCAL_MAX_CONCURRENCY).toBe(4);
+
+    let inFlight = 0;
+    let peak = 0;
+    const releases: Array<() => void> = [];
+    const startOrder: number[] = [];
+    let nextId = 0;
+    const runOne = () => {
+      const id = nextId++;
+      return q.run(async () => {
+        inFlight++;
+        startOrder.push(id);
+        peak = Math.max(peak, inFlight);
+        await new Promise<void>((resolve) => releases.push(resolve));
+        inFlight--;
+      });
+    };
+
+    // 4 acquire + 1 queued waiter (id 4).
+    const early = Array.from({ length: 5 }, () => runOne());
+    for (let i = 0; i < 4; i++) await Promise.resolve();
+    expect(inFlight).toBe(4);
+    expect(startOrder).toEqual([0, 1, 2, 3]);
+
+    // Now cause id 0 to finish AND schedule a late caller to enter
+    // run() at the very next microtask boundary — i.e. before the
+    // waiter's continuation gets scheduled. We synchronously resolve
+    // id 0's release Promise; id 0's fn continuation is queued. Then
+    // in a queueMicrotask that runs BEFORE id 0's finally chain, we
+    // enqueue late. This mimics an unrelated code path calling
+    // db.query() mid-tick, which is exactly the SSR-under-load pattern.
+    releases[0]();
+    let late: Promise<void> | undefined;
+    queueMicrotask(() => {
+      queueMicrotask(() => {
+        late = runOne();
+      });
+    });
+
+    // Let everything settle over generous microtask ticks.
+    for (let i = 0; i < 40; i++) await Promise.resolve();
+
+    // The invariant that must hold under any interleaving: peak never
+    // exceeds 4. This is what breaks with buggy release; it stays 4
+    // with direct handoff.
+    expect(peak).toBeLessThanOrEqual(4);
+
+    // The waiter (id 4) must have started; late may or may not have
+    // started depending on interleaving, but either way peak is bounded.
+    expect(startOrder).toContain(4);
+
+    // Drain everything.
+    while (releases.length > 0) {
+      const r = releases.shift();
+      if (r) r();
+      for (let i = 0; i < 4; i++) await Promise.resolve();
+    }
+    await Promise.all([...early, ...(late ? [late] : [])]);
+    expect(peak).toBeLessThanOrEqual(4);
+  });
+
+  it("shares a single queue across multiple createDb() clients pointed at the same localhost origin (STU-2495 R2)", async () => {
+    // getDb() singleton, tracking singleton, and per-request createDb()
+    // in proxy.ts all target the same wrangler-dev. They must share one
+    // queue so the combined budget stays at 4, not 4 × N.
+    const g = makeGatedFetch();
+    vi.stubGlobal("fetch", g.fetchMock);
+    const a = createDb("http://localhost:8787", "s");
+    const b = createDb("http://localhost:8787", "s");
+
+    // 4 from each — 8 total — must serialize through one queue.
+    const promises = [
+      ...Array.from({ length: 4 }, () => a.query("SELECT A")),
+      ...Array.from({ length: 4 }, () => b.query("SELECT B")),
+    ];
+    await flush();
+
+    expect(g.inFlight()).toBe(4);
+    expect(g.peak()).toBeLessThanOrEqual(4);
+
+    while (g.resolveOne()) await flush();
+    await Promise.all(promises);
+    expect(g.totalStarted()).toBe(8);
+    expect(g.peak()).toBeLessThanOrEqual(4);
+  });
+
+  it("does NOT share a queue between localhost and 127.0.0.1 — each origin gets its own", async () => {
+    // Registry key is the URL origin, so http://localhost:8787 and
+    // http://127.0.0.1:8787 map to different queues even though they
+    // resolve to the same host. That's fine — the queue is a defensive
+    // burst suppressor, not a global lock; callers who need one shared
+    // budget can pick one canonical form. This test locks the current
+    // behaviour so a future rewrite that changes it does so on purpose.
+    const g = makeGatedFetch();
+    vi.stubGlobal("fetch", g.fetchMock);
+    const a = createDb("http://localhost:8787", "s");
+    const b = createDb("http://127.0.0.1:8787", "s");
+
+    const promises = [
+      ...Array.from({ length: 4 }, () => a.query("SELECT A")),
+      ...Array.from({ length: 4 }, () => b.query("SELECT B")),
+    ];
+    await flush();
+    // Two distinct queues → 8 in flight simultaneously.
+    expect(g.inFlight()).toBe(8);
+
+    while (g.resolveOne()) await flush();
+    await Promise.all(promises);
   });
 });
 
