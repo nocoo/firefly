@@ -86,9 +86,13 @@ export class DbError extends Error {
 // first keyword is SELECT to keep at-most-once for anything ambiguous.
 // Writes (`execute`, `batch`, `call`) never retry — see the reviewer's P1
 // on 22dc220 in STU-2495.
+//
+// Backoff runs at 100 → 300 → 1000 → 3000ms (5 attempts total). CI evidence
+// (STU-2495 run 30896621829) showed the socket-pool flake lands in bursts
+// that outlast a sub-second retry window, so we need a multi-second tail.
 // This is a defensive mitigation; the underlying wrangler-dev flake root
 // cause is not confirmed.
-const RETRY_DELAYS_MS = [100, 300] as const;
+const RETRY_DELAYS_MS = [100, 300, 1000, 3000] as const;
 const RETRYABLE_SELECT_RE = /^\s*SELECT\b/i;
 
 const isTestEnv = () =>
@@ -103,10 +107,21 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
   if (!workerUrl) throw new Error("workerUrl is required");
   if (!workerSecret) throw new Error("workerSecret is required");
 
-  const headers = {
+  // `Connection: close` opts out of undici's keep-alive pool. In production
+  // the workerUrl is Cloudflare-hosted and the pool is a real win, but in
+  // E2E (`localhost` wrangler-dev) under Playwright's fan-out the pool has
+  // been observed to hand out stale sockets that surface as `fetch failed`
+  // (STU-2495 — CI worker log shows every request returning 200 while the
+  // client throws). Disable pooling only when talking to localhost so the
+  // production hot path is unchanged.
+  const disableKeepAlive = /^https?:\/\/(localhost|127\.0\.0\.1)(?::|\/|$)/i.test(
+    workerUrl,
+  );
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${workerSecret}`,
   };
+  if (disableKeepAlive) headers.Connection = "close";
 
   async function postOnce<T>(path: string, body: unknown): Promise<T> {
     const url = `${workerUrl}${path}`;

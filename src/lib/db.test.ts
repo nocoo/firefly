@@ -37,6 +37,38 @@ describe("createDb", () => {
       "workerSecret is required",
     );
   });
+
+  it("sets Connection: close on localhost URLs (STU-2495)", async () => {
+    const fetchMock = mockFetch(200, {
+      results: [],
+      meta: { changes: 0, duration: 0 },
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const local = createDb("http://localhost:8787", "s");
+    await local.query("SELECT 1");
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect((init.headers as Record<string, string>).Connection).toBe("close");
+
+    vi.restoreAllMocks();
+  });
+
+  it("does NOT set Connection: close on remote URLs (preserve keep-alive)", async () => {
+    const fetchMock = mockFetch(200, {
+      results: [],
+      meta: { changes: 0, duration: 0 },
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const remote = createDb("https://firefly.worker.dev", "s");
+    await remote.query("SELECT 1");
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(
+      (init.headers as Record<string, string>).Connection,
+    ).toBeUndefined();
+
+    vi.restoreAllMocks();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -146,7 +178,7 @@ describe("db.query", () => {
     expect(result).toEqual(mockResult);
   });
 
-  it("gives up after 3 total attempts on repeated fetch failures", async () => {
+  it("gives up after 5 total attempts on repeated fetch failures", async () => {
     const fetchMock = vi
       .fn()
       .mockRejectedValue(new TypeError("fetch failed"));
@@ -155,7 +187,7 @@ describe("db.query", () => {
     await expect(db.query("SELECT 1")).rejects.toThrow(
       "Network error: fetch failed",
     );
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(5);
   });
 
   it("does not retry on HTTP error responses (returned unchanged)", async () => {

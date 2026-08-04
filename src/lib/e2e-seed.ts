@@ -23,7 +23,11 @@
  * re-export it from e2e/bdd/fixtures.ts.
  */
 
-const SEED_BACKOFF_MS = [250, 500, 1000] as const;
+// Backoff runs at 250 → 500 → 1000 → 3000 → 6000 ms (6 attempts total).
+// CI evidence in STU-2495 shows the localhost socket-pool flake arrives in
+// bursts that outlast a sub-second retry window; the multi-second tail is
+// what actually recovers.
+const SEED_BACKOFF_MS = [250, 500, 1000, 3000, 6000] as const;
 
 export interface SeedPostBody {
   title: string;

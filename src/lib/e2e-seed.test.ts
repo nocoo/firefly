@@ -114,7 +114,7 @@ describe("seedPostIdempotent", () => {
   // Exhaustion path
   // -------------------------------------------------------------------------
 
-  it("throws after 4 exhausted attempts on continuous 5xx + miss", async () => {
+  it("throws after 6 exhausted attempts on continuous 5xx + miss", async () => {
     const fetchMock = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
       if (init?.method === "POST") return res(500, '{"error":"down"}');
       return res(404);
@@ -122,17 +122,17 @@ describe("seedPostIdempotent", () => {
 
     await expect(
       seedPostIdempotent(BASE, BODY, makeDeps(fetchMock)),
-    ).rejects.toThrow(/Failed to seed post after 4 attempts/);
-    // 4 POSTs + 4 GETs (one reconcile after each POST failure).
-    expect(fetchMock).toHaveBeenCalledTimes(8);
+    ).rejects.toThrow(/Failed to seed post after 6 attempts/);
+    // 6 POSTs + 6 GETs (one reconcile after each POST failure).
+    expect(fetchMock).toHaveBeenCalledTimes(12);
   });
 
-  it("throws after 4 exhausted attempts on continuous throws + GET throw", async () => {
+  it("throws after 6 exhausted attempts on continuous throws + GET throw", async () => {
     const fetchMock = vi.fn().mockRejectedValue(new TypeError("fetch failed"));
 
     await expect(
       seedPostIdempotent(BASE, BODY, makeDeps(fetchMock)),
-    ).rejects.toThrow(/Failed to seed post after 4 attempts/);
-    expect(fetchMock).toHaveBeenCalledTimes(8);
+    ).rejects.toThrow(/Failed to seed post after 6 attempts/);
+    expect(fetchMock).toHaveBeenCalledTimes(12);
   });
 });
