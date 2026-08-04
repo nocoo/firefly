@@ -5,7 +5,7 @@ import {
   resetDb,
   DbError,
   _resetLocalQueuesForTest,
-  _internalForTest,
+  _internalTestHooks,
   type Db,
   type DbQueryResult,
 } from "./db";
@@ -501,7 +501,7 @@ describe("db bounded concurrency (localhost)", () => {
     // Under fixed direct-handoff release, `active` is NEVER decremented
     // while a waiter is queued; the released permit sits at `active`
     // until the waiter consumes it. Late sees active=max, queues.
-    const { FdQueue, LOCAL_MAX_CONCURRENCY } = _internalForTest;
+    const { FdQueue, LOCAL_MAX_CONCURRENCY } = _internalTestHooks;
     const q = new FdQueue(LOCAL_MAX_CONCURRENCY);
     expect(LOCAL_MAX_CONCURRENCY).toBe(4);
 
@@ -550,9 +550,17 @@ describe("db bounded concurrency (localhost)", () => {
     // with direct handoff.
     expect(peak).toBeLessThanOrEqual(4);
 
-    // The waiter (id 4) must have started; late may or may not have
-    // started depending on interleaving, but either way peak is bounded.
+    // FIFO: the queued waiter (id 4) must have started before any late
+    // caller (id 5+). The late Promise is definitely created; whether
+    // its fn has started depends on whether more permits have been
+    // released, but its start index must be > 4 if it started.
+    expect(late).toBeDefined();
     expect(startOrder).toContain(4);
+    const idx4 = startOrder.indexOf(4);
+    const idx5 = startOrder.indexOf(5);
+    if (idx5 !== -1) {
+      expect(idx4).toBeLessThan(idx5);
+    }
 
     // Drain everything.
     while (releases.length > 0) {
@@ -611,6 +619,60 @@ describe("db bounded concurrency (localhost)", () => {
 
     while (g.resolveOne()) await flush();
     await Promise.all(promises);
+  });
+
+  it("registry is shared across separate module instances of db.ts (STU-2495 R3)", async () => {
+    // Turbopack ships a separate `moduleCache` for the server and SSR
+    // runtimes (see .next/server/chunks/[turbopack]_runtime.js and
+    // .../ssr/[turbopack]_runtime.js). A module-scope Map would give
+    // each runtime its own 4-permit queue and the real ceiling per Next
+    // process would be 4 × N. Placing the registry on globalThis under
+    // a Symbol.for() key makes it process-wide.
+    //
+    // Simulate the multi-runtime layout with vi.resetModules() +
+    // dynamic import to get a second, independent module instance of
+    // ./db that shares the same `globalThis` (which is the same host
+    // both Turbopack runtimes see in a single Node.js process).
+    _resetLocalQueuesForTest();
+    const first = await import("./db");
+    vi.resetModules();
+    const second = await import("./db");
+
+    // Sanity — this is truly a fresh module instance.
+    expect(second.createDb).not.toBe(first.createDb);
+    expect(second._internalTestHooks.FdQueue).not.toBe(
+      first._internalTestHooks.FdQueue,
+    );
+
+    // …but the registry itself is shared via Symbol.for, so a queue
+    // created by `first` for a given origin is returned by `second`.
+    expect(second._internalTestHooks.registryKey).toBe(
+      first._internalTestHooks.registryKey,
+    );
+    expect(second._internalTestHooks.getLocalQueues()).toBe(
+      first._internalTestHooks.getLocalQueues(),
+    );
+
+    const g = makeGatedFetch();
+    vi.stubGlobal("fetch", g.fetchMock);
+    const a = first.createDb("http://localhost:8787", "s");
+    const b = second.createDb("http://localhost:8787", "s");
+
+    // 4 + 4 concurrent queries across the two module instances must
+    // still serialize through the process-wide queue.
+    const promises = [
+      ...Array.from({ length: 4 }, () => a.query("SELECT A")),
+      ...Array.from({ length: 4 }, () => b.query("SELECT B")),
+    ];
+    await flush();
+
+    expect(g.inFlight()).toBe(4);
+    expect(g.peak()).toBeLessThanOrEqual(4);
+
+    while (g.resolveOne()) await flush();
+    await Promise.all(promises);
+    expect(g.totalStarted()).toBe(8);
+    expect(g.peak()).toBeLessThanOrEqual(4);
   });
 });
 

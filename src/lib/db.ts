@@ -167,13 +167,31 @@ const LOCAL_MAX_CONCURRENCY = 4;
 
 // Registry keyed by localhost `origin` (protocol + host + port). All
 // `createDb()` calls in this runtime that target the same localhost origin
-// share the same queue so `getDb()` (src/lib/db.ts), the tracking
-// singleton (src/lib/tracking.ts:81-88), and the per-request client in
-// `src/proxy.ts:327,340` do not each get their own 4-permit budget. The
-// registry sits in module scope; on runtimes that duplicate module
-// instances (edge / RSC bundles) the guarantee degrades to per-copy,
-// which we accept — the E2E hot path is a single Node.js server.
-const _localQueues = new Map<string, FdQueue>();
+// share the same queue so `getDb()` (src/lib/db.ts), the tracking singleton
+// (src/lib/tracking.ts:81-88), and the per-request client in
+// `src/proxy.ts:327,340` do not each get their own 4-permit budget.
+//
+// The registry lives on `globalThis` under a Symbol.for() key so that every
+// copy of this module in the same Node.js process resolves to the same Map.
+// This matters because Turbopack ships separate `moduleCache` instances for
+// the server and SSR runtimes (see `.next/server/chunks/[turbopack]_runtime.js`
+// and `.../ssr/[turbopack]_runtime.js`); a plain module-scope Map would give
+// each runtime its own 4-permit queue and the observed process-level ceiling
+// would be 4 × N. `Symbol.for("firefly.db.localQueues")` is process-wide and
+// shared across bundlers / require caches.
+type LocalQueuesRegistry = Map<string, FdQueue>;
+const _localQueuesKey: symbol = Symbol.for("firefly.db.localQueues.v1");
+type GlobalRegistryHost = { [K in typeof _localQueuesKey]?: LocalQueuesRegistry };
+
+function getLocalQueues(): LocalQueuesRegistry {
+  const host = globalThis as unknown as GlobalRegistryHost;
+  let map = host[_localQueuesKey];
+  if (!map) {
+    map = new Map<string, FdQueue>();
+    host[_localQueuesKey] = map;
+  }
+  return map;
+}
 
 function localhostQueueFor(workerUrl: string): FdQueue | null {
   if (!LOCALHOST_RE.test(workerUrl)) return null;
@@ -183,28 +201,26 @@ function localhostQueueFor(workerUrl: string): FdQueue | null {
   } catch {
     return null;
   }
-  let q = _localQueues.get(key);
+  const registry = getLocalQueues();
+  let q = registry.get(key);
   if (!q) {
     q = new FdQueue(LOCAL_MAX_CONCURRENCY);
-    _localQueues.set(key, q);
+    registry.set(key, q);
   }
   return q;
 }
 
-/** Test-only: clear the localhost queue registry so each test's
- *  createDb() sees a fresh queue. Not exported for production callers. */
+// Internal test hooks. Tree-shaken from production chunks because no
+// runtime code path outside `src/lib/db.test.ts` reads them.
 export function _resetLocalQueuesForTest(): void {
-  _localQueues.clear();
+  getLocalQueues().clear();
 }
 
-/** Test-only: expose FdQueue and the registry so barging / handoff
- *  semantics can be tested directly. Going through the fetch chain
- *  (fetch → Response.json() → await) burns several microtasks and
- *  makes the barging race unreproducible in vitest. */
-export const _internalForTest = {
+export const _internalTestHooks = {
   FdQueue,
-  localQueues: _localQueues,
+  getLocalQueues,
   LOCAL_MAX_CONCURRENCY,
+  registryKey: _localQueuesKey,
 };
 
 export function createDb(workerUrl: string, workerSecret: string): Db {
