@@ -181,11 +181,12 @@ describe("deleteComment", () => {
   });
 
   it("deletes comment and updates post comment_count", async () => {
-    vi.mocked(db.firstOrNull)
-      // First call: find comment
-      .mockResolvedValueOnce(parentComment)
-      // Second call: count descendants
-      .mockResolvedValueOnce({ cnt: 1 });
+    vi.mocked(db.firstOrNull).mockResolvedValueOnce(parentComment);
+    // Single row means only the target comment exists — deletedCount = 1.
+    vi.mocked(db.query).mockResolvedValueOnce({
+      results: [{ id: "c1", parent_id: null }],
+      meta: { changes: 0, duration: 0 },
+    });
     vi.mocked(db.execute).mockResolvedValue({ meta: { changes: 1, duration: 1 } } as never);
 
     const result = await deleteComment(db, "c1");
@@ -203,22 +204,43 @@ describe("deleteComment", () => {
     expect(updateParams).toEqual([1, "post-1"]);
   });
 
-  it("counts multiple descendants for accurate comment_count update", async () => {
-    vi.mocked(db.firstOrNull)
-      .mockResolvedValueOnce(parentComment)
-      .mockResolvedValueOnce({ cnt: 3 });
+  it("walks the parent_id map and counts the full subtree in JS (STU-2497)", async () => {
+    // c1 → c2 → c3, plus a sibling c4 and an unrelated root c5.
+    // Deleting c1 should count 3 rows (c1, c2, c3), NOT the whole post.
+    vi.mocked(db.firstOrNull).mockResolvedValueOnce(parentComment);
+    vi.mocked(db.query).mockResolvedValueOnce({
+      results: [
+        { id: "c1", parent_id: null },
+        { id: "c2", parent_id: "c1" },
+        { id: "c3", parent_id: "c2" },
+        { id: "c4", parent_id: "c1" }, // sibling → also deleted
+        { id: "c5", parent_id: null },  // unrelated root → NOT deleted
+      ],
+      meta: { changes: 0, duration: 0 },
+    });
     vi.mocked(db.execute).mockResolvedValue({ meta: { changes: 1, duration: 1 } } as never);
 
     await deleteComment(db, "c1");
 
+    // Subtree = c1 + c2 + c3 + c4 = 4 rows.
     const [, updateParams] = vi.mocked(db.execute).mock.calls[1];
-    expect(updateParams).toEqual([3, "post-1"]);
+    expect(updateParams).toEqual([4, "post-1"]);
+
+    // Confirms the SELECT query text matches what the Worker gate will accept
+    // (SELECT-prefix, no WITH). If someone re-adds a CTE here, the L1 mock
+    // stays green but the L2 contract test will catch it.
+    const [querySql, queryParams] = vi.mocked(db.query).mock.calls[0];
+    expect(querySql).toMatch(/^\s*SELECT\b/i);
+    expect(querySql).not.toMatch(/\bWITH\b/i);
+    expect(queryParams).toEqual(["post-1"]);
   });
 
-  it("defaults to 1 when count query returns null", async () => {
-    vi.mocked(db.firstOrNull)
-      .mockResolvedValueOnce(parentComment)
-      .mockResolvedValueOnce(null); // countResult is null
+  it("defaults to 1 when the post has no comment rows (empty query result)", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValueOnce(parentComment);
+    vi.mocked(db.query).mockResolvedValueOnce({
+      results: [],
+      meta: { changes: 0, duration: 0 },
+    });
     vi.mocked(db.execute).mockResolvedValue({ meta: { changes: 1, duration: 1 } } as never);
 
     await deleteComment(db, "c1");
