@@ -72,6 +72,19 @@ export class DbError extends Error {
 // Implementation
 // ---------------------------------------------------------------------------
 
+// Retries only trigger when fetch() itself throws (transient TCP/keep-alive
+// flake between Next.js and the local wrangler-dev worker seen in CI —
+// STU-2495). HTTP 4xx/5xx responses are returned unchanged.
+const RETRY_DELAYS_MS = [100, 300] as const;
+
+const isTestEnv = () =>
+  typeof process !== "undefined" &&
+  (process.env.NODE_ENV === "test" || process.env.VITEST === "true");
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function createDb(workerUrl: string, workerSecret: string): Db {
   if (!workerUrl) throw new Error("workerUrl is required");
   if (!workerSecret) throw new Error("workerSecret is required");
@@ -83,29 +96,40 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
 
   async function post<T>(path: string, body: unknown): Promise<T> {
     const url = `${workerUrl}${path}`;
+    const payload = JSON.stringify(body);
+    const attempts = RETRY_DELAYS_MS.length + 1;
 
-    let res: Response;
-    try {
-      res = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-      });
-    } catch (err) {
-      throw new DbError(
-        `Network error: ${err instanceof Error ? err.message : String(err)}`,
-      );
+    for (let i = 0; ; i++) {
+      let res: Response;
+      try {
+        res = await fetch(url, { method: "POST", headers, body: payload });
+      } catch (err) {
+        if (i < attempts - 1) {
+          if (!isTestEnv()) {
+            console.warn(
+              `[db] fetch to ${path} failed (attempt ${i + 1}/${attempts}): ${
+                err instanceof Error ? err.message : String(err)
+              } — retrying`,
+            );
+          }
+          await sleep(isTestEnv() ? 0 : (RETRY_DELAYS_MS[i] ?? 0));
+          continue;
+        }
+        throw new DbError(
+          `Network error: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new DbError(
+          (data as { error?: string }).error ?? `HTTP ${res.status}`,
+          res.status,
+        );
+      }
+
+      return res.json() as Promise<T>;
     }
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new DbError(
-        (data as { error?: string }).error ?? `HTTP ${res.status}`,
-        res.status,
-      );
-    }
-
-    return res.json() as Promise<T>;
   }
 
   const db: Db = {

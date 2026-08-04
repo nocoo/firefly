@@ -125,6 +125,47 @@ describe("db.query", () => {
     );
   });
 
+  it("retries transient fetch failures and returns success (STU-2495)", async () => {
+    const mockResult: DbQueryResult = {
+      results: [{ id: "1" }],
+      meta: { changes: 0, duration: 1 },
+    };
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError("fetch failed"))
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(mockResult),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await db.query("SELECT 1");
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result).toEqual(mockResult);
+  });
+
+  it("gives up after 3 total attempts on repeated fetch failures", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValue(new TypeError("fetch failed"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(db.query("SELECT 1")).rejects.toThrow(
+      "Network error: fetch failed",
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("does not retry on HTTP error responses (returned unchanged)", async () => {
+    const fetchMock = mockFetch(500, { error: "boom" });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(db.query("SELECT 1")).rejects.toThrow("boom");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it("throws DbError when json() fails on error response", async () => {
     vi.stubGlobal(
       "fetch",
