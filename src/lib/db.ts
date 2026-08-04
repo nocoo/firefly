@@ -96,8 +96,9 @@ export class DbError extends Error {
 //     between Next.js and the local worker under high concurrency; only
 //     a multi-second tail recovers.
 //   - remote (Cloudflare): 3 attempts / 100+300ms tail. Same short budget
-//     as pre-STU-2495. Any wider policy for prod needs its own SLO /
-//     failure evidence, not a spillover from a local-E2E flake.
+//     the codebase used before commit d7d328c widened it. Any wider policy
+//     for prod needs its own SLO / failure evidence, not a spillover from
+//     a local-E2E flake.
 const LOCAL_RETRY_DELAYS_MS = [100, 300, 1000, 3000] as const;
 const REMOTE_RETRY_DELAYS_MS = [100, 300] as const;
 const RETRYABLE_SELECT_RE = /^\s*SELECT\b/i;

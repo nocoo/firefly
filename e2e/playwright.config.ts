@@ -11,13 +11,13 @@ import { defineConfig } from "@playwright/test";
 //   -  4 cores → workers = 2
 //   -  8 cores → workers = 4
 //   - 20 cores → workers = 10 (typical dev workstation)
-// Prefer availableParallelism() over cpus().length: it respects cgroup /
-// container CPU limits, whereas cpus() reports the host's cores. If the
-// runtime pre-dates Node 20, fall back to cpus().length.
+// availableParallelism() is Node 20+ and respects cgroup / container CPU
+// limits, whereas cpus() returns the host cores even inside a container.
+// The project's engines / CI pin Node 20+, so no fallback is provided;
+// running on older Node throws at import time, which is preferable to
+// silently over-scheduling.
 function computeWorkers(): number {
-  // Node 20+ ships availableParallelism; guard for older runtimes.
-  const parallel = availableParallelism();
-  return Math.max(2, Math.min(10, Math.ceil(parallel / 2)));
+  return Math.max(2, Math.min(10, Math.ceil(availableParallelism() / 2)));
 }
 
 export default defineConfig({

@@ -77,7 +77,12 @@ describe("createDb", () => {
 
 describe("db.query", () => {
   let db: Db;
-  const url = process.env.WORKER_URL ?? "https://firefly.worker.dev";
+  // Hardcode a remote URL: STU-2495 splits the retry budget by URL shape,
+  // so `process.env.WORKER_URL` (which may be http://localhost:… when the
+  // E2E runner is active) would flip the whole describe onto the local
+  // 5-attempt budget and break the assertions below. Localhost budget has
+  // its own describe block further down.
+  const url = "https://firefly.worker.dev";
   const secret = "test_secret";
 
   beforeEach(() => {
