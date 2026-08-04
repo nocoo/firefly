@@ -30,36 +30,46 @@ describe("DELETE /api/admin/comments/[id]", () => {
   // by exactly 3 (parent + two children).
   // -------------------------------------------------------------------------
   it("cascades a real parent+children subtree and decrements post.comment_count", async () => {
-    // Enable comments globally (default off). Restore afterwards.
+    // Read current settings first so cleanup can restore them even if the
+    // PUT or the post seed throws. `previouslyEnabled` stays false when
+    // the GET itself fails — the finally block will still try to restore
+    // to false, which is the safe default and matches the runner's
+    // fresh-DB baseline.
     const settingsBefore = await (await fetch(`${BASE}/api/settings`)).json();
     const previouslyEnabled: boolean = !!settingsBefore.commentsEnabled;
-    if (!previouslyEnabled) {
-      const putRes = await fetch(`${BASE}/api/settings`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ commentsEnabled: true }),
-      });
-      expect(putRes.status).toBe(200);
-    }
-
-    // Seed a published post with per-post comment_enabled = 1.
     const slug = `e2e-admin-comment-delete-${Date.now()}`;
-    const postRes = await fetch(`${BASE}/api/posts`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: "E2E Admin Comment DELETE contract",
-        slug,
-        content: "Body",
-        status: "published",
-        comment_enabled: 1,
-        published_at: Math.floor(Date.now() / 1000),
-      }),
-    });
-    expect(postRes.status).toBe(201);
-    const post = await postRes.json();
+    // seededPost is set only after POST /api/posts returns 201 so the
+    // finally block never tries to DELETE a slug that never existed.
+    let seededPost = false;
 
     try {
+      // Enable comments globally (default off). Restore in finally.
+      if (!previouslyEnabled) {
+        const putRes = await fetch(`${BASE}/api/settings`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ commentsEnabled: true }),
+        });
+        expect(putRes.status).toBe(200);
+      }
+
+      // Seed a published post with per-post comment_enabled = 1.
+      const postRes = await fetch(`${BASE}/api/posts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "E2E Admin Comment DELETE contract",
+          slug,
+          content: "Body",
+          status: "published",
+          comment_enabled: 1,
+          published_at: Math.floor(Date.now() / 1000),
+        }),
+      });
+      expect(postRes.status).toBe(201);
+      const post = await postRes.json();
+      seededPost = true;
+
       // Parent comment.
       const parentRes = await fetch(`${BASE}/api/comments`, {
         method: "POST",
@@ -113,9 +123,12 @@ describe("DELETE /api/admin/comments/[id]", () => {
       const postBody = await postGet.json();
       expect(postBody.comment_count).toBe(0);
     } finally {
-      // Cleanup: delete the post (cascades any remaining comments) and
-      // restore commentsEnabled to its prior state.
-      await fetch(`${BASE}/api/posts/${slug}`, { method: "DELETE" });
+      // Cleanup wraps every mutation above: post cascade (comments,
+      // media) + settings restore. Both wrapped so a mid-test throw
+      // still leaves the environment clean for subsequent suites.
+      if (seededPost) {
+        await fetch(`${BASE}/api/posts/${slug}`, { method: "DELETE" });
+      }
       if (!previouslyEnabled) {
         await fetch(`${BASE}/api/settings`, {
           method: "PUT",
