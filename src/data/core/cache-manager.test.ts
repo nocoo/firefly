@@ -26,16 +26,22 @@ describe("EntityCacheManager", () => {
   });
 
   it("returns null after TTL expires", () => {
-    cache.set(["hello"]);
     vi.useFakeTimers();
+    cache.set(["hello"]);
     vi.advanceTimersByTime(1001);
     expect(cache.get()).toBeNull();
     vi.useRealTimers();
   });
 
   it("returns value within TTL", () => {
-    cache.set(["hello"]);
+    // Install fake timers BEFORE set() so both `cachedAt` and the later
+    // `Date.now()` read share the same frozen clock. If we install after
+    // set(), coverage instrumentation adds enough real-time overhead
+    // between the real-clock write and the fake-clock read that the
+    // 999ms advance blows past the 1s TTL (observed in CI under
+    // `test:coverage`).
     vi.useFakeTimers();
+    cache.set(["hello"]);
     vi.advanceTimersByTime(999);
     expect(cache.get()).toEqual(["hello"]);
     vi.useRealTimers();
@@ -72,8 +78,8 @@ describe("EntityCacheManager", () => {
 
   it("respects custom TTL (5 min)", () => {
     const longCache = new EntityCacheManager<string>(5 * 60 * 1000);
-    longCache.set("value");
     vi.useFakeTimers();
+    longCache.set("value");
     vi.advanceTimersByTime(4 * 60 * 1000);
     expect(longCache.get()).toBe("value");
     vi.advanceTimersByTime(60 * 1000);

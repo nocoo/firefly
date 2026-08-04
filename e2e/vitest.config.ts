@@ -10,6 +10,10 @@ const SERIAL_FILES = [
   "e2e/api/settings-ai.test.ts",
   "e2e/api/auth.test.ts",
   "e2e/api/unfurl-enhance.test.ts",
+  // Toggles global `site_settings.comments_enabled` while seeding real
+  // parent+child comments and asserting `posts.comment_count`. Must not
+  // race any other suite that reads/writes settings or comment_count.
+  "e2e/api/admin-comments.test.ts",
 ];
 
 export default defineConfig({

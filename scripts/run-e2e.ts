@@ -139,8 +139,24 @@ async function waitForServer(
 // ---------------------------------------------------------------------------
 
 const procs: Subprocess[] = [];
+const prematureExits: string[] = [];
+let shuttingDown = false;
+
+/** Attach an exit watcher so a sidecar dying mid-run is surfaced immediately
+ *  instead of manifesting only as a downstream test failure. The runner
+ *  treats any premature exit as a fatal run outcome even if tests happened
+ *  to pass by luck (STU-2497). */
+function watchPrematureExit(name: string, proc: Subprocess): void {
+  void proc.exited.then((code) => {
+    if (shuttingDown) return;
+    const label = `${name} (code ${code})`;
+    prematureExits.push(label);
+    console.error(`❌ Sidecar '${label}' exited unexpectedly mid-run`);
+  });
+}
 
 function cleanup() {
+  shuttingDown = true;
   for (const p of procs) {
     try {
       p.kill();
@@ -180,6 +196,7 @@ function startWorker(): Subprocess {
   );
   closeSync(logFd);
   procs.push(proc);
+  watchPrematureExit("wrangler", proc);
   return proc;
 }
 
@@ -275,6 +292,7 @@ function startNextServer(
   );
   closeSync(logFd);
   procs.push(proc);
+  watchPrematureExit(`next-${port}`, proc);
   return proc;
 }
 
@@ -385,6 +403,16 @@ async function main() {
     );
     const browserResult = await browserTest.exited;
     if (browserResult !== 0) exitCode = 1;
+  }
+
+  // Any sidecar that died mid-run is a fatal signal even if the tests
+  // themselves happened to pass — surface it and fail the run so CI cannot
+  // silently accept partial coverage (STU-2497).
+  if (prematureExits.length > 0 && exitCode === 0) {
+    console.error(
+      `❌ Sidecars exited during the run: ${prematureExits.join(", ")} — treating as failure`,
+    );
+    exitCode = 1;
   }
 
   // --- Cleanup ---

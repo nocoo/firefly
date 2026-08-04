@@ -111,17 +111,36 @@ export async function deleteComment(
   );
   if (!comment) return false;
 
-  // 2. Count descendants with recursive CTE (for accurate comment_count update)
-  const countResult = await db.firstOrNull<{ cnt: number }>(
-    `WITH RECURSIVE tree AS (
-       SELECT id FROM comments WHERE id = ?
-       UNION ALL
-       SELECT c.id FROM comments c JOIN tree t ON c.parent_id = t.id
-     )
-     SELECT COUNT(*) AS cnt FROM tree`,
-    [commentId],
+  // 2. Count descendants by walking the parent_id → children map in JS.
+  //    Previously used `WITH RECURSIVE tree AS …` but the Worker's
+  //    `/api/v1/query` gate is fail-closed against WITH (STU-2497: any
+  //    CTE opens up scrub bypass paths, no other prod caller needed
+  //    one). A single-post comment set is small — the extra rows are
+  //    cheap versus the security posture of the gate.
+  const rows = await db.query<{ id: string; parent_id: string | null }>(
+    "SELECT id, parent_id FROM comments WHERE post_id = ?",
+    [comment.post_id],
   );
-  const deletedCount = countResult?.cnt ?? 1;
+  const childrenByParent = new Map<string, string[]>();
+  for (const r of rows.results) {
+    if (!r.parent_id) continue;
+    const bucket = childrenByParent.get(r.parent_id);
+    if (bucket) bucket.push(r.id);
+    else childrenByParent.set(r.parent_id, [r.id]);
+  }
+  // BFS from the target commentId, counting itself + all descendants.
+  let deletedCount = 0;
+  const stack = [commentId];
+  const seen = new Set<string>();
+  while (stack.length > 0) {
+    const id = stack.pop();
+    if (id === undefined || seen.has(id)) continue;
+    seen.add(id);
+    deletedCount++;
+    const kids = childrenByParent.get(id);
+    if (kids) stack.push(...kids);
+  }
+  if (deletedCount === 0) deletedCount = 1;
 
   // 3. DELETE — ON DELETE CASCADE handles children
   await db.execute("DELETE FROM comments WHERE id = ?", [commentId]);

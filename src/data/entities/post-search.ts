@@ -43,7 +43,9 @@ export async function searchPosts(
   };
   if (status) body.status = status;
 
-  return db.call<SearchResult>("/api/v1/fts-search", body);
+  return db.call<SearchResult>("/api/v1/fts-search", body, {
+    retry: "idempotent",
+  });
 }
 
 /** Sync a single post to/from the FTS index via the Worker endpoint. */

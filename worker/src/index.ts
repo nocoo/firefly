@@ -24,7 +24,55 @@ export interface Env {
   WORKER_SECRET: string;
 }
 
-const WRITE_RE = /^\s*(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|PRAGMA)\b/i;
+// Fail-closed read-only gate for /api/v1/query (STU-2497).
+//
+// The prior `WRITE_RE` only inspected the first keyword after leading
+// whitespace, so a CTE (`WITH x AS (SELECT 1) UPDATE ...`), a comment
+// prefix (`-- foo\nDELETE ...` / `/* */ UPDATE ...`), or a REPLACE /
+// VACUUM / ATTACH / BEGIN / COMMIT / ROLLBACK / SAVEPOINT / RELEASE
+// slipped past. Since the client (src/lib/db.ts) retries any SELECT-
+// prefix query on transient network errors, the gate has to be
+// fail-closed at the Worker so a retry cannot accidentally re-fire a
+// side-effecting request.
+//
+// Rules:
+//   1. Strip leading whitespace + `-- …` line comments + `/* … */` block
+//      comments iteratively until stable, so a comment-prefixed write
+//      cannot masquerade as a read at the first-keyword check.
+//   2. First non-comment keyword must be SELECT or EXPLAIN.
+//   3. WITH is REJECTED (no current caller needs it). We attempted a
+//      string-scrub scan of the CTE tail, but a quote embedded inside a
+//      block comment (e.g. `WITH x AS (SELECT 1 /* ' */) UPDATE t
+//      SET v='pwn' RETURNING v`) pairs with the real string literal
+//      after the block, deleting the UPDATE keyword between them —
+//      confirmed on 0e40a75 by Reviewer-01 with `workerStatus=200,
+//      prepared=1, value=pwn`. Any independent regex-scrub layering
+//      trades one lexical bypass for another; the only sound fix is a
+//      single-pass state-machine lexer OR refusing WITH outright.
+//      Refusal is the smaller change and, since production `db.query` /
+//      `db.firstOrNull` has zero WITH callers, has no functional cost.
+//      If a caller ever needs read-only CTEs, escalate to the lexer.
+const READ_FIRST_KEYWORDS = new Set(["SELECT", "EXPLAIN"]);
+
+function stripSqlPrelude(sql: string): string {
+  let out = sql;
+  let prev = "";
+  while (prev !== out) {
+    prev = out;
+    out = out.replace(/^\s+/, "");
+    out = out.replace(/^--[^\n]*(\n|$)/, "");
+    out = out.replace(/^\/\*[\s\S]*?\*\//, "");
+  }
+  return out;
+}
+
+function isReadOnlySql(sql: string): boolean {
+  const stripped = stripSqlPrelude(sql);
+  const firstMatch = stripped.match(/^([A-Za-z]+)/);
+  if (!firstMatch) return false;
+  const first = firstMatch[1].toUpperCase();
+  return READ_FIRST_KEYWORDS.has(first);
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -135,7 +183,7 @@ async function handleQuery(body: unknown, env: Env): Promise<Response> {
     return jsonResponse({ error: "Missing or empty sql" }, 400);
   }
 
-  if (WRITE_RE.test(sql)) {
+  if (!isReadOnlySql(sql)) {
     return jsonResponse(
       { error: "Write queries not allowed on /api/v1/query" },
       403,
