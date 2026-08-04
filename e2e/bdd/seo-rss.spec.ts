@@ -32,7 +32,7 @@
  *   browser/content-images.spec.ts L100 "inline image src points to /_next/image"
  *       → "Given a published post has inline images, ... the rendered <img> src uses /_next/image"
  */
-import { test, expect, emptyDataGate } from "./fixtures";
+import { test, expect, emptyDataGate, seedPostIdempotent } from "./fixtures";
 
 // ---------------------------------------------------------------------------
 // Seed helpers — used by the image-optimization scenarios. A post with inline
@@ -65,20 +65,13 @@ const CONTENT = [
 ].join("\n");
 
 async function seedPost(): Promise<void> {
-  const res = await fetch(`${BASE}/api/posts`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      title: "E2E SEO/RSS Image Optimization",
-      slug: SLUG,
-      content: CONTENT,
-      status: "published",
-      published_at: NOW_EPOCH,
-    }),
+  await seedPostIdempotent(BASE, {
+    title: "E2E SEO/RSS Image Optimization",
+    slug: SLUG,
+    content: CONTENT,
+    status: "published",
+    published_at: NOW_EPOCH,
   });
-  if (!res.ok) {
-    throw new Error(`Failed to seed post: ${res.status} ${await res.text()}`);
-  }
 }
 
 function postUrl(): string {

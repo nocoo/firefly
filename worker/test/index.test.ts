@@ -530,6 +530,43 @@ describe('POST /api/v1/query', () => {
     expect(res.status).toBe(403);
   });
 
+  it('documents that WRITE_RE does NOT block CTE-wrapped writes (STU-2495)', async () => {
+    // Known gap: WRITE_RE only inspects the first keyword, so
+    //   WITH c AS (SELECT 1) UPDATE posts SET view_count = view_count + 1
+    // reaches D1 via the query path. This is safe today because the client
+    // (src/lib/db.ts) only retries SQL whose first keyword is SELECT — CTEs
+    // are executed at most once. If the client retry rule is ever relaxed,
+    // this Worker guard MUST be tightened first.
+    const mockAll = vi.fn().mockResolvedValue({
+      results: [],
+      meta: { changes: 1, duration: 3 },
+    });
+    const env = makeEnv({
+      DB: {
+        prepare: vi.fn().mockReturnValue({
+          bind: vi.fn().mockReturnValue({ all: mockAll }),
+          all: mockAll,
+        }),
+      } as unknown as D1Database,
+    });
+    const res = await worker.fetch(
+      makeRequest('/api/v1/query', {
+        method: 'POST',
+        auth: true,
+        body: JSON.stringify({
+          sql:
+            'WITH c AS (SELECT 1) UPDATE posts SET view_count = view_count + 1',
+        }),
+      }),
+      env,
+      makeCtx(),
+    );
+
+    // NOT 403 — the CTE-write slips past WRITE_RE and reaches D1.
+    expect(res.status).toBe(200);
+    expect(mockAll).toHaveBeenCalledTimes(1);
+  });
+
   it('executes SELECT query successfully', async () => {
     const mockAll = vi.fn().mockResolvedValue({
       results: [{ id: 1, name: 'Test' }],

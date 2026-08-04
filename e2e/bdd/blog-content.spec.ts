@@ -85,7 +85,7 @@
  *   L162 "linked image click navigates without lightbox"
  *       → "Given a post with a linked image, ... clicking it navigates without opening the lightbox"
  */
-import { test, expect, emptyDataGate } from "./fixtures";
+import { test, expect, emptyDataGate, seedPostIdempotent } from "./fixtures";
 import type { Page } from "@playwright/test";
 
 // ---------------------------------------------------------------------------
@@ -120,20 +120,13 @@ const CONTENT = [
 ].join("\n");
 
 async function seedPost(): Promise<void> {
-  const res = await fetch(`${BASE}/api/posts`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      title: "E2E Content Image Lightbox",
-      slug: SLUG,
-      content: CONTENT,
-      status: "published",
-      published_at: NOW_EPOCH,
-    }),
+  await seedPostIdempotent(BASE, {
+    title: "E2E Content Image Lightbox",
+    slug: SLUG,
+    content: CONTENT,
+    status: "published",
+    published_at: NOW_EPOCH,
   });
-  if (!res.ok) {
-    throw new Error(`Failed to seed post: ${res.status} ${await res.text()}`);
-  }
 }
 
 function postUrl(): string {

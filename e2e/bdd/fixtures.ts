@@ -5,6 +5,7 @@
  *   1. Stable navigation helpers used across multiple specs
  *   2. Empty-data gating that surfaces as Playwright `test.skip()`
  *   3. Admin auth-bypass entry that wraps the `E2E_SKIP_AUTH` convention
+ *   4. Re-export of the idempotent seed helper from src/lib/e2e-seed.ts
  *
  * Do NOT add per-spec helpers, business-assertion helpers, or fallback
  * selectors here.
@@ -62,5 +63,17 @@ export function emptyDataGate(count: number, what: string): EmptyDataGate {
       }
     : { skip: false, reason: "" };
 }
+
+// ---------------------------------------------------------------------------
+// Idempotent seed helper (STU-2495) — logic lives in src/lib/e2e-seed.ts so
+// it participates in the main vitest suite. Re-exported here so specs stay
+// on the fixtures import surface.
+// ---------------------------------------------------------------------------
+
+export {
+  seedPostIdempotent,
+  type SeedPostBody,
+  type SeedDeps,
+} from "../../src/lib/e2e-seed";
 
 export { base as test, expect };
