@@ -30,17 +30,14 @@ describe("DELETE /api/admin/comments/[id]", () => {
   // by exactly 3 (parent + two children).
   // -------------------------------------------------------------------------
   it("cascades a real parent+children subtree and decrements post.comment_count", async () => {
-    // Read current settings first so cleanup can restore them even if the
-    // PUT or the post seed throws. `previouslyEnabled` stays false when
-    // the GET itself fails — the finally block will still try to restore
-    // to false, which is the safe default and matches the runner's
-    // fresh-DB baseline.
+    // Snapshot the current commentsEnabled so the finally block can
+    // restore it. This GET runs OUTSIDE the try — a failure here means
+    // no mutation has happened yet, so there is nothing to unwind.
+    // If the GET returns 200 but has no `commentsEnabled` field the
+    // fresh-DB default (false) is a safe recovery target.
     const settingsBefore = await (await fetch(`${BASE}/api/settings`)).json();
     const previouslyEnabled: boolean = !!settingsBefore.commentsEnabled;
     const slug = `e2e-admin-comment-delete-${Date.now()}`;
-    // seededPost is set only after POST /api/posts returns 201 so the
-    // finally block never tries to DELETE a slug that never existed.
-    let seededPost = false;
 
     try {
       // Enable comments globally (default off). Restore in finally.
@@ -68,7 +65,6 @@ describe("DELETE /api/admin/comments/[id]", () => {
       });
       expect(postRes.status).toBe(201);
       const post = await postRes.json();
-      seededPost = true;
 
       // Parent comment.
       const parentRes = await fetch(`${BASE}/api/comments`, {
@@ -123,12 +119,14 @@ describe("DELETE /api/admin/comments/[id]", () => {
       const postBody = await postGet.json();
       expect(postBody.comment_count).toBe(0);
     } finally {
-      // Cleanup wraps every mutation above: post cascade (comments,
-      // media) + settings restore. Both wrapped so a mid-test throw
-      // still leaves the environment clean for subsequent suites.
-      if (seededPost) {
-        await fetch(`${BASE}/api/posts/${slug}`, { method: "DELETE" });
-      }
+      // Cleanup is unconditional on the unique slug. The exact failure
+      // mode this PR hardens against — server-side write committed but
+      // client-side fetch/json throws before returning 201 — would
+      // leak the post if we gated the DELETE on a client-side seed
+      // flag. A 404 on a slug that never made it to the DB is a
+      // harmless no-op; do NOT reintroduce a guard here (Reviewer-01
+      // 15:16Z).
+      await fetch(`${BASE}/api/posts/${slug}`, { method: "DELETE" });
       if (!previouslyEnabled) {
         await fetch(`${BASE}/api/settings`, {
           method: "PUT",
