@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import {
   seedPostIdempotent,
+  SEED_TOTAL_DEADLINE_MS,
   type SeedDeps,
   type SeedPostBody,
 } from "./e2e-seed";
@@ -22,8 +23,16 @@ function res(status: number, bodyText = ""): Response {
   return new Response(bodyText, { status });
 }
 
+/** Build SeedDeps with fake time. sleep() advances the virtual clock. */
 function makeDeps(fetchImpl: SeedDeps["fetch"]): SeedDeps {
-  return { fetch: fetchImpl, sleep: () => Promise.resolve() };
+  let clock = 0;
+  return {
+    fetch: fetchImpl,
+    sleep: async (ms) => {
+      clock += ms;
+    },
+    now: () => clock,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -134,5 +143,50 @@ describe("seedPostIdempotent", () => {
       seedPostIdempotent(BASE, BODY, makeDeps(fetchMock)),
     ).rejects.toThrow(/Failed to seed post after 6 attempts/);
     expect(fetchMock).toHaveBeenCalledTimes(12);
+  });
+
+  it("stops before Playwright's hook timeout via SEED_TOTAL_DEADLINE_MS", async () => {
+    // Simulate an outer db.query() retry chain by making each POST+GET burn
+    // 6s of virtual time before returning. This blows the 20 s deadline on
+    // the second attempt, and the helper must throw its own diagnostic
+    // rather than let the loop run to attempt 6.
+    let clock = 0;
+    const fetchMock = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      clock += 6_000; // each request consumes 6 s of wall clock
+      if (init?.method === "POST") return res(500, '{"error":"down"}');
+      return res(404);
+    });
+    const deps: SeedDeps = {
+      fetch: fetchMock,
+      sleep: async (ms) => {
+        clock += ms;
+      },
+      now: () => clock,
+    };
+
+    const err = await seedPostIdempotent(BASE, BODY, deps).then(
+      () => null,
+      (e) => e as Error,
+    );
+    expect(err).toBeInstanceOf(Error);
+    expect(err?.message).toMatch(
+      new RegExp(
+        `Failed to seed post before deadline \\(${SEED_TOTAL_DEADLINE_MS}ms\\)`,
+      ),
+    );
+    // Must stop well before the 6-attempt exhaustion path.
+    expect(fetchMock.mock.calls.length).toBeLessThan(12);
+  });
+
+  it("uses default deps (real Date.now) when no deps argument given", async () => {
+    // Sanity: exercise the default-deps branch. A single 201 avoids any
+    // real sleep budget.
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValue(res(201)) as unknown as typeof fetch;
+    try {
+      await seedPostIdempotent(BASE, BODY);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });

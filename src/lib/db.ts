@@ -68,8 +68,11 @@ export class DbError extends Error {
     /** HTTP status when kind === "http"; undefined when kind === "network". */
     public readonly status?: number,
     kind?: DbErrorKind,
+    /** Underlying cause (e.g. the TypeError from fetch(), which carries
+     *  undici-specific codes such as UND_ERR_SOCKET on `.cause.code`). */
+    options?: { cause?: unknown },
   ) {
-    super(message);
+    super(message, options);
     this.name = "DbError";
     this.kind = kind ?? (status === undefined ? "network" : "http");
   }
@@ -87,13 +90,18 @@ export class DbError extends Error {
 // Writes (`execute`, `batch`, `call`) never retry — see the reviewer's P1
 // on 22dc220 in STU-2495.
 //
-// Backoff runs at 100 → 300 → 1000 → 3000ms (5 attempts total). CI evidence
-// (STU-2495 run 30896621829) showed the socket-pool flake lands in bursts
-// that outlast a sub-second retry window, so we need a multi-second tail.
-// This is a defensive mitigation; the underlying wrangler-dev flake root
-// cause is not confirmed.
-const RETRY_DELAYS_MS = [100, 300, 1000, 3000] as const;
+// Retry budget is per-destination:
+//   - localhost wrangler-dev: 5 attempts / 100+300+1000+3000ms tail.
+//     The observed failure mode is an unconfirmed channel disruption
+//     between Next.js and the local worker under high concurrency; only
+//     a multi-second tail recovers.
+//   - remote (Cloudflare): 3 attempts / 100+300ms tail. Same short budget
+//     as pre-STU-2495. Any wider policy for prod needs its own SLO /
+//     failure evidence, not a spillover from a local-E2E flake.
+const LOCAL_RETRY_DELAYS_MS = [100, 300, 1000, 3000] as const;
+const REMOTE_RETRY_DELAYS_MS = [100, 300] as const;
 const RETRYABLE_SELECT_RE = /^\s*SELECT\b/i;
+const LOCALHOST_RE = /^https?:\/\/(localhost|127\.0\.0\.1)(?::|\/|$)/i;
 
 const isTestEnv = () =>
   typeof process !== "undefined" &&
@@ -107,21 +115,23 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
   if (!workerUrl) throw new Error("workerUrl is required");
   if (!workerSecret) throw new Error("workerSecret is required");
 
-  // `Connection: close` opts out of undici's keep-alive pool. In production
-  // the workerUrl is Cloudflare-hosted and the pool is a real win, but in
-  // E2E (`localhost` wrangler-dev) under Playwright's fan-out the pool has
-  // been observed to hand out stale sockets that surface as `fetch failed`
-  // (STU-2495 — CI worker log shows every request returning 200 while the
-  // client throws). Disable pooling only when talking to localhost so the
-  // production hot path is unchanged.
-  const disableKeepAlive = /^https?:\/\/(localhost|127\.0\.0\.1)(?::|\/|$)/i.test(
-    workerUrl,
-  );
+  // In E2E (`localhost` wrangler-dev) under Playwright fan-out the client
+  // fetch throws `Network error: fetch failed` in bursts while the worker
+  // log shows every request returning 200 OK — an unconfirmed channel
+  // disruption on the Next.js side of the localhost pipe (STU-2495 run
+  // 30896621829). We do not have evidence identifying the specific undici
+  // layer (see DbError.cause on the actual failure to inspect), so this is
+  // a defensive mitigation, not a root-cause fix. `Connection: close` and
+  // the wider retry tail are both scoped to localhost so production is
+  // unchanged.
+  const isLocal = LOCALHOST_RE.test(workerUrl);
+  const retryDelays = isLocal ? LOCAL_RETRY_DELAYS_MS : REMOTE_RETRY_DELAYS_MS;
+
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${workerSecret}`,
   };
-  if (disableKeepAlive) headers.Connection = "close";
+  if (isLocal) headers.Connection = "close";
 
   async function postOnce<T>(path: string, body: unknown): Promise<T> {
     const url = `${workerUrl}${path}`;
@@ -135,6 +145,9 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
     } catch (err) {
       throw new DbError(
         `Network error: ${err instanceof Error ? err.message : String(err)}`,
+        undefined,
+        "network",
+        { cause: err },
       );
     }
 
@@ -156,7 +169,7 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
     const retryable = RETRYABLE_SELECT_RE.test(sql);
     if (!retryable) return postOnce<T>("/api/v1/query", payload);
 
-    const attempts = RETRY_DELAYS_MS.length + 1;
+    const attempts = retryDelays.length + 1;
     let lastErr: DbError | undefined;
     for (let i = 0; i < attempts; i++) {
       try {
@@ -177,7 +190,7 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
             `[db] /api/v1/query attempt ${i + 1}/${attempts} failed: ${err.message} — retrying`,
           );
         }
-        await sleep(isTestEnv() ? 0 : (RETRY_DELAYS_MS[i] ?? 0));
+        await sleep(isTestEnv() ? 0 : (retryDelays[i] ?? 0));
       }
     }
     // Unreachable — the final attempt either returns or throws above.
