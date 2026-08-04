@@ -166,6 +166,74 @@ describe("db.query", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it("does not retry HTTP 500 whose body starts with 'Network error:' (STU-2495 P2)", async () => {
+    // Distinguish real HTTP 500 responses from client-side fetch throws even
+    // when the server body happens to prefix the message. Retry gate must
+    // use DbError.kind ("http" vs "network"), not string prefix.
+    const fetchMock = mockFetch(500, {
+      error: "Network error: fetch failed downstream",
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(db.query("SELECT 1")).rejects.toThrow(
+      "Network error: fetch failed downstream",
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("does NOT retry CTE/WITH-prefixed SQL — semantics not proven read-only (STU-2495 P1)", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValue(new TypeError("fetch failed"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      db.query(
+        "WITH c AS (SELECT 1) UPDATE posts SET view_count = view_count + 1",
+      ),
+    ).rejects.toThrow("Network error: fetch failed");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("does NOT retry PRAGMA-prefixed SQL", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValue(new TypeError("fetch failed"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(db.query("PRAGMA foreign_keys")).rejects.toThrow(
+      "Network error: fetch failed",
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("kind='network' when fetch throws; status is undefined", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new TypeError("fetch failed")),
+    );
+    try {
+      await db.query("PRAGMA table_info(posts)");
+      expect.fail("should have thrown");
+    } catch (err) {
+      expect(err).toBeInstanceOf(DbError);
+      expect((err as DbError).kind).toBe("network");
+      expect((err as DbError).status).toBeUndefined();
+    }
+  });
+
+  it("kind='http' when server returns 5xx; status is set", async () => {
+    vi.stubGlobal("fetch", mockFetch(503, { error: "unavailable" }));
+    try {
+      await db.query("SELECT 1");
+      expect.fail("should have thrown");
+    } catch (err) {
+      expect(err).toBeInstanceOf(DbError);
+      expect((err as DbError).kind).toBe("http");
+      expect((err as DbError).status).toBe(503);
+    }
+  });
+
   it("throws DbError when json() fails on error response", async () => {
     vi.stubGlobal(
       "fetch",

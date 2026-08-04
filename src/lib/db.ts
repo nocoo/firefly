@@ -58,13 +58,20 @@ export interface Db {
 // Error
 // ---------------------------------------------------------------------------
 
+export type DbErrorKind = "network" | "http";
+
 export class DbError extends Error {
+  public readonly kind: DbErrorKind;
+
   constructor(
     message: string,
+    /** HTTP status when kind === "http"; undefined when kind === "network". */
     public readonly status?: number,
+    kind?: DbErrorKind,
   ) {
     super(message);
     this.name = "DbError";
+    this.kind = kind ?? (status === undefined ? "network" : "http");
   }
 }
 
@@ -72,15 +79,17 @@ export class DbError extends Error {
 // Implementation
 // ---------------------------------------------------------------------------
 
-// Retries only apply to /api/v1/query — the read-only path enforced by the
-// Worker's WRITE_RE guard. Writes (`execute`, `batch`, `call`) never retry:
-// a fetch() throw means the client did not see the response, not that the
-// server did no work; replaying an INSERT/UPDATE/DELETE would break
-// at-most-once semantics (e.g. UPDATE ... view_count = view_count + 1 in
-// src/data/analytics-record.ts:56).
-// This is a defensive mitigation for the L3 CI flake in STU-2495; the root
-// cause of the underlying wrangler-dev / socket transient is not confirmed.
+// Only /api/v1/query calls with a plain SELECT-prefix are retried. WITH/CTE
+// and PRAGMA cannot be proven read-only from SQL text alone — a CTE like
+// `WITH c AS (...) UPDATE posts SET view_count = view_count + 1` is legal in
+// SQLite and would slip past the Worker's WRITE_RE. We retry only SQL whose
+// first keyword is SELECT to keep at-most-once for anything ambiguous.
+// Writes (`execute`, `batch`, `call`) never retry — see the reviewer's P1
+// on 22dc220 in STU-2495.
+// This is a defensive mitigation; the underlying wrangler-dev flake root
+// cause is not confirmed.
 const RETRY_DELAYS_MS = [100, 300] as const;
+const RETRYABLE_SELECT_RE = /^\s*SELECT\b/i;
 
 const isTestEnv = () =>
   typeof process !== "undefined" &&
@@ -125,16 +134,24 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
     return res.json() as Promise<T>;
   }
 
-  async function postWithRetry<T>(path: string, body: unknown): Promise<T> {
+  async function postQueryWithRetry<T>(
+    sql: string,
+    payload: { sql: string; params: unknown[] },
+  ): Promise<T> {
+    const retryable = RETRYABLE_SELECT_RE.test(sql);
+    if (!retryable) return postOnce<T>("/api/v1/query", payload);
+
     const attempts = RETRY_DELAYS_MS.length + 1;
     let lastErr: DbError | undefined;
     for (let i = 0; i < attempts; i++) {
       try {
-        return await postOnce<T>(path, body);
+        return await postOnce<T>("/api/v1/query", payload);
       } catch (err) {
+        // Retry only on kind === "network"; HTTP responses (including 5xx
+        // whose body happens to start with "Network error:") pass through.
         if (
           !(err instanceof DbError) ||
-          !err.message.startsWith("Network error:") ||
+          err.kind !== "network" ||
           i === attempts - 1
         ) {
           throw err;
@@ -142,7 +159,7 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
         lastErr = err;
         if (!isTestEnv()) {
           console.warn(
-            `[db] ${path} attempt ${i + 1}/${attempts} failed: ${err.message} — retrying`,
+            `[db] /api/v1/query attempt ${i + 1}/${attempts} failed: ${err.message} — retrying`,
           );
         }
         await sleep(isTestEnv() ? 0 : (RETRY_DELAYS_MS[i] ?? 0));
@@ -157,7 +174,7 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
       sql: string,
       params?: unknown[],
     ): Promise<DbQueryResult<T>> {
-      return postWithRetry<DbQueryResult<T>>("/api/v1/query", {
+      return postQueryWithRetry<DbQueryResult<T>>(sql, {
         sql,
         params: params ?? [],
       });
