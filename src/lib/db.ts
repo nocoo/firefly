@@ -172,13 +172,14 @@ const LOCAL_MAX_CONCURRENCY = 4;
 // `src/proxy.ts:327,340` do not each get their own 4-permit budget.
 //
 // The registry lives on `globalThis` under a Symbol.for() key so that every
-// copy of this module in the same Node.js process resolves to the same Map.
+// copy of this module in the same `globalThis` realm resolves to the same Map.
 // This matters because Turbopack ships separate `moduleCache` instances for
 // the server and SSR runtimes (see `.next/server/chunks/[turbopack]_runtime.js`
 // and `.../ssr/[turbopack]_runtime.js`); a plain module-scope Map would give
-// each runtime its own 4-permit queue and the observed process-level ceiling
-// would be 4 × N. `Symbol.for("firefly.db.localQueues")` is process-wide and
-// shared across bundlers / require caches.
+// each runtime its own 4-permit queue and the per-process ceiling would be
+// 4 × N. `Symbol.for("firefly.db.localQueues.v1")` is shared across bundler
+// module caches inside one realm; distinct realms (worker_threads /
+// vm.createContext) each hold their own Map by design.
 type LocalQueuesRegistry = Map<string, FdQueue>;
 const _localQueuesKey: symbol = Symbol.for("firefly.db.localQueues.v1");
 type GlobalRegistryHost = { [K in typeof _localQueuesKey]?: LocalQueuesRegistry };
