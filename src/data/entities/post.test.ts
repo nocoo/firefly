@@ -1058,7 +1058,7 @@ describe("searchPosts", () => {
       status: "published",
       page: 1,
       pageSize: 20,
-    });
+    }, { retry: "idempotent" });
     expect(result.posts).toHaveLength(1);
     expect(result.snippets["post-1"]).toBe("Hello <mark>World</mark>");
     expect(result.total).toBe(1);
@@ -1085,7 +1085,7 @@ describe("searchPosts", () => {
       status: "draft",
       page: 2,
       pageSize: 10,
-    });
+    }, { retry: "idempotent" });
   });
 
   it("omits status when null (searches all statuses)", async () => {
@@ -1107,7 +1107,7 @@ describe("searchPosts", () => {
       query: "admin search",
       page: 1,
       pageSize: 10,
-    });
+    }, { retry: "idempotent" });
     // Ensure status key is not present at all
     const callArgs = vi.mocked(db.call).mock.calls[0][1] as Record<string, unknown>;
     expect("status" in callArgs).toBe(false);
@@ -1129,7 +1129,7 @@ describe("searchPosts", () => {
       status: "published",
       page: 1,
       pageSize: 20,
-    });
+    }, { retry: "idempotent" });
   });
 
   it("clamps NaN page to default", async () => {
@@ -1148,7 +1148,7 @@ describe("searchPosts", () => {
       status: "published",
       page: 1,
       pageSize: 20,
-    });
+    }, { retry: "idempotent" });
   });
 
   it("clamps negative page to default", async () => {
@@ -1167,7 +1167,7 @@ describe("searchPosts", () => {
       status: "published",
       page: 1,
       pageSize: 20,
-    });
+    }, { retry: "idempotent" });
   });
 
   it("clamps oversized pageSize to max 100", async () => {
@@ -1186,7 +1186,7 @@ describe("searchPosts", () => {
       status: "published",
       page: 1,
       pageSize: 100,
-    });
+    }, { retry: "idempotent" });
   });
 });
 
@@ -1722,7 +1722,7 @@ describe("searchPosts branch coverage", () => {
       status: "published",
       page: 1,
       pageSize: 15,
-    });
+    }, { retry: "idempotent" });
   });
 
   it("floors page to integer", async () => {
@@ -1741,7 +1741,7 @@ describe("searchPosts branch coverage", () => {
       status: "published",
       page: 2,
       pageSize: 20,
-    });
+    }, { retry: "idempotent" });
   });
 
   it("handles Infinity page by falling back to default", async () => {
@@ -1760,7 +1760,7 @@ describe("searchPosts branch coverage", () => {
       status: "published",
       page: 1,
       pageSize: 20,
-    });
+    }, { retry: "idempotent" });
   });
 
   it("handles Infinity pageSize by falling back to default", async () => {
@@ -1779,6 +1779,6 @@ describe("searchPosts branch coverage", () => {
       status: "published",
       page: 1,
       pageSize: 20,
-    });
+    }, { retry: "idempotent" });
   });
 });

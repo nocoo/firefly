@@ -50,8 +50,18 @@ export interface Db {
   /** Execute multiple write queries in a batch (atomic via D1.batch). */
   batch(statements: DbBatchStatement[]): Promise<DbQueryResult[]>;
 
-  /** Call a custom Worker endpoint (non-SQL). Reuses Worker URL and auth. */
-  call<T = unknown>(path: string, body: unknown): Promise<T>;
+  /**
+   * Call a custom Worker endpoint (non-SQL). Reuses Worker URL and auth.
+   * Retry is opt-in and per-call: pass `{ retry: "idempotent" }` ONLY when
+   * the endpoint has no server-side side effect that could be double-fired
+   * (e.g. read-only `/api/v1/fts-search`). The default is no retry —
+   * a dropped connection may have already committed a write server-side.
+   */
+  call<T = unknown>(
+    path: string,
+    body: unknown,
+    options?: { retry?: "none" | "idempotent" },
+  ): Promise<T>;
 }
 
 // ---------------------------------------------------------------------------
@@ -82,13 +92,18 @@ export class DbError extends Error {
 // Implementation
 // ---------------------------------------------------------------------------
 
-// Only /api/v1/query calls with a plain SELECT-prefix are retried. WITH/CTE
-// and PRAGMA cannot be proven read-only from SQL text alone — a CTE like
-// `WITH c AS (...) UPDATE posts SET view_count = view_count + 1` is legal in
-// SQLite and would slip past the Worker's WRITE_RE. We retry only SQL whose
-// first keyword is SELECT to keep at-most-once for anything ambiguous.
-// Writes (`execute`, `batch`, `call`) never retry — see the reviewer's P1
-// on 22dc220 in STU-2495.
+// Only /api/v1/query calls with a plain SELECT-prefix are retried. WITH,
+// PRAGMA and other prefixes cannot be proven read-only from SQL text
+// alone, and the Worker (`worker/src/index.ts`) fail-closes the /query
+// gate by rejecting WITH outright and requiring the first non-comment
+// keyword to be SELECT or EXPLAIN. Together this keeps at-most-once for
+// anything ambiguous.
+//
+// Writes (`execute`, `batch`) never retry — see the reviewer's P1 on
+// 22dc220 in STU-2495. `call()` retry is opt-in via
+// `{ retry: "idempotent" }` on the caller (STU-2497 R2) — used by
+// `/api/v1/fts-search`. `/api/v1/fts-sync` and any other write path
+// leaves the option unset and stays at-most-once.
 //
 // Retry budget is per-destination:
 //   - localhost wrangler-dev: 5 attempts / 100+300+1000+3000ms tail.
@@ -110,6 +125,35 @@ const isTestEnv = () =>
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Classify a body-read rejection. Only known transport-failure shapes
+// (undici's `TypeError: terminated` and its `UND_ERR_SOCKET` /
+// `other side closed` cause chain) are treated as retryable network
+// failures. Anything else — most importantly `SyntaxError` from a
+// malformed JSON body on a 200 response — is a real application-level
+// failure that would fail identically on retry and just wastes the
+// backoff budget (STU-2497 P2).
+const TRANSPORT_MESSAGE_MARKERS = [
+  "terminated",
+  "UND_ERR_SOCKET",
+  "other side closed",
+  "socket hang up",
+  "ECONNRESET",
+  "aborted",
+];
+
+function isTransportBodyFailure(err: unknown): boolean {
+  if (!(err instanceof TypeError)) return false;
+  const msg = err.message ?? "";
+  const causeMsg =
+    err.cause instanceof Error
+      ? err.cause.message
+      : typeof err.cause === "string"
+        ? err.cause
+        : "";
+  const haystack = `${msg} ${causeMsg}`;
+  return TRANSPORT_MESSAGE_MARKERS.some((needle) => haystack.includes(needle));
 }
 
 // ---------------------------------------------------------------------------
@@ -273,7 +317,34 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
         );
       }
 
-      return res.json() as Promise<T>;
+      // Body read must live inside its own try (STU-2497 R1). If the
+      // socket dies AFTER headers arrive but BEFORE the body drains,
+      // the Node fetch stack rejects `res.json()` with `TypeError:
+      // terminated` whose cause is `UND_ERR_SOCKET` / `other side
+      // closed`. Wrap only that shape as `kind: "network"` so
+      // `postQueryWithRetry` retries it. Anything else — most
+      // importantly `SyntaxError` from malformed JSON — is
+      // application-level (STU-2497 P2) and MUST stay non-retryable,
+      // otherwise a broken response would burn the full localhost
+      // 4.4s backoff on every call.
+      try {
+        return (await res.json()) as T;
+      } catch (err) {
+        if (isTransportBodyFailure(err)) {
+          throw new DbError(
+            `Network error: ${err instanceof Error ? err.message : String(err)}`,
+            undefined,
+            "network",
+            { cause: err },
+          );
+        }
+        throw new DbError(
+          `Malformed response body: ${err instanceof Error ? err.message : String(err)}`,
+          undefined,
+          "http",
+          { cause: err },
+        );
+      }
     });
   }
 
@@ -312,6 +383,39 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
     throw lastErr ?? new DbError("Network error: retry loop exhausted");
   }
 
+  // Opt-in retry for `db.call({ retry: "idempotent" })`. Same budget as
+  // `postQueryWithRetry`; caller signals it is safe to re-execute
+  // (read-only endpoints like `/api/v1/fts-search`). Writes MUST NOT
+  // opt in — a dropped connection may have already committed.
+  async function postCallWithRetry<T>(
+    path: string,
+    body: unknown,
+  ): Promise<T> {
+    const attempts = retryDelays.length + 1;
+    let lastErr: DbError | undefined;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await postOnce<T>(path, body);
+      } catch (err) {
+        if (
+          !(err instanceof DbError) ||
+          err.kind !== "network" ||
+          i === attempts - 1
+        ) {
+          throw err;
+        }
+        lastErr = err;
+        if (!isTestEnv()) {
+          console.warn(
+            `[db] ${path} attempt ${i + 1}/${attempts} failed: ${err.message} — retrying`,
+          );
+        }
+        await sleep(isTestEnv() ? 0 : (retryDelays[i] ?? 0));
+      }
+    }
+    throw lastErr ?? new DbError("Network error: retry loop exhausted");
+  }
+
   const db: Db = {
     async query<T>(
       sql: string,
@@ -347,8 +451,14 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
       return result.results;
     },
 
-    async call<T>(path: string, body: unknown): Promise<T> {
-      return postOnce<T>(path, body);
+    async call<T>(
+      path: string,
+      body: unknown,
+      options?: { retry?: "none" | "idempotent" },
+    ): Promise<T> {
+      return options?.retry === "idempotent"
+        ? postCallWithRetry<T>(path, body)
+        : postOnce<T>(path, body);
     },
   };
 

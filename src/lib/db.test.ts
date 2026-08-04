@@ -309,6 +309,111 @@ describe("db.query", () => {
 
     await expect(db.query("SELECT 1")).rejects.toThrow("HTTP 502");
   });
+
+  it("retries when response body read rejects transiently (STU-2497 R1)", async () => {
+    // The socket may die AFTER headers arrive but BEFORE the body drains —
+    // the Node fetch stack surfaces this as `TypeError: terminated` (cause
+    // UND_ERR_SOCKET / other side closed). If body-read is outside the
+    // network-error catch, it escapes as an unhandled TypeError with
+    // attempts=1 and the retry loop is bypassed entirely.
+    const failingBody = {
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.reject(
+          new TypeError("terminated", {
+            cause: new Error("other side closed"),
+          }),
+        ),
+    };
+    const succeedingBody = {
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.resolve({
+          results: [{ id: "recovered" }],
+          meta: { changes: 0, duration: 1 },
+        }),
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(failingBody)
+      .mockResolvedValueOnce(succeedingBody);
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await db.query("SELECT 1");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result.results[0]).toEqual({ id: "recovered" });
+  });
+
+  it("body-read failure surfaces as DbError kind='network' with cause preserved (STU-2497 R1)", async () => {
+    // WITH branch skips retry entirely — single attempt inspection of the
+    // surfaced DbError shape.
+    const cause = new Error("UND_ERR_SOCKET");
+    const failingBody = {
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.reject(new TypeError("terminated", { cause })),
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(failingBody),
+    );
+
+    try {
+      await db.query("WITH x AS (SELECT 1) SELECT * FROM x");
+      expect.fail("should have thrown");
+    } catch (err) {
+      expect(err).toBeInstanceOf(DbError);
+      expect((err as DbError).kind).toBe("network");
+      expect((err as DbError).status).toBeUndefined();
+      expect((err as DbError).cause).toBeInstanceOf(TypeError);
+    }
+  });
+
+  it("does NOT retry malformed JSON responses (STU-2497 P2)", async () => {
+    // A 200 response with a syntactically-broken body throws SyntaxError
+    // out of `res.json()`. That is NOT a transport failure — retrying
+    // would fail identically and just waste the backoff budget (up to
+    // 4.4s on localhost). Surface as DbError kind='http' and stop.
+    const malformed = {
+      ok: true,
+      status: 200,
+      json: () => Promise.reject(new SyntaxError("Unexpected token < in JSON")),
+    };
+    const fetchMock = vi.fn().mockResolvedValue(malformed);
+    vi.stubGlobal("fetch", fetchMock);
+
+    try {
+      await db.query("SELECT 1");
+      expect.fail("should have thrown");
+    } catch (err) {
+      expect(err).toBeInstanceOf(DbError);
+      expect((err as DbError).kind).toBe("http");
+      expect((err as DbError).message).toMatch(/Malformed response body/);
+      expect((err as DbError).cause).toBeInstanceOf(SyntaxError);
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("does NOT wrap generic Error body-read failures as network (STU-2497 P2)", async () => {
+    // Belt-and-braces: only known transport-failure shapes are treated
+    // as retryable. A plain-Error rejection from body must not sneak
+    // through the transport classifier and force retries.
+    const broken = {
+      ok: true,
+      status: 200,
+      json: () => Promise.reject(new Error("random parser error")),
+    };
+    const fetchMock = vi.fn().mockResolvedValue(broken);
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(db.query("SELECT 1")).rejects.toThrow(
+      /Malformed response body/,
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -872,7 +977,7 @@ describe("db.call", () => {
     );
   });
 
-  it("does NOT retry on network error — call() semantics unknown (STU-2495)", async () => {
+  it("does NOT retry on network error by default — call() semantics unknown (STU-2495)", async () => {
     const fetchMock = vi
       .fn()
       .mockRejectedValue(new TypeError("fetch failed"));
@@ -882,6 +987,39 @@ describe("db.call", () => {
     await expect(db.call("/api/v1/custom", {})).rejects.toThrow(
       "Network error: fetch failed",
     );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries on transient network errors when { retry: 'idempotent' } is set (STU-2497 R2)", async () => {
+    const success = {
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ ok: true }),
+    };
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError("fetch failed"))
+      .mockResolvedValueOnce(success);
+    globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch;
+
+    const db = createDb(url, secret);
+    const result = await db.call<{ ok: boolean }>(
+      "/api/v1/fts-search",
+      { query: "x" },
+      { retry: "idempotent" },
+    );
+    expect(result.ok).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not retry HTTP error responses even with { retry: 'idempotent' }", async () => {
+    const fetchMock = mockFetch(500, { error: "app boom" });
+    globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch;
+
+    const db = createDb(url, secret);
+    await expect(
+      db.call("/api/v1/fts-search", {}, { retry: "idempotent" }),
+    ).rejects.toThrow("app boom");
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

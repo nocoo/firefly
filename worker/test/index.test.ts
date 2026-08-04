@@ -530,25 +530,25 @@ describe('POST /api/v1/query', () => {
     expect(res.status).toBe(403);
   });
 
-  it('documents that WRITE_RE does NOT block CTE-wrapped writes (STU-2495)', async () => {
-    // Known gap: WRITE_RE only inspects the first keyword, so
+  it('blocks CTE-wrapped writes on /api/v1/query (STU-2497 hardening)', async () => {
+    // STU-2495 documented a known gap: the old WRITE_RE only inspected
+    // the first keyword, so a CTE like
     //   WITH c AS (SELECT 1) UPDATE posts SET view_count = view_count + 1
-    // reaches D1 via the query path. This is safe today because the client
-    // (src/lib/db.ts) only retries SQL whose first keyword is SELECT — CTEs
-    // are executed at most once. If the client retry rule is ever relaxed,
-    // this Worker guard MUST be tightened first.
+    // reached D1 via the query path. Safe at the time only because the
+    // client only retried SELECT-prefix SQL.
+    // STU-2497 replaces WRITE_RE with `isReadOnlySql`, which strips
+    // comments and rejects WITH entirely — no current caller needs a
+    // read-only CTE, and the earlier string-scrub attempt could be
+    // bypassed via quotes embedded in block comments.
     const mockAll = vi.fn().mockResolvedValue({
       results: [],
       meta: { changes: 1, duration: 3 },
     });
-    const env = makeEnv({
-      DB: {
-        prepare: vi.fn().mockReturnValue({
-          bind: vi.fn().mockReturnValue({ all: mockAll }),
-          all: mockAll,
-        }),
-      } as unknown as D1Database,
+    const prepare = vi.fn().mockReturnValue({
+      bind: vi.fn().mockReturnValue({ all: mockAll }),
+      all: mockAll,
     });
+    const env = makeEnv({ DB: { prepare } as unknown as D1Database });
     const res = await worker.fetch(
       makeRequest('/api/v1/query', {
         method: 'POST',
@@ -562,9 +562,200 @@ describe('POST /api/v1/query', () => {
       makeCtx(),
     );
 
-    // NOT 403 — the CTE-write slips past WRITE_RE and reaches D1.
+    expect(res.status).toBe(403);
+    expect(prepare).not.toHaveBeenCalled();
+    expect(mockAll).not.toHaveBeenCalled();
+  });
+
+  it('rejects CTE-wrapped INSERT/DELETE/REPLACE (STU-2497)', async () => {
+    const env = makeEnv();
+    for (const kw of ['INSERT INTO posts (id) VALUES (\'a\')', 'DELETE FROM posts', 'REPLACE INTO posts (id) VALUES (\'a\')']) {
+      const res = await worker.fetch(
+        makeRequest('/api/v1/query', {
+          method: 'POST',
+          auth: true,
+          body: JSON.stringify({ sql: `WITH x AS (SELECT 1) ${kw}` }),
+        }),
+        env,
+        makeCtx(),
+      );
+      expect(res.status).toBe(403);
+    }
+  });
+
+  it('rejects the quote-in-block-comment WITH bypass (Reviewer-01 PoC)', async () => {
+    // Reviewer-01 confirmed on 0e40a75 that a block comment inside the CTE
+    // could embed a quote that pairs with the real string literal after
+    // the closing `)`, letting the string-strip regex delete UPDATE and
+    // reach D1 with `prepared=1, value=pwn`. `isReadOnlySql` now rejects
+    // WITH entirely, closing this bypass.
+    const prepare = vi.fn().mockReturnValue({
+      bind: vi.fn().mockReturnValue({
+        all: vi.fn().mockResolvedValue({ results: [], meta: { changes: 0, duration: 0 } }),
+      }),
+    });
+    const env = makeEnv({ DB: { prepare } as unknown as D1Database });
+    const res = await worker.fetch(
+      makeRequest('/api/v1/query', {
+        method: 'POST',
+        auth: true,
+        body: JSON.stringify({
+          sql: "WITH x AS (SELECT 1 /* ' */)\nUPDATE t SET v='pwn' RETURNING v",
+        }),
+      }),
+      env,
+      makeCtx(),
+    );
+    expect(res.status).toBe(403);
+    expect(prepare).not.toHaveBeenCalled();
+  });
+
+  it('rejects a line-comment-embedded quote bypass', async () => {
+    // Symmetric to the block-comment case: an unbalanced quote inside a
+    // `-- …` line comment used to shift string parity for the subsequent
+    // scrub. WITH-blanket rejection covers this equally.
+    const prepare = vi.fn().mockReturnValue({
+      bind: vi.fn().mockReturnValue({
+        all: vi.fn().mockResolvedValue({ results: [], meta: { changes: 0, duration: 0 } }),
+      }),
+    });
+    const env = makeEnv({ DB: { prepare } as unknown as D1Database });
+    const res = await worker.fetch(
+      makeRequest('/api/v1/query', {
+        method: 'POST',
+        auth: true,
+        body: JSON.stringify({
+          sql: "WITH x AS (SELECT 1 -- '\n)\nUPDATE t SET v='pwn'",
+        }),
+      }),
+      env,
+      makeCtx(),
+    );
+    expect(res.status).toBe(403);
+    expect(prepare).not.toHaveBeenCalled();
+  });
+
+  it('rejects read-only WITH too — WITH is blanket-blocked (STU-2497)', async () => {
+    // Deliberately gives up the tiny read-only CTE surface. If a future
+    // caller needs it, replace the regex-based gate with a state-machine
+    // lexer; do not re-add a scrub-based allowlist.
+    const prepare = vi.fn();
+    const env = makeEnv({ DB: { prepare } as unknown as D1Database });
+    const res = await worker.fetch(
+      makeRequest('/api/v1/query', {
+        method: 'POST',
+        auth: true,
+        body: JSON.stringify({
+          sql: 'WITH x AS (SELECT id FROM posts) SELECT * FROM x',
+        }),
+      }),
+      env,
+      makeCtx(),
+    );
+    expect(res.status).toBe(403);
+    expect(prepare).not.toHaveBeenCalled();
+  });
+
+  it('rejects REPLACE / VACUUM / ATTACH / DETACH / BEGIN / COMMIT / ROLLBACK / SAVEPOINT / RELEASE (STU-2497)', async () => {
+    const env = makeEnv();
+    for (const kw of [
+      'REPLACE',
+      'VACUUM',
+      'ATTACH',
+      'DETACH',
+      'BEGIN',
+      'COMMIT',
+      'ROLLBACK',
+      'SAVEPOINT',
+      'RELEASE',
+    ]) {
+      const res = await worker.fetch(
+        makeRequest('/api/v1/query', {
+          method: 'POST',
+          auth: true,
+          body: JSON.stringify({ sql: `${kw} something` }),
+        }),
+        env,
+        makeCtx(),
+      );
+      expect(res.status).toBe(403);
+    }
+  });
+
+  it('rejects SQL prefixed by a line comment that hides a write (STU-2497)', async () => {
+    const env = makeEnv();
+    const res = await worker.fetch(
+      makeRequest('/api/v1/query', {
+        method: 'POST',
+        auth: true,
+        body: JSON.stringify({ sql: '-- pretend\nDELETE FROM posts' }),
+      }),
+      env,
+      makeCtx(),
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it('rejects SQL prefixed by a block comment that hides a write (STU-2497)', async () => {
+    const env = makeEnv();
+    const res = await worker.fetch(
+      makeRequest('/api/v1/query', {
+        method: 'POST',
+        auth: true,
+        body: JSON.stringify({ sql: '/* trick */ UPDATE posts SET x=1' }),
+      }),
+      env,
+      makeCtx(),
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it('allows a comment-prefixed SELECT (STU-2497)', async () => {
+    // The prelude-strip lets a legitimate leading comment through as
+    // long as the first executable keyword is a read.
+    const mockAll = vi.fn().mockResolvedValue({
+      results: [{ id: 1 }],
+      meta: { changes: 0, duration: 1 },
+    });
+    const env = makeEnv({
+      DB: {
+        prepare: vi.fn(() => ({ all: mockAll })),
+      } as unknown as D1Database,
+    });
+    const res = await worker.fetch(
+      makeRequest('/api/v1/query', {
+        method: 'POST',
+        auth: true,
+        body: JSON.stringify({
+          sql: '/* metric: post-fetch */ SELECT * FROM posts',
+        }),
+      }),
+      env,
+      makeCtx(),
+    );
     expect(res.status).toBe(200);
-    expect(mockAll).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows EXPLAIN queries (STU-2497)', async () => {
+    const mockAll = vi.fn().mockResolvedValue({
+      results: [{ detail: 'SCAN posts' }],
+      meta: { changes: 0, duration: 1 },
+    });
+    const env = makeEnv({
+      DB: {
+        prepare: vi.fn(() => ({ all: mockAll })),
+      } as unknown as D1Database,
+    });
+    const res = await worker.fetch(
+      makeRequest('/api/v1/query', {
+        method: 'POST',
+        auth: true,
+        body: JSON.stringify({ sql: 'EXPLAIN SELECT * FROM posts' }),
+      }),
+      env,
+      makeCtx(),
+    );
+    expect(res.status).toBe(200);
   });
 
   it('executes SELECT query successfully', async () => {
