@@ -19,7 +19,16 @@
  *   Worker:  8787  (wrangler default, local only)
  */
 import { spawn, type Subprocess } from "bun";
-import { readFileSync, existsSync, statSync, readdirSync, rmSync } from "node:fs";
+import {
+  readFileSync,
+  existsSync,
+  statSync,
+  readdirSync,
+  rmSync,
+  mkdirSync,
+  openSync,
+  closeSync,
+} from "node:fs";
 import { join, resolve } from "node:path";
 
 // Use the current bun binary path for spawning subprocesses
@@ -43,6 +52,47 @@ const browserOnly = args.includes("--browser-only");
 
 const PERSIST_D1 = resolve("worker/.wrangler/e2e-d1");
 const PERSIST_R2 = resolve(".wrangler/e2e-r2");
+
+// ---------------------------------------------------------------------------
+// Log capture — worker/next stdout+stderr land here so CI failures leave
+// evidence (STU-2495 could not root-cause because these were "ignore").
+// The dir is recreated each run; on failure, the runner tail-dumps each log
+// so the CI job page shows them without extra tooling.
+// ---------------------------------------------------------------------------
+
+const LOG_DIR = resolve(".wrangler/e2e-logs");
+const WORKER_LOG = join(LOG_DIR, "worker.log");
+const NEXT_LOG = (port: number) => join(LOG_DIR, `next-${port}.log`);
+
+function prepareLogDir(): void {
+  rmSync(LOG_DIR, { recursive: true, force: true });
+  mkdirSync(LOG_DIR, { recursive: true });
+}
+
+function openLogFd(path: string): number {
+  // Create the file so `spawn` can attach as an append target.
+  const fd = openSync(path, "a");
+  return fd;
+}
+
+/** Emit the last `lines` lines of each captured log, then delete the fd list. */
+function dumpLogsOnFailure(): void {
+  for (const path of collectLogPaths()) {
+    if (!existsSync(path)) continue;
+    const content = readFileSync(path, "utf-8");
+    const tail = content.split("\n").slice(-80).join("\n");
+    console.error(`\n──── ${path} (last 80 lines) ────`);
+    console.error(tail || "(empty)");
+    console.error("─".repeat(60));
+  }
+}
+
+function collectLogPaths(): string[] {
+  const paths = [WORKER_LOG];
+  if (apiOnly || !browserOnly) paths.push(NEXT_LOG(API_E2E_PORT));
+  if (browserOnly || !apiOnly) paths.push(NEXT_LOG(BROWSER_E2E_PORT));
+  return paths;
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -107,6 +157,7 @@ process.on("SIGINT", () => {
 
 function startWorker(): Subprocess {
   console.log(`▸ Starting local worker on port ${WORKER_PORT}...`);
+  const logFd = openLogFd(WORKER_LOG);
   const proc = spawn(
     [
       WRANGLER,
@@ -120,11 +171,14 @@ function startWorker(): Subprocess {
     ],
     {
       cwd: `${process.cwd()}/worker`,
-      env: { ...process.env, WRANGLER_LOG: "error" },
-      stdout: "ignore",
-      stderr: "ignore",
+      // WRANGLER_LOG=info keeps the file readable while still surfacing
+      // startup, disconnect, and exit signatures relevant to STU-2495.
+      env: { ...process.env, WRANGLER_LOG: "info" },
+      stdout: logFd,
+      stderr: logFd,
     },
   );
+  closeSync(logFd);
   procs.push(proc);
   return proc;
 }
@@ -209,15 +263,17 @@ function startNextServer(
 ): Subprocess {
   buildNextOnce(env);
   console.log(`▸ Starting Next.js (production) on port ${port}...`);
+  const logFd = openLogFd(NEXT_LOG(port));
   const proc = spawn(
     [BUN, "run", "next", "start", "-p", String(port)],
     {
       cwd: process.cwd(),
       env: { ...env, PORT: String(port) },
-      stdout: "ignore",
-      stderr: "ignore",
+      stdout: logFd,
+      stderr: logFd,
     },
   );
+  closeSync(logFd);
   procs.push(proc);
   return proc;
 }
@@ -228,6 +284,8 @@ async function main() {
     rmSync(dir, { recursive: true, force: true });
   }
   console.log("▸ Cleaned persist directories (D1 + R2)");
+  prepareLogDir();
+  console.log(`▸ Capturing worker/next output under ${LOG_DIR}`);
 
   // --- Build env: load .env as base, then inject E2E overrides ---
   const prodEnv = loadEnvFile(".env");
@@ -270,6 +328,7 @@ async function main() {
     );
   } catch (err) {
     console.error("❌ Migration failed:", err);
+    dumpLogsOnFailure();
     cleanup();
     process.exit(1);
   }
@@ -329,6 +388,7 @@ async function main() {
   }
 
   // --- Cleanup ---
+  if (exitCode !== 0) dumpLogsOnFailure();
   cleanup();
   process.exit(exitCode);
 }
@@ -343,6 +403,7 @@ async function waitForWorkerReady(): Promise<void> {
     console.log(`▸ Test worker ready on port ${WORKER_PORT}`);
   } catch {
     console.error(`❌ Test worker failed to start on port ${WORKER_PORT}`);
+    dumpLogsOnFailure();
     cleanup();
     process.exit(1);
   }
@@ -354,6 +415,7 @@ async function waitForReady(port: number): Promise<void> {
     console.log(`▸ Next.js ready on port ${port}`);
   } catch {
     console.error(`❌ Next.js failed to start on port ${port}`);
+    dumpLogsOnFailure();
     cleanup();
     process.exit(1);
   }

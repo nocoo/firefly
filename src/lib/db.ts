@@ -72,9 +72,14 @@ export class DbError extends Error {
 // Implementation
 // ---------------------------------------------------------------------------
 
-// Retries only trigger when fetch() itself throws (transient TCP/keep-alive
-// flake between Next.js and the local wrangler-dev worker seen in CI —
-// STU-2495). HTTP 4xx/5xx responses are returned unchanged.
+// Retries only apply to /api/v1/query — the read-only path enforced by the
+// Worker's WRITE_RE guard. Writes (`execute`, `batch`, `call`) never retry:
+// a fetch() throw means the client did not see the response, not that the
+// server did no work; replaying an INSERT/UPDATE/DELETE would break
+// at-most-once semantics (e.g. UPDATE ... view_count = view_count + 1 in
+// src/data/analytics-record.ts:56).
+// This is a defensive mitigation for the L3 CI flake in STU-2495; the root
+// cause of the underlying wrangler-dev / socket transient is not confirmed.
 const RETRY_DELAYS_MS = [100, 300] as const;
 
 const isTestEnv = () =>
@@ -94,42 +99,57 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
     Authorization: `Bearer ${workerSecret}`,
   };
 
-  async function post<T>(path: string, body: unknown): Promise<T> {
+  async function postOnce<T>(path: string, body: unknown): Promise<T> {
     const url = `${workerUrl}${path}`;
-    const payload = JSON.stringify(body);
-    const attempts = RETRY_DELAYS_MS.length + 1;
-
-    for (let i = 0; ; i++) {
-      let res: Response;
-      try {
-        res = await fetch(url, { method: "POST", headers, body: payload });
-      } catch (err) {
-        if (i < attempts - 1) {
-          if (!isTestEnv()) {
-            console.warn(
-              `[db] fetch to ${path} failed (attempt ${i + 1}/${attempts}): ${
-                err instanceof Error ? err.message : String(err)
-              } — retrying`,
-            );
-          }
-          await sleep(isTestEnv() ? 0 : (RETRY_DELAYS_MS[i] ?? 0));
-          continue;
-        }
-        throw new DbError(
-          `Network error: ${err instanceof Error ? err.message : String(err)}`,
-        );
-      }
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new DbError(
-          (data as { error?: string }).error ?? `HTTP ${res.status}`,
-          res.status,
-        );
-      }
-
-      return res.json() as Promise<T>;
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
+    } catch (err) {
+      throw new DbError(
+        `Network error: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new DbError(
+        (data as { error?: string }).error ?? `HTTP ${res.status}`,
+        res.status,
+      );
+    }
+
+    return res.json() as Promise<T>;
+  }
+
+  async function postWithRetry<T>(path: string, body: unknown): Promise<T> {
+    const attempts = RETRY_DELAYS_MS.length + 1;
+    let lastErr: DbError | undefined;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await postOnce<T>(path, body);
+      } catch (err) {
+        if (
+          !(err instanceof DbError) ||
+          !err.message.startsWith("Network error:") ||
+          i === attempts - 1
+        ) {
+          throw err;
+        }
+        lastErr = err;
+        if (!isTestEnv()) {
+          console.warn(
+            `[db] ${path} attempt ${i + 1}/${attempts} failed: ${err.message} — retrying`,
+          );
+        }
+        await sleep(isTestEnv() ? 0 : (RETRY_DELAYS_MS[i] ?? 0));
+      }
+    }
+    // Unreachable — the final attempt either returns or throws above.
+    throw lastErr ?? new DbError("Network error: retry loop exhausted");
   }
 
   const db: Db = {
@@ -137,7 +157,7 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
       sql: string,
       params?: unknown[],
     ): Promise<DbQueryResult<T>> {
-      return post<DbQueryResult<T>>("/api/v1/query", {
+      return postWithRetry<DbQueryResult<T>>("/api/v1/query", {
         sql,
         params: params ?? [],
       });
@@ -152,7 +172,7 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
     },
 
     async execute(sql: string, params?: unknown[]): Promise<DbMeta> {
-      const result = await post<DbQueryResult>("/api/v1/execute", {
+      const result = await postOnce<DbQueryResult>("/api/v1/execute", {
         sql,
         params: params ?? [],
       });
@@ -160,7 +180,7 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
     },
 
     async batch(statements: DbBatchStatement[]): Promise<DbQueryResult[]> {
-      const result = await post<{ results: DbQueryResult[] }>(
+      const result = await postOnce<{ results: DbQueryResult[] }>(
         "/api/v1/execute",
         { statements },
       );
@@ -168,7 +188,7 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
     },
 
     async call<T>(path: string, body: unknown): Promise<T> {
-      return post<T>(path, body);
+      return postOnce<T>(path, body);
     },
   };
 

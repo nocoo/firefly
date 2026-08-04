@@ -110,7 +110,7 @@ describe("db.query", () => {
     await expect(db.query("SELECT 1")).rejects.toThrow("HTTP 500");
   });
 
-  it("throws DbError on network error", async () => {
+  it("throws DbError on network error after exhausting retries", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("ECONNREFUSED")));
 
     await expect(db.query("SELECT 1")).rejects.toThrow(DbError);
@@ -125,7 +125,7 @@ describe("db.query", () => {
     );
   });
 
-  it("retries transient fetch failures and returns success (STU-2495)", async () => {
+  it("retries transient fetch failures on query() and returns success (STU-2495)", async () => {
     const mockResult: DbQueryResult = {
       results: [{ id: "1" }],
       meta: { changes: 0, duration: 1 },
@@ -264,6 +264,20 @@ describe("db.execute", () => {
     );
     expect(body.params).toEqual([]);
   });
+
+  it("does NOT retry on network error — writes are non-idempotent (STU-2495)", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValue(new TypeError("fetch failed"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      db.execute("UPDATE posts SET view_count = view_count + 1 WHERE id = ?", [
+        "p1",
+      ]),
+    ).rejects.toThrow("Network error: fetch failed");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -302,6 +316,18 @@ describe("db.batch", () => {
     expect(body.statements).toHaveLength(2);
     expect(results).toHaveLength(2);
     expect(results[0].meta.changes).toBe(1);
+  });
+
+  it("does NOT retry on network error — batches are non-idempotent (STU-2495)", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValue(new TypeError("fetch failed"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      db.batch([{ sql: "INSERT INTO tags (id) VALUES (?)", params: ["1"] }]),
+    ).rejects.toThrow("Network error: fetch failed");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -348,6 +374,19 @@ describe("db.call", () => {
     await expect(db.call("/api/v1/custom", {})).rejects.toBeInstanceOf(
       DbError,
     );
+  });
+
+  it("does NOT retry on network error — call() semantics unknown (STU-2495)", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValue(new TypeError("fetch failed"));
+    globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch;
+
+    const db = createDb(url, secret);
+    await expect(db.call("/api/v1/custom", {})).rejects.toThrow(
+      "Network error: fetch failed",
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
 
