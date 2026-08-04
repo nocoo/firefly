@@ -200,7 +200,9 @@ describe("seedPostIdempotent", () => {
 
     const p = seedPostIdempotent(BASE, BODY, depsWithFetch(fetchMock));
     const settled = p.catch((e) => e);
-    await advanceFake(SEED_TOTAL_DEADLINE_MS + 5_000);
+    // Advance to exactly the deadline. Helper must have settled — with no
+    // slack for a straggling sleep or extra attempt.
+    await advanceFake(SEED_TOTAL_DEADLINE_MS);
     const err = (await settled) as Error;
 
     expect(started).toEqual([`POST ${BASE}/api/posts`]);
@@ -212,8 +214,12 @@ describe("seedPostIdempotent", () => {
     );
   });
 
-  it("aborts a pending reconcile GET at the deadline", async () => {
+  it("aborts a pending reconcile GET at the deadline (settles at deadline, no straggling sleep)", async () => {
     vi.useFakeTimers();
+    // First POST fails 5xx so the loop enters slugExists. GET hangs and
+    // must be aborted by the deadline. Prior to the fix the loop would
+    // swallow the abort in slugExists and then wait a full 250 ms sleep
+    // before throwing, so the diagnostic surfaced ~250 ms past deadline.
     const fetchMock = vi.fn(
       (_url: string, init: RequestInit & { signal: AbortSignal }) => {
         if (init.method === "POST") {
@@ -231,27 +237,48 @@ describe("seedPostIdempotent", () => {
 
     const p = seedPostIdempotent(BASE, BODY, depsWithFetch(fetchMock));
     const settled = p.catch((e) => e);
-    await advanceFake(SEED_TOTAL_DEADLINE_MS + 5_000);
-    const err = (await settled) as Error;
 
+    // Step 1: advance to exactly the deadline. Helper must be settled
+    // right here — not one millisecond later.
+    await advanceFake(SEED_TOTAL_DEADLINE_MS);
+
+    // Race: advance no further time; require settlement now.
+    const marker = { pending: true };
+    const check = Promise.race([
+      settled.then(() => ({ pending: false })),
+      Promise.resolve().then(() => Promise.resolve()).then(() => marker),
+    ]);
+    const outcome = await check;
+    expect(outcome).not.toBe(marker); // proved settled at deadline
+
+    const err = (await settled) as Error;
     expect(err.message).toMatch(
       new RegExp(
         `Failed to seed post before deadline \\(${SEED_TOTAL_DEADLINE_MS}ms\\)`,
       ),
     );
-    // 1 POST resolved + 1 GET pending until abort → 2 calls, no further.
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it("does not fire any further attempt after the deadline (last-attempt boundary)", async () => {
+  it("aborts a pending GET on attempt 5 during the long 6s backoff window", async () => {
     vi.useFakeTimers();
-    // POST hangs each time so the loop never gets past attempt 1 before
-    // deadline. If the deadline handler is buggy the loop could still fire
-    // additional POSTs — the assert catches that.
-    let started = 0;
+    // Attempts 1..4 all fail with 5xx + reconcile miss; each consumes
+    // 250+500+1000+3000 = 4750 ms of virtual time from sleeps. Attempt 5's
+    // POST returns 5xx synchronously, then its GET hangs. Deadline (20s)
+    // fires while the 5th GET is pending. If slugExists / sleep swallowed
+    // the abort, the helper would then attempt a 6 s backoff before
+    // throwing at 26 s — this test locks the settlement to the deadline.
+    let attempt = 0;
+    let getStarted = 0;
     const fetchMock = vi.fn(
       (_url: string, init: RequestInit & { signal: AbortSignal }) => {
-        started++;
+        if (init.method === "POST") {
+          attempt++;
+          return Promise.resolve(res(500, '{"error":"down"}'));
+        }
+        getStarted++;
+        if (getStarted < 5) return Promise.resolve(res(404));
+        // 5th GET hangs.
         return new Promise<Response>((_, reject) => {
           init.signal.addEventListener(
             "abort",
@@ -264,9 +291,65 @@ describe("seedPostIdempotent", () => {
 
     const p = seedPostIdempotent(BASE, BODY, depsWithFetch(fetchMock));
     const settled = p.catch((e) => e);
+    await advanceFake(SEED_TOTAL_DEADLINE_MS);
+
+    // No extra advance. If the helper still needs 6 s more, this fails.
+    const marker = { pending: true };
+    const outcome = await Promise.race([
+      settled.then(() => ({ pending: false })),
+      Promise.resolve().then(() => Promise.resolve()).then(() => marker),
+    ]);
+    expect(outcome).not.toBe(marker);
+
+    const err = (await settled) as Error;
+    expect(err.message).toMatch(
+      new RegExp(
+        `Failed to seed post before deadline \\(${SEED_TOTAL_DEADLINE_MS}ms\\)`,
+      ),
+    );
+    expect(attempt).toBe(5); // reached but did not exceed attempt 5
+  });
+
+  it("does not fire the 6th attempt once the deadline has aborted (last-attempt boundary)", async () => {
+    vi.useFakeTimers();
+    // POST 5xx + GET 404 for attempts 1..4 (fast). Attempt 5 POST is slow
+    // (blocks for 10 s virtual) and gets aborted by the 20 s deadline
+    // during attempt 5, since sleeps 250+500+1000+3000 = 4.75 s + 10 s = 14.75 s > 20 s
+    // is not — recompute: sleeps only run between attempts; before
+    // attempt 5 the cumulative sleep is 250+500+1000+3000 = 4.75 s and POST 5
+    // starts at t=4.75s and hangs for 10 s → aborted at t=14.75+? Actually
+    // we make POST 5 hang forever so the abort clearly fires during it.
+    let postCount = 0;
+    let getCount = 0;
+    const fetchMock = vi.fn(
+      (_url: string, init: RequestInit & { signal: AbortSignal }) => {
+        if (init.method === "POST") {
+          postCount++;
+          if (postCount < 5) return Promise.resolve(res(500));
+          // 5th POST hangs → aborted at deadline.
+          return new Promise<Response>((_, reject) => {
+            init.signal.addEventListener(
+              "abort",
+              () => reject(init.signal.reason ?? new Error("aborted")),
+              { once: true },
+            );
+          });
+        }
+        getCount++;
+        return Promise.resolve(res(404));
+      },
+    );
+
+    const p = seedPostIdempotent(BASE, BODY, depsWithFetch(fetchMock));
+    const settled = p.catch((e) => e);
     await advanceFake(SEED_TOTAL_DEADLINE_MS + 60_000);
-    await settled;
-    expect(started).toBe(1);
+    const err = (await settled) as Error;
+    expect(err).toBeInstanceOf(Error);
+    // The 5th POST is where abort fires. The 6th POST must NOT run.
+    expect(postCount).toBe(5);
+    // 4 GETs (one per completed 5xx POST) — no 5th because attempt 5's
+    // POST never returned normally.
+    expect(getCount).toBe(4);
   });
 
   it("uses default deps (real timers) when no deps argument given", async () => {

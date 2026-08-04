@@ -68,15 +68,22 @@ export const defaultSeedDeps: SeedDeps = {
   fetch: (input, init) => fetch(input, init),
   sleep: (ms, signal) =>
     new Promise((resolve) => {
-      const t = setTimeout(resolve, ms);
-      signal.addEventListener(
-        "abort",
-        () => {
-          clearTimeout(t);
-          resolve();
-        },
-        { once: true },
-      );
+      // If signal is already aborted, abort events do NOT re-fire — resolve
+      // synchronously so the caller can check signal.aborted and exit.
+      if (signal.aborted) {
+        resolve();
+        return;
+      }
+      const onAbort = () => {
+        clearTimeout(t);
+        signal.removeEventListener("abort", onAbort);
+        resolve();
+      };
+      const t = setTimeout(() => {
+        signal.removeEventListener("abort", onAbort);
+        resolve();
+      }, ms);
+      signal.addEventListener("abort", onAbort, { once: true });
     }),
   setTimer: (onFire, ms) => {
     const t = setTimeout(onFire, ms);
@@ -103,7 +110,11 @@ async function slugExists(
       { method: "GET", signal },
     );
     return res.ok;
-  } catch {
+  } catch (err) {
+    // Do NOT swallow a deadline abort — propagate so the loop stops
+    // immediately instead of falling into the next sleep/retry with an
+    // already-aborted signal.
+    if (signal.aborted) throw err;
     return false;
   }
 }
