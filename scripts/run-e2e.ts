@@ -30,6 +30,7 @@ import {
   closeSync,
 } from "node:fs";
 import { join, resolve } from "node:path";
+import { SidecarSupervisor } from "./e2e-sidecar";
 
 // Use the current bun binary path for spawning subprocesses
 const BUN = process.execPath;
@@ -62,6 +63,7 @@ const PERSIST_R2 = resolve(".wrangler/e2e-r2");
 
 const LOG_DIR = resolve(".wrangler/e2e-logs");
 const WORKER_LOG = join(LOG_DIR, "worker.log");
+const WRANGLER_DEBUG_LOG = join(LOG_DIR, "wrangler-debug.log");
 const NEXT_LOG = (port: number) => join(LOG_DIR, `next-${port}.log`);
 
 function prepareLogDir(): void {
@@ -88,7 +90,7 @@ function dumpLogsOnFailure(): void {
 }
 
 function collectLogPaths(): string[] {
-  const paths = [WORKER_LOG];
+  const paths = [WORKER_LOG, WRANGLER_DEBUG_LOG];
   if (apiOnly || !browserOnly) paths.push(NEXT_LOG(API_E2E_PORT));
   if (browserOnly || !apiOnly) paths.push(NEXT_LOG(BROWSER_E2E_PORT));
   return paths;
@@ -141,6 +143,7 @@ async function waitForServer(
 const procs: Subprocess[] = [];
 const prematureExits: string[] = [];
 let shuttingDown = false;
+let workerSupervisor: SidecarSupervisor<Subprocess> | undefined;
 
 /** Attach an exit watcher so a sidecar dying mid-run is surfaced immediately
  *  instead of manifesting only as a downstream test failure. The runner
@@ -157,6 +160,7 @@ function watchPrematureExit(name: string, proc: Subprocess): void {
 
 function cleanup() {
   shuttingDown = true;
+  workerSupervisor?.stop();
   for (const p of procs) {
     try {
       p.kill();
@@ -171,7 +175,7 @@ process.on("SIGINT", () => {
   process.exit(130);
 });
 
-function startWorker(): Subprocess {
+function startWorkerProcess(): Subprocess {
   console.log(`▸ Starting local worker on port ${WORKER_PORT}...`);
   const logFd = openLogFd(WORKER_LOG);
   const proc = spawn(
@@ -189,15 +193,48 @@ function startWorker(): Subprocess {
       cwd: `${process.cwd()}/worker`,
       // WRANGLER_LOG=info keeps the file readable while still surfacing
       // startup, disconnect, and exit signatures relevant to STU-2495.
-      env: { ...process.env, WRANGLER_LOG: "info" },
+      // Wrangler writes richer diagnostics to its own debug file than it
+      // emits on stderr. Pin that file inside LOG_DIR so failure dumps include
+      // the real exception instead of only Wrangler's blank `[ERROR]` banner.
+      env: {
+        ...process.env,
+        WRANGLER_LOG: "info",
+        WRANGLER_LOG_PATH: WRANGLER_DEBUG_LOG,
+      },
       stdout: logFd,
       stderr: logFd,
     },
   );
   closeSync(logFd);
-  procs.push(proc);
-  watchPrematureExit("wrangler", proc);
   return proc;
+}
+
+function createWorkerSupervisor(): SidecarSupervisor<Subprocess> {
+  return new SidecarSupervisor({
+    name: "wrangler",
+    maxRestarts: 2,
+    startProcess: startWorkerProcess,
+    waitUntilReady: () =>
+      waitForServer(
+        `http://localhost:${WORKER_PORT}/api/v1/health`,
+        15_000,
+        true,
+      ),
+    onUnexpectedExit: (code) => {
+      console.error(`❌ Sidecar 'wrangler (code ${code})' exited unexpectedly mid-run`);
+    },
+    onRestart: (attempt, maxRestarts) => {
+      console.warn(
+        `↻ Restarting wrangler after transient exit (${attempt}/${maxRestarts})...`,
+      );
+    },
+    onRecovered: (attempt) => {
+      console.log(`✓ Wrangler recovered after restart ${attempt}`);
+    },
+    onFatal: (reason) => {
+      console.error(`❌ ${reason}`);
+    },
+  });
 }
 
 let didBuild = false;
@@ -333,7 +370,8 @@ async function main() {
   };
 
   // --- Start local worker ---
-  startWorker();
+  workerSupervisor = createWorkerSupervisor();
+  workerSupervisor.start();
   await waitForWorkerReady();
 
   // --- Apply DB migrations to local D1 ---
@@ -404,6 +442,12 @@ async function main() {
     const browserResult = await browserTest.exited;
     if (browserResult !== 0) exitCode = 1;
   }
+
+  // Do not declare success while an unexpected worker exit is still being
+  // recovered. A bounded recovery failure remains fatal even if Playwright
+  // happened to finish during the restart window.
+  await workerSupervisor.waitForRecovery();
+  if (workerSupervisor.fatalReason) exitCode = 1;
 
   // Any sidecar that died mid-run is a fatal signal even if the tests
   // themselves happened to pass — surface it and fail the run so CI cannot
