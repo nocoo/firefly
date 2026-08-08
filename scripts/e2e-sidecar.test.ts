@@ -9,12 +9,19 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
-function fakeProcess(): SupervisedProcess & { exit: (code: number) => void } {
+type FakeProcess = SupervisedProcess & {
+  exit: (code: number) => void;
+  kill: ReturnType<typeof vi.fn>;
+};
+
+function fakeProcess(exitOnKill = true): FakeProcess {
   const done = deferred<number>();
   return {
     exited: done.promise,
     exit: done.resolve,
-    kill: vi.fn(() => done.resolve(0)),
+    kill: vi.fn(() => {
+      if (exitOnKill) done.resolve(0);
+    }),
   };
 }
 
@@ -81,7 +88,7 @@ describe("SidecarSupervisor", () => {
     supervisor.stop();
   });
 
-  it("fails after exhausting the bounded restart budget", async () => {
+  it("spends one restart budget across separate successful recovery cycles", async () => {
     const first = fakeProcess();
     const replacementOne = fakeProcess();
     const replacementTwo = fakeProcess();
@@ -90,26 +97,96 @@ describe("SidecarSupervisor", () => {
       .mockReturnValueOnce(first)
       .mockReturnValueOnce(replacementOne)
       .mockReturnValueOnce(replacementTwo);
-    const neverReady = () => new Promise<void>(() => {});
     const onFatal = vi.fn();
     const supervisor = new SidecarSupervisor({
       name: "wrangler",
       maxRestarts: 2,
       startProcess,
-      waitUntilReady: neverReady,
+      waitUntilReady: vi.fn().mockResolvedValue(undefined),
       onFatal,
     });
 
     supervisor.start();
     first.exit(1);
     await vi.waitFor(() => expect(startProcess).toHaveBeenCalledTimes(2));
+    await supervisor.waitForRecovery();
     replacementOne.exit(2);
     await vi.waitFor(() => expect(startProcess).toHaveBeenCalledTimes(3));
+    await supervisor.waitForRecovery();
     replacementTwo.exit(3);
 
     await vi.waitFor(() => expect(onFatal).toHaveBeenCalledOnce());
     await supervisor.waitForRecovery();
+    expect(startProcess).toHaveBeenCalledTimes(3);
+    expect(supervisor.restartCount).toBe(2);
     expect(supervisor.fatalReason).toContain("failed to recover after 2 restarts");
+    supervisor.stop();
+  });
+
+  it("does not lose an exit resolved in the same turn as readiness", async () => {
+    const first = fakeProcess();
+    const racedReplacement = fakeProcess();
+    const healthyReplacement = fakeProcess();
+    const startProcess = vi
+      .fn<() => SupervisedProcess>()
+      .mockReturnValueOnce(first)
+      .mockReturnValueOnce(racedReplacement)
+      .mockReturnValueOnce(healthyReplacement);
+    const firstReadiness = deferred<void>();
+    const waitUntilReady = vi
+      .fn<() => Promise<void>>()
+      .mockReturnValueOnce(firstReadiness.promise)
+      .mockResolvedValueOnce(undefined);
+    const supervisor = new SidecarSupervisor({
+      name: "wrangler",
+      maxRestarts: 2,
+      startProcess,
+      waitUntilReady,
+    });
+
+    supervisor.start();
+    first.exit(1);
+    await vi.waitFor(() => expect(startProcess).toHaveBeenCalledTimes(2));
+    firstReadiness.resolve();
+    racedReplacement.exit(9);
+
+    await vi.waitFor(() => expect(startProcess).toHaveBeenCalledTimes(3));
+    await supervisor.waitForRecovery();
+    expect(supervisor.restartCount).toBe(2);
+    expect(supervisor.fatalReason).toBeUndefined();
+    supervisor.stop();
+  });
+
+  it("waits for a killed generation to exit before launching the next", async () => {
+    const first = fakeProcess();
+    const stuckReplacement = fakeProcess(false);
+    const healthyReplacement = fakeProcess();
+    const startProcess = vi
+      .fn<() => SupervisedProcess>()
+      .mockReturnValueOnce(first)
+      .mockReturnValueOnce(stuckReplacement)
+      .mockReturnValueOnce(healthyReplacement);
+    const waitUntilReady = vi
+      .fn<() => Promise<void>>()
+      .mockRejectedValueOnce(new Error("health timeout"))
+      .mockResolvedValueOnce(undefined);
+    const supervisor = new SidecarSupervisor({
+      name: "wrangler",
+      maxRestarts: 2,
+      startProcess,
+      waitUntilReady,
+    });
+
+    supervisor.start();
+    first.exit(1);
+    await vi.waitFor(() => expect(stuckReplacement.kill).toHaveBeenCalledOnce());
+    await Promise.resolve();
+    expect(startProcess).toHaveBeenCalledTimes(2);
+
+    stuckReplacement.exit(7);
+    await vi.waitFor(() => expect(startProcess).toHaveBeenCalledTimes(3));
+    await supervisor.waitForRecovery();
+    expect(supervisor.fatalReason).toBeUndefined();
     supervisor.stop();
   });
 });

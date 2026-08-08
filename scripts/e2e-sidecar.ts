@@ -14,22 +14,56 @@ export interface SidecarSupervisorOptions<T extends SupervisedProcess> {
   onFatal?: (reason: string) => void;
 }
 
-class ExitDuringRecoveryError extends Error {
-  constructor(public readonly code: number) {
-    super(`sidecar exited during recovery with code ${code}`);
-  }
+interface RecoveryBarrier {
+  promise: Promise<void>;
+  resolve: () => void;
+}
+
+interface ExitObserver {
+  promise: Promise<number>;
+  didExit: () => boolean;
+  exitCode: () => number;
+}
+
+function createBarrier(): RecoveryBarrier {
+  let resolve!: () => void;
+  const promise = new Promise<void>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
+function observeExit(proc: SupervisedProcess): ExitObserver {
+  let exited = false;
+  let code = -1;
+  const promise = proc.exited.then(
+    (value) => {
+      exited = true;
+      code = value;
+      return value;
+    },
+    () => {
+      exited = true;
+      return code;
+    },
+  );
+  return {
+    promise,
+    didExit: () => exited,
+    exitCode: () => code,
+  };
 }
 
 /**
- * Keeps a local test sidecar alive across a small number of transient exits.
- *
- * Recovery is intentionally bounded: a one-off Wrangler/workerd crash should
- * not fan out into dozens of misleading browser failures, while a persistent
- * startup failure must still fail the E2E run.
+ * Keeps a local test sidecar alive across a bounded number of transient exits.
+ * One monitor loop owns every generation, so an exit cannot be dropped between
+ * a readiness race and a separate watcher. The restart budget belongs to the
+ * supervisor lifetime and is never reset after a successful recovery.
  */
 export class SidecarSupervisor<T extends SupervisedProcess> {
   private current: T | undefined;
-  private recovery: Promise<void> | undefined;
+  private lifecycle: Promise<void> | undefined;
+  private recovery: RecoveryBarrier | undefined;
   private stopped = false;
   private restarts = 0;
   private fatal: string | undefined;
@@ -37,12 +71,18 @@ export class SidecarSupervisor<T extends SupervisedProcess> {
   constructor(private readonly options: SidecarSupervisorOptions<T>) {}
 
   start(): T {
-    if (this.current) throw new Error(`${this.options.name} already started`);
-    return this.launch();
+    if (this.lifecycle) throw new Error(`${this.options.name} already started`);
+    const proc = this.options.startProcess();
+    this.current = proc;
+    this.lifecycle = this.monitor(proc).catch(() => {
+      if (!this.stopped) this.fail(-1);
+    });
+    return proc;
   }
 
   stop(): void {
     this.stopped = true;
+    this.finishRecovery();
     try {
       this.current?.kill();
     } catch {
@@ -51,10 +91,9 @@ export class SidecarSupervisor<T extends SupervisedProcess> {
   }
 
   async waitForRecovery(): Promise<void> {
-    // Give a just-settled `proc.exited` callback a microtask turn to install
-    // the recovery promise, then follow any recovery that is currently live.
+    // Let a just-settled current-generation exit enter the monitor first.
     await Promise.resolve();
-    while (this.recovery) await this.recovery;
+    while (this.recovery) await this.recovery.promise;
   }
 
   get restartCount(): number {
@@ -65,59 +104,91 @@ export class SidecarSupervisor<T extends SupervisedProcess> {
     return this.fatal;
   }
 
-  private launch(): T {
-    const proc = this.options.startProcess();
-    this.current = proc;
-    void proc.exited.then((code) => this.handleExit(proc, code));
-    return proc;
-  }
+  private async monitor(initial: T): Promise<void> {
+    let proc = initial;
+    let pendingExitCode: number | undefined;
 
-  private handleExit(proc: T, code: number): void {
-    if (this.stopped || proc !== this.current || this.recovery) return;
-    this.options.onUnexpectedExit?.(code);
-    this.recovery = this.recover(code).finally(() => {
-      this.recovery = undefined;
-    });
-  }
-
-  private async recover(initialCode: number): Promise<void> {
-    let lastCode = initialCode;
-
-    for (let attempt = 1; attempt <= this.options.maxRestarts; attempt++) {
+    while (!this.stopped) {
+      const exitCode = pendingExitCode ?? (await proc.exited.catch(() => -1));
+      pendingExitCode = undefined;
       if (this.stopped) return;
-      this.restarts = attempt;
-      this.options.onRestart?.(attempt, this.options.maxRestarts);
 
-      const proc = this.launch();
-      try {
-        await Promise.race([
-          this.options.waitUntilReady(),
-          proc.exited.then((code) => {
-            lastCode = code;
-            throw new ExitDuringRecoveryError(code);
-          }),
-        ]);
-        if (this.stopped) return;
-        this.options.onRecovered?.(attempt);
+      this.options.onUnexpectedExit?.(exitCode);
+      this.beginRecovery();
+      if (this.restarts >= this.options.maxRestarts) {
+        this.fail(exitCode);
         return;
-      } catch {
-        if (this.stopped) return;
-        try {
-          proc.kill();
-        } catch {
-          // already exited
-        }
-        // Do not launch the next replacement while the previous process may
-        // still own the port or the persisted D1 directory lock.
-        try {
-          lastCode = await proc.exited;
-        } catch {
-          // A rejected exit promise is equivalent to an unknown exit code.
-        }
       }
-    }
 
-    this.fatal = `${this.options.name} exited with code ${lastCode} and failed to recover after ${this.options.maxRestarts} restarts`;
+      const attempt = ++this.restarts;
+      this.options.onRestart?.(attempt, this.options.maxRestarts);
+      try {
+        proc = this.options.startProcess();
+      } catch {
+        pendingExitCode = -1;
+        continue;
+      }
+      this.current = proc;
+
+      const exit = observeExit(proc);
+      const readiness = Promise.resolve()
+        .then(() => this.options.waitUntilReady())
+        .then(
+          () => ({ kind: "ready" }) as const,
+          () => ({ kind: "not-ready" }) as const,
+        );
+      const outcome = await Promise.race([
+        readiness,
+        exit.promise.then((code) => ({ kind: "exit", code }) as const),
+      ]);
+      if (this.stopped) return;
+
+      if (outcome.kind === "exit") {
+        pendingExitCode = outcome.code;
+        continue;
+      }
+
+      if (outcome.kind === "not-ready") {
+        if (!exit.didExit()) {
+          try {
+            proc.kill();
+          } catch {
+            // already exited
+          }
+        }
+        // Preserve the D1 lock guarantee: the next generation cannot launch
+        // until this process has fully exited after the readiness failure.
+        pendingExitCode = await exit.promise;
+        continue;
+      }
+
+      // If readiness and exit settle in the same turn, the exit observer's
+      // reaction runs by the next microtask and wins over a false recovery.
+      await Promise.resolve();
+      if (exit.didExit()) {
+        pendingExitCode = exit.exitCode();
+        continue;
+      }
+
+      this.options.onRecovered?.(attempt);
+      this.finishRecovery();
+    }
+  }
+
+  private beginRecovery(): void {
+    this.recovery ??= createBarrier();
+  }
+
+  private finishRecovery(): void {
+    const barrier = this.recovery;
+    this.recovery = undefined;
+    barrier?.resolve();
+  }
+
+  private fail(exitCode: number): void {
+    if (this.fatal) return;
+    this.fatal = `${this.options.name} exited with code ${exitCode} and failed to recover after ${this.options.maxRestarts} restarts`;
     this.options.onFatal?.(this.fatal);
+    this.finishRecovery();
   }
 }
