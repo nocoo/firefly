@@ -64,6 +64,8 @@ export class SidecarSupervisor<T extends SupervisedProcess> {
   private current: T | undefined;
   private lifecycle: Promise<void> | undefined;
   private recovery: RecoveryBarrier | undefined;
+  private checkpointSignal = createBarrier();
+  private checkpointWaiters = new Set<RecoveryBarrier>();
   private stopped = false;
   private restarts = 0;
   private fatal: string | undefined;
@@ -83,6 +85,7 @@ export class SidecarSupervisor<T extends SupervisedProcess> {
   stop(): void {
     this.stopped = true;
     this.finishRecovery();
+    this.checkpointSignal.resolve();
     try {
       this.current?.kill();
     } catch {
@@ -91,9 +94,22 @@ export class SidecarSupervisor<T extends SupervisedProcess> {
   }
 
   async waitForRecovery(): Promise<void> {
-    // Let a just-settled current-generation exit enter the monitor first.
-    await Promise.resolve();
-    while (this.recovery) await this.recovery.promise;
+    if (!this.lifecycle || this.stopped || this.fatal) return;
+
+    const recovery = this.recovery;
+    if (recovery) {
+      await recovery.promise;
+      if (this.stopped || this.fatal) return;
+    }
+
+    // Linearize this check in the monitor's steady-state race. If the current
+    // generation exited first, the waiter is held until recovery or fatal;
+    // otherwise the monitor confirms that no recovery was active at this
+    // checkpoint. This avoids guessing at promise reaction timing.
+    const waiter = createBarrier();
+    this.checkpointWaiters.add(waiter);
+    this.checkpointSignal.resolve();
+    await waiter.promise;
   }
 
   get restartCount(): number {
@@ -109,9 +125,9 @@ export class SidecarSupervisor<T extends SupervisedProcess> {
     let pendingExitCode: number | undefined;
 
     while (!this.stopped) {
-      const exitCode = pendingExitCode ?? (await proc.exited.catch(() => -1));
+      const exitCode = pendingExitCode ?? (await this.waitForExit(proc));
       pendingExitCode = undefined;
-      if (this.stopped) return;
+      if (this.stopped || exitCode === undefined) return;
 
       this.options.onUnexpectedExit?.(exitCode);
       this.beginRecovery();
@@ -179,10 +195,39 @@ export class SidecarSupervisor<T extends SupervisedProcess> {
     this.recovery ??= createBarrier();
   }
 
+  private async waitForExit(proc: T): Promise<number | undefined> {
+    while (!this.stopped) {
+      const checkpoint = this.checkpointSignal;
+      const outcome = await Promise.race([
+        proc.exited.then(
+          (code) => ({ kind: "exit", code }) as const,
+          () => ({ kind: "exit", code: -1 }) as const,
+        ),
+        checkpoint.promise.then(() => ({ kind: "checkpoint" }) as const),
+      ]);
+
+      if (this.checkpointSignal === checkpoint) {
+        this.checkpointSignal = createBarrier();
+      }
+      if (this.stopped) return undefined;
+
+      if (outcome.kind === "exit") return outcome.code;
+      this.finishCheckpoints();
+    }
+    return undefined;
+  }
+
   private finishRecovery(): void {
     const barrier = this.recovery;
     this.recovery = undefined;
     barrier?.resolve();
+    this.finishCheckpoints();
+  }
+
+  private finishCheckpoints(): void {
+    const waiters = this.checkpointWaiters;
+    this.checkpointWaiters = new Set();
+    for (const waiter of waiters) waiter.resolve();
   }
 
   private fail(exitCode: number): void {

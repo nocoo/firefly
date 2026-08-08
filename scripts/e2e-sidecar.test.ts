@@ -189,4 +189,39 @@ describe("SidecarSupervisor", () => {
     expect(supervisor.fatalReason).toBeUndefined();
     supervisor.stop();
   });
+
+  it("waits when called immediately after an exit before recovery starts", async () => {
+    const first = fakeProcess();
+    const replacement = fakeProcess();
+    const startProcess = vi
+      .fn<() => SupervisedProcess>()
+      .mockReturnValueOnce(first)
+      .mockReturnValueOnce(replacement);
+    const readiness = deferred<void>();
+    const supervisor = new SidecarSupervisor({
+      name: "wrangler",
+      maxRestarts: 1,
+      startProcess,
+      waitUntilReady: () => readiness.promise,
+    });
+
+    supervisor.start();
+    first.exit(1);
+    const recovery = supervisor.waitForRecovery();
+
+    const earlyResult = await Promise.race([
+      recovery.then(() => "recovered" as const),
+      new Promise<"pending">((resolve) =>
+        setTimeout(() => resolve("pending"), 50),
+      ),
+    ]);
+    expect(earlyResult).toBe("pending");
+    expect(startProcess).toHaveBeenCalledTimes(2);
+
+    readiness.resolve();
+    await recovery;
+    expect(supervisor.restartCount).toBe(1);
+    expect(supervisor.fatalReason).toBeUndefined();
+    supervisor.stop();
+  });
 });
