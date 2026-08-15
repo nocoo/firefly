@@ -33,7 +33,10 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
   if (!post) notFound();
 
   const tags = await getPostTags(db, post.id);
-  const html = renderMarkdown(post.content, { optimizeImages: true, postTitle: post.title });
+  const html = renderMarkdown(post.content, {
+    optimizeImages: process.env.NODE_ENV === "production",
+    postTitle: post.title,
+  });
   const date = post.published_at
     ? formatDateDisplay(post.published_at)
     : "草稿";

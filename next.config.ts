@@ -52,6 +52,8 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_APP_VERSION: pkg.version,
   },
   images: {
+    // Dev fake-ip (198.18.0.0/15) is treated as SSRF by /_next/image.
+    unoptimized: process.env.NODE_ENV !== "production",
     remotePatterns: [
       {
         protocol: assetsOrigin.protocol,

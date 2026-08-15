@@ -116,7 +116,10 @@ export default async function PostPage({ params }: PostPageProps) {
     ? postPath(adjacent.next.slug, adjacent.next.published_at)
     : null;
 
-  const html = renderMarkdown(post.content, { optimizeImages: true, postTitle: post.title });
+  const html = renderMarkdown(post.content, {
+    optimizeImages: process.env.NODE_ENV === "production",
+    postTitle: post.title,
+  });
   const toc = extractToc(post.content);
   const date = post.published_at
     ? formatDateDisplay(post.published_at)
