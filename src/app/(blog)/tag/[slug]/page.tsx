@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { getTagBySlug } from "@/data/entities/tag";
 import { listPosts } from "@/data/entities/post";
 import { getSiteSettings } from "@/data/settings";
+import { loadSiteIdentity } from "@/lib/site-identity";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { ListPageHeader } from "@/components/blog/list-page-header";
@@ -27,12 +28,12 @@ export async function generateMetadata({
 
   if (!tag) return { title: "Not Found" };
 
-  const settings = await getSiteSettings(db);
+  const { identity } = await loadSiteIdentity(db);
   const meta = buildPageMeta({
     title: `#${tag.name}`,
     description: `标签为 ${tag.name} 的文章`,
     path: `/tag/${tag.slug}`,
-  }, settings);
+  }, identity);
 
   // Thin-content tags: noindex to avoid low-quality pages in search index
   if (tag.post_count < 3) {
@@ -95,7 +96,7 @@ export default async function TagPage({ params }: TagPageProps) {
             <PostCard
               key={post.id}
               post={post}
-              author={getPostAuthor(post, settings)}
+              author={getPostAuthor(post)}
               priority={i === 0 && !!post.featured_image}
             />
           ))

@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { getDb } from "@/lib/db";
 import { getPostBySlug, getPostTags, getAdjacentPosts } from "@/data/entities/post";
-import { getSiteSettings } from "@/data/settings";
 import { isAdminSession } from "@/lib/auth";
 import { listCommentsByPost, buildCommentTree } from "@/data/entities/comment";
 import { FeaturedImage } from "@/components/blog/featured-image";
@@ -18,6 +17,7 @@ import {
   postPath,
   SITE_URL,
 } from "@/lib/seo";
+import { loadSiteIdentity } from "@/lib/site-identity";
 import { blogPostingJsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { Comments } from "@/components/blog/comments";
 import { ArticleBody } from "@/components/blog/article-body";
@@ -49,19 +49,19 @@ export async function generateMetadata({
 
   if (!post) return { title: "Not Found" };
 
-  const [tags, settings] = await Promise.all([
+  const [tags, { identity }] = await Promise.all([
     getPostTags(db, post.id),
-    getSiteSettings(db),
+    loadSiteIdentity(db),
   ]);
 
   // Resolve author (agent or site author) - now synchronous with JOINed data
-  const authorMeta = getPostAuthorForMeta(post, settings, SITE_URL);
+  const authorMeta = getPostAuthorForMeta(post, SITE_URL);
   const path = postPath(post.slug, post.published_at);
 
   // OG image preference: post's featured_image first, then dynamically
   // generated /api/og card so every post has a usable share preview even
   // without a featured image set.
-  const ogFallback = `/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(settings.siteName)}`;
+  const ogFallback = `/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(identity.siteName)}`;
   const ogImage = post.featured_image ?? ogFallback;
 
   return buildPageMeta({
@@ -76,8 +76,8 @@ export async function generateMetadata({
     modifiedTime: formatDateISO(post.updated_at),
     keywords: tags.map((t) => t.name),
     // Only set authorOverride if it's an agent (different from site author)
-    authorOverride: authorMeta.name !== settings.siteAuthor ? authorMeta : undefined,
-  }, settings);
+    authorOverride: authorMeta,
+  }, identity);
 }
 
 export default async function PostPage({ params }: PostPageProps) {
@@ -98,12 +98,12 @@ export default async function PostPage({ params }: PostPageProps) {
   }
 
   const tags = await getPostTags(db, post.id);
-  const settings = await getSiteSettings(db);
+  const { settings, identity } = await loadSiteIdentity(db);
   const isAdmin = await isAdminSession();
   const showComments = settings.commentsEnabled && !!post.comment_enabled;
 
   // Resolve author (agent or site owner) - now synchronous with JOINed data
-  const author = getPostAuthor(post, settings);
+  const author = getPostAuthor(post);
 
   // Adjacent posts for keyboard navigation
   const adjacent = post.published_at
@@ -143,7 +143,7 @@ export default async function PostPage({ params }: PostPageProps) {
       <ReadingProgress />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: blogPostingJsonLd(post, settings, tagNames, jsonLdAuthor) }}
+        dangerouslySetInnerHTML={{ __html: blogPostingJsonLd(post, identity, tagNames, jsonLdAuthor) }}
       />
       <script
         type="application/ld+json"

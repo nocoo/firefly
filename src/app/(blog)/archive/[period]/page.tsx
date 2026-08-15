@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { listPosts, listMonthlyArchives } from "@/data/entities/post";
 import { getSiteSettings } from "@/data/settings";
+import { loadSiteIdentity } from "@/lib/site-identity";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { ListPageHeader } from "@/components/blog/list-page-header";
@@ -26,7 +27,7 @@ export async function generateMetadata({ params }: ArchivePageProps): Promise<Me
   if (!parsed) return { title: "Not Found" };
 
   const db = getDb();
-  const settings = await getSiteSettings(db);
+  const { identity } = await loadSiteIdentity(db);
   const label = parsed.month
     ? `${parsed.year} 年 ${parsed.month} 月`
     : `${parsed.year} 年`;
@@ -35,7 +36,7 @@ export async function generateMetadata({ params }: ArchivePageProps): Promise<Me
     title: label,
     description: label,
     path: `/archive/${period}`,
-  }, settings);
+  }, identity);
 }
 
 export default async function ArchivePage({ params }: ArchivePageProps) {
@@ -101,7 +102,7 @@ export default async function ArchivePage({ params }: ArchivePageProps) {
             <PostCard
               key={post.id}
               post={post}
-              author={getPostAuthor(post, settings)}
+              author={getPostAuthor(post)}
               priority={i === 0 && !!post.featured_image}
             />
           ))

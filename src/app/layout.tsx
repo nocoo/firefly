@@ -3,6 +3,7 @@ import { IBM_Plex_Sans, IBM_Plex_Mono, IBM_Plex_Serif } from "next/font/google";
 import { SITE_URL, OG_LOCALE, HTML_LANG } from "@/lib/seo";
 import { getDb } from "@/lib/db";
 import { getSiteSettings } from "@/data/settings";
+import { loadSiteIdentity } from "@/lib/site-identity";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
@@ -35,7 +36,7 @@ export const revalidate = 300;
 
 export async function generateMetadata(): Promise<Metadata> {
   const db = getDb();
-  const settings = await getSiteSettings(db);
+  const { settings, identity } = await loadSiteIdentity(db);
   const fullTitle = settings.siteTagline
     ? `${settings.siteName} – ${settings.siteTagline}`
     : settings.siteName;
@@ -52,9 +53,9 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s | ${settings.siteName}`,
     },
     description,
-    authors: [{ name: settings.siteAuthor, url: SITE_URL }],
-    creator: settings.siteAuthor,
-    publisher: settings.siteAuthor,
+    authors: [{ name: identity.siteAuthor, url: SITE_URL }],
+    creator: identity.siteAuthor,
+    publisher: identity.siteAuthor,
     robots: {
       index: true,
       follow: true,

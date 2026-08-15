@@ -2,18 +2,20 @@ import { getDb } from "@/lib/db";
 import { listPosts } from "@/data/entities/post";
 import { listCategories } from "@/data/entities/category";
 import { getSiteSettings } from "@/data/settings";
+import { getDefaultHuman } from "@/data/entities/human";
 import { SITE_URL, postPath } from "@/lib/seo";
 
 export async function GET() {
   const db = getDb();
-  const [{ posts }, categories, settings] = await Promise.all([
+  const [{ posts }, categories, settings, defaultHuman] = await Promise.all([
     listPosts(db, { status: "published", pageSize: 250 }),
     listCategories(db),
     getSiteSettings(db),
+    getDefaultHuman(db),
   ]);
 
   const lines = [
-    `# ${settings.siteAuthor || settings.siteName}`,
+    `# ${defaultHuman?.name || settings.siteName}`,
     "",
     settings.siteDescription ? `> ${settings.siteDescription}` : "",
     "",

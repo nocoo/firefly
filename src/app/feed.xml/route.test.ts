@@ -23,7 +23,7 @@ vi.mock("@/data/settings", () => ({
     siteName: "Test Blog",
     siteTagline: "A test blog",
     siteDescription: "A blog about testing",
-    siteAuthor: "Test Author",
+    defaultHumanId: "human-1",
     authorEmail: "test@example.com",
     twitterHandle: "",
     socialLinks: [],
@@ -83,14 +83,19 @@ vi.mock("@/models/markdown", () => ({
   renderMarkdown: vi.fn((content: string) => `<p>${content}</p>`),
 }));
 
+vi.mock("@/data/entities/human", () => ({
+  getDefaultHuman: vi.fn().mockResolvedValue({
+    id: "human-1",
+    name: "Test Author",
+  }),
+}));
+
 vi.mock("@/lib/ai-agent/author", () => ({
   getPostAuthor: vi.fn().mockImplementation((post: { ai_agent_id: string | null; agent_name: string | null }) => {
-    // Return agent author if post has ai_agent_id and agent_name
     if (post.ai_agent_id && post.agent_name) {
       return { type: "agent", name: post.agent_name, url: null, avatarUrl: null };
     }
-    // Return site author
-    return { type: "site", name: "Test Author", url: null, avatarUrl: null };
+    return { type: "human", name: "Test Author", url: null, avatarUrl: null };
   }),
 }));
 

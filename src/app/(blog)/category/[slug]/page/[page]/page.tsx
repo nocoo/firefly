@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { getCategoryBySlug } from "@/data/entities/category";
 import { listPosts } from "@/data/entities/post";
 import { getSiteSettings } from "@/data/settings";
+import { loadSiteIdentity } from "@/lib/site-identity";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { ListPageHeader } from "@/components/blog/list-page-header";
@@ -27,12 +28,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const category = await getCategoryBySlug(db, slug);
   if (!category) return { title: "Not Found" };
 
-  const settings = await getSiteSettings(db);
+  const { identity } = await loadSiteIdentity(db);
   return buildPageMeta({
     title: `${category.name} – Page ${page}`,
     description: category.description || category.name,
     path: `/category/${slug}/page/${page}`,
-  }, settings);
+  }, identity);
 }
 
 export default async function CategoryPaged({ params }: Props) {
@@ -97,7 +98,7 @@ export default async function CategoryPaged({ params }: Props) {
             <PostCard
               key={post.id}
               post={post}
-              author={getPostAuthor(post, settings)}
+              author={getPostAuthor(post)}
               priority={i === 0 && !!post.featured_image}
             />
           ))

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
 import { listPosts } from "@/data/entities/post";
 import { getSiteSettings } from "@/data/settings";
+import { loadSiteIdentity } from "@/lib/site-identity";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { SITE_URL, OG_LOCALE, HTML_LANG, postPath } from "@/lib/seo";
@@ -52,7 +53,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Home() {
   const db = getDb();
-  const settings = await getSiteSettings(db);
+  const { settings, identity } = await loadSiteIdentity(db);
   const { posts, total } = await listPosts(db, {
     status: "published",
     page: 1,
@@ -66,7 +67,7 @@ export default async function Home() {
       <ListOriginTracker />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: websiteJsonLd(settings) }}
+        dangerouslySetInnerHTML={{ __html: websiteJsonLd(identity) }}
       />
       <script
         type="application/ld+json"
@@ -90,7 +91,7 @@ export default async function Home() {
             <PostCard
               key={post.id}
               post={post}
-              author={getPostAuthor(post, settings)}
+              author={getPostAuthor(post)}
               priority={i === 0 && !!post.featured_image}
             />
           ))

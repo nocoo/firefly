@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { listPosts } from "@/data/entities/post";
 import { getSiteSettings } from "@/data/settings";
+import { loadSiteIdentity } from "@/lib/site-identity";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { buildPageMeta, SITE_URL, postPath } from "@/lib/seo";
@@ -22,12 +23,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (Number.isNaN(page) || page < 2) return { title: "Not Found" };
 
   const db = getDb();
-  const settings = await getSiteSettings(db);
+  const { identity } = await loadSiteIdentity(db);
   return buildPageMeta({
     title: `Page ${page}`,
-    description: `${settings.siteDescription} — Page ${page}`,
+    description: `${identity.siteDescription} — Page ${page}`,
     path: `/page/${page}`,
-  }, settings);
+  }, identity);
 }
 
 export default async function HomePaged({ params }: PageProps) {
@@ -71,7 +72,7 @@ export default async function HomePaged({ params }: PageProps) {
             <PostCard
               key={post.id}
               post={post}
-              author={getPostAuthor(post, settings)}
+              author={getPostAuthor(post)}
               priority={i === 0 && !!post.featured_image}
             />
           ))

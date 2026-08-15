@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
 import { listMonthlyArchives } from "@/data/entities/post";
-import { getSiteSettings } from "@/data/settings";
+import { loadSiteIdentity } from "@/lib/site-identity";
 import { ListPageHeader } from "@/components/blog/list-page-header";
 import { ArchiveHeatmap } from "@/components/blog/archive-heatmap";
 import { EmptyState } from "@/components/blog/empty-state";
@@ -17,14 +17,14 @@ import { Archive } from "lucide-react";
 
 export async function generateMetadata(): Promise<Metadata> {
   const db = getDb();
-  const settings = await getSiteSettings(db);
+  const { identity } = await loadSiteIdentity(db);
   return buildPageMeta(
     {
       title: "归档",
       description: "按月查看所有已发布文章。",
       path: "/archive",
     },
-    settings,
+    identity,
   );
 }
 

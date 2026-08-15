@@ -5,6 +5,7 @@ import { renderMarkdown } from "@/models/markdown";
 import { SITE_URL, postPath, HTML_LANG } from "@/lib/seo";
 import { escapeXml } from "@/lib/xml";
 import { getPostAuthor } from "@/lib/ai-agent/author";
+import { getDefaultHuman } from "@/data/entities/human";
 import { createCache } from "@/lib/cache";
 
 // In-process response cache mirrors the public Cache-Control max-age=3600.
@@ -24,16 +25,17 @@ export async function GET() {
   }
 
   const db = getDb();
-  const [{ posts }, settings] = await Promise.all([
+  const [{ posts }, settings, defaultHuman] = await Promise.all([
     listPosts(db, {
       status: "published",
       pageSize: 50,
     }),
     getSiteSettings(db),
+    getDefaultHuman(db),
   ]);
 
-  // Resolve authors for all posts (now synchronous with JOINed data)
-  const postAuthors = posts.map((post) => getPostAuthor(post, settings));
+  const defaultHumanName = defaultHuman?.name ?? settings.siteName;
+  const postAuthors = posts.map((post) => getPostAuthor(post));
 
   const items = posts.map((post, idx) => {
     const url = `${SITE_URL}${postPath(post.slug, post.published_at)}`;
@@ -41,7 +43,7 @@ export async function GET() {
       ? new Date(post.published_at * 1000).toUTCString()
       : new Date(post.created_at * 1000).toUTCString();
     const html = post.content_html || renderMarkdown(post.content);
-    const authorName = postAuthors[idx]?.name ?? settings.siteAuthor;
+    const authorName = postAuthors[idx]?.name ?? defaultHumanName;
 
     return `    <item>
       <title><![CDATA[${post.title}]]></title>
@@ -56,7 +58,7 @@ export async function GET() {
   });
 
   const managingEditor = settings.authorEmail
-    ? `<managingEditor>${escapeXml(settings.authorEmail)} (${escapeXml(settings.siteAuthor)})</managingEditor>`
+    ? `<managingEditor>${escapeXml(settings.authorEmail)} (${escapeXml(defaultHumanName)})</managingEditor>`
     : "";
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

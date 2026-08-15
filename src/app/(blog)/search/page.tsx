@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
 import { searchPosts } from "@/data/entities/post";
-import { getSiteSettings } from "@/data/settings";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { EmptyState } from "@/components/blog/empty-state";
@@ -37,14 +36,11 @@ export default async function SearchPage({
   const parsed = page ? parseInt(page, 10) : 1;
   const currentPage = Number.isFinite(parsed) && parsed >= 1 ? parsed : 1;
 
-  const [result, settings] = await Promise.all([
-    searchPosts(db, {
-      query: q.trim(),
-      page: currentPage,
-      pageSize: PAGE_SIZE,
-    }),
-    getSiteSettings(db),
-  ]);
+  const result = await searchPosts(db, {
+    query: q.trim(),
+    page: currentPage,
+    pageSize: PAGE_SIZE,
+  });
 
   const totalPages = Math.ceil(result.total / PAGE_SIZE);
 
@@ -67,7 +63,7 @@ export default async function SearchPage({
               <PostCard
                 key={post.id}
                 post={post}
-                author={getPostAuthor(post, settings)}
+                author={getPostAuthor(post)}
                 snippet={result.snippets[post.id]}
               />
             ))}

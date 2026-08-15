@@ -30,6 +30,26 @@ export interface SiteIdentity {
   twitterHandle: string;
 }
 
+export function toSiteIdentity(
+  settings: {
+    siteName: string;
+    siteTagline: string;
+    siteDescription: string;
+    authorEmail: string;
+    twitterHandle: string;
+  },
+  defaultHumanName: string,
+): SiteIdentity {
+  return {
+    siteName: settings.siteName,
+    siteTagline: settings.siteTagline,
+    siteDescription: settings.siteDescription,
+    siteAuthor: defaultHumanName,
+    authorEmail: settings.authorEmail,
+    twitterHandle: settings.twitterHandle,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Page metadata builder
 // ---------------------------------------------------------------------------
