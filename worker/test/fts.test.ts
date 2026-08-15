@@ -400,6 +400,26 @@ describe('handleFtsSearch', () => {
     expect(json.pageSize).toBe(20);
   });
 
+  it('joins humans and ai_agents for author projection', async () => {
+    const mockAll = vi.fn().mockResolvedValue({ results: [] });
+    const mockFirst = vi.fn().mockResolvedValue({ count: 0 });
+    const mockBind = vi.fn().mockReturnValue({
+      all: mockAll,
+      first: mockFirst,
+      bind: vi.fn().mockReturnThis(),
+    });
+    const prepareMock = vi.fn().mockReturnValue({ bind: mockBind });
+    const db = makeDb({ prepare: prepareMock });
+
+    await handleFtsSearch({ query: 'hello' }, db as unknown as D1Database);
+
+    const searchSql = String(prepareMock.mock.calls[0][0]);
+    expect(searchSql).toContain('LEFT JOIN ai_agents a ON p.ai_agent_id = a.id');
+    expect(searchSql).toContain('LEFT JOIN humans h ON p.human_id = h.id');
+    expect(searchSql).toContain('a.name AS agent_name');
+    expect(searchSql).toContain('h.name AS human_name');
+  });
+
   it('applies status filter when provided', async () => {
     const mockAll = vi.fn().mockResolvedValue({ results: [] });
     const mockFirst = vi.fn().mockResolvedValue({ count: 0 });

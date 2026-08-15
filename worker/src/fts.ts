@@ -147,6 +147,12 @@ interface FtsSearchResult {
   category_id: string | null;
   category_name: string | null;
   category_slug: string | null;
+  agent_name: string | null;
+  agent_slug: string | null;
+  agent_avatar_version: string | null;
+  human_name: string | null;
+  human_slug: string | null;
+  human_avatar_version: string | null;
   featured_image: string | null;
   reading_time: number;
   comment_count: number;
@@ -279,10 +285,14 @@ export async function handleFtsSearch(
   // Search with BM25 ranking: title × 10, content × 1, excerpt × 5
   const searchSql = `
     SELECT p.*, c.name AS category_name, c.slug AS category_slug,
+           a.name AS agent_name, a.slug AS agent_slug, a.avatar_version AS agent_avatar_version,
+           h.name AS human_name, h.slug AS human_slug, h.avatar_version AS human_avatar_version,
            snippet(posts_fts, -1, '<mark>', '</mark>', '…', 40) AS search_snippet
     FROM posts_fts
     JOIN posts p ON p.rowid = posts_fts.rowid
     LEFT JOIN categories c ON p.category_id = c.id
+    LEFT JOIN ai_agents a ON p.ai_agent_id = a.id
+    LEFT JOIN humans h ON p.human_id = h.id
     WHERE posts_fts MATCH ?
       ${statusClause}
     ORDER BY bm25(posts_fts, 10.0, 1.0, 5.0), p.published_at DESC, p.rowid DESC
