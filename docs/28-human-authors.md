@@ -48,8 +48,10 @@
 | `src/data/entities/ai-agent.ts` | 不改 |
 | `src/lib/mcp/**`（含 `author-post.ts`、token、OAuth） | 不改 |
 | `/api/admin/ai-agents/**`、`/admin/ai-agents/**` | 不改 |
-| `src/lib/ai-agent/avatar.ts`、R2 `agents/{id}/...` | 不改 |
+| `src/lib/ai-agent/avatar.ts`、`avatar-url.ts`、`avatar.test.ts`、R2 `agents/{id}/...` | 不改 |
 | `src/lib/ai-agent/prompt-generator.ts` | 不改 |
+| `src/components/admin/ai-agent-*.tsx`、`ai-agents-*.tsx` | 不改 |
+| `e2e/api/admin-ai-agents.test.ts`、`e2e/bdd/admin-ai-agents.spec.ts`、`e2e/api/mcp.test.ts` | 不改期望 |
 | MCP `scope=author` 工具参数里的 `author_id`（实际是 agent id） | 不改 |
 
 允许的、仅限「署名展示」的只读扩展：`VIEW_QUERY` 增加 `LEFT JOIN humans`，`getPostAuthor` 在 `ai_agent_id` 为空时改走 human，不再读 `site_author` / logo。Agent 分支保持先判 `ai_agent_id`，逻辑与今天一致。
@@ -71,57 +73,93 @@
 
 ### Migration `019-human-authors.sql`
 
-不需要 `@batch` 重建 posts / 关 FK。只加表和列。
+不重建 `posts` / `ai_agents`，不关 FK。**最终 DDL 就是下面这一份**，不要另选「重建 site_settings」。
+
+SQLite / 本仓库已有 `ALTER TABLE ... DROP COLUMN`（`017-mcp-no-expiry.sql`）。**不能**把已加的 `default_human_id` 改成 NOT NULL，除非重建 `site_settings`——那会漏拷 `ai_*` / Backy 密钥列。因此：
+
+- `default_human_id` 在库里保持可空
+- 迁移**末尾断言**无 NULL；应用拒绝空默认
+- `posts.human_id` 对 agent 行保持 NULL，永不 `NOT NULL`
+
+完整语句顺序（每条可单独被 runner 跳过「已存在」）：
 
 ```sql
-CREATE TABLE humans (
+CREATE TABLE IF NOT EXISTS humans (
   id              TEXT PRIMARY KEY,
   name            TEXT NOT NULL,
   slug            TEXT NOT NULL UNIQUE,
   description     TEXT,
-  email           TEXT,
+  email           TEXT,            -- 只存 trim+lower；见写入规范
   profile_public  INTEGER NOT NULL DEFAULT 0 CHECK (profile_public IN (0, 1)),
   avatar_version  TEXT,
   created_at      INTEGER NOT NULL,
   updated_at      INTEGER NOT NULL
 );
 
-CREATE UNIQUE INDEX idx_humans_email
+CREATE UNIQUE INDEX IF NOT EXISTS idx_humans_email
   ON humans(email) WHERE email IS NOT NULL;
 
 ALTER TABLE posts
   ADD COLUMN human_id TEXT REFERENCES humans(id);
 
-CREATE INDEX idx_posts_human ON posts(human_id);
+CREATE INDEX IF NOT EXISTS idx_posts_human ON posts(human_id);
 
 ALTER TABLE site_settings
   ADD COLUMN default_human_id TEXT REFERENCES humans(id);
+
+-- 幂等：已有 humans 则不再插
+INSERT INTO humans (id, name, slug, email, profile_public, avatar_version, created_at, updated_at)
+SELECT
+  lower(hex(randomblob(16))),
+  COALESCE(NULLIF(site_author, ''), NULLIF(site_name, ''), 'Author'),
+  'human-' || lower(hex(randomblob(16))),
+  NULL, 0, NULL, unixepoch(), unixepoch()
+FROM site_settings
+WHERE id = 1
+  AND NOT EXISTS (SELECT 1 FROM humans);
+
+UPDATE site_settings
+SET default_human_id = (SELECT id FROM humans ORDER BY created_at ASC LIMIT 1)
+WHERE id = 1 AND default_human_id IS NULL;
+
+UPDATE posts
+SET human_id = (SELECT default_human_id FROM site_settings WHERE id = 1)
+WHERE ai_agent_id IS NULL AND human_id IS NULL;
+
+ALTER TABLE site_settings DROP COLUMN site_author;
 ```
 
-然后同一文件里用纯 SQL 回填（runner 只跑 `.sql`，不用 `slugify`）：
+迁移测试（`019-human-authors.test.ts`）必须失败即红：
 
-1. `INSERT` 一条 human：
-   - `id` = `lower(hex(randomblob(16)))`
-   - `name` = `COALESCE(NULLIF(site_author, ''), NULLIF(site_name, ''), 'Author')`
-   - `slug` = `'human-' || id`
-   - `email = NULL`，`profile_public = 0`
-2. `UPDATE site_settings SET default_human_id = <该 id>`
-3. `UPDATE posts SET human_id = <该 id> WHERE ai_agent_id IS NULL`
-4. 确认 `default_human_id` 无 NULL、且 `posts` 中 `ai_agent_id IS NULL` 的行都有 `human_id`
+- `SELECT COUNT(*) FROM site_settings WHERE default_human_id IS NULL` = 0
+- `SELECT COUNT(*) FROM posts WHERE ai_agent_id IS NULL AND human_id IS NULL` = 0
+- agent 文：`ai_agent_id` 原值不变，`human_id` 仍 NULL
+- `PRAGMA foreign_key_check` 空
 
-**不** `DROP site_author` 写在同一条「必须成功」的迁移里也可以，但本设计选择 **同迁去掉 `site_author`**（重建 `site_settings` 单行，或可接受的话留下列不用——为免旧代码误读，**删列**）。删 `site_settings` 列若必须重建该表，只动 settings 一行，不动 `posts` / `ai_agents`。
+中途失败：runner **不会**记成已应用。**禁止**在半迁库上重跑碰运气；先 Time Travel 回 bookmark 再整份重跑。`DROP COLUMN site_author` 放最后，重跑时若列已删会报错——这就是要回滚再跑的原因，不要给 DROP 加「忽略错误」。
 
-`human_id` 对 agent 行保持 NULL，**不加** `NOT NULL`，避免强迫重建 posts。
+slug：`'human-' || id` 在单条 INSERT 里要用**同一个** `hex(randomblob(16))`（CTE / 子查询绑定一次），不能 name 用一个 blob、slug 再 `randomblob` 一次。上面示例写成两次是示意；实现必须：
 
-应用层 XOR（`PostService` + humans CRUD）：
+```sql
+WITH seed AS (
+  SELECT lower(hex(randomblob(16))) AS hid, site_author, site_name
+  FROM site_settings WHERE id = 1
+)
+INSERT INTO humans (id, name, slug, ...)
+SELECT hid, COALESCE(...), 'human-' || hid, ... FROM seed
+WHERE NOT EXISTS (SELECT 1 FROM humans);
+```
 
-- 写文章：`human_id` 与 `ai_agent_id` 恰有一个非空
-- 选人：清 `ai_agent_id`
-- 选 agent：清 `human_id`（与今天「设 ai_agent_id」等价）
-- MCP create 仍只设 `ai_agent_id`、不设 `human_id` → 合法 agent 文，零改 MCP
+应用层 XOR（`PostService`，**不是**改 MCP 文件）：
 
-删人类：有 `posts.human_id` 引用 → 409；是 `default_human_id` → 409；最后一个人类 → 409。  
-删 agent：仍走现有「有 `ai_agent_id` 引用则 409」，本篇不改。
+- 最终落库：`human_id` 与 `ai_agent_id` 恰有一个非空
+- 选人：写 `human_id`，同一条 SQL 把 `ai_agent_id` 置 NULL
+- 选 agent：写 `ai_agent_id`，同一条 SQL 把 `human_id` 置 NULL
+- **full-scope MCP `update_post` 现有语义**允许 `ai_agent_id: null`（`src/lib/mcp/entities/post.ts`）。零改 MCP 文件的前提下，`PostService.update` 必须根据「库里的旧值 + 输入」算最终二元组：清空 `aiAgentId` 且未另给 `humanId` 时，**同一条 UPDATE** 写入 `default_human_id`。禁止先 UPDATE 成双 NULL。
+- MCP create 仍只设 `aiAgentId`、不设 `humanId` → 合法 agent 文
+
+删人类：有 `posts.human_id` → 409；是 `default_human_id` → 409；最后一个人类 → 409。  
+删 agent：现有逻辑，不改。
 
 ---
 
@@ -196,12 +234,15 @@ LEFT JOIN humans h ON p.human_id = h.id
 
 | 入口 | 行为 |
 |------|------|
-| `POST /api/posts` | `human_id` 可选；缺省且未传 `ai_agent_id` → 填 `default_human_id`。若传了 `ai_agent_id`（后台选 agent）→ `human_id` 必须空，走现有 agent 逻辑 |
-| `PUT /api/posts/[slug]` | 显式带当前选择：人或 agent 二选一 |
-| `PATCH /api/admin/posts/batch` | **不改署名**。改分类不新增 agent 校验（现有行为） |
-| MCP `create_post` / `update_post` | **不改**。继续只碰 `ai_agent_id` |
+| `POST /api/posts` | 请求体：`human_id` / `ai_agent_id` 都可选。都缺 → 路由/Service 填 `default_human_id`。只传 `ai_agent_id` → 与今天 create 相同 |
+| `PUT /api/posts/[slug]` | 带当前选择（人或 agent） |
+| `PATCH /api/admin/posts/batch` | **不改署名** |
+| MCP create / update | **文件零 diff**。create 只带 `aiAgentId`。update 若 `ai_agent_id: null` 由 PostService 补默认人类（见上） |
 
-`PostService`：若调用方带了 `aiAgentId`，禁止同时带 `humanId`；若只带 `humanId` 或两者都空（create），按上表补默认人类。现有只传 `aiAgentId` 的测试必须继续绿。
+`PostService.create` 读默认人类时 **绕过** `getSiteSettings` 的 5 分钟缓存，直接 `SELECT default_human_id FROM site_settings`。  
+切换默认：专用 `updateDefaultHumanId()`（仿 `updateSiteLogoVersion`），写完 `invalidateSettingsCache()`。
+
+两者都传 → 400。现有只传 `aiAgentId` 的测试必须继续绿。增加：agent 文 MCP 清空 `ai_agent_id` → 变成默认人类；人类文改署 agent → `human_id` 空；连续两次清空仍有人类作者。
 
 选 agent 当作者时 **不**在本篇加「锁分类到 agent.category_id」——那是今天 MCP 已做、后台尚未做的 agent 规则，单独开篇再做，避免悄悄改 agent 发文体验。
 
@@ -265,7 +306,10 @@ GET /api/authors/profile?hash=<sha256(lowercase(trim(email)))>
 | 超限 | `429` |
 
 - 不回 email / id / slug
-- 默认 `profile_public=0`（含迁移出来的那条）
+- CRUD 写入：`email` 一律 `trim().toLowerCase()`；空串存 NULL。唯一索引建在规范化后的值上（不必 `COLLATE NOCASE`）
+- `email` 与 `hash` 都给 → **只认 hash**。hash 必须是 64 位小写 hex，否则当缺参
+- hash = `sha256(normalizedEmail)`，查询时对 `profile_public=1` 的行现算（人类行数极少，不另存列）
+- 默认 `profile_public=0`（含迁移那条）
 - 限流：`src/lib/rate-limit.ts`，IP，30/60s，进程内
 - `proxy.ts` 对非 admin GET `/api/*` 本就公开；这里只加 profile 限流分支
 - **不查 `ai_agents`**
@@ -281,7 +325,7 @@ Backup：现行导出没有 `ai_agent_id`（保持如此，本篇不补 agent �
 `BACKUP_SCHEMA_VERSION` → 2：
 
 - 新增 `humans: ExportedHuman[]`
-- `ExportedPost` 新增可选 `human_id`
+- `ExportedPost` **必有** `human_id: string | null`（converter 必须输出；human 文为 id，agent 文为 `null`）。不是「字段可缺席」
 - `ExportedSiteSettings` 去掉 `site_author`，保留 `author_email`，加上 `default_human_id`
 - `humans` + `posts` + `site_settings` 用一次 `db.batch` 读，避免悬挂 `human_id`
 - 不做恢复
@@ -320,7 +364,7 @@ Modify (human / 署名 only):
 ├── src/data/entities/post-types.ts     # VIEW_QUERY 追加 humans；Create/Update 加 humanId
 ├── src/data/entities/post-mutations.ts # 写 human_id
 ├── src/services/post-service.ts        # XOR；aiAgentId 路径保持
-├── src/data/settings.ts                # drop siteAuthor; add defaultHumanId
+├── src/data/settings.ts                # drop siteAuthor; add defaultHumanId + updateDefaultHumanId
 ├── src/models/types.ts                 # Human；Post 加 human_id
 ├── src/models/backup-schema.ts / backup-export.ts
 ├── src/lib/seo.ts / jsonld.ts / feed / layout / blog pages
@@ -349,7 +393,7 @@ Do not touch:
 | `human-avatar.test.ts` | `humans/{id}/...` 路径 |
 | `019-human-authors.test.ts` | 夹具含 **已有 agent 文**：迁完 `ai_agent_id` 不变、`human_id` 仍 NULL；无 agent 文补上 human；`default_human_id` 非空 |
 | `author.test.ts` | agent 分支仍只看 `ai_agent_id`；无 agent 走 human，不用 logo |
-| `post-service.test.ts` | 只传 `aiAgentId` 与今天一致；只传/都不传 → 默认人类；两者都传 400 |
+| `post-service.test.ts` | 只传 `aiAgentId` 与今天一致；都不传 → 默认人类；两者都传 400；`aiAgentId: null` 更新 agent 文 → 同一语句写成默认人类 |
 | `settings.test.ts` | 无 `siteAuthor`；有 `defaultHumanId` |
 | `profile/route.test.ts` | 默认不公开；不查 agent |
 | `seo` / `jsonld` / `feed` | publisher = 默认人类；agent 文 creator 仍是 agent |
@@ -377,8 +421,8 @@ Do not touch:
 
 ### G1 / G2
 
-- 除约定的 VIEW_QUERY / `getPostAuthor` 展示外，`rg` 不应为人类功能改 `src/lib/mcp`、`ai-agent.ts`、`/admin/ai-agents`
 - 公开接口不回邮箱
+- 实现验收：`git diff --name-only <base>...HEAD` 不得出现冻结清单里的路径（denylist），不要只靠 `rg`
 
 ---
 
