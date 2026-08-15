@@ -27,6 +27,7 @@ const PAGE_TITLE_KEYS: Record<string, TranslationKey> = {
   "/admin/tags": "admin.page.tags",
   "/admin/media": "admin.page.media",
   "/admin/site-identity": "admin.page.site-identity",
+  "/admin/authors": "admin.page.authors",
   "/admin/settings": "admin.page.settings",
   "/admin/ai-settings": "admin.page.ai-settings",
   "/admin/ai-agents": "admin.page.ai-agents",

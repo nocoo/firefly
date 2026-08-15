@@ -25,6 +25,10 @@ export function inferErrorField(message: string): PostFormField | null {
 }
 
 
+export type AuthorSelection =
+  | { kind: "human"; id: string }
+  | { kind: "agent"; id: string };
+
 export interface BuildSubmitBodyArgs {
   isEditing: boolean;
   title: string;
@@ -37,6 +41,7 @@ export interface BuildSubmitBodyArgs {
   selectedTags: string[];
   publishedAtLocal: string;
   reference: ReferenceState;
+  author: AuthorSelection | null;
 }
 
 /** Convert a `<input type="datetime-local">` value to a unix epoch (seconds). */
@@ -66,6 +71,7 @@ export function buildSubmitBody(args: BuildSubmitBodyArgs): Record<string, unkno
     selectedTags,
     publishedAtLocal,
     reference,
+    author,
   } = args;
 
   const publishedAtEpoch = datetimeLocalToEpoch(publishedAtLocal);
@@ -103,6 +109,8 @@ export function buildSubmitBody(args: BuildSubmitBodyArgs): Record<string, unkno
     tag_ids: selectedTags,
     // published_at: epoch when set, null to clear (edit), undefined to omit (create)
     published_at: isEditing ? (publishedAtEpoch ?? null) : publishedAtEpoch,
+    human_id: author?.kind === "human" ? author.id : isEditing ? null : undefined,
+    ai_agent_id: author?.kind === "agent" ? author.id : isEditing ? null : undefined,
     ...refFields,
   };
 }

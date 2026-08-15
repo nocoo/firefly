@@ -37,6 +37,7 @@ export const zhCN = {
   "admin.page.categories": "分类",
   "admin.page.tags": "标签",
   "admin.page.site-identity": "站点身份",
+  "admin.page.authors": "作者",
   "admin.page.settings": "设置",
   "admin.page.ai-agents": "AI 代理",
   "admin.page.ai-settings": "AI 设置",

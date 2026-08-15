@@ -3,6 +3,8 @@ import { getDb } from "@/lib/db";
 import { getPostById, getPostTags } from "@/data/entities/post";
 import { listCategories } from "@/data/entities/category";
 import { listTags } from "@/data/entities/tag";
+import { listHumans, getDefaultHumanIdUncached } from "@/data/entities/human";
+import { listAiAgents } from "@/data/entities/ai-agent";
 import {
   listCommentsByPost,
   buildCommentTree,
@@ -18,13 +20,16 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
   const { id } = await params;
   const db = getDb();
 
-  const [post, postTags, categories, tags, comments] =
+  const [post, postTags, categories, tags, comments, humans, agents, defaultHumanId] =
     await Promise.all([
       getPostById(db, id),
       getPostTags(db, id),
       listCategories(db),
       listTags(db),
       listCommentsByPost(db, id),
+      listHumans(db),
+      listAiAgents(db),
+      getDefaultHumanIdUncached(db),
     ]);
 
   if (!post) notFound();
@@ -37,6 +42,9 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
         post={{ ...post, tagIds: postTags.map((t) => t.id) }}
         categories={categories}
         tags={tags}
+        humans={humans}
+        agents={agents}
+        defaultHumanId={defaultHumanId}
       />
       {commentTree.length > 0 && (
         <section className="mt-8 rounded-widget border border-border p-6">

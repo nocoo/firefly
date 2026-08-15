@@ -4,13 +4,21 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import type { Category, PostStatus, PostWithCategory, Tag } from "@/models/types";
+import type {
+  AiAgent,
+  Category,
+  Human,
+  PostStatus,
+  PostWithAgent,
+  Tag,
+} from "@/models/types";
 import { slugify } from "@/models/post";
 import type { UploadResult } from "./image-upload-zone";
 import { MarkdownPreview } from "./markdown-preview";
 import { ConfirmDialog } from "./confirm-dialog";
 import { PostContentEditor, type PostContentEditorHandle } from "./post-form-content-editor";
 import {
+  PostAuthorField,
   PostExcerptField,
   PostFeaturedImageField,
   PostPublishDateField,
@@ -25,15 +33,19 @@ import {
   buildSubmitBody,
   epochToDatetimeLocal,
   inferErrorField,
+  type AuthorSelection,
   type PostFormField,
 } from "./post-form-helpers";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 
 interface PostFormProps {
-  post?: PostWithCategory & { tagIds: string[] };
+  post?: PostWithAgent & { tagIds: string[] };
   categories: Category[];
   tags: Tag[];
+  humans: Human[];
+  agents: AiAgent[];
+  defaultHumanId: string | null;
 }
 
 /** Preload media records for an existing post, merging with anything the
@@ -90,7 +102,24 @@ async function associateMedia(
   }
 }
 
-export function PostForm({ post, categories, tags }: PostFormProps) {
+function initialAuthor(
+  post: PostWithAgent | undefined,
+  defaultHumanId: string | null,
+): AuthorSelection | null {
+  if (post?.ai_agent_id) return { kind: "agent", id: post.ai_agent_id };
+  if (post?.human_id) return { kind: "human", id: post.human_id };
+  if (defaultHumanId) return { kind: "human", id: defaultHumanId };
+  return null;
+}
+
+export function PostForm({
+  post,
+  categories,
+  tags,
+  humans,
+  agents,
+  defaultHumanId,
+}: PostFormProps) {
   const router = useRouter();
   const isEditing = !!post;
 
@@ -113,6 +142,9 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
   const [featuredImage, setFeaturedImage] = useState(post?.featured_image ?? "");
   const [publishedAtLocal, setPublishedAtLocal] = useState(() =>
     epochToDatetimeLocal(post?.published_at),
+  );
+  const [author, setAuthor] = useState<AuthorSelection | null>(() =>
+    initialAuthor(post, defaultHumanId),
   );
 
   // ── Field refs (for scroll/focus on field-level errors) ──
@@ -203,6 +235,7 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         selectedTags,
         publishedAtLocal,
         reference,
+        author,
       });
 
       const url = isEditing ? `/api/posts/${post.slug}` : "/api/posts";
@@ -312,6 +345,13 @@ export function PostForm({ post, categories, tags }: PostFormProps) {
         categoryId={categoryId}
         onCategoryChange={setCategoryId}
         categories={categories}
+      />
+
+      <PostAuthorField
+        author={author}
+        onAuthorChange={setAuthor}
+        humans={humans}
+        agents={agents}
       />
 
       <PostPublishDateField

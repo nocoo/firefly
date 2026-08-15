@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import type { Category, PostStatus, Tag } from "@/models/types";
+import type { AiAgent, Category, Human, PostStatus, Tag } from "@/models/types";
+import type { AuthorSelection } from "./post-form-helpers";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -128,6 +129,54 @@ export function PostStatusCategoryRow({
           ))}
         </Select>
       </div>
+    </div>
+  );
+}
+
+export function PostAuthorField({
+  author,
+  onAuthorChange,
+  humans,
+  agents,
+}: {
+  author: AuthorSelection | null;
+  onAuthorChange: (next: AuthorSelection) => void;
+  humans: Human[];
+  agents: AiAgent[];
+}) {
+  const value =
+    author?.kind === "human"
+      ? `human:${author.id}`
+      : author?.kind === "agent"
+        ? `agent:${author.id}`
+        : "";
+
+  return (
+    <div className="space-y-2">
+      <label htmlFor="author" className="text-sm font-medium text-foreground">
+        {"作者"}
+      </label>
+      <Select
+        id="author"
+        value={value}
+        onChange={(e) => {
+          const [kind, id] = e.target.value.split(":");
+          if ((kind === "human" || kind === "agent") && id) {
+            onAuthorChange({ kind, id });
+          }
+        }}
+      >
+        {humans.map((human) => (
+          <option key={human.id} value={`human:${human.id}`}>
+            {human.name}
+          </option>
+        ))}
+        {agents.map((agent) => (
+          <option key={agent.id} value={`agent:${agent.id}`}>
+            {`${agent.name} (AI)`}
+          </option>
+        ))}
+      </Select>
     </div>
   );
 }

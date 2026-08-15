@@ -26,6 +26,7 @@ import {
   BarChart3,
   Sparkles,
   Building2,
+  UserRound,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -115,6 +116,7 @@ const NAV_COMMANDS: NavCommand[] = [
   { id: "nav-categories", label: "分类", href: "/admin/categories", icon: Folder, keywords: ["categories", "分类"] },
   { id: "nav-tags", label: "标签", href: "/admin/tags", icon: Tag, keywords: ["tags", "标签"] },
   { id: "nav-site-identity", label: "站点身份", href: "/admin/site-identity", icon: Building2, keywords: ["site", "identity", "branding", "站点", "身份", "品牌"] },
+  { id: "nav-authors", label: "作者", href: "/admin/authors", icon: UserRound, keywords: ["authors", "humans", "作者"] },
   { id: "nav-settings", label: "设置", href: "/admin/settings", icon: Settings, keywords: ["settings", "preferences", "设置", "偏好"] },
   { id: "nav-ai-agents", label: "AI 代理", href: "/admin/ai-agents", icon: Users, keywords: ["ai", "agents", "代理"] },
   { id: "nav-ai-settings", label: "AI 设置", href: "/admin/ai-settings", icon: Sparkles, keywords: ["ai", "settings", "provider", "ai 设置"] },
