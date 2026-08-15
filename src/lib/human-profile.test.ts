@@ -46,6 +46,13 @@ describe("parseProfileQuery", () => {
     });
   });
 
+  it("treats an empty hash as invalid even when email is present", () => {
+    expect(parseProfileQuery("li@example.com", "")).toEqual({
+      kind: "none",
+      value: null,
+    });
+  });
+
   it("normalizes email when hash is absent", () => {
     expect(parseProfileQuery("  LI@Example.COM ", null)).toEqual({
       kind: "email",

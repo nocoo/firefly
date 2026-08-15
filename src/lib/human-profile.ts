@@ -23,7 +23,7 @@ export function parseProfileQuery(
   email: string | null,
   hash: string | null,
 ): ProfileLookup {
-  if (hash !== null && hash !== "") {
+  if (hash !== null) {
     if (!HASH_RE.test(hash)) return { kind: "none", value: null };
     return { kind: "hash", value: hash };
   }

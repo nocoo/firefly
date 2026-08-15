@@ -80,6 +80,13 @@ describe("GET /api/authors/profile", () => {
     });
   });
 
+  it("returns empty payload when hash is present but empty", async () => {
+    const res = await GET(request("?email=li@example.com&hash="));
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toEqual({ name: null, avatar: null });
+    expect(listPublicHumans).not.toHaveBeenCalled();
+  });
+
   it("returns empty payload for a missing query", async () => {
     const res = await GET(request(""));
     expect(res.status).toBe(200);
