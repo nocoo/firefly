@@ -109,7 +109,7 @@ ALTER TABLE site_settings
   ADD COLUMN default_human_id TEXT REFERENCES humans(id);
 
 -- 幂等：已有 humans 则不再插。id 与 slug 共用同一个 hid。
-WITH seed AS (
+WITH seed AS MATERIALIZED (
   SELECT
     lower(hex(randomblob(16))) AS hid,
     COALESCE(NULLIF(trim(site_author), ''), NULLIF(trim(site_name), ''), 'Author') AS hname
