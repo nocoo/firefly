@@ -2,6 +2,7 @@ import { gzipSync } from "node:zlib";
 import type { Db } from "@/lib/db";
 import type {
   Post,
+  Human,
   Category,
   Tag,
   PostTag,
@@ -23,6 +24,7 @@ import type {
   ExportedAttachment,
   ExportedRedirect,
   ExportedSiteSettings,
+  ExportedHuman,
 } from "@/models/backup-schema";
 import { APP_VERSION } from "@/lib/version";
 
@@ -39,7 +41,7 @@ interface BackupSiteSettingsRow {
   site_name: string;
   site_tagline: string;
   site_description: string;
-  site_author: string;
+  default_human_id: string | null;
   author_email: string;
   twitter_handle: string;
   social_links: string;
@@ -59,7 +61,7 @@ interface BackupSiteSettingsRow {
 const SITE_SETTINGS_SQL =
   "SELECT locale, posts_per_page, comments_enabled, font_style, " +
   "site_logo_version, site_name, site_tagline, site_description, " +
-  "site_author, author_email, twitter_handle, social_links, " +
+  "default_human_id, author_email, twitter_handle, social_links, " +
   "ai_provider, ai_model, ai_base_url, ai_sdk_type, ai_auth_type, updated_at " +
   "FROM site_settings WHERE id = 1";
 
@@ -77,6 +79,7 @@ function convertPost(p: Post): ExportedPost {
     excerpt: p.excerpt,
     status: p.status,
     category_id: p.category_id,
+    human_id: p.human_id,
     featured_image: p.featured_image,
     comment_enabled: p.comment_enabled,
     comment_count: p.comment_count,
@@ -159,6 +162,20 @@ function convertRedirect(r: Redirect): ExportedRedirect {
   };
 }
 
+function convertHuman(h: Human): ExportedHuman {
+  return {
+    id: h.id,
+    name: h.name,
+    slug: h.slug,
+    description: h.description,
+    email: h.email,
+    profile_public: h.profile_public,
+    avatar_version: h.avatar_version,
+    created_at: epochToIso(h.created_at),
+    updated_at: epochToIso(h.updated_at),
+  };
+}
+
 function convertSiteSettings(row: BackupSiteSettingsRow): ExportedSiteSettings {
   return {
     locale: row.locale,
@@ -169,7 +186,7 @@ function convertSiteSettings(row: BackupSiteSettingsRow): ExportedSiteSettings {
     site_name: row.site_name,
     site_tagline: row.site_tagline,
     site_description: row.site_description,
-    site_author: row.site_author,
+    default_human_id: row.default_human_id,
     author_email: row.author_email,
     twitter_handle: row.twitter_handle,
     social_links: row.social_links,
@@ -190,17 +207,24 @@ function convertSiteSettings(row: BackupSiteSettingsRow): ExportedSiteSettings {
 export async function collectBackupData(
   db: Db,
 ): Promise<FireflyBackupEnvelope> {
-  const [posts, categories, tags, postTags, comments, attachments, redirects, settings] =
+  const [core, categories, tags, postTags, comments, attachments, redirects] =
     await Promise.all([
-      db.query<Post>("SELECT * FROM posts ORDER BY id"),
+      db.batch([
+        { sql: "SELECT * FROM humans ORDER BY id" },
+        { sql: "SELECT * FROM posts ORDER BY id" },
+        { sql: SITE_SETTINGS_SQL },
+      ]),
       db.query<Category>("SELECT * FROM categories ORDER BY id"),
       db.query<Tag>("SELECT * FROM tags ORDER BY id"),
       db.query<PostTag>("SELECT * FROM post_tags ORDER BY post_id, tag_id"),
       db.query<Comment>("SELECT * FROM comments ORDER BY id"),
       db.query<Attachment>("SELECT * FROM attachments ORDER BY id"),
       db.query<Redirect>("SELECT * FROM redirects ORDER BY id"),
-      db.firstOrNull<BackupSiteSettingsRow>(SITE_SETTINGS_SQL),
     ]);
+
+  const humans = { results: (core[0]?.results ?? []) as unknown as Human[] };
+  const posts = { results: (core[1]?.results ?? []) as unknown as Post[] };
+  const settings = (core[2]?.results[0] ?? null) as unknown as BackupSiteSettingsRow | null;
 
   const defaultSettings: ExportedSiteSettings = {
     locale: "zh",
@@ -211,7 +235,7 @@ export async function collectBackupData(
     site_name: "My Blog",
     site_tagline: "",
     site_description: "",
-    site_author: "",
+    default_human_id: null,
     author_email: "",
     twitter_handle: "",
     social_links: "[]",
@@ -228,6 +252,7 @@ export async function collectBackupData(
     exportedAt: new Date().toISOString(),
     appVersion: APP_VERSION,
     posts: posts.results.map(convertPost),
+    humans: humans.results.map(convertHuman),
     categories: categories.results.map(convertCategory),
     tags: tags.results.map(convertTag),
     postTags: postTags.results,
@@ -265,6 +290,7 @@ export async function serializeBackup(db: Db): Promise<SerializedBackup> {
 /** @internal — exposed for unit tests only */
 export const _testHelpers = {
   convertPost,
+  convertHuman,
   convertCategory,
   convertTag,
   convertComment,

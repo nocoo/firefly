@@ -6,7 +6,7 @@
 // Schema version
 // ---------------------------------------------------------------------------
 
-export const BACKUP_SCHEMA_VERSION = 1;
+export const BACKUP_SCHEMA_VERSION = 2;
 
 // ---------------------------------------------------------------------------
 // Epoch → ISO helpers
@@ -35,6 +35,7 @@ export interface ExportedPost {
   excerpt: string | null;
   status: "draft" | "published" | "private" | "archived";
   category_id: string | null;
+  human_id: string | null;
   featured_image: string | null;
   comment_enabled: number;
   comment_count: number;
@@ -111,6 +112,18 @@ export interface ExportedRedirect {
   created_at: string;
 }
 
+export interface ExportedHuman {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  email: string | null;
+  profile_public: number;
+  avatar_version: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ExportedSiteSettings {
   locale: string;
   posts_per_page: number;
@@ -120,7 +133,7 @@ export interface ExportedSiteSettings {
   site_name: string;
   site_tagline: string;
   site_description: string;
-  site_author: string;
+  default_human_id: string | null;
   author_email: string;
   twitter_handle: string;
   social_links: string;
@@ -141,6 +154,7 @@ export interface FireflyBackupEnvelope {
   exportedAt: string;
   appVersion: string;
   posts: ExportedPost[];
+  humans: ExportedHuman[];
   categories: ExportedCategory[];
   tags: ExportedTag[];
   postTags: ExportedPostTag[];

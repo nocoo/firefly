@@ -15,7 +15,7 @@ import type {
 
 describe("BACKUP_SCHEMA_VERSION", () => {
   it("is 1", () => {
-    expect(BACKUP_SCHEMA_VERSION).toBe(1);
+    expect(BACKUP_SCHEMA_VERSION).toBe(2);
   });
 });
 
@@ -71,7 +71,7 @@ describe("FireflyBackupEnvelope shape", () => {
     site_name: "Test Blog",
     site_tagline: "A test blog",
     site_description: "Description",
-    site_author: "Author",
+    default_human_id: "human-1",
     author_email: "test@example.com",
     twitter_handle: "@test",
     social_links: "[]",
@@ -88,6 +88,7 @@ describe("FireflyBackupEnvelope shape", () => {
     exportedAt: "2026-03-26T14:30:05.000Z",
     appVersion: "1.4.0",
     posts: [],
+    humans: [],
     categories: [],
     tags: [],
     postTags: [],
@@ -103,6 +104,7 @@ describe("FireflyBackupEnvelope shape", () => {
       "exportedAt",
       "appVersion",
       "posts",
+      "humans",
       "categories",
       "tags",
       "postTags",

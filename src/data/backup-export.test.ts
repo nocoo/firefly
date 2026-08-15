@@ -44,6 +44,7 @@ const samplePost: Post = {
   reference_description: null,
   reference_image: null,
   ai_agent_id: null,
+  human_id: "human-1",
   published_at: 1774483200,
   created_at: 1774483200,
   updated_at: 1774483200,
@@ -113,7 +114,7 @@ const sampleSettingsRow = {
   site_name: "Test Blog",
   site_tagline: "A test blog",
   site_description: "Description",
-  site_author: "Author",
+  default_human_id: "human-1",
   author_email: "test@example.com",
   twitter_handle: "@test",
   social_links: "[]",
@@ -139,6 +140,7 @@ describe("convertPost", () => {
     expect(exported.created_at).toBe("2026-03-26T00:00:00.000Z");
     expect(exported.updated_at).toBe("2026-03-26T00:00:00.000Z");
     expect(exported.published_at).toBe("2026-03-26T00:00:00.000Z");
+    expect(exported.human_id).toBe("human-1");
   });
 
   it("handles null published_at", () => {
@@ -219,7 +221,7 @@ describe("SITE_SETTINGS_SQL", () => {
       "site_name",
       "site_tagline",
       "site_description",
-      "site_author",
+      "default_human_id",
       "author_email",
       "twitter_handle",
       "social_links",
@@ -245,15 +247,18 @@ describe("collectBackupData", () => {
 
   beforeEach(() => {
     db = createMockDb();
+    vi.mocked(db.batch).mockResolvedValue([
+      mockResult([]),
+      mockResult([samplePost]),
+      mockResult([sampleSettingsRow]),
+    ] as never);
     vi.mocked(db.query)
-      .mockResolvedValueOnce(mockResult([samplePost]))        // posts
       .mockResolvedValueOnce(mockResult([sampleCategory]))    // categories
       .mockResolvedValueOnce(mockResult([sampleTag]))         // tags
       .mockResolvedValueOnce(mockResult([{ post_id: "01HX1234", tag_id: "tag1" }])) // postTags
       .mockResolvedValueOnce(mockResult([sampleComment]))     // comments
       .mockResolvedValueOnce(mockResult([sampleAttachment]))  // attachments
       .mockResolvedValueOnce(mockResult([sampleRedirect]));   // redirects
-    vi.mocked(db.firstOrNull).mockResolvedValue(sampleSettingsRow);
   });
 
   it("returns envelope with correct schema version", async () => {
@@ -269,6 +274,7 @@ describe("collectBackupData", () => {
   it("includes all entity arrays", async () => {
     const envelope = await collectBackupData(db);
     expect(envelope.posts).toHaveLength(1);
+    expect(envelope.humans).toHaveLength(0);
     expect(envelope.categories).toHaveLength(1);
     expect(envelope.tags).toHaveLength(1);
     expect(envelope.postTags).toHaveLength(1);
@@ -282,31 +288,43 @@ describe("collectBackupData", () => {
     expect(envelope.posts[0].created_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 
-  it("queries all 7 tables with ORDER BY", async () => {
+  it("queries remaining tables with ORDER BY and batches humans/posts/settings", async () => {
     await collectBackupData(db);
     const queryCalls = vi.mocked(db.query).mock.calls;
-    expect(queryCalls).toHaveLength(7);
+    expect(queryCalls).toHaveLength(6);
+    expect(queryCalls[0][0]).toContain("ORDER BY id");     // categories
+    expect(queryCalls[1][0]).toContain("ORDER BY id");     // tags
+    expect(queryCalls[2][0]).toContain("ORDER BY post_id, tag_id"); // postTags
+    expect(queryCalls[3][0]).toContain("ORDER BY id");     // comments
+    expect(queryCalls[4][0]).toContain("ORDER BY id");     // attachments
+    expect(queryCalls[5][0]).toContain("ORDER BY id");     // redirects
 
-    expect(queryCalls[0][0]).toContain("ORDER BY id");     // posts
-    expect(queryCalls[1][0]).toContain("ORDER BY id");     // categories
-    expect(queryCalls[2][0]).toContain("ORDER BY id");     // tags
-    expect(queryCalls[3][0]).toContain("ORDER BY post_id, tag_id"); // postTags
-    expect(queryCalls[4][0]).toContain("ORDER BY id");     // comments
-    expect(queryCalls[5][0]).toContain("ORDER BY id");     // attachments
-    expect(queryCalls[6][0]).toContain("ORDER BY id");     // redirects
+    const batchSql = vi.mocked(db.batch).mock.calls[0][0].map((s) => s.sql);
+    expect(batchSql[0]).toContain("FROM humans");
+    expect(batchSql[1]).toContain("FROM posts");
+    expect(batchSql[2]).toContain("FROM site_settings");
   });
 
   it("uses site_settings column whitelist (no SELECT *)", async () => {
     await collectBackupData(db);
-    expect(db.firstOrNull).toHaveBeenCalledWith(
-      expect.not.stringContaining("SELECT *"),
-    );
+    const settingsSql = vi.mocked(db.batch).mock.calls[0][0][2].sql;
+    expect(settingsSql).not.toContain("SELECT *");
   });
 
   it("uses default settings when no row found", async () => {
-    vi.mocked(db.firstOrNull).mockResolvedValue(null);
+    vi.mocked(db.batch).mockResolvedValue([
+      mockResult([]),
+      mockResult([samplePost]),
+      mockResult([]),
+    ] as never);
     const envelope = await collectBackupData(db);
     expect(envelope.siteSettings.site_name).toBe("My Blog");
+    expect(envelope.siteSettings.default_human_id).toBeNull();
+  });
+
+  it("always emits human_id on posts", async () => {
+    const envelope = await collectBackupData(db);
+    expect(envelope.posts[0]).toHaveProperty("human_id", "human-1");
   });
 });
 
@@ -319,15 +337,18 @@ describe("serializeBackup", () => {
 
   beforeEach(() => {
     db = createMockDb();
+    vi.mocked(db.batch).mockResolvedValue([
+      mockResult([]),
+      mockResult([samplePost]),
+      mockResult([sampleSettingsRow]),
+    ] as never);
     vi.mocked(db.query)
-      .mockResolvedValueOnce(mockResult([samplePost]))
       .mockResolvedValueOnce(mockResult([sampleCategory]))
       .mockResolvedValueOnce(mockResult([sampleTag]))
       .mockResolvedValueOnce(mockResult([{ post_id: "01HX1234", tag_id: "tag1" }]))
       .mockResolvedValueOnce(mockResult([sampleComment]))
       .mockResolvedValueOnce(mockResult([sampleAttachment]))
       .mockResolvedValueOnce(mockResult([sampleRedirect]));
-    vi.mocked(db.firstOrNull).mockResolvedValue(sampleSettingsRow);
   });
 
   it("returns a gzip-compressed buffer", async () => {
