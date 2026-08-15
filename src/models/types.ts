@@ -50,6 +50,7 @@ export interface Post {
   status: PostStatus;
   category_id: string | null;
   ai_agent_id: string | null;
+  human_id: string | null;
   featured_image: string | null;
   comment_enabled: number; // 0 | 1
   comment_count: number;
@@ -179,6 +180,26 @@ export interface PostWithAgent extends PostWithCategory {
   agent_name: string | null;
   agent_slug: string | null;
   agent_avatar_version: string | null;
+  human_name: string | null;
+  human_slug: string | null;
+  human_avatar_version: string | null;
+}
+
+export interface Human {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  email: string | null;
+  profile_public: number;
+  avatar_version: string | null;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface HumanWithMeta extends Human {
+  post_count: number;
+  is_default: number;
 }
 
 export interface PostWithTags extends PostWithCategory {
