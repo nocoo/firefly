@@ -10,6 +10,8 @@ import {
   updateHumanAvatarVersion,
   deleteHuman,
   getHumanPostCount,
+  getDefaultHuman,
+  listPublicHumans,
   normalizeHumanEmail,
 } from "./human";
 import type { Human, HumanWithMeta } from "@/models/types";
@@ -92,6 +94,14 @@ describe("updateHuman", () => {
     const params = vi.mocked(db.execute).mock.calls[0][1] as unknown[];
     expect(params[0]).toBe("b@example.com");
   });
+
+  it("returns the existing row when no fields change", async () => {
+    const db = createMockDb();
+    vi.mocked(db.firstOrNull).mockResolvedValue(sampleHuman);
+    const result = await updateHuman(db, "human-1", {});
+    expect(result).toEqual(sampleHuman);
+    expect(db.execute).not.toHaveBeenCalled();
+  });
 });
 
 describe("updateHumanAvatarVersion", () => {
@@ -134,6 +144,35 @@ describe("getHumanPostCount", () => {
     const db = createMockDb();
     vi.mocked(db.firstOrNull).mockResolvedValue({ count: 3 });
     expect(await getHumanPostCount(db, "human-1")).toBe(3);
+  });
+});
+
+describe("getDefaultHuman", () => {
+  it("returns null when default_human_id is unset", async () => {
+    const db = createMockDb();
+    vi.mocked(db.firstOrNull).mockResolvedValueOnce({ default_human_id: null });
+    expect(await getDefaultHuman(db)).toBeNull();
+  });
+
+  it("loads the default human row", async () => {
+    const db = createMockDb();
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({ default_human_id: "human-1" })
+      .mockResolvedValueOnce(sampleHuman);
+    expect(await getDefaultHuman(db)).toEqual(sampleHuman);
+  });
+});
+
+describe("listPublicHumans", () => {
+  it("queries only public humans with email", async () => {
+    const db = createMockDb();
+    vi.mocked(db.query).mockResolvedValue({
+      results: [sampleHuman],
+      meta: { changes: 0, duration: 1 },
+    });
+    const result = await listPublicHumans(db);
+    expect(result).toHaveLength(1);
+    expect(vi.mocked(db.query).mock.calls[0][0]).toContain("profile_public = 1");
   });
 });
 

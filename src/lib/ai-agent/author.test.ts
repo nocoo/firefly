@@ -75,6 +75,32 @@ describe("getPostAuthor", () => {
     });
   });
 
+  it("uses empty slug when agent_slug is missing", () => {
+    const post = createMockPostWithAgent({
+      ai_agent_id: "agent-1",
+      agent_name: "Claude Daily",
+      agent_slug: null,
+      agent_avatar_version: null,
+    });
+    expect(getPostAuthor(post).slug).toBe("");
+  });
+
+  it("uses empty human fields when human_id is missing", () => {
+    const post = createMockPostWithAgent({
+      ai_agent_id: null,
+      human_id: null,
+      human_name: null,
+      human_slug: null,
+    });
+    expect(getPostAuthor(post)).toEqual({
+      type: "human",
+      id: "",
+      name: "",
+      slug: "",
+      avatarUrl: null,
+    });
+  });
+
   it("returns null avatarUrl when agent has no avatar", () => {
     const post = createMockPostWithAgent({
       ai_agent_id: "agent-1",
