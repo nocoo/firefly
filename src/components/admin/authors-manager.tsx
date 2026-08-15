@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Star, User } from "lucide-react";
+import { Pencil, Plus, Star, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
 import type { HumanWithMeta } from "@/models/types";
 import { Button } from "@/components/ui/button";
@@ -78,21 +78,34 @@ export function AuthorsManager({
         </Button>
       </div>
 
-      <div className="overflow-x-auto rounded-widget border border-border">
-        <table className="w-full text-sm">
-          <thead className="bg-secondary text-left text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3 font-medium">作者</th>
-              <th className="px-4 py-3 font-medium">标识</th>
-              <th className="px-4 py-3 font-medium">邮箱</th>
-              <th className="px-4 py-3 font-medium">公开</th>
-              <th className="px-4 py-3 font-medium">文章</th>
-              <th className="px-4 py-3 font-medium" />
+      <div className="overflow-x-auto rounded-card bg-secondary p-1">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
+                作者
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
+                标识
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
+                邮箱
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
+                公开
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
+                文章
+              </th>
+              <th className="px-4 py-2 w-24" />
             </tr>
           </thead>
           <tbody>
             {authors.map((author) => (
-              <tr key={author.id} className="border-t border-border">
+              <tr
+                key={author.id}
+                className="border-b border-border last:border-0 transition-colors hover:bg-accent/50"
+              >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     {author.avatarUrl ? (
@@ -122,39 +135,42 @@ export function AuthorsManager({
                 <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                   {author.slug}
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">
+                <td className="px-4 py-3 text-sm text-muted-foreground">
                   {author.email ?? "—"}
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">
+                <td className="px-4 py-3 text-sm text-muted-foreground">
                   {author.profile_public === 1 ? "是" : "否"}
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">
+                <td className="px-4 py-3 text-sm text-muted-foreground">
                   {author.post_count}
                 </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex justify-end gap-2">
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-1">
                     {author.is_default !== 1 && (
                       <button
                         type="button"
-                        className="text-xs text-primary hover:underline"
                         onClick={() => handleSetDefault(author)}
+                        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        title="设为默认"
                       >
-                        设为默认
+                        <Star className="h-4 w-4" />
                       </button>
                     )}
                     <button
                       type="button"
-                      className="text-xs text-foreground hover:underline"
                       onClick={() => router.push(`/admin/authors/${author.id}`)}
+                      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      title="编辑"
                     >
-                      编辑
+                      <Pencil className="h-4 w-4" />
                     </button>
                     <button
                       type="button"
-                      className="text-xs text-destructive hover:underline"
                       onClick={() => setConfirmDelete(author)}
+                      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      title="删除"
                     >
-                      删除
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </td>

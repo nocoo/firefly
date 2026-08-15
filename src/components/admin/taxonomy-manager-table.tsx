@@ -96,25 +96,27 @@ function ActionsCell({
         {totalCount > 0 && (
           <Link
             href={`/admin/posts?${type === "category" ? "category" : "tag"}=${item.id}`}
-            className="inline-flex items-center gap-1 rounded-widget px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            title="查看全部"
           >
-            <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.5} />
-            查看全部
+            <ExternalLink className="h-4 w-4" strokeWidth={1.5} />
           </Link>
         )}
-        <button type="button"
+        <button
+          type="button"
           onClick={onEdit}
-          className="inline-flex items-center gap-1 rounded-widget px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          title="编辑"
         >
-          <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
-          编辑
+          <Pencil className="h-4 w-4" strokeWidth={1.5} />
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={onDelete}
-          className="inline-flex items-center gap-1 rounded-widget px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+          title="删除"
         >
-          <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
-          删除
+          <Trash2 className="h-4 w-4" strokeWidth={1.5} />
         </button>
       </div>
     </td>

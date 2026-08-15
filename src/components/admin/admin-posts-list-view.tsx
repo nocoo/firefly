@@ -85,20 +85,20 @@ function PostRowActions({ post }: { post: PostWithTags }) {
     <div className="flex items-center justify-end gap-1">
       <Link
         href={`/admin/posts/${post.id}/edit`}
-        className="inline-flex items-center gap-1 rounded-widget px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        title="编辑"
       >
-        <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
-        编辑
+        <Pencil className="h-4 w-4" strokeWidth={1.5} />
       </Link>
       <CopyLinkButton post={post} />
       <a
         href={getPreviewUrl(post)}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center justify-center rounded-widget p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         title="在新标签页打开"
       >
-        <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.5} />
+        <ExternalLink className="h-4 w-4" strokeWidth={1.5} />
       </a>
       <DeletePostButton slug={post.slug} title={post.title} />
     </div>

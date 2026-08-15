@@ -61,10 +61,10 @@ export function DeletePostButton({ slug, title, iconOnly }: DeletePostButtonProp
         <button type="button"
           onClick={openConfirm}
           disabled={deleting}
-          className="inline-flex items-center gap-1 rounded-widget px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+          title="删除"
         >
-          <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
-          {deleting ? "..." : "删除"}
+          <Trash2 className="h-4 w-4" strokeWidth={1.5} />
         </button>
       )}
 

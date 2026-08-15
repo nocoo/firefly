@@ -1,6 +1,6 @@
 "use client";
 
-import { Shield, ShieldCheck } from "lucide-react";
+import { Ban, Shield, ShieldCheck, Trash2 } from "lucide-react";
 import type { McpToken, McpTokenScope } from "@/models/types";
 import { Select } from "@/components/ui/select";
 
@@ -84,21 +84,27 @@ function TokenRow({
         <span className={`text-xs font-medium ${cls}`}>{label}</span>
       </td>
       <td className="px-4 py-3 text-right">
-        {isRevoked ? (
-          <button type="button"
-            onClick={() => onDelete(token.id)}
-            className="text-xs text-destructive hover:text-destructive/80 transition-colors"
-          >
-            删除
-          </button>
-        ) : (
-          <button type="button"
-            onClick={() => onRevoke(token.id)}
-            className="text-xs text-destructive hover:text-destructive/80 transition-colors"
-          >
-            撤销
-          </button>
-        )}
+        <div className="flex items-center justify-end gap-1">
+          {isRevoked ? (
+            <button
+              type="button"
+              onClick={() => onDelete(token.id)}
+              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+              title="删除"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onRevoke(token.id)}
+              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+              title="撤销"
+            >
+              <Ban className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </td>
     </tr>
   );

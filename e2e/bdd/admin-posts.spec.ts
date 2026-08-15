@@ -174,9 +174,9 @@ test.describe("Feature: Admin posts list", () => {
 
     // Then: state branch — empty branch asserts the exact 未找到文章 copy
     // scoped to <table>; non-empty branch asserts the first row 编辑 link.
-    // PostRowActions renders the edit link with text "编辑" + Pencil icon
-    // (admin-posts-list-view.tsx:86-92). Filter to links so the table-header
-    // 编辑 sortable column (if any future regression) cannot satisfy.
+    // PostRowActions renders an icon-only edit link whose accessible name
+    // comes from title="编辑". Filter to links so a table-header 编辑
+    // sortable column (if any future regression) cannot satisfy.
     const editLinks = table.getByRole("link", { name: /编辑/ });
     const editCount = await editLinks.count();
     if (editCount === 0) {

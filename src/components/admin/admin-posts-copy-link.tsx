@@ -36,10 +36,10 @@ export function CopyLinkButton({ post }: { post: PostWithCategory }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="inline-flex items-center justify-center rounded-widget p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
       title="复制链接"
     >
-      <Link2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+      <Link2 className="h-4 w-4" strokeWidth={1.5} />
     </button>
   );
 }
