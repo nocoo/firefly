@@ -19,7 +19,6 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
   const [siteDescription, setSiteDescription] = useState(
     settings.siteDescription,
   );
-  const [siteAuthor, setSiteAuthor] = useState(settings.siteAuthor);
   const [authorEmail, setAuthorEmail] = useState(settings.authorEmail);
   const [twitterHandle, setTwitterHandle] = useState(settings.twitterHandle);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(
@@ -44,7 +43,6 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
           siteName,
           siteTagline,
           siteDescription,
-          siteAuthor,
           authorEmail,
           twitterHandle,
           socialLinks,
@@ -124,23 +122,9 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
         <h2 className="text-base font-medium text-foreground">作者信息</h2>
 
         <div className="space-y-1">
-          <label className="text-sm font-medium text-foreground">作者名称</label>
-          <p className="text-xs text-muted-foreground">
-            文章和 RSS 订阅中显示的主要作者名称。
-          </p>
-          <Input
-            value={siteAuthor}
-            onChange={(e) => setSiteAuthor(e.target.value)}
-            placeholder="张三"
-            maxLength={255}
-            className="max-w-md"
-          />
-        </div>
-
-        <div className="space-y-1">
           <label className="text-sm font-medium text-foreground">作者邮箱</label>
           <p className="text-xs text-muted-foreground">
-            用于 RSS 订阅的 managingEditor 字段。可选。
+            用于 RSS 订阅的 managingEditor 字段。与人类作者邮箱无关。可选。
           </p>
           <Input
             type="email"
