@@ -29,6 +29,73 @@ import type {
 } from "@/data/entities/post";
 import { invalidateCategoryCache } from "@/data/entities/category";
 import { invalidateTagCache } from "@/data/entities/tag";
+import { getDefaultHumanIdUncached } from "@/data/entities/human";
+
+export class PostAttributionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PostAttributionError";
+  }
+}
+
+async function requireDefaultHumanId(db: Db): Promise<string> {
+  const id = await getDefaultHumanIdUncached(db);
+  if (!id) throw new PostAttributionError("Default human is not configured");
+  return id;
+}
+
+export async function resolveCreateAttribution(
+  db: Db,
+  input: { humanId?: string | undefined; aiAgentId?: string | undefined },
+): Promise<{ humanId: string | null; aiAgentId: string | null }> {
+  const hasHuman = !!input.humanId;
+  const hasAgent = !!input.aiAgentId;
+  if (hasHuman && hasAgent) {
+    throw new PostAttributionError("Cannot set both humanId and aiAgentId");
+  }
+  if (hasAgent) return { humanId: null, aiAgentId: input.aiAgentId ?? null };
+  if (hasHuman) return { humanId: input.humanId ?? null, aiAgentId: null };
+  return { humanId: await requireDefaultHumanId(db), aiAgentId: null };
+}
+
+export async function resolveUpdateAttribution(
+  db: Db,
+  existing: { human_id: string | null; ai_agent_id: string | null },
+  input: {
+    humanId?: string | null | undefined;
+    aiAgentId?: string | null | undefined;
+  },
+): Promise<{ humanId: string | null; aiAgentId: string | null }> {
+  const humanSpecified = input.humanId !== undefined;
+  const agentSpecified = input.aiAgentId !== undefined;
+
+  if (humanSpecified && agentSpecified && input.humanId && input.aiAgentId) {
+    throw new PostAttributionError("Cannot set both humanId and aiAgentId");
+  }
+
+  let humanId = existing.human_id;
+  let aiAgentId = existing.ai_agent_id;
+
+  if (agentSpecified && input.aiAgentId) {
+    aiAgentId = input.aiAgentId;
+    humanId = humanSpecified ? (input.humanId ?? null) : null;
+  } else if (agentSpecified && input.aiAgentId === null) {
+    aiAgentId = null;
+    humanId = humanSpecified && input.humanId ? input.humanId : await requireDefaultHumanId(db);
+  } else if (humanSpecified && input.humanId) {
+    humanId = input.humanId;
+    aiAgentId = null;
+  } else if (humanSpecified && input.humanId === null) {
+    humanId = await requireDefaultHumanId(db);
+    aiAgentId = agentSpecified ? input.aiAgentId ?? null : null;
+  }
+
+  if (!humanId && !aiAgentId) {
+    humanId = await requireDefaultHumanId(db);
+  }
+
+  return { humanId, aiAgentId };
+}
 
 // ---------------------------------------------------------------------------
 // Service input types (extend entity input with orchestration fields)
@@ -71,9 +138,14 @@ export const PostService = {
     input: CreatePostServiceInput,
   ): Promise<PostWithCategory> {
     const { tagIds, ...postInput } = input;
+    const attribution = await resolveCreateAttribution(db, postInput);
 
     // Primary write — throws on failure
-    const post = await createPost(db, postInput);
+    const post = await createPost(db, {
+      ...postInput,
+      humanId: attribution.humanId ?? undefined,
+      aiAgentId: attribution.aiAgentId ?? undefined,
+    });
 
     // Secondary effects — best-effort
     if (tagIds && tagIds.length > 0) {
@@ -123,8 +195,14 @@ export const PostService = {
     const existing = await getPostById(db, id);
     if (!existing) return null;
 
-    // Primary write
-    const updated = await updatePost(db, id, postInput);
+    const attribution = await resolveUpdateAttribution(db, existing, postInput);
+
+    // Primary write — always write both attribution columns together
+    const updated = await updatePost(db, id, {
+      ...postInput,
+      humanId: attribution.humanId,
+      aiAgentId: attribution.aiAgentId,
+    });
 
     // Tags
     if (tagIds) {

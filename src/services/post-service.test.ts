@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db } from "@/lib/db";
 import { createMockDb, createMockPostWithAgent } from "@/data/core/test-utils";
-import { PostService } from "./post-service";
 import type { PostWithAgent } from "@/models/types";
 
 // Mock all post entity functions
@@ -30,6 +29,10 @@ vi.mock("@/data/entities/tag", () => ({
   invalidateTagCache: vi.fn(),
 }));
 
+vi.mock("@/data/entities/human", () => ({
+  getDefaultHumanIdUncached: vi.fn(),
+}));
+
 // Import mocked functions for assertions
 import {
   createPost,
@@ -50,6 +53,8 @@ import {
 
 import { invalidateCategoryCache } from "@/data/entities/category";
 import { invalidateTagCache } from "@/data/entities/tag";
+import { getDefaultHumanIdUncached } from "@/data/entities/human";
+import { PostService, PostAttributionError } from "./post-service";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -82,6 +87,7 @@ describe("PostService.create", () => {
   beforeEach(() => {
     db = createMockDb();
     vi.clearAllMocks();
+    vi.mocked(getDefaultHumanIdUncached).mockResolvedValue("human-default");
   });
 
   it("creates post, sets tags, and refreshes counts", async () => {
@@ -188,6 +194,53 @@ describe("PostService.create", () => {
       excerpt: undefined,
     });
   });
+
+  it("fills default human when neither id is provided", async () => {
+    vi.mocked(createPost).mockResolvedValue(samplePost);
+    await PostService.create(db, {
+      title: "Test",
+      slug: "test",
+      content: "Content",
+      status: "draft",
+    });
+    expect(createPost).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({
+        humanId: "human-default",
+        aiAgentId: undefined,
+      }),
+    );
+  });
+
+  it("keeps agent-only create without a human", async () => {
+    vi.mocked(createPost).mockResolvedValue(samplePost);
+    await PostService.create(db, {
+      title: "Test",
+      slug: "test",
+      content: "Content",
+      status: "draft",
+      aiAgentId: "agent-1",
+    });
+    expect(createPost).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({ humanId: undefined, aiAgentId: "agent-1" }),
+    );
+    expect(getDefaultHumanIdUncached).not.toHaveBeenCalled();
+  });
+
+  it("rejects create with both human and agent", async () => {
+    await expect(
+      PostService.create(db, {
+        title: "Test",
+        slug: "test",
+        content: "Content",
+        status: "draft",
+        humanId: "human-1",
+        aiAgentId: "agent-1",
+      }),
+    ).rejects.toBeInstanceOf(PostAttributionError);
+    expect(createPost).not.toHaveBeenCalled();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -199,6 +252,7 @@ describe("PostService.update", () => {
   beforeEach(() => {
     db = createMockDb();
     vi.clearAllMocks();
+    vi.mocked(getDefaultHumanIdUncached).mockResolvedValue("human-default");
   });
 
   it("updates post and refreshes counts when category changes", async () => {
@@ -426,6 +480,53 @@ describe("PostService.update", () => {
       content: "# Hello",
       excerpt: undefined,
     });
+  });
+
+  it("writes default human when clearing aiAgentId on an agent post", async () => {
+    vi.mocked(getPostById).mockResolvedValue({
+      ...samplePost,
+      ai_agent_id: "agent-1",
+      human_id: null,
+    });
+    vi.mocked(updatePost).mockResolvedValue(samplePost);
+
+    await PostService.update(db, "post-1", { aiAgentId: null });
+
+    expect(updatePost).toHaveBeenCalledWith(
+      db,
+      "post-1",
+      expect.objectContaining({
+        humanId: "human-default",
+        aiAgentId: null,
+      }),
+    );
+  });
+
+  it("clears humanId when assigning an agent", async () => {
+    vi.mocked(getPostById).mockResolvedValue({
+      ...samplePost,
+      human_id: "human-1",
+      ai_agent_id: null,
+    });
+    vi.mocked(updatePost).mockResolvedValue(samplePost);
+
+    await PostService.update(db, "post-1", { aiAgentId: "agent-9" });
+
+    expect(updatePost).toHaveBeenCalledWith(
+      db,
+      "post-1",
+      expect.objectContaining({ humanId: null, aiAgentId: "agent-9" }),
+    );
+  });
+
+  it("rejects update with both human and agent set", async () => {
+    vi.mocked(getPostById).mockResolvedValue(samplePost);
+    await expect(
+      PostService.update(db, "post-1", {
+        humanId: "human-1",
+        aiAgentId: "agent-1",
+      }),
+    ).rejects.toBeInstanceOf(PostAttributionError);
   });
 });
 

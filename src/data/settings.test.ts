@@ -5,6 +5,7 @@ import {
   getSiteSettings,
   updateSiteSettings,
   updateSiteLogoVersion,
+  updateDefaultHumanId,
   invalidateSettingsCache,
   _testHelpers,
 } from "./settings";
@@ -25,7 +26,7 @@ const sampleRow = {
   site_name: "My Blog",
   site_tagline: "",
   site_description: "",
-  site_author: "",
+  default_human_id: null as string | null,
   author_email: "",
   twitter_handle: "",
   social_links: "[]",
@@ -46,7 +47,7 @@ describe("parseRow", () => {
       siteName: "My Blog",
       siteTagline: "",
       siteDescription: "",
-      siteAuthor: "",
+      defaultHumanId: null,
       authorEmail: "",
       twitterHandle: "",
       socialLinks: [],
@@ -65,7 +66,7 @@ describe("parseRow", () => {
       siteName: "My Blog",
       siteTagline: "",
       siteDescription: "",
-      siteAuthor: "",
+      defaultHumanId: null,
       authorEmail: "",
       twitterHandle: "",
       socialLinks: [],
@@ -103,7 +104,7 @@ describe("parseRow", () => {
       site_name: "LIZHENG.ME",
       site_tagline: "知白守黑",
       site_description: "A personal blog",
-      site_author: "Li Zheng",
+      default_human_id: "human-1",
       author_email: "test@example.com",
       twitter_handle: "@test",
     };
@@ -111,7 +112,7 @@ describe("parseRow", () => {
     expect(result.siteName).toBe("LIZHENG.ME");
     expect(result.siteTagline).toBe("知白守黑");
     expect(result.siteDescription).toBe("A personal blog");
-    expect(result.siteAuthor).toBe("Li Zheng");
+    expect(result.defaultHumanId).toBe("human-1");
     expect(result.authorEmail).toBe("test@example.com");
     expect(result.twitterHandle).toBe("@test");
   });
@@ -130,9 +131,10 @@ describe("parseRow", () => {
     expect(parseRow({ ...sampleRow, site_description: undefined as any }).siteDescription).toBe("");
   });
 
-  it("falls back to empty string when site_author is null/undefined", () => {
-    expect(parseRow({ ...sampleRow, site_author: null as any }).siteAuthor).toBe("");
-    expect(parseRow({ ...sampleRow, site_author: undefined as any }).siteAuthor).toBe("");
+  it("parses default_human_id as null when absent", () => {
+    expect(
+      parseRow({ ...sampleRow, default_human_id: null as any }).defaultHumanId,
+    ).toBeNull();
   });
 
   it("falls back to empty string when author_email is null/undefined", () => {
@@ -303,19 +305,16 @@ describe("updateSiteSettings", () => {
     vi.mocked(db.firstOrNull).mockResolvedValue({
       ...sampleRow,
       site_name: "Test Blog",
-      site_author: "Test Author",
     });
 
     const result = await updateSiteSettings(db, {
       siteName: "Test Blog",
-      siteAuthor: "Test Author",
     });
     expect(result.siteName).toBe("Test Blog");
-    expect(result.siteAuthor).toBe("Test Author");
 
     const sql = vi.mocked(db.execute).mock.calls[0][0] as string;
     expect(sql).toContain("site_name = ?");
-    expect(sql).toContain("site_author = ?");
+    expect(sql).not.toContain("site_author");
   });
 
   it("serializes socialLinks as JSON", async () => {
@@ -434,5 +433,33 @@ describe("updateSiteLogoVersion", () => {
     await updateSiteLogoVersion(db, "newver01");
     // getSiteSettings is called inside updateSiteLogoVersion, re-fetching from DB
     expect(db.firstOrNull).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("updateDefaultHumanId", () => {
+  let db: Db;
+
+  beforeEach(() => {
+    db = createMockDb();
+    invalidateSettingsCache();
+  });
+
+  it("writes default_human_id and invalidates cache", async () => {
+    vi.mocked(db.firstOrNull)
+      .mockResolvedValueOnce({ id: "human-2" })
+      .mockResolvedValueOnce({ ...sampleRow, default_human_id: "human-2" });
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
+
+    const result = await updateDefaultHumanId(db, "human-2");
+    expect(result.defaultHumanId).toBe("human-2");
+    expect(vi.mocked(db.execute).mock.calls[0][0]).toContain("default_human_id = ?");
+  });
+
+  it("throws when the human does not exist", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue(null);
+    await expect(updateDefaultHumanId(db, "missing")).rejects.toThrow(
+      "Default human not found",
+    );
+    expect(db.execute).not.toHaveBeenCalled();
   });
 });

@@ -31,11 +31,11 @@ export async function createPost(
   const sql = `
     INSERT INTO posts (
       id, title, slug, content, content_html, excerpt, status,
-      category_id, ai_agent_id, featured_image, comment_enabled,
+      category_id, ai_agent_id, human_id, featured_image, comment_enabled,
       reading_time, published_at,
       reference_url, reference_title, reference_description, reference_image,
       created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   await db.execute(sql, [
@@ -48,6 +48,7 @@ export async function createPost(
     input.status,
     input.categoryId ?? null,
     input.aiAgentId ?? null,
+    input.humanId ?? null,
     input.featuredImage ?? null,
     input.commentEnabled ?? 0,
     computedReadingTime,
@@ -155,6 +156,7 @@ function applySimpleFields(b: SetBuilder, input: UpdatePostInput): void {
   if (input.commentEnabled !== undefined)
     addSet(b, "comment_enabled", input.commentEnabled);
   if (input.aiAgentId !== undefined) addSet(b, "ai_agent_id", input.aiAgentId);
+  if (input.humanId !== undefined) addSet(b, "human_id", input.humanId);
 }
 
 export async function updatePost(

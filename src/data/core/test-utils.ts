@@ -44,6 +44,7 @@ export function createMockPost(overrides: Partial<Post> = {}): Post {
     status: "published",
     category_id: "cat_123",
     ai_agent_id: null,
+    human_id: null,
     featured_image: null,
     comment_enabled: 0,
     comment_count: 0,
@@ -87,6 +88,9 @@ export function createMockPostWithAgent(
     agent_name: null,
     agent_slug: null,
     agent_avatar_version: null,
+    human_name: null,
+    human_slug: null,
+    human_avatar_version: null,
     ...overrides,
   };
 }

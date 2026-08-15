@@ -26,7 +26,7 @@ interface SiteSettingsRow {
   site_name: string;
   site_tagline: string;
   site_description: string;
-  site_author: string;
+  default_human_id: string | null;
   author_email: string;
   twitter_handle: string;
   social_links: string;
@@ -42,7 +42,7 @@ export interface SiteSettings {
   siteName: string;
   siteTagline: string;
   siteDescription: string;
-  siteAuthor: string;
+  defaultHumanId: string | null;
   authorEmail: string;
   twitterHandle: string;
   socialLinks: SocialLink[];
@@ -57,7 +57,7 @@ const DEFAULTS: SiteSettings = {
   siteName: "My Blog",
   siteTagline: "",
   siteDescription: "",
-  siteAuthor: "",
+  defaultHumanId: null,
   authorEmail: "",
   twitterHandle: "",
   socialLinks: [],
@@ -100,7 +100,7 @@ function parseRow(row: SiteSettingsRow): SiteSettings {
     siteName: row.site_name || "My Blog",
     siteTagline: row.site_tagline ?? "",
     siteDescription: row.site_description ?? "",
-    siteAuthor: row.site_author ?? "",
+    defaultHumanId: row.default_human_id ?? null,
     authorEmail: row.author_email ?? "",
     twitterHandle: row.twitter_handle ?? "",
     socialLinks: parseSocialLinks(row.social_links),
@@ -141,7 +141,6 @@ export interface UpdateSiteSettingsInput {
   siteName?: string;
   siteTagline?: string;
   siteDescription?: string;
-  siteAuthor?: string;
   authorEmail?: string;
   twitterHandle?: string;
   socialLinks?: SocialLink[];
@@ -157,7 +156,6 @@ const settingsFields: Record<string, FieldDef> = {
   siteName: { column: "site_name" },
   siteTagline: { column: "site_tagline" },
   siteDescription: { column: "site_description" },
-  siteAuthor: { column: "site_author" },
   authorEmail: { column: "author_email" },
   twitterHandle: { column: "twitter_handle" },
   socialLinks: { column: "social_links" },
@@ -182,7 +180,6 @@ function normalizeSettingsInput(
   if (input.siteName !== undefined) normalized.siteName = input.siteName.slice(0, 255);
   if (input.siteTagline !== undefined) normalized.siteTagline = input.siteTagline.slice(0, 500);
   if (input.siteDescription !== undefined) normalized.siteDescription = input.siteDescription.slice(0, 1000);
-  if (input.siteAuthor !== undefined) normalized.siteAuthor = input.siteAuthor.slice(0, 255);
   if (input.authorEmail !== undefined) normalized.authorEmail = input.authorEmail.slice(0, 255);
   if (input.twitterHandle !== undefined) normalized.twitterHandle = input.twitterHandle.slice(0, 50);
   if (input.socialLinks !== undefined) normalized.socialLinks = JSON.stringify(input.socialLinks);
@@ -228,6 +225,27 @@ export async function updateSiteLogoVersion(
   await db.execute(
     "UPDATE site_settings SET site_logo_version = ?, updated_at = unixepoch() WHERE id = 1",
     [version],
+  );
+
+  invalidateSettingsCache();
+  return getSiteSettings(db);
+}
+
+export async function updateDefaultHumanId(
+  db: Db,
+  humanId: string,
+): Promise<SiteSettings> {
+  const human = await db.firstOrNull<{ id: string }>(
+    "SELECT id FROM humans WHERE id = ?",
+    [humanId],
+  );
+  if (!human) {
+    throw new Error("Default human not found");
+  }
+
+  await db.execute(
+    "UPDATE site_settings SET default_human_id = ?, updated_at = unixepoch() WHERE id = 1",
+    [humanId],
   );
 
   invalidateSettingsCache();

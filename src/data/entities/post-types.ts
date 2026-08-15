@@ -12,6 +12,7 @@ export interface CreatePostInput {
   excerpt?: string | undefined;
   categoryId?: string | undefined;
   aiAgentId?: string | undefined;
+  humanId?: string | undefined;
   featuredImage?: string | undefined;
   commentEnabled?: number | undefined;
   publishedAt?: number | undefined;
@@ -37,6 +38,7 @@ export interface UpdatePostInput {
   referenceDescription?: string | null | undefined;
   referenceImage?: string | null | undefined;
   aiAgentId?: string | null | undefined;
+  humanId?: string | null | undefined;
 }
 
 export interface ListPostsOptions {
@@ -119,8 +121,10 @@ export type FtsSyncInput = FtsSyncUpsert | FtsSyncDelete;
 // Shared view query joining categories + ai_agents (used in list/get/by-slug)
 export const VIEW_QUERY = `
   SELECT p.*, c.name AS category_name, c.slug AS category_slug,
-         a.name AS agent_name, a.slug AS agent_slug, a.avatar_version AS agent_avatar_version
+         a.name AS agent_name, a.slug AS agent_slug, a.avatar_version AS agent_avatar_version,
+         h.name AS human_name, h.slug AS human_slug, h.avatar_version AS human_avatar_version
   FROM posts p
   LEFT JOIN categories c ON p.category_id = c.id
   LEFT JOIN ai_agents a ON p.ai_agent_id = a.id
+  LEFT JOIN humans h ON p.human_id = h.id
 `;
