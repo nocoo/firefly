@@ -25,7 +25,7 @@
 3. 人类署名图盗用站点图标，logo / favicon / 作者头像缠在一起。
 4. 外部系统没法按邮箱查到「这个人在本站叫什么、头像是什么」（没有类似 Gravatar 的只读接口）。
 
-`docs/21` 里的静态 `firefly_agent_` key **已经不是现状**。现行代码（migration `016`）里 `ai_agents` 只是身份记录；MCP 走 OAuth token 的 `full` / `author` scope，`author` scope 在工具参数里带 `author_id` 再去查 `ai_agents`。本设计以**当前代码**为准，不复活静态 key。
+`docs/21` 里的静态 `firefly_agent_` key **已经不是现状**。现行代码（migration `016`）里 `ai_agents` 只是身份记录；MCP 走 OAuth token 的 `full` / `author` scope。`author` scope **没有把 token 绑到具体作者**：工具参数里的 `author_id` 由调用方自报（`src/lib/mcp/entities/author-post.ts`、`src/data/mcp-tokens.ts`）。本设计以当前代码为准，不复活静态 key，并修掉这条授权缺口。
 
 ---
 
@@ -35,13 +35,13 @@
 
 原则：
 
-1. **不保留向后兼容** — 删 `/admin/ai-agents`、`ai_agents`、`posts.ai_agent_id`、`site_settings.site_author`，不做双写、不做别名路由。
+1. **不保留向后兼容** — 删 `/admin/ai-agents`、`ai_agents`、`posts.ai_agent_id`、`site_settings.site_author`，不做双写、不做别名路由。接受一次维护窗口，见下方部署顺序。
 2. **`author_email` 留下** — 仍在 `site_settings`，语义不变：站点对外联系邮箱 / RSS `managingEditor`。和 `authors.email` 不是同一个字段。
 3. **站点 logo 不再当作者头像** — logo 只服务 favicon / 登录页。署名前的图来自作者自己的 `avatar_version`。
-4. **`author_id` 同时是署名和 MCP 所有权** — 和今天的 `ai_agent_id` 一样。把文章署给某个 agent 后，`author` scope 的 MCP 就能改这篇。
-5. **Agent 必绑分类，人类不绑** — 选 agent 当作者时，文章分类锁到该 agent 的 `category_id`。
-6. **恰好一个默认人类作者** — 新文章选择器的初始值。不能删默认作者，除非先把默认让给另一个人类。
-7. **公开查询按邮箱走** — 无认证，只回 `name` + `avatar`，不回邮箱本身。
+4. **`author_id` 是署名；MCP 所有权来自 token，不来自工具参数** — `mcp_tokens.author_id` 在 `scope=author` 时必填且必须指向 agent。调用方不能靠改参数冒充别的作者。
+5. **Agent 必绑分类，人类不绑；分类创建后不可改** — 选 agent 当作者时，文章分类锁到该 agent 的 `category_id`。约束落在 `PostService`，所有写入口共用。
+6. **恰好一个默认人类作者** — 存在 `site_settings.default_author_id`（非空 FK），不是 `authors.is_default` 旗标。
+7. **公开查询按邮箱走，默认关闭** — 无认证，只回 `name` + `avatar`。作者必须显式打开 `profile_public` 才可被查到。404 **不能**当成防枚举。
 
 ### 刻意不做
 
@@ -52,6 +52,7 @@
 | 把 `site_settings.author_email` 自动同步到默认作者 | 两个字段职责不同，避免隐式耦合 |
 | 用站点 logo 给没头像的人类垫图 | 身份拆开；没头像就用 `User` 图标 |
 | `human` ↔ `agent` 互转 | 分类 / 默认作者 / MCP 约束不同，删了重建 |
+| expand/contract 双写 | 与「不保留向后兼容」冲突；改用维护窗口一次性切 |
 
 ---
 
@@ -63,30 +64,33 @@
 
 ```sql
 CREATE TABLE authors (
-  id              TEXT PRIMARY KEY,           -- ULID
+  id              TEXT PRIMARY KEY,
   type            TEXT NOT NULL CHECK (type IN ('human', 'agent')),
   name            TEXT NOT NULL,
   slug            TEXT NOT NULL UNIQUE,
   description     TEXT,
   email           TEXT,                       -- optional, stored lowercased
+  profile_public  INTEGER NOT NULL DEFAULT 0 CHECK (profile_public IN (0, 1)),
   category_id     TEXT REFERENCES categories(id) ON DELETE RESTRICT,
-  avatar_version  TEXT,                       -- null = no avatar
-  is_default      INTEGER NOT NULL DEFAULT 0 CHECK (is_default IN (0, 1)),
+  avatar_version  TEXT,
   created_at      INTEGER NOT NULL,
   updated_at      INTEGER NOT NULL,
   CHECK (
     (type = 'human' AND category_id IS NULL)
     OR (type = 'agent' AND category_id IS NOT NULL)
-  ),
-  CHECK (type = 'human' OR is_default = 0)
+  )
 );
 
 CREATE UNIQUE INDEX idx_authors_email
   ON authors(email) WHERE email IS NOT NULL;
-CREATE UNIQUE INDEX idx_authors_default
-  ON authors(is_default) WHERE is_default = 1;
 CREATE INDEX idx_authors_type ON authors(type);
 CREATE INDEX idx_authors_category ON authors(category_id);
+
+ALTER TABLE site_settings
+  ADD COLUMN default_author_id TEXT REFERENCES authors(id);
+
+ALTER TABLE mcp_tokens
+  ADD COLUMN author_id TEXT REFERENCES authors(id);
 ```
 
 `posts` 重建为：
@@ -97,32 +101,78 @@ author_id TEXT NOT NULL REFERENCES authors(id) ON DELETE RESTRICT
 
 并 `DROP`：`posts.ai_agent_id`、`ai_agents`、`site_settings.site_author`。
 
+回填完成后：
+
+```sql
+-- default_author_id 改为 NOT NULL（重建 site_settings 单行表）
+-- CHECK 无法跨表限制 type='human'，由应用层强制
+```
+
+`mcp_tokens.author_id`：`scope='author'` 必须非空且指向 `type='agent'`（应用层 + 创建 API）；`scope='full'` 必须为 NULL。
+
 ### 字段语义
 
 | 字段 | human | agent |
 |------|-------|-------|
-| `category_id` | 必须 NULL | 必须非空；同一分类可有多个 agent |
+| `category_id` | 必须 NULL | 必须非空；同一分类可有多个 agent；**创建后不可改** |
 | `email` | 可选；有则小写、全表唯一 | 可选；同样唯一 |
-| `is_default` | 全表恰好一行 = 1 | 必须 0 |
+| `profile_public` | 默认 0；1 才允许公开查询命中 | 同左 |
 | `slug` | 必填、全表唯一 | 同左 |
 | `avatar_version` | 可选 | 可选 |
 
-没有 `is_active`、没有 `api_key_*`（与 migration `016` 之后的现状一致）。
+默认作者不在 `authors` 上：`site_settings.default_author_id` 非空，必须指向一个 human。切换默认 = `UPDATE site_settings SET default_author_id = ?`。删除该人类前必须先改指针。
 
-### 数据迁移
+没有 `is_active`、没有 `api_key_*`、没有 `is_default`（与 migration `016` 之后的现状一致，且避免「至多一个」≠「恰好一个」）。
+
+### 数据迁移（纯 SQL，无 TS hook）
+
+`scripts/migrations/runner.ts` 只跑 `.sql`。默认人类的 id / slug **不得**依赖 `src/models/post.ts` 的 `slugify`。
+
+确定性规则：
 
 1. 建 `authors`。
-2. `INSERT ... SELECT` 从 `ai_agents`：`type = 'agent'`，`email = NULL`，`is_default = 0`，**保留原 `id`**（已有 `posts.ai_agent_id` 和 R2 路径都靠这个 id）。
-3. 插入一条 `type = 'human'`：
-   - `name` = `site_settings.site_author`；若空则用 `site_name`；再空则 `'Author'`
-   - `slug` = slugify(name)，冲突则加后缀
-   - `is_default = 1`
-   - `email = NULL`（不从 `author_email` 拷，避免站点联系邮箱和作者查询邮箱被绑死）
-4. `posts.author_id`：有 `ai_agent_id` 的用原 id；其余全部指向默认人类。
-5. 确认 `author_id` 无 NULL 后，重建 `posts` 加上 `NOT NULL` + `ON DELETE RESTRICT`。
-6. `DROP TABLE ai_agents`；从 `site_settings` 去掉 `site_author`。
+2. `INSERT ... SELECT` 从 `ai_agents`：`type = 'agent'`，`email = NULL`，`profile_public = 0`，**保留原 `id`**。
+3. 插入一条 human：
+   - `id` = `lower(hex(randomblob(16)))`（TEXT PK，与现网 ULID 混用可接受）
+   - `name` = `COALESCE(NULLIF(site_author, ''), NULLIF(site_name, ''), 'Author')`
+   - `slug` = 若 `authors`/`即将插入的 agent 行` 已有 `'default-author'` 则用 `'default-author-human'`，否则 `'default-author'`
+   - `email = NULL`，`profile_public = 0`
+4. `UPDATE site_settings SET default_author_id = <该 human id>`。
+5. `posts.author_id`：有 `ai_agent_id` 的用原 id；其余指向 `default_author_id`。
+6. 确认无 NULL 后重建 `posts`（`author_id NOT NULL`）和 `site_settings`（`default_author_id NOT NULL`）。
+7. `DROP TABLE ai_agents`；去掉 `site_author`。
+8. 已有 `mcp_tokens`：`scope='author'` 的行在切库前若无法绑定唯一 agent，**本迁移把它们的 scope 视为失效**——`author_id` 留 NULL，应用启动后这些 token 鉴权失败，管理员在新 UI 里重发。不猜测该绑哪个 agent。
 
-R2：新路径 `{R2_KEY_PREFIX}authors/{id}/{version}/avatar-{size}.jpg`。迁移脚本 **best-effort** 把 `{prefix}agents/{id}/...` 拷到新前缀（失败只打日志，不回滚）。拷失败的头像 404，后台可重新上传。站点 logo 路径不变。
+中文名、空名、与 agent slug 冲突：一律走上面两条固定 slug，不在 SQL 里做拼音/unicode slugify。
+
+### R2 头像
+
+新路径：`{R2_KEY_PREFIX}authors/{id}/{version}/avatar-{size}.jpg`。
+
+**单独脚本** `scripts/migrations/019-copy-author-avatars.ts`（幂等、可重跑）：
+
+- 列出 `authors` 里 `avatar_version IS NOT NULL` 的行
+- 对每个 size，若目标 key 不存在且源 `{prefix}agents/{id}/{ver}/avatar-{size}.jpg` 存在，则 Copy
+- 结束时打印 `copied / skipped-exists / missing-source / failed` 计数
+- 失败不回滚 SQL；missing-source 的头像 404，后台可重传
+
+现有 `r2-client.ts` 只有 Put/Delete，脚本里直接用 S3 `CopyObject` / `HeadObject`，不塞进运行时客户端。
+
+站点 logo 路径不变。
+
+### 部署顺序（接受停机，无双写）
+
+Railway 自动部署会让「先迁后发」或「先发后迁」必有一边炸掉。约定一次维护窗口：
+
+1. 用现有 Backy **拉一份 D1 + 设置备份**（`docs/15-backy-backup.md`：备份是导出，没有自动恢复；回滚 = 手工把 dump 打回 D1）。
+2. Railway 停服务或切维护页。
+3. 对生产 D1 执行 `019-unified-authors.sql`。
+4. 跑 `019-copy-author-avatars.ts`（可在窗口外补跑，头像暂时 404 可接受）。
+5. 部署含新代码的 release。
+6. 冒烟：首页、一篇人类文、一篇 agent 文、`/admin/authors`、新发文默认作者。
+7. 失败回滚：恢复步骤 1 的 D1 dump，再部署回旧 tag。schema 已 DROP，不能 forward-fix 回旧列。
+
+分支上的 commit 仍按功能切开；**生产 apply** 必须是「停 → 迁 → 发」，不能「先合 migration 再过几天再发应用」。
 
 ---
 
@@ -140,7 +190,6 @@ export interface PostAuthor {
 }
 
 export function getPostAuthor(post: PostWithAuthor): PostAuthor {
-  // post 由 VIEW_QUERY INNER JOIN authors 带出
   return {
     type: post.author_type,
     id: post.author_id,
@@ -149,9 +198,13 @@ export function getPostAuthor(post: PostWithAuthor): PostAuthor {
     avatarUrl: getAuthorAvatarUrl(post.author_id, post.author_avatar_version, 128),
   };
 }
+
+export async function getDefaultAuthor(db: Db): Promise<Author> {
+  // JOIN site_settings.default_author_id → authors
+}
 ```
 
-不再接收 `SiteSettings`。没有作者的文章在 DB 层就不合法。
+不再接收 `SiteSettings.siteAuthor`。没有作者的文章在 DB 层就不合法。
 
 `VIEW_QUERY`（`src/data/entities/post-types.ts`）：
 
@@ -173,11 +226,25 @@ JOIN authors a ON p.author_id = a.id
 | 文章详情 / 列表 byline | agent 或 `site_author` + logo | `getPostAuthor()`：作者名 + 作者头像 |
 | `generateMetadata` / OG | `siteAuthor` 或 agent override | 该篇 `author.name` |
 | JSON-LD `author` | 同上 | 该篇作者 |
-| JSON-LD `publisher` / WebSite author | `siteAuthor` | **默认人类作者**的 name |
+| JSON-LD `publisher` / WebSite author | `siteAuthor` | **默认人类** `getDefaultAuthor().name` |
 | RSS `<dc:creator>` | 该篇作者名 | 不变（数据源换成 JOIN） |
 | RSS `<managingEditor>` | `author_email (site_author)` | `author_email (默认人类.name)`；邮箱仍空则整段不输出 |
-| `layout.tsx` `authors` / `creator` / `publisher` | `siteAuthor` | 默认人类作者 |
+| `layout.tsx` `authors` / `creator` / `publisher` | `siteAuthor` | 默认人类 |
 | `llms.txt` / `/api/md` 标题行 | `siteAuthor \|\| siteName` | 默认人类.name 或 `siteName` |
+
+---
+
+## Write-path invariants
+
+全部写文章入口必须进 `PostService`（含 MCP full、MCP author、`POST /api/posts`、`PUT /api/posts/[slug]`、`PATCH /api/admin/posts/batch`）。数据层不信任调用方已经校过。
+
+| 规则 | 行为 |
+|------|------|
+| `author_id` 必填且存在 | 否则 400 |
+| 作者 `type=agent` | `category_id` 必须等于 `authors.category_id`；缺省则代填；传入其它值 400 |
+| 作者 `type=human` | 分类自由 |
+| 批量改分类 | 目标集里若有 agent 文章，且新分类 ≠ 该文作者的 `category_id` → 整批 400 |
+| agent `category_id` | **创建后不可改**（PATCH 忽略或 400）。已有文章时也不允许改，避免一批文和作者分类分叉 |
 
 ---
 
@@ -187,9 +254,9 @@ JOIN authors a ON p.author_id = a.id
 
 ### 列表 `/admin/authors`
 
-- 一张表：类型、头像、名称、slug、邮箱、分类（人类显示 —）、默认标记、文章数
+- 一张表：类型、头像、名称、slug、邮箱、公开查询开关、分类（人类显示 —）、默认标记、文章数
 - 筛 `type`
-- 「设为默认」只对 human 出现
+- 「设为默认」只对 human 出现 → `PATCH /api/admin/settings` 或 `PATCH /api/admin/authors/[id]` 写 `site_settings.default_author_id`
 - 创建入口两个：新建人类 / 新建代理
 
 ### 表单 `/admin/authors/new?type=human|agent` 与 `/admin/authors/[id]`
@@ -197,28 +264,37 @@ JOIN authors a ON p.author_id = a.id
 | 字段 | human | agent |
 |------|-------|-------|
 | 名称 / slug / 描述 / 头像 / 邮箱 | 有 | 有 |
-| 分类 | 无 | 必选 |
-| 默认作者 | 开关（打开则原子地清掉其他人的 `is_default`） | 无 |
-| MCP prompt | 无 | 保留现有 prompt 生成器，文案里的 `ai_agent_id` 改成 `author_id` |
+| `profile_public` | 有，默认关 | 有，默认关 |
+| 分类 | 无 | 创建时必选；编辑时只读 |
+| 默认作者 | 开关（写 `default_author_id`） | 无 |
+| MCP prompt | 无 | 保留现有生成器（**已经**用 `author_id`，见 `src/lib/ai-agent/prompt-generator.ts`；只需改查表） |
 
 类型创建后不可改。删除规则：
 
 - 有文章 → 409，先改署或删文
-- 默认人类 → 409，先转让默认
-- 最后一个人类 → 409（站点必须有一个默认作者）
+- `id = default_author_id` → 409，先转让默认
+- 最后一个人类 → 409
+- 仍被 `mcp_tokens.author_id` 引用 → 409，先删/换 token
 
-Sidebar / command palette / i18n：`admin.page.ai-agents` → `admin.page.authors`（「作者」）。站点身份页去掉「作者名称」整块，**留下「作者邮箱」**，说明改成「RSS managingEditor，不是署名」。
+Sidebar / command palette / i18n：`admin.page.ai-agents` → `admin.page.authors`（「作者」）。站点身份页去掉「作者名称」，**留下「作者邮箱」**，说明改为「RSS managingEditor，不是署名」。
 
 ### 文章编辑器
 
-`src/components/admin/post-form*.tsx` 增加作者选择器：
+改这些真实入口，不是文档里虚构的 `PATCH /api/posts`：
 
-- 选项 = 全部 authors（人类 + agent），按 type 分组
-- 新建：预选 `is_default = 1` 的人类
+- `src/app/admin/posts/new/page.tsx` — 加载 authors 列表
+- `src/app/admin/posts/[id]/page.tsx` — 同上
+- `src/components/admin/post-form.tsx` / `post-form-fields.tsx` / `post-form-helpers.ts`
+- `POST /api/posts`、`PUT /api/posts/[slug]`（见 `src/app/api/posts/[slug]/route.ts`）
+
+行为：
+
+- 选项 = 全部 authors，按 type 分组
+- 新建：预选 `site_settings.default_author_id`
 - 编辑：预选当前 `author_id`
-- 选中 agent：分类 select 设为该 agent 的 `category_id` 并禁用
-- 改回人类：分类解锁（值保留，可改）
-- 保存：`author_id` 必填；服务端再校验一遍 agent→分类锁定
+- 选中 agent：分类设为该 agent 的 `category_id` 并禁用
+- 改回人类：分类解锁
+- 保存：`author_id` 必填；服务端走 `PostService` 再锁一遍
 
 ---
 
@@ -231,24 +307,28 @@ Sidebar / command palette / i18n：`admin.page.ai-agents` → `admin.page.author
 | GET | `/api/admin/authors` | 列表；`?type=human\|agent` |
 | POST | `/api/admin/authors` | 创建；body 含 `type` |
 | GET | `/api/admin/authors/[id]` | 详情 |
-| PATCH | `/api/admin/authors/[id]` | 更新；忽略 `type`；`is_default: true` 原子切换 |
+| PATCH | `/api/admin/authors/[id]` | 更新；忽略 `type`；禁止改 agent `category_id`；`is_default: true` 只更新 `site_settings.default_author_id` |
 | DELETE | `/api/admin/authors/[id]` | 见删除规则 |
 | POST/DELETE | `/api/admin/authors/[id]/avatar` | 头像，复用现有正方形校验 |
 | GET | `/api/admin/authors/[id]/prompt` | 仅 `type=agent`，否则 404 |
 
-请求/响应字段 **snake_case**（与现有 admin/MCP 边界一致）。
+请求/响应字段 **snake_case**。
 
-`POST/PATCH /api/posts`：`ai_agent_id` 改名为 `author_id`（必填）。服务端：
+文章：
 
-- 作者必须存在
-- `type=agent` → `category_id` 必须等于该作者的 `category_id`（缺省则代填）
-- `type=human` → 分类自由
+| Method | Path | `author_id` |
+|--------|------|-------------|
+| POST | `/api/posts` | 必填；缺省则填 `default_author_id` |
+| PUT | `/api/posts/[slug]` | 必填 |
+| PATCH | `/api/admin/posts/batch` | 不改作者；改分类时走上面的批量不变量 |
 
-`GET /api/admin/ai-agents*` 全部删除，测试改挂新路径。
+`GET /api/admin/ai-agents*` 全部删除。
+
+创建 MCP token（现有 admin MCP UI）：`scope=author` 时必须选一个 agent，写入 `mcp_tokens.author_id`。
 
 ### 公开查询（无认证）
 
-类似 Gravatar：给邮箱，换名字和头像。**不是重定向图片，是 JSON。**
+类似 Gravatar：给邮箱，换名字和头像。**JSON，不是重定向图片。**
 
 ```
 GET /api/authors/profile?email=you@example.com
@@ -257,47 +337,52 @@ GET /api/authors/profile?hash=<sha256(lowercase(trim(email)))>
 
 | 条件 | 响应 |
 |------|------|
-| 命中（该邮箱挂在某个 author 上） | `200 { "name": "...", "avatar": "https://..." \| null }` |
-| 未命中 / 参数缺失 / 非法 | `404 { "error": "not found" }`（不区分原因，防枚举细节） |
+| `profile_public=1` 且 email/hash 命中 | `200 { "name": "...", "avatar": "https://..." \| null }` |
+| 未命中 / 未公开 / 缺参 / 非法 | `200 { "name": null, "avatar": null }`（形状统一，**不**假装这能防枚举） |
 | 超限 | `429` |
 
 约束：
 
 - 不回 `email`、`id`、`slug`、`type`
 - `email` 与 `hash` 二选一；都给以 `hash` 为准
-- 邮箱在查询前 `trim + toLowerCase`；库里只存小写
-- 限流：现有 `src/lib/rate-limit.ts`，按 IP，**30 次 / 60s**
-- `proxy.ts` 必须把 `/api/authors/profile` 列为公开（与 `/api/favicon` 同类）
-- 只查 `authors.email IS NOT NULL` 的行
+- 库里只存小写；查询前 `trim + toLowerCase`
+- 限流：`src/lib/rate-limit.ts` 按 IP，**30 / 60s**。这是**进程内**限流，多实例可放大配额；文档不把它写成反枚举方案
+- 现有 `proxy.ts` 对非 admin 的 GET `/api/*` **已经公开**（没有 favicon 式 allowlist）。这里要加的是 **profile 专用限流分支**，不是再挂一条公开名单
+- 默认 `profile_public=0`，迁移来的作者全部不可查，直到有人打开开关
 
-推荐调用方用 `hash`，避免邮箱进 access log / Referer。浏览器书签用 `email` 也可以。
+推荐调用方用 `hash`，少把邮箱写进 access log。打开开关即表示接受「知道邮箱的人能确认该地址是否公开挂在本站」。
 
 ---
 
 ## MCP
 
-OAuth scope 模型不动（`full` / `author`）。改的是身份表和字段名。
+OAuth 仍是 `full` / `author` 两种 scope，但 **author token 必须绑定 agent**。
 
 | 现状 | 之后 |
 |------|------|
-| `createAuthorPostEntity()` 用 `getAiAgentById` | `getAuthorById`，且 `type` 必须是 `agent`（人类 id → 当作 not found） |
-| 工具参数 / 过滤 `ai_agent_id` | `author_id` |
-| create 强制 `status=private`、分类 = agent.category | 不变 |
-| `src/lib/mcp/entities/post.ts` 的 `ai_agent_id` | `author_id`（full scope 可指定任意作者，含人类） |
-| prompt 模板里的隔离说明 | `author_id` |
+| token 只有 `scope`，工具参数自报 `author_id` | `mcp_tokens.author_id` 非空；`createMcpServer` / `author-post` 从 **认证上下文**取作者，工具 schema **删除** `author_id` 参数 |
+| 任一 author token + 别人的 id = 可改对方的文 | 只能动 token 绑定的那个 agent 的文 |
+| `getAiAgentById` | `getAuthorById`，且必须 `type=agent` 且 id 等于 token.author_id |
+| create 强制 `private` + 分类 | 不变 |
+| update 只剥 `status`，已发布文仍可改正文/删除 | **author scope 只能 update/delete `status=private` 的文**。published / archived / draft 由管理员走 full scope 或后台。发布后锁定，不靠 agent 自行「再改回 private」绕过审核 |
+| full scope `post.ts` 的 `ai_agent_id` | `author_id`；可指定人类或 agent；仍走 `PostService` |
+| prompt | 已使用 `author_id`；补一句「已发布不可改」 |
 
-不引入新的 token 前缀。
+不引入新的 token 前缀。旧的 `scope=author` 且 `author_id IS NULL` 的 token：鉴权直接 401。
 
 ---
 
 ## Backup
 
-`BACKUP_SCHEMA_VERSION` 升到 **2**。
+现行备份（`src/models/backup-schema.ts`）**没有** `ai_agent_id`，也**没有导入/恢复**（`docs/15-backy-backup.md`）。
 
-- 新增 `ExportedAuthor`（snake_case，与表列一致）
-- `ExportedPost.ai_agent_id` → `author_id`（必填）
-- `ExportedSiteSettings` 去掉 `site_author`，保留 `author_email`
-- 导入侧不读 v1 的 `site_author` / `ai_agent_id`（不兼容层）
+`BACKUP_SCHEMA_VERSION` 升到 **2**：
+
+- 新增 `authors: ExportedAuthor[]`（与表列一致，含 `type` / `email` / `profile_public` / `category_id`）
+- `ExportedPost` **新增必填** `author_id`
+- `ExportedSiteSettings` 去掉 `site_author`，保留 `author_email`，新增 `default_author_id`
+- 同一次导出里 authors 与 posts 必须是同一快照，避免悬挂 `author_id`
+- **不做**恢复实现；删掉任何「导入侧不读 v1」的说法——本来就没有导入侧
 
 ---
 
@@ -306,40 +391,52 @@ OAuth scope 模型不动（`full` / `author`）。改的是身份表和字段名
 ```
 New:
 ├── scripts/migrations/019-unified-authors.sql
+├── scripts/migrations/019-copy-author-avatars.ts
+├── scripts/migrations/019-copy-author-avatars.test.ts
 ├── src/data/entities/author.ts
 ├── src/data/entities/author.test.ts
-├── src/lib/author.ts                         # getPostAuthor + 默认作者
+├── src/lib/author.ts
 ├── src/lib/author.test.ts
-├── src/lib/author-avatar.ts                  # 原 avatar.ts，路径改为 authors/
+├── src/lib/author-avatar.ts
 ├── src/lib/author-avatar.test.ts
 ├── src/app/api/admin/authors/**
-├── src/app/api/authors/profile/route.ts      # 公开查询
+├── src/app/api/authors/profile/route.ts
 ├── src/app/api/authors/profile/route.test.ts
 ├── src/app/admin/authors/**
 └── src/components/admin/authors/**
 
 Replace / delete:
 ├── src/data/entities/ai-agent.ts (+ test)
-├── src/lib/ai-agent/**                       # author / avatar / prompt 迁出后删除目录
+├── src/lib/ai-agent/**                       # prompt 迁到 src/lib/author-prompt.ts
 ├── src/app/api/admin/ai-agents/**
 ├── src/app/admin/ai-agents/**
 └── src/components/admin/ai-agent*.tsx, ai-agents-*.tsx
 
 Modify:
-├── src/data/entities/post*.ts                # author_id, VIEW_QUERY
-├── src/data/settings.ts                      # 去掉 siteAuthor
-├── src/models/types.ts                       # Author, PostWithAuthor
-├── src/models/backup-schema.ts               # v2
+├── src/data/entities/post.ts, post-types.ts, post-queries.ts, post-mutations.ts
+├── src/services/post-service.ts              # 所有写路径不变量
+├── src/data/settings.ts                      # drop siteAuthor; add defaultAuthorId
+├── src/data/mcp-tokens.ts                    # author_id
+├── src/models/types.ts
+├── src/models/backup-schema.ts / backup-export.ts
 ├── src/lib/mcp/entities/post.ts
-├── src/lib/mcp/entities/author-post.ts
-├── src/lib/seo.ts / jsonld.ts / feed.xml
+├── src/lib/mcp/entities/author-post.ts       # 从 context 取作者
+├── src/lib/mcp/server.ts / auth.ts
+├── src/lib/seo.ts / jsonld.ts
+├── src/app/feed.xml/route.ts
 ├── src/app/layout.tsx
-├── src/app/(blog)/**                         # getPostAuthor 调用点
-├── src/components/admin/post-form*.tsx
+├── src/app/(blog)/**
+├── src/app/api/posts/route.ts
+├── src/app/api/posts/[slug]/route.ts         # PUT
+├── src/app/api/admin/posts/batch/route.ts
+├── src/app/admin/posts/new/page.tsx
+├── src/app/admin/posts/[id]/page.tsx
+├── src/components/admin/post-form.tsx, post-form-fields.tsx, post-form-helpers.ts
+├── src/components/admin/mcp-tokens-*.tsx     # author scope 必须选 agent
 ├── src/components/admin/sidebar.tsx, shell.tsx, command-palette.tsx
 ├── src/components/admin/site-identity-form.tsx
 ├── src/lib/i18n/index.ts
-├── src/proxy.ts                              # 公开 /api/authors/profile
+├── src/proxy.ts                              # profile 限流，不是公开 allowlist
 ├── e2e/api/admin-ai-agents.test.ts           # → admin-authors.test.ts
 └── e2e/bdd/admin-ai-agents.spec.ts           # → admin-authors.spec.ts
 ```
@@ -352,72 +449,73 @@ Modify:
 
 | 文件 | 覆盖 |
 |------|------|
-| `author.test.ts`（data） | CRUD；human 禁 category；agent 必 category；email 小写 + 唯一；默认作者原子切换；删除拦截（有文 / 默认 / 最后人类） |
-| `author.test.ts`（lib） | JOIN 数据 → `PostAuthor`；无头像 → `avatarUrl: null` |
+| `author.test.ts`（data） | CRUD；human 禁 category；agent 必 category 且不可改；email 小写 + 唯一；`default_author_id` 切换；删除拦截（有文 / 默认 / 最后人类 / 仍被 token 引用） |
+| `author.test.ts`（lib） | JOIN → `PostAuthor`；无头像 → null |
 | `author-avatar.test.ts` | 路径 `authors/{id}/{ver}/avatar-{size}.jpg` |
-| `post*.test.ts` | `author_id` 过滤 / 写入；agent 分类锁定 |
-| `settings.test.ts` | 不再解析 / 更新 `siteAuthor` |
-| `seo` / `jsonld` / `feed` | 默认人类作 publisher；byline 用该篇作者 |
-| `profile/route.test.ts` | email / hash 命中；404 不泄漏；限流键 |
-| `author-post.test.ts` | 人类 id 被拒；agent 分类强制 |
+| `019-copy-author-avatars.test.ts` | 幂等；缺源计数；目标已存在 skip |
+| `post-service.test.ts` | agent 分类锁定；批量改分类撞 agent 文失败 |
+| `post*.test.ts` | `author_id` 过滤 / 写入 |
+| `settings.test.ts` | 无 `siteAuthor`；有 `defaultAuthorId` |
+| `mcp-tokens.test.ts` | author scope 必须带 agent id |
+| `seo` / `jsonld` / `feed` | publisher = 默认人类；byline = 该篇作者 |
+| `profile/route.test.ts` | 默认不公开；打开后 email/hash 命中；未公开与未命中同形；限流 |
+| `author-post.test.ts` | 上下文作者，忽略/拒绝参数里的 id；人类 token 不可建；已发布拒绝 update/delete |
 | `mcp/entities/post.test.ts` | `author_id` 映射 |
-
-`siteAuthor` 从所有 fixture 删除。
 
 ### L2
 
 | 文件 | 覆盖 |
 |------|------|
-| `e2e/api/admin-authors.test.ts` | 人类/agent CRUD；默认切换；删除 409；agent 无分类 400 |
-| `e2e/api/posts.test.ts` | 创建默认作者；改署 agent 时分类被锁 |
-| `e2e/api/authors-profile.test.ts` | 无 cookie 可查；错邮箱 404；超限 429 |
-| `e2e/api/mcp.test.ts` | `author_id`；人类 id 在 author scope 失败 |
+| `e2e/api/admin-authors.test.ts` | 人类/agent CRUD；默认切换；删除 409；改 agent 分类 400 |
+| `e2e/api/posts.test.ts` | `POST` 缺省默认作者；`PUT /api/posts/:slug` 改署 agent 时分类被锁 |
+| `e2e/api/admin-posts.test.ts` | batch 改分类撞 agent 文 400 |
+| `e2e/api/authors-profile.test.ts` | 无 cookie；默认 空结果；打开后命中；超限 429 |
+| `e2e/api/mcp.test.ts` | token 绑定作者；换别人的 id 无效；已发布 update/delete 失败 |
 | 删除 | `e2e/api/admin-ai-agents.test.ts` |
 
 ### L3
 
 | 场景 | 断言 |
 |------|------|
-| `/admin/authors` | 列表 + 类型列；不再出现「AI 代理」h1 |
-| 新建人类 / 新建代理 | 人类无分类 select；代理有 |
+| `/admin/authors` | 列表 + 类型列；无「AI 代理」h1 |
+| 新建人类 / 新建代理 | 人类无分类；代理有且编辑只读 |
 | 站点身份 | 无「作者名称」；有「作者邮箱」 |
-| 新文章表单 | 作者选择器预选默认人类 |
+| `/admin/posts/new` | 作者选择器预选默认人类 |
 | 选 agent | 分类被锁 |
-| 已发布人类文章 | byline 是人类名 + 人类头像（不是 logo） |
-| 已发布 agent 文章 | byline 是 agent 名 + agent 头像 |
-
-`e2e/bdd/admin-ai-agents.spec.ts` 整文件替换。
+| 已发布人类 / agent 文 | byline 用各自头像，不用 logo |
+| MCP token 创建 | author scope 必须选 agent |
 
 ### G1 / G2 / Worker
 
-- G1：全量 `tsc` + Biome；无残留 `ai_agents` / `siteAuthor` / `ai_agent_id` 引用（可用 `rg` 自检，不必新 gate）
-- G2：公开接口不把邮箱写入响应；gitleaks 无新增
-- Worker：无 schema 依赖，不改
+- G1：`tsc` + Biome；`rg 'ai_agents|ai_agent_id|siteAuthor|/admin/ai-agents'` 无业务引用
+- G2：响应不含邮箱；不把 404 文案写成「防枚举」
+- Worker：不改
 
 ---
 
 ## Atomic Commits
 
+实现期（本文之后）按此切开。生产 apply 仍遵守「停 → 迁 → 发」。
+
 | # | Commit | 文件 |
 |---|--------|------|
 | 1 | `feat(db): add authors table migration` | `019-unified-authors.sql` |
-| 2 | `feat(data): add author entity` | `src/data/entities/author.ts*` |
+| 2 | `feat(data): add author entity` | `author.ts*` |
 | 3 | `feat(data): switch posts to author_id` | `post*.ts`, `types.ts` |
-| 4 | `feat(data): drop siteAuthor from settings` | `settings.ts*` |
-| 5 | `feat(lib): resolve post author from join` | `src/lib/author.ts*`；删 `src/lib/ai-agent/author.ts` |
-| 6 | `feat(lib): author avatar urls` | `author-avatar.ts*`；删旧 avatar 路径 |
-| 7 | `feat(api): admin authors crud` | `/api/admin/authors/**`；删 `/api/admin/ai-agents/**` |
+| 4 | `feat(data): default author on site settings` | `settings.ts*` |
+| 5 | `feat(lib): resolve post author from join` | `src/lib/author.ts*` |
+| 6 | `feat(lib): author avatar urls and copy script` | `author-avatar.ts*`，`019-copy-author-avatars.ts*` |
+| 7 | `feat(api): admin authors crud` | `/api/admin/authors/**`；删 ai-agents |
 | 8 | `feat(api): public author profile lookup` | `/api/authors/profile/**`, `proxy.ts` |
-| 9 | `feat(mcp): use authors.author_id` | `mcp/entities/*`, prompt |
-| 10 | `feat(seo): author surfaces use authors table` | `seo`, `jsonld`, `feed`, `layout`, blog pages |
-| 11 | `feat(ui): authors admin replaces ai-agents` | `admin/authors/**`, sidebar, i18n |
-| 12 | `feat(ui): pick author on post form` | `post-form*` |
-| 13 | `feat(ui): drop site author from identity` | `site-identity-form.tsx` |
-| 14 | `feat(backup): schema v2 authors` | `backup-schema.ts*` |
+| 9 | `feat(mcp): bind author tokens and lock published` | `mcp-tokens`, `author-post`, `server`, prompt |
+| 10 | `feat(seo): author surfaces use authors table` | seo / jsonld / feed / layout / blog |
+| 11 | `feat(ui): authors admin replaces ai-agents` | admin/authors, sidebar, i18n |
+| 12 | `feat(ui): pick author on post form` | post-form*，`posts/new`，`posts/[id]`，`POST`/`PUT` posts |
+| 13 | `feat(ui): drop site author from identity` | site-identity-form |
+| 14 | `feat(backup): schema v2 authors export` | backup-schema / backup-export |
 | 15 | `test(e2e): authors api and bdd` | 替换 ai-agents e2e |
-| 16 | `docs: add unified authors design` | 本文 + `docs/README.md` |
 
-每步后：`bun run test` 绿。涉及 schema 的本地验证：`bun run migrate:local`。
+每步后 `bun run test`。schema：`bun run migrate:local`。
 
 ---
 
@@ -427,20 +525,20 @@ Modify:
 bun run typecheck
 bun run lint
 bun run test
-# schema 落地后：
 bun run migrate:local
 bun run test:e2e:api
 ```
 
 手工：
 
-1. `/admin/authors` 能看到迁移来的 agent + 一条默认人类（名字来自原 `site_author`）。
+1. `/admin/authors` 能看到迁移来的 agent + 一条默认人类（名字来自原 `site_author`，slug 为 `default-author` 或 `default-author-human`）。
 2. 站点身份没有作者名称，邮箱仍在。
-3. 新文章默认署默认人类；改选 agent 后面分类锁死。
+3. 新文章默认署 `default_author_id`；改选 agent 后面分类锁死；改 agent 自己的分类被拒。
 4. 人类文章 byline 不再用站点 logo。
-5. `GET /api/authors/profile?email=` 无登录返回 `{name, avatar}`。
-6. MCP author scope 用 agent 的 `author_id` 仍能建私密文；传人类 id 失败。
-7. `rg 'ai_agents|ai_agent_id|siteAuthor|/admin/ai-agents' --glob '!docs/**' --glob '!scripts/migrations/**'` 无业务引用。
+5. `profile_public=0` 时查询得到空结果；打开后 `?email=` / `?hash=` 能拿到 name/avatar。
+6. 新发的 author-scope token 必须选 agent；不能改别人的文；不能改已发布文。
+7. 旧的未绑定 author token 401。
+8. `rg 'ai_agents|ai_agent_id|siteAuthor|/admin/ai-agents' --glob '!docs/**' --glob '!scripts/migrations/**'` 无业务引用。
 
 ---
 
@@ -449,9 +547,10 @@ bun run test:e2e:api
 | 旧 | 新 |
 |----|----|
 | `ai_agents` | `authors` WHERE `type='agent'` |
-| `site_settings.site_author` | 默认 `authors` 行（human, `is_default=1`） |
+| `site_settings.site_author` | 一条 human + `site_settings.default_author_id` |
 | `site_settings.author_email` | **不动** |
 | `posts.ai_agent_id`（nullable） | `posts.author_id`（NOT NULL） |
 | `/admin/ai-agents` | `/admin/authors` |
 | 署名前用 logo | 署名前用作者头像 |
-| MCP `ai_agent_id` | MCP `author_id` |
+| MCP 工具参数里的 `author_id` | token 上的 `mcp_tokens.author_id` |
+| 已发布后 agent 仍可改正文 | author scope 仅限 `private` |
