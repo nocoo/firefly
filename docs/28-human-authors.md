@@ -129,19 +129,36 @@ UPDATE posts
 SET human_id = (SELECT default_human_id FROM site_settings WHERE id = 1)
 WHERE ai_agent_id IS NULL AND human_id IS NULL;
 
--- DROP 之前必须让 runner 失败（影响 0 行不能当成功）
-SELECT CASE
-  WHEN EXISTS (SELECT 1 FROM site_settings WHERE id = 1 AND default_human_id IS NULL)
-  THEN RAISE(ABORT, '019: default_human_id is null')
-END;
-SELECT CASE
-  WHEN EXISTS (SELECT 1 FROM posts WHERE ai_agent_id IS NULL AND human_id IS NULL)
-  THEN RAISE(ABORT, '019: human posts missing human_id')
-END;
-SELECT CASE
-  WHEN EXISTS (SELECT 1 FROM pragma_foreign_key_check())
-  THEN RAISE(ABORT, '019: foreign_key_check failed')
-END;
+-- DROP 之前必须失败：RAISE() 只能用在 trigger 里。用 CHECK (v=1) 的 guard 表。
+-- v=0 时 INSERT 失败，runner 不会记迁移成功，也走不到 DROP。
+DROP TABLE IF EXISTS _019_guard;
+CREATE TABLE _019_guard (
+  k TEXT PRIMARY KEY,
+  v INTEGER NOT NULL CHECK (v = 1)
+);
+INSERT INTO _019_guard(k, v)
+SELECT 'default',
+  CASE
+    WHEN EXISTS (
+      SELECT 1 FROM site_settings
+      WHERE id = 1 AND default_human_id IS NOT NULL
+    ) THEN 1 ELSE 0
+  END;
+INSERT INTO _019_guard(k, v)
+SELECT 'xor',
+  CASE
+    WHEN EXISTS (
+      SELECT 1 FROM posts
+      WHERE ai_agent_id IS NULL AND human_id IS NULL
+    ) THEN 0 ELSE 1
+  END;
+INSERT INTO _019_guard(k, v)
+SELECT 'fk',
+  CASE
+    WHEN EXISTS (SELECT 1 FROM pragma_foreign_key_check())
+    THEN 0 ELSE 1
+  END;
+DROP TABLE _019_guard;
 
 ALTER TABLE site_settings DROP COLUMN site_author;
 ```
