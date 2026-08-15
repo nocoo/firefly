@@ -52,6 +52,7 @@
 | `src/lib/ai-agent/prompt-generator.ts` | 不改 |
 | `src/components/admin/ai-agent-*.tsx`、`ai-agents-*.tsx` | 不改 |
 | `e2e/api/admin-ai-agents.test.ts`、`e2e/bdd/admin-ai-agents.spec.ts`、`e2e/api/mcp.test.ts` | 不改期望 |
+| `src/data/entities/ai-agent.test.ts`、`src/lib/ai-agent/avatar-url.test.ts`、`src/lib/ai-agent/prompt-generator.test.ts` | 不改。`src/lib/ai-agent/author.test.ts` 是明确例外（要加 human 回落） |
 | MCP `scope=author` 工具参数里的 `author_id`（实际是 agent id） | 不改 |
 
 允许的、仅限「署名展示」的只读扩展：`VIEW_QUERY` 增加 `LEFT JOIN humans`，`getPostAuthor` 在 `ai_agent_id` 为空时改走 human，不再读 `site_author` / logo。Agent 分支保持先判 `ai_agent_id`，逻辑与今天一致。
@@ -107,16 +108,18 @@ CREATE INDEX IF NOT EXISTS idx_posts_human ON posts(human_id);
 ALTER TABLE site_settings
   ADD COLUMN default_human_id TEXT REFERENCES humans(id);
 
--- 幂等：已有 humans 则不再插
+-- 幂等：已有 humans 则不再插。id 与 slug 共用同一个 hid。
+WITH seed AS (
+  SELECT
+    lower(hex(randomblob(16))) AS hid,
+    COALESCE(NULLIF(trim(site_author), ''), NULLIF(trim(site_name), ''), 'Author') AS hname
+  FROM site_settings
+  WHERE id = 1
+)
 INSERT INTO humans (id, name, slug, email, profile_public, avatar_version, created_at, updated_at)
-SELECT
-  lower(hex(randomblob(16))),
-  COALESCE(NULLIF(site_author, ''), NULLIF(site_name, ''), 'Author'),
-  'human-' || lower(hex(randomblob(16))),
-  NULL, 0, NULL, unixepoch(), unixepoch()
-FROM site_settings
-WHERE id = 1
-  AND NOT EXISTS (SELECT 1 FROM humans);
+SELECT hid, hname, 'human-' || hid, NULL, 0, NULL, unixepoch(), unixepoch()
+FROM seed
+WHERE NOT EXISTS (SELECT 1 FROM humans);
 
 UPDATE site_settings
 SET default_human_id = (SELECT id FROM humans ORDER BY created_at ASC LIMIT 1)
@@ -126,29 +129,26 @@ UPDATE posts
 SET human_id = (SELECT default_human_id FROM site_settings WHERE id = 1)
 WHERE ai_agent_id IS NULL AND human_id IS NULL;
 
+-- DROP 之前必须让 runner 失败（影响 0 行不能当成功）
+SELECT CASE
+  WHEN EXISTS (SELECT 1 FROM site_settings WHERE id = 1 AND default_human_id IS NULL)
+  THEN RAISE(ABORT, '019: default_human_id is null')
+END;
+SELECT CASE
+  WHEN EXISTS (SELECT 1 FROM posts WHERE ai_agent_id IS NULL AND human_id IS NULL)
+  THEN RAISE(ABORT, '019: human posts missing human_id')
+END;
+SELECT CASE
+  WHEN EXISTS (SELECT 1 FROM pragma_foreign_key_check())
+  THEN RAISE(ABORT, '019: foreign_key_check failed')
+END;
+
 ALTER TABLE site_settings DROP COLUMN site_author;
 ```
 
-迁移测试（`019-human-authors.test.ts`）必须失败即红：
-
-- `SELECT COUNT(*) FROM site_settings WHERE default_human_id IS NULL` = 0
-- `SELECT COUNT(*) FROM posts WHERE ai_agent_id IS NULL AND human_id IS NULL` = 0
-- agent 文：`ai_agent_id` 原值不变，`human_id` 仍 NULL
-- `PRAGMA foreign_key_check` 空
+`019-human-authors.test.ts` 再断言一遍同样条件，并确认 agent 文 `ai_agent_id` 不变、`human_id` 仍 NULL。
 
 中途失败：runner **不会**记成已应用。**禁止**在半迁库上重跑碰运气；先 Time Travel 回 bookmark 再整份重跑。`DROP COLUMN site_author` 放最后，重跑时若列已删会报错——这就是要回滚再跑的原因，不要给 DROP 加「忽略错误」。
-
-slug：`'human-' || id` 在单条 INSERT 里要用**同一个** `hex(randomblob(16))`（CTE / 子查询绑定一次），不能 name 用一个 blob、slug 再 `randomblob` 一次。上面示例写成两次是示意；实现必须：
-
-```sql
-WITH seed AS (
-  SELECT lower(hex(randomblob(16))) AS hid, site_author, site_name
-  FROM site_settings WHERE id = 1
-)
-INSERT INTO humans (id, name, slug, ...)
-SELECT hid, COALESCE(...), 'human-' || hid, ... FROM seed
-WHERE NOT EXISTS (SELECT 1 FROM humans);
-```
 
 应用层 XOR（`PostService`，**不是**改 MCP 文件）：
 
