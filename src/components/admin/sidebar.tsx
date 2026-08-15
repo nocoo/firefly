@@ -66,14 +66,20 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "作者",
+    defaultOpen: true,
+    items: [
+      { title: "作者", href: "/admin/authors", icon: UserRound },
+      { title: "AI 代理", href: "/admin/ai-agents", icon: Users },
+    ],
+  },
+  {
     label: "系统",
     defaultOpen: true,
     items: [
       { title: "通用设置", href: "/admin/settings", icon: Settings },
       { title: "站点身份", href: "/admin/site-identity", icon: Fingerprint },
-      { title: "作者", href: "/admin/authors", icon: UserRound },
       { title: "AI 设置", href: "/admin/ai-settings", icon: Bot },
-      { title: "AI 代理", href: "/admin/ai-agents", icon: Users },
       { title: "MCP 令牌", href: "/admin/mcp", icon: KeyRound },
       { title: "备份", href: "/admin/backup", icon: CloudUpload },
     ],
