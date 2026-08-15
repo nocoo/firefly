@@ -477,6 +477,13 @@ describe("getRateLimitConfig", () => {
       windowMs: 60_000,
     });
   });
+
+  it("applies a tighter limit to GET /api/authors/profile", () => {
+    expect(getRateLimitConfig("/api/authors/profile", "GET")).toEqual({
+      limit: 30,
+      windowMs: 60_000,
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------

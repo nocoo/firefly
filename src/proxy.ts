@@ -55,6 +55,8 @@ const RATE_LIMIT_WINDOW_MS = 60_000;
 const MCP_REGISTER_LIMIT = 10;
 const MCP_TOKEN_LIMIT = 20;
 const PUBLIC_API_LIMIT = 60;
+const AUTHOR_PROFILE_PATH = "/api/authors/profile";
+const AUTHOR_PROFILE_LIMIT = 30;
 
 interface RateLimitConfig {
   limit: number;
@@ -85,6 +87,10 @@ function getRateLimitConfig(
 
   // All other /api/mcp routes are exempt (own auth + token-bound).
   if (pathname === "/api/mcp" || pathname.startsWith("/api/mcp/")) return null;
+
+  if (pathname === AUTHOR_PROFILE_PATH && method === "GET") {
+    return { limit: AUTHOR_PROFILE_LIMIT, windowMs: RATE_LIMIT_WINDOW_MS };
+  }
 
   return { limit: PUBLIC_API_LIMIT, windowMs: RATE_LIMIT_WINDOW_MS };
 }

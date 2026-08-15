@@ -4,7 +4,7 @@ import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse, notFoundResponse } from "@/lib/api";
 import { getPostBySlug } from "@/data/entities/post";
 import type { PostStatus } from "@/models/types";
-import { PostService } from "@/services/post-service";
+import { PostAttributionError, PostService } from "@/services/post-service";
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -56,6 +56,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       status: body.status as PostStatus | undefined,
       excerpt: body.excerpt as string | null | undefined,
       categoryId: (body.categoryId ?? body.category_id) as string | null | undefined,
+      aiAgentId: (body.aiAgentId ?? body.ai_agent_id) as string | null | undefined,
+      humanId: (body.humanId ?? body.human_id) as string | null | undefined,
       featuredImage: (body.featuredImage ?? body.featured_image) as string | null | undefined,
       commentEnabled: (body.commentEnabled ?? body.comment_enabled) as number | undefined,
       publishedAt: (body.publishedAt ?? body.published_at) as number | null | undefined,
@@ -70,6 +72,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     return jsonResponse(updated);
   } catch (error) {
+    if (error instanceof PostAttributionError) {
+      return errorResponse(error.message, 400);
+    }
     return errorResponse(
       error instanceof Error ? error.message : "Internal server error",
       500,

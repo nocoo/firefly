@@ -108,7 +108,6 @@ function parseSettingsBody(
     { key: "siteName", field: "siteName", maxLen: 255, required: true },
     { key: "siteTagline", field: "siteTagline", maxLen: 500 },
     { key: "siteDescription", field: "siteDescription", maxLen: 1000 },
-    { key: "siteAuthor", field: "siteAuthor", maxLen: 255 },
     { key: "authorEmail", field: "authorEmail", maxLen: 255 },
     { key: "twitterHandle", field: "twitterHandle", maxLen: 50 },
   ];

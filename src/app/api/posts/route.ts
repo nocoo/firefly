@@ -3,7 +3,7 @@ import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
 import { listPosts, type ListPostsOptions } from "@/data/entities/post";
 import type { PostStatus } from "@/models/types";
-import { PostService } from "@/services/post-service";
+import { PostAttributionError, PostService } from "@/services/post-service";
 
 // GET /api/posts — list posts with optional filters
 export async function GET(request: NextRequest) {
@@ -70,6 +70,8 @@ export async function POST(request: NextRequest) {
       status: (body.status as PostStatus) || "draft",
       excerpt: body.excerpt as string | undefined,
       categoryId: (body.categoryId ?? body.category_id) as string | undefined,
+      aiAgentId: (body.aiAgentId ?? body.ai_agent_id) as string | undefined,
+      humanId: (body.humanId ?? body.human_id) as string | undefined,
       featuredImage: (body.featuredImage ?? body.featured_image) as string | undefined,
       commentEnabled: (body.commentEnabled ?? body.comment_enabled) as number | undefined,
       publishedAt: (body.publishedAt ?? body.published_at) as number | undefined,
@@ -82,6 +84,9 @@ export async function POST(request: NextRequest) {
 
     return jsonResponse(post, 201);
   } catch (error) {
+    if (error instanceof PostAttributionError) {
+      return errorResponse(error.message, 400);
+    }
     return errorResponse(
       error instanceof Error ? error.message : "Internal server error",
       500,
