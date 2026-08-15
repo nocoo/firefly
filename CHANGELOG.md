@@ -1,5 +1,230 @@
 # Changelog
 
+## v2.9.0 (2026-08-15)
+
+- fix: treat empty profile hash as missing
+- test: add human_id to jsonld fixture
+- test(e2e): human authors
+- feat(backup): export humans
+- feat(ui): drop site author name
+- feat(ui): humans admin and post picker
+- feat(seo): human publisher fallback
+- feat(api): admin humans and profile
+- feat(lib): resolve human byline
+- feat(data): posts.human_id and default human
+- feat(data): add human entity
+- feat(db): add humans table
+- docs: use check-table migration guards
+- docs: harden human authors migration sql
+- docs: address human authors design review
+- docs: add split human authors design
+- docs: fix authors rollback and token refresh
+- docs: close remaining authors review items
+- docs: address authors design review
+- docs: add unified authors design
+- fix: skip image optimizer in local dev
+- chore(deps): bump next to 16.3.1 (#504)
+- chore(deps): bump hono to 4.13.2 (#503)
+- chore(deps): bump ai to 7.0.65 (#502)
+- chore(deps): bump wrangler to 4.123.0 (#505)
+- Merge pull request #508 from nocoo/agent/sde-01/6eaf0a92
+- chore(deps): bump @aws-sdk/client-s3 to 3.1110.0 (#501)
+- chore(deps): bump workers-types to 5.20260814.1 (#498)
+- chore(deps): bump wrangler to 4.123.0
+- chore(deps): bump nanoid to 3.3.18 for security (#500)
+- Merge pull request #490 from nocoo/agent/sde-01/ca6c353a
+- chore(deps): bump @aws-sdk/client-s3 to 3.1109.0
+- chore(deps): bump ai to 7.0.64 (#489)
+- chore(deps): bump wrangler to 4.122.0 (#488)
+- Merge pull request #483 from nocoo/agent/sde-01/ae8c547b
+- Merge pull request #484 from nocoo/agent/sde-01/15a0c91d
+- Merge pull request #482 from nocoo/agent/sde-01/2f25afd8
+- Merge pull request #481 from nocoo/agent/sde-01/6336eeb4
+- chore(deps): bump ai to 7.0.62
+- Merge pull request #480 from nocoo/agent/sde-01/fabb5b32
+- chore(deps): bump wrangler to 4.121.0
+- chore(deps): bump workers-types to 5.20260812.1
+- chore(deps): bump @biomejs/biome to 2.5.8
+- chore(deps): bump @aws-sdk/client-s3 to 3.1108.0
+- Merge pull request #474 from nocoo/agent/sde-01/9f06d3dd
+- chore(deps): bump wrangler to 4.120.1
+- chore(deps): bump workers-types to 5.20260811.1
+- chore(deps): bump oxc-parser to 0.144.0
+- chore(deps): bump ai to 7.0.59
+- chore(deps): bump @aws-sdk/client-s3 to 3.1107.0
+- chore(deps): bump sonner to 2.0.8 (#467)
+- Merge pull request #468 from nocoo/agent/sde-01/ab897da1
+- Merge pull request #466 from nocoo/agent/sde-01/9f059f44
+- chore(deps): bump workers-types to 5.20260810.1
+- chore(deps): bump lucide-react to 1.31.0
+- Merge pull request #462 from nocoo/agent/sde-01/7b039f76
+- chore(deps): bump workers-types to 5.20260809.1
+- Merge pull request #460 from nocoo/agent/sde-01/37daa931
+- fix(e2e): synchronize recovery waiters
+- fix(e2e): bound sidecar recovery lifecycle
+- fix(e2e): recover transient wrangler sidecar exits
+- Merge pull request #457 from nocoo/agent/sde-01/5f2fb097
+- Merge pull request #451 from nocoo/agent/sde-01/ba998527
+- Merge pull request #453 from nocoo/agent/sde-01/664e110a
+- chore(deps): bump hono to 4.13.1
+- Merge pull request #459 from nocoo/agent/sde-01/2fa76d79
+- Merge pull request #454 from nocoo/agent/sde-01/3a00bccc
+- chore(deps): bump @aws-sdk/client-s3 to 3.1106.0
+- chore(deps): bump ai to 7.0.58
+- Merge pull request #452 from nocoo/agent/sde-01/2302dde2
+- Merge remote-tracking branch 'origin/main' into agent/sde-01/664e110a
+- Merge pull request #456 from nocoo/agent/sde-01/9aaa65c7
+- Merge origin/main to include nanoid security fix
+- chore(deps): bump wrangler to 4.120.0
+- Merge remote-tracking branch 'origin/main' into agent/sde-01/9aaa65c7
+- Merge pull request #455 from nocoo/agent/sde-01/f484190e
+- chore(deps): pin nanoid 3.3.17 for security
+- chore(deps): bump @types/node 26.1.2 → 26.2.0
+- chore(deps): bump @cloudflare/workers-types to 5.20260808.1
+- chore(deps): bump lucide-react to 1.30.0
+- Merge pull request #442 from nocoo/agent/sde-01/de8a7ab2
+- Merge pull request #441 from nocoo/agent/sde-01/4d93b637
+- Merge pull request #440 from nocoo/agent/sde-01/a5f192e4
+- chore(deps): bump @aws-sdk/client-s3 to 3.1105.0
+- chore(deps): bump lucide-react to 1.29.0
+- chore(deps): bump ai to 7.0.55
+- Merge pull request #435 from nocoo/agent/sde-01/1518268f
+- Merge pull request #436 from nocoo/agent/sde-01/d9cf00da
+- chore(deps): bump @aws-sdk/client-s3 to 3.1104.0
+- chore(deps): bump wrangler to 4.119.0
+- Merge pull request #432 from nocoo/agent/sde-01/3cb99f4c
+- chore(deps): bump next 16.2.12 to 16.3.0
+- Merge pull request #431 from nocoo/agent/sde-01/28eb0a4d
+- Merge pull request #430 from nocoo/agent/sde-01/24db4876
+- Merge pull request #429 from nocoo/agent/sde-01/1c1353d4
+- Merge pull request #428 from nocoo/agent/sde-01/2f6dfd7f
+- chore(deps): bump oxc-parser to 0.143.0
+- Merge pull request #427 from nocoo/agent/sde-01/6a14a980
+- chore(deps): bump marked 18.0.7 to 18.0.9
+- Merge pull request #426 from nocoo/agent/sde-01/2e1ca90f
+- chore(deps): bump hono to 4.13.0
+- Merge pull request #424 from nocoo/agent/sde-01/846c5b61
+- Merge pull request #425 from nocoo/agent/sde-01/d6f3c169
+- chore(deps): bump ai 7.0.48 to 7.0.52
+- chore(deps): bump @biomejs/biome 2.5.6 → 2.5.7
+- chore(deps): bump workers-types to 5.20260804.1
+- chore(deps): bump undici 7.28.0 → 7.29.0 (GH #388)
+- chore(deps): bump @aws-sdk/client-s3 to 3.1103.0
+- Merge pull request #412 from nocoo/agent/sde-01/1f84fb09
+- chore(deps): bump @modelcontextprotocol/sdk 1.29.0 → 1.30.0
+- Merge pull request #413 from nocoo/agent/sde-01/178c3fea
+- test(e2e): drop seededPost guard so committed-but-lost-response leaks nothing
+- test(e2e): serialize admin-comments + widen try/finally over settings PUT
+- fix(comments): rewrite deleteComment subtree walk in JS, add L2 regression
+- fix(ci): harden /query gate, retry body-read, opt-in call, coverage flake
+- Merge pull request #415 from nocoo/agent/sde-01/ffc54614-r2
+- docs(db): fix comment — add .v1 in symbol example, note globalThis realm scope (STU-2495 R4)
+- fix(db): hoist localQueues to globalThis via Symbol.for (STU-2495 R3)
+- Merge pull request #414 from nocoo/agent/sde-01/d0336f06
+- fix(db): direct-handoff semaphore + shared registry by origin (STU-2495 R2)
+- chore(deps): bump @aws-sdk/client-s3 3.1093.0 → 3.1101.0
+- fix(db): bounded concurrency for localhost + restore keep-alive (STU-2495)
+- Merge pull request #411 from nocoo/agent/sde-01/ffc54614
+- fix(e2e-seed): propagate deadline abort out of slugExists + guard sleep on pre-aborted signal (STU-2495)
+- fix(e2e-seed): AbortController-based deadline preempts in-flight fetch (STU-2495)
+- fix: scope long retry to localhost, deadline seed loop, preserve cause (STU-2495)
+- fix(e2e): tame Next→wrangler socket-pool flake on 2-vCPU CI (STU-2495)
+- fix(db/e2e): tighter retry gate + seed 4xx fail-fast + CTE-write guard (STU-2495)
+- fix(e2e): scope db retry to reads, idempotent seed, log capture (STU-2495)
+- Merge pull request #405 from nocoo/agent/sde-01/3cdcfd23
+- chore(deps): bump @types/react 19.2.17 → 19.2.18 (GH #367)
+- fix(db): retry transient fetch failures against local worker (STU-2495)
+- Merge pull request #408 from nocoo/agent/sde-01/a9c0169a
+- Merge pull request #402 from nocoo/agent/sde-01/a00fe778
+- Merge pull request #407 from nocoo/agent/sde-01/1a9f1d05
+- Merge pull request #409 from nocoo/agent/sde-01/40736272
+- chore(deps): bump @playwright/test 1.61.1 → 1.62.1 (GH #366)
+- chore(deps): bump lint-staged 17.1.1 → 17.3.0 (#410)
+- Merge pull request #403 from nocoo/agent/sde-01/b0d75e98
+- chore(deps): bump @radix-ui/react-avatar 1.2.4 → 1.2.6
+- Merge pull request #406 from nocoo/agent/sde-01/1305152a
+- Merge pull request #404 from nocoo/agent/sde-01/bd7bc54d
+- chore(deps): bump recharts 3.10.0 → 3.10.1
+- chore(deps): bump @types/react-dom 19.2.3 → 19.2.4
+- chore(deps): bump ai 7.0.35 → 7.0.48
+- Merge pull request #401 from nocoo/agent/sde-01/199c2493
+- chore(deps): bump @types/node 26.1.1 → 26.1.2
+- Merge pull request #399 from nocoo/agent/sde-01/be79ae71
+- Merge pull request #389 from nocoo/agent/sde-01/258984e7
+- Merge pull request #400 from nocoo/agent/sde-01/stu-2484-followup
+- chore(deps): bump @radix-ui/react-alert-dialog 1.1.21 → 1.1.23
+- Merge pull request #398 from nocoo/agent/sde-01/1495c66a
+- chore(deps): bump hono direct dep 4.12.31 → 4.12.34 (GHSA-8j4g-w8fx-2239)
+- chore(deps): bump wrangler 4.113.0 → 4.118.0 (GH #377)
+- Merge pull request #397 from nocoo/agent/sde-01/2fe87337
+- Merge pull request #393 from nocoo/agent/sde-01/e5a8f21e
+- Merge branch 'main' into agent/sde-01/258984e7
+- Merge pull request #390 from nocoo/agent/sde-01/ca167399
+- chore(deps): bump security overrides for CI G2
+- chore(deps): bump fast-uri 4.1.2 & hono 4.12.34 (STU-2480) (#396)
+- chore(deps): security bump overrides (hono/fast-uri/ip-address/postcss)
+- chore(deps): bump fast-uri 4.1.1→4.1.2 and hono 4.12.31→4.12.34 (G2 baseline)
+- Merge pull request #392 from nocoo/agent/sde-01/2ac42a09
+- chore(deps): bump postcss override 8.5.18 → 8.5.23 (GHSA-fxqj-rqcc-2cmp)
+- Merge pull request #391 from nocoo/agent/sde-01/7ea6cf86
+- chore(deps): bump ip-address override 10.1.1 → 10.3.1 (GHSA-mwp4-54f8-5fhr)
+- chore(deps): bump @cloudflare/workers-types 5.20260722.1 → 5.20260801.1 (worker)
+- chore(deps): bump oxc-parser 0.141.0 → 0.142.0
+- chore(deps): bump lucide-react 1.25.0 → 1.28.0
+- chore(deps): bump next 16.2.11 → 16.2.12
+- chore(deps): bump @biomejs/biome 2.5.5 → 2.5.6
+- Merge pull request #348 from nocoo/agent/sde-01/91c81c4d
+- chore(deps): bump postcss override 8.5.10 → 8.5.18 (GHSA-r28c-9q8g-f849)
+- Merge pull request #346 from nocoo/agent/sde-03/28ca3f37
+- chore(deps): bump next-auth 5.0.0-beta.31 → 5.0.0-beta.32 (security)
+- Merge pull request #343 from nocoo/agent/sde-02/3b2f797e
+- chore(deps): bump @aws-sdk/client-s3 3.1092.0 → 3.1093.0
+- chore(deps): bump @cloudflare/workers-types 5.20260721.1 → 5.20260722.1 (worker)
+- chore(deps): bump @radix-ui/react-alert-dialog 1.1.20 → 1.1.21
+- chore(deps): bump @radix-ui/react-avatar 1.2.3 → 1.2.4
+- chore(deps): bump ai 7.0.34 → 7.0.35
+- chore(deps): bump lint-staged 17.1.0 → 17.1.1
+- Merge pull request #336 from nocoo/agent/sde-01/e05e88cd
+- chore(deps): add sharp >=0.35.3 override for next transitive (GHSA-f88m-g3jw-g9cj)
+- chore(deps): bump fast-uri override 3.1.2 → 4.1.1 (GHSA-v2hh-gcrm-f6hx)
+- chore(deps): bump next 16.2.10 → 16.2.11
+- chore(deps): bump react/react-dom/react-is 19.2.7 → 19.2.8
+- chore(deps): bump ai 7.0.32 → 7.0.34
+- chore(deps): bump marked 18.0.6 → 18.0.7
+- chore(deps): bump oxc-parser 0.140.0 → 0.141.0
+- chore(deps): bump @aws-sdk/client-s3 3.1091.0 → 3.1092.0
+- chore(deps): bump @biomejs/biome 2.5.4 → 2.5.5
+- chore(deps): bump @cloudflare/workers-types 5.20260719.1 → 5.20260721.1 (worker)
+- chore(deps): bump wrangler 4.112.0 → 4.113.0 (worker)
+- Merge pull request #322 from nocoo/agent/sde-03/f2ea9a70
+- chore(deps): bump recharts 3.9.2 → 3.10.0
+- chore(deps): bump ai 7.0.31 → 7.0.32
+- chore(deps): bump @aws-sdk/client-s3 3.1090.0 → 3.1091.0
+- Merge pull request #318 from nocoo/agent/sde-04/e682d07b
+- chore(deps): bump @cloudflare/workers-types 5.20260718.1 → 5.20260719.1 (worker)
+- chore(deps): bump @radix-ui/react-alert-dialog 1.1.19 → 1.1.20
+- chore(deps): bump @radix-ui/react-avatar 1.2.2 → 1.2.3
+- Merge pull request #314 from nocoo/agent/sde-01/68fe03b5
+- chore(deps): unify hono resolution to 4.12.31 across override
+- chore(deps): bump lint-staged 17.0.8 → 17.1.0
+- chore(deps): bump hono 4.12.30 → 4.12.31
+- chore(deps): bump @cloudflare/workers-types 5.20260717.1 → 5.20260718.1 (worker)
+- Merge pull request #310 from nocoo/agent/sde-03/ac5d513f
+- chore(deps): bump wrangler 4.111.0 → 4.112.0 (worker)
+- chore(deps): bump @cloudflare/workers-types 5.20260716.1 → 5.20260717.1 (worker)
+- chore(deps): bump lucide-react 1.24.0 → 1.25.0
+- chore(deps): bump ai 7.0.30 → 7.0.31
+- chore(deps): bump @aws-sdk/client-s3 3.1089.0 → 3.1090.0
+- Merge pull request #304 from nocoo/deps/stu-1936-group-01
+- deps: bump tailwindcss 4.3.2 → 4.3.3 (#303)
+- deps: bump oxc-parser 0.139.0 → 0.140.0 (#302)
+- deps: bump ai 7.0.29 → 7.0.30 (#301)
+- deps: bump @tailwindcss/postcss 4.3.2 → 4.3.3 (#300)
+- deps(worker): bump @cloudflare/workers-types 5.20260715.1 → 5.20260716.1 (#299)
+- deps: bump @biomejs/biome 2.5.3 → 2.5.4 (#298)
+- deps: bump @aws-sdk/client-s3 3.1088.0 → 3.1089.0 (#297)
+
+
 ## v2.8.0 (2026-07-16)
 
 - Merge remote-tracking branch 'origin/main'
