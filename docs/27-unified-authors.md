@@ -164,21 +164,28 @@ author_id TEXT NOT NULL REFERENCES authors(id) ON DELETE RESTRICT
 
 Railway 自动部署会让「先迁后发」或「先发后迁」必有一边炸掉。约定一次维护窗口。
 
-**回滚介质不是 Backy。** Backy 是部分业务表的 JSON 导出，明确不实现恢复，也不含 `mcp_tokens` 等表（`docs/15-backy-backup.md`）。维护前必须有一份**可打回的原生 D1 快照**：
+**回滚介质不是 Backy，也不是「对现库直接 `wrangler d1 export`」。**
 
-- `wrangler d1 export` 出完整 SQL dump，或 Cloudflare D1 Time Travel 到迁库前的 bookmark
-- 在**临时 D1** 上演练一次「import dump → 跑 019 → 再 import dump 回到旧 schema」
-- Backy 只作内容旁路，不能当回滚依据
+- Backy 是部分业务表 JSON，无恢复、不含 `mcp_tokens`（`docs/15-backy-backup.md`）。
+- 本库有 FTS5 虚表 `posts_fts`（`013-fts5-search.sql`）。Cloudflare 文档写明：**含虚表的 D1 不能 export**（[D1 export limitations](https://developers.cloudflare.com/d1/best-practices/import-export-data/#known-limitations)）。不能把「完整 SQL dump」写成默认可选项。
+
+回滚主路径：**D1 Time Travel**。
+
+- 维护前用 `wrangler d1 info` 确认该库 `version: production`（Time Travel 只对 production D1 可用）。
+- 在**另一只临时 D1** 上先演练：bookmark → 跑 019 → Time Travel 回到 bookmark → 应用旧代码仍能读。
+- 生产最终 bookmark **必须在停写之后**打。公开流量会持续写 `page_views` / `posts.view_count`（`src/data/analytics-record.ts`），停写前的快照会丢掉窗口内的写入。
+- 维护页必须在应用进程之外（Caddy 静态页或掐掉 Railway），避免维护页本身还打 D1。
 
 步骤：
 
-1. 生成并校验原生 D1 dump / Time Travel bookmark（临时库恢复成功才继续）。
-2. Railway 停服务或切维护页。
-3. 对生产 D1 执行 `019-unified-authors.sql`。
-4. 跑 `019-copy-author-avatars.ts`（可在窗口外补跑，头像暂时 404 可接受）。
-5. 部署含新代码的 release。
-6. 冒烟：首页、一篇人类文、一篇 agent 文、`/admin/authors`、新发文默认作者。
-7. 失败回滚：用步骤 1 的 dump / Time Travel 恢复 **整库**，再部署回旧 tag。schema 已 DROP，不能 forward-fix 回旧列。
+1. 临时库演练 Time Travel 回滚（可在窗口前做）。
+2. **先停写**（停 Railway / 外置维护页）。
+3. 打 Time Travel bookmark（最终 checkpoint）。
+4. 对生产 D1 执行 `019-unified-authors.sql`。
+5. 跑 `019-copy-author-avatars.ts`（可在窗口外补跑，头像暂时 404 可接受）。
+6. 部署含新代码的 release。
+7. 冒烟：首页、一篇人类文、一篇 agent 文、`/admin/authors`、新发文默认作者。
+8. 失败回滚：Time Travel 回到步骤 3 的 bookmark，再部署旧 tag。schema 已 DROP，不能 forward-fix 回旧列。
 
 分支上的 commit 仍按功能切开；**生产 apply** 必须是「停 → 迁 → 发」，不能「先合 migration 再过几天再发应用」。
 
@@ -365,7 +372,9 @@ GET /api/authors/profile?hash=<sha256(lowercase(trim(email)))>
 
 ## MCP
 
-OAuth 仍是 `full` / `author` 两种 scope，但 **author token 必须绑定 agent**。绑定必须覆盖**完整 token 生命周期**，不能只改后台「新建 token」表单。
+**Token 模型**仍有 `full` / `author` 两种 scope，但 **author token 必须绑定 agent**。绑定必须覆盖完整生命周期。
+
+**OAuth 浏览器流只签发 `full`。** `author` 只能由后台创建。不要在 authorize 页保留 author 分支。
 
 ### 谁能签发 author scope
 
@@ -373,7 +382,7 @@ OAuth 仍是 `full` / `author` 两种 scope，但 **author token 必须绑定 ag
 |------|----------|------|
 | 后台创建 token | `src/data/mcp-tokens.ts` / admin UI | `scope=author` **必须**带 agent id，写入 `mcp_tokens.author_id` |
 | OAuth authorize + `/api/mcp/token`（authorization_code） | `authCode.scope === "author"` 会原样签发（`src/app/api/mcp/token/route.ts`） | **拒绝 author**：authorize 与 code 兑换只允许 `full`。OAuth 浏览器流没有选 agent 的 UI，不在这里猜 |
-| Refresh | 只继承 `scope`，不传作者（同文件 `handleRefreshToken`） | `issueTokenPair` **必须复制** `existingToken.author_id`。author token refresh 后绑定不能丢 |
+| Refresh | 只继承 `scope`，不传作者（同文件 `handleRefreshToken`） | 复制 `existingToken.author_id`。若 `scope=author` 且 `author_id` 空或指向的不是活着的 agent → `invalid_grant`，**不**签发新的空绑定 token |
 | `PATCH /api/mcp/tokens/[id]` 改 scope | 只改 scope（`src/app/api/mcp/tokens/[id]/route.ts`） | 原子：`full → author` 必须同时给 `author_id`（agent）；`author → full` 必须把 `author_id` 置 NULL；缺 agent 的 `full→author` → 400 |
 
 `mcp_auth_codes` **不加** `author_id`（OAuth 不再签发 author）。
@@ -388,7 +397,7 @@ OAuth 仍是 `full` / `author` 两种 scope，但 **author token 必须绑定 ag
 | full scope `post.ts` 的 `ai_agent_id` | `author_id`；可指定人类或 agent；仍走 `PostService` |
 | prompt | 已使用 `author_id`；补一句「已发布不可改」 |
 
-不引入新的 token 前缀。旧的 `scope=author` 且 `author_id IS NULL`：鉴权 401。
+不引入新的 token 前缀。旧的 `scope=author` 且 `author_id IS NULL`：持 access token 调 MCP → 401；拿 refresh token 换新对 → `invalid_grant`。
 
 ---
 
@@ -403,7 +412,7 @@ OAuth 仍是 `full` / `author` 两种 scope，但 **author token 必须绑定 ag
 - `ExportedSiteSettings` 去掉 `site_author`，保留 `author_email`，新增 `default_author_id`
 - 同一次导出必须是**同一快照**：`db.batch` 一次读 `authors`、`posts`、`site_settings`（现有 `src/lib/db.ts` 已支持 batch）。禁止三个独立 `query` 并发（`src/data/backup-export.ts` 现状），否则导出中途改署会产生悬挂 `author_id` / `default_author_id`
 - L1 断言：导出结果里每条 `post.author_id`、`default_author_id` 都落在同包 `authors` 里
-- **不做**恢复实现。回滚生产 D1 用上一节的原生 dump / Time Travel，不用这份 JSON
+- **不做**恢复实现。回滚生产 D1 用上一节的 Time Travel bookmark，不用这份 JSON
 
 ---
 
@@ -486,7 +495,7 @@ Modify:
 | `seo` / `jsonld` / `feed` | publisher = 默认人类；byline = 该篇作者 |
 | `profile/route.test.ts` | 默认不公开；打开后 email/hash 命中；未公开与未命中同形；限流 |
 | `author-post.test.ts` | 上下文作者；条件 UPDATE `status='private'`；并发「先读后写」不可用无条件写 |
-| `mcp/token` / `mcp/tokens/[id]` tests | OAuth 拒绝 author scope；refresh 复制 `author_id`；PATCH scope 原子设/清作者 |
+| `mcp/token` / `mcp/tokens/[id]` tests | OAuth 拒绝 author scope；refresh 复制 `author_id`；`author`+空绑定 refresh → invalid_grant；PATCH scope 原子设/清作者 |
 | `mcp/entities/post.test.ts` | `author_id` 映射 |
 
 ### L2
