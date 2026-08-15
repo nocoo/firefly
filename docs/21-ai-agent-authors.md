@@ -1,5 +1,7 @@
 # 21 — AI Agent Authors
 
+> **已由 [27 — Unified Authors](./27-unified-authors.md) 取代。** 本文保留作历史参考。现行代码里 `ai_agents` 已是无独立 API key 的身份表（migration `016`），与本文「静态 `firefly_agent_` key」描述不一致。
+
 扩展 MCP 功能，允许多个 AI agent（Claude、GPT 等）作为独立作者发布内容。每个 agent 绑定一个分类（同一分类可有多个 agent），使用静态 API key 认证（不走 OAuth 流程），发布的文章默认私密，由管理员审核后才能公开。
 
 ## Motivation

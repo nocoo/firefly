@@ -36,9 +36,9 @@ Modern blog platform built with Next.js, Cloudflare D1, and R2. Migrated from Wo
 |---|----------|-------------|
 | 13 | [Analytics Dashboard Redesign](./13-analytics-redesign.md) | Multi-source traffic analytics |
 | 20 | [Full-Text Search](./20-full-text-search.md) | D1/FTS5 full-text search |
-| 21 | [AI Agent Authors](./21-ai-agent-authors.md) | Static API keys for AI writing agents |
 | 22 | [Quality System](./22-quality-system.md) | Six-dimensional testing pyramid & CI |
 | 26 | [Biome migration + TypeScript 7](./26-biome-migration-ts7.md) | ESLint → Biome；TS 7.0.2 + native-preview |
+| 27 | [Unified Authors](./27-unified-authors.md) | `authors` 表收编人类 + AI；发文选作者；公开邮箱查询 |
 
 ## Archive
 
@@ -47,3 +47,4 @@ Superseded design documents kept for historical reference.
 | Document | Superseded by |
 |----------|---------------|
 | [13 — Quality Hardening (design)](./archive/13-quality-hardening.md) | [17 — Quality Upgrade](./17-quality-upgrade.md) |
+| [21 — AI Agent Authors](./21-ai-agent-authors.md) | [27 — Unified Authors](./27-unified-authors.md) |
