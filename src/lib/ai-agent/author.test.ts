@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
 
-// Mock avatar module to provide stable URLs (not env-dependent)
 vi.mock("./avatar", () => ({
   getAgentAvatarUrl: vi.fn(
     (agentId: string, version: string | null, size: number) =>
@@ -10,72 +9,53 @@ vi.mock("./avatar", () => ({
   ),
 }));
 
-// Mock logo module for site author avatar
-vi.mock("../logo", () => ({
-  getLogoUrl: vi.fn(
-    (version: string, size: number) =>
-      `https://test-cdn.example.com/uploads/firefly/logo/${version}/logo-${size}.png`,
+vi.mock("../human-avatar", () => ({
+  getHumanAvatarUrl: vi.fn(
+    (humanId: string, version: string | null, size: number) =>
+      version
+        ? `https://test-cdn.example.com/uploads/firefly/humans/${humanId}/${version}/avatar-${size}.jpg`
+        : null,
   ),
 }));
 
 import { getPostAuthor, getPostAuthorForMeta } from "./author";
 import { createMockPostWithAgent } from "@/data/core/test-utils";
-import type { SiteSettings } from "@/data/settings";
-
-// ---------------------------------------------------------------------------
-// Fixtures
-// ---------------------------------------------------------------------------
-
-function createMockSettings(overrides: Partial<SiteSettings> = {}): SiteSettings {
-  return {
-    postsPerPage: 10,
-    commentsEnabled: false,
-    fontStyle: "pingfang",
-    siteLogoVersion: null,
-    siteName: "Test Blog",
-    siteTagline: "",
-    siteDescription: "",
-    siteAuthor: "Site Owner",
-    authorEmail: "",
-    twitterHandle: "",
-    socialLinks: [],
-    updatedAt: 0,
-    ...overrides,
-  };
-}
-
-const defaultSettings = createMockSettings({
-  siteAuthor: "Site Owner",
-  siteLogoVersion: "v1",
-});
-
-// ---------------------------------------------------------------------------
-// getPostAuthor
-// ---------------------------------------------------------------------------
 
 describe("getPostAuthor", () => {
-  it("returns site author when post has no ai_agent_id", () => {
-    const post = createMockPostWithAgent({ ai_agent_id: null });
-    const result = getPostAuthor(post, defaultSettings);
+  it("returns human author when post has no ai_agent_id", () => {
+    const post = createMockPostWithAgent({
+      ai_agent_id: null,
+      human_id: "human-1",
+      human_name: "Li Zheng",
+      human_slug: "li-zheng",
+      human_avatar_version: "v9",
+    });
+    const result = getPostAuthor(post);
 
     expect(result).toEqual({
-      type: "site",
-      name: "Site Owner",
-      url: null,
-      avatarUrl: "https://test-cdn.example.com/uploads/firefly/logo/v1/logo-80.png",
+      type: "human",
+      id: "human-1",
+      name: "Li Zheng",
+      slug: "li-zheng",
+      avatarUrl:
+        "https://test-cdn.example.com/uploads/firefly/humans/human-1/v9/avatar-80.jpg",
     });
+    expect(result.avatarUrl).not.toContain("/logo/");
   });
 
-  it("returns site author when post has ai_agent_id but no agent_name", () => {
-    // Edge case: ai_agent_id set but JOINed agent_name is null (orphaned reference)
+  it("falls back to human when ai_agent_id is set but agent_name is missing", () => {
     const post = createMockPostWithAgent({
       ai_agent_id: "agent-1",
       agent_name: null,
+      human_id: "human-1",
+      human_name: "Li Zheng",
+      human_slug: "li-zheng",
+      human_avatar_version: null,
     });
-    const result = getPostAuthor(post, defaultSettings);
-
-    expect(result.type).toBe("site");
-    expect(result.name).toBe("Site Owner");
+    const result = getPostAuthor(post);
+    expect(result.type).toBe("human");
+    expect(result.name).toBe("Li Zheng");
+    expect(result.avatarUrl).toBeNull();
   });
 
   it("returns agent author when post has ai_agent_id and agent_name", () => {
@@ -85,14 +65,13 @@ describe("getPostAuthor", () => {
       agent_slug: "claude-daily",
       agent_avatar_version: "v1",
     });
-    const result = getPostAuthor(post, defaultSettings);
-
-    expect(result).toEqual({
+    expect(getPostAuthor(post)).toEqual({
       type: "agent",
+      id: "agent-1",
       name: "Claude Daily",
-      url: null,
-      // Avatar path uses agent ID (not slug) for stability
-      avatarUrl: "https://test-cdn.example.com/uploads/firefly/agents/agent-1/v1/avatar-128.png",
+      slug: "claude-daily",
+      avatarUrl:
+        "https://test-cdn.example.com/uploads/firefly/agents/agent-1/v1/avatar-128.png",
     });
   });
 
@@ -103,44 +82,20 @@ describe("getPostAuthor", () => {
       agent_slug: "claude-daily",
       agent_avatar_version: null,
     });
-    const result = getPostAuthor(post, defaultSettings);
-
-    expect(result).toEqual({
-      type: "agent",
-      name: "Claude Daily",
-      url: null,
-      avatarUrl: null,
-    });
-  });
-
-  it("returns null avatarUrl when site has no logo", () => {
-    const post = createMockPostWithAgent({ ai_agent_id: null });
-    const settingsWithoutLogo = createMockSettings({
-      siteAuthor: "Site Owner",
-      siteLogoVersion: null,
-    });
-    const result = getPostAuthor(post, settingsWithoutLogo);
-
-    expect(result).toEqual({
-      type: "site",
-      name: "Site Owner",
-      url: null,
-      avatarUrl: null,
-    });
+    expect(getPostAuthor(post).avatarUrl).toBeNull();
   });
 });
 
-// ---------------------------------------------------------------------------
-// getPostAuthorForMeta
-// ---------------------------------------------------------------------------
-
 describe("getPostAuthorForMeta", () => {
-  it("returns site author when post has no agent", () => {
-    const post = createMockPostWithAgent({ ai_agent_id: null });
-    const result = getPostAuthorForMeta(post, defaultSettings, "https://example.com");
-
-    expect(result).toEqual({
-      name: "Site Owner",
+  it("returns human name when post has no agent", () => {
+    const post = createMockPostWithAgent({
+      ai_agent_id: null,
+      human_id: "human-1",
+      human_name: "Li Zheng",
+      human_slug: "li-zheng",
+    });
+    expect(getPostAuthorForMeta(post, "https://example.com")).toEqual({
+      name: "Li Zheng",
       url: "https://example.com",
     });
   });
@@ -150,35 +105,8 @@ describe("getPostAuthorForMeta", () => {
       ai_agent_id: "agent-1",
       agent_name: "Claude Daily",
     });
-    const result = getPostAuthorForMeta(post, defaultSettings, "https://example.com");
-
-    expect(result).toEqual({
+    expect(getPostAuthorForMeta(post, "https://example.com")).toEqual({
       name: "Claude Daily",
-      url: "https://example.com",
-    });
-  });
-
-  it("uses site URL for agent author (not agent URL)", () => {
-    const post = createMockPostWithAgent({
-      ai_agent_id: "agent-1",
-      agent_name: "Claude Daily",
-    });
-    const result = getPostAuthorForMeta(post, defaultSettings, "https://myblog.com");
-
-    // Agent author uses site URL, not agent-specific URL
-    expect(result.url).toBe("https://myblog.com");
-    expect(result.name).toBe("Claude Daily");
-  });
-
-  it("falls back to site author when agent_name is missing", () => {
-    const post = createMockPostWithAgent({
-      ai_agent_id: "agent-1",
-      agent_name: null,
-    });
-    const result = getPostAuthorForMeta(post, defaultSettings, "https://example.com");
-
-    expect(result).toEqual({
-      name: "Site Owner",
       url: "https://example.com",
     });
   });
