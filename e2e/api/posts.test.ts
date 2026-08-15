@@ -60,6 +60,8 @@ describe.concurrent("POST /api/posts", () => {
     expect(body.slug).toBe(slug);
     expect(body.status).toBe("draft");
     expect(body.id).toBeDefined();
+    expect(body.human_id).toBeTruthy();
+    expect(body.ai_agent_id).toBeNull();
 
     // Draft posts should NOT appear in public listing
     const listRes = await fetch(`${BASE}/api/posts`);
