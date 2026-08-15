@@ -1,5 +1,7 @@
 # 27 — Unified Authors
 
+> **已由 [28 — Human Authors](./28-human-authors.md) 取代。** 单表收编 human+agent 未实现；agent 路径改动过大。
+
 把「站点作者」和「AI 代理」收成一张 `authors` 表。文章必须挂一个作者；人类可设默认作者；AI 仍绑定分类。站点级 `author_email` 保留，仅用于 RSS。
 
 > 日期: 2026-08-15
