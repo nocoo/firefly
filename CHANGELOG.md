@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.9.1 (2026-08-16)
+
+- fix(ui): use icon table row actions
+- feat(ui): group authors above system
+- test: cover human identity branches
+
+
 ## v2.9.0 (2026-08-15)
 
 - fix: treat empty profile hash as missing
