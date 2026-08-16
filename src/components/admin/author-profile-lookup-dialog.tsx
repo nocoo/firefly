@@ -16,6 +16,15 @@ export interface ProfileLookupAuthor {
   profilePublic: boolean;
 }
 
+async function fetchProfileTrial(hash: string): Promise<{
+  status: number;
+  body: unknown;
+}> {
+  const res = await fetch(profileLookupPath(hash));
+  const body: unknown = await res.json().catch(() => null);
+  return { status: res.status, body };
+}
+
 export function AuthorProfileLookupDialog({
   author,
   siteUrl,
@@ -46,23 +55,42 @@ export function AuthorProfileLookupDialog({
     hash: author.hash,
     profilePublic: author.profilePublic,
     siteUrl,
-    trial,
   });
 
-  const handleTry = async () => {
-    if (!author.hash) return;
+  const runTrial = async (hash: string) => {
     setTrying(true);
     setTryError(null);
     try {
-      const res = await fetch(profileLookupPath(author.hash));
-      const body: unknown = await res.json().catch(() => null);
-      setTrial({ status: res.status, body });
+      setTrial(await fetchProfileTrial(hash));
     } catch (error) {
+      setTrial(null);
       setTryError(error instanceof Error ? error.message : "请求失败");
     } finally {
       setTrying(false);
     }
   };
+
+  useEffect(() => {
+    if (!author.hash) return;
+    let cancelled = false;
+    setTrying(true);
+    setTryError(null);
+    void fetchProfileTrial(author.hash)
+      .then((result) => {
+        if (!cancelled) setTrial(result);
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setTrial(null);
+        setTryError(error instanceof Error ? error.message : "请求失败");
+      })
+      .finally(() => {
+        if (!cancelled) setTrying(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [author.hash]);
 
   return (
     <div
@@ -84,8 +112,7 @@ export function AuthorProfileLookupDialog({
             公开资料查询
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            用邮箱的 SHA-256 换取公开姓名和头像。整段可复制给其他
-            agent 按同一份契约实现。
+            用邮箱的 SHA-256 调用接口，换取公开姓名和头像。
           </p>
         </div>
 
@@ -93,40 +120,61 @@ export function AuthorProfileLookupDialog({
           <div>
             <div className="flex items-center justify-between">
               <label className="text-xs font-medium text-muted-foreground">
-                给其他 agent 的说明
+                说明
               </label>
               <CopyButton text={brief} />
             </div>
-            <pre className="mt-1 max-h-[280px] overflow-auto whitespace-pre-wrap rounded-md border border-border bg-secondary p-3 text-xs font-mono leading-relaxed text-foreground">
+            <pre className="mt-1 max-h-[240px] overflow-auto whitespace-pre-wrap rounded-md border border-border bg-secondary p-3 text-xs font-mono leading-relaxed text-foreground">
               {brief}
             </pre>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleTry}
-              disabled={!author.hash || trying}
-            >
-              {trying ? "请求中…" : "尝试请求"}
-            </Button>
-            {!author.hash && (
-              <span className="text-xs text-muted-foreground">
-                先给这位作者填邮箱才能试 hash 查询。
+          <div>
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-muted-foreground">
+                测试调用
               </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (author.hash) void runTrial(author.hash);
+                }}
+                disabled={!author.hash || trying}
+              >
+                {trying ? "请求中…" : trial ? "再试一次" : "尝试请求"}
+              </Button>
+              {!author.hash && (
+                <span className="text-xs text-muted-foreground">
+                  先给这位作者填邮箱才能试。
+                </span>
+              )}
+              {author.hash && !author.profilePublic && (
+                <span className="text-xs text-muted-foreground">
+                  未公开时会返回空结果。
+                </span>
+              )}
+            </div>
+
+            {tryError && (
+              <p className="text-sm text-destructive">{tryError}</p>
             )}
-            {author.hash && !author.profilePublic && (
-              <span className="text-xs text-muted-foreground">
-                未公开时接口会回空结果。
-              </span>
+
+            {trial && (
+              <div className="rounded-md border border-border bg-secondary">
+                <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    HTTP {trial.status}
+                  </span>
+                  <CopyButton text={JSON.stringify(trial.body, null, 2)} />
+                </div>
+                <pre className="max-h-[200px] overflow-auto p-3 text-xs font-mono leading-relaxed text-foreground whitespace-pre-wrap">
+                  {JSON.stringify(trial.body, null, 2)}
+                </pre>
+              </div>
             )}
           </div>
-
-          {tryError && (
-            <p className="text-sm text-destructive">{tryError}</p>
-          )}
         </div>
 
         <div className="flex justify-end border-t border-border px-6 py-3">

@@ -4,10 +4,6 @@ export interface AuthorProfileBriefInput {
   hash: string | null;
   profilePublic: boolean;
   siteUrl: string;
-  trial?: {
-    status: number;
-    body: unknown;
-  } | null;
 }
 
 export function profileLookupPath(hash: string): string {
@@ -22,74 +18,34 @@ export function buildAuthorProfileBrief(
   input: AuthorProfileBriefInput,
 ): string {
   const origin = input.siteUrl.replace(/\/$/, "");
-  const hashLine =
-    input.hash ?? "(no email on this human — hash cannot be computed)";
-  const emailLine = input.email ?? "(none)";
   const exampleUrl = input.hash
     ? profileLookupUrl(origin, input.hash)
-    : `${origin}/api/authors/profile?hash=<sha256 hex>`;
+    : `${origin}/api/authors/profile?hash=<64-char-hex>`;
 
-  const trialBlock = input.trial
-    ? `\n## Live trial\n\nHTTP ${input.trial.status}\n${JSON.stringify(input.trial.body, null, 2)}\n`
-    : "";
+  return `公开作者资料查询
 
-  return `# Firefly public author profile lookup
+把邮箱做成 SHA-256，用 hash 调接口拿公开姓名和头像。
 
-Use this to resolve a human author's public name and avatar without sending their email. Paste into another agent and implement against the contract below. Do not invent a fallback identity when the API returns nulls.
+1. 规范化：email.trim().toLowerCase()
+2. hash：对 UTF-8 字节做 SHA-256，输出 64 位小写 hex
+3. 请求：GET ${exampleUrl}
 
-## Endpoint
+本作者
+- 名称：${input.name}
+- 规范化邮箱：${input.email ?? "（未填写，无法计算 hash）"}
+- SHA-256：${input.hash ?? "（无）"}
+- 公开查询：${input.profilePublic ? "是" : "否（未公开时返回空结果）"}
 
-\`GET ${origin}/api/authors/profile\`
+预期返回
 
-- Unauthenticated.
-- Humans only. Never query AI agents.
-- Prefer \`hash\` over \`email\` so the address never appears in URLs or logs.
+HTTP 200，JSON：
 
-## Query
+命中：
+{ "name": "${input.name}", "avatar": "https://…/avatar-80.jpg" }
 
-Provide one of:
-
-- \`hash\` — 64-char lowercase hex SHA-256 of \`email.trim().toLowerCase()\` (UTF-8).
-- \`email\` — raw address; the server normalizes with trim + lower-case.
-
-Rules:
-
-- If both are present, only \`hash\` is used.
-- A present but invalid \`hash\` (not 64 lowercase hex, including empty) is treated as missing. Do not fall back to email.
-- Missing / invalid params return the empty payload. They do not 4xx.
-
-## This human
-
-- Display name (admin only): ${input.name}
-- Normalized email (admin only; never returned by the API): ${emailLine}
-- SHA-256 hash: ${hashLine}
-- \`profile_public\`: ${input.profilePublic ? "1 (lookup can succeed)" : "0 (API returns empty until this is turned on)"}
-- Example: \`GET ${exampleUrl}\`
-
-## Response
-
-Always \`200\` except \`429\` when the IP exceeds 30 requests / 60 seconds.
-
-Hit:
-
-\`\`\`json
-{ "name": "Display Name", "avatar": "https://cdn.example/humans/{id}/{version}/avatar-80.jpg" }
-\`\`\`
-
-Miss / private / bad input:
-
-\`\`\`json
+未命中 / 未公开 / 缺参或 hash 不合法：
 { "name": null, "avatar": null }
-\`\`\`
 
-Never returns email, id, or slug.
-
-## Implementation
-
-1. Compute \`hash = sha256_hex(utf8(email.trim().toLowerCase()))\`.
-2. \`GET ${origin}/api/authors/profile?hash={hash}\`.
-3. If \`name\` is null, show nothing. Do not substitute site name, logo, or a guessed author.
-4. If \`avatar\` is a URL, render it as an image; if null, use a generic person icon.
-5. Cache by hash. Do not retry in a loop — the endpoint is rate-limited.
-${trialBlock}`.trim();
+超过 30 次 / 60 秒会 429。
+不返回 email、id、slug。`.trim();
 }

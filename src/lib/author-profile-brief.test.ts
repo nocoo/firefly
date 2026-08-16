@@ -17,7 +17,7 @@ describe("profileLookupUrl", () => {
 });
 
 describe("buildAuthorProfileBrief", () => {
-  it("includes the hash URL and forbids email fallback", () => {
+  it("explains hash, URL, and expected JSON", () => {
     const brief = buildAuthorProfileBrief({
       name: "Li Zheng",
       email: "li@example.com",
@@ -25,11 +25,12 @@ describe("buildAuthorProfileBrief", () => {
       profilePublic: true,
       siteUrl: "https://lizheng.me",
     });
+    expect(brief).toContain("email.trim().toLowerCase()");
     expect(brief).toContain(`GET https://lizheng.me/api/authors/profile?hash=${hash}`);
     expect(brief).toContain(hash);
-    expect(brief).toContain("Do not fall back to email");
-    expect(brief).toContain("profile_public`: 1");
-    expect(brief).not.toContain("Live trial");
+    expect(brief).toContain('{ "name": "Li Zheng", "avatar":');
+    expect(brief).toContain('{ "name": null, "avatar": null }');
+    expect(brief).not.toMatch(/agent/i);
   });
 
   it("explains a missing email and a private profile", () => {
@@ -40,22 +41,11 @@ describe("buildAuthorProfileBrief", () => {
       profilePublic: false,
       siteUrl: "https://lizheng.me/",
     });
-    expect(brief).toContain("hash cannot be computed");
-    expect(brief).toContain("profile_public`: 0");
-    expect(brief).toContain("https://lizheng.me/api/authors/profile?hash=<sha256 hex>");
-  });
-
-  it("appends a live trial payload when provided", () => {
-    const brief = buildAuthorProfileBrief({
-      name: "Li Zheng",
-      email: "li@example.com",
-      hash,
-      profilePublic: true,
-      siteUrl: "https://lizheng.me",
-      trial: { status: 200, body: { name: "Li Zheng", avatar: null } },
-    });
-    expect(brief).toContain("## Live trial");
-    expect(brief).toContain("HTTP 200");
-    expect(brief).toContain('"name": "Li Zheng"');
+    expect(brief).toContain("未填写，无法计算 hash");
+    expect(brief).toContain("未公开时返回空结果");
+    expect(brief).toContain(
+      "https://lizheng.me/api/authors/profile?hash=<64-char-hex>",
+    );
+    expect(brief).not.toMatch(/agent/i);
   });
 });
