@@ -2,38 +2,17 @@
 // Category Entity — Integration Tests
 // ---------------------------------------------------------------------------
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import type { Category } from "@/models/types";
 import { createCrudHandlers } from "../framework/handlers";
-import { createMockContext, parseToolResult, expectError } from "../framework/test-utils";
+import {
+  createMockContext,
+  createMockDataLayer,
+  parseToolResult,
+  expectError,
+} from "../framework/test-utils";
 import { categoryEntity } from "./category";
 import type { ToolContext } from "../framework/types";
-
-// ---------------------------------------------------------------------------
-// Mock the data layer
-// ---------------------------------------------------------------------------
-
-vi.mock("@/data/entities/category", () => ({
-  listCategories: vi.fn(),
-  getCategoryById: vi.fn(),
-  getCategoryBySlug: vi.fn(),
-  createCategory: vi.fn(),
-  updateCategory: vi.fn(),
-  deleteCategory: vi.fn(),
-}));
-
-import {
-  listCategories,
-  getCategoryById,
-  getCategoryBySlug,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-} from "@/data/entities/category";
-
-// ---------------------------------------------------------------------------
-// Test data
-// ---------------------------------------------------------------------------
 
 const now = Math.floor(Date.now() / 1000);
 
@@ -48,30 +27,20 @@ const sampleCategory: Category = {
   updated_at: now,
 };
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 describe("category entity handlers", () => {
   let ctx: ToolContext;
+  let dataLayer: ReturnType<typeof createMockDataLayer<Category>>;
   let handlers: ReturnType<typeof createCrudHandlers<Category>>;
 
   beforeEach(() => {
     ctx = createMockContext();
-    handlers = createCrudHandlers(categoryEntity);
-    vi.mocked(listCategories).mockReset();
-    vi.mocked(getCategoryById).mockReset();
-    vi.mocked(getCategoryBySlug).mockReset();
-    vi.mocked(createCategory).mockReset();
-    vi.mocked(updateCategory).mockReset();
-    vi.mocked(deleteCategory).mockReset();
+    dataLayer = createMockDataLayer<Category>();
+    handlers = createCrudHandlers({ ...categoryEntity, dataLayer });
   });
-
-  // ---- list ----
 
   describe("handleList", () => {
     it("returns all categories", async () => {
-      vi.mocked(listCategories).mockResolvedValue([sampleCategory]);
+      dataLayer.list.mockResolvedValue([sampleCategory]);
       const result = await handlers.handleList(ctx, {});
       const data = parseToolResult(result) as Category[];
       expect(data).toHaveLength(1);
@@ -79,42 +48,38 @@ describe("category entity handlers", () => {
     });
   });
 
-  // ---- get ----
-
   describe("handleGet", () => {
     it("returns category by slug", async () => {
-      vi.mocked(getCategoryBySlug).mockResolvedValue(sampleCategory);
+      dataLayer.getBySlug.mockResolvedValue(sampleCategory);
       const result = await handlers.handleGet(ctx, { slug: "tech" });
       const data = parseToolResult(result) as Category;
       expect(data.name).toBe("Tech");
     });
 
     it("returns category by id", async () => {
-      vi.mocked(getCategoryById).mockResolvedValue(sampleCategory);
+      dataLayer.getById.mockResolvedValue(sampleCategory);
       const result = await handlers.handleGet(ctx, { id: "cat-1" });
       const data = parseToolResult(result) as Category;
       expect(data.id).toBe("cat-1");
     });
 
     it("returns error for missing category", async () => {
-      vi.mocked(getCategoryBySlug).mockResolvedValue(null);
+      dataLayer.getBySlug.mockResolvedValue(null);
       const result = await handlers.handleGet(ctx, { slug: "missing" });
       expectError(result, "Category not found: missing");
     });
   });
 
-  // ---- create ----
-
   describe("handleCreate", () => {
     it("creates category with all fields", async () => {
-      vi.mocked(createCategory).mockResolvedValue(sampleCategory);
+      dataLayer.create.mockResolvedValue(sampleCategory);
       const result = await handlers.handleCreate(ctx, {
         name: "Tech",
         slug: "tech",
         description: "Technology posts",
         sort_order: 0,
       });
-      expect(createCategory).toHaveBeenCalledWith(ctx.db, {
+      expect(dataLayer.create).toHaveBeenCalledWith(ctx.db, {
         name: "Tech",
         slug: "tech",
         description: "Technology posts",
@@ -125,12 +90,10 @@ describe("category entity handlers", () => {
     });
   });
 
-  // ---- update ----
-
   describe("handleUpdate", () => {
     it("maps new_slug to slug in update input", async () => {
-      vi.mocked(getCategoryBySlug).mockResolvedValue(sampleCategory);
-      vi.mocked(updateCategory).mockResolvedValue({
+      dataLayer.getBySlug.mockResolvedValue(sampleCategory);
+      dataLayer.update.mockResolvedValue({
         ...sampleCategory,
         slug: "technology",
       });
@@ -141,15 +104,15 @@ describe("category entity handlers", () => {
         name: "Technology",
       });
 
-      expect(updateCategory).toHaveBeenCalledWith(ctx.db, "cat-1", {
+      expect(dataLayer.update).toHaveBeenCalledWith(ctx.db, "cat-1", {
         slug: "technology",
         name: "Technology",
       });
     });
 
     it("maps sort_order to sortOrder in update input", async () => {
-      vi.mocked(getCategoryById).mockResolvedValue(sampleCategory);
-      vi.mocked(updateCategory).mockResolvedValue({
+      dataLayer.getById.mockResolvedValue(sampleCategory);
+      dataLayer.update.mockResolvedValue({
         ...sampleCategory,
         sort_order: 10,
       });
@@ -159,14 +122,14 @@ describe("category entity handlers", () => {
         sort_order: 10,
       });
 
-      expect(updateCategory).toHaveBeenCalledWith(ctx.db, "cat-1", {
+      expect(dataLayer.update).toHaveBeenCalledWith(ctx.db, "cat-1", {
         sortOrder: 10,
       });
     });
 
     it("handles nullable description", async () => {
-      vi.mocked(getCategoryById).mockResolvedValue(sampleCategory);
-      vi.mocked(updateCategory).mockResolvedValue({
+      dataLayer.getById.mockResolvedValue(sampleCategory);
+      dataLayer.update.mockResolvedValue({
         ...sampleCategory,
         description: null,
       });
@@ -176,13 +139,13 @@ describe("category entity handlers", () => {
         description: null,
       });
 
-      expect(updateCategory).toHaveBeenCalledWith(ctx.db, "cat-1", {
+      expect(dataLayer.update).toHaveBeenCalledWith(ctx.db, "cat-1", {
         description: null,
       });
     });
 
     it("returns error for missing category", async () => {
-      vi.mocked(getCategoryBySlug).mockResolvedValue(null);
+      dataLayer.getBySlug.mockResolvedValue(null);
       const result = await handlers.handleUpdate(ctx, {
         slug: "missing",
         name: "X",
@@ -191,26 +154,26 @@ describe("category entity handlers", () => {
     });
   });
 
-  // ---- delete ----
-
   describe("handleDelete", () => {
     it("deletes category by slug", async () => {
-      vi.mocked(getCategoryBySlug).mockResolvedValue(sampleCategory);
-      vi.mocked(deleteCategory).mockResolvedValue(true);
+      dataLayer.getBySlug.mockResolvedValue(sampleCategory);
+      dataLayer.delete.mockResolvedValue(true);
       const result = await handlers.handleDelete(ctx, { slug: "tech" });
-      expect(deleteCategory).toHaveBeenCalledWith(ctx.db, "cat-1", expect.anything());
+      expect(dataLayer.delete).toHaveBeenCalledWith(
+        ctx.db,
+        "cat-1",
+        expect.anything(),
+      );
       const data = parseToolResult(result) as { deleted: boolean };
       expect(data.deleted).toBe(true);
     });
 
     it("returns error for missing category", async () => {
-      vi.mocked(getCategoryBySlug).mockResolvedValue(null);
+      dataLayer.getBySlug.mockResolvedValue(null);
       const result = await handlers.handleDelete(ctx, { slug: "missing" });
       expectError(result, "Category not found: missing");
     });
   });
-
-  // ---- plural naming ----
 
   it("uses 'categories' as plural name", () => {
     expect(categoryEntity.plural).toBe("categories");
