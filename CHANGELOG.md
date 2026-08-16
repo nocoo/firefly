@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.9.2 (2026-08-16)
+
+- fix(ui): clarify author profile lookup dialog
+- feat(ui): add author profile lookup dialog
+
+
 ## v2.9.1 (2026-08-16)
 
 - fix(ui): use icon table row actions
