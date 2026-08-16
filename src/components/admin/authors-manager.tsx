@@ -7,19 +7,29 @@ import { toast } from "sonner";
 import type { HumanWithMeta } from "@/models/types";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "./confirm-dialog";
+import {
+  AuthorProfileLookupDialog,
+  ProfileLookupButton,
+} from "./author-profile-lookup-dialog";
 
 export interface HumanWithAvatarUrl extends HumanWithMeta {
   avatarUrl: string | null;
+  emailHash: string | null;
 }
 
 export function AuthorsManager({
   authors: initialAuthors,
+  siteUrl,
 }: {
   authors: HumanWithAvatarUrl[];
+  siteUrl: string;
 }) {
   const router = useRouter();
   const [authors, setAuthors] = useState(initialAuthors);
   const [confirmDelete, setConfirmDelete] = useState<HumanWithAvatarUrl | null>(
+    null,
+  );
+  const [lookupAuthor, setLookupAuthor] = useState<HumanWithAvatarUrl | null>(
     null,
   );
 
@@ -97,7 +107,7 @@ export function AuthorsManager({
               <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
                 文章
               </th>
-              <th className="px-4 py-2 w-24" />
+              <th className="px-4 py-2 w-32" />
             </tr>
           </thead>
           <tbody>
@@ -156,6 +166,7 @@ export function AuthorsManager({
                         <Star className="h-4 w-4" />
                       </button>
                     )}
+                    <ProfileLookupButton onClick={() => setLookupAuthor(author)} />
                     <button
                       type="button"
                       onClick={() => router.push(`/admin/authors/${author.id}`)}
@@ -179,6 +190,19 @@ export function AuthorsManager({
           </tbody>
         </table>
       </div>
+
+      {lookupAuthor && (
+        <AuthorProfileLookupDialog
+          author={{
+            name: lookupAuthor.name,
+            email: lookupAuthor.email,
+            hash: lookupAuthor.emailHash,
+            profilePublic: lookupAuthor.profile_public === 1,
+          }}
+          siteUrl={siteUrl}
+          onClose={() => setLookupAuthor(null)}
+        />
+      )}
 
       <ConfirmDialog
         open={!!confirmDelete}
