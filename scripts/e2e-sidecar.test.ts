@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SidecarSupervisor, type SupervisedProcess } from "./e2e-sidecar";
 
 function deferred<T>() {
@@ -26,6 +26,14 @@ function fakeProcess(exitOnKill = true): FakeProcess {
 }
 
 describe("SidecarSupervisor", () => {
+  beforeEach(() => {
+    vi.useRealTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("restarts an unexpectedly exited sidecar and waits for readiness", async () => {
     const first = fakeProcess();
     const replacement = fakeProcess();
@@ -209,17 +217,19 @@ describe("SidecarSupervisor", () => {
     first.exit(1);
     const recovery = supervisor.waitForRecovery();
 
-    const earlyResult = await Promise.race([
-      recovery.then(() => "recovered" as const),
-      new Promise<"pending">((resolve) =>
-        setTimeout(() => resolve("pending"), 50),
-      ),
-    ]);
-    expect(earlyResult).toBe("pending");
-    expect(startProcess).toHaveBeenCalledTimes(2);
+    let recovered = false;
+    void recovery.then(() => {
+      recovered = true;
+    });
+
+    await vi.waitFor(() => expect(startProcess).toHaveBeenCalledTimes(2));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(recovered).toBe(false);
 
     readiness.resolve();
     await recovery;
+    expect(recovered).toBe(true);
     expect(supervisor.restartCount).toBe(1);
     expect(supervisor.fatalReason).toBeUndefined();
     supervisor.stop();
