@@ -37,6 +37,11 @@ Personal blog platform built with Next.js + Cloudflare Workers.
 
 ## Retrospective
 
+### 2026-08-18: fake timers 跨文件泄漏导致 SidecarSupervisor 单测 5s 超时
+**问题**: CI L1 偶发 `waits when called immediately after an exit before recovery starts` 5s timeout。`vitest.config.ts` 设 `isolate: false`，`hash.test.ts` / `r2.test.ts` 的 `vi.useFakeTimers()` 未 `useRealTimers()` 还原，同 worker 后续文件的 `setTimeout` 永不触发；该用例用 `setTimeout(50)` 探测 pending，与未 resolve 的 recovery 一起挂死直到 testTimeout。
+**修复**: 两处 suite 补 `afterEach(vi.useRealTimers)`；sidecar 用例改为 flag + microtask 断言，并 `beforeEach/afterEach` 钉死 real timers。
+**教训**: `isolate: false` 下 fake timers 是进程级污染。凡 `useFakeTimers` 必须对称还原；依赖墙钟的测试应自保 real timers，或改成不依赖 macrotimer 的断言。
+
 ### 2026-03-27: tsconfig.tsbuildinfo 导致 release 脚本失败
 **问题**: `bun run release` 报 "Working tree is dirty"，原因是 `tsconfig.tsbuildinfo` 被 git 跟踪但每次 build 都会变更。
 **修复**: 将 `*.tsbuildinfo` 加入 `.gitignore` 并 `git rm --cached` 移除跟踪。
