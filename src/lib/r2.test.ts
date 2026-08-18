@@ -29,6 +29,10 @@ describe("generateR2Key", () => {
     vi.setSystemTime(new Date("2026-03-23T12:00:00Z"));
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("generates key with correct year/month prefix", () => {
     const key = generateR2Key("photo.jpg");
     expect(key).toMatch(/^uploads\/2026\/03\//);
