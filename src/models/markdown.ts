@@ -3,7 +3,7 @@
 // Uses `marked` for parsing with custom extensions for blog needs.
 // ---------------------------------------------------------------------------
 
-import { Marked, type MarkedExtension, type Tokens } from "marked";
+import { Marked, type MarkedExtension, type Token, type Tokens } from "marked";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -126,6 +126,122 @@ function nextImageUrl(src: string, width: number): string {
 }
 
 // ---------------------------------------------------------------------------
+// GFM footnotes — `[^label]` refs + `[^label]: content` definitions
+// marked has no built-in footnotes; without this, `[^1]` stays literal text
+// and `[^1]: [title](url)` collapses into a paragraph instead of a list.
+// ---------------------------------------------------------------------------
+
+const FOOTNOTE_LABEL = "[A-Za-z0-9_-]+";
+const FOOTNOTE_DEF_RE = new RegExp(
+  `^ {0,3}\\[\\^(${FOOTNOTE_LABEL})\\]:[ \\t]*([^\\n]*)(?:\\n|$)`,
+);
+const FOOTNOTE_DEF_START_RE = new RegExp(`\\n\\[\\^${FOOTNOTE_LABEL}\\]:`);
+const FOOTNOTE_REF_RE = new RegExp(`^\\[\\^(${FOOTNOTE_LABEL})\\](?!:)`);
+const NUMERIC_LABEL_RE = /^\d+$/;
+
+interface FootnoteDef {
+  tokens: Token[];
+  firstRefId: string | null;
+}
+
+function createFootnoteExtension(): MarkedExtension {
+  const defs = new Map<string, FootnoteDef>();
+  const refCount = new Map<string, number>();
+
+  return {
+    extensions: [
+      {
+        name: "footnoteDef",
+        level: "block",
+        start(src) {
+          const match = src.match(FOOTNOTE_DEF_START_RE);
+          return match ? match.index : undefined;
+        },
+        tokenizer(src) {
+          const match = FOOTNOTE_DEF_RE.exec(src);
+          if (!match) return;
+          const label = match[1];
+          if (!defs.has(label)) {
+            defs.set(label, {
+              tokens: this.lexer.inlineTokens(match[2].trim()),
+              firstRefId: null,
+            });
+          }
+          return { type: "footnoteDef", raw: match[0] };
+        },
+        renderer() {
+          return "";
+        },
+      },
+      {
+        name: "footnoteRef",
+        level: "inline",
+        start(src) {
+          const i = src.indexOf("[^");
+          return i === -1 ? undefined : i;
+        },
+        tokenizer(src) {
+          const match = FOOTNOTE_REF_RE.exec(src);
+          if (!match) return;
+          const label = match[1];
+          const def = defs.get(label);
+          if (!def) return;
+          const n = (refCount.get(label) ?? 0) + 1;
+          refCount.set(label, n);
+          const id = n === 1 ? `fnref-${label}` : `fnref-${label}-${n}`;
+          if (!def.firstRefId) def.firstRefId = id;
+          return { type: "footnoteRef", raw: match[0], label, id };
+        },
+        renderer(token) {
+          const label = String(token.label);
+          const id = String(token.id);
+          return `<sup class="footnote-ref"><a href="#fn-${escapeAttr(label)}" id="${escapeAttr(id)}">${escapeHtml(label)}</a></sup>`;
+        },
+      },
+      {
+        name: "footnoteSection",
+        renderer(token) {
+          const items = token.items as {
+            label: string;
+            tokens: Token[];
+            firstRefId: string | null;
+          }[];
+          if (!items.length) return "";
+          const lis = items
+            .map((item) => {
+              const content = this.parser.parseInline(item.tokens);
+              const valueAttr = NUMERIC_LABEL_RE.test(item.label)
+                ? ` value="${item.label}"`
+                : "";
+              const backref = item.firstRefId
+                ? ` <a href="#${escapeAttr(item.firstRefId)}" class="footnote-backref" aria-label="返回正文">↩</a>`
+                : "";
+              return `<li id="fn-${escapeAttr(item.label)}"${valueAttr}>${content}${backref}</li>`;
+            })
+            .join("\n");
+          return `<section class="footnotes" aria-label="参考文献">\n<ol>\n${lis}\n</ol>\n</section>\n`;
+        },
+      },
+    ],
+    hooks: {
+      processAllTokens(tokens) {
+        if (defs.size === 0) return tokens;
+        tokens.push({
+          type: "footnoteSection",
+          raw: "",
+          items: [...defs.entries()].map(([label, def]) => ({
+            label,
+            tokens: def.tokens,
+            firstRefId: def.firstRefId,
+          })),
+        });
+        return tokens;
+      },
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Custom renderer
 // ---------------------------------------------------------------------------
 
@@ -208,28 +324,11 @@ function createRenderer(optimizeImages: boolean, postTitle?: string): MarkedExte
   };
 }
 
-// ---------------------------------------------------------------------------
-// Marked instances (singletons)
-// ---------------------------------------------------------------------------
-
-let defaultInstance: Marked | null = null;
-let optimizedInstance: Marked | null = null;
-
 function getMarked(optimizeImages: boolean, postTitle?: string): Marked {
-  // When postTitle is provided, create a fresh instance (alt fallback is per-post)
-  if (postTitle) {
-    return new Marked(createRenderer(optimizeImages, postTitle));
-  }
-  if (optimizeImages) {
-    if (!optimizedInstance) {
-      optimizedInstance = new Marked(createRenderer(true));
-    }
-    return optimizedInstance;
-  }
-  if (!defaultInstance) {
-    defaultInstance = new Marked(createRenderer(false));
-  }
-  return defaultInstance;
+  return new Marked(
+    createRenderer(optimizeImages, postTitle),
+    createFootnoteExtension(),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -242,6 +341,7 @@ function getMarked(optimizeImages: boolean, postTitle?: string): Marked {
  * - External links open in new tab with noopener
  * - Images get lazy loading
  * - Code blocks get language class
+ * - GFM footnotes (`[^1]` / `[^1]: …`) become superscripts + a bottom list
  * - HTML is escaped to prevent XSS
  *
  * When `options.optimizeImages` is true, internal image URLs are rewritten to

@@ -399,6 +399,86 @@ const x = 1;
     expect(html).toContain("<strong>world</strong>");
     expect(html).toContain("<a ");
   });
+
+  // --- GFM footnotes / citations ---
+  it("renders footnote refs as superscripts that link to the bottom list", () => {
+    const html = renderMarkdown("正文引用[^1]结束。\n\n[^1]: [来源](https://example.com/src)");
+    expect(html).toContain('<sup class="footnote-ref">');
+    expect(html).toContain('href="#fn-1"');
+    expect(html).toContain('id="fnref-1"');
+    expect(html).toContain(">1</a></sup>");
+    expect(html).toMatch(/<section class="footnotes"[^>]*>/);
+    expect(html).toContain("<ol>");
+    expect(html).toContain('<li id="fn-1" value="1">');
+    expect(html).toContain('href="https://example.com/src"');
+    expect(html).toContain("来源");
+    expect(html).toContain('href="#fnref-1"');
+    expect(html).not.toContain("[^1]");
+  });
+
+  it("renders consecutive footnote definitions as a numbered list", () => {
+    const html = renderMarkdown(`见[^1]与[^2]。
+
+[^1]: [甲](https://a.example)
+[^2]: [乙](https://b.example)`);
+    expect(html).toContain('<li id="fn-1" value="1">');
+    expect(html).toContain('<li id="fn-2" value="2">');
+    expect((html.match(/<li /g) ?? []).length).toBe(2);
+    expect(html.indexOf("id=\"fn-1\"")).toBeLessThan(html.indexOf("id=\"fn-2\""));
+  });
+
+  it("keeps original numeric labels so [^4] stays 4, not 3", () => {
+    const html = renderMarkdown("先[^1]再[^4]。\n\n[^1]: one\n[^4]: four");
+    expect(html).toContain(">1</a></sup>");
+    expect(html).toContain(">4</a></sup>");
+    expect(html).toContain('href="#fn-4"');
+    expect(html).toContain('<li id="fn-4" value="4">');
+  });
+
+  it("includes defined-but-unreferenced footnotes in the bottom list", () => {
+    const html = renderMarkdown("只用[^1]。\n\n[^1]: used\n[^3]: unused");
+    expect(html).toContain('<li id="fn-1"');
+    expect(html).toContain('<li id="fn-3"');
+    expect(html).toContain("unused");
+    expect(html).not.toContain('id="fnref-3"');
+  });
+
+  it("renders footnote refs inside table cells", () => {
+    const html = renderMarkdown(`| A | B |
+| --- | --- |
+| x[^1] | y |
+
+[^1]: [来源](https://example.com)`);
+    expect(html).toContain("<td>");
+    expect(html).toContain('href="#fn-1"');
+    expect(html).toContain('<li id="fn-1"');
+  });
+
+  it("leaves unknown footnote refs as literal text", () => {
+    const html = renderMarkdown("没有定义[^99]");
+    expect(html).toContain("[^99]");
+    expect(html).not.toContain("footnote-ref");
+    expect(html).not.toContain('class="footnotes"');
+  });
+
+  it("does not parse footnote syntax inside fenced code blocks", () => {
+    const html = renderMarkdown("```\n[^1]: not a footnote\n```\n\n正文");
+    expect(html).toContain("[^1]: not a footnote");
+    expect(html).not.toContain('class="footnotes"');
+  });
+
+  it("escapes HTML in footnote definition content", () => {
+    const html = renderMarkdown("引用[^1]\n\n[^1]: <script>alert(1)</script>");
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("&lt;script&gt;");
+  });
+
+  it("links multiple refs of the same footnote to one list item", () => {
+    const html = renderMarkdown("一次[^1]两次[^1]\n\n[^1]: same");
+    expect(html).toContain('id="fnref-1"');
+    expect(html).toContain('id="fnref-1-2"');
+    expect((html.match(/id="fn-1"/g) ?? []).length).toBe(1);
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -75,6 +75,37 @@
 
   /* Dividers */
   & hr { border-color: var(--blog-separator); }
+
+  /* GFM footnotes */
+  & .footnote-ref {
+    font-size: 0.7em;
+    line-height: 0;
+    font-weight: 600;
+    margin-inline: 0.08em;
+  }
+  & .footnote-ref a {
+    text-decoration: none;
+    color: var(--blog-accent);
+  }
+  & .footnote-ref a:hover { text-decoration: underline; }
+  & .footnotes {
+    margin-top: 2.5em;
+    padding-top: 1.25em;
+    border-top: 1px solid var(--blog-separator);
+    font-size: 0.875em;
+    line-height: 1.7;
+    color: var(--blog-muted);
+  }
+  & .footnotes ol { margin: 0; padding-inline-start: 1.5em; }
+  & .footnotes li {
+    margin-block: 0.45em;
+    scroll-margin-top: 1.5em;
+  }
+  & .footnotes a { color: var(--blog-text); }
+  & .footnote-backref {
+    text-decoration: none;
+    margin-inline-start: 0.25em;
+  }
 }
 
 /*
