@@ -409,11 +409,17 @@
 .blog-tag-pill:nth-child(8n+8) { background: var(--tag-8-bg); color: var(--tag-8-fg); }
 
 /* ─── Post entries — simple dashed separator ─── */
-.blog-entry { position: relative; padding-bottom: 2.5em; margin-top: 2.5em; }
-.blog-entry:first-child { margin-top: 0; }
+.blog-entry { position: relative; }
 .blog-entry + .blog-entry {
-  padding-top: 2.5em;
+  margin-top: 2em;
+  padding-top: 2em;
   border-top: 1px dashed var(--blog-separator);
+}
+@media (max-width: 768px) {
+  .blog-entry + .blog-entry {
+    margin-top: 1.25em;
+    padding-top: 1.25em;
+  }
 }
 
 /* ─── Featured image — strict in-container, no bleed ─── */
