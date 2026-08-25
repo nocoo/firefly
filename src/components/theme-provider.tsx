@@ -1,6 +1,7 @@
 "use client";
 
 import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { ThemeColor } from "@/components/theme-color";
 
 /**
  * Thin client wrapper around `next-themes`'s ThemeProvider.
@@ -23,6 +24,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
+      <ThemeColor />
       {children}
     </NextThemesProvider>
   );

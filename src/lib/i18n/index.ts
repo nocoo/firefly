@@ -14,7 +14,7 @@
  */
 
 export const zhCN = {
-  // theme-toggle (used in admin shell + blog global bar)
+  // theme-toggle (used in admin shell + blog topbar)
   "theme.toggle.label.system": "跟随系统",
   "theme.toggle.label.light": "浅色模式",
   "theme.toggle.label.dark": "深色模式",

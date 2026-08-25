@@ -4,7 +4,6 @@ import { listTags } from "@/data/entities/tag";
 import { listMonthlyArchives } from "@/data/entities/post";
 import { getSiteSettings } from "@/data/settings";
 import { isAdminSession } from "@/lib/auth";
-import { BlogGlobalBar } from "@/components/blog/blog-global-bar";
 import { BlogLayoutClient } from "@/components/blog/blog-layout-client";
 import { BlogFooter } from "@/components/blog/blog-footer";
 
@@ -34,21 +33,17 @@ export default async function BlogLayout({
       >
         Skip to content
       </a>
-      <BlogGlobalBar isAdmin={isAdmin} />
-      <div className="page-wrapper">
-        <div className="blog-max-width">
-          <BlogLayoutClient
-            categories={activeCategories}
-            tags={activeTags}
-            archives={archives}
-            siteName={settings.siteName}
-            siteTagline={settings.siteTagline}
-            socialLinks={settings.socialLinks}
-          >
-            {children}
-          </BlogLayoutClient>
-        </div>
-      </div>
+      <BlogLayoutClient
+        categories={activeCategories}
+        tags={activeTags}
+        archives={archives}
+        siteName={settings.siteName}
+        siteTagline={settings.siteTagline}
+        socialLinks={settings.socialLinks}
+        isAdmin={isAdmin}
+      >
+        {children}
+      </BlogLayoutClient>
       <BlogFooter siteName={settings.siteName} />
     </div>
   );

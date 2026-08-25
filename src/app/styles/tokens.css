@@ -140,6 +140,7 @@
   --blog-separator: #dadde2;
   --blog-accent: oklch(48% 0.23 264);
   --blog-accent-hover: oklch(40% 0.23 264);
+  --blog-accent-theme: #1348dc;
   --blog-code-bg: #efeeec;
 
   /* Layout (lizheng-aligned) */
@@ -148,6 +149,8 @@
   --blog-content-list-max: 1180px;
   --blog-content-post-max: 936px;
   --blog-content-padding: 3rem;
+  --blog-topbar-h: 2.75rem;
+  --blog-topbar-offset: calc(var(--blog-topbar-h) + env(safe-area-inset-top, 0px));
 
   /* Tag pill palette — soft pastels (light) */
   --tag-1-bg: #EDE8E1; --tag-1-fg: #6B5D4F;
@@ -210,6 +213,7 @@
   --blog-separator: color-mix(in oklab, #6a7282 22%, transparent);
   --blog-accent: color-mix(in oklch, oklch(48% 0.23 264) 60%, white);
   --blog-accent-hover: color-mix(in oklch, oklch(48% 0.23 264) 75%, white);
+  --blog-accent-theme: #6f98f0;
   --blog-code-bg: #1c1d22;
 
   /* Tag pill palette — muted earth tones (dark) */

@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { THEME_COLOR_DARK, THEME_COLOR_LIGHT } from "@/lib/theme-color";
 import { IBM_Plex_Sans, IBM_Plex_Mono, IBM_Plex_Serif } from "next/font/google";
 import { SITE_URL, OG_LOCALE, HTML_LANG } from "@/lib/seo";
 import { getDb } from "@/lib/db";
@@ -33,6 +34,14 @@ const ibmPlexSerif = IBM_Plex_Serif({
  * s-maxage=31536000 and CDN caches the pre-rendered HTML indefinitely.
  */
 export const revalidate = 300;
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: THEME_COLOR_LIGHT },
+    { media: "(prefers-color-scheme: dark)", color: THEME_COLOR_DARK },
+  ],
+  viewportFit: "cover",
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const db = getDb();
@@ -111,10 +120,6 @@ export default async function RootLayout({
       className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} ${ibmPlexSerif.variable}`}
       suppressHydrationWarning
     >
-      <head>
-        <meta name="theme-color" content="#f5f4f3" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#13151a" media="(prefers-color-scheme: dark)" />
-      </head>
       <body className="antialiased">
         <ThemeProvider>{children}</ThemeProvider>
       </body>

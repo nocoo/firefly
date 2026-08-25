@@ -10,8 +10,8 @@ import { useEffect, useState } from "react";
  * scroll handlers. Hides itself entirely on prefers-reduced-motion: reduce
  * (decorative chrome, not essential to comprehension).
  *
- * Implemented as a fixed 1px bar at the very top of the viewport, colored
- * with `--blog-accent` so it inherits theme.
+ * Implemented as a fixed 2px bar along the bottom edge of the topbar,
+ * in white so it reads against the accent header.
  */
 export function ReadingProgress() {
   const [pct, setPct] = useState(0);
@@ -49,13 +49,14 @@ export function ReadingProgress() {
   return (
     <div
       aria-hidden="true"
-      className="fixed inset-x-0 top-0 z-40 h-[2px] bg-transparent pointer-events-none"
+      className="fixed inset-x-0 z-40 h-[2px] bg-transparent pointer-events-none"
+      style={{ top: "calc(var(--blog-topbar-offset) - 2px)" }}
     >
       <div
         className="h-full origin-left"
         style={{
           width: `${pct}%`,
-          background: "var(--blog-accent)",
+          background: "rgba(255, 255, 255, 0.85)",
         }}
       />
     </div>

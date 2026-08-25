@@ -4,6 +4,7 @@
  * ==========================================================================
  * Blog layout — lizheng.dev aligned
  *   .blog-shell      → outer page bg
+ *   .blog-topbar     → sticky blue+hatch header (menu + theme)
  *   .page-wrapper    → 1500 max + 1px L/R borders + edge ruler ticks
  *   .blog-max-width  → top-row/bottom-row two-column flex (sidebar + content)
  *   .blog-main       → content surface, padded
@@ -84,8 +85,8 @@
     display: block;
     width: var(--blog-sidebar-w);
     position: sticky;
-    top: 0;
-    max-height: 100vh;
+    top: var(--blog-topbar-offset);
+    max-height: calc(100dvh - var(--blog-topbar-offset));
     overflow-x: hidden;
     overflow-y: auto;
     padding: var(--blog-content-padding) 1.5rem;
@@ -111,28 +112,26 @@
 
 @media (max-width: 768px) {
   .blog-sidebar-toggle {
-    position: fixed;
-    top: 0.75em;
-    left: 0.75em;
-    z-index: 30;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 2.5em;
     height: 2.5em;
     border-radius: 0.5em;
-    background: var(--blog-bg);
-    color: var(--blog-text);
-    border: 1px solid var(--blog-separator);
+    background: transparent;
+    color: inherit;
+    border: none;
     cursor: pointer;
-    transition: background-color 0.15s, color 0.15s;
+    flex-shrink: 0;
   }
-  .blog-sidebar-toggle:hover { background: var(--blog-separator); }
 
   .blog-sidebar-backdrop {
     display: block;
     position: fixed;
-    inset: 0;
+    top: var(--blog-topbar-offset);
+    right: 0;
+    bottom: 0;
+    left: 0;
     background: rgba(0, 0, 0, 0.4);
     z-index: 28;
     animation: blog-fade-in 150ms ease-out;
@@ -141,11 +140,11 @@
   .blog-sidebar-desktop {
     display: block;
     position: fixed;
-    top: 0;
+    top: var(--blog-topbar-offset);
     left: 0;
     bottom: 0;
     width: min(85vw, 320px);
-    padding: 3.5rem 1.25rem 1.5rem;
+    padding: 1.5rem 1.25rem 1.5rem;
     border-right: 1px solid var(--blog-separator);
     border-bottom: none;
     background: var(--blog-sidebar);
@@ -208,7 +207,7 @@
    * reads as a separate band, not a flush continuation of the article. */
   padding: var(--blog-content-padding) var(--blog-content-padding) 4rem;
   position: relative;
-  min-height: 100vh;
+  min-height: calc(100dvh - var(--blog-topbar-offset));
   width: 100%;
   overflow-x: clip;
   animation: blog-fade-in 300ms ease-out;
@@ -229,23 +228,69 @@
   .blog-main { padding: 1.5rem 1.25rem 2.5rem; }
 }
 
-/* ─── Global bar (top-right) ─── */
-.blog-global-bar {
-  position: fixed; top: 0.75em; right: 0.75em; z-index: 20;
-  display: flex; align-items: center; gap: 0.25em;
+/* ─── Top bar — blue + hatching bookend matching the footer ─── */
+.blog-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--blog-accent);
+  color: #fff;
+  padding-top: env(safe-area-inset-top, 0px);
 }
-.blog-global-bar button {
-  color: var(--blog-muted); background: none; border: none;
+.blog-topbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0,
+    transparent 7px,
+    rgba(255, 255, 255, 0.1) 7px,
+    rgba(255, 255, 255, 0.1) 8px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+.blog-topbar-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  height: var(--blog-topbar-h);
+  max-width: var(--blog-layout-max);
+  margin: 0 auto;
+  padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
+  padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
+}
+.blog-topbar-end {
+  display: flex;
+  align-items: center;
+  gap: 0.15em;
+  margin-left: auto;
+}
+.blog-topbar button,
+.blog-topbar a {
+  color: rgba(255, 255, 255, 0.92);
+  background: transparent;
+  border: none;
   transition: color 0.15s, background-color 0.15s;
 }
-.blog-global-bar button:hover { color: var(--blog-text); background: var(--blog-separator); }
-.blog-global-bar-link {
-  display: flex; align-items: center; justify-content: center;
-  width: 2.5em; height: 2.5em; border-radius: 0.5em;
-  color: var(--blog-muted);
-  transition: color 0.15s, background-color 0.15s;
+.blog-topbar button:hover,
+.blog-topbar a:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
 }
-.blog-global-bar-link:hover { color: var(--blog-text); background: var(--blog-separator); }
+.blog-topbar *:focus-visible {
+  outline-color: #fff;
+}
+.blog-topbar-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5em;
+  height: 2.5em;
+  border-radius: 0.5em;
+}
 
 /* ─── Site title (lizheng/zed hero — moderate, tracking-tight) ─── */
 .blog-site-title {
@@ -480,9 +525,9 @@ hr.blog-hr::before, .blog-content hr::before { left: -4px; }
   .article-toc {
     display: block;
     position: sticky;
-    top: 1.5rem;
+    top: calc(var(--blog-topbar-offset) + 1.5rem);
     width: 14rem;
-    max-height: calc(100vh - 3rem);
+    max-height: calc(100dvh - var(--blog-topbar-offset) - 3rem);
     overflow-y: auto;
     padding-left: 1.5rem;
     border-left: 1px solid var(--blog-separator);

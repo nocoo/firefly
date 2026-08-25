@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import Link from "next/link";
+import { LayoutDashboard, Menu, X } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/entities/post";
 import type { SocialLink } from "@/data/settings";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { BlogSidebar } from "./blog-sidebar";
 
 interface BlogLayoutClientProps {
@@ -15,6 +17,7 @@ interface BlogLayoutClientProps {
   siteName: string;
   siteTagline: string;
   socialLinks: SocialLink[];
+  isAdmin: boolean;
   children: React.ReactNode;
 }
 
@@ -46,7 +49,7 @@ function getMobileServerSnapshot(): boolean {
 }
 
 export function BlogLayoutClient({
-  categories, tags, archives, siteName, siteTagline, socialLinks, children,
+  categories, tags, archives, siteName, siteTagline, socialLinks, isAdmin, children,
 }: BlogLayoutClientProps) {
   const pathname = usePathname();
   const isPostDetail = isPostDetailRoute(pathname);
@@ -66,21 +69,24 @@ export function BlogLayoutClient({
   const sidebarRef = useRef<HTMLElement | null>(null);
   const toggleRef = useRef<HTMLButtonElement | null>(null);
   const backdropRef = useRef<HTMLDivElement | null>(null);
+  const headerRef = useRef<HTMLElement | null>(null);
 
   // While drawer is open: lock body scroll, Escape to close, focus into
   // sidebar, restore focus on close, trap Tab inside sidebar, and mark
   // every page-chrome sibling outside the dialog ancestry as inert so
-  // AT/virtual-cursor users can't reach skip-link, global bar, or footer.
+  // AT/virtual-cursor users can't reach skip-link or footer. The topbar
+  // stays interactive so the close button keeps working.
   useEffect(() => {
     if (!drawerOpen) return;
 
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const sidebar = sidebarRef.current;
     const toggle = toggleRef.current;
+    const header = headerRef.current;
 
     // Inert everything in <body> that doesn't contain the sidebar.
-    // Skip the backdrop and toggle button — both must remain interactive
-    // so the user can dismiss the drawer.
+    // Skip the backdrop and topbar — both must remain interactive so the
+    // user can dismiss the drawer.
     const inerted: { el: HTMLElement; prevInert: boolean; prevAriaHidden: string | null }[] = [];
     if (sidebar) {
       const ancestors = new Set<Node>();
@@ -91,7 +97,7 @@ export function BlogLayoutClient({
           if (!(child instanceof HTMLElement)) continue;
           if (child === sidebar) continue;
           if (child === backdrop) continue;
-          if (child === toggle) continue;
+          if (child === header) continue;
           if (ancestors.has(child)) {
             walk(child);
             continue;
@@ -165,50 +171,71 @@ export function BlogLayoutClient({
 
   return (
     <>
-      <button
-        ref={toggleRef}
-        type="button"
-        className="blog-sidebar-toggle"
-        aria-label={drawerOpen ? "关闭侧边栏" : "打开侧边栏"}
-        aria-expanded={drawerOpen}
-        aria-controls="blog-sidebar"
-        onClick={() => setDrawerOpen((v) => !v)}
-      >
-        {drawerOpen ? <X className="h-5 w-5" strokeWidth={1.5} /> : <Menu className="h-5 w-5" strokeWidth={1.5} />}
-      </button>
-
-      {drawerOpen && (
-        <div
-          ref={backdropRef}
-          className="blog-sidebar-backdrop"
-          aria-hidden="true"
-          onClick={() => setDrawerOpen(false)}
-        />
-      )}
-
-      <BlogSidebar
-        ref={sidebarRef}
-        categories={categories}
-        tags={tags}
-        archives={archives}
-        siteName={siteName}
-        siteTagline={siteTagline}
-        socialLinks={socialLinks}
-        drawerOpen={drawerOpen}
-        isMobile={isMobile}
-        onDrawerClose={() => setDrawerOpen(false)}
-      />
-
-      <main
-        id="main"
-        className="blog-main"
-        inert={mainInert || undefined}
-        aria-hidden={mainInert ? true : undefined}
-      >
-        <div className={`blog-main-inner${isPostDetail ? " blog-main-inner-post" : ""}`}>
-          {children}
+      <header ref={headerRef} className="blog-topbar">
+        <div className="blog-topbar-inner">
+          <button
+            ref={toggleRef}
+            type="button"
+            className="blog-sidebar-toggle"
+            aria-label={drawerOpen ? "关闭侧边栏" : "打开侧边栏"}
+            aria-expanded={drawerOpen}
+            aria-controls="blog-sidebar"
+            onClick={() => setDrawerOpen((v) => !v)}
+          >
+            {drawerOpen ? <X className="h-5 w-5" strokeWidth={1.5} /> : <Menu className="h-5 w-5" strokeWidth={1.5} />}
+          </button>
+          <div className="blog-topbar-end">
+            {isAdmin && (
+              <Link
+                href="/admin"
+                prefetch={false}
+                className="blog-topbar-link"
+                aria-label="Dashboard"
+              >
+                <LayoutDashboard className="h-4 w-4" strokeWidth={1.5} />
+              </Link>
+            )}
+            <ThemeToggle />
+          </div>
         </div>
-      </main>
+      </header>
+
+      <div className="page-wrapper">
+        <div className="blog-max-width">
+          {drawerOpen && (
+            <div
+              ref={backdropRef}
+              className="blog-sidebar-backdrop"
+              aria-hidden="true"
+              onClick={() => setDrawerOpen(false)}
+            />
+          )}
+
+          <BlogSidebar
+            ref={sidebarRef}
+            categories={categories}
+            tags={tags}
+            archives={archives}
+            siteName={siteName}
+            siteTagline={siteTagline}
+            socialLinks={socialLinks}
+            drawerOpen={drawerOpen}
+            isMobile={isMobile}
+            onDrawerClose={() => setDrawerOpen(false)}
+          />
+
+          <main
+            id="main"
+            className="blog-main"
+            inert={mainInert || undefined}
+            aria-hidden={mainInert ? true : undefined}
+          >
+            <div className={`blog-main-inner${isPostDetail ? " blog-main-inner-post" : ""}`}>
+              {children}
+            </div>
+          </main>
+        </div>
+      </div>
     </>
   );
 }
