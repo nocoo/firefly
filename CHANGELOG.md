@@ -1,5 +1,81 @@
 # Changelog
 
+## v2.10.0 (2026-08-25)
+
+- fix: blend menu and theme into blue topbar
+- fix: render gfm footnotes as superscripts
+- chore: remove outdated autoresearch notes
+- [deps] marked: 18.0.10 → 18.0.11
+- Merge pull request #586 from nocoo/agent/sde-02/075a286803b1
+- Merge pull request #587 from nocoo/agent/sde-03/ec6a4c8dc561
+- [deps] @aws-sdk/client-s3 3.1116.0 → 3.1117.0
+- chore(deps): bump lucide-react to 1.34.0 (STU-4341)
+- Merge pull request #584 from nocoo/agent/sde-04/9cce71c79b7f
+- deps: upgrade hono 4.13.3 → 4.13.4
+- chore(deps): bump ai to 7.0.78 (#583)
+- chore(deps): bump oxc-parser to 0.147.0 (#582)
+- chore(deps): bump @types/node to 26.3.0
+- Merge pull request #573 from nocoo/sde/deps/types-react-dom-19.2.5
+- chore(deps): bump @types/react-dom to 19.2.5
+- chore(deps): bump ai to 7.0.77 (#571)
+- chore(deps): bump workers-types to 5.20260823.1 (#570)
+- Merge pull request #567 from nocoo/agent/sde-01/stu-4168-next-16.3.2
+- Merge pull request #566 from nocoo/agent/sde-01/eca469f15f73
+- chore(deps): bump next to 16.3.2
+- chore(deps): bump workers-types to 5.20260822.1
+- chore(deps): bump next to 16.3.2
+- chore(deps): bump ai to 7.0.76
+- chore(deps): bump @biomejs/biome to 2.5.10
+- chore(deps): bump @aws-sdk/client-s3 to 3.1116.0
+- Merge pull request #560 from nocoo/agent/sde-01/c9ad05f2
+- chore(deps): bump @aws-sdk/client-s3 to 3.1115.0
+- Merge pull request #559 from nocoo/agent/sde-01/e46df0fe
+- chore(deps): bump workers-types to 5.20260821.1
+- Merge pull request #558 from nocoo/agent/sde-01/42c875d1
+- chore(deps): bump ai to 7.0.71
+- Merge pull request #557 from nocoo/agent/sde-01/941565c7
+- chore(deps): bump wrangler to 4.125.0
+- Merge pull request #552 from nocoo/agent/sde-01/stu-3955-aws-s3
+- Merge pull request #551 from nocoo/agent/sde-01/stu-3954-workers-types
+- Merge pull request #550 from nocoo/agent/sde-01/stu-3953-ai
+- Merge pull request #549 from nocoo/agent/sde-01/1c05028f
+- Merge pull request #548 from nocoo/agent/sde-01/ff02db1e
+- chore(deps): bump @aws-sdk/client-s3 to 3.1114.0
+- chore(deps): bump workers-types to 5.20260820.1
+- chore(deps): bump ai to 7.0.70
+- chore(deps): bump lucide-react to 1.33.0
+- chore(deps): bump oxc-parser to 0.146.0
+- chore(deps): bump lucide-react to 1.32.0 (#536)
+- chore(deps): bump wrangler to 4.124.0 (#533)
+- chore(deps): bump ai to 7.0.68 (#538)
+- chore(deps): bump marked to 18.0.10 (#537)
+- chore(deps): bump hono to 4.13.3 (#535)
+- Merge pull request #542 from nocoo/agent/sde-01/f93f6988
+- chore(deps): bump worker vitest packages to 4.1.11
+- chore(deps): bump @vitest/coverage-v8 to 4.1.11
+- Merge pull request #540 from nocoo/agent/sde-01/7c8bf80a
+- Merge pull request #534 from nocoo/agent/sde-01/97737900
+- chore(deps): bump @aws-sdk/client-s3 to 3.1113.0
+- Merge pull request #539 from nocoo/agent/sde-01/e8bcb5ee
+- chore(deps): bump workers-types to 5.20260819.1
+- chore(deps): bump oxc-parser to 0.145.0
+- Merge pull request #522 from nocoo/agent/sde-01/1b5f309a
+- docs: record fake-timer leak retrospective for sidecar CI flake
+- test: harden SidecarSupervisor recovery-wait assertions
+- fix(test): restore real timers after generateR2Key suite
+- fix(test): restore real timers after hashIp suite
+- Merge pull request #520 from nocoo/agent/sde-01/66d45f61
+- Merge pull request #521 from nocoo/agent/sde-01/ac5e115b
+- Merge pull request #519 from nocoo/agent/sde-01/242834ff
+- chore(deps): bump @aws-sdk/client-s3 to 3.1112.0
+- chore(deps): bump @biomejs/biome to 2.5.9
+- chore(deps): bump workers-types to 5.20260818.1
+- chore(deps): bump ai to 7.0.66 (#518)
+- Merge pull request #517 from nocoo/agent/sde-01/baf90919
+- chore(deps): bump workers-types to 5.20260817.1
+- fix(test): isolate mcp category and tag mocks
+
+
 ## v2.9.2 (2026-08-16)
 
 - fix(ui): clarify author profile lookup dialog
