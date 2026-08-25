@@ -31,7 +31,9 @@
   hr.blog-hr::before,
   hr.blog-hr::after,
   .blog-content hr::before,
-  .blog-content hr::after { display: none; }            /* + end nodes */
+  .blog-content hr::after,
+  .prose-firefly hr::before,
+  .prose-firefly hr::after { display: none; }            /* + end nodes */
 
   /* ── Layout ── */
   html, body {

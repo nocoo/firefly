@@ -494,18 +494,21 @@
 
 /* ─── HR with + end nodes ─── */
 hr.blog-hr,
-.blog-content hr {
+.blog-content hr,
+.prose-firefly hr {
   position: relative;
   border: none;
   border-top: 1px solid var(--blog-separator);
   margin: 2em 0;
   overflow: visible;
+  height: 0;
 }
 hr.blog-hr::before, hr.blog-hr::after,
-.blog-content hr::before, .blog-content hr::after {
+.blog-content hr::before, .blog-content hr::after,
+.prose-firefly hr::before, .prose-firefly hr::after {
   content: "";
   position: absolute;
-  top: -5px;
+  top: -4px;
   width: 9px; height: 9px;
   background:
     linear-gradient(to right, transparent 4px, currentColor 4px 5px, transparent 5px),
@@ -513,7 +516,12 @@ hr.blog-hr::before, hr.blog-hr::after,
   color: var(--blog-separator);
   opacity: 0.85;
 }
-hr.blog-hr::before, .blog-content hr::before { left: -4px; }
+hr.blog-hr::before,
+.blog-content hr::before,
+.prose-firefly hr::before { left: 0; }
+hr.blog-hr::after,
+.blog-content hr::after,
+.prose-firefly hr::after { right: 0; }
 
 /* ─── Article TOC (sticky right rail on lg+) ───
  * Container is hidden on small screens; the post layout adds it as a flex

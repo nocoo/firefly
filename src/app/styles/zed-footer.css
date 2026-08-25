@@ -1,7 +1,5 @@
 /* zed.dev-inspired multi-column footer */
 
-hr.blog-hr::after,  .blog-content hr::after  { right: -4px; }
-
 /* ─── zed.dev — hatching grid pattern ─── */
 .zed-hatching {
   background-image: repeating-linear-gradient(

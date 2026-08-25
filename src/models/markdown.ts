@@ -141,7 +141,6 @@ const NUMERIC_LABEL_RE = /^\d+$/;
 
 interface FootnoteDef {
   tokens: Token[];
-  firstRefId: string | null;
 }
 
 function createFootnoteExtension(): MarkedExtension {
@@ -164,7 +163,6 @@ function createFootnoteExtension(): MarkedExtension {
           if (!defs.has(label)) {
             defs.set(label, {
               tokens: this.lexer.inlineTokens(match[2].trim()),
-              firstRefId: null,
             });
           }
           return { type: "footnoteDef", raw: match[0] };
@@ -189,7 +187,6 @@ function createFootnoteExtension(): MarkedExtension {
           const n = (refCount.get(label) ?? 0) + 1;
           refCount.set(label, n);
           const id = n === 1 ? `fnref-${label}` : `fnref-${label}-${n}`;
-          if (!def.firstRefId) def.firstRefId = id;
           return { type: "footnoteRef", raw: match[0], label, id };
         },
         renderer(token) {
@@ -204,7 +201,6 @@ function createFootnoteExtension(): MarkedExtension {
           const items = token.items as {
             label: string;
             tokens: Token[];
-            firstRefId: string | null;
           }[];
           if (!items.length) return "";
           const lis = items
@@ -213,26 +209,30 @@ function createFootnoteExtension(): MarkedExtension {
               const valueAttr = NUMERIC_LABEL_RE.test(item.label)
                 ? ` value="${item.label}"`
                 : "";
-              const backref = item.firstRefId
-                ? ` <a href="#${escapeAttr(item.firstRefId)}" class="footnote-backref" aria-label="返回正文">↩</a>`
-                : "";
-              return `<li id="fn-${escapeAttr(item.label)}"${valueAttr}>${content}${backref}</li>`;
+              return `<li id="fn-${escapeAttr(item.label)}"${valueAttr}>${content}</li>`;
             })
             .join("\n");
-          return `<section class="footnotes" aria-label="参考文献">\n<ol>\n${lis}\n</ol>\n</section>\n`;
+          return `<section class="footnotes" aria-label="参考文献">\n<hr class="blog-hr">\n<ol>\n${lis}\n</ol>\n</section>\n`;
         },
       },
     ],
     hooks: {
       processAllTokens(tokens) {
         if (defs.size === 0) return tokens;
+        const firstDef = tokens.findIndex((t) => t.type === "footnoteDef");
+        if (firstDef > 0) {
+          let i = firstDef - 1;
+          while (i >= 0 && (tokens[i].type === "space" || tokens[i].type === "hr")) {
+            tokens.splice(i, 1);
+            i -= 1;
+          }
+        }
         tokens.push({
           type: "footnoteSection",
           raw: "",
           items: [...defs.entries()].map(([label, def]) => ({
             label,
             tokens: def.tokens,
-            firstRefId: def.firstRefId,
           })),
         });
         return tokens;
@@ -248,6 +248,10 @@ function createFootnoteExtension(): MarkedExtension {
 function createRenderer(optimizeImages: boolean, postTitle?: string): MarkedExtension {
   return {
     renderer: {
+      hr(): string {
+        return '<hr class="blog-hr">\n';
+      },
+
       heading({ tokens, depth }: Tokens.Heading): string {
         // Use parseInline to render inline tokens through our custom html()
         // renderer, which escapes dangerous HTML tags in the text content.

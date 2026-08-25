@@ -73,9 +73,6 @@
   & a       { color: var(--blog-text); text-decoration-color: var(--blog-accent); text-underline-offset: 3px; transition: text-decoration-color 0.15s; }
   & a:hover { text-decoration-color: var(--blog-text); }
 
-  /* Dividers */
-  & hr { border-color: var(--blog-separator); }
-
   /* GFM footnotes */
   & .footnote-ref {
     font-size: 0.7em;
@@ -89,23 +86,18 @@
   }
   & .footnote-ref a:hover { text-decoration: underline; }
   & .footnotes {
-    margin-top: 2.5em;
-    padding-top: 1.25em;
-    border-top: 1px solid var(--blog-separator);
+    margin-top: 0;
     font-size: 0.875em;
     line-height: 1.7;
     color: var(--blog-muted);
   }
+  & .footnotes .blog-hr { margin-bottom: 1.25em; }
   & .footnotes ol { margin: 0; padding-inline-start: 1.5em; }
   & .footnotes li {
     margin-block: 0.45em;
     scroll-margin-top: 1.5em;
   }
   & .footnotes a { color: var(--blog-text); }
-  & .footnote-backref {
-    text-decoration: none;
-    margin-inline-start: 0.25em;
-  }
 }
 
 /*

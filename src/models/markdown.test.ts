@@ -233,7 +233,7 @@ describe("renderMarkdown", () => {
   // --- Horizontal rules ---
   it("renders horizontal rules", () => {
     const html = renderMarkdown("---");
-    expect(html).toContain("<hr");
+    expect(html).toContain('<hr class="blog-hr">');
   });
 
   // --- Paragraphs ---
@@ -412,7 +412,7 @@ const x = 1;
     expect(html).toContain('<li id="fn-1" value="1">');
     expect(html).toContain('href="https://example.com/src"');
     expect(html).toContain("来源");
-    expect(html).toContain('href="#fnref-1"');
+    expect(html).not.toContain("footnote-backref");
     expect(html).not.toContain("[^1]");
   });
 
@@ -478,6 +478,17 @@ const x = 1;
     expect(html).toContain('id="fnref-1"');
     expect(html).toContain('id="fnref-1-2"');
     expect((html.match(/id="fn-1"/g) ?? []).length).toBe(1);
+  });
+
+  it("renders thematic breaks with the blog hr class", () => {
+    const html = renderMarkdown("上\n\n---\n\n下");
+    expect(html).toContain('<hr class="blog-hr">');
+  });
+
+  it("inserts a single blog hr before footnotes and drops a trailing markdown hr", () => {
+    const html = renderMarkdown("正文[^1]\n\n---\n\n[^1]: [来源](https://example.com)");
+    expect((html.match(/<hr class="blog-hr">/g) ?? []).length).toBe(1);
+    expect(html).toMatch(/<section class="footnotes"[^>]*>\s*<hr class="blog-hr">/);
   });
 });
 
