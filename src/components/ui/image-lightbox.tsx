@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -58,7 +59,7 @@ export function ImageLightbox({
 
   const hasPanel = !!children;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm"
       onClick={onClose}
@@ -105,6 +106,7 @@ export function ImageLightbox({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
