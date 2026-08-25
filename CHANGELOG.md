@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.10.1 (2026-08-25)
+
+- fix: tighten homepage card spacing
+- fix: clean citation list and blog hr
+- fix: portal lightbox above sticky topbar
+
+
 ## v2.10.0 (2026-08-25)
 
 - fix: blend menu and theme into blue topbar
