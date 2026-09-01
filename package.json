@@ -39,7 +39,7 @@
     "@vitest/coverage-v8": "4.1.11",
     "dotenv": "^17.4.2",
     "husky": "^9.1.7",
-    "lint-staged": "17.3.0",
+    "lint-staged": "17.4.1",
     "oxc-parser": "0.147.0",
     "typescript": "7.0.2",
     "vitest": "4.1.11"
@@ -75,7 +75,7 @@
   },
   "overrides": {
     "@babel/core": ">=7.29.6",
-    "picomatch": ">=4.0.4",
+    "picomatch": ">=4.0.7",
     "brace-expansion": ">=5.0.6",
     "ws": ">=8.20.1",
     "path-to-regexp": ">=8.4.0",
