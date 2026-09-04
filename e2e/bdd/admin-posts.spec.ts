@@ -153,10 +153,9 @@ test.describe("Feature: Admin posts list", () => {
     await gotoAdminPostsList(page);
 
     // Then: AdminShell h1 — i18n key "admin.page.posts" → "文章"
-    // (src/lib/i18n/index.ts:35). exact:true avoids substring collision with
-    // other 文章-prefixed headings (e.g. 文章数).
+    // (src/lib/i18n/index.ts:35).
     await expect(
-      page.getByRole("heading", { level: 1, name: "文章", exact: true }),
+      page.getByRole("heading", { level: 1, name: "文章" }),
     ).toBeVisible({ timeout: 10_000 });
   });
 
@@ -223,19 +222,16 @@ test.describe("Feature: Admin posts list", () => {
 // ---------------------------------------------------------------------------
 
 test.describe("Feature: Admin post new editor", () => {
-  test("Given /admin/posts/new is requested, When I open it, Then the AdminShell h1 (文章) and 文章标题 placeholder input are visible", async ({
+  test("Given /admin/posts/new is requested, When I open it, Then the AdminShell h1 and 文章标题 placeholder input are visible", async ({
     page,
   }) => {
     // Given/When: open the new post editor.
     await page.goto("/admin/posts/new", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/posts/new");
 
-    // Then: /admin/posts/new is wrapped by the admin layout, so the
-    // AdminShell h1 stays "文章" (page.subtitle changes via
-    // PageSubtitleContext but h1 does not). exact:true to avoid 文章-prefix
-    // substring matches.
+    // Then: /admin/posts/new is wrapped by the admin layout with breadcrumbs / subpage title.
     await expect(
-      page.getByRole("heading", { level: 1, name: "文章", exact: true }),
+      page.getByRole("heading", { level: 1, name: "新建文章" }),
     ).toBeVisible({ timeout: 10_000 });
 
     // Then: post-form.tsx:273 — title <Input> placeholder is exactly "文章标题".
