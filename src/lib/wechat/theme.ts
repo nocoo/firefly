@@ -1,82 +1,11 @@
-/* Admin preview surface mirroring blog palette */
+// Scoped CSS styles for WeChat Official Account Markdown rendering.
+// Adapted from the Kami / bm.md typography theme:
+// - Serif / Chinese Songti typographic elegance
+// - Explicit color codes (#141413, #1b365d, #faf9f5, #e5e3d8)
+// - Clean blockquote, table, pre/code, lists, and footnote styles
+// - Fully inlined via juice for clipboard compatibility with WeChat MP editor.
 
-
-/*
- * Admin preview theme bridge — scoped blog palette inside admin panels.
- * Mirrors .blog-main padding/colors so the preview is pixel-identical
- * to the public blog. Has its own light/dark toggle via .blog-preview-dark.
- */
-.blog-preview-theme {
-  background: var(--blog-bg);
-  color: var(--blog-text);
-  border-radius: var(--radius-widget);
-  padding: 2em 6%;
-  min-height: 100%;
-}
-
-/* Force light blog palette when preview is in light mode,
-   even if global page is dark (overrides .dark inherited vars) */
-.blog-preview-theme:not(.blog-preview-dark) {
-  --blog-bg: #f5f4f3;
-  --blog-surface: #fafaf9;
-  --blog-text: #1a1a1a;
-  --blog-muted: #8a8678;
-  --blog-separator: #dadde2;
-  --blog-accent: oklch(48% 0.23 264);
-  --blog-code-bg: #efeeec;
-  --tag-1-bg: #EDE8E1; --tag-1-fg: #6B5D4F;
-  --tag-2-bg: #E3EBE8; --tag-2-fg: #4A655B;
-  --tag-3-bg: #E8E3EE; --tag-3-fg: #5E4F6B;
-  --tag-4-bg: #E8EDE3; --tag-4-fg: #556B4A;
-  --tag-5-bg: #EDE3E3; --tag-5-fg: #6B4F4F;
-  --tag-6-bg: #E3E8ED; --tag-6-fg: #4F5D6B;
-  --tag-7-bg: #EDE8E3; --tag-7-fg: #6B5A45;
-  --tag-8-bg: #E3EDEB; --tag-8-fg: #456B63;
-}
-
-/* Scoped dark mode — overrides blog palette when toggled */
-.blog-preview-dark {
-  --blog-bg: hsl(218 13% 7.5%);
-  --blog-surface: #121316;
-  --blog-text: #e5e7eb;
-  --blog-muted: #9ca3af;
-  --blog-separator: color-mix(in oklab, #6a7282 22%, transparent);
-  --blog-accent: color-mix(in oklch, oklch(48% 0.23 264) 60%, white);
-  --blog-code-bg: #1c1d22;
-  --tag-1-bg: #3D3830; --tag-1-fg: #C8BFA8;
-  --tag-2-bg: #303A36; --tag-2-fg: #A8C8BB;
-  --tag-3-bg: #38303D; --tag-3-fg: #BBA8C8;
-  --tag-4-bg: #353D30; --tag-4-fg: #B3C8A8;
-  --tag-5-bg: #3D3030; --tag-5-fg: #C8A8A8;
-  --tag-6-bg: #30353D; --tag-6-fg: #A8B8C8;
-  --tag-7-bg: #3D3830; --tag-7-fg: #C8B8A0;
-  --tag-8-bg: #303D3A; --tag-8-fg: #A0C8C0;
-}
-
-/* Preview toggle button */
-.blog-preview-toggle {
-  position: absolute;
-  top: 0.75em;
-  right: 0.75em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75em;
-  height: 1.75em;
-  border-radius: 0.375em;
-  border: none;
-  background: none;
-  color: var(--blog-muted);
-  cursor: pointer;
-  transition: color 0.15s, background-color 0.15s;
-  z-index: 1;
-}
-.blog-preview-toggle:hover {
-  color: var(--blog-text);
-  background: var(--blog-separator);
-}
-
-/* Base WeChat Preview Theme Styles */
+export const WECHAT_THEME_CSS = `
 #bm-md *,
 #bm-md *::before,
 #bm-md *::after {
@@ -388,76 +317,4 @@
   color: #1b365d;
   padding: 0 2px;
 }
-
-/* Scoped dark mode overrides for WeChat preview in dark mode */
-.wechat-preview-dark {
-  background-color: #1a1a1a !important;
-  color: #e5e5e5 !important;
-}
-
-.wechat-preview-dark #bm-md {
-  background-color: #1a1a1a !important;
-  color: #e5e5e5 !important;
-}
-
-.wechat-preview-dark #bm-md h1,
-.wechat-preview-dark #bm-md h2,
-.wechat-preview-dark #bm-md h3,
-.wechat-preview-dark #bm-md h4,
-.wechat-preview-dark #bm-md h5,
-.wechat-preview-dark #bm-md h6,
-.wechat-preview-dark #bm-md strong,
-.wechat-preview-dark #bm-md b,
-.wechat-preview-dark #bm-md .wechat-post-title,
-.wechat-preview-dark #bm-md .wechat-footnotes h4 {
-  color: #f3f3f3 !important;
-}
-
-.wechat-preview-dark #bm-md p,
-.wechat-preview-dark #bm-md li,
-.wechat-preview-dark #bm-md td,
-.wechat-preview-dark #bm-md th,
-.wechat-preview-dark #bm-md em,
-.wechat-preview-dark #bm-md i {
-  color: #d1d1d1 !important;
-}
-
-.wechat-preview-dark #bm-md a {
-  color: #70a0e0 !important;
-}
-
-.wechat-preview-dark #bm-md blockquote,
-.wechat-preview-dark #bm-md pre,
-.wechat-preview-dark #bm-md code,
-.wechat-preview-dark #bm-md .wechat-post-excerpt,
-.wechat-preview-dark #bm-md .wechat-reference-card {
-  background-color: #242424 !important;
-  border-color: #383838 !important;
-  color: #cccccc !important;
-}
-
-.wechat-preview-dark #bm-md .wechat-reference-title {
-  color: #70a0e0 !important;
-}
-
-.wechat-preview-dark #bm-md .wechat-reference-desc {
-  color: #a0a09c !important;
-}
-
-.wechat-preview-dark #bm-md .wechat-reference-url {
-  color: #888884 !important;
-}
-
-.wechat-preview-dark #bm-md .wechat-footnote-ref {
-  color: #70a0e0 !important;
-}
-
-.wechat-preview-dark #bm-md th {
-  background-color: #282828 !important;
-}
-
-.wechat-preview-dark #bm-md hr,
-.wechat-preview-dark #bm-md td,
-.wechat-preview-dark #bm-md .wechat-footnotes {
-  border-color: #383838 !important;
-}
+`;

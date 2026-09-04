@@ -32,6 +32,7 @@ export default defineConfig({
         "src/lib/utils.ts",
         "src/lib/r2-client.ts",
         "src/lib/mcp/server.ts",
+        "src/lib/wechat/clipboard.ts",
         "src/models/types.ts",
       ],
       thresholds: {
