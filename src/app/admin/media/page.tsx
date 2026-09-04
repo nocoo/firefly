@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
 import { getR2PublicUrl } from "@/lib/r2-client";
 import { listMedia, listMediaYears } from "@/data/entities/media";
 import { MediaLibrary } from "@/components/admin/media-library";
+
+export const metadata: Metadata = {
+  title: "媒体库",
+};
 
 export default async function AdminMediaPage() {
   const db = getDb();

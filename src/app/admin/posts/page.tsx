@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
 import { listPosts, listPostYears, getPostsTagsMap } from "@/data/entities/post";
 import { listCategories } from "@/data/entities/category";
 import { listTags } from "@/data/entities/tag";
 import type { PostStatus } from "@/models/types";
 import { AdminPostsClient } from "@/components/admin/admin-posts-client";
+
+export const metadata: Metadata = {
+  title: "文章",
+};
 
 interface AdminPostsPageProps {
   searchParams: Promise<{

@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
 import { getAiSettings } from "@/data/ai-settings";
 import { AiSettingsForm } from "@/components/admin/ai-settings-form";
 import { AI_PROVIDERS, CUSTOM_PROVIDER_INFO } from "@/services/ai";
 import { maskApiKey } from "@/data/ai-settings";
+
+export const metadata: Metadata = {
+  title: "AI 设置",
+};
 
 export default async function AiSettingsPage() {
   const db = getDb();

@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
 import { AnalyticsDashboard } from "@/components/admin/analytics-dashboard";
+
+export const metadata: Metadata = {
+  title: "概览",
+};
 
 export default async function AdminDashboardPage() {
   const db = getDb();

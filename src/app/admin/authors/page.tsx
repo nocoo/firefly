@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
 import { listHumans, normalizeHumanEmail } from "@/data/entities/human";
 import { getHumanAvatarUrl } from "@/lib/human-avatar";
 import { hashNormalizedEmail } from "@/lib/human-profile";
 import { SITE_URL } from "@/lib/seo";
 import { AuthorsManager } from "@/components/admin/authors-manager";
+
+export const metadata: Metadata = {
+  title: "作者",
+};
 
 export default async function AuthorsPage() {
   const db = getDb();

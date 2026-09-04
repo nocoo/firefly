@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { getHumanById } from "@/data/entities/human";
@@ -6,6 +7,20 @@ import { AuthorForm } from "@/components/admin/author-form";
 
 interface AuthorEditPageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: AuthorEditPageProps): Promise<Metadata> {
+  const { id } = await params;
+  if (id === "new") {
+    return { title: "创建作者" };
+  }
+  const db = getDb();
+  const author = await getHumanById(db, id);
+  return {
+    title: author?.name ? `编辑：${author.name}` : "编辑作者",
+  };
 }
 
 export default async function AuthorEditPage({ params }: AuthorEditPageProps) {

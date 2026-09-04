@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
 import { listAiAgents } from "@/data/entities/ai-agent";
 import { listCategories } from "@/data/entities/category";
 import { AiAgentsManager } from "@/components/admin/ai-agents-manager";
 import { SITE_URL } from "@/lib/seo";
 import { getAgentAvatarUrl } from "@/lib/ai-agent/avatar";
+
+export const metadata: Metadata = {
+  title: "AI 代理作者",
+};
 
 export default async function AiAgentsPage() {
   const db = getDb();

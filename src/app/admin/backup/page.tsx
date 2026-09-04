@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
 import { getBackyConfig, getBackyPullKey } from "@/data/backup";
 import { maskApiKey } from "@/models/backup";
 import { BackupPage } from "@/components/admin/backup-page";
+
+export const metadata: Metadata = {
+  title: "备份",
+};
 
 export default async function AdminBackupPage() {
   const db = getDb();

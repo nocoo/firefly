@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { getAiAgentById } from "@/data/entities/ai-agent";
@@ -7,6 +8,20 @@ import { getAgentAvatarUrl } from "@/lib/ai-agent/avatar";
 
 interface AiAgentEditPageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: AiAgentEditPageProps): Promise<Metadata> {
+  const { id } = await params;
+  if (id === "new") {
+    return { title: "创建代理" };
+  }
+  const db = getDb();
+  const agent = await getAiAgentById(db, id);
+  return {
+    title: agent?.name ? `编辑：${agent.name}` : "编辑代理",
+  };
 }
 
 export default async function AiAgentEditPage({

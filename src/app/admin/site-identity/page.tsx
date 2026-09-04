@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
 import { getSiteSettings } from "@/data/settings";
 import { SiteIdentityForm } from "@/components/admin/site-identity-form";
 import { getLogoUrl } from "@/lib/logo";
+
+export const metadata: Metadata = {
+  title: "站点身份",
+};
 
 export default async function SiteIdentityPage() {
   const db = getDb();

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { getPostById, getPostTags } from "@/data/entities/post";
@@ -14,6 +15,17 @@ import { Comments } from "@/components/blog/comments";
 
 interface EditPostPageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: EditPostPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const db = getDb();
+  const post = await getPostById(db, id);
+  return {
+    title: post?.title ? `编辑：${post.title}` : "编辑文章",
+  };
 }
 
 export default async function EditPostPage({ params }: EditPostPageProps) {
