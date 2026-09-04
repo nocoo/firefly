@@ -26,6 +26,7 @@ import { AppHeader } from "@nocoo/basalt/components/app-header";
 import {
   ContentIsland,
   Sheet,
+  SheetTrigger,
   SheetContent,
   SheetTitle,
   Button,
@@ -105,6 +106,19 @@ export function AdminShell({ user, children }: AdminShellProps) {
     };
   }, [mobileOpen]);
 
+  const mobileTrigger = (
+    <SheetTrigger asChild>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8"
+        aria-label="打开导航"
+      >
+        <Menu className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
+      </Button>
+    </SheetTrigger>
+  );
+
   return (
     <CommandPaletteProvider>
       <PageSubtitleProvider>
@@ -121,8 +135,21 @@ export function AdminShell({ user, children }: AdminShellProps) {
           )}
 
           {/* Mobile Sheet sidebar */}
-          {isMobile && (
+          {isMobile ? (
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              {/* Main column inside Sheet context so SheetTrigger is registered */}
+              <AppMain>
+                <ShellHeader
+                  title={title}
+                  leading={mobileTrigger}
+                />
+
+                {/* Content island */}
+                <div className="flex min-h-0 flex-1 flex-col px-2 pb-2 md:px-3 md:pb-3">
+                  <ContentIsland>{children}</ContentIsland>
+                </div>
+              </AppMain>
+
               <SheetContent
                 side="left"
                 className="w-[260px] max-w-[260px] border-0 bg-basalt-background p-0"
@@ -135,21 +162,20 @@ export function AdminShell({ user, children }: AdminShellProps) {
                 />
               </SheetContent>
             </Sheet>
+          ) : (
+            /* Main column without Sheet wrapper for desktop */
+            <AppMain>
+              <ShellHeader
+                title={title}
+                leading={null}
+              />
+
+              {/* Content island */}
+              <div className="flex min-h-0 flex-1 flex-col px-2 pb-2 md:px-3 md:pb-3">
+                <ContentIsland>{children}</ContentIsland>
+              </div>
+            </AppMain>
           )}
-
-          {/* Main column */}
-          <AppMain>
-            <ShellHeader
-              title={title}
-              isMobile={isMobile}
-              onOpenMobile={() => setMobileOpen(true)}
-            />
-
-            {/* Content island */}
-            <div className="flex min-h-0 flex-1 flex-col px-2 pb-2 md:px-3 md:pb-3">
-              <ContentIsland>{children}</ContentIsland>
-            </div>
-          </AppMain>
 
           {/* Global toast notifications */}
           <Toaster />
@@ -165,28 +191,14 @@ export function AdminShell({ user, children }: AdminShellProps) {
 // Extracted header consuming AppHeader from basalt
 function ShellHeader({
   title,
-  isMobile,
-  onOpenMobile,
+  leading,
 }: {
   title: string;
-  isMobile: boolean;
-  onOpenMobile: () => void;
+  leading: React.ReactNode;
 }) {
   const { subtitle } = usePageSubtitle();
 
   const titleStr = subtitle ? `${title} · ${subtitle}` : title;
-
-  const leading = isMobile ? (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-8 w-8"
-      onClick={onOpenMobile}
-      aria-label="打开导航"
-    >
-      <Menu className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
-    </Button>
-  ) : null;
 
   const actions = (
     <div className="flex items-center gap-1.5">

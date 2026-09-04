@@ -28,8 +28,6 @@ import {
   SidebarHeader,
   SidebarNav,
   SidebarPartition,
-  SidebarItem,
-  SidebarIconItem,
   SidebarFooter,
   SidebarUser,
   SidebarSearch,
@@ -38,6 +36,7 @@ import { Button } from "@nocoo/basalt/components/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@nocoo/basalt";
 import { Avatar, AvatarFallback, AvatarImage } from "@nocoo/basalt";
 import { useCommandPalette } from "@/components/admin/command-palette";
+import { cn } from "@/lib/utils";
 
 // ── Navigation data model ──
 
@@ -92,6 +91,24 @@ const NAV_GROUPS: NavGroup[] = [
 
 const ALL_NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
 
+// ── Item styling matching Basalt SidebarItem & SidebarIconItem tokens ──
+
+const sidebarIconItemClass = (active: boolean) =>
+  cn(
+    "relative flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
+    active
+      ? "bg-basalt-accent text-basalt-foreground"
+      : "text-basalt-muted-foreground hover:bg-basalt-accent hover:text-basalt-foreground",
+  );
+
+const sidebarItemClass = (active: boolean) =>
+  cn(
+    "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-normal transition-colors",
+    active
+      ? "bg-basalt-accent text-basalt-foreground"
+      : "text-basalt-muted-foreground hover:bg-basalt-accent hover:text-basalt-foreground",
+  );
+
 // ── Sidebar Component ──
 
 interface AdminSidebarProps {
@@ -108,9 +125,10 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
   const pathname = usePathname();
   const { setOpen: openSearch } = useCommandPalette();
 
-  const isActive = (href: string) => {
-    if (href === "/admin") return pathname === "/admin";
-    return pathname.startsWith(href);
+  const isItemActive = (item: NavItem) => {
+    if (item.external) return false;
+    if (item.href === "/admin") return pathname === "/admin";
+    return pathname.startsWith(item.href);
   };
 
   const initials = (user.name ?? user.email ?? "A")
@@ -154,13 +172,14 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
 
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
-              <SidebarIconItem
-                className="mb-2 self-center"
+              <button
+                type="button"
+                className={cn("mb-2 self-center", sidebarIconItemClass(false))}
                 onClick={() => openSearch(true)}
                 aria-label="搜索 (⌘K)"
               >
                 <Search className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-              </SidebarIconItem>
+              </button>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={8}>
               搜索 (⌘K)
@@ -168,44 +187,38 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
           </Tooltip>
 
           <SidebarNav className="w-full items-center gap-1 pt-1">
-            {ALL_NAV_ITEMS.map((item) => (
-              <Tooltip key={item.href} delayDuration={0}>
-                <TooltipTrigger asChild>
-                  {item.external ? (
-                    <a
-                      href={item.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={item.title}
-                      className="self-center"
-                    >
-                      <SidebarIconItem
-                        active={isActive(item.href)}
+            {ALL_NAV_ITEMS.map((item) => {
+              const active = isItemActive(item);
+              return (
+                <Tooltip key={item.href} delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    {item.external ? (
+                      <a
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         aria-label={item.title}
+                        className={sidebarIconItemClass(active)}
                       >
                         <item.icon className="h-4 w-4" strokeWidth={1.5} />
-                      </SidebarIconItem>
-                    </a>
-                  ) : (
-                    <Link
-                      href={item.href}
-                      aria-label={item.title}
-                      className="self-center"
-                    >
-                      <SidebarIconItem
-                        active={isActive(item.href)}
+                      </a>
+                    ) : (
+                      <Link
+                        href={item.href}
                         aria-label={item.title}
+                        aria-current={active ? "page" : undefined}
+                        className={sidebarIconItemClass(active)}
                       >
                         <item.icon className="h-4 w-4" strokeWidth={1.5} />
-                      </SidebarIconItem>
-                    </Link>
-                  )}
-                </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8}>
-                  {item.title}
-                </TooltipContent>
-              </Tooltip>
-            ))}
+                      </Link>
+                    )}
+                  </TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={8}>
+                    {item.title}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
           </SidebarNav>
 
           <SidebarFooter className="flex w-full justify-center px-0">
@@ -266,33 +279,31 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
               <div key={group.label}>
                 <SidebarPartition>{group.label}</SidebarPartition>
                 <div className="flex flex-col gap-0.5 px-3">
-                  {group.items.map((item) =>
-                    item.external ? (
+                  {group.items.map((item) => {
+                    const active = isItemActive(item);
+                    return item.external ? (
                       <a
                         key={item.href}
                         href={item.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block w-full"
+                        className={sidebarItemClass(active)}
                       >
-                        <SidebarItem active={isActive(item.href)}>
-                          <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-                          <span className="flex-1 truncate text-left">{item.title}</span>
-                        </SidebarItem>
+                        <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+                        <span className="flex-1 truncate text-left">{item.title}</span>
                       </a>
                     ) : (
                       <Link
                         key={item.href}
                         href={item.href}
-                        className="block w-full"
+                        aria-current={active ? "page" : undefined}
+                        className={sidebarItemClass(active)}
                       >
-                        <SidebarItem active={isActive(item.href)}>
-                          <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-                          <span className="flex-1 truncate text-left">{item.title}</span>
-                        </SidebarItem>
+                        <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+                        <span className="flex-1 truncate text-left">{item.title}</span>
                       </Link>
-                    ),
-                  )}
+                    );
+                  })}
                 </div>
               </div>
             ))}

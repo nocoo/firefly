@@ -16,7 +16,7 @@ function Barcode() {
       {bars.map((w, i) => (
         <div
           key={i}
-          className="rounded-[0.5px] bg-primary-foreground"
+          className="rounded-[0.5px] bg-basalt-primary-foreground"
           style={{ width: `${w * 1.5}px`, opacity: i % 3 === 0 ? 0.9 : 0.5 }}
         />
       ))}
@@ -186,7 +186,7 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
             {/* Footer strip */}
             <div className="mt-auto flex items-center justify-center border-t border-basalt-border bg-basalt-secondary/50 py-2.5">
               <div className="flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 rounded-full bg-basalt-info animate-pulse" />
+                <div className="h-1.5 w-1.5 rounded-full bg-basalt-success animate-pulse" />
                 <span className="text-2xs text-basalt-muted-foreground">安全认证</span>
               </div>
             </div>
@@ -219,7 +219,7 @@ export function LoginCard({ logoUrl }: { logoUrl: string | null }) {
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center">
-          <p className="text-muted-foreground">加载中...</p>
+          <p className="text-basalt-muted-foreground">加载中...</p>
         </div>
       }
     >
