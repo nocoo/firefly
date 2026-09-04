@@ -81,6 +81,24 @@ function getAdminBreadcrumbs(pathname: string): { label: string; href?: string }
   return items;
 }
 
+// Resolve page title for the current route, taking specific sub-routes into account
+function getAdminPageTitle(pathname: string): string {
+  if (pathname === "/admin/posts/new") return "新建文章";
+  if (pathname.startsWith("/admin/posts/") && pathname.endsWith("/edit")) return "编辑文章";
+  if (pathname === "/admin/authors/new") return "创建作者";
+  if (pathname.startsWith("/admin/authors/") && pathname !== "/admin/authors") return "编辑作者";
+  if (pathname === "/admin/ai-agents/new") return "创建代理";
+  if (pathname.startsWith("/admin/ai-agents/") && pathname !== "/admin/ai-agents") return "编辑代理";
+
+  const titleKey =
+    PAGE_TITLE_KEYS[pathname] ??
+    Object.entries(PAGE_TITLE_KEYS).find(([key]) =>
+      key !== "/admin" && pathname.startsWith(key),
+    )?.[1];
+
+  return titleKey ? t(titleKey) : "管理";
+}
+
 interface AdminShellProps {
   user: {
     name?: string | null | undefined;
@@ -108,12 +126,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
   }, [isTablet]);
 
   // Resolve page title from pathname
-  const titleKey =
-    PAGE_TITLE_KEYS[pathname] ??
-    Object.entries(PAGE_TITLE_KEYS).find(([key]) =>
-      key !== "/admin" && pathname.startsWith(key),
-    )?.[1];
-  const title = titleKey ? t(titleKey) : "管理";
+  const title = getAdminPageTitle(pathname);
 
   // Close mobile sidebar on route change
   const prevPathname = useRef(pathname);

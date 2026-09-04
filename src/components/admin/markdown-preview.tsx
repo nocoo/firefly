@@ -145,8 +145,21 @@ export function MarkdownPreview({
     }
   }, [html]);
 
-  const isEmpty =
-    !title && !excerpt && !content && !featuredImage && !referenceUrl;
+  // Empty state logic:
+  // Web preview displays title, excerpt, content, featured image, and reference card.
+  const webIsEmpty =
+    !title?.trim() &&
+    !excerpt?.trim() &&
+    !content?.trim() &&
+    !featuredImage?.trim() &&
+    !referenceUrl?.trim();
+
+  // WeChat preview explicitly omits title and excerpt, so empty state depends solely
+  // on whether there is actual content, cover image, or reference.
+  const wechatIsEmpty =
+    !content?.trim() && !featuredImage?.trim() && !referenceUrl?.trim();
+
+  const isCurrentEmpty = platformMode === "wechat" ? wechatIsEmpty : webIsEmpty;
 
   return (
     <div className="flex h-full flex-col bg-muted/20">
@@ -225,7 +238,7 @@ export function MarkdownPreview({
             <button
               type="button"
               onClick={handleCopyWeChat}
-              disabled={isEmpty}
+              disabled={wechatIsEmpty}
               title="复制微信公众号排版到剪贴板（不含标题与摘要，含图片）"
               className="inline-flex items-center gap-1.5 rounded-md border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -242,7 +255,7 @@ export function MarkdownPreview({
             <button
               type="button"
               onClick={handleCopyWebText}
-              disabled={!content}
+              disabled={!content?.trim()}
               title="复制正文内容（不含标题、摘要及图片）"
               className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -274,7 +287,7 @@ export function MarkdownPreview({
 
       {/* Main Preview Container */}
       <div className="flex-1 overflow-y-auto p-4 flex justify-center">
-        {isEmpty ? (
+        {isCurrentEmpty ? (
           <div className="flex h-full items-center justify-center self-center">
             <p className="text-sm text-muted-foreground">
               开始编写以查看实时预览
