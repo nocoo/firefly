@@ -43,6 +43,20 @@ interface MemoryStats {
 // Helpers
 // ---------------------------------------------------------------------------
 
+function formatMemoryMB(mb: number): { value: string; unit: string } {
+  if (mb >= 1024) {
+    const gb = mb / 1024;
+    return {
+      value: (Math.round(gb * 10) / 10).toString(),
+      unit: "GB",
+    };
+  }
+  return {
+    value: Math.round(mb).toString(),
+    unit: "MB",
+  };
+}
+
 function formatUptime(seconds: number): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
@@ -145,58 +159,85 @@ export function SystemMemoryCard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4">
+        {/* 1. Heap Used */}
         <div className="space-y-1">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <HardDrive className="h-3 w-3" />
-            Heap Used
+          <div className="flex items-center gap-1 text-xs text-muted-foreground truncate">
+            <HardDrive className="h-3 w-3 shrink-0" />
+            <span>堆内存</span>
           </div>
-          <div className="text-2xl font-semibold tabular-nums">
-            {current.heapUsedMB}
-            <span className="text-sm font-normal text-muted-foreground"> MB</span>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {heapPercent}% of {current.heapTotalMB} MB
+          {(() => {
+            const { value, unit } = formatMemoryMB(current.heapUsedMB);
+            return (
+              <div className="text-xl sm:text-2xl font-semibold tabular-nums">
+                {value}
+                <span className="text-xs sm:text-sm font-normal text-muted-foreground ml-1">
+                  {unit}
+                </span>
+              </div>
+            );
+          })()}
+          <div className="text-[11px] sm:text-xs text-muted-foreground truncate">
+            {heapPercent}%
+            <span className="hidden sm:inline"> of {formatMemoryMB(current.heapTotalMB).value} {formatMemoryMB(current.heapTotalMB).unit}</span>
           </div>
         </div>
 
+        {/* 2. RSS */}
         <div className="space-y-1">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Cpu className="h-3 w-3" />
-            RSS
+          <div className="flex items-center gap-1 text-xs text-muted-foreground truncate">
+            <Cpu className="h-3 w-3 shrink-0" />
+            <span>RSS</span>
           </div>
-          <div className="text-2xl font-semibold tabular-nums">
-            {current.rssMB}
-            <span className="text-sm font-normal text-muted-foreground"> MB</span>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            Total process memory
+          {(() => {
+            const { value, unit } = formatMemoryMB(current.rssMB);
+            return (
+              <div className="text-xl sm:text-2xl font-semibold tabular-nums">
+                {value}
+                <span className="text-xs sm:text-sm font-normal text-muted-foreground ml-1">
+                  {unit}
+                </span>
+              </div>
+            );
+          })()}
+          <div className="text-[11px] sm:text-xs text-muted-foreground truncate">
+            进程总内存
           </div>
         </div>
 
+        {/* 3. Peak / Avg (hide subtext on small screens) */}
         <div className="space-y-1">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Activity className="h-3 w-3" />
-            Peak / Avg
+          <div className="flex items-center gap-1 text-xs text-muted-foreground truncate">
+            <Activity className="h-3 w-3 shrink-0" />
+            <span>峰值</span>
           </div>
-          <div className="text-2xl font-semibold tabular-nums">
-            {summary.peakHeapMB}
-            <span className="text-sm font-normal text-muted-foreground"> MB</span>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            Avg: {summary.avgHeapMB} MB
+          {(() => {
+            const { value, unit } = formatMemoryMB(summary.peakHeapMB);
+            return (
+              <div className="text-xl sm:text-2xl font-semibold tabular-nums">
+                {value}
+                <span className="text-xs sm:text-sm font-normal text-muted-foreground ml-1">
+                  {unit}
+                </span>
+              </div>
+            );
+          })()}
+          <div className="text-[11px] sm:text-xs text-muted-foreground truncate">
+            <span className="hidden sm:inline">平均：</span>
+            {formatMemoryMB(summary.avgHeapMB).value} {formatMemoryMB(summary.avgHeapMB).unit}
           </div>
         </div>
 
+        {/* 4. Uptime */}
         <div className="space-y-1">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Clock className="h-3 w-3" />
-            Uptime
+          <div className="flex items-center gap-1 text-xs text-muted-foreground truncate">
+            <Clock className="h-3 w-3 shrink-0" />
+            <span>运行时间</span>
           </div>
-          <div className="text-2xl font-semibold tabular-nums">
+          <div className="text-xl sm:text-2xl font-semibold tabular-nums truncate">
             {formatUptime(summary.uptimeSeconds)}
           </div>
-          <div className="text-xs text-muted-foreground">
-            {summary.sampleCount} samples
+          <div className="text-[11px] sm:text-xs text-muted-foreground truncate">
+            {summary.sampleCount} 个样本
           </div>
         </div>
       </div>
