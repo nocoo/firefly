@@ -1,21 +1,35 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { Github } from "@/components/icons/brand";
-import { cn } from "@/lib/utils";
 import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { IconButton } from "@/components/ui/icon-button";
 import { Toaster } from "@/components/ui/sonner";
-import { PageSubtitleProvider, usePageSubtitle } from "@/components/admin/page-subtitle-context";
+import {
+  PageSubtitleProvider,
+  usePageSubtitle,
+} from "@/components/admin/page-subtitle-context";
 import { t, type TranslationKey } from "@/lib/i18n";
 import {
   CommandPaletteProvider,
   CommandPalette,
 } from "@/components/admin/command-palette";
+import {
+  AppShell,
+  AppMain,
+  AppSkipLink,
+} from "@nocoo/basalt/components/app-shell";
+import { AppHeader } from "@nocoo/basalt/components/app-header";
+import {
+  ContentIsland,
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  Button,
+} from "@nocoo/basalt";
 
 // Map admin routes to dictionary keys. Title strings live in the dictionary
 // so they are translatable and share a source of truth with command-palette
@@ -50,9 +64,6 @@ export function AdminShell({ user, children }: AdminShellProps) {
   const isTablet = useIsTablet();
   const [collapsed, setCollapsed] = useState(isTablet);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const sidebarRef = useRef<HTMLDivElement>(null);
-  const hamburgerRef = useRef<HTMLButtonElement>(null);
-  const mainRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
   // Auto-collapse once when entering tablet range; user toggle still works.
@@ -73,8 +84,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
     )?.[1];
   const title = titleKey ? t(titleKey) : "管理";
 
-  // Close mobile sidebar on route change — intentional setState in effect
-  // to sync UI with navigation (external event from Next.js router).
+  // Close mobile sidebar on route change
   const prevPathname = useRef(pathname);
   useEffect(() => {
     if (prevPathname.current !== pathname) {
@@ -95,67 +105,12 @@ export function AdminShell({ user, children }: AdminShellProps) {
     };
   }, [mobileOpen]);
 
-  const closeMobile = useCallback(() => setMobileOpen(false), []);
-
-  // Escape key to close + focus trap inside mobile sidebar
-  useEffect(() => {
-    if (!mobileOpen) return;
-
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        setMobileOpen(false);
-        hamburgerRef.current?.focus();
-        return;
-      }
-
-      if (e.key === "Tab" && sidebarRef.current) {
-        const focusable = sidebarRef.current.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
-        );
-        if (focusable.length === 0) return;
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [mobileOpen]);
-
-  // Move focus into sidebar on open
-  useEffect(() => {
-    if (mobileOpen && sidebarRef.current) {
-      const first = sidebarRef.current.querySelector<HTMLElement>(
-        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      );
-      first?.focus();
-    }
-  }, [mobileOpen]);
-
-  // Set inert on background content when mobile sidebar is open
-  useEffect(() => {
-    if (mainRef.current) {
-      if (mobileOpen) {
-        mainRef.current.setAttribute("inert", "");
-      } else {
-        mainRef.current.removeAttribute("inert");
-      }
-    }
-  }, [mobileOpen]);
-
   return (
     <CommandPaletteProvider>
       <PageSubtitleProvider>
-        <div className="flex min-h-screen w-full bg-background">
+        <AppShell>
+          <AppSkipLink>跳至主要内容</AppSkipLink>
+
           {/* Desktop sidebar */}
           {!isMobile && (
             <AdminSidebar
@@ -165,113 +120,98 @@ export function AdminShell({ user, children }: AdminShellProps) {
             />
           )}
 
-          {/* Mobile overlay */}
-          {isMobile && mobileOpen && (
-            <div
-              ref={sidebarRef}
-              role="dialog"
-              aria-modal="true"
-              aria-label="打开导航"
-              className="fixed inset-0 z-40"
-            >
-              <div
-                className="absolute inset-0 bg-zinc-950/50 backdrop-blur-xs"
-                role="presentation"
-                onClick={closeMobile}
-              />
-              <div className="absolute inset-y-0 left-0 z-50 w-[var(--sidebar-width)]">
+          {/* Mobile Sheet sidebar */}
+          {isMobile && (
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetContent
+                side="left"
+                className="w-[260px] max-w-[260px] border-0 bg-basalt-background p-0"
+              >
+                <SheetTitle className="sr-only">导航</SheetTitle>
                 <AdminSidebar
                   collapsed={false}
-                  onToggle={closeMobile}
+                  onToggle={() => setMobileOpen(false)}
                   user={user}
                 />
-              </div>
-            </div>
+              </SheetContent>
+            </Sheet>
           )}
 
-          {/* Main content */}
-          <div ref={mainRef} className="flex-1 flex flex-col min-h-screen min-w-0">
-            {/* Top bar */}
+          {/* Main column */}
+          <AppMain>
             <ShellHeader
               title={title}
               isMobile={isMobile}
               onOpenMobile={() => setMobileOpen(true)}
-              openNavLabel="打开导航"
-              hamburgerRef={hamburgerRef}
             />
 
-            {/* Page content */}
-            <div className={cn("flex-1 px-2 pb-2 md:px-3 md:pb-3")}>
-              <div className="h-full rounded-[var(--radius-island)] bg-card p-3 md:p-5 overflow-y-auto">
-                {children}
-              </div>
+            {/* Content island */}
+            <div className="flex min-h-0 flex-1 flex-col px-2 pb-2 md:px-3 md:pb-3">
+              <ContentIsland>{children}</ContentIsland>
             </div>
-          </div>
+          </AppMain>
 
           {/* Global toast notifications */}
           <Toaster />
 
           {/* Global command palette */}
           <CommandPalette />
-        </div>
+        </AppShell>
       </PageSubtitleProvider>
     </CommandPaletteProvider>
   );
 }
 
-// Extracted header so it can consume PageSubtitleContext
+// Extracted header consuming AppHeader from basalt
 function ShellHeader({
   title,
   isMobile,
   onOpenMobile,
-  openNavLabel,
-  hamburgerRef,
 }: {
   title: string;
   isMobile: boolean;
   onOpenMobile: () => void;
-  openNavLabel: string;
-  hamburgerRef?: React.RefObject<HTMLButtonElement | null>;
 }) {
   const { subtitle } = usePageSubtitle();
 
+  const titleStr = subtitle ? `${title} · ${subtitle}` : title;
+
+  const leading = isMobile ? (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8"
+      onClick={onOpenMobile}
+      aria-label="打开导航"
+    >
+      <Menu className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
+    </Button>
+  ) : null;
+
+  const actions = (
+    <div className="flex items-center gap-1.5">
+      <a
+        href="https://github.com/nocoo/firefly"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="GitHub"
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-basalt-muted-foreground hover:text-basalt-foreground hover:bg-basalt-accent transition-colors"
+      >
+        <Github
+          className="h-[18px] w-[18px]"
+          aria-hidden="true"
+          strokeWidth={1.5}
+        />
+      </a>
+      <ThemeToggle />
+    </div>
+  );
+
   return (
-    <header className="flex h-14 items-center justify-between px-4 md:px-6 shrink-0">
-      <div className="flex items-center gap-3">
-        {isMobile && (
-          <IconButton ref={hamburgerRef} onClick={onOpenMobile} aria-label={openNavLabel}>
-            <Menu
-              className="h-5 w-5"
-              aria-hidden="true"
-              strokeWidth={1.5}
-            />
-          </IconButton>
-        )}
-        <div className="flex items-baseline gap-2">
-          <h1 className="text-lg md:text-xl font-semibold text-foreground">
-            {title}
-          </h1>
-          {subtitle && (
-            <span className="text-sm text-muted-foreground">{subtitle}</span>
-          )}
-        </div>
-      </div>
-      <div className="flex items-center gap-1.5">
-        <a
-          href="https://github.com/nocoo/firefly"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="GitHub"
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-        >
-          <Github
-            className="h-[18px] w-[18px]"
-            aria-hidden="true"
-            strokeWidth={1.5}
-          />
-        </a>
-        <ThemeToggle />
-      </div>
-    </header>
+    <AppHeader
+      leading={leading}
+      title={titleStr}
+      actions={actions}
+    />
   );
 }
