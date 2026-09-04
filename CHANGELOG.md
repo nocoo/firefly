@@ -1,5 +1,21 @@
 # Changelog
 
+## v2.11.0 (2026-09-04)
+
+- fix(admin): refine preview empty states and resolve duplicate breadcrumb sub-route titles
+- feat(admin): add explicit metadata titles to all dashboard pages
+- feat(admin): configure hierarchical breadcrumbs in basalt app header
+- feat(admin): refine article preview and copy flows for wechat and web modes
+- fix(admin): simplify memory card values with GB units and mobile responsive layout
+- chore(deps): remove obsolete @radix-ui/react-avatar and local avatar component
+- fix(admin): wrap collapsed sidebar in TooltipProvider, unify Sheet DOM hierarchy, and use heatmap-green-3 token
+- fix(admin): resolve nested interactive elements, active route highlights, sheet focus and token semantics
+- refactor(admin): update command palette colors to basalt tokens
+- refactor(admin): migrate AppShell, AppHeader, Sidebar and Island to basalt chrome
+- refactor(auth): migrate login badge card to basalt surface and tokens
+- build(deps): install @nocoo/basalt 2.0.3 and configure tailwind
+
+
 ## v2.10.2 (2026-09-04)
 
 - feat(admin): support mobile and WeChat formats in live preview
