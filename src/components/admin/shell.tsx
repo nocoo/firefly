@@ -17,6 +17,8 @@ import {
   CommandPaletteProvider,
   CommandPalette,
 } from "@/components/admin/command-palette";
+import Link from "next/link";
+import { LinkProvider } from "@nocoo/basalt/providers/link";
 import {
   AppShell,
   AppMain,
@@ -50,6 +52,34 @@ const PAGE_TITLE_KEYS: Record<string, TranslationKey> = {
   "/admin/backup": "admin.page.backup",
   "/admin/system": "admin.page.system",
 };
+
+// Generate hierarchical breadcrumbs for admin routes
+function getAdminBreadcrumbs(pathname: string): { label: string; href?: string }[] {
+  if (pathname === "/admin") {
+    return [];
+  }
+
+  const items: { label: string; href?: string }[] = [{ label: "控制台", href: "/admin" }];
+
+  if (pathname === "/admin/posts/new") {
+    items.push({ label: "文章", href: "/admin/posts" });
+    return items;
+  }
+  if (pathname.startsWith("/admin/posts/") && pathname.endsWith("/edit")) {
+    items.push({ label: "文章", href: "/admin/posts" });
+    return items;
+  }
+  if (pathname.startsWith("/admin/authors/") && pathname !== "/admin/authors") {
+    items.push({ label: "作者", href: "/admin/authors" });
+    return items;
+  }
+  if (pathname.startsWith("/admin/ai-agents/") && pathname !== "/admin/ai-agents") {
+    items.push({ label: "AI 代理作者", href: "/admin/ai-agents" });
+    return items;
+  }
+
+  return items;
+}
 
 interface AdminShellProps {
   user: {
@@ -120,66 +150,71 @@ export function AdminShell({ user, children }: AdminShellProps) {
   );
 
   return (
-    <CommandPaletteProvider>
-      <PageSubtitleProvider>
-        <AppShell>
-          <AppSkipLink>跳至主要内容</AppSkipLink>
+    <LinkProvider render={Link}>
+      <CommandPaletteProvider>
+        <PageSubtitleProvider>
+          <AppShell>
+            <AppSkipLink>跳至主要内容</AppSkipLink>
 
-          {/* Desktop sidebar */}
-          {!isMobile && (
-            <AdminSidebar
-              collapsed={collapsed}
-              onToggle={() => setCollapsed(!collapsed)}
-              user={user}
-            />
-          )}
-
-          {/* Sheet wraps main column always; SheetTrigger only appears on mobile */}
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <AppMain>
-              <ShellHeader
-                title={title}
-                leading={isMobile ? mobileTrigger : null}
+            {/* Desktop sidebar */}
+            {!isMobile && (
+              <AdminSidebar
+                collapsed={collapsed}
+                onToggle={() => setCollapsed(!collapsed)}
+                user={user}
               />
-
-              {/* Content island */}
-              <div className="flex min-h-0 flex-1 flex-col px-2 pb-2 md:px-3 md:pb-3">
-                <ContentIsland>{children}</ContentIsland>
-              </div>
-            </AppMain>
-
-            {isMobile && (
-              <SheetContent
-                side="left"
-                className="w-[260px] max-w-[260px] border-0 bg-basalt-background p-0"
-              >
-                <SheetTitle className="sr-only">导航</SheetTitle>
-                <AdminSidebar
-                  collapsed={false}
-                  onToggle={() => setMobileOpen(false)}
-                  user={user}
-                />
-              </SheetContent>
             )}
-          </Sheet>
 
-          {/* Global toast notifications */}
-          <Toaster />
+            {/* Sheet wraps main column always; SheetTrigger only appears on mobile */}
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <AppMain>
+                <ShellHeader
+                  title={title}
+                  breadcrumbs={getAdminBreadcrumbs(pathname)}
+                  leading={isMobile ? mobileTrigger : null}
+                />
 
-          {/* Global command palette */}
-          <CommandPalette />
-        </AppShell>
-      </PageSubtitleProvider>
-    </CommandPaletteProvider>
+                {/* Content island */}
+                <div className="flex min-h-0 flex-1 flex-col px-2 pb-2 md:px-3 md:pb-3">
+                  <ContentIsland>{children}</ContentIsland>
+                </div>
+              </AppMain>
+
+              {isMobile && (
+                <SheetContent
+                  side="left"
+                  className="w-[260px] max-w-[260px] border-0 bg-basalt-background p-0"
+                >
+                  <SheetTitle className="sr-only">导航</SheetTitle>
+                  <AdminSidebar
+                    collapsed={false}
+                    onToggle={() => setMobileOpen(false)}
+                    user={user}
+                  />
+                </SheetContent>
+              )}
+            </Sheet>
+
+            {/* Global toast notifications */}
+            <Toaster />
+
+            {/* Global command palette */}
+            <CommandPalette />
+          </AppShell>
+        </PageSubtitleProvider>
+      </CommandPaletteProvider>
+    </LinkProvider>
   );
 }
 
 // Extracted header consuming AppHeader from basalt
 function ShellHeader({
   title,
+  breadcrumbs,
   leading,
 }: {
   title: string;
+  breadcrumbs: { label: string; href?: string }[];
   leading: React.ReactNode;
 }) {
   const { subtitle } = usePageSubtitle();
@@ -208,6 +243,7 @@ function ShellHeader({
   return (
     <AppHeader
       leading={leading}
+      breadcrumbs={breadcrumbs}
       title={titleStr}
       actions={actions}
     />
