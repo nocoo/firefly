@@ -1,5 +1,40 @@
 # Changelog
 
+## v2.10.2 (2026-09-04)
+
+- feat(admin): support mobile and WeChat formats in live preview
+- Merge pull request #648 from nocoo/agent/sde/a788543c35f4
+- fix(deps): update fast-uri security override
+- Merge pull request #625 from nocoo/agent/sde/ffc2c76a0234-stu-4652-s3
+- Merge pull request #624 from nocoo/agent/sde/ffc2c76a0234-stu-4651-workers-types
+- Merge pull request #623 from nocoo/agent/sde/ffc2c76a0234-stu-4650-ai
+- chore(deps): upgrade aws s3 client to 3.1123.0
+- chore(deps): upgrade workers types to 5.20260831.1
+- chore(deps): upgrade ai to 7.0.87
+- Merge pull request #622 from nocoo/agent/sde/944ca1b8f315
+- Merge pull request #621 from nocoo/agent/sde/bd82f98f9ff2
+- Merge pull request #620 from nocoo/agent/sde/88c17d828bb2
+- Merge pull request #619 from nocoo/agent/sde/f7a241bdcd8a
+- chore(deps): upgrade next to 16.3.4
+- chore(deps): upgrade zod to 4.5.4
+- chore(deps): upgrade wrangler to 4.127.1
+- chore(deps): upgrade lucide-react to 1.38.0
+- Merge pull request #611 from nocoo/agent/sde/4d3f4c2dedd8
+- Merge pull request #613 from nocoo/agent/sde/4d53c18de164
+- Merge pull request #612 from nocoo/agent/sde/674a1403a9e0
+- chore(deps): upgrade lint-staged to 17.4.1
+- chore(deps): upgrade @types/node to 26.4.0
+- chore(deps): upgrade biome to 2.5.11
+- chore(deps): relock hono to 4.13.5
+- chore(deps): bump wrangler to 4.126.0
+- chore(deps): bump workers-types to 5.20260826.1
+- chore(deps): bump sharp to 0.35.4
+- chore(deps): bump ai to 7.0.82
+- chore(deps): bump @aws-sdk/client-s3 to 3.1119.0
+- chore(deps): bump hono to 4.13.5
+- chore(deps): bump next to 16.3.3
+
+
 ## v2.10.1 (2026-08-25)
 
 - fix: tighten homepage card spacing
