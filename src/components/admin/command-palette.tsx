@@ -320,17 +320,17 @@ export function CommandPalette() {
       />
 
       {/* Panel */}
-      <div className="absolute inset-x-0 top-[15%] mx-auto flex max-w-[560px] flex-col overflow-hidden rounded-[var(--radius-island)] border border-border bg-card shadow-xl">
+      <div className="absolute inset-x-0 top-[15%] mx-auto flex max-w-[560px] flex-col overflow-hidden rounded-[var(--radius-island)] border border-basalt-border bg-basalt-card shadow-xl">
         {/* Search input */}
-        <div className="flex items-center gap-3 border-b border-border bg-secondary px-4 py-3">
+        <div className="flex items-center gap-3 border-b border-basalt-border bg-basalt-secondary px-4 py-3">
           {loading ? (
             <Loader2
-              className="h-4 w-4 shrink-0 animate-spin text-muted-foreground"
+              className="h-4 w-4 shrink-0 animate-spin text-basalt-muted-foreground"
               strokeWidth={1.5}
             />
           ) : (
             <Search
-              className="h-4 w-4 shrink-0 text-muted-foreground"
+              className="h-4 w-4 shrink-0 text-basalt-muted-foreground"
               strokeWidth={1.5}
             />
           )}
@@ -340,9 +340,9 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => handleInputChange(e.target.value)}
             placeholder="搜索文章或跳转页面..."
-            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0"
+            className="flex-1 bg-transparent text-sm text-basalt-foreground placeholder:text-basalt-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-basalt-ring focus-visible:ring-offset-0"
           />
-          <kbd className="hidden sm:inline-flex h-5 items-center rounded border border-border bg-background px-1.5 text-2xs font-medium text-muted-foreground">
+          <kbd className="hidden sm:inline-flex h-5 items-center rounded border border-basalt-border bg-basalt-background px-1.5 text-2xs font-medium text-basalt-muted-foreground">
             ESC
           </kbd>
         </div>
@@ -353,7 +353,7 @@ export function CommandPalette() {
           className="max-h-[min(400px,50vh)] overflow-y-auto overscroll-contain"
         >
           {showNoResults && (
-            <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+            <div className="px-4 py-8 text-center text-sm text-basalt-muted-foreground">
               没有找到结果
             </div>
           )}
@@ -361,7 +361,7 @@ export function CommandPalette() {
           {/* Navigation section */}
           {navCommands.length > 0 && (
             <div className="py-1">
-              <div className="px-4 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
+              <div className="px-4 py-1 text-2xs font-medium uppercase tracking-wider text-basalt-muted-foreground">
                 导航
               </div>
               {navCommands.map((cmd, navIndex) => {
@@ -376,16 +376,16 @@ export function CommandPalette() {
                     className={cn(
                       "flex w-full items-center gap-2 px-4 py-2 text-left transition-colors",
                       index === activeIndex
-                        ? "bg-secondary text-foreground"
-                        : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
+                        ? "bg-basalt-secondary text-basalt-foreground"
+                        : "text-basalt-muted-foreground hover:bg-basalt-secondary/50 hover:text-basalt-foreground",
                     )}
                   >
                     <Icon
-                      className="h-4 w-4 shrink-0 text-muted-foreground"
+                      className="h-4 w-4 shrink-0 text-basalt-muted-foreground"
                       strokeWidth={1.5}
                       aria-hidden="true"
                     />
-                    <span className="flex-1 truncate text-sm text-foreground">
+                    <span className="flex-1 truncate text-sm text-basalt-foreground">
                       {cmd.label}
                     </span>
                   </button>
@@ -397,7 +397,7 @@ export function CommandPalette() {
           {/* Posts section */}
           {posts.length > 0 && (
             <div className="py-1">
-              <div className="px-4 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
+              <div className="px-4 py-1 text-2xs font-medium uppercase tracking-wider text-basalt-muted-foreground">
                 文章
               </div>
               {posts.map((post, postIndex) => {
@@ -411,12 +411,12 @@ export function CommandPalette() {
                     className={cn(
                       "flex w-full flex-col gap-1 px-4 py-2.5 text-left transition-colors",
                       index === activeIndex
-                        ? "bg-secondary text-foreground"
-                        : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
+                        ? "bg-basalt-secondary text-basalt-foreground"
+                        : "text-basalt-muted-foreground hover:bg-basalt-secondary/50 hover:text-basalt-foreground",
                     )}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="flex-1 truncate text-sm font-medium text-foreground">
+                      <span className="flex-1 truncate text-sm font-medium text-basalt-foreground">
                         {post.title}
                       </span>
                       <span
@@ -428,7 +428,7 @@ export function CommandPalette() {
                         {STATUS_LABELS[post.status as PostStatus] ?? post.status}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 text-xs text-basalt-muted-foreground">
                       {post.category_name && (
                         <span className="truncate">{post.category_name}</span>
                       )}
