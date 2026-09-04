@@ -33,7 +33,12 @@ import {
   SidebarSearch,
 } from "@nocoo/basalt";
 import { Button } from "@nocoo/basalt/components/button";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@nocoo/basalt";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "@nocoo/basalt";
 import { Avatar, AvatarFallback, AvatarImage } from "@nocoo/basalt";
 import { useCommandPalette } from "@/components/admin/command-palette";
 import { cn } from "@/lib/utils";
@@ -149,7 +154,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
     <Sidebar collapsed={collapsed}>
       {collapsed ? (
         /* ── Collapsed rail ── */
-        <>
+        <TooltipProvider delayDuration={0}>
           <SidebarHeader className="justify-center px-0">
             <img
               src="/logo-24.png"
@@ -231,7 +236,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
               </TooltipContent>
             </Tooltip>
           </SidebarFooter>
-        </>
+        </TooltipProvider>
       ) : (
         /* ── Expanded rail ── */
         <>

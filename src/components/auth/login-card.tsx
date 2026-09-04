@@ -186,7 +186,7 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
             {/* Footer strip */}
             <div className="mt-auto flex items-center justify-center border-t border-basalt-border bg-basalt-secondary/50 py-2.5">
               <div className="flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 rounded-full bg-basalt-success animate-pulse" />
+                <div className="h-1.5 w-1.5 rounded-full bg-basalt-heatmap-green-3 animate-pulse" />
                 <span className="text-2xs text-basalt-muted-foreground">安全认证</span>
               </div>
             </div>

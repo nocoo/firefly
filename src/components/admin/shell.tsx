@@ -134,22 +134,21 @@ export function AdminShell({ user, children }: AdminShellProps) {
             />
           )}
 
-          {/* Mobile Sheet sidebar */}
-          {isMobile ? (
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              {/* Main column inside Sheet context so SheetTrigger is registered */}
-              <AppMain>
-                <ShellHeader
-                  title={title}
-                  leading={mobileTrigger}
-                />
+          {/* Sheet wraps main column always; SheetTrigger only appears on mobile */}
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <AppMain>
+              <ShellHeader
+                title={title}
+                leading={isMobile ? mobileTrigger : null}
+              />
 
-                {/* Content island */}
-                <div className="flex min-h-0 flex-1 flex-col px-2 pb-2 md:px-3 md:pb-3">
-                  <ContentIsland>{children}</ContentIsland>
-                </div>
-              </AppMain>
+              {/* Content island */}
+              <div className="flex min-h-0 flex-1 flex-col px-2 pb-2 md:px-3 md:pb-3">
+                <ContentIsland>{children}</ContentIsland>
+              </div>
+            </AppMain>
 
+            {isMobile && (
               <SheetContent
                 side="left"
                 className="w-[260px] max-w-[260px] border-0 bg-basalt-background p-0"
@@ -161,21 +160,8 @@ export function AdminShell({ user, children }: AdminShellProps) {
                   user={user}
                 />
               </SheetContent>
-            </Sheet>
-          ) : (
-            /* Main column without Sheet wrapper for desktop */
-            <AppMain>
-              <ShellHeader
-                title={title}
-                leading={null}
-              />
-
-              {/* Content island */}
-              <div className="flex min-h-0 flex-1 flex-col px-2 pb-2 md:px-3 md:pb-3">
-                <ContentIsland>{children}</ContentIsland>
-              </div>
-            </AppMain>
-          )}
+            )}
+          </Sheet>
 
           {/* Global toast notifications */}
           <Toaster />
