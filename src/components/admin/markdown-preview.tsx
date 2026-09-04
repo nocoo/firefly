@@ -20,6 +20,8 @@ import {
   inlineWeChatHtml,
   buildWeChatStructure,
   copyWechatHtmlToClipboard,
+  copyHtmlToClipboard,
+  stripImagesFromHtml,
 } from "@/lib/wechat";
 
 export type DeviceMode = "desktop" | "mobile";
@@ -58,7 +60,8 @@ export function MarkdownPreview({
   const [platformMode, setPlatformMode] = useState<PlatformMode>("web");
 
   // Copy state feedback
-  const [copied, setCopied] = useState(false);
+  const [wechatCopied, setWechatCopied] = useState(false);
+  const [webCopied, setWebCopied] = useState(false);
 
   // Markdown rendering
   const html = useMemo(
@@ -111,9 +114,9 @@ export function MarkdownPreview({
 
     const success = await copyWechatHtmlToClipboard(inlinedHtml);
     if (success) {
-      setCopied(true);
+      setWechatCopied(true);
       toast.success("已复制微信公众号格式到剪贴板，可直接在微信编辑器粘贴");
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setWechatCopied(false), 2000);
     } else {
       toast.error("复制失败，请重试");
     }
@@ -127,6 +130,20 @@ export function MarkdownPreview({
     referenceDescription,
     referenceImage,
   ]);
+
+  const handleCopyWebText = useCallback(async () => {
+    if (!html) return;
+    // Only copy body content, excluding title, excerpt, and images
+    const textOnlyHtml = stripImagesFromHtml(html);
+    const success = await copyHtmlToClipboard(textOnlyHtml);
+    if (success) {
+      setWebCopied(true);
+      toast.success("已复制正文内容（不含标题、摘要及图片）");
+      setTimeout(() => setWebCopied(false), 2000);
+    } else {
+      toast.error("复制失败，请重试");
+    }
+  }, [html]);
 
   const isEmpty =
     !title && !excerpt && !content && !featuredImage && !referenceUrl;
@@ -202,22 +219,39 @@ export function MarkdownPreview({
           </div>
         </div>
 
-        {/* Right: Actions (Copy WeChat format + Light/Dark toggle) */}
+        {/* Right: Actions (Copy format + Light/Dark toggle) */}
         <div className="flex items-center gap-1.5">
           {platformMode === "wechat" && (
             <button
               type="button"
               onClick={handleCopyWeChat}
               disabled={isEmpty}
-              title="复制微信公众号排版到剪贴板"
+              title="复制微信公众号排版到剪贴板（不含标题与摘要，含图片）"
               className="inline-flex items-center gap-1.5 rounded-md border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {copied ? (
+              {wechatCopied ? (
                 <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
               ) : (
                 <Copy className="h-3.5 w-3.5" />
               )}
-              <span>{copied ? "已复制" : "复制公众号格式"}</span>
+              <span>{wechatCopied ? "已复制" : "复制公众号格式"}</span>
+            </button>
+          )}
+
+          {platformMode === "web" && (
+            <button
+              type="button"
+              onClick={handleCopyWebText}
+              disabled={!content}
+              title="复制正文内容（不含标题、摘要及图片）"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {webCopied ? (
+                <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+              <span>{webCopied ? "已复制正文" : "复制正文"}</span>
             </button>
           )}
 

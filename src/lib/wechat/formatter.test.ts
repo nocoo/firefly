@@ -5,7 +5,7 @@ import {
   buildWeChatStructure,
   inlineWeChatHtml,
 } from "./formatter";
-import { extractPlainText } from "./clipboard";
+import { extractPlainText, stripImagesFromHtml } from "./clipboard";
 
 describe("WeChat Formatter", () => {
   describe("convertLinksToFootnotes", () => {
@@ -64,7 +64,7 @@ describe("WeChat Formatter", () => {
       expect(result).toBe("");
     });
 
-    it("includes title, excerpt, featured image, and reference card when provided", () => {
+    it("excludes title and excerpt by default for WeChat (only includes cover, content, reference)", () => {
       const content = "<p>Main post content</p>";
       const meta = {
         title: "Test Title",
@@ -78,14 +78,27 @@ describe("WeChat Formatter", () => {
 
       const result = buildWeChatStructure(content, meta);
       expect(result).toContain('<div class="wechat-featured-image">');
-      expect(result).toContain('<h1 class="wechat-post-title">Test Title</h1>');
-      expect(result).toContain('<div class="wechat-post-excerpt">Brief summary of the article</div>');
+      expect(result).not.toContain("wechat-post-title");
+      expect(result).not.toContain("wechat-post-excerpt");
       expect(result).toContain('<div class="wechat-reference-card">');
       expect(result).toContain('<div class="wechat-reference-img">');
       expect(result).toContain("https://example.com/ref.jpg");
       expect(result).toContain("Source Website");
       expect(result).toContain("Ref description");
       expect(result).toContain("<p>Main post content</p>");
+    });
+
+    it("includes title and excerpt when includeHeaderMeta is true", () => {
+      const content = "<p>Main post content</p>";
+      const meta = {
+        title: "Test Title",
+        excerpt: "Brief summary of the article",
+        featuredImage: "https://example.com/cover.jpg",
+      };
+      const result = buildWeChatStructure(content, meta, { includeHeaderMeta: true });
+      expect(result).toContain('<h1 class="wechat-post-title">Test Title</h1>');
+      expect(result).toContain('<div class="wechat-post-excerpt">Brief summary of the article</div>');
+      expect(result).toContain("wechat-featured-image");
     });
 
     it("handles reference card without optional description or image", () => {
@@ -109,7 +122,7 @@ describe("WeChat Formatter", () => {
         referenceDescription: 'Desc with <iframe src="">',
       };
 
-      const result = buildWeChatStructure(content, maliciousMeta);
+      const result = buildWeChatStructure(content, maliciousMeta, { includeHeaderMeta: true });
       expect(result).not.toContain('<img src=x');
       expect(result).toContain('&lt;img src=x onerror=&quot;alert(1)&quot;&gt;');
       expect(result).not.toContain('<script>');
@@ -121,7 +134,7 @@ describe("WeChat Formatter", () => {
   describe("inlineWeChatHtml", () => {
     it("inlines styles directly on HTML elements using juice", () => {
       const rawHtml = "<h2>Section Title</h2><p>Paragraph with <strong>bold</strong> text.</p>";
-      const inlined = inlineWeChatHtml(rawHtml, { title: "My Article" });
+      const inlined = inlineWeChatHtml(rawHtml, { title: "My Article" }, { includeHeaderMeta: true });
 
       expect(inlined).toContain('style="');
       // Should have applied styles inline to headers and paragraphs
@@ -149,6 +162,18 @@ describe("WeChat Formatter", () => {
       expect(plain).toContain("One");
       expect(plain).toContain("Two");
       expect(plain).not.toContain("TitleFirst");
+    });
+  });
+
+  describe("stripImagesFromHtml", () => {
+    it("removes img, picture, and figure elements from HTML", () => {
+      const html = "<p>Intro</p><figure><img src='pic.jpg' /><figcaption>Cap</figcaption></figure><p>Text <img src='icon.png'/> more</p>";
+      const stripped = stripImagesFromHtml(html);
+      expect(stripped).not.toContain("pic.jpg");
+      expect(stripped).not.toContain("icon.png");
+      expect(stripped).not.toContain("<figure");
+      expect(stripped).toContain("<p>Intro</p>");
+      expect(stripped).toContain("<p>Text  more</p>");
     });
   });
 });

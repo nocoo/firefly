@@ -13,6 +13,7 @@ export interface WeChatPostMetadata {
 
 export interface ConvertWechatOptions {
   referenceTitle?: string | undefined;
+  includeHeaderMeta?: boolean | undefined;
 }
 
 interface FootnoteLink {
@@ -132,6 +133,7 @@ export function buildWeChatStructure(
   options?: ConvertWechatOptions,
 ): string {
   const parts: string[] = [];
+  const includeHeader = options?.includeHeaderMeta ?? false;
 
   if (meta?.featuredImage) {
     parts.push(
@@ -139,11 +141,11 @@ export function buildWeChatStructure(
     );
   }
 
-  if (meta?.title) {
+  if (includeHeader && meta?.title) {
     parts.push(`<h1 class="wechat-post-title">${escapeHtml(meta.title)}</h1>`);
   }
 
-  if (meta?.excerpt) {
+  if (includeHeader && meta?.excerpt) {
     parts.push(
       `<div class="wechat-post-excerpt">${escapeHtml(meta.excerpt)}</div>`,
     );

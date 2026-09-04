@@ -115,6 +115,53 @@ export function copyViaExecCommand(html: string): boolean {
   }
 }
 
+/**
+ * Remove images, pictures and figures from HTML for clean text-only copying.
+ */
+export function stripImagesFromHtml(html: string): string {
+  if (typeof document !== "undefined") {
+    const temp = document.createElement("div");
+    temp.innerHTML = html;
+    const images = temp.querySelectorAll("img, picture, figure");
+    for (const el of Array.from(images)) {
+      el.remove();
+    }
+    return temp.innerHTML;
+  }
+  return html
+    .replace(/<figure\b[^>]*>[\s\S]*?<\/figure>/gi, "")
+    .replace(/<picture\b[^>]*>[\s\S]*?<\/picture>/gi, "")
+    .replace(/<img\b[^>]*\/?>/gi, "");
+}
+
+/**
+ * Copy rich HTML content (with fallback plain text) to clipboard.
+ */
+export async function copyHtmlToClipboard(html: string): Promise<boolean> {
+  const plainText = extractPlainText(html);
+
+  if (
+    typeof navigator !== "undefined" &&
+    navigator.clipboard &&
+    typeof ClipboardItem !== "undefined"
+  ) {
+    try {
+      const htmlBlob = new Blob([html], { type: "text/html" });
+      const textBlob = new Blob([plainText], { type: "text/plain" });
+      const item = new ClipboardItem({
+        "text/html": htmlBlob,
+        "text/plain": textBlob,
+      });
+      await navigator.clipboard.write([item]);
+      return true;
+    } catch (err) {
+      console.warn("navigator.clipboard.write failed, falling back to execCommand:", err);
+    }
+  }
+
+  return copyViaExecCommand(html);
+}
+
 export async function copyWechatHtmlToClipboard(html: string): Promise<boolean> {
   const plainText = extractPlainText(html);
 
