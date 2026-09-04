@@ -63,7 +63,7 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-background overflow-hidden">
+    <div className="relative flex min-h-screen flex-col bg-basalt-background overflow-hidden">
       <div className="flex flex-1 items-center justify-center p-4">
         {/* Radial glow */}
         <div
@@ -71,14 +71,14 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
           style={{
             background: [
               "radial-gradient(ellipse 70% 55% at 50% 50%,",
-              "hsl(var(--foreground) / 0.045) 0%,",
-              "hsl(var(--foreground) / 0.042) 10%,",
-              "hsl(var(--foreground) / 0.036) 20%,",
-              "hsl(var(--foreground) / 0.028) 32%,",
-              "hsl(var(--foreground) / 0.020) 45%,",
-              "hsl(var(--foreground) / 0.012) 58%,",
-              "hsl(var(--foreground) / 0.006) 72%,",
-              "hsl(var(--foreground) / 0.002) 86%,",
+              "hsl(var(--basalt-foreground) / 0.045) 0%,",
+              "hsl(var(--basalt-foreground) / 0.042) 10%,",
+              "hsl(var(--basalt-foreground) / 0.036) 20%,",
+              "hsl(var(--basalt-foreground) / 0.028) 32%,",
+              "hsl(var(--basalt-foreground) / 0.020) 45%,",
+              "hsl(var(--basalt-foreground) / 0.012) 58%,",
+              "hsl(var(--basalt-foreground) / 0.006) 72%,",
+              "hsl(var(--basalt-foreground) / 0.002) 86%,",
               "transparent 100%)",
             ].join(" "),
           }}
@@ -91,7 +91,7 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="GitHub repository"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-basalt-muted-foreground hover:text-basalt-foreground hover:bg-basalt-accent transition-colors"
           >
             <Github className="h-[18px] w-[18px]" aria-hidden="true" strokeWidth={1.5} />
           </a>
@@ -101,7 +101,8 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
         <div className="flex flex-col items-center">
           {/* Badge card */}
           <div
-            className="relative w-72 aspect-[54/86] overflow-hidden rounded-2xl bg-card flex flex-col ring-1 ring-black/[0.08] dark:ring-white/[0.06]"
+            data-basalt-surface-root=""
+            className="relative w-72 aspect-[54/86] overflow-hidden rounded-2xl bg-basalt-card flex flex-col ring-1 ring-black/[0.08] dark:ring-white/[0.06]"
             style={{
               boxShadow: [
                 "0 1px 2px rgba(0,0,0,0.06)",
@@ -114,26 +115,26 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
             }}
           >
             {/* Header strip with barcode */}
-            <div className="bg-primary px-5 py-4">
+            <div className="bg-basalt-primary px-5 py-4">
               <div className="flex items-center justify-between">
                 {/* Punch hole */}
                 <div
-                  className="h-4 w-8 rounded-full bg-background/80"
+                  className="h-4 w-8 rounded-full bg-basalt-background/80"
                   style={{
                     boxShadow: "inset 0 1.5px 3px rgba(0,0,0,0.35), inset 0 -0.5px 1px rgba(255,255,255,0.1)",
                   }}
                 />
                 <div className="flex items-center gap-2">
                   <img src="/logo-24.png" alt="Firefly" width={24} height={24} className="h-5 w-5" />
-                  <span className="text-sm font-semibold text-primary-foreground">Firefly</span>
+                  <span className="text-sm font-semibold text-basalt-primary-foreground">Firefly</span>
                 </div>
-                <span className="text-2xs font-medium uppercase tracking-widest text-primary-foreground/60">
+                <span className="text-2xs font-medium uppercase tracking-widest text-basalt-primary-foreground/60">
                   BLOG
                 </span>
               </div>
               {/* Barcode row */}
               <div className="mt-3 flex items-center justify-between">
-                <span className="text-3xs font-mono text-primary-foreground/40 tracking-wider">
+                <span className="text-3xs font-mono text-basalt-primary-foreground/40 tracking-wider">
                   ID {year}-{today.slice(4)}
                 </span>
                 <div className="h-6">
@@ -145,16 +146,16 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
             {/* Badge content */}
             <div className="flex flex-1 flex-col items-center px-6 pt-6 pb-5">
               {/* Avatar placeholder */}
-              <div className="h-24 w-24 overflow-hidden rounded-full bg-secondary dark:bg-background ring-1 ring-border">
+              <div className="h-24 w-24 overflow-hidden rounded-full bg-basalt-secondary dark:bg-basalt-background ring-1 ring-basalt-border">
                 <img src={logoUrl ?? "/logo-80.png"} alt="Firefly" width={96} height={96} className="h-full w-full object-cover" />
               </div>
 
-              <p className="mt-5 text-lg font-semibold text-foreground">欢迎回来</p>
-              <p className="mt-1 text-xs text-muted-foreground">登录以管理您的博客</p>
+              <p className="mt-5 text-lg font-semibold text-basalt-foreground">欢迎回来</p>
+              <p className="mt-1 text-xs text-basalt-muted-foreground">登录以管理您的博客</p>
 
               {/* Error message */}
               {error && (
-                <div className="mt-3 w-full rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive text-center">
+                <div className="mt-3 w-full rounded-lg bg-basalt-destructive/10 px-3 py-2 text-xs text-basalt-destructive text-center">
                   {error === "AccessDenied"
                     ? "您的账户未被授权访问此应用程序。"
                     : "登录失败，请重试。"}
@@ -162,7 +163,7 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
               )}
 
               {/* Divider */}
-              <div className="mt-5 h-px w-full bg-border" />
+              <div className="mt-5 h-px w-full bg-basalt-border" />
 
               {/* Spacing before action area */}
               <div className="mt-5" />
@@ -170,23 +171,23 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
               {/* Google Sign-in button */}
               <button type="button"
                 onClick={handleGoogleLogin}
-                className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-secondary px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-accent cursor-pointer"
+                className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-basalt-secondary px-4 py-3 text-sm font-medium text-basalt-foreground transition-colors hover:bg-basalt-accent cursor-pointer"
               >
                 <GoogleIcon />
                 使用 Google 登录
               </button>
 
               {/* Terms */}
-              <p className="mt-3 text-center text-2xs leading-relaxed text-muted-foreground/60">
+              <p className="mt-3 text-center text-2xs leading-relaxed text-basalt-muted-foreground/60">
                 仅限管理员 · 授权邮箱
               </p>
             </div>
 
             {/* Footer strip */}
-            <div className="mt-auto flex items-center justify-center border-t border-border bg-secondary/50 py-2.5">
+            <div className="mt-auto flex items-center justify-center border-t border-basalt-border bg-basalt-secondary/50 py-2.5">
               <div className="flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                <span className="text-2xs text-muted-foreground">安全认证</span>
+                <div className="h-1.5 w-1.5 rounded-full bg-basalt-info animate-pulse" />
+                <span className="text-2xs text-basalt-muted-foreground">安全认证</span>
               </div>
             </div>
           </div>
@@ -195,13 +196,13 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
 
       {/* Page footer */}
       <footer className="py-4 text-center">
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-basalt-muted-foreground">
           由{" "}
           <a
             href="https://github.com/nocoo/firefly"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary hover:text-primary/80 transition-colors"
+            className="text-basalt-primary hover:text-basalt-primary/80 transition-colors"
           >
             Firefly
           </a>
