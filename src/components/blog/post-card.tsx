@@ -28,9 +28,9 @@ export function PostCard({ post, author, priority, snippet }: PostCardProps) {
     : "草稿";
 
   return (
-    <article className="blog-entry">
+    <article className={`blog-entry${priority ? " blog-entry-featured" : ""}`}>
       {/* Post title */}
-      <h2 className="text-lg font-semibold leading-snug tracking-tight md:text-xl">
+      <h2 className="blog-entry-title text-lg font-semibold leading-snug tracking-tight md:text-xl">
         <Link
           href={href}
           prefetch={false}
@@ -79,7 +79,7 @@ export function PostCard({ post, author, priority, snippet }: PostCardProps) {
               src={post.featured_image}
               alt={post.title}
               fill
-              sizes={FEATURED_IMAGE_SIZES}
+              sizes={priority ? FEATURED_IMAGE_SIZES : "(max-width: 480px) 100px, (max-width: 1100px) 156px, 224px"}
               priority={priority ?? false}
               {...(priority ? { fetchPriority: "high" as const } : {})}
             />
@@ -91,11 +91,11 @@ export function PostCard({ post, author, priority, snippet }: PostCardProps) {
       {(snippet || post.excerpt) &&
         (snippet ? (
           <p
-            className="mt-3 text-base leading-relaxed text-blog-text"
+            className="blog-entry-excerpt mt-3 text-base leading-relaxed text-blog-text"
             dangerouslySetInnerHTML={{ __html: sanitizeSnippet(snippet) }}
           />
         ) : (
-          <p className="mt-3 text-base leading-relaxed text-blog-text">
+          <p className="blog-entry-excerpt mt-3 text-base leading-relaxed text-blog-text">
             {post.excerpt}
           </p>
         ))}

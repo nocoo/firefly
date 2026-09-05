@@ -150,12 +150,13 @@ export default async function PostPage({ params }: PostPageProps) {
         dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd(breadcrumbs) }}
       />
 
-      <div className="flex gap-8">
+      <div className="journal-article-layout flex gap-8">
         <div className="flex-1 min-w-0">
           <ArticleBody
             html={html}
             header={
-              <header>
+              <header className="journal-article-header">
+            <p className="journal-eyebrow" lang="en"><span /> THE JOURNAL / FIELD NOTES</p>
             <h1 className="text-2xl font-bold leading-tight text-blog-text md:text-3xl">
               {post.title}
             </h1>

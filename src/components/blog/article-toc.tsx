@@ -7,46 +7,47 @@ interface ArticleTocProps {
   entries: TocEntry[];
 }
 
-/**
- * Sticky right-rail table of contents for long blog posts.
- *
- * Server component extracts headings via `extractToc(markdown)`. Client side
- * uses an IntersectionObserver to highlight whichever heading is currently
- * in the upper half of the viewport — same pattern as Vercel docs / Stripe
- * docs, well understood by readers.
- *
- * Hidden on small screens (mobile readers don't have the screen width); on
- * lg+ it lives in a flex sidebar at the right of the article column. Hidden
- * outright when fewer than 3 entries — TOCs only earn their space at length.
- */
+/** Sticky, native-link navigation for long public articles. */
 export function ArticleToc({ entries }: ArticleTocProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (entries.length === 0) return;
+    if (entries.length < 3) return;
     const ids = entries.map((e) => e.id);
     const headings = ids
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null);
     if (headings.length === 0) return;
 
-    // rootMargin: top -40% / bottom -55% keeps the active region at roughly
-    // the upper-third of the viewport. Heading enters → becomes active when
-    // its top crosses that band; out → next heading takes over.
-    const observer = new IntersectionObserver(
-      (entriesIO) => {
-        // Pick the heading that's currently intersecting and closest to the top.
-        const visible = entriesIO
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible.length > 0) {
-          setActiveId(visible[0].target.id);
-        }
-      },
-      { rootMargin: "-40% 0% -55% 0%", threshold: 0 },
-    );
-    for (const h of headings) observer.observe(h);
-    return () => observer.disconnect();
+    const topbar = document.querySelector(".blog-topbar");
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      // Match the heading's scroll margin, with a little tolerance. Reading
+      // position must survive fast jumps and upward scrolling between headings.
+      const boundary = (topbar?.getBoundingClientRect().bottom ?? 0) + 48;
+      let current = headings[0].id;
+      for (const heading of headings) {
+        if (heading.getBoundingClientRect().top > boundary) break;
+        current = heading.id;
+      }
+      setActiveId(current);
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    const resizeObserver = new ResizeObserver(schedule);
+    const article = headings[0].closest("article");
+    if (article) resizeObserver.observe(article);
+    schedule();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      resizeObserver.disconnect();
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
   }, [entries]);
 
   if (entries.length < 3) return null;
@@ -61,7 +62,7 @@ export function ArticleToc({ entries }: ArticleTocProps) {
             data-depth={e.depth}
             data-active={e.id === activeId || undefined}
           >
-            <a href={`#${e.id}`}>{e.text}</a>
+            <a href={`#${e.id}`} aria-current={e.id === activeId ? "location" : undefined}>{e.text}</a>
           </li>
         ))}
       </ul>

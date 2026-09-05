@@ -38,6 +38,7 @@ export function SearchInput() {
         ref={inputRef}
         name="q"
         type="search"
+        aria-label="搜索文章"
         placeholder="搜索..."
         className="blog-search-input"
       />

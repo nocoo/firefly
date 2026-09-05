@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
  * (decorative chrome, not essential to comprehension).
  *
  * Implemented as a fixed 2px bar along the bottom edge of the topbar,
- * in white so it reads against the accent header.
+ * using the public theme accent.
  */
 export function ReadingProgress() {
   const [pct, setPct] = useState(0);
@@ -56,7 +56,7 @@ export function ReadingProgress() {
         className="h-full origin-left"
         style={{
           width: `${pct}%`,
-          background: "rgba(255, 255, 255, 0.85)",
+          background: "var(--blog-accent)",
         }}
       />
     </div>

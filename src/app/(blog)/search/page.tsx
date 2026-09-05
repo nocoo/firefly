@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
 import { searchPosts } from "@/data/entities/post";
+import { ListPageHeader } from "@/components/blog/list-page-header";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { EmptyState } from "@/components/blog/empty-state";
@@ -19,10 +20,19 @@ export default async function SearchPage({
   searchParams: Promise<{ q?: string; page?: string }>;
 }) {
   const { q, page } = await searchParams;
+  const searchForm = (
+    <form action="/search" method="get" className="journal-search-form" role="search" aria-label="站内文章">
+      <Search aria-hidden="true" strokeWidth={1.5} />
+      <input name="q" type="search" defaultValue={q ?? ""} aria-label="关键词" placeholder="想读点什么？" />
+      <button type="submit">搜索 <span aria-hidden="true">↗</span></button>
+    </form>
+  );
 
   if (!q?.trim()) {
     return (
       <div className="blog-search-results">
+        <ListPageHeader title="搜索" />
+        {searchForm}
         <EmptyState
           icon={Search}
           message="输入关键词搜索文章。"
@@ -46,9 +56,8 @@ export default async function SearchPage({
 
   return (
     <div className="blog-search-results">
-      <h1>
-        {`搜索 "${q}" 共 ${result.total} 条结果`}
-      </h1>
+      <ListPageHeader title={`搜索 "${q}" 共 ${result.total} 条结果`} />
+      {searchForm}
 
       {result.posts.length === 0 ? (
         <EmptyState

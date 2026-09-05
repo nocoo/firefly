@@ -15,7 +15,8 @@ interface ListPageHeaderProps {
  */
 export function ListPageHeader({ title, description }: ListPageHeaderProps) {
   return (
-    <header className="mb-8">
+    <header className="journal-list-header mb-8">
+      <p className="journal-eyebrow" lang="en"><span /> FROM THE COLLECTION</p>
       <h1 className="text-2xl font-bold leading-tight text-blog-text md:text-3xl">
         {title}
       </h1>

@@ -11,6 +11,7 @@ import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
 import { EmptyState } from "@/components/blog/empty-state";
 import { FileText } from "lucide-react";
 import { getPostAuthor } from "@/lib/ai-agent/author";
+import { JournalIntro } from "@/components/blog/journal-intro";
 
 export async function generateMetadata(): Promise<Metadata> {
   const db = getDb();
@@ -83,7 +84,8 @@ export default async function Home() {
         }}
       />
 
-      <section>
+      <JournalIntro siteName={settings.siteName} tagline={settings.siteTagline} total={total} />
+      <section className="journal-posts" aria-label="最近文章">
         {posts.length === 0 ? (
           <EmptyState icon={FileText} message="暂无文章。" />
         ) : (

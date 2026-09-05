@@ -128,7 +128,7 @@ export function ArticleNav({
   }, [prevHref, nextHref, back.href, router]);
 
   return (
-    <nav className="mt-10 border-t border-blog-separator pt-6">
+    <nav className="article-nav mt-10 border-t border-blog-separator pt-6" aria-label="文章导航">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {/* Left: back to list */}
         <Link

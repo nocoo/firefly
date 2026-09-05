@@ -1,4 +1,7 @@
 import Link from "next/link";
+import "./(blog)/journal.css";
+import { JournalBrand } from "@/components/blog/journal-brand";
+import { JournalThemeColor } from "@/components/blog/journal-theme-color";
 import { getDb } from "@/lib/db";
 import { getSiteSettings } from "@/data/settings";
 import { listPosts } from "@/data/entities/post";
@@ -17,7 +20,11 @@ export default async function NotFound() {
   const recent = listing.posts;
 
   return (
-    <div className="blog-shell">
+    <div className="blog-shell journal-theme">
+      <JournalThemeColor />
+      <header className="blog-topbar">
+        <div className="blog-topbar-inner"><JournalBrand siteName={settings.siteName} /></div>
+      </header>
       <div className="page-wrapper">
         <main id="main" className="blog-main">
           <div className="blog-main-inner blog-main-inner-post">

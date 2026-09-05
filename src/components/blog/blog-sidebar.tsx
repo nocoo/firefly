@@ -61,9 +61,10 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
     >
       {/* top-left: identity (lizheng pattern) */}
       <div className="blog-sidebar-top">
-        <h1 className="blog-site-title">
+        <p className="journal-eyebrow" lang="en"><span /> THE COLLECTION</p>
+        <p className="blog-site-title">
           <Link href="/" prefetch={false}>{siteName}</Link>
-        </h1>
+        </p>
         {siteTagline && <p className="blog-tagline">{siteTagline}</p>}
 
         {socialLinks.length > 0 && (

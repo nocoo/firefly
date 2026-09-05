@@ -6,6 +6,17 @@ import { getSiteSettings } from "@/data/settings";
 import { isAdminSession } from "@/lib/auth";
 import { BlogLayoutClient } from "@/components/blog/blog-layout-client";
 import { BlogFooter } from "@/components/blog/blog-footer";
+import { JournalThemeColor } from "@/components/blog/journal-theme-color";
+import type { Metadata, Viewport } from "next";
+import "./journal.css";
+
+export const metadata: Metadata = { icons: { icon: "/journal-icon.svg" } };
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f0f0e9" },
+    { media: "(prefers-color-scheme: dark)", color: "#1e2824" },
+  ],
+};
 
 export default async function BlogLayout({
   children,
@@ -26,12 +37,13 @@ export default async function BlogLayout({
   const activeTags = tags.filter((t) => t.post_count > 0);
 
   return (
-    <div className="blog-shell">
+    <div className="blog-shell journal-theme">
+      <JournalThemeColor />
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-blog-bg focus:px-4 focus:py-2 focus:text-blog-text"
+        className="journal-skip-link"
       >
-        Skip to content
+        跳到正文
       </a>
       <BlogLayoutClient
         categories={activeCategories}

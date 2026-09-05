@@ -63,6 +63,7 @@ export function ArchiveHeatmap({ archives, year }: ArchiveHeatmapProps) {
                     <span
                       key={m}
                       className="archive-heatmap-cell archive-heatmap-cell-empty"
+                      role="img"
                       title={label}
                       aria-label={label}
                     />

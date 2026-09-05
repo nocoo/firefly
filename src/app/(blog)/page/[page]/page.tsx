@@ -8,6 +8,7 @@ import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
 import { buildPageMeta, SITE_URL, postPath } from "@/lib/seo";
 import { collectionPageJsonLd } from "@/lib/jsonld";
+import { ListPageHeader } from "@/components/blog/list-page-header";
 import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
 import { EmptyState } from "@/components/blog/empty-state";
 import { FileText } from "lucide-react";
@@ -64,7 +65,8 @@ export default async function HomePaged({ params }: PageProps) {
         }}
       />
 
-      <section>
+      <ListPageHeader title={`文章 · 第 ${page} 页`} description={`共 ${total} 篇文章`} />
+      <section aria-label="文章列表">
         {posts.length === 0 ? (
           <EmptyState icon={FileText} message="暂无文章。" />
         ) : (

@@ -2,85 +2,53 @@
 
 import Link from "next/link";
 import { ArrowUp } from "lucide-react";
-import { t } from "@/lib/i18n";
+import { JournalBrand } from "./journal-brand";
 
-interface BlogFooterProps {
-  siteName: string;
-}
-
-interface FooterLink {
-  label: string;
-  href: string;
-  external?: boolean;
-}
-
-interface FooterColumn {
-  heading: string;
-  links: FooterLink[];
-}
-
-const COLUMNS: FooterColumn[] = [
-  {
-    heading: t("footer.column.content"),
-    links: [
-      { label: t("footer.link.home"), href: "/" },
-      { label: t("footer.link.search"), href: "/search" },
-    ],
-  },
-  {
-    heading: t("footer.column.resources"),
-    links: [
-      { label: t("footer.link.rss"), href: "/feed.xml" },
-      { label: "站点地图", href: "/sitemap.xml" },
-      { label: "llms.txt", href: "/llms.txt" },
-    ],
-  },
+const COLUMNS = [
+  { heading: "THE JOURNAL", links: [
+    { label: "最近文章", href: "/" },
+    { label: "文章归档", href: "/archive" },
+    { label: "搜索", href: "/search" },
+  ] },
+  { heading: "ELSEWHERE", links: [
+    { label: "Play ↗", href: "https://lizheng.me/" },
+    { label: "Résumé ↗", href: "https://lizheng.dev/" },
+  ] },
+  { heading: "KEEP IN TOUCH", links: [
+    { label: "RSS", href: "/feed.xml" },
+    { label: "站点地图", href: "/sitemap.xml" },
+    { label: "llms.txt", href: "/llms.txt" },
+  ] },
 ];
 
-export function BlogFooter({ siteName }: BlogFooterProps) {
-  const year = new Date().getFullYear();
-
+export function BlogFooter({ siteName }: { siteName: string }) {
   return (
-    <footer className="zed-footer" aria-label="Site footer">
-      <div className="zed-footer-cols">
-        {/* col 1: brand */}
-        <div className="zed-footer-col">
-          <p className="zed-footer-heading">{siteName}</p>
-          <p className="zed-footer-copyright">© {year}</p>
-          <button
-            type="button"
-            onClick={() => {
-              const prefersReduced = window.matchMedia(
-                "(prefers-reduced-motion: reduce)",
-              ).matches;
-              window.scrollTo({
-                top: 0,
-                behavior: prefersReduced ? "auto" : "smooth",
-              });
-            }}
-            className="zed-footer-back-to-top"
-            aria-label={t("footer.back-to-top")}
-          >
-            <ArrowUp className="h-3 w-3" strokeWidth={1.5} />
-            {t("footer.back-to-top")}
-          </button>
+    <footer className="journal-footer" aria-label="Site footer">
+      <div className="journal-footer-top">
+        <div lang="en">
+          <p className="journal-eyebrow"><span /> THE STORY CONTINUES</p>
+          <h2>Always another chapter<span>.</span></h2>
         </div>
-
-        {/* cols 2-5: link groups */}
-        {COLUMNS.map((col) => (
-          <div className="zed-footer-col" key={col.heading}>
-            <p className="zed-footer-heading">{col.heading}</p>
-            <ul className="zed-footer-list">
-              {col.links.map((link) => (
+        <a className="journal-footer-play" href="https://lizheng.me/" lang="en">
+          Play a little <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+      <div className="journal-footer-body">
+        <div className="journal-footer-identity">
+          <JournalBrand siteName={siteName} />
+          <p lang="en">© {new Date().getFullYear()} {siteName}</p>
+          <small className="journal-footer-version">v{process.env.NEXT_PUBLIC_APP_VERSION}</small>
+        </div>
+        {COLUMNS.map((column) => (
+          <div key={column.heading}>
+            <p className="journal-footer-heading" lang="en">{column.heading}</p>
+            <ul className="journal-footer-list">
+              {column.links.map((link) => (
                 <li key={link.href}>
-                  {link.external ? (
-                    <a href={link.href} target="_blank" rel="noopener noreferrer">
-                      {link.label}
-                    </a>
+                  {link.href.startsWith("https:") || /\.(xml|txt)$/.test(link.href) ? (
+                    <a href={link.href}>{link.label}</a>
                   ) : (
-                    <Link href={link.href} prefetch={false}>
-                      {link.label}
-                    </Link>
+                    <Link href={link.href} prefetch={false}>{link.label}</Link>
                   )}
                 </li>
               ))}
@@ -88,10 +56,19 @@ export function BlogFooter({ siteName }: BlogFooterProps) {
           </div>
         ))}
       </div>
-
-      {/* hatching watermark band */}
-      <div className="zed-footer-watermark" aria-hidden="true">
-        <span className="zed-footer-watermark-text">{siteName}</span>
+      <div className="journal-footer-bottom">
+        <span className="journal-location" lang="en"><i aria-hidden="true" /> MADE IN BEIJING</span>
+        <span lang="en">BUILT WITH CURIOSITY.</span>
+        <button
+          type="button"
+          className="journal-back-top"
+          onClick={() => window.scrollTo({
+            top: 0,
+            behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+          })}
+        >
+          返回顶部 <ArrowUp aria-hidden="true" strokeWidth={1.5} />
+        </button>
       </div>
     </footer>
   );
