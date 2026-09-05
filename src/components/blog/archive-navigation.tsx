@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Archive, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import type { MonthlyArchive } from "@/data/entities/post";
 
 interface ArchiveEntry {
@@ -46,8 +46,8 @@ export function ArchiveNavigation({ archives }: { archives: MonthlyArchive[] }) 
 
   return (
     <nav className="blog-sidebar-section" aria-labelledby="blog-archive-heading">
-      <h3 id="blog-archive-heading" className="blog-sidebar-heading">
-        <Archive className="blog-sidebar-heading-icon" strokeWidth={1.5} aria-hidden="true" />
+      <h3 id="blog-archive-heading" className="journal-eyebrow">
+        <span aria-hidden="true" />
         归档
       </h3>
       <ArchiveLinks entries={visible} />

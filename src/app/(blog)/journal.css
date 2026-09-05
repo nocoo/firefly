@@ -125,8 +125,9 @@
     font: 9px / 1.6 var(--ff-mono); letter-spacing: 0.075em; color: var(--blog-muted); margin: 0 0 20px;
   }
   .journal-eyebrow > span { width: 5px; height: 5px; flex: 0 0 5px; background: var(--journal-orange); }
+  .blog-sidebar .journal-eyebrow { margin-bottom: 16px; }
+  h3.journal-eyebrow { font-size: 11px; }
   .journal-connect { margin: 0 0 28px; padding-bottom: 28px; border-bottom: 1px solid var(--blog-separator); }
-  .journal-connect-label { display: block; margin-bottom: 16px; color: var(--blog-muted); font: 9px / 1.5 var(--ff-mono); letter-spacing: 0.09em; }
   .journal-social-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; list-style: none; margin: 0; padding: 0; }
   .journal-social-list li { min-width: 0; max-width: 100%; }
   .journal-social-list li:last-child:nth-child(odd) { grid-column: 1 / -1; }

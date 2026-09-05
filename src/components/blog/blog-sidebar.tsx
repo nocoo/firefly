@@ -1,6 +1,5 @@
 import { forwardRef } from "react";
 import Link from "next/link";
-import { Folder, Tags } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/entities/post";
 import { SearchInput } from "./search-input";
@@ -41,13 +40,13 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
     >
       <JournalSocialLinks links={socialLinks} />
       <div className="blog-sidebar-bottom">
-        <p className="journal-eyebrow" lang="en"><span /> THE COLLECTION</p>
+        <p className="journal-eyebrow" lang="en"><span aria-hidden="true" /> THE COLLECTION</p>
         <SearchInput />
 
         {categories.length > 0 && (
           <nav className="blog-sidebar-section">
-            <h3 className="blog-sidebar-heading">
-              <Folder className="blog-sidebar-heading-icon" strokeWidth={1.5} />
+            <h3 className="journal-eyebrow">
+              <span aria-hidden="true" />
               分类
             </h3>
             <ul className="blog-sidebar-list">
@@ -65,8 +64,8 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
 
         {tags.length > 0 && (
           <nav className="blog-sidebar-section">
-            <h3 className="blog-sidebar-heading">
-              <Tags className="blog-sidebar-heading-icon" strokeWidth={1.5} />
+            <h3 className="journal-eyebrow">
+              <span aria-hidden="true" />
               标签
             </h3>
             <div className="blog-tag-cloud">

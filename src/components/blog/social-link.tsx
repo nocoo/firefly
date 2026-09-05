@@ -40,7 +40,7 @@ export function JournalSocialLinks({ links }: { links: SocialLinkData[] }) {
   if (links.length === 0) return null;
   return (
     <nav className="journal-connect" aria-label="社交网络">
-      <span className="journal-connect-label" lang="en">ELSEWHERE</span>
+      <p className="journal-eyebrow" lang="en"><span aria-hidden="true" /> ELSEWHERE</p>
       <ul className="journal-social-list">
         {links.map((link) => <li key={link.url}><SocialLink {...link} /></li>)}
       </ul>
