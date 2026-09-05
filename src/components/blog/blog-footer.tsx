@@ -30,6 +30,7 @@ export function BlogFooter({ siteName }: { siteName: string }) {
           <h2>Always another chapter<span>.</span></h2>
         </div>
         <a className="journal-footer-play" href="https://lizheng.me/" lang="en">
+          <img src="/journal-capsule.svg" width={24} height={27} alt="" aria-hidden="true" />
           Play a little <span aria-hidden="true">↗</span>
         </a>
       </div>

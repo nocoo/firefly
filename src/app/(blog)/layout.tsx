@@ -50,7 +50,6 @@ export default async function BlogLayout({
         tags={activeTags}
         archives={archives}
         siteName={settings.siteName}
-        siteTagline={settings.siteTagline}
         socialLinks={settings.socialLinks}
         isAdmin={isAdmin}
       >

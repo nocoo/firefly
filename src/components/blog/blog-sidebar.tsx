@@ -1,44 +1,24 @@
 import { forwardRef } from "react";
 import Link from "next/link";
-import { Mail, FileUser, Folder, Tags, Archive } from "lucide-react";
-import { Github, Facebook, Linkedin } from "@/components/icons/brand";
+import { Folder, Tags } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/entities/post";
-import type { SocialLink } from "@/data/settings";
-import { SocialLink as SocialLinkComponent } from "./social-link";
 import { SearchInput } from "./search-input";
-
-function XIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-    </svg>
-  );
-}
-
-const BRAND_ICONS: Record<string, { icon: React.ComponentType<{ className?: string }>; isLucide: boolean }> = {
-  x: { icon: XIcon, isLucide: false },
-  facebook: { icon: Facebook, isLucide: true },
-  linkedin: { icon: Linkedin, isLucide: true },
-  email: { icon: Mail, isLucide: true },
-  github: { icon: Github, isLucide: true },
-  resume: { icon: FileUser, isLucide: true },
-};
+import type { SocialLink } from "@/data/settings";
+import { JournalSocialLinks } from "./social-link";
+import { ArchiveNavigation } from "./archive-navigation";
 
 interface BlogSidebarProps {
   categories: Category[];
   tags: Tag[];
   archives: MonthlyArchive[];
-  siteName: string;
-  siteTagline: string;
   socialLinks: SocialLink[];
   drawerOpen?: boolean;
   isMobile?: boolean;
-  onDrawerClose?: () => void;
 }
 
 export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function BlogSidebar({
-  categories, tags, archives, siteName, siteTagline, socialLinks,
+  categories, tags, archives, socialLinks,
   drawerOpen = false, isMobile = false,
 }, ref) {
   // On mobile when closed, hide from a11y tree + disable keyboard focus
@@ -59,36 +39,9 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
       tabIndex={-1}
       {...modalProps}
     >
-      {/* top-left: identity (lizheng pattern) */}
-      <div className="blog-sidebar-top">
-        <p className="journal-eyebrow" lang="en"><span /> THE COLLECTION</p>
-        <p className="blog-site-title">
-          <Link href="/" prefetch={false}>{siteName}</Link>
-        </p>
-        {siteTagline && <p className="blog-tagline">{siteTagline}</p>}
-
-        {socialLinks.length > 0 && (
-          <div className="blog-social">
-            {socialLinks.map((link) => {
-              const brandInfo = BRAND_ICONS[link.brand];
-              if (!brandInfo) return null;
-              return (
-                <SocialLinkComponent
-                  key={link.url}
-                  href={link.brand === "email" ? `mailto:${link.url}` : link.url}
-                  name={link.name}
-                  brand={link.brand}
-                  icon={brandInfo.icon}
-                  isLucide={brandInfo.isLucide}
-                />
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* bottom-left: search + nav modules */}
+      <JournalSocialLinks links={socialLinks} />
       <div className="blog-sidebar-bottom">
+        <p className="journal-eyebrow" lang="en"><span /> THE COLLECTION</p>
         <SearchInput />
 
         {categories.length > 0 && (
@@ -141,54 +94,7 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
           </nav>
         )}
 
-        {archives.length > 0 && (
-          <nav className="blog-sidebar-section">
-            <h3 className="blog-sidebar-heading">
-              <Archive className="blog-sidebar-heading-icon" strokeWidth={1.5} />
-              归档
-            </h3>
-            <ul className="blog-sidebar-list">
-              {(() => {
-                const now = new Date();
-                const cutoffYear = now.getFullYear() - 1;
-
-                const recent: MonthlyArchive[] = [];
-                const olderByYear = new Map<number, number>();
-
-                for (const a of archives) {
-                  if (a.year >= cutoffYear) {
-                    recent.push(a);
-                  } else {
-                    olderByYear.set(a.year, (olderByYear.get(a.year) ?? 0) + a.count);
-                  }
-                }
-
-                const olderEntries = [...olderByYear.entries()].sort((a, b) => b[0] - a[0]);
-
-                return (
-                  <>
-                    {recent.map((a) => (
-                      <li key={`${a.year}-${a.month}`}>
-                        <Link href={`/archive/${a.year}-${String(a.month).padStart(2, "0")}`} prefetch={false}>
-                          <span>{a.year} 年 {a.month} 月</span>
-                          <span className="blog-sidebar-count">{a.count}</span>
-                        </Link>
-                      </li>
-                    ))}
-                    {olderEntries.map(([year, count]) => (
-                      <li key={year}>
-                        <Link href={`/archive/${year}`} prefetch={false}>
-                          <span>{year} 年</span>
-                          <span className="blog-sidebar-count">{count}</span>
-                        </Link>
-                      </li>
-                    ))}
-                  </>
-                );
-              })()}
-            </ul>
-          </nav>
-        )}
+        <ArchiveNavigation archives={archives} />
       </div>
     </aside>
   );

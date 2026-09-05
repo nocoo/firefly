@@ -16,7 +16,6 @@ interface BlogLayoutClientProps {
   tags: Tag[];
   archives: MonthlyArchive[];
   siteName: string;
-  siteTagline: string;
   socialLinks: SocialLink[];
   isAdmin: boolean;
   children: React.ReactNode;
@@ -34,6 +33,7 @@ const FOCUSABLE_SEL = [
   "input:not([disabled])",
   "select:not([disabled])",
   "textarea:not([disabled])",
+  "summary",
   '[tabindex]:not([tabindex="-1"])',
 ].join(",");
 
@@ -50,7 +50,7 @@ function getMobileServerSnapshot(): boolean {
 }
 
 export function BlogLayoutClient({
-  categories, tags, archives, siteName, siteTagline, socialLinks, isAdmin, children,
+  categories, tags, archives, siteName, socialLinks, isAdmin, children,
 }: BlogLayoutClientProps) {
   const pathname = usePathname();
   const isPostDetail = isPostDetailRoute(pathname);
@@ -130,7 +130,9 @@ export function BlogLayoutClient({
       }
       if (e.key !== "Tab" || !sidebar) return;
       const items = Array.from(sidebar.querySelectorAll<HTMLElement>(FOCUSABLE_SEL))
-        .filter((el) => el.offsetParent !== null || el === sidebar);
+        // Closed details descendants can keep layout boxes; checkVisibility
+        // also excludes content hidden by the native disclosure element.
+        .filter((el) => el.checkVisibility({ visibilityProperty: true }));
       if (items.length === 0) {
         e.preventDefault();
         sidebar.focus({ preventScroll: true });
@@ -179,7 +181,6 @@ export function BlogLayoutClient({
         <div className="blog-topbar-inner">
           <div className="journal-topbar-brand" inert={mainInert || undefined}>
             <JournalBrand siteName={siteName} />
-            <span className="journal-edition" lang="en">THE JOURNAL</span>
           </div>
           <button
             ref={toggleRef}
@@ -229,12 +230,9 @@ export function BlogLayoutClient({
             categories={categories}
             tags={tags}
             archives={archives}
-            siteName={siteName}
-            siteTagline={siteTagline}
             socialLinks={socialLinks}
             drawerOpen={drawerOpen}
             isMobile={isMobile}
-            onDrawerClose={() => setDrawerOpen(false)}
           />
 
           <main

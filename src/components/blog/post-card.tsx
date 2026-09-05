@@ -28,7 +28,7 @@ export function PostCard({ post, author, priority, snippet }: PostCardProps) {
     : "草稿";
 
   return (
-    <article className={`blog-entry${priority ? " blog-entry-featured" : ""}`}>
+    <article className="blog-entry">
       {/* Post title */}
       <h2 className="blog-entry-title text-lg font-semibold leading-snug tracking-tight md:text-xl">
         <Link
@@ -79,7 +79,7 @@ export function PostCard({ post, author, priority, snippet }: PostCardProps) {
               src={post.featured_image}
               alt={post.title}
               fill
-              sizes={priority ? FEATURED_IMAGE_SIZES : "(max-width: 480px) 100px, (max-width: 1100px) 156px, 224px"}
+              sizes={FEATURED_IMAGE_SIZES}
               priority={priority ?? false}
               {...(priority ? { fetchPriority: "high" as const } : {})}
             />

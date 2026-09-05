@@ -29,6 +29,7 @@ export function JournalIntro({ siteName, tagline, total }: { siteName: string; t
           <path d="m77 167 6 5 6-5" stroke="#89967e" strokeWidth="2" />
         </svg>
         <span className="journal-cartridge-label" lang="en">FIELD NOTES</span>
+        <img className="journal-capsule" src="/journal-capsule.svg" width={72} height={82} alt="" aria-hidden="true" />
         <span className="journal-pixel-spark journal-spark-one" />
         <span className="journal-pixel-spark journal-spark-two" />
       </div>
