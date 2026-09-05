@@ -7,7 +7,10 @@ test("connected public surfaces retain standard navigation and a single page tit
   await expect(surfaces.getByRole("link", { name: "Play", exact: true })).toHaveAttribute("href", "https://lizheng.me/");
   await expect(surfaces.getByRole("link", { name: "Résumé", exact: true })).toHaveAttribute("href", "https://lizheng.dev/");
   await expect(page.locator("h1")).toHaveCount(1);
-  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /https:\/\//);
+  // Canonical follows the deployment URL; isolated CI uses HTTP on localhost.
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href", process.env.AUTH_URL ?? "http://localhost:3000",
+  );
   await expect(page.getByRole("link", { name: "RSS", exact: true })).toHaveAttribute("href", "/feed.xml");
 });
 
