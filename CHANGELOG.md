@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.12.0 (2026-09-05)
+
+- style(blog): simplify social links to a themed icon row
+- style(blog): unify sidebar section decorations
+- feat(blog): refine artwork and sidebar navigation
+- feat(blog): align the public journal with the play-side theme
+
+
 ## v2.11.0 (2026-09-04)
 
 - fix(admin): refine preview empty states and resolve duplicate breadcrumb sub-route titles
