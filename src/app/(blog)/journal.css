@@ -128,13 +128,12 @@
   .blog-sidebar .journal-eyebrow { margin-bottom: 16px; }
   h3.journal-eyebrow { font-size: 11px; }
   .journal-connect { margin: 0 0 28px; padding-bottom: 28px; border-bottom: 1px solid var(--blog-separator); }
-  .journal-social-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; list-style: none; margin: 0; padding: 0; }
-  .journal-social-list li { min-width: 0; max-width: 100%; }
-  .journal-social-list li:last-child:nth-child(odd) { grid-column: 1 / -1; }
-  .blog-social-link { width: auto; height: auto; min-height: 40px; gap: 7px; padding: 8px; border: 1px solid var(--blog-separator); border-radius: 6px; background: var(--blog-surface); color: var(--blog-text); font: 11px / 1.5 var(--ff-sans); text-decoration: none; overflow-wrap: anywhere; }
-  .journal-social-symbol { display: inline-flex; flex-shrink: 0; color: var(--blog-accent); }
-  .blog-social-icon { width: 15px; height: 15px; }
-  .blog-social-link[data-brand]:hover { background: var(--blog-code-bg); border-color: var(--blog-muted); color: var(--blog-accent); }
+  .journal-social-list { display: flex; gap: 2px; list-style: none; margin: 0; padding: 0; }
+  .journal-social-list li { flex: 0 1 40px; min-width: 0; }
+  .blog-social-link { width: 100%; height: auto; aspect-ratio: 1; padding: 0; border: none; border-radius: 50%; background: transparent; color: var(--blog-muted); text-decoration: none; outline-offset: 3px; transition: color 180ms var(--journal-ease), background-color 180ms var(--journal-ease); }
+  .journal-social-symbol { display: inline-flex; flex-shrink: 0; }
+  .blog-social-icon { width: 18px; height: 18px; }
+  .blog-social-link[data-brand]:is(:hover, :focus-visible, :active) { background: var(--blog-accent); color: var(--blog-bg); }
   .blog-social-link:hover .blog-social-icon { fill: none; }
   .blog-social-link[data-brand="x"]:hover .blog-social-icon { fill: currentColor; }
   .blog-sidebar-bottom { border: none; padding-top: 0; }
@@ -331,7 +330,7 @@
     .journal-surfaces a { font-size: 10px; }
     .blog-sidebar-toggle { order: 4; width: 36px; height: 36px; }
     .blog-topbar-end { gap: 8px; margin-left: 0; }
-    .blog-social-link { min-height: 44px; }
+    .journal-social-list li { flex-basis: 44px; }
     .blog-topbar-end button, .blog-topbar-link { width: 36px; height: 36px; }
     .blog-sidebar-desktop { background: var(--blog-bg); padding: 32px 28px; width: min(86vw, 340px); transition: transform 300ms var(--journal-ease), visibility 300ms; box-shadow: 20px 0 40px #17261b12; }
     .blog-sidebar-desktop:not(.blog-sidebar-open) { visibility: hidden; }
@@ -400,7 +399,7 @@
 @media (prefers-reduced-motion: reduce) {
   .blog-shell.journal-theme {
     .journal-intro, .journal-location i { animation: none; }
-    .blog-archive-more summary > svg, .blog-featured-image img, .blog-read-more svg, .blog-sidebar-desktop, .blog-sidebar-backdrop { transition: none; animation: none; }
+    .blog-social-link, .blog-archive-more summary > svg, .blog-featured-image img, .blog-read-more svg, .blog-sidebar-desktop, .blog-sidebar-backdrop { transition: none; animation: none; }
   }
 }
 @media print {

@@ -27,11 +27,12 @@ function SocialLink({ name, url, brand }: SocialLinkData) {
       rel={isEmail ? undefined : "noopener noreferrer"}
       className="blog-social-link"
       data-brand={brand}
+      title={label}
     >
       <span className="journal-social-symbol" aria-hidden="true">
         <Icon className="blog-social-icon" strokeWidth={1.5} />
       </span>
-      <span>{label}</span>
+      <span className="sr-only">{label}</span>
     </a>
   );
 }
@@ -40,7 +41,6 @@ export function JournalSocialLinks({ links }: { links: SocialLinkData[] }) {
   if (links.length === 0) return null;
   return (
     <nav className="journal-connect" aria-label="社交网络">
-      <p className="journal-eyebrow" lang="en"><span aria-hidden="true" /> ELSEWHERE</p>
       <ul className="journal-social-list">
         {links.map((link) => <li key={link.url}><SocialLink {...link} /></li>)}
       </ul>
