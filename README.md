@@ -1,3 +1,5 @@
+<img src="./assets/brand/icon-rounded.png" alt="Firefly" width="128" height="128" />
+
 # firefly
 
 Modern blog platform. Next.js 16 + Cloudflare D1 + R2. Deployed on Railway.

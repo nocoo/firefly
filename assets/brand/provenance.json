@@ -1,0 +1,42 @@
+{
+  "study": "firefly/2026-09-06-10",
+  "finishing": "02",
+  "archiveRepository": "https://github.com/nocoo/hexly.ai",
+  "archiveRevision": "1c7bafd45291297e6ae4ba9be3517cba96be49f4",
+  "rawSha256": "384fff12838b1e9b282879ffb008f9b9aa8af110ba28400050ef6cd489f48d25",
+  "previous": {
+    "revision": "8093578e9960f36cd112b7c04a841e6d5e345aed",
+    "path": "logo.png",
+    "sha256": "2c07a3d70ee783d69d2f839ad7f3bc0ca340804a6e66e2702fbe0bc36a845269"
+  },
+  "placement": {
+    "scale": 0.84,
+    "cornerRadius": 0.23,
+    "visibleAlphaThreshold": 16,
+    "minimumRoundedEdgeClearance": 157.28273203637184,
+    "clippedPixels": 0
+  },
+  "files": [
+    {
+      "path": "logo.png",
+      "width": 2048,
+      "height": 2048,
+      "bytes": 2583578,
+      "sha256": "a2c29a6601fb041c27c7fcc4a4493ae8b0ae09dc72d3d0da6e475400dd167759"
+    },
+    {
+      "path": "assets/brand/icon.png",
+      "width": 2048,
+      "height": 2048,
+      "bytes": 3973346,
+      "sha256": "5b44f514117c0e7471e60fcd628880c3c7116a9d597e9d1f944aaa621318992e"
+    },
+    {
+      "path": "assets/brand/icon-rounded.png",
+      "width": 2048,
+      "height": 2048,
+      "bytes": 3921094,
+      "sha256": "47baff0c6569e958d6e7665c663a2c66ea0f449b7d1859752420bad2a58d8776"
+    }
+  ]
+}
