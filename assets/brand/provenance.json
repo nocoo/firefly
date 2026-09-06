@@ -38,5 +38,14 @@
       "bytes": 3921094,
       "sha256": "47baff0c6569e958d6e7665c663a2c66ea0f449b7d1859752420bad2a58d8776"
     }
-  ]
+  ],
+  "usage": {
+    "updated": "2026-09-07",
+    "scope": "Local source adoption and usage standard; publication remains paused",
+    "foreground": "Root logo.png supplies transparent app marks and browser favicons; preserve framing without extra background or corner mask",
+    "largePresentation": "Rounded master supplies the README header and large social presentation",
+    "platformIcon": "Use square presentation only where the platform manages app-icon masking",
+    "sop": "hexly.ai/docs/07-logo-usage-sop.md",
+    "generator": "uv run --with pillow python scripts/resize-logos.py"
+  }
 }

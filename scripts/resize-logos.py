@@ -31,6 +31,8 @@ def main() -> None:
     rounded = Image.open(ROUNDED).convert("RGBA")
     if img.size != (2048, 2048) or square.size != img.size or rounded.size != img.size:
         raise ValueError("Brand masters must share their approved 2048-square framing")
+    if img.getchannel("A").getextrema() != (0, 255):
+        raise ValueError("The foreground must preserve transparent space and opaque artwork")
     print(f"Masters: transparent, square, rounded ({img.size[0]}x{img.size[1]})")
 
     PUBLIC.mkdir(exist_ok=True)
@@ -38,21 +40,21 @@ def main() -> None:
     # ── public/ assets (referenced by <img> in components) ──
 
     # Sidebar logo
-    save_resized(rounded, PUBLIC / "logo-24.png", 24)
+    save_resized(img, PUBLIC / "logo-24.png", 24)
     # Login page logo
-    save_resized(rounded, PUBLIC / "logo-80.png", 80)
+    save_resized(img, PUBLIC / "logo-80.png", 80)
 
     # ── src/app/ assets (Next.js file-based metadata convention) ──
 
     # favicon (32x32 PNG)
-    save_resized(square, APP / "icon.png", 32)
+    save_resized(img, APP / "icon.png", 32)
     # Apple touch icon (180x180 PNG)
     save_resized(square, APP / "apple-icon.png", 180)
 
     # Start from the full master so Pillow can encode every requested resolution.
     ico_path = APP / "favicon.ico"
     ico_sizes = [(16, 16), (32, 32), (48, 48)]
-    square.save(ico_path, format="ICO", sizes=ico_sizes)
+    img.save(ico_path, format="ICO", sizes=ico_sizes)
     with Image.open(ico_path) as icon:
         if icon.ico.sizes() != set(ico_sizes):
             raise ValueError("Favicon is missing an expected resolution")
