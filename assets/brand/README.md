@@ -31,9 +31,12 @@ square tiles for the 32 px icon, 180 px touch icon, and verified 16/32/48 px ICO
 It never crops or adds another inset. At 16 px the wing silhouette and amber
 light remain visible; individual eyes, limbs, and wood grain simplify.
 
-The configured site logo in R2 also needs its seven versioned derivatives when
-promoting an identity. The Journal theme's four-square mark and favicon are a
-separate personal-site identity, documented in `docs/29-journal-play-side.md`.
+Production uses a separate custom blue LZ monogram in its versioned R2 site-logo
+setting. That personal mark supplies the login hero and dynamic `/api/favicon`;
+Firefly's sidebar and login chrome use the project assets above. The Journal
+theme has its own four-square mark and favicon, documented in
+`docs/29-journal-play-side.md`. These personal-site identities are distinct from
+the Firefly application logo.
 
 See [provenance.json](provenance.json) for exact master hashes and source history;
 the public before/after review is [hexly.ai/logos/firefly](https://hexly.ai/logos/firefly).
