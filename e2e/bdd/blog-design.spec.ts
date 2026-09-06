@@ -45,8 +45,15 @@ test("public theme styles do not change the admin after client navigation", asyn
   });
   await page.goto("/");
   await expect(page.locator(".journal-theme")).toBeVisible();
-  await page.getByRole("link", { name: "Dashboard", exact: true }).click();
+  await expect(page.locator('.blog-topbar a[href="/admin"]')).toHaveCount(0);
+  // The public header no longer has an admin shortcut. Next exposes this
+  // router for testing; preserve the same-document style teardown check.
+  await page.evaluate(() => {
+    document.documentElement.dataset.navigationSession = "journal-to-admin";
+    (window as Window & { next: { router: { push: (href: string) => void } } }).next.router.push("/admin");
+  });
   await expect(page).toHaveURL(/\/admin/);
+  await expect(page.locator("html")).toHaveAttribute("data-navigation-session", "journal-to-admin");
   await expect(page.locator(".journal-theme")).toHaveCount(0);
   const after = await page.locator("body").evaluate((el) => {
     const style = getComputedStyle(el);

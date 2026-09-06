@@ -40,7 +40,6 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
     >
       <JournalSocialLinks links={socialLinks} />
       <div className="blog-sidebar-bottom">
-        <p className="journal-eyebrow" lang="en"><span aria-hidden="true" /> THE COLLECTION</p>
         <SearchInput />
 
         {categories.length > 0 && (

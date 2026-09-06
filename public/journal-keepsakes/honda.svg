@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 280" fill="none" aria-hidden="true" focusable="false"><defs>
+  <linearGradient id="paper" x1="0" y1="0" x2=".35" y2="1"><stop stop-color="#fffef0"/><stop offset=".64" stop-color="#f0efdf"/><stop offset="1" stop-color="#dedecb"/></linearGradient>
+  <linearGradient id="edge" x2="0" y2="1"><stop stop-color="#f3f1df"/><stop offset=".42" stop-color="#bdc3b0"/><stop offset="1" stop-color="#8f9a87"/></linearGradient>
+  <linearGradient id="pearl" x1="0" y1="0" x2=".4" y2="1"><stop stop-color="#fffdf3"/><stop offset=".48" stop-color="#eeede2"/><stop offset="1" stop-color="#d5d8cb"/></linearGradient>
+  <linearGradient id="ember" x1="0" y1="0" x2=".5" y2="1"><stop stop-color="#e69b73"/><stop offset=".5" stop-color="#c76b4b"/><stop offset="1" stop-color="#985037"/></linearGradient>
+  <linearGradient id="olive" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#9da98b"/><stop offset="1" stop-color="#66775c"/></linearGradient>
+  <linearGradient id="graphite" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#657267"/><stop offset=".3" stop-color="#3f4c42"/><stop offset="1" stop-color="#25362e"/></linearGradient>
+  <linearGradient id="glass" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#728776"/><stop offset=".48" stop-color="#354d43"/><stop offset="1" stop-color="#1c3029"/></linearGradient>
+  <linearGradient id="lcd" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#dae2bd"/><stop offset="1" stop-color="#b6c49b"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2=".3"><stop stop-color="#879487"/><stop offset=".27" stop-color="#f0f0de"/><stop offset=".48" stop-color="#c3cbb8"/><stop offset=".72" stop-color="#f7f7e7"/><stop offset="1" stop-color="#8c9989"/></linearGradient>
+  <filter id="shadow" x="-45%" y="-35%" width="190%" height="195%" color-interpolation-filters="sRGB"><feDropShadow dx="1.5" dy="5" stdDeviation="3.5" flood-color="#25382b" flood-opacity=".18"/></filter>
+  <filter id="soft" x="-45%" y="-35%" width="190%" height="195%" color-interpolation-filters="sRGB"><feDropShadow dx=".5" dy="2" stdDeviation="1.4" flood-color="#203a2a" flood-opacity=".2"/></filter>
+</defs><g transform="translate(81 30) scale(1) rotate(8)"><g filter="url(#shadow)">
+  <rect x="-5" y="6" width="138" height="181" rx="4" fill="#71846a"/>
+  <rect x="0" y="0" width="133" height="181" rx="3" fill="url(#paper)" stroke="#fcfbe8"/>
+  <rect x="-3" y="-4" width="139" height="18" rx="6" fill="url(#pearl)" stroke="#b4bea5"/>
+  <path d="M1 0h131" stroke="#fffef0" stroke-width="1.4"/>
+  <path d="M2 11h129" stroke="#9eae91"/>
+  <text x="15" y="34" font-family="'Courier New',monospace" font-size="10.5" fill="#a55f3f" font-weight="bold" letter-spacing=".7">ROAD NOTES</text>
+  <path d="M10 46h113v104H10Z" stroke="#a8b899"/><path d="M43 46v104m39-104v104M10 81h113M10 116h113" stroke="#a8b899"/>
+  <text x="17" y="65" font-family="'Courier New',monospace" font-size="8" fill="#596650" >001</text><text x="17" y="100" font-family="'Courier New',monospace" font-size="8" fill="#596650" >002</text><text x="17" y="136" font-family="'Courier New',monospace" font-size="8" fill="#596650" >003</text>
+  <path d="M61 73V55m-5 6 5-6 5 6M54 108V93h16m-6-6 6 6-6 6M56 142v-9l11-10m-8 0h8v8" stroke="#506547" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="61" cy="74" r="2.5" fill="#506547"/><circle cx="54" cy="109" r="2.5" fill="#506547"/><circle cx="56" cy="143" r="2.5" fill="#506547"/>
+  <path d="M89 58h25" stroke="#c7ccba" stroke-linecap="round"/><path d="M89 63h20" stroke="#c7ccba" stroke-linecap="round"/><path d="M89 68h22" stroke="#c7ccba" stroke-linecap="round"/><path d="M89 92h24" stroke="#c7ccba" stroke-linecap="round"/><path d="M89 97h17" stroke="#c7ccba" stroke-linecap="round"/><path d="M89 102h23" stroke="#c7ccba" stroke-linecap="round"/><path d="M89 128h24" stroke="#c7ccba" stroke-linecap="round"/><path d="M89 133h21" stroke="#c7ccba" stroke-linecap="round"/><path d="M89 138h18" stroke="#c7ccba" stroke-linecap="round"/>
+  <text x="15" y="168" font-family="'Courier New',monospace" font-size="5.4" fill="#596650" >TAKE THE LONG WAY HOME</text>
+  <path d="m117 179 7-7v10Z" fill="#c48056"/>
+</g></g><g transform="translate(24 165) scale(0.77) rotate(-7)"><g filter="url(#shadow)">
+  <path d="M9 46C6 15 24 0 48 0s42 15 39 46l-5 26-15 26H29L14 73Z" fill="url(#pearl)" stroke="#929e88" stroke-width="1.2"/>
+  <path d="M36 2h24l4 23H32Z" fill="url(#ember)"/>
+  <path d="M39 3h4l-1 21h-5Z" fill="#efc09a" opacity=".7"/>
+  <path d="M13 36q35-12 70 0l-4 27q-31 10-62 0Z" fill="url(#graphite)" stroke="#aebaa3"/>
+  <path d="M20 38q28-8 56 0l-2 19q-26 8-52 0Z" fill="url(#glass)" stroke="#263d31"/>
+  <path d="M24 41q24-7 46-1" stroke="#cbd9c3" stroke-opacity=".5" stroke-width="1.2"/>
+  <path d="M19 35 2 25l7-4q39-9 78 0l7 4-17 10q-29-7-58 0Z" fill="url(#pearl)" stroke="#899a81"/>
+  <path d="M5 25q43-12 86 0" stroke="#ffffed" stroke-width="1.5"/>
+  <path d="m34 66 14-4 14 4 9 20-8 12H33l-8-12Z" fill="url(#pearl)" stroke="#a5b098"/>
+  <path d="m37 74 11-4 11 4-3 9H40Z" fill="#354d3f"/>
+  <path d="M42 74v6m6-8v9m6-7v6" stroke="#879c7c" stroke-width="1.4"/>
+  <path d="M29 91h38" stroke="#6f8165" stroke-width="1.5"/>
+  <circle cx="15" cy="46" r="3" fill="url(#steel)"/><circle cx="81" cy="46" r="3" fill="url(#steel)"/>
+  <path d="M17 69 29 81m50-12L67 81" stroke="#c57c54" stroke-width="4"/>
+</g></g><g transform="translate(204 183) scale(0.8) rotate(17)"><g filter="url(#soft)">
+  <ellipse cx="15" cy="3" rx="10" ry="13" stroke="#6c7e69" stroke-width="3"/>
+  <ellipse cx="15" cy="2" rx="10" ry="13" stroke="url(#steel)" stroke-width="2"/>
+  <path d="M11 22h9v39l-5 6-4-4V51h4v-5h-4v-6h4v-5h-4Z" fill="url(#steel)" stroke="#82917e" stroke-width=".8"/>
+  <rect x="1" y="7" width="29" height="25" rx="7" fill="url(#graphite)" stroke="#72836b"/>
+  <path d="M8 13h14M8 16h14" stroke="#a0ad94" stroke-width=".6"/>
+  <path d="m11 21 4-3 4 3-4 4Z" fill="#ca8156"/>
+</g></g><g transform="translate(41 84) scale(0.55) rotate(0)"><path d="M0 5h5V0h3v5h5v3H8v5H5V8H0Z" fill="#c67850" opacity=".7"/></g></svg>

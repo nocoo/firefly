@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 280" fill="none" aria-hidden="true" focusable="false"><defs>
+  <linearGradient id="paper" x1="0" y1="0" x2=".35" y2="1"><stop stop-color="#fffef0"/><stop offset=".64" stop-color="#f0efdf"/><stop offset="1" stop-color="#dedecb"/></linearGradient>
+  <linearGradient id="edge" x2="0" y2="1"><stop stop-color="#f3f1df"/><stop offset=".42" stop-color="#bdc3b0"/><stop offset="1" stop-color="#8f9a87"/></linearGradient>
+  <linearGradient id="pearl" x1="0" y1="0" x2=".4" y2="1"><stop stop-color="#fffdf3"/><stop offset=".48" stop-color="#eeede2"/><stop offset="1" stop-color="#d5d8cb"/></linearGradient>
+  <linearGradient id="ember" x1="0" y1="0" x2=".5" y2="1"><stop stop-color="#e69b73"/><stop offset=".5" stop-color="#c76b4b"/><stop offset="1" stop-color="#985037"/></linearGradient>
+  <linearGradient id="olive" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#9da98b"/><stop offset="1" stop-color="#66775c"/></linearGradient>
+  <linearGradient id="graphite" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#657267"/><stop offset=".3" stop-color="#3f4c42"/><stop offset="1" stop-color="#25362e"/></linearGradient>
+  <linearGradient id="glass" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#728776"/><stop offset=".48" stop-color="#354d43"/><stop offset="1" stop-color="#1c3029"/></linearGradient>
+  <linearGradient id="lcd" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#dae2bd"/><stop offset="1" stop-color="#b6c49b"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2=".3"><stop stop-color="#879487"/><stop offset=".27" stop-color="#f0f0de"/><stop offset=".48" stop-color="#c3cbb8"/><stop offset=".72" stop-color="#f7f7e7"/><stop offset="1" stop-color="#8c9989"/></linearGradient>
+  <filter id="shadow" x="-45%" y="-35%" width="190%" height="195%" color-interpolation-filters="sRGB"><feDropShadow dx="1.5" dy="5" stdDeviation="3.5" flood-color="#25382b" flood-opacity=".18"/></filter>
+  <filter id="soft" x="-45%" y="-35%" width="190%" height="195%" color-interpolation-filters="sRGB"><feDropShadow dx=".5" dy="2" stdDeviation="1.4" flood-color="#203a2a" flood-opacity=".2"/></filter>
+</defs><g transform="translate(89 29) scale(1) rotate(9)"><g filter="url(#shadow)">
+    <rect x="-6" y="-4" width="143" height="185" rx="7" fill="url(#olive)" stroke="#697a5b" stroke-width=".8"/>
+    <path d="M1 174h130v5H1Z" fill="#c2c8b2"/><path d="M3 175h124m-124 2h124" stroke="#f4f1db" stroke-width=".7"/>
+    <rect x="1" y="0" width="131" height="174" rx="4" fill="url(#paper)" stroke="#fcfce9"/>
+    <path d="M13 0v174" stroke="#bbbfa6"/><path d="M16 0v174" stroke="#fffcea"/>
+    <path d="M-5 15q-9-6 1-10h8" stroke="#788570" stroke-width="2.2" stroke-linecap="round"/><path d="M-5 14q-7-5 1-8h7" stroke="#f1edce" stroke-width=".8" stroke-linecap="round"/><path d="M-5 35q-9-6 1-10h8" stroke="#788570" stroke-width="2.2" stroke-linecap="round"/><path d="M-5 34q-7-5 1-8h7" stroke="#f1edce" stroke-width=".8" stroke-linecap="round"/><path d="M-5 55q-9-6 1-10h8" stroke="#788570" stroke-width="2.2" stroke-linecap="round"/><path d="M-5 54q-7-5 1-8h7" stroke="#f1edce" stroke-width=".8" stroke-linecap="round"/><path d="M-5 75q-9-6 1-10h8" stroke="#788570" stroke-width="2.2" stroke-linecap="round"/><path d="M-5 74q-7-5 1-8h7" stroke="#f1edce" stroke-width=".8" stroke-linecap="round"/><path d="M-5 95q-9-6 1-10h8" stroke="#788570" stroke-width="2.2" stroke-linecap="round"/><path d="M-5 94q-7-5 1-8h7" stroke="#f1edce" stroke-width=".8" stroke-linecap="round"/><path d="M-5 115q-9-6 1-10h8" stroke="#788570" stroke-width="2.2" stroke-linecap="round"/><path d="M-5 114q-7-5 1-8h7" stroke="#f1edce" stroke-width=".8" stroke-linecap="round"/><path d="M-5 135q-9-6 1-10h8" stroke="#788570" stroke-width="2.2" stroke-linecap="round"/><path d="M-5 134q-7-5 1-8h7" stroke="#f1edce" stroke-width=".8" stroke-linecap="round"/><path d="M-5 155q-9-6 1-10h8" stroke="#788570" stroke-width="2.2" stroke-linecap="round"/><path d="M-5 154q-7-5 1-8h7" stroke="#f1edce" stroke-width=".8" stroke-linecap="round"/>
+    
+  <text x="27" y="22" font-family="'Courier New',monospace" font-size="11" fill="#a85f3f" font-weight="bold" letter-spacing="1">SIDE A</text>
+  <text x="27" y="34" font-family="'Courier New',monospace" font-size="5.8" fill="#596650" >VOICE &amp; OTHER NOTES</text>
+  <path d="M26 43h91" stroke="#b8c0a6"/>
+  <circle cx="32" cy="62" r="4" fill="#c57e54"/>
+  <path d="M47 58v8m4-15v22m4-28v34m4-19v7m4-18v28m4-20v12m4-28v40m4-23v9m4-16v25m4-19v13m4-27v39m4-23v9m4-16v24m4-13v5" stroke="#809268" stroke-width="2" stroke-linecap="round"/>
+  <text x="27" y="93" font-family="'Courier New',monospace" font-size="5.4" fill="#596650" >01 / A FAMILIAR FEELING</text>
+  <path d="M27 108h81" stroke="#c7ccba" stroke-linecap="round"/><path d="M27 118h68" stroke="#c7ccba" stroke-linecap="round"/><path d="M27 128h76" stroke="#c7ccba" stroke-linecap="round"/><path d="M27 138h60" stroke="#c7ccba" stroke-linecap="round"/><path d="M27 148h81" stroke="#c7ccba" stroke-linecap="round"/>
+  <path d="M122-3v32l-6-5-6 5V-3" fill="url(#ember)"/>
+
+  </g></g><g transform="translate(27 149) scale(0.74) rotate(-12)"><g filter="url(#shadow)">
+  <rect x="0" y="3" width="76" height="122" rx="12" fill="url(#steel)" stroke="#99a793"/>
+  <rect x="0" y="0" width="76" height="121" rx="11" fill="url(#pearl)" stroke="#fffef3"/>
+  <path d="M11 2h11" stroke="#a5ad99" stroke-width="1.1" stroke-linecap="round"/>
+  <path d="M14 2h4" stroke="#cb8058" stroke-width="1.1"/>
+  <rect x="10" y="13" width="56" height="43" rx="5" fill="#52624f"/>
+  <rect x="13" y="16" width="50" height="37" rx="2" fill="#dce3cc" stroke="#1f362d" stroke-width=".5"/>
+  <text x="18" y="24" font-family="'Courier New',monospace" font-size="4.8" fill="#596650" >Voice memo</text>
+  <path d="M15 28h46" stroke="#a4b193"/>
+  <circle cx="21" cy="39" r="3" fill="#bf6846"/>
+  <path d="M29 37v4m3-7v10m3-13v15m3-9v6m3-9v11m3-8v5m3-6v9m3-11v12m3-8v4" stroke="#6a7d56" stroke-width="1.6"/>
+  <circle cx="38" cy="87" r="25" fill="#faf9ec" stroke="#ced4c0"/>
+  <circle cx="38" cy="87" r="9" fill="url(#pearl)" stroke="#c1cab6"/>
+  <text x="31" y="69" font-family="'Courier New',monospace" font-size="4" fill="#8a967f" >MENU</text>
+  <path d="m56 85 3 2-3 2Zm-38 0-3 2 3 2Z" fill="#8a967f"/>
+  <path d="M59 85v4M15 85v4" stroke="#8a967f" stroke-width=".8"/>
+  <path d="m33 104 4 2-4 2Zm7 0h1v4h-1Zm3 0h1v4h-1Z" fill="#8a967f"/>
+</g></g><g transform="translate(173 171) scale(0.76) rotate(-9)"><g fill="none" stroke-linecap="round">
+  <path d="M10 22v20c0 24 26 9 26 32v18m21-61v19c0 18-21 4-21 24" stroke="#73816f" stroke-opacity=".25" stroke-width="3.5"/>
+  <path d="M10 22v20c0 24 26 9 26 32v18m21-61v19c0 18-21 4-21 24" stroke="#ecefde" stroke-width="2"/>
+  <g filter="url(#soft)"><rect x="7" y="11" width="6" height="16" rx="3" fill="url(#pearl)" stroke="#aab79f" stroke-width=".7"/>
+  <ellipse cx="8" cy="9" rx="8" ry="10" fill="url(#pearl)" stroke="#b1bba5" stroke-width=".7"/>
+  <ellipse cx="5" cy="8" rx="3.5" ry="5.5" fill="#586b5e"/>
+  <path d="M4 4v8m2-8v8" stroke="#adbfa8" stroke-width=".6"/>
+  <rect x="54" y="20" width="6" height="16" rx="3" fill="url(#pearl)" stroke="#aab79f" stroke-width=".7"/>
+  <ellipse cx="59" cy="18" rx="8" ry="10" fill="url(#pearl)" stroke="#b1bba5" stroke-width=".7"/>
+  <ellipse cx="62" cy="17" rx="3.5" ry="5.5" fill="#586b5e"/><path d="M61 13v8m2-8v8" stroke="#adbfa8" stroke-width=".6"/>
+  <rect x="33.5" y="89" width="5" height="12" rx="2" fill="url(#pearl)" stroke="#adb8a2" stroke-width=".7"/>
+  <path d="M36 101v8" stroke="url(#steel)" stroke-width="2.4"/><path d="M35 104h2m-2 3h2" stroke="#56694e" stroke-width=".7"/>
+  </g>
+</g></g><g transform="translate(51 79) scale(0.6) rotate(0)"><path d="M0 5h5V0h3v5h5v3H8v5H5V8H0Z" fill="#c67850" opacity=".7"/></g></svg>

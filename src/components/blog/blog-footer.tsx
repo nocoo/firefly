@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowUp } from "lucide-react";
 import { JournalBrand } from "./journal-brand";
+import { journalSurfaceUrls } from "./journal-surfaces";
 
 const COLUMNS = [
   { heading: "THE JOURNAL", links: [
@@ -11,8 +12,8 @@ const COLUMNS = [
     { label: "搜索", href: "/search" },
   ] },
   { heading: "ELSEWHERE", links: [
-    { label: "Play ↗", href: "https://lizheng.me/" },
-    { label: "Résumé ↗", href: "https://lizheng.dev/" },
+    { label: "Play ↗", href: journalSurfaceUrls.play },
+    { label: "Résumé ↗", href: journalSurfaceUrls.resume },
   ] },
   { heading: "KEEP IN TOUCH", links: [
     { label: "RSS", href: "/feed.xml" },
@@ -29,7 +30,7 @@ export function BlogFooter({ siteName }: { siteName: string }) {
           <p className="journal-eyebrow"><span /> THE STORY CONTINUES</p>
           <h2>Always another chapter<span>.</span></h2>
         </div>
-        <a className="journal-footer-play" href="https://lizheng.me/" lang="en">
+        <a className="journal-footer-play" href={journalSurfaceUrls.play} lang="en">
           <img src="/journal-capsule.svg" width={24} height={27} alt="" aria-hidden="true" />
           Play a little <span aria-hidden="true">↗</span>
         </a>

@@ -3,7 +3,6 @@ import { listCategories } from "@/data/entities/category";
 import { listTags } from "@/data/entities/tag";
 import { listMonthlyArchives } from "@/data/entities/post";
 import { getSiteSettings } from "@/data/settings";
-import { isAdminSession } from "@/lib/auth";
 import { BlogLayoutClient } from "@/components/blog/blog-layout-client";
 import { BlogFooter } from "@/components/blog/blog-footer";
 import { JournalThemeColor } from "@/components/blog/journal-theme-color";
@@ -24,12 +23,11 @@ export default async function BlogLayout({
   children: React.ReactNode;
 }) {
   const db = getDb();
-  const [categories, tags, archives, settings, isAdmin] = await Promise.all([
+  const [categories, tags, archives, settings] = await Promise.all([
     listCategories(db),
     listTags(db),
     listMonthlyArchives(db),
     getSiteSettings(db),
-    isAdminSession(),
   ]);
 
   // Only show categories/tags that have published posts
@@ -51,7 +49,6 @@ export default async function BlogLayout({
         archives={archives}
         siteName={settings.siteName}
         socialLinks={settings.socialLinks}
-        isAdmin={isAdmin}
       >
         {children}
       </BlogLayoutClient>

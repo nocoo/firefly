@@ -304,9 +304,8 @@ test.describe("Feature: Post detail rendering", () => {
     const gate = emptyDataGate(url === null ? 0 : 1, "published posts");
     test.skip(gate.skip, gate.reason);
 
-    // Then: <title> is non-empty
-    const title = await page.title();
-    expect(title.length).toBeGreaterThan(0);
+    // Next can stream metadata after the client navigation commits its URL.
+    await expect(page).toHaveTitle(/.+/);
 
     // Then: og:title is populated and og:type is "article".
     // CSS attribute selector: <meta> tags have no role/label/testid.

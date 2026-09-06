@@ -2,14 +2,14 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
-import Link from "next/link";
-import { LayoutDashboard, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/entities/post";
 import type { SocialLink } from "@/data/settings";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { BlogSidebar } from "./blog-sidebar";
 import { JournalBrand } from "./journal-brand";
+import { JournalSurfaces } from "./journal-surfaces";
 
 interface BlogLayoutClientProps {
   categories: Category[];
@@ -17,7 +17,6 @@ interface BlogLayoutClientProps {
   archives: MonthlyArchive[];
   siteName: string;
   socialLinks: SocialLink[];
-  isAdmin: boolean;
   children: React.ReactNode;
 }
 
@@ -50,7 +49,7 @@ function getMobileServerSnapshot(): boolean {
 }
 
 export function BlogLayoutClient({
-  categories, tags, archives, siteName, socialLinks, isAdmin, children,
+  categories, tags, archives, siteName, socialLinks, children,
 }: BlogLayoutClientProps) {
   const pathname = usePathname();
   const isPostDetail = isPostDetailRoute(pathname);
@@ -193,22 +192,8 @@ export function BlogLayoutClient({
           >
             {drawerOpen ? <X className="h-5 w-5" strokeWidth={1.5} /> : <Menu className="h-5 w-5" strokeWidth={1.5} />}
           </button>
-          <nav className="journal-surfaces" aria-label="访问面" inert={mainInert || undefined}>
-            <Link href="/" prefetch={false} aria-current="true" lang="en">Journal</Link>
-            <a href="https://lizheng.me/" lang="en">Play <span aria-hidden="true">↗</span></a>
-            <a href="https://lizheng.dev/" lang="en">Résumé <span aria-hidden="true">↗</span></a>
-          </nav>
+          <JournalSurfaces inert={mainInert} />
           <div className="blog-topbar-end" inert={mainInert || undefined}>
-            {isAdmin && (
-              <Link
-                href="/admin"
-                prefetch={false}
-                className="blog-topbar-link"
-                aria-label="Dashboard"
-              >
-                <LayoutDashboard className="h-4 w-4" strokeWidth={1.5} />
-              </Link>
-            )}
             <ThemeToggle />
           </div>
         </div>
