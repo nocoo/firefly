@@ -18,8 +18,9 @@
  *   5. Commit + tag
  *   6. Push + create GitHub Release
  */
-import { execSync } from "node:child_process";
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { execFileSync, execSync } from "node:child_process";
+import { readFileSync, writeFileSync, existsSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
 // ---------------------------------------------------------------------------
@@ -213,7 +214,7 @@ if (dryRun) {
 info(`Creating commit and tag ${tag}...`);
 if (!dryRun) {
   run("git add package.json bun.lock CHANGELOG.md");
-  run(`git commit -m "release: ${tag}"`);
+  run(`git commit -m "chore: release ${tag}"`);
   run(`git tag -a ${tag} -m "Release ${tag}"`);
 }
 success(`Committed and tagged ${tag}`);
@@ -224,7 +225,8 @@ success(`Committed and tagged ${tag}`);
 
 info("Pushing to remote...");
 if (!dryRun) {
-  run("git push && git push --tags", { stdio: "inherit" });
+  run("git push origin main", { stdio: "inherit" });
+  run(`git push origin ${tag}`, { stdio: "inherit" });
 }
 success("Pushed");
 
@@ -237,11 +239,18 @@ if (!dryRun) {
     .join("\n")
     .trim();
 
-  const escapedNotes = notes.replace(/"/g, '\\"');
-  run(
-    `gh release create ${tag} --title "${tag}" --notes "${escapedNotes}"`,
-    { stdio: "inherit" },
-  );
+  const notesDirectory = mkdtempSync(resolve(tmpdir(), "firefly-release-"));
+  const notesPath = resolve(notesDirectory, "notes.md");
+  try {
+    writeFileSync(notesPath, `${notes}\n`);
+    execFileSync(
+      "gh",
+      ["release", "create", tag, "--verify-tag", "--title", tag, "--notes-file", notesPath],
+      { cwd: ROOT, stdio: "inherit" },
+    );
+  } finally {
+    rmSync(notesDirectory, { recursive: true, force: true });
+  }
 }
 success(`GitHub Release ${tag} created`);
 
