@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.12.3 (2026-09-06)
+
+- fix: publish release notes without shell parsing
+- docs: distinguish firefly and site identities
+- feat: adopt the firefly family logo
+
+
 ## v2.12.2 (2026-09-06)
 
 - fix(navigation): add portfolio header link to hexly.ai
