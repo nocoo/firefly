@@ -1,5 +1,24 @@
 # Changelog
 
+## v2.12.1 (2026-09-06)
+
+- feat(journal): align surface navigation and add stable device keepsakes
+- chore(deps): bump lint-staged to 17.5.0 (#656)
+- chore(deps): bump @cloudflare/workers-types to 5.20260905.1 (#655)
+- chore(deps): bump lucide-react to 1.41.0 (#654)
+- chore(deps): bump hono to 4.13.7 (#653)
+- chore(deps): bump ai to 7.0.93 (#652)
+- chore(deps): bump @playwright/test to 1.63.0 (#651)
+- chore(deps): bump @aws-sdk/client-s3 to 3.1127.0 (#649)
+- chore(deps): bump wrangler to 4.129.0 (#646)
+- chore(deps): upgrade Vitest and coverage-v8 to 5.0.0 (#642 #645)
+- chore(deps): bump @types/react-dom to 19.2.7 (#641)
+- chore(deps): bump @biomejs/biome to 2.5.12 (#639)
+- chore(deps): bump oxc-parser to 0.148.0 (#631)
+- chore(deps): bump @types/node to 26.4.1 (#628)
+- test(e2e): validate canonical against configured site URL
+
+
 ## v2.12.0 (2026-09-05)
 
 - style(blog): simplify social links to a themed icon row
