@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.12.2 (2026-09-06)
+
+- fix(navigation): add portfolio header link to hexly.ai
+
+
 ## v2.12.1 (2026-09-06)
 
 - feat(journal): align surface navigation and add stable device keepsakes
