@@ -22,6 +22,7 @@ export function websiteJsonLd(site: SiteIdentity): string {
       "@type": "Person",
       name: site.siteAuthor,
       url: SITE_URL,
+      ...(site.sameAs?.length ? { sameAs: site.sameAs } : {}),
     },
   });
 }
@@ -64,6 +65,7 @@ export function blogPostingJsonLd(
     publisher: {
       "@type": "Person",
       name: site.siteAuthor,
+      ...(site.sameAs?.length ? { sameAs: site.sameAs } : {}),
     },
     mainEntityOfPage: {
       "@type": "WebPage",

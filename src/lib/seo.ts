@@ -3,6 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import type { Metadata } from "next";
+import homeSocial from "./home-social.json";
 
 /**
  * Site URL — read from AUTH_URL env var (deployment-level config).
@@ -28,6 +29,7 @@ export interface SiteIdentity {
   siteAuthor: string;
   authorEmail: string;
   twitterHandle: string;
+  sameAs?: string[];
 }
 
 export function toSiteIdentity(
@@ -53,6 +55,47 @@ export function toSiteIdentity(
 // ---------------------------------------------------------------------------
 // Page metadata builder
 // ---------------------------------------------------------------------------
+
+/** Settings accept handles with or without @; card markup requires the prefix. */
+export function twitterAccountMeta(handle: string) {
+  const account = handle.trim().replace(/^@+/, "");
+  return account ? { site: `@${account}`, creator: `@${account}` } : {};
+}
+
+/** Homepage copy and artwork are curated together; articles use buildPageMeta. */
+export function buildHomeMeta(
+  site: Pick<SiteIdentity, "siteName" | "twitterHandle">,
+): Metadata {
+  const image = {
+    ...homeSocial.image,
+    url: new URL(homeSocial.image.url, SITE_URL).href,
+  };
+  return {
+    // An absolute title avoids appending the root layout's site-name template.
+    title: { absolute: homeSocial.title },
+    description: homeSocial.description,
+    alternates: {
+      canonical: SITE_URL,
+      languages: { [HTML_LANG]: SITE_URL },
+    },
+    openGraph: {
+      title: homeSocial.title,
+      description: homeSocial.description,
+      url: SITE_URL,
+      siteName: site.siteName,
+      locale: OG_LOCALE,
+      type: "website",
+      images: [image],
+    },
+    twitter: {
+      card: "summary_large_image",
+      ...twitterAccountMeta(site.twitterHandle),
+      title: homeSocial.title,
+      description: homeSocial.description,
+      images: [{ url: image.url, alt: image.alt }],
+    },
+  };
+}
 
 export interface PageMetaInput {
   title: string;
@@ -104,8 +147,7 @@ export function buildPageMeta(
     },
     twitter: {
       card: input.image ? "summary_large_image" : "summary",
-      ...(site.twitterHandle ? { site: site.twitterHandle } : {}),
-      ...(site.twitterHandle ? { creator: site.twitterHandle } : {}),
+      ...twitterAccountMeta(site.twitterHandle),
       title: input.title,
       description: input.description,
       ...(input.image ? { images: [input.image] } : {}),

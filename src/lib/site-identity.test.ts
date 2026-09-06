@@ -49,6 +49,22 @@ describe("loadSiteIdentity", () => {
     expect(result.settings).toBe(settings);
     expect(result.identity.siteAuthor).toBe("Li Zheng");
     expect(result.identity.siteName).toBe("Firefly");
+    expect(result.identity.sameAs).toContain("https://hexly.ai/");
+  });
+
+  it("keeps configured HTTP profiles, removes duplicates, and excludes contact schemes", async () => {
+    vi.mocked(getDefaultHuman).mockResolvedValue(null);
+    const result = await loadSiteIdentity(db, {
+      ...settings,
+      socialLinks: [
+        { name: "Portfolio", url: "https://hexly.ai/", brand: "web" },
+        { name: "GitHub", url: "https://github.com/nocoo", brand: "github" },
+        { name: "Email", url: "mailto:test@example.com", brand: "email" },
+      ],
+    });
+    expect(result.identity.sameAs).toContain("https://github.com/nocoo");
+    expect(result.identity.sameAs?.filter((url) => url === "https://hexly.ai/")).toHaveLength(1);
+    expect(result.identity.sameAs).not.toContain("mailto:test@example.com");
   });
 
   it("loads settings and falls back to siteName when no default human", async () => {

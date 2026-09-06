@@ -26,6 +26,12 @@ describe("websiteJsonLd", () => {
     expect(result.description).toBe("A test blog description");
     expect(result.author.name).toBe("Test Author");
   });
+
+  it("exposes the site owner's other public profiles", () => {
+    const result = JSON.parse(websiteJsonLd({ ...testSite, sameAs: ["https://hexly.ai/"] }));
+    expect(result.author.sameAs).toEqual(["https://hexly.ai/"]);
+    expect(JSON.parse(websiteJsonLd({ ...testSite, sameAs: [] })).author.sameAs).toBeUndefined();
+  });
 });
 
 describe("blogPostingJsonLd", () => {
@@ -84,6 +90,16 @@ describe("blogPostingJsonLd", () => {
     expect(result.author.url).toBeUndefined();
     // publisher should still be site author
     expect(result.publisher.name).toBe("Test Author");
+  });
+
+  it("assigns owner profiles to the publisher without misidentifying an article's author", () => {
+    const result = JSON.parse(blogPostingJsonLd(post, {
+      ...testSite, sameAs: ["https://hexly.ai/"],
+    }, undefined, { name: "Claude Daily" }));
+    expect(result.publisher.sameAs).toEqual(["https://hexly.ai/"]);
+    expect(result.author).toEqual({ "@type": "Person", name: "Claude Daily" });
+    const empty = JSON.parse(blogPostingJsonLd(post, { ...testSite, sameAs: [] }));
+    expect(empty.publisher.sameAs).toBeUndefined();
   });
 
   it("uses authorOverride with custom URL when provided", () => {

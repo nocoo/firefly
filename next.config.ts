@@ -80,6 +80,12 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
+  async rewrites() {
+    return [
+      { source: "/apple-touch-icon", destination: "/apple-touch-icon.png" },
+      { source: "/apple-touch-icon-precomposed.png", destination: "/apple-touch-icon.png" },
+    ];
+  },
   async headers() {
     // HSTS must NOT be sent on plain-http dev — once a browser sees a
     // valid HSTS header from `localhost:7028`, it pins HTTPS for two years
@@ -99,6 +105,10 @@ const nextConfig: NextConfig = {
       : [];
 
     return [
+      {
+        source: "/social/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
       {
         source: "/(.*)",
         headers: [

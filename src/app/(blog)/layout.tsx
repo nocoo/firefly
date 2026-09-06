@@ -9,7 +9,12 @@ import { JournalThemeColor } from "@/components/blog/journal-theme-color";
 import type { Metadata, Viewport } from "next";
 import "./journal.css";
 
-export const metadata: Metadata = { icons: { icon: "/journal-icon.svg" } };
+export const metadata: Metadata = {
+  icons: {
+    icon: "/journal-icon.svg",
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+  },
+};
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f0f0e9" },

@@ -1,0 +1,55 @@
+@font-face {
+  font-family: "Journal Sans";
+  src: url("../public/fonts/journal/space-grotesk.woff2") format("woff2");
+  font-weight: 300 700;
+}
+@font-face {
+  font-family: "Journal Mono";
+  src: url("../public/fonts/journal/geist-mono.woff2") format("woff2");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Journal CJK";
+  src: url("../assets/social/journal-cjk.woff2") format("woff2");
+  font-weight: 400 700;
+}
+* { box-sizing: border-box; }
+html, body { width: 1200px; height: 630px; margin: 0; overflow: hidden; }
+.social-card {
+  position: relative;
+  width: 1200px;
+  height: 630px;
+  background: #f3f1e9;
+  color: #30372e;
+  font-family: "Journal Sans", "Journal CJK", sans-serif;
+}
+header {
+  position: absolute;
+  inset: 54px 68px auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand { display: flex; align-items: center; gap: 12px; font-size: 28px; font-weight: 600; letter-spacing: -.055em; }
+.brand-mark { display: grid; grid-template-columns: repeat(2, 8px); gap: 3px; }
+.brand-mark i { width: 8px; height: 8px; background: #a45536; }
+.brand-period { color: #a45536; }
+.label { font: 13px "Journal Mono", monospace; letter-spacing: .13em; color: #68705f; }
+.copy { position: absolute; left: 68px; top: 198px; z-index: 1; }
+h1 { margin: 0; font-size: 86px; line-height: 1.25; font-weight: 500; letter-spacing: -.04em; }
+.topics { margin: 30px 0 0; font-size: 30px; line-height: 1.5; color: #59664f; }
+.note { margin: 8px 0 0; font-size: 23px; line-height: 1.5; color: #68705f; }
+.illustration { position: absolute; top: 98px; right: 21px; width: 510px; height: 451px; }
+footer {
+  position: absolute;
+  inset: auto 68px 44px;
+  border-top: 1px solid #cfd4c7;
+  padding-top: 23px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font: 14px "Journal Mono", monospace;
+  letter-spacing: .04em;
+  color: #59664f;
+}
+footer strong { font-size: 22px; font-weight: 450; color: #30372e; }

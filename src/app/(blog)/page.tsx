@@ -5,51 +5,20 @@ import { getSiteSettings } from "@/data/settings";
 import { loadSiteIdentity } from "@/lib/site-identity";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
-import { SITE_URL, OG_LOCALE, HTML_LANG, postPath } from "@/lib/seo";
+import { SITE_URL, buildHomeMeta, postPath } from "@/lib/seo";
 import { websiteJsonLd, collectionPageJsonLd } from "@/lib/jsonld";
 import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
 import { EmptyState } from "@/components/blog/empty-state";
 import { FileText } from "lucide-react";
 import { getPostAuthor } from "@/lib/ai-agent/author";
 import { JournalIntro } from "@/components/blog/journal-intro";
+import homeSocial from "@/lib/home-social.json";
 
 export async function generateMetadata(): Promise<Metadata> {
   const db = getDb();
   const settings = await getSiteSettings(db);
 
-  // Do NOT set a page-level title here — the root layout defines
-  // title.default = "SiteName – Tagline" which is used automatically.
-  // Setting a title here would cause duplication via the template
-  // "%s | SiteName".
-  const fullTitle = settings.siteTagline
-    ? `${settings.siteName} – ${settings.siteTagline}`
-    : settings.siteName;
-
-  const description =
-    settings.siteDescription || settings.siteTagline || undefined;
-
-  return {
-    description,
-    alternates: {
-      canonical: SITE_URL,
-      languages: { [HTML_LANG]: SITE_URL },
-    },
-    openGraph: {
-      title: fullTitle,
-      description,
-      url: SITE_URL,
-      siteName: settings.siteName,
-      locale: OG_LOCALE,
-      type: "website",
-    },
-    twitter: {
-      card: "summary",
-      ...(settings.twitterHandle ? { site: settings.twitterHandle } : {}),
-      ...(settings.twitterHandle ? { creator: settings.twitterHandle } : {}),
-      title: fullTitle,
-      description,
-    },
-  };
+  return buildHomeMeta(settings);
 }
 
 export default async function Home() {
@@ -68,7 +37,7 @@ export default async function Home() {
       <ListOriginTracker />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: websiteJsonLd(identity) }}
+        dangerouslySetInnerHTML={{ __html: websiteJsonLd({ ...identity, siteDescription: homeSocial.description }) }}
       />
       <script
         type="application/ld+json"

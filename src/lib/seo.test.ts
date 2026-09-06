@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   buildPageMeta,
+  buildHomeMeta,
+  twitterAccountMeta,
   SITE_URL,
   HTML_LANG,
   OG_LOCALE,
@@ -11,6 +13,7 @@ import {
   postPath,
   type SiteIdentity,
 } from "./seo";
+import homeSocial from "./home-social.json";
 
 const testSite: SiteIdentity = {
   siteName: "Test Blog",
@@ -20,6 +23,48 @@ const testSite: SiteIdentity = {
   authorEmail: "test@example.com",
   twitterHandle: "@test",
 };
+
+describe("homepage social metadata", () => {
+  it("uses an absolute title and an explicit large image instead of the root app logo", () => {
+    const meta = buildHomeMeta(testSite);
+    expect(meta.title).toEqual({ absolute: "李征 — 博客" });
+    expect(meta.openGraph).toMatchObject({
+      title: "李征 — 博客",
+      description: meta.description,
+      type: "website",
+      siteName: testSite.siteName,
+      images: [{
+        url: new URL(homeSocial.image.url, SITE_URL).href,
+        width: 1200, height: 630, type: "image/jpeg", alt: homeSocial.image.alt,
+      }],
+    });
+    expect(meta.twitter).toMatchObject({ card: "summary_large_image", title: "李征 — 博客" });
+    expect(meta.alternates?.canonical).toBe(SITE_URL);
+  });
+
+  it("keeps article titles and featured images independent of the homepage", () => {
+    const meta = buildPageMeta({
+      title: "文章自己的标题", description: "文章自己的摘要", path: "/2026/09/article",
+      type: "article", image: "https://images.example.com/cover.jpg",
+    }, testSite);
+    expect(meta.openGraph).toMatchObject({
+      title: "文章自己的标题", type: "article",
+      images: [{ url: "https://images.example.com/cover.jpg" }],
+    });
+    expect(meta.twitter).toMatchObject({
+      title: "文章自己的标题", images: ["https://images.example.com/cover.jpg"],
+    });
+  });
+});
+
+describe("Twitter account metadata", () => {
+  it.each(["zhengli", "@zhengli", "  @zhengli  "])("normalizes %s", (value) => {
+    expect(twitterAccountMeta(value)).toEqual({ site: "@zhengli", creator: "@zhengli" });
+  });
+  it.each(["", "   ", "@"])("omits the empty account %s", (value) => {
+    expect(twitterAccountMeta(value)).toEqual({});
+  });
+});
 
 describe("locale constants", () => {
   it("HTML_LANG is zh-CN", () => {

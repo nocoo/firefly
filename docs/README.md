@@ -30,6 +30,7 @@ Modern blog platform built with Next.js, Cloudflare D1, and R2. Migrated from Wo
 | 18 | [Media Library](./18-media-library.md) | 2026-03-27 |
 | 19 | [Image Optimization & Content Lightbox](./19-image-optimization.md) | 2026-03-27 |
 | 29 | [Journal / Play-side Theme](./29-journal-play-side.md) | 2026-09-05 |
+| 30 | [Journal social previews and public identity](./30-social-preview.md) | 2026-09-07 |
 
 ## In Progress / Design
 
