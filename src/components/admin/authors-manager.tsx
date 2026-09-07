@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Pencil, Plus, Star, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
 import type { HumanWithMeta } from "@/models/types";
-import { Button } from "@/components/ui/button";
+import { Button } from "@nocoo/basalt/components/button";
+import { PageHeader } from "@nocoo/basalt/components/page-header";
 import { ConfirmDialog } from "./confirm-dialog";
 import {
   AuthorProfileLookupDialog,
@@ -75,18 +76,18 @@ export function AuthorsManager({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">作者</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            管理人类作者。AI 代理仍在「AI 代理」页维护。
-          </p>
-        </div>
-        <Button onClick={() => router.push("/admin/authors/new")}>
-          <Plus className="mr-2 h-4 w-4" />
-          创建作者
-        </Button>
-      </div>
+      <PageHeader
+        title="作者"
+        description="管理人类作者。AI 代理仍在「AI 代理」页维护。"
+        actions={
+          <Button
+            icon={<Plus />}
+            onClick={() => router.push("/admin/authors/new")}
+          >
+            创建作者
+          </Button>
+        }
+      />
 
       <div className="overflow-x-auto rounded-card bg-secondary p-1">
         <table className="w-full">

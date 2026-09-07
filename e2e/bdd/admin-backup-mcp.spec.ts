@@ -72,7 +72,7 @@ test.describe("Feature: Admin backup page", () => {
     // Then: AdminShell h1 — i18n key "admin.page.backup" → "备份"
     // (src/components/admin/shell.tsx:34 + src/lib/i18n/index.ts:44).
     await expect(
-      page.getByRole("heading", { level: 1, name: "备份" }),
+      page.getByRole("heading", { level: 1, name: "备份" }).first(),
     ).toBeVisible({ timeout: 10_000 });
   });
 
@@ -320,7 +320,7 @@ test.describe("Feature: Admin MCP tokens page", () => {
     // Then: AdminShell h1 — i18n key "admin.page.mcp" → "MCP 令牌"
     // (src/components/admin/shell.tsx:33 + src/lib/i18n/index.ts:43).
     await expect(
-      page.getByRole("heading", { level: 1, name: "MCP 令牌" }),
+      page.getByRole("heading", { level: 1, name: "MCP 令牌" }).first(),
     ).toBeVisible({ timeout: 10_000 });
   });
 

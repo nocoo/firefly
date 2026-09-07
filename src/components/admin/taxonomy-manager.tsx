@@ -4,7 +4,8 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
-import { useSetPageSubtitle } from "@/components/admin/page-subtitle-context";
+import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { Button } from "@nocoo/basalt/components/button";
 import {
   TaxonomyForm,
   type TaxonomyFormState,
@@ -51,7 +52,6 @@ export function TaxonomyManager({
     type === "category"
       ? `共 ${initialItems.length} 个分类`
       : `共 ${initialItems.length} 个标签`;
-  useSetPageSubtitle(totalText);
 
   const resetForm = useCallback(() => {
     setForm(EMPTY_FORM);
@@ -168,19 +168,20 @@ export function TaxonomyManager({
 
   return (
     <div className="space-y-4">
+      <PageHeader
+        title={label}
+        description={totalText}
+        actions={
+          !creating && !editing ? (
+            <Button onClick={startCreate}>{`新建${label}`}</Button>
+          ) : undefined
+        }
+      />
+
       {error && (
         <div className="rounded-widget border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
-      )}
-
-      {!creating && !editing && (
-        <button type="button"
-          onClick={startCreate}
-          className="inline-flex items-center gap-2 rounded-widget bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          {`新建${label}`}
-        </button>
       )}
 
       {(creating || editing) && (() => {

@@ -79,7 +79,7 @@ test.describe("Feature: Admin dashboard shell + content stats", () => {
     // Then: the AdminShell top-bar <h1> renders the dashboard title from
     // i18n key "admin.page.dashboard" → "概览" (src/lib/i18n/index.ts:34).
     await expect(
-      page.getByRole("heading", { level: 1, name: "概览" }),
+      page.getByRole("heading", { level: 1, name: "概览" }).first(),
     ).toBeVisible({ timeout: 10_000 });
 
     // Then: the three ContentStatCard labels are visible. The labels are

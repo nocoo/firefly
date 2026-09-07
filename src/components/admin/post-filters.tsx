@@ -1,13 +1,34 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
-import { RotateCcw } from "lucide-react";
+import { useCallback, type ReactNode } from "react";
 import type { Category, Tag } from "@/models/types";
 import type { PostYearCount } from "@/data/entities/post";
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@nocoo/basalt/components/select";
+import { FilterBar } from "@nocoo/basalt/components/filter-bar";
 
-const MONTH_LABELS = ["", "一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"];
+const ALL = "all";
+const MONTH_LABELS = [
+  "",
+  "一月",
+  "二月",
+  "三月",
+  "四月",
+  "五月",
+  "六月",
+  "七月",
+  "八月",
+  "九月",
+  "十月",
+  "十一月",
+  "十二月",
+];
 
 interface PostFiltersProps {
   categories: Category[];
@@ -16,6 +37,33 @@ interface PostFiltersProps {
 }
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
+
+function FilterSelect({
+  value,
+  onValueChange,
+  placeholder,
+  disabled,
+  children,
+}: {
+  value: string;
+  onValueChange: (value: string) => void;
+  placeholder: string;
+  disabled?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Select
+      value={value}
+      onValueChange={onValueChange}
+      {...(disabled ? { disabled: true } : {})}
+    >
+      <SelectTrigger size="sm" className="w-[8.5rem]">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>{children}</SelectContent>
+    </Select>
+  );
+}
 
 export function PostFilters({ categories, tags, yearCounts }: PostFiltersProps) {
   const router = useRouter();
@@ -29,11 +77,10 @@ export function PostFilters({ categories, tags, yearCounts }: PostFiltersProps) 
       } else {
         sp.delete(key);
       }
-      // Clear month when year is cleared
       if (key === "year" && !value) {
         sp.delete("month");
       }
-      sp.delete("page"); // Reset to page 1 on filter change
+      sp.delete("page");
       router.push(`/admin/posts?${sp.toString()}`);
     },
     [router, searchParams],
@@ -52,92 +99,82 @@ export function PostFilters({ categories, tags, yearCounts }: PostFiltersProps) 
 
   const currentYear = searchParams.get("year") ?? "";
   const currentMonth = searchParams.get("month") ?? "";
+  const fromParam = (key: string) => searchParams.get(key) || ALL;
+  const toParam = (value: string) => (value === ALL ? "" : value);
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      {/* Status filter */}
-      <Select
-        value={searchParams.get("status") ?? ""}
-        onChange={(e) => updateFilter("status", e.target.value)}
-        className="w-auto"
+    <FilterBar
+      label="筛选文章"
+      active={hasActiveFilters}
+      onClear={resetAllFilters}
+      clearLabel="重置"
+    >
+      <FilterSelect
+        value={fromParam("status")}
+        onValueChange={(value) => updateFilter("status", toParam(value))}
+        placeholder="全部状态"
       >
-        <option value="">全部状态</option>
-        <option value="published">已发布</option>
-        <option value="draft">草稿</option>
-        <option value="private">私密</option>
-        <option value="archived">已归档</option>
-      </Select>
+        <SelectItem value={ALL}>全部状态</SelectItem>
+        <SelectItem value="published">已发布</SelectItem>
+        <SelectItem value="draft">草稿</SelectItem>
+        <SelectItem value="private">私密</SelectItem>
+        <SelectItem value="archived">已归档</SelectItem>
+      </FilterSelect>
 
-      {/* Category filter */}
-      <Select
-        value={searchParams.get("category") ?? ""}
-        onChange={(e) => updateFilter("category", e.target.value)}
-        className="w-auto"
+      <FilterSelect
+        value={fromParam("category")}
+        onValueChange={(value) => updateFilter("category", toParam(value))}
+        placeholder="全部分类"
       >
-        <option value="">全部分类</option>
+        <SelectItem value={ALL}>全部分类</SelectItem>
         {categories.map((cat) => (
-          <option key={cat.id} value={cat.id}>
+          <SelectItem key={cat.id} value={cat.id}>
             {cat.name}
-          </option>
+          </SelectItem>
         ))}
-      </Select>
+      </FilterSelect>
 
-      {/* Tag filter */}
       {tags.length > 0 && (
-        <Select
-          value={searchParams.get("tag") ?? ""}
-          onChange={(e) => updateFilter("tag", e.target.value)}
-          className="w-auto"
+        <FilterSelect
+          value={fromParam("tag")}
+          onValueChange={(value) => updateFilter("tag", toParam(value))}
+          placeholder="全部标签"
         >
-          <option value="">全部标签</option>
+          <SelectItem value={ALL}>全部标签</SelectItem>
           {tags.map((tag) => (
-            <option key={tag.id} value={tag.id}>
+            <SelectItem key={tag.id} value={tag.id}>
               {tag.name}
-            </option>
+            </SelectItem>
           ))}
-        </Select>
+        </FilterSelect>
       )}
 
-      {/* Year filter */}
-      <Select
-        value={currentYear}
-        onChange={(e) => updateFilter("year", e.target.value)}
-        className="w-auto"
+      <FilterSelect
+        value={currentYear || ALL}
+        onValueChange={(value) => updateFilter("year", toParam(value))}
+        placeholder="全部年份"
       >
-        <option value="">全部年份</option>
+        <SelectItem value={ALL}>全部年份</SelectItem>
         {yearCounts.map(({ year, count }) => (
-          <option key={year} value={String(year)}>
+          <SelectItem key={year} value={String(year)}>
             {year} ({count})
-          </option>
+          </SelectItem>
         ))}
-      </Select>
+      </FilterSelect>
 
-      {/* Month filter — only enabled when year is selected */}
-      <Select
-        value={currentMonth}
-        onChange={(e) => updateFilter("month", e.target.value)}
-        className="w-auto"
+      <FilterSelect
+        value={currentMonth || ALL}
+        onValueChange={(value) => updateFilter("month", toParam(value))}
+        placeholder="全部月份"
         disabled={!currentYear}
       >
-        <option value="">全部月份</option>
+        <SelectItem value={ALL}>全部月份</SelectItem>
         {MONTHS.map((m) => (
-          <option key={m} value={String(m)}>
+          <SelectItem key={m} value={String(m)}>
             {MONTH_LABELS[m]}
-          </option>
+          </SelectItem>
         ))}
-      </Select>
-
-      {/* Reset all filters */}
-      {hasActiveFilters && (
-        <button
-          type="button"
-          onClick={resetAllFilters}
-          className="inline-flex items-center gap-1 rounded-widget border border-border bg-secondary px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        >
-          <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.5} />
-          重置
-        </button>
-      )}
-    </div>
+      </FilterSelect>
+    </FilterBar>
   );
 }

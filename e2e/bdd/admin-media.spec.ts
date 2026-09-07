@@ -77,7 +77,7 @@ test.describe("Feature: Admin media library page", () => {
     // Then: AdminShell h1 — i18n key "admin.page.media" → "媒体库"
     // (src/lib/i18n/index.ts:36, src/components/admin/shell.tsx:28).
     await expect(
-      page.getByRole("heading", { level: 1, name: "媒体库" }),
+      page.getByRole("heading", { level: 1, name: "媒体库" }).first(),
     ).toBeVisible({ timeout: 10_000 });
   });
 

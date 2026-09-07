@@ -62,7 +62,7 @@ test.describe("Feature: Admin categories page", () => {
     // Then: AdminShell h1 — i18n key "admin.page.categories" → "分类"
     // (src/lib/i18n/index.ts).
     await expect(
-      page.getByRole("heading", { level: 1, name: "分类" }),
+      page.getByRole("heading", { level: 1, name: "分类" }).first(),
     ).toBeVisible({ timeout: 10_000 });
   });
 
@@ -200,7 +200,7 @@ test.describe("Feature: Admin tags page", () => {
 
     // Then: AdminShell h1 — i18n key "admin.page.tags" → "标签".
     await expect(
-      page.getByRole("heading", { level: 1, name: "标签" }),
+      page.getByRole("heading", { level: 1, name: "标签" }).first(),
     ).toBeVisible({ timeout: 10_000 });
   });
 

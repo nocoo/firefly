@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 import type { Category } from "@/models/types";
-import { Button } from "@/components/ui/button";
+import { Button } from "@nocoo/basalt/components/button";
+import { PageHeader } from "@nocoo/basalt/components/page-header";
 import {
   DeleteAgentDialog,
   NewAgentModal,
@@ -108,18 +109,15 @@ export function AiAgentsManager({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">AI 代理作者</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            管理可发布内容的 AI 代理
-          </p>
-        </div>
-        <Button onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          创建代理
-        </Button>
-      </div>
+      <PageHeader
+        title="AI 代理"
+        description="管理可发布内容的 AI 代理"
+        actions={
+          <Button icon={<Plus />} onClick={handleCreate}>
+            创建代理
+          </Button>
+        }
+      />
 
       {agents.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-card bg-secondary py-12">

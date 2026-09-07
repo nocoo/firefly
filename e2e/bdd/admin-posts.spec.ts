@@ -155,7 +155,7 @@ test.describe("Feature: Admin posts list", () => {
     // Then: AdminShell h1 — i18n key "admin.page.posts" → "文章"
     // (src/lib/i18n/index.ts:35).
     await expect(
-      page.getByRole("heading", { level: 1, name: "文章" }),
+      page.getByRole("heading", { level: 1, name: "文章" }).first(),
     ).toBeVisible({ timeout: 10_000 });
   });
 
@@ -231,7 +231,7 @@ test.describe("Feature: Admin post new editor", () => {
 
     // Then: /admin/posts/new is wrapped by the admin layout with breadcrumbs / subpage title.
     await expect(
-      page.getByRole("heading", { level: 1, name: "新建文章" }),
+      page.getByRole("heading", { level: 1, name: "新建文章" }).first(),
     ).toBeVisible({ timeout: 10_000 });
 
     // Then: post-form.tsx:273 — title <Input> placeholder is exactly "文章标题".

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Loader2, Upload, User, X } from "lucide-react";
 import { toast } from "sonner";
 import type { Human } from "@/models/types";
-import { Button } from "@/components/ui/button";
+import { Button } from "@nocoo/basalt/components/button";
+import { PageHeader } from "@nocoo/basalt/components/page-header";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -125,11 +126,7 @@ export function AuthorForm({
 
   return (
     <div className="max-w-xl space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-foreground">
-          {isNew ? "创建作者" : "编辑作者"}
-        </h1>
-      </div>
+      <PageHeader title={isNew ? "创建作者" : "编辑作者"} />
 
       {!isNew && (
         <div className="flex items-center gap-4">

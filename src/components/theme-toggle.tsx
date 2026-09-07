@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Monitor } from "lucide-react";
-import { IconButton } from "@/components/ui/icon-button";
+import { Button } from "@nocoo/basalt/components/button";
 import { t } from "@/lib/i18n";
 
 const ICON_PROPS = {
@@ -42,16 +42,20 @@ export function ThemeToggle() {
   // Render a static placeholder until mounted to avoid hydration mismatch
   if (!mounted) {
     return (
-      <IconButton
+      <Button
+        variant="ghost"
+        size="icon"
         aria-label={`${t("theme.toggle.tip.next")}（${t("theme.toggle.label.system")}）`}
       >
         <Monitor {...ICON_PROPS} />
-      </IconButton>
+      </Button>
     );
   }
 
   return (
-    <IconButton
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={cycleTheme}
       aria-label={`${t("theme.toggle.tip.next")}（${label}）`}
     >
@@ -62,6 +66,6 @@ export function ThemeToggle() {
       ) : (
         <Monitor {...ICON_PROPS} />
       )}
-    </IconButton>
+    </Button>
   );
 }

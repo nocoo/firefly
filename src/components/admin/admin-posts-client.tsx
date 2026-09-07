@@ -6,10 +6,15 @@ import { LayoutList, LayoutGrid } from "lucide-react";
 import type { PostWithCategory, Category, Tag } from "@/models/types";
 import type { PostYearCount } from "@/data/entities/post";
 import { PostFilters } from "@/components/admin/post-filters";
-import { useSetPageSubtitle } from "@/components/admin/page-subtitle-context";
 import { AdminPostsBulkActionBar } from "@/components/admin/admin-posts-bulk-action-bar";
 import { AdminPostsListView } from "@/components/admin/admin-posts-list-view";
 import { AdminPostsGridView } from "@/components/admin/admin-posts-grid-view";
+import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { Button } from "@nocoo/basalt/components/button";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@nocoo/basalt/components/toggle-group";
 
 // ---------------------------------------------------------------------------
 // View-mode external store — keeps preference in localStorage across tabs
@@ -71,30 +76,21 @@ function ViewModeToggle({
   onChange: (mode: ViewMode) => void;
 }) {
   return (
-    <div className="flex items-center rounded-lg border border-border bg-background p-0.5">
-      <button type="button"
-        onClick={() => onChange("list")}
-        aria-label="列表视图"
-        className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
-          viewMode === "list"
-            ? "bg-accent text-foreground"
-            : "text-muted-foreground hover:text-foreground"
-        }`}
-      >
+    <ToggleGroup
+      type="single"
+      value={viewMode}
+      onValueChange={(value) => {
+        if (value === "list" || value === "grid") onChange(value);
+      }}
+      aria-label="视图"
+    >
+      <ToggleGroupItem value="list" aria-label="列表视图">
         <LayoutList className="h-4 w-4" strokeWidth={1.5} />
-      </button>
-      <button type="button"
-        onClick={() => onChange("grid")}
-        aria-label="网格视图"
-        className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
-          viewMode === "grid"
-            ? "bg-accent text-foreground"
-            : "text-muted-foreground hover:text-foreground"
-        }`}
-      >
+      </ToggleGroupItem>
+      <ToggleGroupItem value="grid" aria-label="网格视图">
         <LayoutGrid className="h-4 w-4" strokeWidth={1.5} />
-      </button>
-    </div>
+      </ToggleGroupItem>
+    </ToggleGroup>
   );
 }
 
@@ -115,8 +111,6 @@ export function AdminPostsClient({
     getViewModeSnapshot,
     getViewModeServerSnapshot,
   );
-
-  useSetPageSubtitle(`共 ${total} 篇文章`);
 
   const handleViewModeChange = (mode: ViewMode) => {
     localStorage.setItem(VIEW_MODE_KEY, mode);
@@ -156,20 +150,23 @@ export function AdminPostsClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="flex-1 min-w-0">
-          <PostFilters categories={categories} tags={tags} yearCounts={yearCounts} />
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <ViewModeToggle viewMode={viewMode} onChange={handleViewModeChange} />
-          <Link
-            href="/admin/posts/new"
-            className="inline-flex items-center gap-2 rounded-widget bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            新建文章
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title="文章"
+        description={`共 ${total} 篇文章`}
+        actions={
+          <>
+            <PostFilters
+              categories={categories}
+              tags={tags}
+              yearCounts={yearCounts}
+            />
+            <ViewModeToggle viewMode={viewMode} onChange={handleViewModeChange} />
+            <Button asChild>
+              <Link href="/admin/posts/new">新建文章</Link>
+            </Button>
+          </>
+        }
+      />
 
       {selectedIds.size > 0 && (
         <AdminPostsBulkActionBar

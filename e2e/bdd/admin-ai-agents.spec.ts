@@ -108,7 +108,7 @@ test.describe("Feature: Admin AI agents list page", () => {
     // also renders AiAgentsManager h1 "AI 代理作者" — exact: true keeps
     // "AI 代理" from substring-matching "AI 代理作者".
     await expect(
-      page.getByRole("heading", { level: 1, name: "AI 代理", exact: true }),
+      page.getByRole("heading", { level: 1, name: "AI 代理", exact: true }).first(),
     ).toBeVisible({ timeout: 10_000 });
   });
 
@@ -119,10 +119,13 @@ test.describe("Feature: Admin AI agents list page", () => {
     await page.goto("/admin/ai-agents", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-agents");
 
-    // Then: positive anchor — AiAgentsManager always renders its own h1.
+    // Then: positive anchor — PageHeader title matches the shell heading.
     await expect(
-      page.getByRole("heading", { level: 1, name: "AI 代理作者", exact: true }),
+      page.getByRole("heading", { level: 1, name: "AI 代理", exact: true }).nth(1),
     ).toBeVisible({ timeout: 10_000 });
+    await expect(
+      page.getByText("管理可发布内容的 AI 代理", { exact: true }),
+    ).toBeVisible();
 
     // Then: ai-agents-manager.tsx:124 — empty branch renders the exact copy;
     // non-empty branch renders <AiAgentsTable> with at least the 名称
@@ -242,7 +245,7 @@ test.describe("Feature: Admin AI agent new form", () => {
     // AI 代理" would otherwise substring-match the AdminShell "AI 代理"
     // as well.
     await expect(
-      page.getByRole("heading", { level: 1, name: "创建 AI 代理", exact: true }),
+      page.getByRole("heading", { level: 1, name: "创建 AI 代理", exact: true }).first(),
     ).toBeVisible({ timeout: 10_000 });
   });
 

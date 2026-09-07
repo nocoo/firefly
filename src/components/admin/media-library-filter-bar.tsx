@@ -1,8 +1,6 @@
 "use client";
 
-import { useRef } from "react";
-import { Search, X, RotateCcw } from "lucide-react";
-import { Select } from "@/components/ui/select";
+import type { ReactNode } from "react";
 import type { YearCount } from "@/data/entities/media";
 import {
   hasActiveFilters,
@@ -10,6 +8,44 @@ import {
   MONTHS,
   type Filters,
 } from "./media-library-helpers";
+import { FilterBar } from "@nocoo/basalt/components/filter-bar";
+import { Input } from "@nocoo/basalt/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@nocoo/basalt/components/select";
+
+const ALL = "all";
+
+function FilterSelect({
+  value,
+  onValueChange,
+  placeholder,
+  disabled,
+  children,
+}: {
+  value: string;
+  onValueChange: (value: string) => void;
+  placeholder: string;
+  disabled?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Select
+      value={value}
+      onValueChange={onValueChange}
+      {...(disabled ? { disabled: true } : {})}
+    >
+      <SelectTrigger size="sm" className="w-[8.5rem]">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>{children}</SelectContent>
+    </Select>
+  );
+}
 
 export function MediaLibraryFilterBar({
   filters,
@@ -28,105 +64,78 @@ export function MediaLibraryFilterBar({
   onSortChange: (sortBy: string, sortOrder: string) => void;
   onReset: () => void;
 }) {
-  const searchRef = useRef<HTMLInputElement>(null);
+  const toParam = (value: string) => (value === ALL ? "" : value);
 
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-3">
-      {/* Search */}
-      <div className="relative flex-1 min-w-[180px]">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-        <input
-          ref={searchRef}
-          type="text"
-          value={searchInput}
-          onChange={(e) => onSearchInputChange(e.target.value)}
-          placeholder="搜索文件..."
-          className="w-full rounded-widget border border-border bg-secondary pl-8 pr-8 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        {searchInput && (
-          <button
-            type="button"
-            onClick={() => {
-              onSearchInputChange("");
-              searchRef.current?.focus();
-            }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <X className="h-3.5 w-3.5" strokeWidth={1.5} />
-          </button>
-        )}
-      </div>
+    <FilterBar
+      label="筛选媒体"
+      active={hasActiveFilters(filters)}
+      onClear={onReset}
+      clearLabel="重置"
+    >
+      <Input
+        size="sm"
+        type="text"
+        value={searchInput}
+        onChange={(e) => onSearchInputChange(e.target.value)}
+        placeholder="搜索文件..."
+        className="min-w-[180px] flex-1"
+      />
 
-      {/* Type filter */}
-      <Select
-        value={filters.mimeType}
-        onChange={(e) => onUpdateFilter("mimeType", e.target.value)}
-        className="w-auto"
+      <FilterSelect
+        value={filters.mimeType || ALL}
+        onValueChange={(value) => onUpdateFilter("mimeType", toParam(value))}
+        placeholder="所有类型"
       >
-        <option value="">所有类型</option>
-        <option value="image/jpeg">JPEG</option>
-        <option value="image/png">PNG</option>
-        <option value="image/webp">WebP</option>
-        <option value="image/gif">GIF</option>
-        <option value="image/svg">SVG</option>
-      </Select>
+        <SelectItem value={ALL}>所有类型</SelectItem>
+        <SelectItem value="image/jpeg">JPEG</SelectItem>
+        <SelectItem value="image/png">PNG</SelectItem>
+        <SelectItem value="image/webp">WebP</SelectItem>
+        <SelectItem value="image/gif">GIF</SelectItem>
+        <SelectItem value="image/svg">SVG</SelectItem>
+      </FilterSelect>
 
-      {/* Year filter */}
-      <Select
-        value={filters.year}
-        onChange={(e) => onUpdateFilter("year", e.target.value)}
-        className="w-auto"
+      <FilterSelect
+        value={filters.year || ALL}
+        onValueChange={(value) => onUpdateFilter("year", toParam(value))}
+        placeholder="全部年份"
       >
-        <option value="">全部年份</option>
+        <SelectItem value={ALL}>全部年份</SelectItem>
         {initialYearCounts.map(({ year, count }) => (
-          <option key={year} value={String(year)}>
+          <SelectItem key={year} value={String(year)}>
             {year} ({count})
-          </option>
+          </SelectItem>
         ))}
-      </Select>
+      </FilterSelect>
 
-      {/* Month filter */}
-      <Select
-        value={filters.month}
-        onChange={(e) => onUpdateFilter("month", e.target.value)}
-        className="w-auto"
+      <FilterSelect
+        value={filters.month || ALL}
+        onValueChange={(value) => onUpdateFilter("month", toParam(value))}
+        placeholder="全部月份"
         disabled={!filters.year}
       >
-        <option value="">全部月份</option>
+        <SelectItem value={ALL}>全部月份</SelectItem>
         {MONTHS.map((m) => (
-          <option key={m} value={String(m)}>
+          <SelectItem key={m} value={String(m)}>
             {MONTH_LABELS[m]}
-          </option>
+          </SelectItem>
         ))}
-      </Select>
+      </FilterSelect>
 
-      {/* Sort */}
-      <Select
+      <FilterSelect
         value={`${filters.sortBy}-${filters.sortOrder}`}
-        onChange={(e) => {
-          const [by, order] = e.target.value.split("-");
+        onValueChange={(value) => {
+          const [by, order] = value.split("-");
           onSortChange(by, order);
         }}
-        className="w-auto"
+        placeholder="排序"
       >
-        <option value="created_at-desc">最新优先</option>
-        <option value="created_at-asc">最早优先</option>
-        <option value="size-desc">最大优先</option>
-        <option value="size-asc">最小优先</option>
-        <option value="filename-asc">名称 A–Z</option>
-      </Select>
-
-      {/* Reset */}
-      {hasActiveFilters(filters) && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="inline-flex items-center gap-1 rounded-widget border border-border bg-secondary px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        >
-          <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.5} />
-          重置
-        </button>
-      )}
-    </div>
+        <SelectItem value="created_at-desc">最新优先</SelectItem>
+        <SelectItem value="created_at-asc">最早优先</SelectItem>
+        <SelectItem value="size-desc">最大优先</SelectItem>
+        <SelectItem value="size-asc">最小优先</SelectItem>
+        <SelectItem value="filename-asc">名称 A–Z</SelectItem>
+      </FilterSelect>
+    </FilterBar>
   );
 }

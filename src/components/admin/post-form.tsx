@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type {
   AiAgent,
@@ -38,6 +37,8 @@ import {
 } from "./post-form-helpers";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
+import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { Button } from "@nocoo/basalt/components/button";
 
 interface PostFormProps {
   post?: PostWithAgent & { tagIds: string[] };
@@ -379,30 +380,26 @@ export function PostForm({
 
       {/* Actions */}
       <div className="flex items-center gap-3 pt-4 border-t border-border">
-        <button
-          type="submit"
-          disabled={saving}
-          className="inline-flex items-center gap-2 rounded-widget bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-        >
-          {saving && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} aria-hidden="true" />}
+        <Button type="submit" disabled={saving} loading={saving}>
           {saving ? "保存中..." : isEditing ? "更新文章" : "创建文章"}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           onClick={() => router.push("/admin/posts")}
-          className="inline-flex items-center rounded-widget border border-border bg-secondary px-4 py-2 text-sm text-foreground transition-colors hover:bg-accent"
         >
-          {"取消"}
-        </button>
+          取消
+        </Button>
         {isEditing && (
-          <button
+          <Button
             type="button"
+            variant="destructive"
+            className="ml-auto"
             onClick={() => setDeleteConfirmOpen(true)}
             disabled={saving}
-            className="ml-auto inline-flex items-center rounded-widget bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50"
           >
-            {"删除文章"}
-          </button>
+            删除文章
+          </Button>
         )}
       </div>
 
@@ -422,6 +419,8 @@ export function PostForm({
   );
 
   return (
+    <div className="space-y-6">
+      <PageHeader title={isEditing ? "编辑文章" : "新建文章"} />
     <div className="flex gap-6">
       <form
         onSubmit={handleSubmit}
@@ -443,6 +442,7 @@ export function PostForm({
           referenceImage={reference.image}
         />
       </div>
+    </div>
     </div>
   );
 }

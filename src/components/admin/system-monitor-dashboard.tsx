@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Clock, Cpu, HardDrive, RefreshCw, TrendingUp } from "lucide-react";
-import { useSetPageSubtitle } from "@/components/admin/page-subtitle-context";
+import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { Button } from "@nocoo/basalt/components/button";
 import { MemoryTrendChart } from "./system-monitor-chart";
 import {
   formatTimeAgo,
@@ -18,8 +19,6 @@ export function SystemMonitorDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
-
-  useSetPageSubtitle("系统监控");
 
   const fetchStats = useCallback(async () => {
     try {
@@ -66,18 +65,15 @@ export function SystemMonitorDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          {lastUpdated && `上次更新：${formatTimeAgo(lastUpdated)}`}
-        </div>
-        <button type="button"
-          onClick={fetchStats}
-          className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-secondary transition-colors"
-        >
-          <RefreshCw className="h-4 w-4" />
-          刷新
-        </button>
-      </div>
+      <PageHeader
+        title="系统监控"
+        description={lastUpdated ? `上次更新：${formatTimeAgo(lastUpdated)}` : undefined}
+        actions={
+          <Button variant="outline" size="sm" icon={<RefreshCw />} onClick={fetchStats}>
+            刷新
+          </Button>
+        }
+      />
 
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard

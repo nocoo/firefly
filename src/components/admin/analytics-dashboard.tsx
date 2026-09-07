@@ -2,8 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { FileText, FolderOpen, Tags } from "lucide-react";
-import { SegmentedControl } from "@/components/ui/segmented-control";
-import { useSetPageSubtitle } from "@/components/admin/page-subtitle-context";
+import { PageHeader } from "@nocoo/basalt/components/page-header";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@nocoo/basalt/components/toggle-group";
 import type {
   AnalyticsSummaryResponse,
   SourceDetailResponse,
@@ -123,8 +126,7 @@ export function AnalyticsDashboard({
 
   const subtitleText = summary
     ? `${summary.period.startDate} — ${summary.period.endDate}`
-    : null;
-  useSetPageSubtitle(subtitleText);
+    : undefined;
 
   if (error && !summary) {
     return (
@@ -151,21 +153,30 @@ export function AnalyticsDashboard({
   };
 
   return (
+    <div className="space-y-6">
+      <PageHeader
+        title="概览"
+        description={subtitleText}
+        actions={
+          <ToggleGroup
+            type="single"
+            value={String(days)}
+            onValueChange={(value) => {
+              if (value) handlePeriodChange(Number(value));
+            }}
+            aria-label="统计周期"
+          >
+            {PERIOD_OPTIONS.map((option) => (
+              <ToggleGroupItem key={option.value} value={String(option.value)}>
+                {option.label}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        }
+      />
     <div className="grid gap-6 lg:grid-cols-10">
       {/* ── Left column: charts + tabs (7/10) ── */}
       <div className="lg:col-span-7 space-y-6">
-        {/* Period selector */}
-        <div className="flex items-center justify-end">
-          <SegmentedControl
-            options={PERIOD_OPTIONS.map((o) => ({
-              value: o.value,
-              label: o.label,
-            }))}
-            value={days}
-            onChange={handlePeriodChange}
-          />
-        </div>
-
         {/* Traffic trend chart */}
         <TrafficTrend daily={summary.daily} />
 
@@ -239,6 +250,7 @@ export function AnalyticsDashboard({
         {/* System memory stats */}
         <SystemMemoryCard />
       </div>
+    </div>
     </div>
   );
 }

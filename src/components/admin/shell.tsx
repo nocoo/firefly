@@ -8,10 +8,6 @@ import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Toaster } from "@/components/ui/sonner";
-import {
-  PageSubtitleProvider,
-  usePageSubtitle,
-} from "@/components/admin/page-subtitle-context";
 import { t, type TranslationKey } from "@/lib/i18n";
 import {
   CommandPaletteProvider,
@@ -59,7 +55,7 @@ function getAdminBreadcrumbs(pathname: string): { label: string; href?: string }
     return [];
   }
 
-  const items: { label: string; href?: string }[] = [{ label: "控制台", href: "/admin" }];
+  const items: { label: string; href?: string }[] = [{ label: "概览", href: "/admin" }];
 
   if (pathname === "/admin/posts/new") {
     items.push({ label: "文章", href: "/admin/posts" });
@@ -74,7 +70,7 @@ function getAdminBreadcrumbs(pathname: string): { label: string; href?: string }
     return items;
   }
   if (pathname.startsWith("/admin/ai-agents/") && pathname !== "/admin/ai-agents") {
-    items.push({ label: "AI 代理作者", href: "/admin/ai-agents" });
+    items.push({ label: "AI 代理", href: "/admin/ai-agents" });
     return items;
   }
 
@@ -165,8 +161,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
   return (
     <LinkProvider render={Link}>
       <CommandPaletteProvider>
-        <PageSubtitleProvider>
-          <AppShell>
+        <AppShell>
             <AppSkipLink>跳至主要内容</AppSkipLink>
 
             {/* Desktop sidebar */}
@@ -213,8 +208,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
 
             {/* Global command palette */}
             <CommandPalette />
-          </AppShell>
-        </PageSubtitleProvider>
+        </AppShell>
       </CommandPaletteProvider>
     </LinkProvider>
   );
@@ -230,25 +224,22 @@ function ShellHeader({
   breadcrumbs: { label: string; href?: string }[];
   leading: React.ReactNode;
 }) {
-  const { subtitle } = usePageSubtitle();
-
-  const titleStr = subtitle ? `${title} · ${subtitle}` : title;
-
   const actions = (
     <div className="flex items-center gap-1.5">
-      <a
-        href="https://github.com/nocoo/firefly"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="GitHub"
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-basalt-muted-foreground hover:text-basalt-foreground hover:bg-basalt-accent transition-colors"
-      >
-        <Github
-          className="h-[18px] w-[18px]"
-          aria-hidden="true"
-          strokeWidth={1.5}
-        />
-      </a>
+      <Button variant="ghost" size="icon" asChild>
+        <a
+          href="https://github.com/nocoo/firefly"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="GitHub"
+        >
+          <Github
+            className="h-[18px] w-[18px]"
+            aria-hidden="true"
+            strokeWidth={1.5}
+          />
+        </a>
+      </Button>
       <ThemeToggle />
     </div>
   );
@@ -257,7 +248,7 @@ function ShellHeader({
     <AppHeader
       leading={leading}
       breadcrumbs={breadcrumbs}
-      title={titleStr}
+      title={title}
       actions={actions}
     />
   );

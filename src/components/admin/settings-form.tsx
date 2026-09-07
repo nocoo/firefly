@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { PageHeader } from "@nocoo/basalt/components/page-header";
 import type { SiteSettings, FontStyle } from "@/data/settings";
 
 interface SettingsFormProps {
@@ -81,6 +82,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
 
   return (
     <div className="space-y-6">
+      <PageHeader title="设置" />
       {/* Card 1: Display Settings */}
       <div className="rounded-card bg-secondary p-5 md:p-6 space-y-5">
         <h2 className="text-base font-medium text-foreground">

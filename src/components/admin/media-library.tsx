@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import type { YearCount } from "@/data/entities/media";
 import { ConfirmDialog } from "./confirm-dialog";
+import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { Button } from "@nocoo/basalt/components/button";
 import {
   buildQuery,
   EMPTY_FILTERS,
@@ -174,19 +176,21 @@ export function MediaLibrary({
         onDismiss={upload.dismissQueue}
       />
 
-      <MediaLibraryFilterBar
-        filters={filters}
-        searchInput={searchInput}
-        initialYearCounts={initialYearCounts}
-        onSearchInputChange={setSearchInput}
-        onUpdateFilter={updateFilter}
-        onSortChange={handleSortChange}
-        onReset={resetFilters}
+      <PageHeader
+        title="媒体库"
+        description={fetching ? "..." : `显示 ${media.length} / ${total}`}
+        actions={
+          <MediaLibraryFilterBar
+            filters={filters}
+            searchInput={searchInput}
+            initialYearCounts={initialYearCounts}
+            onSearchInputChange={setSearchInput}
+            onUpdateFilter={updateFilter}
+            onSortChange={handleSortChange}
+            onReset={resetFilters}
+          />
+        }
       />
-
-      <p className="mb-4 text-sm text-muted-foreground">
-        {fetching ? "..." : `显示 ${media.length} / ${total}`}
-      </p>
 
       {media.length === 0 && !fetching && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -210,14 +214,14 @@ export function MediaLibrary({
 
       {media.length < total && media.length > 0 && (
         <div className="mt-6 flex justify-center">
-          <button
-            type="button"
+          <Button
+            variant="outline"
             onClick={loadMore}
             disabled={loading}
-            className="rounded-widget border border-border bg-secondary px-6 py-2 text-sm text-foreground hover:bg-accent transition-colors disabled:opacity-50"
+            loading={loading}
           >
-            {loading ? "..." : "加载更多"}
-          </button>
+            加载更多
+          </Button>
         </div>
       )}
 

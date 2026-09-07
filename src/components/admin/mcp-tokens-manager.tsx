@@ -6,6 +6,7 @@ import { KeyRound, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { McpToken, McpTokenScope } from "@/models/types";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@nocoo/basalt/components/page-header";
 import { McpSetupGuide } from "./mcp-tokens-setup-guide";
 import { McpTokensTable } from "./mcp-tokens-table";
 import { McpTokenCreateForm } from "./mcp-tokens-create-form";
@@ -138,6 +139,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
 
   return (
     <div className="space-y-8">
+      <PageHeader title="MCP 令牌" />
       <McpSetupGuide mcpUrl={mcpUrl} />
 
       <hr className="border-border" />

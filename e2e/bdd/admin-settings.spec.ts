@@ -87,7 +87,7 @@ test.describe("Feature: Admin general settings page", () => {
     // Then: AdminShell top-bar <h1> renders i18n key "admin.page.settings" → "设置"
     // (src/components/admin/shell.tsx:30,250-252 + src/lib/i18n/index.ts:40).
     await expect(
-      page.getByRole("heading", { level: 1, name: "设置" }),
+      page.getByRole("heading", { level: 1, name: "设置" }).first(),
     ).toBeVisible({ timeout: 10_000 });
   });
 
@@ -186,7 +186,7 @@ test.describe("Feature: Admin AI settings page", () => {
 
     // Then: AdminShell h1 — i18n key "admin.page.ai-settings" → "AI 设置".
     await expect(
-      page.getByRole("heading", { level: 1, name: "AI 设置" }),
+      page.getByRole("heading", { level: 1, name: "AI 设置" }).first(),
     ).toBeVisible({ timeout: 10_000 });
     // Then: AiSettingsProviderCard h2 (provider-card.tsx:31).
     await expect(
@@ -324,7 +324,7 @@ test.describe("Feature: Admin site identity page", () => {
 
     // Then: AdminShell h1.
     await expect(
-      page.getByRole("heading", { level: 1, name: "站点身份" }),
+      page.getByRole("heading", { level: 1, name: "站点身份" }).first(),
     ).toBeVisible({ timeout: 10_000 });
   });
 
@@ -432,7 +432,7 @@ test.describe("Feature: Admin system monitor page", () => {
 
     // Then: AdminShell h1 — i18n key "admin.page.system" → "系统监控".
     await expect(
-      page.getByRole("heading", { level: 1, name: "系统监控" }),
+      page.getByRole("heading", { level: 1, name: "系统监控" }).first(),
     ).toBeVisible({ timeout: 10_000 });
   });
 

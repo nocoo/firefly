@@ -5,6 +5,7 @@ import type { McpTokenScope } from "@/models/types";
 import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
+import { Button } from "@nocoo/basalt/components/button";
 
 /**
  * Inline create-token form: client-name input + scope select + create button.
@@ -52,14 +53,14 @@ export function McpTokenCreateForm({
           <option value="author">作者</option>
         </Select>
       </FormField>
-      <button type="button"
+      <Button
         onClick={onCreate}
         disabled={creating || !clientName.trim()}
-        className="inline-flex items-center gap-2 rounded-widget bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+        loading={creating}
+        icon={<Plus />}
       >
-        <Plus className="h-4 w-4" />
         {creating ? "创建中…" : "创建令牌"}
-      </button>
+      </Button>
     </div>
   );
 }

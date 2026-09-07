@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { AiAgent, Category } from "@/models/types";
-import { Button } from "@/components/ui/button";
+import { Button } from "@nocoo/basalt/components/button";
+import { PageHeader } from "@nocoo/basalt/components/page-header";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -138,15 +138,7 @@ export function AiAgentForm({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          返回
-        </Button>
-        <h1 className="text-xl font-semibold text-foreground">
-          {isNew ? "创建 AI 代理" : "编辑 AI 代理"}
-        </h1>
-      </div>
+      <PageHeader title={isNew ? "创建 AI 代理" : "编辑 AI 代理"} />
 
       <div className="rounded-lg bg-secondary p-6">
         <div className="grid gap-6 md:grid-cols-2">
@@ -235,8 +227,7 @@ export function AiAgentForm({
         </div>
 
         <div className="mt-6 flex items-center gap-3 border-t border-border pt-6">
-          <Button onClick={handleSave} disabled={saving}>
-            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button onClick={handleSave} disabled={saving} loading={saving}>
             {isNew ? "创建代理" : "保存更改"}
           </Button>
           <Button

@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { SiteSettings, SocialLink } from "@/data/settings";
 import { SiteLogoCard } from "./site-logo-card";
 import { SocialLinksCard } from "./social-links-card";
+import { PageHeader } from "@nocoo/basalt/components/page-header";
 
 interface SiteIdentityFormProps {
   settings: SiteSettings;
@@ -67,6 +68,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
 
   return (
     <div className="space-y-6">
+      <PageHeader title="站点身份" />
       <SiteLogoCard initialLogoUrl={logoUrl} />
 
       {/* Card 2: Site Info */}
