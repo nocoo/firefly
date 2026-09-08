@@ -134,7 +134,7 @@
   .page-wrapper { border: none; background: transparent; }
   .page-wrapper::before, .page-wrapper::after, .blog-max-width::after { display: none; }
   .blog-sidebar { background: transparent; scrollbar-width: thin; scrollbar-color: var(--blog-separator) transparent; }
-  .blog-sidebar-desktop { padding: 40px 20px 48px; }
+  .blog-sidebar-desktop { padding: 48px 28px 48px 36px; }
   .journal-eyebrow {
     display: flex; align-items: center; gap: 9px;
     font: 9px / 1.6 var(--ff-mono); letter-spacing: 0.075em; color: var(--blog-muted); margin: 0 0 20px;
@@ -152,10 +152,10 @@
   .blog-social-link[data-brand]:is(:hover, :focus-visible, :active) { background: var(--blog-accent); color: var(--blog-bg); }
   .blog-social-link:hover .blog-social-icon { fill: none; }
   .blog-social-link[data-brand="x"]:hover .blog-social-icon { fill: currentColor; }
-  .blog-search { width: 100%; margin: 0 0 28px; border: 1px solid var(--blog-separator); border-radius: 7px; background: var(--blog-surface); padding: 10px 14px; }
+  .blog-search { width: 100%; margin: 0 0 28px; border: none; border-radius: 7px; background: var(--blog-surface); padding: 10px 12px; box-shadow: 0 0 0 1px var(--blog-separator); }
   .blog-search-input { min-width: 0; width: 100%; font: 13px / 1.6 var(--ff-sans); color: var(--blog-text); }
   .blog-search-input::placeholder { color: var(--blog-muted); }
-  .blog-search:focus-within { border-color: var(--blog-accent); }
+  .blog-search:focus-within { box-shadow: 0 0 0 1px var(--blog-accent); }
   .blog-search-input:focus { outline: none; }
   .blog-search-kbd { flex-shrink: 0; color: var(--blog-muted); }
   .blog-sidebar-heading { font: 500 11px var(--ff-sans); letter-spacing: 0.06em; color: var(--blog-muted); border: none; padding: 0; margin-bottom: 12px; gap: 8px; }
@@ -343,7 +343,7 @@
     .blog-topbar-inner { padding-inline: 28px; gap: 22px; }
     .journal-surfaces { gap: 18px; }
     .blog-search-kbd { display: none; }
-    .blog-sidebar-desktop { padding-inline: 16px; }
+    .blog-sidebar-desktop { padding-inline: 28px 22px; }
     .journal-intro { grid-template-columns: minmax(0, 1fr) 150px; gap: 20px; }
     .journal-intro h1 { font-size: 30px; }
     .blog-entry-title { font-size: 25px; }
