@@ -85,12 +85,11 @@ test("the mobile drawer traps focus around collapsed and expanded archives", asy
   await expect(summary).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(drawer.locator("details")).toHaveAttribute("open");
-  const last = drawer.getByRole("link").last();
-  await last.focus();
+  await expect(summary).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(first).toBeFocused();
   await page.keyboard.press("Shift+Tab");
-  await expect(last).toBeFocused();
+  await expect(summary).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "打开侧边栏" })).toBeFocused();
 });

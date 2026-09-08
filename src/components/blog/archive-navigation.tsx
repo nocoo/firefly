@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { ChevronsDown, ChevronsUp } from "lucide-react";
 import type { MonthlyArchive } from "@/data/entities/post";
 
 interface ArchiveEntry {
@@ -54,9 +54,14 @@ export function ArchiveNavigation({ archives }: { archives: MonthlyArchive[] }) 
       {remaining.length > 0 && (
         <details className="blog-archive-more">
           <summary>
-            <span className="blog-archive-expand">展开更多 <span className="blog-sidebar-count">+{remaining.length}</span></span>
-            <span className="blog-archive-collapse">收起归档</span>
-            <ChevronDown aria-hidden="true" strokeWidth={1.5} />
+            <span className="blog-archive-expand">
+              展开
+              <ChevronsDown aria-hidden="true" strokeWidth={1.5} />
+            </span>
+            <span className="blog-archive-collapse">
+              收起
+              <ChevronsUp aria-hidden="true" strokeWidth={1.5} />
+            </span>
           </summary>
           <ArchiveLinks entries={remaining} />
         </details>
