@@ -4,7 +4,7 @@ export function JournalWechat() {
       <figure className="journal-wechat-card">
         <img
           className="journal-wechat-qr"
-          src="/journal-wechat-qr.png"
+          src="/journal-wechat-qr.png?v=accent"
           width={180}
           height={180}
           alt="微信公众号「不如喝杯咖啡」二维码"
