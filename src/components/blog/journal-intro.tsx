@@ -18,8 +18,8 @@ export async function JournalIntro({ siteName, tagline, total }: { siteName: str
       </div>
       <JournalKeepsake initialScene={initialScene} />
       <div className="journal-index-line">
-        <span lang="en">LATEST ENTRIES</span>
-        <span>{total} 篇记录 <span aria-hidden="true">↙</span></span>
+        <span lang="en">LATEST ARTICLES</span>
+        <span>{total} 篇文章 <span aria-hidden="true">↙</span></span>
       </div>
     </header>
   );
