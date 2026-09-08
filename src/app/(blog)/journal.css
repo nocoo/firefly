@@ -182,8 +182,7 @@
   .journal-intro { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 208px; column-gap: 32px; align-items: center; margin-bottom: 28px; animation: journal-arrive 650ms var(--journal-ease) both; }
   .journal-intro .journal-eyebrow { margin-bottom: 24px; }
   .journal-intro h1 { font: 500 clamp(36px, 3.7vw, 54px) / 1.42 var(--journal-display); letter-spacing: -0.065em; margin: 0; }
-  .journal-intro h1 > span { display: block; }
-  .journal-intro h1 > span + span { color: var(--journal-olive); }
+  .journal-intro-period { color: var(--journal-orange); }
   .journal-intro-note { margin: 20px 0 36px; color: var(--blog-muted); font: 13px / 1.7 var(--journal-display); }
   .journal-index-line { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 16px; align-items: center; padding-top: 22px; border-top: 1px solid var(--blog-separator); color: var(--blog-muted); font: 9px / 1.7 var(--ff-mono); letter-spacing: 0.07em; }
   .journal-index-line > span:last-child { font-family: var(--ff-sans); font-size: 11px; letter-spacing: 0; }
