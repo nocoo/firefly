@@ -175,17 +175,22 @@
   .blog-archive-more[open] .blog-archive-collapse { display: inline-flex; }
   .blog-archive-more > .blog-sidebar-list { order: 1; }
   .journal-wechat { margin-top: 20px; }
-  .journal-wechat-kicker { margin: 0; font: 9px / 1.6 var(--ff-mono); letter-spacing: 0.075em; color: var(--blog-muted); }
-  .journal-wechat-name { margin: 4px 0 10px; font: 13px / 1.4 var(--ff-sans); color: var(--blog-text); }
-  .journal-wechat-mark { position: relative; margin: 0 -2px -10px; }
+  .journal-wechat-kicker { margin: 0 0 10px; font: 9px / 1.6 var(--ff-mono); letter-spacing: 0.075em; color: var(--blog-muted); }
+  .journal-wechat-card {
+    margin: 0 18px 4px; padding: 14px 14px 12px;
+    border: 1px solid var(--blog-separator); background: var(--blog-surface);
+    border-radius: 8px 8px 36px 8px;
+  }
+  .journal-wechat-mark { position: relative; }
   .journal-wechat-qr {
     display: block; width: 100%; aspect-ratio: 1; opacity: 0.7;
     background: var(--blog-text);
     -webkit-mask: url("/journal-wechat-qr.svg?v=70") center / contain no-repeat;
     mask: url("/journal-wechat-qr.svg?v=70") center / contain no-repeat;
   }
+  .journal-wechat-name { margin: 10px 2px 2px; font: 13px / 1.4 var(--ff-sans); color: var(--blog-text); text-align: center; }
   .journal-wechat-seal {
-    position: absolute; left: 50%; top: 50%; width: 30%; aspect-ratio: 1;
+    position: absolute; left: 50%; top: 50%; width: 28%; aspect-ratio: 1;
     translate: -50% -50%; display: grid; place-items: center; pointer-events: none;
   }
   .journal-wechat-seal::before {
