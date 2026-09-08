@@ -255,7 +255,7 @@
   .journal-article-header .blog-byline { margin-top: 22px; }
   .journal-article-layout .blog-featured-image { margin-block: 28px 34px; aspect-ratio: 16 / 9; }
   .prose-firefly { font-size: 18px; line-height: 1.95; letter-spacing: 0.01em; }
-  .prose-firefly p { margin-block: 1.35em; }
+  .prose-firefly p { margin-block: 1.35em; text-align: justify; text-align-last: start; }
   .prose-firefly :is(h1, h2, h3, h4, h5, h6) { scroll-margin-top: calc(var(--blog-topbar-offset) + 32px); letter-spacing: -0.02em; line-height: 1.55; }
   .prose-firefly h2 { margin-top: 2.4em; margin-bottom: 0.85em; font-size: 1.4em; }
   .prose-firefly h3 { margin-top: 2em; }
