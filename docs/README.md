@@ -1,6 +1,13 @@
 # Firefly — Documentation Index
 
-Modern blog platform built with Next.js, Cloudflare D1, and R2. Migrated from WordPress.
+Personal blog with a Next.js website and admin console, a separate D1 Worker, R2 media, and MCP writing access. Migrated from WordPress.
+
+[中文项目说明](../README.md) · [English README](README.en.md)
+
+## Start Here
+
+- [Development, configuration, and deployment](31-development.md): current local setup, Google auth, media storage, MCP scopes, backup limits, and test runners.
+- The numbered design documents below retain implementation history. Current source and the development guide take precedence where an old schema, test command, or deployment example differs.
 
 ## Foundation
 
@@ -41,6 +48,8 @@ Modern blog platform built with Next.js, Cloudflare D1, and R2. Migrated from Wo
 | 22 | [Quality System](./22-quality-system.md) | Six-dimensional testing pyramid & CI |
 | 26 | [Biome migration + TypeScript 7](./26-biome-migration-ts7.md) | ESLint → Biome；TS 7.0.2 + native-preview |
 | 28 | [Human Authors](./28-human-authors.md) | 人类独立成表；agent 零改动；发文选人/AI；公开邮箱查询 |
+
+Full-text search and human-author management are implemented in the current application; their entries remain here as design references.
 
 ## Archive
 
