@@ -54,12 +54,9 @@
  * ==========================================================================
  */
 @layer base {
-  html {
-    scroll-behavior: smooth;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-  }
+  /* Do not set `scroll-behavior: smooth` on html. Next.js sets scrollTop
+   * during client navigations; CSS smooth lets layout shifts cancel the
+   * animation mid-way so the page never actually reaches the top. */
   * {
     @apply border-border;
   }
