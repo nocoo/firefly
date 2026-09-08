@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.13.1 (2026-09-08)
+
+- fix: move mobile menu left to match theme
+- fix: wrap archive focus from last expanded link
+- fix: replace removed ai-agent back button
+- fix: assert media filters as comboboxes
+
+
 ## v2.13.0 (2026-09-08)
 
 - fix: do not smooth-scroll html on navigation
