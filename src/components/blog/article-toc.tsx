@@ -26,17 +26,15 @@ export function ArticleToc({ entries }: ArticleTocProps) {
     const update = () => {
       frame = 0;
       const boundary = (topbar?.getBoundingClientRect().bottom ?? 0) + 48;
-      const last = headings[headings.length - 1];
-      const remaining =
-        document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
       let current = headings[0].id;
       for (const heading of headings) {
         if (heading.getBoundingClientRect().top > boundary) break;
         current = heading.id;
       }
-      const lastTop = last.getBoundingClientRect().top;
-      if (remaining <= 24 || lastTop - boundary >= remaining - 1) {
-        current = last.id;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const remaining = maxScroll - window.scrollY;
+      if (maxScroll > 80 && remaining <= 32) {
+        current = headings[headings.length - 1].id;
       }
       setActiveId(current);
     };
