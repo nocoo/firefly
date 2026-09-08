@@ -24,7 +24,6 @@ import { ArticleBody } from "@/components/blog/article-body";
 import { ContentImageLightbox } from "@/components/blog/content-image-lightbox";
 import { ReferenceCard } from "@/components/blog/reference-card";
 import { ArticleNav } from "@/components/blog/article-nav";
-import { ReadingProgress } from "@/components/blog/reading-progress";
 import { CodeBlockActions } from "@/components/blog/code-block-actions";
 import { ArticleToc } from "@/components/blog/article-toc";
 import { getPostAuthor, getPostAuthorForMeta } from "@/lib/ai-agent/author";
@@ -140,7 +139,6 @@ export default async function PostPage({ params }: PostPageProps) {
 
   return (
     <>
-      <ReadingProgress />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: blogPostingJsonLd(post, identity, tagNames, jsonLdAuthor) }}
