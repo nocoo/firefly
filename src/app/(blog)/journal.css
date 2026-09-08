@@ -175,13 +175,10 @@
   .blog-archive-more[open] .blog-archive-collapse { display: inline-flex; }
   .blog-archive-more > .blog-sidebar-list { order: 1; }
   .journal-wechat-card { margin: 0; }
-  .journal-wechat-qr {
-    display: block; width: 100%; max-width: 180px; height: auto;
-    border: 1px solid var(--blog-separator); border-radius: 10px;
-  }
-  .journal-wechat-name {
-    margin: 10px 0 0; font: 13px / 1.4 var(--ff-sans); color: var(--blog-text);
-  }
+  .journal-wechat-qr { display: block; width: 100%; max-width: 168px; height: auto; }
+  .journal-wechat-card figcaption { margin-top: 10px; }
+  .journal-wechat-name { display: block; font: 13px / 1.4 var(--ff-sans); color: var(--blog-text); }
+  .journal-wechat-hint { display: block; margin-top: 3px; font: 10px / 1.6 var(--ff-mono); letter-spacing: 0.06em; color: var(--blog-muted); }
   .blog-tag-cloud { gap: 6px 10px; }
   .blog-tag-cloud a { font-family: var(--ff-sans); line-height: 1.7; color: var(--blog-muted); }
   .blog-tag-cloud a:hover { color: var(--blog-accent); text-decoration: underline; text-underline-offset: 4px; }
