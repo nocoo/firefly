@@ -2,7 +2,7 @@ import Link from "next/link";
 import "./(blog)/journal.css";
 import { JournalBrand } from "@/components/blog/journal-brand";
 import { JournalSurfaces } from "@/components/blog/journal-surfaces";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { JournalThemeToggle } from "@/components/blog/journal-theme-toggle";
 import { JournalThemeColor } from "@/components/blog/journal-theme-color";
 import { getDb } from "@/lib/db";
 import { getSiteSettings } from "@/data/settings";
@@ -28,7 +28,7 @@ export default async function NotFound() {
         <div className="blog-topbar-inner">
           <div className="journal-topbar-brand"><JournalBrand siteName={settings.siteName} /></div>
           <JournalSurfaces />
-          <div className="blog-topbar-end"><ThemeToggle /></div>
+          <div className="blog-topbar-end"><JournalThemeToggle /></div>
         </div>
       </header>
       <div className="page-wrapper">

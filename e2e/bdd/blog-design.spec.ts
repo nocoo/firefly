@@ -3,9 +3,10 @@ import { test, expect, seedPostIdempotent } from "./fixtures";
 test("connected public surfaces retain standard navigation and a single page title", async ({ page }) => {
   await page.goto("/");
   const surfaces = page.getByRole("navigation", { name: "访问面" });
-  await expect(surfaces.getByRole("link", { name: "Journal", exact: true })).toHaveAttribute("href", "/");
   await expect(surfaces.getByRole("link", { name: "Play", exact: true })).toHaveAttribute("href", "https://lizheng.me/");
+  await expect(surfaces.getByRole("link", { name: "Journal", exact: true })).toHaveAttribute("href", "/");
   await expect(surfaces.getByRole("link", { name: "Résumé", exact: true })).toHaveAttribute("href", "https://lizheng.dev/");
+  await expect(surfaces.getByRole("link", { name: "Portfolio", exact: true })).toHaveAttribute("href", "https://hexly.ai");
   await expect(page.locator("h1")).toHaveCount(1);
   // Canonical follows the deployment URL; isolated CI uses HTTP on localhost.
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(

@@ -100,23 +100,36 @@
   .journal-brand-period { color: var(--journal-orange); }
   .journal-surfaces { display: flex; align-items: center; gap: 28px; margin-left: auto; }
   .journal-surfaces a {
-    position: relative; display: inline-flex; align-items: center; gap: 7px; min-height: 44px;
-    color: var(--blog-muted); font: 11px var(--ff-mono); text-decoration: none;
+    position: relative; display: inline-flex; align-items: center; min-height: 44px;
+    color: var(--blog-muted); font: 12px / 1 var(--ff-mono); letter-spacing: 0.06em;
+    text-transform: uppercase; text-decoration: none; white-space: nowrap;
   }
   .journal-surfaces a[aria-current] { color: var(--blog-text); }
-  .journal-surfaces a[aria-current]::before {
-    content: ""; position: absolute; bottom: 5px; left: 0; width: 12px; height: 2px; background: var(--journal-orange);
+  .journal-surfaces a[aria-current]::after {
+    content: ""; position: absolute; right: 0; bottom: 10px; left: 0; height: 1px; background: var(--journal-orange);
   }
   .journal-surfaces a:hover { color: var(--blog-accent); background: transparent; }
-  .journal-surfaces a span { color: var(--blog-muted); font-size: 12px; }
-  .blog-topbar-end { gap: 12px; margin-left: 4px; }
-  .blog-topbar-end button, .blog-topbar-link, .blog-sidebar-toggle {
+  .blog-topbar-end {
+    gap: 2px; margin-left: 4px; padding-left: 18px;
+    border-left: 1px solid var(--blog-separator);
+  }
+  .blog-sidebar-toggle, .blog-topbar-link {
     width: 40px; height: 40px; color: var(--blog-text); border: 1px solid var(--blog-separator); border-radius: 50%;
   }
-  .blog-topbar button:hover, .blog-topbar-link:hover { background: var(--blog-code-bg); color: var(--blog-accent); }
+  .journal-theme-toggle {
+    width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center;
+    border: 0; background: transparent; color: var(--blog-muted); cursor: pointer;
+    transition: color 0.2s;
+  }
+  .journal-theme-toggle:hover { color: var(--blog-accent); background: transparent; }
+  .journal-theme-toggle svg { width: 18px; height: 18px; }
+  .journal-theme-toggle .theme-moon { display: none; }
+  .dark .journal-theme-toggle .theme-sun { display: none; }
+  .dark .journal-theme-toggle .theme-moon { display: block; }
+  .blog-sidebar-toggle:hover, .blog-topbar-link:hover { background: var(--blog-code-bg); color: var(--blog-accent); }
   .blog-topbar .journal-brand:hover { background: transparent; color: var(--blog-text); }
   .blog-topbar :is(button, a):focus-visible { outline: 2px solid color-mix(in srgb, var(--journal-orange) 80%, var(--blog-text)); outline-offset: 4px; border-radius: 3px; }
-  .blog-topbar :is(button, .blog-topbar-link):focus-visible { border-radius: 50%; }
+  .blog-topbar :is(.blog-sidebar-toggle, .blog-topbar-link):focus-visible { border-radius: 50%; }
 
   .page-wrapper { border: none; background: transparent; }
   .page-wrapper::before, .page-wrapper::after, .blog-max-width::after { display: none; }
@@ -256,13 +269,13 @@
   .journal-footer-play:hover { background: var(--blog-code-bg); border-color: var(--blog-muted); }
   .journal-footer-play span { margin-left: 8px; color: var(--blog-accent); }
   .journal-footer-body { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 32px; padding-block: 30px 40px; border-top: 1px solid var(--blog-separator); }
-  .journal-footer-identity > p { font: 10px var(--ff-mono); color: var(--blog-muted); margin-top: 24px; }
+  .journal-footer-identity > p { font: 11px / 1.6 var(--ff-mono); color: var(--blog-muted); margin-top: 24px; }
   .journal-footer-version { display: block; font: 9px var(--ff-mono); color: var(--blog-muted); margin-top: 8px; }
-  .journal-footer-heading { font: 10px var(--ff-mono); color: var(--blog-muted); margin-bottom: 16px; letter-spacing: 0.08em; }
+  .journal-footer-heading { font: 11px var(--ff-mono); color: var(--blog-muted); margin-bottom: 16px; letter-spacing: 0.08em; }
   .journal-footer-list { list-style: none; padding: 0; margin: 0; }
-  .journal-footer-list a { display: inline-flex; align-items: center; min-height: 32px; font-size: 13px; color: var(--blog-text); text-decoration: none; }
+  .journal-footer-list a { display: inline-flex; align-items: center; min-height: 32px; font-size: 11px; color: var(--blog-text); text-decoration: none; }
   .journal-footer-list a:hover { color: var(--blog-accent); }
-  .journal-footer-bottom { display: flex; justify-content: space-between; gap: 24px; align-items: center; padding-top: 24px; border-top: 1px solid var(--blog-separator); color: var(--blog-muted); font: 9px var(--ff-mono); }
+  .journal-footer-bottom { display: flex; justify-content: space-between; gap: 24px; align-items: center; padding-top: 24px; border-top: 1px solid var(--blog-separator); color: var(--blog-muted); font: 11px / 1.6 var(--ff-mono); }
   .journal-location { display: inline-flex; align-items: center; gap: 9px; white-space: nowrap; }
   .journal-location i { width: 5px; height: 5px; border-radius: 50%; background: #c77a4d; box-shadow: 0 0 5px #c77a4d44; animation: journal-breathe 7.4s infinite; }
   .journal-back-top { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; color: var(--blog-muted); background: none; border: none; cursor: pointer; }
@@ -319,11 +332,11 @@
     .blog-topbar-inner { padding-inline: 22px; gap: 12px; }
     .journal-brand { font-size: 22px; }
     .journal-surfaces { gap: 15px; }
-    .journal-surfaces a { font-size: 10px; }
+    .journal-surfaces a { font-size: 11px; }
     .blog-sidebar-toggle { order: 4; width: 36px; height: 36px; }
-    .blog-topbar-end { gap: 8px; margin-left: 0; }
+    .blog-topbar-end { gap: 2px; margin-left: 0; }
     .journal-social-list li { flex-basis: 44px; }
-    .blog-topbar-end button, .blog-topbar-link { width: 36px; height: 36px; }
+    .journal-theme-toggle, .blog-topbar-link { width: 36px; height: 36px; }
     .blog-sidebar-desktop { background: var(--blog-bg); padding: 32px 28px; width: min(86vw, 340px); transition: transform 300ms var(--journal-ease), visibility 300ms; box-shadow: 20px 0 40px #17261b12; }
     .blog-sidebar-desktop:not(.blog-sidebar-open) { visibility: hidden; }
     .blog-sidebar-backdrop { background: #14201955; backdrop-filter: blur(3px); }
@@ -385,13 +398,12 @@
     .journal-footer-play { font-size: 11px; padding: 10px; gap: 6px; }
     .journal-footer-play img { width: 20px; }
     .journal-footer-play span { margin-left: 0; }
-    .journal-footer-bottom { font-size: 8px; }
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .blog-shell.journal-theme {
     .journal-intro, .journal-location i { animation: none; }
-    .blog-social-link, .blog-archive-more summary > svg, .blog-featured-image img, .blog-read-more svg, .blog-sidebar-desktop, .blog-sidebar-backdrop { transition: none; animation: none; }
+    .blog-social-link, .blog-archive-more summary > svg, .blog-featured-image img, .blog-read-more svg, .blog-sidebar-desktop, .blog-sidebar-backdrop, .journal-theme-toggle { transition: none; animation: none; }
   }
 }
 @media print {

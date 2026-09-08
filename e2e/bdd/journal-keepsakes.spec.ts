@@ -16,13 +16,14 @@ async function chooseKeepsake(page: Page, id: string) {
   }, id);
 }
 
-test("all three surfaces remain visible in the journal header, including mobile and 404", async ({ page }) => {
+test("all four surfaces remain visible in the journal header, including mobile and 404", async ({ page }) => {
   for (const path of ["/", "/a-journal-page-that-does-not-exist"]) {
     await page.goto(path);
     const nav = page.getByRole("navigation", { name: "访问面" });
-    await expect(nav.getByRole("link", { name: "Journal", exact: true })).toHaveAttribute("aria-current", "true");
     await expect(nav.getByRole("link", { name: "Play", exact: true })).toHaveAttribute("href", "https://lizheng.me/");
+    await expect(nav.getByRole("link", { name: "Journal", exact: true })).toHaveAttribute("aria-current", "true");
     await expect(nav.getByRole("link", { name: "Résumé", exact: true })).toHaveAttribute("href", "https://lizheng.dev/");
+    await expect(nav.getByRole("link", { name: "Portfolio", exact: true })).toHaveAttribute("href", "https://hexly.ai");
     for (const width of [320, 390, 640, 768, 769, 820, 1100, 1440, 1920]) {
       await page.setViewportSize({ width, height: 900 });
       for (const link of await nav.getByRole("link").all()) await expect(link).toBeVisible();
@@ -51,8 +52,8 @@ for (const id of keepsakeIds) {
       expect(box).not.toBeNull();
       expect(box?.x).toBeGreaterThanOrEqual(0);
       expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width);
-      for (let theme = 0; theme < 3; theme++) {
-        await page.locator(".blog-topbar-end button").last().click();
+      for (let theme = 0; theme < 2; theme++) {
+        await page.locator(".journal-theme-toggle").click();
         await expect(image).toHaveAttribute("src", `/journal-keepsakes/${id}.svg`);
       }
     }

@@ -6,10 +6,10 @@ import { Menu, X } from "lucide-react";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/entities/post";
 import type { SocialLink } from "@/data/settings";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { BlogSidebar } from "./blog-sidebar";
 import { JournalBrand } from "./journal-brand";
 import { JournalSurfaces } from "./journal-surfaces";
+import { JournalThemeToggle } from "./journal-theme-toggle";
 
 interface BlogLayoutClientProps {
   categories: Category[];
@@ -194,7 +194,7 @@ export function BlogLayoutClient({
           </button>
           <JournalSurfaces inert={mainInert} />
           <div className="blog-topbar-end" inert={mainInert || undefined}>
-            <ThemeToggle />
+            <JournalThemeToggle />
           </div>
         </div>
       </header>

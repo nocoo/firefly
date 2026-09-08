@@ -6,13 +6,33 @@ export const journalSurfaceUrls = {
   portfolio: "https://hexly.ai",
 };
 
+const SURFACES = [
+  { id: "play", name: "Play", href: journalSurfaceUrls.play },
+  { id: "blog", name: "Journal", href: "/" },
+  { id: "resume", name: "Résumé", href: journalSurfaceUrls.resume },
+  { id: "portfolio", name: "Portfolio", href: journalSurfaceUrls.portfolio },
+] as const;
+
 export function JournalSurfaces({ inert }: { inert?: boolean }) {
   return (
     <nav className="journal-surfaces" aria-label="访问面" inert={inert}>
-      <Link href="/" prefetch={false} aria-current="true" lang="en">Journal</Link>
-      <a href={journalSurfaceUrls.play} lang="en">Play <span aria-hidden="true">↗</span></a>
-      <a href={journalSurfaceUrls.resume} lang="en">Résumé <span aria-hidden="true">↗</span></a>
-      <a href={journalSurfaceUrls.portfolio} lang="en">Portfolio <span aria-hidden="true">↗</span></a>
+      {SURFACES.map((surface) =>
+        surface.id === "blog" ? (
+          <Link
+            key={surface.id}
+            href={surface.href}
+            prefetch={false}
+            aria-current="true"
+            lang="en"
+          >
+            {surface.name}
+          </Link>
+        ) : (
+          <a key={surface.id} href={surface.href} lang="en">
+            {surface.name}
+          </a>
+        ),
+      )}
     </nav>
   );
 }

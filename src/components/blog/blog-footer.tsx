@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUp } from "lucide-react";
 import { JournalBrand } from "./journal-brand";
 import { journalSurfaceUrls } from "./journal-surfaces";
 
@@ -12,8 +11,9 @@ const COLUMNS = [
     { label: "搜索", href: "/search" },
   ] },
   { heading: "ELSEWHERE", links: [
-    { label: "Play ↗", href: journalSurfaceUrls.play },
-    { label: "Résumé ↗", href: journalSurfaceUrls.resume },
+    { label: "Play", href: journalSurfaceUrls.play },
+    { label: "Résumé", href: journalSurfaceUrls.resume },
+    { label: "Portfolio", href: journalSurfaceUrls.portfolio },
   ] },
   { heading: "KEEP IN TOUCH", links: [
     { label: "RSS", href: "/feed.xml" },
@@ -48,7 +48,7 @@ export function BlogFooter({ siteName }: { siteName: string }) {
               {column.links.map((link) => (
                 <li key={link.href}>
                   {link.href.startsWith("https:") || /\.(xml|txt)$/.test(link.href) ? (
-                    <a href={link.href}>{link.label}</a>
+                    <a href={link.href} lang={link.href.startsWith("https:") ? "en" : undefined}>{link.label}</a>
                   ) : (
                     <Link href={link.href} prefetch={false}>{link.label}</Link>
                   )}
@@ -69,7 +69,7 @@ export function BlogFooter({ siteName }: { siteName: string }) {
             behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
           })}
         >
-          返回顶部 <ArrowUp aria-hidden="true" strokeWidth={1.5} />
+          返回顶部 <span aria-hidden="true">↑</span>
         </button>
       </div>
     </footer>
