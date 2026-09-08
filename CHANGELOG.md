@@ -1,5 +1,32 @@
 # Changelog
 
+## v2.13.0 (2026-09-08)
+
+- fix: do not smooth-scroll html on navigation
+- fix: drop wechat kicker and widen the card
+- feat: frame wechat qr as an instant card
+- fix: restore sidebar padding, flush search edges
+- fix: set wechat qr to text ink at 70%
+- feat: restack sidebar and quiet wechat qr
+- fix: recast wechat qr in accent red
+- fix: quiet wechat caption under the qr
+- fix: tint wechat qr with journal terracotta
+- feat: add wechat qr module to sidebar
+- fix: do not pin toc to last item on load
+- fix: select last toc item at page bottom
+- fix: remove article reading progress bar
+- fix: split slogan into two colored lines
+- fix: call posts articles not entries
+- fix: highlight journal slogan with red period
+- fix: crop homepage images to fill height
+- fix: move archive toggle below the list
+- fix: align journal chrome with lizheng.dev
+- fix: adopt basalt pageheader in admin
+- chore: bump @nocoo/basalt to 2.1.0
+- fix: use transparent firefly app marks
+- fix: improve Journal social previews and browser identity
+
+
 ## v2.12.3 (2026-09-06)
 
 - fix: publish release notes without shell parsing
