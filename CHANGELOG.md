@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.13.2 (2026-09-08)
+
+- feat: justify journal body paragraphs
+- fix: hide theme divider when header wraps
+
+
 ## v2.13.1 (2026-09-08)
 
 - fix: move mobile menu left to match theme
