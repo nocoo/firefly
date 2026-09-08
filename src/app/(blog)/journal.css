@@ -398,6 +398,7 @@
     .blog-topbar-inner { flex-wrap: wrap; align-content: center; gap: 0 12px; }
     .journal-topbar-brand { margin-right: auto; min-height: 44px; }
     .journal-surfaces { order: 5; flex: 0 0 100%; margin: 0; gap: 24px; }
+    .blog-topbar-end { border-left: none; padding-left: 0; }
     .journal-keepsake { margin-top: -10px; }
   }
 }
