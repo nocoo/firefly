@@ -179,10 +179,10 @@
   .journal-wechat-name { margin: 4px 0 10px; font: 13px / 1.4 var(--ff-sans); color: var(--blog-text); }
   .journal-wechat-mark { position: relative; margin: 0 -2px -10px; }
   .journal-wechat-qr {
-    display: block; width: 100%; aspect-ratio: 1;
+    display: block; width: 100%; aspect-ratio: 1; opacity: 0.7;
     background: var(--blog-text);
-    -webkit-mask: url("/journal-wechat-qr.svg") center / contain no-repeat;
-    mask: url("/journal-wechat-qr.svg") center / contain no-repeat;
+    -webkit-mask: url("/journal-wechat-qr.svg?v=70") center / contain no-repeat;
+    mask: url("/journal-wechat-qr.svg?v=70") center / contain no-repeat;
   }
   .journal-wechat-seal {
     position: absolute; left: 50%; top: 50%; width: 30%; aspect-ratio: 1;
