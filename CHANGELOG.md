@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.13.3 (2026-09-08)
+
+- fix: use settings site name for home title
+
+
 ## v2.13.2 (2026-09-08)
 
 - feat: justify journal body paragraphs
