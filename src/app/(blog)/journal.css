@@ -113,23 +113,24 @@
     gap: 2px; margin-left: 4px; padding-left: 18px;
     border-left: 1px solid var(--blog-separator);
   }
-  .blog-sidebar-toggle, .blog-topbar-link {
+  .blog-topbar-link {
     width: 40px; height: 40px; color: var(--blog-text); border: 1px solid var(--blog-separator); border-radius: 50%;
   }
-  .journal-theme-toggle {
-    width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center;
+  .blog-sidebar-toggle, .journal-theme-toggle {
+    width: 40px; height: 40px; flex-shrink: 0; place-items: center;
     border: 0; background: transparent; color: var(--blog-muted); cursor: pointer;
     transition: color 0.2s;
   }
-  .journal-theme-toggle:hover { color: var(--blog-accent); background: transparent; }
-  .journal-theme-toggle svg { width: 18px; height: 18px; }
+  .journal-theme-toggle { display: grid; }
+  .blog-sidebar-toggle:hover, .journal-theme-toggle:hover { color: var(--blog-accent); background: transparent; }
+  .blog-sidebar-toggle svg, .journal-theme-toggle svg { width: 18px; height: 18px; }
   .journal-theme-toggle .theme-moon { display: none; }
   .dark .journal-theme-toggle .theme-sun { display: none; }
   .dark .journal-theme-toggle .theme-moon { display: block; }
-  .blog-sidebar-toggle:hover, .blog-topbar-link:hover { background: var(--blog-code-bg); color: var(--blog-accent); }
+  .blog-topbar-link:hover { background: var(--blog-code-bg); color: var(--blog-accent); }
   .blog-topbar .journal-brand:hover { background: transparent; color: var(--blog-text); }
   .blog-topbar :is(button, a):focus-visible { outline: 2px solid color-mix(in srgb, var(--journal-orange) 80%, var(--blog-text)); outline-offset: 4px; border-radius: 3px; }
-  .blog-topbar :is(.blog-sidebar-toggle, .blog-topbar-link):focus-visible { border-radius: 50%; }
+  .blog-topbar .blog-topbar-link:focus-visible { border-radius: 50%; }
 
   .page-wrapper { border: none; background: transparent; }
   .page-wrapper::before, .page-wrapper::after, .blog-max-width::after { display: none; }
@@ -366,10 +367,9 @@
     .journal-brand { font-size: 22px; }
     .journal-surfaces { gap: 15px; }
     .journal-surfaces a { font-size: 11px; }
-    .blog-sidebar-toggle { order: 4; width: 36px; height: 36px; }
     .blog-topbar-end { gap: 2px; margin-left: 0; }
     .journal-social-list li { flex-basis: 44px; }
-    .journal-theme-toggle, .blog-topbar-link { width: 36px; height: 36px; }
+    .blog-sidebar-toggle, .journal-theme-toggle, .blog-topbar-link { width: 36px; height: 36px; }
     .blog-sidebar-desktop { background: var(--blog-bg); padding: 32px 28px; width: min(86vw, 340px); transition: transform 300ms var(--journal-ease), visibility 300ms; box-shadow: 20px 0 40px #17261b12; }
     .blog-sidebar-desktop:not(.blog-sidebar-open) { visibility: hidden; }
     .blog-sidebar-backdrop { background: #14201955; backdrop-filter: blur(3px); }

@@ -178,9 +178,6 @@ export function BlogLayoutClient({
     <>
       <header ref={headerRef} className="blog-topbar">
         <div className="blog-topbar-inner">
-          <div className="journal-topbar-brand" inert={mainInert || undefined}>
-            <JournalBrand siteName={siteName} />
-          </div>
           <button
             ref={toggleRef}
             type="button"
@@ -192,6 +189,9 @@ export function BlogLayoutClient({
           >
             {drawerOpen ? <X className="h-5 w-5" strokeWidth={1.5} /> : <Menu className="h-5 w-5" strokeWidth={1.5} />}
           </button>
+          <div className="journal-topbar-brand" inert={mainInert || undefined}>
+            <JournalBrand siteName={siteName} />
+          </div>
           <JournalSurfaces inert={mainInert} />
           <div className="blog-topbar-end" inert={mainInert || undefined}>
             <JournalThemeToggle />
