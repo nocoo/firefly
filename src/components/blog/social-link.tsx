@@ -40,7 +40,11 @@ function SocialLink({ name, url, brand }: SocialLinkData) {
 export function JournalSocialLinks({ links }: { links: SocialLinkData[] }) {
   if (links.length === 0) return null;
   return (
-    <nav className="journal-connect" aria-label="社交网络">
+    <nav aria-label="社交媒体">
+      <h3 className="journal-eyebrow">
+        <span aria-hidden="true" />
+        社交媒体
+      </h3>
       <ul className="journal-social-list">
         {links.map((link) => <li key={link.url}><SocialLink {...link} /></li>)}
       </ul>

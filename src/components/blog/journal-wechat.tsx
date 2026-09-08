@@ -1,19 +1,18 @@
 export function JournalWechat() {
   return (
-    <section className="blog-sidebar-section journal-wechat" aria-label="微信公众号 不如喝杯咖啡">
-      <figure className="journal-wechat-card">
-        <img
+    <section className="journal-wechat" aria-label="微信公众号 不如喝杯咖啡">
+      <p className="journal-wechat-kicker">微信公众号</p>
+      <p className="journal-wechat-name">不如喝杯咖啡</p>
+      <div className="journal-wechat-mark">
+        <div
           className="journal-wechat-qr"
-          src="/journal-wechat-qr.png?v=accent"
-          width={180}
-          height={180}
-          alt="微信公众号「不如喝杯咖啡」二维码"
+          role="img"
+          aria-label="微信公众号「不如喝杯咖啡」二维码"
         />
-        <figcaption>
-          <span className="journal-wechat-name">不如喝杯咖啡</span>
-          <span className="journal-wechat-hint" lang="zh">微信扫码</span>
-        </figcaption>
-      </figure>
+        <span className="journal-wechat-seal" aria-hidden="true">
+          <img src="/journal-wechat-cat.png" width={72} height={72} alt="" />
+        </span>
+      </div>
     </section>
   );
 }

@@ -67,7 +67,7 @@ test("the mobile drawer traps focus around collapsed and expanded archives", asy
   }));
   // Mount actual server-rendered archive markup into the real drawer, so the
   // focus trap is exercised independently of the site's cached archive data.
-  await page.locator(".blog-sidebar-bottom").evaluate((el, html) => {
+  await page.locator("#blog-sidebar").evaluate((el, html) => {
     el.querySelector("#blog-archive-heading")?.closest("nav")?.remove();
     el.insertAdjacentHTML("beforeend", html);
   }, markup);
