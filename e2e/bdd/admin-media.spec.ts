@@ -23,10 +23,10 @@
  *       → "Given /admin/media renders, ... the 搜索文件 placeholder text input
  *          is visible"
  *   admin-media "year filter dropdown is present and functional"
- *       → "Given /admin/media renders, ... the year <select> (containing
+ *       → "Given /admin/media renders, ... the year combobox (containing
  *          全部年份 option, ≥1 options) is visible — hard assert, no silent skip"
  *   admin-media "mime type filter dropdown is present"
- *       → "Given /admin/media renders, ... the mime <select> (containing
+ *       → "Given /admin/media renders, ... the mime combobox (containing
  *          所有类型 option, ≥2 options) is visible — hard assert, no silent skip"
  *
  * --- Admin media library lightbox (2 + 1 → 2) ---
@@ -54,7 +54,7 @@
  *   4. Grid scenario asserts filter-bar visibility first, then per-state branch
  *      (empty: 暂无媒体文件 copy; non-empty: first card visible). Never
  *      count-only.
- *   5. Filter <select> scenarios hard-assert visibility + option count (year ≥1,
+ *   5. Filter combobox scenarios hard-assert visibility + option count (year ≥1,
  *      mime ≥2) — components fixed-render these selects, so any regression
  *      should fail.
  *   6. Commit body spells out both merges explicitly + content-images
@@ -124,43 +124,44 @@ test.describe("Feature: Admin media library page", () => {
     ).toBeVisible({ timeout: 10_000 });
   });
 
-  test("Given /admin/media renders, When I view the filter bar, Then the year <select> is visible with 全部年份 and at least one option", async ({
+  test("Given /admin/media renders, When I view the filter bar, Then the year combobox is visible with 全部年份 and at least one option", async ({
     page,
   }) => {
     // Given/When: open the media library page.
     await page.goto("/admin/media", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/media");
 
-    // Then: CSS locator — media-library-filter-bar.tsx:75-86 renders 4
-    // <select> controls; disambiguate by the literal "全部年份" placeholder
-    // option. Component fixed-renders this select; failure is a real
-    // regression so hard-assert ≥1 option (no silent skip branch).
-    const yearSelect = page.locator("select").filter({ hasText: "全部年份" });
+    // Then: Basalt/Radix Select trigger is role=combobox; items live in a
+    // portal so they are counted after open. Disambiguate by the selected
+    // 全部年份 label. Component always renders this control.
+    const yearSelect = page.getByRole("combobox").filter({ hasText: "全部年份" });
     await expect(yearSelect).toBeVisible({ timeout: 10_000 });
-    const optionCount = await yearSelect.locator("option").count();
+    await yearSelect.click();
+    const options = page.getByRole("option");
+    await expect(options.filter({ hasText: "全部年份" })).toBeVisible();
     expect(
-      optionCount,
-      "year <select> should always render at least the 全部年份 placeholder option",
+      await options.count(),
+      "year combobox should always render at least the 全部年份 option",
     ).toBeGreaterThanOrEqual(1);
   });
 
-  test("Given /admin/media renders, When I view the filter bar, Then the mime <select> is visible with 所有类型 and at least two options", async ({
+  test("Given /admin/media renders, When I view the filter bar, Then the mime combobox is visible with 所有类型 and at least two options", async ({
     page,
   }) => {
     // Given/When: open the media library page.
     await page.goto("/admin/media", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/media");
 
-    // Then: CSS locator — media-library-filter-bar.tsx:61-72 renders the mime
-    // select with a fixed option list (所有类型 + JPEG/PNG/WebP/GIF/SVG = 6
-    // options). Hard-assert ≥2 — component always renders these (no silent
-    // skip branch).
-    const mimeSelect = page.locator("select").filter({ hasText: "所有类型" });
+    // Then: mime FilterSelect always lists 所有类型 + JPEG/PNG/WebP/GIF/SVG.
+    // Open the portal and hard-assert ≥2 options (no silent skip branch).
+    const mimeSelect = page.getByRole("combobox").filter({ hasText: "所有类型" });
     await expect(mimeSelect).toBeVisible({ timeout: 10_000 });
-    const optionCount = await mimeSelect.locator("option").count();
+    await mimeSelect.click();
+    const options = page.getByRole("option");
+    await expect(options.filter({ hasText: "所有类型" })).toBeVisible();
     expect(
-      optionCount,
-      "mime <select> should always render 所有类型 + the fixed mime options",
+      await options.count(),
+      "mime combobox should always render 所有类型 + the fixed mime options",
     ).toBeGreaterThanOrEqual(2);
   });
 });
