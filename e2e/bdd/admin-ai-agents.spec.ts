@@ -68,7 +68,8 @@
  *       → "Given /admin/ai-agents/new renders, ... 创建代理 save button is
  *          visible at form footer"
  *   "Admin AI agent form - new agent > has back button"
- *       → "Given /admin/ai-agents/new renders, ... 返回 back button is visible"
+ *       → "Given /admin/ai-agents/new renders, ... 取消 footer button and
+ *          header AI 代理 breadcrumb are visible (PageHeader replaced 返回)"
  *   "Admin AI agent form - new agent > auto-generates slug from name"
  *       → "Given /admin/ai-agents/new renders, When I fill name with a
  *          unique prefix (E2E Admin AI Agents <ts> Test), Then slug input
@@ -87,7 +88,8 @@
  *   5. /admin/ai-agents/new contract noted in scenario comment: id === "new"
  *      → agent=null → uploader gated off → h1 is form's "创建 AI 代理".
  *   6. slug auto-gen uses expect.toHaveValue() poll instead of waitForTimeout.
- *   7. Back button pinned to 返回 (not the source's 返回/取消 fallback).
+ *   7. Leave-form controls: footer 取消 + header breadcrumb to /admin/ai-agents
+ *      (PageHeader dropped the inline 返回 button).
  */
 import { test, expect, expectPathname } from "./fixtures";
 
@@ -342,18 +344,21 @@ test.describe("Feature: Admin AI agent new form", () => {
     ).toBeVisible({ timeout: 10_000 });
   });
 
-  test("Given /admin/ai-agents/new renders, When I view the form header, Then the 返回 back button is visible", async ({
+  test("Given /admin/ai-agents/new renders, When I view the form, Then the 取消 button and AI 代理 breadcrumb are visible", async ({
     page,
   }) => {
     // Given/When: open the new AI agent form.
     await page.goto("/admin/ai-agents/new", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-agents/new");
 
-    // Then: ai-agent-form.tsx:143-145 — exact label "返回". Source spec also
-    // accepted "取消" as fallback; we pin "返回" per reviewer pin.
+    // Then: PageHeader dropped the inline 返回 button. Leave-form is the
+    // footer 取消 control plus the AppHeader breadcrumb back to the list.
     await expect(
-      page.getByRole("button", { name: "返回" }),
+      page.getByRole("button", { name: "取消" }),
     ).toBeVisible({ timeout: 10_000 });
+    await expect(
+      page.locator("header").getByRole("link", { name: "AI 代理" }),
+    ).toBeVisible();
   });
 
   test("Given /admin/ai-agents/new renders, When I fill the name with a unique prefix, Then the slug input auto-fills to the slugified value", async ({
