@@ -27,9 +27,9 @@ const testSite: SiteIdentity = {
 describe("homepage social metadata", () => {
   it("uses an absolute title and an explicit large image instead of the root app logo", () => {
     const meta = buildHomeMeta(testSite);
-    expect(meta.title).toEqual({ absolute: "李征 — 博客" });
+    expect(meta.title).toEqual({ absolute: testSite.siteName });
     expect(meta.openGraph).toMatchObject({
-      title: "李征 — 博客",
+      title: testSite.siteName,
       description: meta.description,
       type: "website",
       siteName: testSite.siteName,
@@ -38,7 +38,7 @@ describe("homepage social metadata", () => {
         width: 1200, height: 630, type: "image/jpeg", alt: homeSocial.image.alt,
       }],
     });
-    expect(meta.twitter).toMatchObject({ card: "summary_large_image", title: "李征 — 博客" });
+    expect(meta.twitter).toMatchObject({ card: "summary_large_image", title: testSite.siteName });
     expect(meta.alternates?.canonical).toBe(SITE_URL);
   });
 

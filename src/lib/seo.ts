@@ -71,15 +71,15 @@ export function buildHomeMeta(
     url: new URL(homeSocial.image.url, SITE_URL).href,
   };
   return {
-    // An absolute title avoids appending the root layout's site-name template.
-    title: { absolute: homeSocial.title },
+    // Absolute so the root layout template does not append "| siteName".
+    title: { absolute: site.siteName },
     description: homeSocial.description,
     alternates: {
       canonical: SITE_URL,
       languages: { [HTML_LANG]: SITE_URL },
     },
     openGraph: {
-      title: homeSocial.title,
+      title: site.siteName,
       description: homeSocial.description,
       url: SITE_URL,
       siteName: site.siteName,
@@ -90,7 +90,7 @@ export function buildHomeMeta(
     twitter: {
       card: "summary_large_image",
       ...twitterAccountMeta(site.twitterHandle),
-      title: homeSocial.title,
+      title: site.siteName,
       description: homeSocial.description,
       images: [{ url: image.url, alt: image.alt }],
     },
