@@ -6,6 +6,7 @@ import { SearchInput } from "./search-input";
 import type { SocialLink } from "@/data/settings";
 import { JournalSocialLinks } from "./social-link";
 import { ArchiveNavigation } from "./archive-navigation";
+import { JournalWechat } from "./journal-wechat";
 
 interface BlogSidebarProps {
   categories: Category[];
@@ -60,6 +61,8 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
             </ul>
           </nav>
         )}
+
+        <JournalWechat />
 
         {tags.length > 0 && (
           <nav className="blog-sidebar-section">
