@@ -16,7 +16,7 @@ jobs:
     with:
       runtime-version: "1.2.15"
       install-policy: "blocked"
-      coverage-path: "coverage"
+      coverage-path: ""
       extra-install-dirs: "worker"
       test-command: "bun run test:coverage"
       osv-config: "osv-scanner.toml"
