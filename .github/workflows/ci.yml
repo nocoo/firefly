@@ -12,49 +12,31 @@ jobs:
   # L1 + G1 + G2 — Core quality gate from base-ci
   # ─────────────────────────────────────────────────────
   quality:
-    uses: nocoo/base-ci/.github/workflows/bun-quality.yml@aec4adc1a817c56790d1698329ef9398a15a754a  # v2026.5
+    uses: nocoo/base-ci/.github/workflows/quality.yml@ab52d72877d386c9a8fd224e9ac868e88be90539
     with:
-      bun-version: "1.2.15"
-      ignore-scripts: true
+      runtime-version: "1.2.15"
+      install-policy: "blocked"
       extra-install-dirs: "worker"
       test-command: "bun run test:coverage"
       osv-config: "osv-scanner.toml"
-      # L2/L3/Worker are defined locally for full secret control
-      enable-l2: "false"
-      enable-l3: "false"
-      enable-worker: "false"
     secrets: inherit
 
   # ─────────────────────────────────────────────────────
   # L2: API E2E (fully local — Miniflare D1 + filesystem R2)
   # Runs in PARALLEL with quality for faster CI.
-  #
-  # ISOLATION: Local wrangler worker (Miniflare SQLite-backed D1),
-  # filesystem R2 adapter. Zero remote Cloudflare resource dependency.
   # ─────────────────────────────────────────────────────
   api-e2e:
     name: "L2 API E2E"
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    env:
-      # Auth — needed for Next.js startup even with E2E_SKIP_AUTH
-      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-      AUTH_URL: "http://localhost:17028"
-      AUTH_ALLOWED_EMAILS: ${{ secrets.AUTH_ALLOWED_EMAILS }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.2.15"
-
-      - run: bun install --frozen-lockfile
-
-      - name: Install worker dependencies
-        run: cd worker && bun install --frozen-lockfile
-
-      - name: "L2: API E2E tests"
-        run: bun run test:e2e:api
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@ab52d72877d386c9a8fd224e9ac868e88be90539
+    with:
+      runtime-version: "1.2.15"
+      install-policy: "project"
+      extra-install-dirs: "worker"
+      timeout-minutes: 20
+      command: "bun run test:e2e:api"
+      env-json: '{"AUTH_URL": "http://localhost:17028"}'
+    secrets:
+      test-env-json: ${{ toJson(secrets) }}
 
   # ─────────────────────────────────────────────────────
   # L3: Browser E2E (fully local — same as L2)
@@ -62,30 +44,17 @@ jobs:
   # ─────────────────────────────────────────────────────
   browser-e2e:
     name: "L3 Browser E2E"
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    env:
-      # Auth — needed for Next.js startup even with E2E_SKIP_AUTH
-      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-      AUTH_URL: "http://localhost:27028"
-      AUTH_ALLOWED_EMAILS: ${{ secrets.AUTH_ALLOWED_EMAILS }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.2.15"
-
-      - run: bun install --frozen-lockfile
-
-      - name: Install worker dependencies
-        run: cd worker && bun install --frozen-lockfile
-
-      - name: Install Playwright browsers
-        run: bunx playwright install --with-deps chromium
-
-      - name: "L3: Playwright E2E tests"
-        run: bun run test:e2e:browser
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@ab52d72877d386c9a8fd224e9ac868e88be90539
+    with:
+      runtime-version: "1.2.15"
+      install-policy: "project"
+      extra-install-dirs: "worker"
+      browser: "chromium"
+      timeout-minutes: 25
+      command: "bun run test:e2e:browser"
+      env-json: '{"AUTH_URL": "http://localhost:27028"}'
+    secrets:
+      test-env-json: ${{ toJson(secrets) }}
 
   # ─────────────────────────────────────────────────────
   # Worker: Edge Worker unit tests
@@ -93,19 +62,10 @@ jobs:
   # ─────────────────────────────────────────────────────
   worker-tests:
     name: "Worker Tests"
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: worker
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.2.15"
-
-      - run: bun install --frozen-lockfile
-
-      - name: "Worker: Unit tests"
-        run: bun run test
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@ab52d72877d386c9a8fd224e9ac868e88be90539
+    with:
+      runtime-version: "1.2.15"
+      install-policy: "project"
+      working-directory: "worker"
+      timeout-minutes: 10
+      command: "bun run test"
