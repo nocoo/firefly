@@ -12,7 +12,7 @@ jobs:
   # L1 + G1 + G2 — Core quality gate from base-ci
   # ─────────────────────────────────────────────────────
   quality:
-    uses: nocoo/base-ci/.github/workflows/quality.yml@ab52d72877d386c9a8fd224e9ac868e88be90539
+    uses: nocoo/base-ci/.github/workflows/quality.yml@ad43150de3a2be2fa464b5cd2f921dc4fa9f8f0f
     with:
       runtime-version: "1.2.15"
       install-policy: "blocked"
@@ -20,7 +20,6 @@ jobs:
       extra-install-dirs: "worker"
       test-command: "bun run test:coverage"
       osv-config: "osv-scanner.toml"
-    secrets: inherit
 
   # ─────────────────────────────────────────────────────
   # L2: API E2E (fully local — Miniflare D1 + filesystem R2)
@@ -28,7 +27,7 @@ jobs:
   # ─────────────────────────────────────────────────────
   api-e2e:
     name: "L2 API E2E"
-    uses: nocoo/base-ci/.github/workflows/test-job.yml@ab52d72877d386c9a8fd224e9ac868e88be90539
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@ad43150de3a2be2fa464b5cd2f921dc4fa9f8f0f
     with:
       runtime-version: "1.2.15"
       install-policy: "project"
@@ -37,7 +36,7 @@ jobs:
       command: "bun run test:e2e:api"
       env-json: '{"AUTH_URL": "http://localhost:17028"}'
     secrets:
-      test-env-json: ${{ toJson(secrets) }}
+      test-env-json: ${{ format('{{"AUTH_SECRET":{0},"AUTH_ALLOWED_EMAILS":{1}}}', toJSON(secrets.AUTH_SECRET), toJSON(secrets.AUTH_ALLOWED_EMAILS)) }}
 
   # ─────────────────────────────────────────────────────
   # L3: Browser E2E (fully local — same as L2)
@@ -45,7 +44,7 @@ jobs:
   # ─────────────────────────────────────────────────────
   browser-e2e:
     name: "L3 Browser E2E"
-    uses: nocoo/base-ci/.github/workflows/test-job.yml@ab52d72877d386c9a8fd224e9ac868e88be90539
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@ad43150de3a2be2fa464b5cd2f921dc4fa9f8f0f
     with:
       runtime-version: "1.2.15"
       install-policy: "project"
@@ -55,7 +54,7 @@ jobs:
       command: "bun run test:e2e:browser"
       env-json: '{"AUTH_URL": "http://localhost:27028"}'
     secrets:
-      test-env-json: ${{ toJson(secrets) }}
+      test-env-json: ${{ format('{{"AUTH_SECRET":{0},"AUTH_ALLOWED_EMAILS":{1}}}', toJSON(secrets.AUTH_SECRET), toJSON(secrets.AUTH_ALLOWED_EMAILS)) }}
 
   # ─────────────────────────────────────────────────────
   # Worker: Edge Worker unit tests
@@ -63,7 +62,7 @@ jobs:
   # ─────────────────────────────────────────────────────
   worker-tests:
     name: "Worker Tests"
-    uses: nocoo/base-ci/.github/workflows/test-job.yml@ab52d72877d386c9a8fd224e9ac868e88be90539
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@ad43150de3a2be2fa464b5cd2f921dc4fa9f8f0f
     with:
       runtime-version: "1.2.15"
       install-policy: "project"
