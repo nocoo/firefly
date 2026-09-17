@@ -116,14 +116,14 @@
   .blog-topbar-link {
     width: 40px; height: 40px; color: var(--blog-text); border: 1px solid var(--blog-separator); border-radius: 50%;
   }
-  .blog-sidebar-toggle, .journal-theme-toggle {
+  .blog-sidebar-toggle, .journal-theme-toggle, .journal-hexly-link {
     width: 40px; height: 40px; flex-shrink: 0; place-items: center;
     border: 0; background: transparent; color: var(--blog-muted); cursor: pointer;
     transition: color 0.2s;
   }
-  .journal-theme-toggle { display: grid; }
-  .blog-sidebar-toggle:hover, .journal-theme-toggle:hover { color: var(--blog-accent); background: transparent; }
-  .blog-sidebar-toggle svg, .journal-theme-toggle svg { width: 18px; height: 18px; }
+  .journal-theme-toggle, .journal-hexly-link { display: grid; }
+  .blog-sidebar-toggle:hover, .journal-theme-toggle:hover, .journal-hexly-link:hover { color: var(--blog-accent); background: transparent; }
+  .blog-sidebar-toggle svg, .journal-theme-toggle svg, .journal-hexly-link svg { width: 18px; height: 18px; }
   .journal-theme-toggle .theme-moon { display: none; }
   .dark .journal-theme-toggle .theme-sun { display: none; }
   .dark .journal-theme-toggle .theme-moon { display: block; }
@@ -369,7 +369,7 @@
     .journal-surfaces a { font-size: 11px; }
     .blog-topbar-end { gap: 2px; margin-left: 0; }
     .journal-social-list li { flex-basis: 44px; }
-    .blog-sidebar-toggle, .journal-theme-toggle, .blog-topbar-link { width: 36px; height: 36px; }
+    .blog-sidebar-toggle, .journal-theme-toggle, .journal-hexly-link, .blog-topbar-link { width: 36px; height: 36px; }
     .blog-sidebar-desktop { background: var(--blog-bg); padding: 32px 28px; width: min(86vw, 340px); transition: transform 300ms var(--journal-ease), visibility 300ms; box-shadow: 20px 0 40px #17261b12; }
     .blog-sidebar-desktop:not(.blog-sidebar-open) { visibility: hidden; }
     .blog-sidebar-backdrop { background: #14201955; backdrop-filter: blur(3px); }
@@ -437,7 +437,7 @@
 @media (prefers-reduced-motion: reduce) {
   .blog-shell.journal-theme {
     .journal-intro, .journal-location i { animation: none; }
-    .blog-social-link, .blog-featured-image img, .blog-read-more svg, .blog-sidebar-desktop, .blog-sidebar-backdrop, .journal-theme-toggle, .article-toc-pip, .article-toc-list a { transition: none; animation: none; }
+    .blog-social-link, .blog-featured-image img, .blog-read-more svg, .blog-sidebar-desktop, .blog-sidebar-backdrop, .journal-theme-toggle, .journal-hexly-link, .article-toc-pip, .article-toc-list a { transition: none; animation: none; }
   }
 }
 @media print {

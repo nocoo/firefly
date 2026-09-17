@@ -1,5 +1,7 @@
 "use client";
 
+import { HeaderTooltip, HexlyLink } from "../header-links";
+
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
@@ -146,16 +148,18 @@ export function AdminShell({ user, children }: AdminShellProps) {
   }, [mobileOpen]);
 
   const mobileTrigger = (
-    <SheetTrigger asChild>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8"
-        aria-label="打开导航"
-      >
-        <Menu className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
-      </Button>
-    </SheetTrigger>
+    <HeaderTooltip label="打开导航">
+      <SheetTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          aria-label="打开导航"
+        >
+          <Menu className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
+        </Button>
+      </SheetTrigger>
+    </HeaderTooltip>
   );
 
   return (
@@ -226,20 +230,23 @@ function ShellHeader({
 }) {
   const actions = (
     <div className="flex items-center gap-1.5">
-      <Button variant="ghost" size="icon" asChild>
-        <a
-          href="https://github.com/nocoo/firefly"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="GitHub"
-        >
-          <Github
-            className="h-[18px] w-[18px]"
-            aria-hidden="true"
-            strokeWidth={1.5}
-          />
-        </a>
-      </Button>
+      <HeaderTooltip label="GitHub 仓库">
+        <Button variant="ghost" size="icon" asChild>
+          <a
+            href="https://github.com/nocoo/firefly"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub"
+          >
+            <Github
+              className="h-[18px] w-[18px]"
+              aria-hidden="true"
+              strokeWidth={1.5}
+            />
+          </a>
+        </Button>
+      </HeaderTooltip>
+      <HexlyLink />
       <ThemeToggle />
     </div>
   );

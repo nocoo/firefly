@@ -1,5 +1,7 @@
 "use client";
 
+import { HeaderTooltip } from "../header-links";
+
 import { useTheme } from "next-themes";
 
 function ThemeMark({ name }: { name: "sun" | "moon" }) {
@@ -34,16 +36,17 @@ export function JournalThemeToggle() {
   const label = isDark ? "主题：深色；切换为浅色" : "主题：浅色；切换为深色";
 
   return (
-    <button
-      type="button"
-      className="journal-theme-toggle"
-      aria-label={label}
-      title={label}
-      suppressHydrationWarning
-      onClick={() => setTheme(isDark ? "light" : "dark")}
-    >
-      <ThemeMark name="sun" />
-      <ThemeMark name="moon" />
-    </button>
+    <HeaderTooltip label={label}>
+      <button
+        type="button"
+        className="journal-theme-toggle"
+        aria-label={label}
+        suppressHydrationWarning
+        onClick={() => setTheme(isDark ? "light" : "dark")}
+      >
+        <ThemeMark name="sun" />
+        <ThemeMark name="moon" />
+      </button>
+    </HeaderTooltip>
   );
 }

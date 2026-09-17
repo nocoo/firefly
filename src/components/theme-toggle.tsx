@@ -1,5 +1,7 @@
 "use client";
 
+import { HeaderTooltip } from "./header-links";
+
 import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Monitor } from "lucide-react";
@@ -39,33 +41,39 @@ export function ThemeToggle() {
         ? t("theme.toggle.label.dark")
         : t("theme.toggle.label.system");
 
+  const tooltipLabel = `${t("theme.toggle.tip.next")}（${mounted ? label : t("theme.toggle.label.system")}）`;
+
   // Render a static placeholder until mounted to avoid hydration mismatch
   if (!mounted) {
     return (
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label={`${t("theme.toggle.tip.next")}（${t("theme.toggle.label.system")}）`}
-      >
-        <Monitor {...ICON_PROPS} />
-      </Button>
+      <HeaderTooltip label={tooltipLabel}>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={`${t("theme.toggle.tip.next")}（${t("theme.toggle.label.system")}）`}
+        >
+          <Monitor {...ICON_PROPS} />
+        </Button>
+      </HeaderTooltip>
     );
   }
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={cycleTheme}
-      aria-label={`${t("theme.toggle.tip.next")}（${label}）`}
-    >
-      {theme === "dark" ? (
-        <Moon {...ICON_PROPS} />
-      ) : theme === "light" ? (
-        <Sun {...ICON_PROPS} />
-      ) : (
-        <Monitor {...ICON_PROPS} />
-      )}
-    </Button>
+    <HeaderTooltip label={tooltipLabel}>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={cycleTheme}
+        aria-label={`${t("theme.toggle.tip.next")}（${label}）`}
+      >
+        {theme === "dark" ? (
+          <Moon {...ICON_PROPS} />
+        ) : theme === "light" ? (
+          <Sun {...ICON_PROPS} />
+        ) : (
+          <Monitor {...ICON_PROPS} />
+        )}
+      </Button>
+    </HeaderTooltip>
   );
 }

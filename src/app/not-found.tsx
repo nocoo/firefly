@@ -1,3 +1,4 @@
+import { HexlyLink } from "../components/header-links";
 import Link from "next/link";
 import "./(blog)/journal.css";
 import { JournalBrand } from "@/components/blog/journal-brand";
@@ -28,7 +29,10 @@ export default async function NotFound() {
         <div className="blog-topbar-inner">
           <div className="journal-topbar-brand"><JournalBrand siteName={settings.siteName} /></div>
           <JournalSurfaces />
-          <div className="blog-topbar-end"><JournalThemeToggle /></div>
+          <div className="blog-topbar-end">
+            <HexlyLink className="journal-hexly-link" />
+            <JournalThemeToggle />
+          </div>
         </div>
       </header>
       <div className="page-wrapper">

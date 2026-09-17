@@ -1,5 +1,7 @@
 "use client";
 
+import { HeaderTooltip, HexlyLink } from "../header-links";
+
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
@@ -178,22 +180,25 @@ export function BlogLayoutClient({
     <>
       <header ref={headerRef} className="blog-topbar">
         <div className="blog-topbar-inner">
-          <button
-            ref={toggleRef}
-            type="button"
-            className="blog-sidebar-toggle"
-            aria-label={drawerOpen ? "关闭侧边栏" : "打开侧边栏"}
-            aria-expanded={drawerOpen}
-            aria-controls="blog-sidebar"
-            onClick={() => setDrawerOpen((v) => !v)}
-          >
-            {drawerOpen ? <X className="h-5 w-5" strokeWidth={1.5} /> : <Menu className="h-5 w-5" strokeWidth={1.5} />}
-          </button>
+          <HeaderTooltip label={drawerOpen ? "关闭侧边栏" : "打开侧边栏"}>
+            <button
+              ref={toggleRef}
+              type="button"
+              className="blog-sidebar-toggle"
+              aria-label={drawerOpen ? "关闭侧边栏" : "打开侧边栏"}
+              aria-expanded={drawerOpen}
+              aria-controls="blog-sidebar"
+              onClick={() => setDrawerOpen((v) => !v)}
+            >
+              {drawerOpen ? <X className="h-5 w-5" strokeWidth={1.5} /> : <Menu className="h-5 w-5" strokeWidth={1.5} />}
+            </button>
+          </HeaderTooltip>
           <div className="journal-topbar-brand" inert={mainInert || undefined}>
             <JournalBrand siteName={siteName} />
           </div>
           <JournalSurfaces inert={mainInert} />
           <div className="blog-topbar-end" inert={mainInert || undefined}>
+            <HexlyLink className="journal-hexly-link" />
             <JournalThemeToggle />
           </div>
         </div>

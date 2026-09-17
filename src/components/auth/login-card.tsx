@@ -1,5 +1,7 @@
 "use client";
 
+import { HeaderTooltip, HexlyLink } from "../header-links";
+
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
@@ -86,15 +88,18 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
 
         {/* Top-right controls */}
         <div className="absolute top-4 right-4 z-10 flex items-center gap-1">
-          <a
-            href="https://github.com/nocoo/firefly"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="GitHub repository"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-basalt-muted-foreground hover:text-basalt-foreground hover:bg-basalt-accent transition-colors"
-          >
-            <Github className="h-[18px] w-[18px]" aria-hidden="true" strokeWidth={1.5} />
-          </a>
+          <HeaderTooltip label="GitHub 仓库">
+            <a
+              href="https://github.com/nocoo/firefly"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub repository"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-basalt-muted-foreground hover:text-basalt-foreground hover:bg-basalt-accent transition-colors"
+            >
+              <Github className="h-[18px] w-[18px]" aria-hidden="true" strokeWidth={1.5} />
+            </a>
+          </HeaderTooltip>
+          <HexlyLink />
           <ThemeToggle />
         </div>
 
