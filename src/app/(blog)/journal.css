@@ -122,8 +122,11 @@
     transition: color 0.2s;
   }
   .journal-theme-toggle, .journal-hexly-link { display: grid; }
+  .journal-hexly-link { position: relative; }
+  .journal-hexly-link::before { content: ""; position: absolute; inset: 0; }
   .blog-sidebar-toggle:hover, .journal-theme-toggle:hover, .journal-hexly-link:hover { color: var(--blog-accent); background: transparent; }
   .blog-sidebar-toggle svg, .journal-theme-toggle svg, .journal-hexly-link svg { width: 18px; height: 18px; }
+  .journal-hexly-link svg { pointer-events: none; }
   .journal-theme-toggle .theme-moon { display: none; }
   .dark .journal-theme-toggle .theme-sun { display: none; }
   .dark .journal-theme-toggle .theme-moon { display: block; }
