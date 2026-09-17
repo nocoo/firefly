@@ -1,86 +1,97 @@
 # Firefly
 
-Personal blog platform built with Next.js + Cloudflare Workers.
+Personal blog and administration platform with Next.js, a Cloudflare D1 Worker and R2 media.
+Profile: ts-worker-web.
+Direction: [development guide](docs/31-development.md), [architecture](docs/03-architecture.md).
 
-## Deployment
+## Sources of Truth
 
-- **Platform**: Railway (NOT Cloudflare Pages)
-- **Release**: `bun run release` bumps version, commits, tags, and pushes to trigger Railway deploy
+This handbook is the contract; hooks, CI and config are enforcement. Raise weaker enforcement to the contract rather than lowering requirements. Frameworks must not replace this file.
 
-## Architecture
+| Fact | Where |
+| --- | --- |
+| Human docs | [README.md](README.md), [docs/README.md](docs/README.md) |
+| Version | Root `package.json`, release script |
+| Enforcement | `.husky/`, `.github/workflows/ci.yml`, root/Worker Vitest configs |
+| Environment | Ignored `.env`; tracked `.env.example` |
+| Accidents | [Retrospective.md](Retrospective.md) |
 
-### Data Layer
-- `src/data/core/` — Base data layer framework (sql builder, cache manager, timestamps)
-- `src/data/entities/` — Pure CRUD entity modules (post, tag, category, comment, media). camelCase input types, snake_case DB columns.
-- `src/services/` — Service layer for orchestration with side effects (PostService, MediaService). Best-effort secondary effects (D6 contract: primary throws, secondary logs).
-- `src/data/` (root) — Non-entity data modules (analytics, settings, backup, mcp-tokens, etc.)
+## Project Invariants
 
-### MCP Framework
-- `src/lib/mcp/framework/` — Generic entity-driven MCP tool framework (handlers, projection, resolve, register)
-- `src/lib/mcp/entities/` — Entity configs (post, tag, category) with hooks for snake_case→camelCase mapping
-- Hooks: `afterGet`, `afterCreate` (best-effort), `afterUpdate` (best-effort), `mapCreateInput`, `mapUpdateInput`
-- No rollback mechanisms — all post-write hooks are best-effort (log on failure, don't roll back)
+- Deploy the Next.js application on Railway; the D1 Worker and migrations are separate operations. Preserve Google login and the administrator email allowlist.
+- `src/data/core/` owns SQL/cache/timestamp primitives; entities are pure CRUD, services orchestrate side effects. A primary failure throws; secondary/post-write hooks log failures without rollback (D6).
+- Entity inputs are camelCase; database columns and external MCP/REST fields are snake_case. Map only at boundaries through entity/route hooks.
+- MCP framework/entity configs retain `afterGet`, best-effort `afterCreate`/`afterUpdate`, `mapCreateInput` and `mapUpdateInput`. Reuse `createMockDb()` from `@/data/core/test-utils`.
+- Preserve original upload filenames for display/search; UUIDs belong in R2 keys. Preserve FTS query syntax and validate pagination before SQL.
+- Worker migrations involving connection-scoped PRAGMAs use the existing `-- @batch` handling. Never revive retired remote test D1 procedures.
+- Keep admin/full and restricted-author MCP scopes separate; author-created posts remain private until an administrator publishes them.
 
-### Key Conventions
-- Entity inputs: camelCase (`categoryId`, `featuredImage`, `publishedAt`)
-- DB columns: snake_case (`category_id`, `featured_image`, `published_at`)
-- MCP/REST external API: snake_case fields, mapped at boundary via hooks/route handlers
-- Test mock: `createMockDb()` from `@/data/core/test-utils` (single source, no local copies)
+## Stack / Layout
 
-### Tooling
-- **TypeScript**: `7.0.2` stable for `tsc` / typecheck / build. Root also has
-  `@typescript/native-preview` so Next 16 skips its embedded typecheck
-  (`build` is `tsc --noEmit && next build --webpack`).
-- **Lint**: Biome 2.5 (`biome check`); no ESLint / typescript-eslint.
-  Custom gates: `gate:dynamic-delete`, `gate:ts-expect-error` (oxc-parser).
-  See `docs/26-biome-migration-ts7.md`.
+| Component | Choice |
+| --- | --- |
+| Web | Next.js/React, TypeScript 7.0.2; `src/app/`, `src/components/` |
+| Data | `src/data/`, `src/services/`, `worker/src/`, D1 and R2 |
+| Tooling | Bun, Biome 2.5, oxc custom gates, Vitest/Playwright |
+| Migrations | `scripts/migrations/`; historical WordPress work in `archive/` |
+
+MVVM: keep ViewModels independent of Views/DOM; routes remain thin. Next's native-preview compatibility is intentional: build still runs stable `tsc` before Webpack. See [tooling](docs/26-biome-migration-ts7.md).
+
+## Commands
+
+Run from root; install root and Worker packages separately. Node 22+ is needed; current CI pins Bun 1.2.15.
+
+```sh
+bun install --frozen-lockfile
+bun install --cwd worker --frozen-lockfile
+bun run dev
+bun run typecheck
+bun run lint
+bun run build
+bun run test:coverage
+bun run test:worker:coverage
+bun run test:e2e:api
+bun run test:e2e:browser
+bun run security
+```
+
+Follow README for local Worker startup on 8787 before `bun run migrate:local`. Web dev uses 7028. Names required for normal login: `AUTH_SECRET`, `AUTH_URL`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_ALLOWED_EMAILS`; Worker connection uses `WORKER_URL`/`WORKER_SECRET`. Ordinary dev uploads use configured R2; E2E uses the local file adapter. Install Chromium with `bunx playwright install chromium`. CI supplies `AUTH_SECRET`/`AUTH_ALLOWED_EMAILS`; never copy production secrets into fixtures.
+
+## Verification
+
+6DQ = L1/L2/L3 + G1/G2 + D1. Status: `enforced`, `planned`, `manual`, `N/A`. L1 requires each of statements/branches/functions/lines ≥95%; no `.skip`/`.only`.
+
+| Piece | Requirement and current reality | Status | Evidence |
+| --- | --- | --- | --- |
+| L1 Web | Four metrics ≥95% for configured non-View TypeScript | enforced | Root Vitest thresholds; pre-push/CI coverage |
+| L1 Worker | Four metrics ≥95%; coverage command exists but CI runs plain tests | planned | `worker/vitest.config.ts`; CI `worker-tests` omits coverage |
+| L2 | Real HTTP, 100% endpoint/method coverage, real SQL | planned | API runner enforced in CI; complete surface proof/isolated lane remains a gap |
+| L3 | Critical blog/admin journeys | enforced | CI browser job → `test:e2e:browser` / Playwright |
+| G1 | Both type lanes, zero-error/warning Biome and AST/skip gates | enforced | `lint`, pre-push/CI; custom gates use index snapshots in pre-commit |
+| G2 | OSV + gitleaks, missing scanner fails; both lockfiles | planned | Root security script scans only root Bun lock; Worker lock coverage missing there |
+| D1 | Dedicated per-run local D1/R2 with guards/marker | planned | Runner uses fixed local directories shared by L2/L3 and Worker port 8787 |
+| Build | `tsc --noEmit && next build --webpack` | manual | Manifest; run for bundler/runtime changes |
+| Docs | Commands, migrations and contracts kept current | manual | Review linked guides |
+
+Current pre-commit skips heavy gates for docs, otherwise runs lint-staged before worktree tests/types; only custom gates use the index. Pre-push runs root coverage/lint/security, despite a stale comment claiming Worker coverage. Its secret range uses upstream, not stdin push refs. Target: check-only full index L1/G1 <30s; pushed-ref L2/G2 in parallel <3min. Never bypass commit/branch-push hooks; remove autofix from future gate design.
+
+## Resources / Isolation
+
+| Purpose | Ports / state | Current behavior |
+| --- | --- | --- |
+| Dev | Web 7028, local Worker 8787 | Can use real configured R2 |
+| L2 | Web 17028, Worker 8787 | Rebuilds `worker/.wrangler/e2e-d1` and `.wrangler/e2e-r2` |
+| L3 | Web 27028, Worker 8787 | Shares those directories; never run alongside L2 or the dev Worker |
+
+The required target is per-run local Wrangler/Miniflare SQLite and local R2, with credential/binding guards and `_test_marker` verified before seed/reset/cleanup. Never touch daily-dev/production data or deploy remote `-test` resources. Fixed-path local isolation is incomplete, not a reason to weaken this contract.
+
+## Operations / Release
+
+For an authorized release use `bun run release`; it bumps, commits, tags and pushes. `bun run migrate` defaults to production, while `migrate:local` targets local 8787. Apply schema before dependent code and validate the deployed site/Worker using the [runbook](docs/31-development.md). Documentation updates do not require a release or deployment.
 
 ## Retrospective
 
-### 2026-08-18: fake timers 跨文件泄漏导致 SidecarSupervisor 单测 5s 超时
-**问题**: CI L1 偶发 `waits when called immediately after an exit before recovery starts` 5s timeout。`vitest.config.ts` 设 `isolate: false`，`hash.test.ts` / `r2.test.ts` 的 `vi.useFakeTimers()` 未 `useRealTimers()` 还原，同 worker 后续文件的 `setTimeout` 永不触发；该用例用 `setTimeout(50)` 探测 pending，与未 resolve 的 recovery 一起挂死直到 testTimeout。
-**修复**: 两处 suite 补 `afterEach(vi.useRealTimers)`；sidecar 用例改为 flag + microtask 断言，并 `beforeEach/afterEach` 钉死 real timers。
-**教训**: `isolate: false` 下 fake timers 是进程级污染。凡 `useFakeTimers` 必须对称还原；依赖墙钟的测试应自保 real timers，或改成不依赖 macrotimer 的断言。
+Keep full narratives in [Retrospective.md](Retrospective.md). Cross-project lessons belong in nmem/global rules; enforce deterministic lessons in tests.
 
-### 2026-03-27: tsconfig.tsbuildinfo 导致 release 脚本失败
-**问题**: `bun run release` 报 "Working tree is dirty"，原因是 `tsconfig.tsbuildinfo` 被 git 跟踪但每次 build 都会变更。
-**修复**: 将 `*.tsbuildinfo` 加入 `.gitignore` 并 `git rm --cached` 移除跟踪。
-**教训**: 构建产物不应被 git 跟踪，新项目初始化时应确保 `.gitignore` 覆盖所有构建缓存文件。
-
-### 2026-03-30: FTS sanitizeFtsQuery 未处理 segmentText 的副作用
-**问题**: `sanitizeFtsQuery()` 先调用 `segmentText()`，但 `Intl.Segmenter` 的 `isWordLike` 过滤器会丢弃 `"` 和 `*` 字符，导致引号短语查询和前缀通配符在进入 token 处理前就被吃掉了。
-**修复**: 在调用 `segmentText()` 之前，用正则提取引号包裹的短语和尾部 `*`，分别处理后再拼装。
-**教训**: 当一个纯函数（segmentText）被复用于不同上下文（索引写入 vs 查询构建）时，它的过滤行为可能与下游假设冲突。写入端只需 word tokens，但查询端需要保留语法符号。复用前要验证过滤器是否吃掉了下游需要的信息。
-
-### 2026-03-30: Worker 路由统一解析 JSON body 导致无 body 端点 400
-**问题**: `fts-rebuild` 设计为无 body 的 POST 端点，但 Worker 路由先统一调用 `parseJsonBody()`，空 body 解析失败直接返回 400。
-**修复**: 将 `fts-rebuild` 路由提到 JSON body 解析之前。
-**教训**: 给路由添加统一 middleware 时，要审查每个端点是否都需要该 middleware 的前置条件（如 JSON body）。不需要 body 的端点必须短路在解析之前。
-
-### 2026-03-30: 分页参数缺乏边界校验
-**问题**: `?page=foo`、`?page=0`、`?page=-1`、`?page_size=NaN` 全部原样传入 SQL 的 `LIMIT/OFFSET`，会产生负数或 NaN，导致 D1 错误暴露为 500。
-**修复**: 在 API 路由、页面组件、数据层、Worker 四层都加了正整数校验和 clamp。
-**教训**: 用户输入（query string）到 SQL 参数之间的每一层都应该做边界校验，不能假设上游已经验证过。尤其是 `parseInt()` 对非数字字符串返回 `NaN`，必须显式检查。
-
-### 2026-03-31: normalizeUploadFilename 把 DB filename 改成 UUID 导致行为回归
-**问题**: 计划要求"filename normalization"，实现时把 `attachments.filename` 从用户原始文件名改成了随机 UUID。但 `filename` 在系统中承担展示名、搜索字段（`filename LIKE ?`）、排序字段（`ORDER BY filename`）和 Markdown alt 文本等多重角色，全部被破坏。
-**修复**: 回滚改动，保留 `file.name` 原样写入 DB。R2 key 本身已经用 UUID（`generateFireflyR2Key`），存储层的去重不需要改 DB 展示名。
-**教训**: 修改一个字段的写入值前，必须追踪该字段的所有读取场景（展示、搜索、排序、导出）。"存储 key" 和 "展示名" 是两个不同职责，不能混为一谈。纯函数测试只覆盖了 helper 本身的正确性，没有覆盖集成行为（"上传后媒体记录仍可按原文件名搜索"），所以回归未被测试拦住。
-
-### 2026-04-13: DB 迁移未同步到 test 环境导致 CI E2E 失败 (SUPERSEDED)
-**注意**: 此问题已通过 `wrangler dev --local --persist-to` 全本地 E2E 解决。E2E runner 每次启动前清盘并自动 apply 迁移，不再依赖远程 test D1。
-**原始问题**: 添加 `ai_agents` 表后直接 release，CI 的 L2 E2E 测试失败，因为 test D1 数据库还没有新表。Next.js build 阶段会 prefetch sitemap 等静态路由，触发数据库查询，schema 不匹配导致 500。
-**原始修复**: 手动在 test D1 执行迁移 + 部署 test worker，然后 rerun CI。
-**教训**: 涉及 DB schema 变更时，release 前必须：1) 先在 test D1 执行迁移 2) 部署 test worker 3) 本地验证 E2E 能过（或至少 build 能过）。pre-push 只跑 L1/G1/G2，无法发现 L2 E2E 问题，所以 schema 变更需要额外的手动验证步骤。
-
-### 2026-04-13: PRAGMA foreign_keys 在迁移 runner 中无效
-**问题**: 迁移 016 用 `PRAGMA foreign_keys = OFF` 防止 `DROP TABLE ai_agents` 触发 `ON DELETE SET NULL` 清空 `posts.ai_agent_id`。但 runner 把 SQL 按分号拆分，每条语句用独立 HTTP 请求执行。`PRAGMA foreign_keys` 是连接级状态，所以 FK 禁用对后续 DROP TABLE 完全无效。
-**修复**: 增加 `-- @batch` 标记支持。标记后的语句作为单个请求发送到 D1 REST API（支持分号分隔的多语句）。标记前的语句仍可单独执行并跳过已存在的错误。
-**教训**: SQLite PRAGMA 是连接级状态，不是数据库级持久配置。通过 REST API 执行 SQL 时，每个请求可能是独立连接。涉及 PRAGMA 的迁移必须确保相关语句在同一连接内执行。
-
-### 2026-06-10: 安全响应头在 dev 触发回归（CSP + HSTS）
-**问题**: `next.config.ts` 的 `headers()` 对所有环境无差别发送严格安全头：
-  1. CSP 没有 `unsafe-eval` → dev 的 react-refresh 报 `Uncaught EvalError`
-  2. `Strict-Transport-Security: max-age=63072000; preload` → 浏览器把 `localhost:7028` 加入 HSTS 缓存，之后所有 dev 访问被强制 https 升级 → `ERR_SSL_PROTOCOL_ERROR`
-**修复**: 用 `process.env.NODE_ENV === "production"` 守卫这两个 header：CSP 在 dev 加 `'unsafe-eval'`（用字符串拼接绕过测试 grep），HSTS 完全不发。
-**教训**: 任何加到 `headers()` 的"严格生产 header"在 dev 都要审查。HSTS 尤其阴险——浏览器记录后即使删 header 也不解封，需要手动 `chrome://net-internals/#hsts` 删 `localhost`/`127.0.0.1`。建议加 retro：审过 Strict-Transport-Security、Content-Security-Policy、Expect-CT、Cross-Origin-* 这几条之前永远先想"dev 也发吗"。
+- Restore fake timers in every suite because `isolate: false` shares process state.
+- Test production-only security headers separately from development; never contaminate localhost with HSTS.

@@ -1,0 +1,51 @@
+# Retrospective
+
+Accident narratives and original lessons. Historical instructions below describe their time; the current handbook and its local-isolation contract take precedence.
+
+### 2026-08-18: fake timers 跨文件泄漏导致 SidecarSupervisor 单测 5s 超时
+**问题**: CI L1 偶发 `waits when called immediately after an exit before recovery starts` 5s timeout。`vitest.config.ts` 设 `isolate: false`，`hash.test.ts` / `r2.test.ts` 的 `vi.useFakeTimers()` 未 `useRealTimers()` 还原，同 worker 后续文件的 `setTimeout` 永不触发；该用例用 `setTimeout(50)` 探测 pending，与未 resolve 的 recovery 一起挂死直到 testTimeout。
+**修复**: 两处 suite 补 `afterEach(vi.useRealTimers)`；sidecar 用例改为 flag + microtask 断言，并 `beforeEach/afterEach` 钉死 real timers。
+**教训**: `isolate: false` 下 fake timers 是进程级污染。凡 `useFakeTimers` 必须对称还原；依赖墙钟的测试应自保 real timers，或改成不依赖 macrotimer 的断言。
+
+### 2026-03-27: tsconfig.tsbuildinfo 导致 release 脚本失败
+**问题**: `bun run release` 报 "Working tree is dirty"，原因是 `tsconfig.tsbuildinfo` 被 git 跟踪但每次 build 都会变更。
+**修复**: 将 `*.tsbuildinfo` 加入 `.gitignore` 并 `git rm --cached` 移除跟踪。
+**教训**: 构建产物不应被 git 跟踪，新项目初始化时应确保 `.gitignore` 覆盖所有构建缓存文件。
+
+### 2026-03-30: FTS sanitizeFtsQuery 未处理 segmentText 的副作用
+**问题**: `sanitizeFtsQuery()` 先调用 `segmentText()`，但 `Intl.Segmenter` 的 `isWordLike` 过滤器会丢弃 `"` 和 `*` 字符，导致引号短语查询和前缀通配符在进入 token 处理前就被吃掉了。
+**修复**: 在调用 `segmentText()` 之前，用正则提取引号包裹的短语和尾部 `*`，分别处理后再拼装。
+**教训**: 当一个纯函数（segmentText）被复用于不同上下文（索引写入 vs 查询构建）时，它的过滤行为可能与下游假设冲突。写入端只需 word tokens，但查询端需要保留语法符号。复用前要验证过滤器是否吃掉了下游需要的信息。
+
+### 2026-03-30: Worker 路由统一解析 JSON body 导致无 body 端点 400
+**问题**: `fts-rebuild` 设计为无 body 的 POST 端点，但 Worker 路由先统一调用 `parseJsonBody()`，空 body 解析失败直接返回 400。
+**修复**: 将 `fts-rebuild` 路由提到 JSON body 解析之前。
+**教训**: 给路由添加统一 middleware 时，要审查每个端点是否都需要该 middleware 的前置条件（如 JSON body）。不需要 body 的端点必须短路在解析之前。
+
+### 2026-03-30: 分页参数缺乏边界校验
+**问题**: `?page=foo`、`?page=0`、`?page=-1`、`?page_size=NaN` 全部原样传入 SQL 的 `LIMIT/OFFSET`，会产生负数或 NaN，导致 D1 错误暴露为 500。
+**修复**: 在 API 路由、页面组件、数据层、Worker 四层都加了正整数校验和 clamp。
+**教训**: 用户输入（query string）到 SQL 参数之间的每一层都应该做边界校验，不能假设上游已经验证过。尤其是 `parseInt()` 对非数字字符串返回 `NaN`，必须显式检查。
+
+### 2026-03-31: normalizeUploadFilename 把 DB filename 改成 UUID 导致行为回归
+**问题**: 计划要求"filename normalization"，实现时把 `attachments.filename` 从用户原始文件名改成了随机 UUID。但 `filename` 在系统中承担展示名、搜索字段（`filename LIKE ?`）、排序字段（`ORDER BY filename`）和 Markdown alt 文本等多重角色，全部被破坏。
+**修复**: 回滚改动，保留 `file.name` 原样写入 DB。R2 key 本身已经用 UUID（`generateFireflyR2Key`），存储层的去重不需要改 DB 展示名。
+**教训**: 修改一个字段的写入值前，必须追踪该字段的所有读取场景（展示、搜索、排序、导出）。"存储 key" 和 "展示名" 是两个不同职责，不能混为一谈。纯函数测试只覆盖了 helper 本身的正确性，没有覆盖集成行为（"上传后媒体记录仍可按原文件名搜索"），所以回归未被测试拦住。
+
+### 2026-04-13: DB 迁移未同步到 test 环境导致 CI E2E 失败 (SUPERSEDED)
+**注意**: 此问题已通过 `wrangler dev --local --persist-to` 全本地 E2E 解决。E2E runner 每次启动前清盘并自动 apply 迁移，不再依赖远程 test D1。
+**原始问题**: 添加 `ai_agents` 表后直接 release，CI 的 L2 E2E 测试失败，因为 test D1 数据库还没有新表。Next.js build 阶段会 prefetch sitemap 等静态路由，触发数据库查询，schema 不匹配导致 500。
+**原始修复**: 手动在 test D1 执行迁移 + 部署 test worker，然后 rerun CI。
+**教训**: 涉及 DB schema 变更时，release 前必须：1) 先在 test D1 执行迁移 2) 部署 test worker 3) 本地验证 E2E 能过（或至少 build 能过）。pre-push 只跑 L1/G1/G2，无法发现 L2 E2E 问题，所以 schema 变更需要额外的手动验证步骤。
+
+### 2026-04-13: PRAGMA foreign_keys 在迁移 runner 中无效
+**问题**: 迁移 016 用 `PRAGMA foreign_keys = OFF` 防止 `DROP TABLE ai_agents` 触发 `ON DELETE SET NULL` 清空 `posts.ai_agent_id`。但 runner 把 SQL 按分号拆分，每条语句用独立 HTTP 请求执行。`PRAGMA foreign_keys` 是连接级状态，所以 FK 禁用对后续 DROP TABLE 完全无效。
+**修复**: 增加 `-- @batch` 标记支持。标记后的语句作为单个请求发送到 D1 REST API（支持分号分隔的多语句）。标记前的语句仍可单独执行并跳过已存在的错误。
+**教训**: SQLite PRAGMA 是连接级状态，不是数据库级持久配置。通过 REST API 执行 SQL 时，每个请求可能是独立连接。涉及 PRAGMA 的迁移必须确保相关语句在同一连接内执行。
+
+### 2026-06-10: 安全响应头在 dev 触发回归（CSP + HSTS）
+**问题**: `next.config.ts` 的 `headers()` 对所有环境无差别发送严格安全头：
+  1. CSP 没有 `unsafe-eval` → dev 的 react-refresh 报 `Uncaught EvalError`
+  2. `Strict-Transport-Security: max-age=63072000; preload` → 浏览器把 `localhost:7028` 加入 HSTS 缓存，之后所有 dev 访问被强制 https 升级 → `ERR_SSL_PROTOCOL_ERROR`
+**修复**: 用 `process.env.NODE_ENV === "production"` 守卫这两个 header：CSP 在 dev 加 `'unsafe-eval'`（用字符串拼接绕过测试 grep），HSTS 完全不发。
+**教训**: 任何加到 `headers()` 的"严格生产 header"在 dev 都要审查。HSTS 尤其阴险——浏览器记录后即使删 header 也不解封，需要手动 `chrome://net-internals/#hsts` 删 `localhost`/`127.0.0.1`。建议加 retro：审过 Strict-Transport-Security、Content-Security-Policy、Expect-CT、Cross-Origin-* 这几条之前永远先想"dev 也发吗"。
