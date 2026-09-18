@@ -1,5 +1,84 @@
 # Changelog
 
+## v2.14.0 (2026-09-18)
+
+- feat: cache public content and reduce D1 read and write costs
+- Merge pull request #746 from nocoo/co/20260918-firefly-cleanup
+- Remove the unused resetR2Client test seam
+- docs: standardize agent handbook and retrospective
+- chore: pin @nocoo/basalt 2.1.8
+- fix: add header icon sr-only text
+- feat(web): add Hexly project link and header tooltips
+- Merge pull request #740 from nocoo/chore/deps-20260917-081524
+- chore(deps): fix worker postcss advisories (#739)
+- chore(deps): update wrangler
+- chore(deps): update hono
+- chore(deps): update ai
+- chore(deps): align vitest 5.0.1
+- chore(deps): update workers-types
+- chore(deps): update client-s3
+- Merge pull request #724 from nocoo/agent/sde/ed2f7a42e20f
+- Merge pull request #723 from nocoo/agent/sde/f75c4bf504f2
+- Merge pull request #721 from nocoo/agent/sde/STU-5973-aws-sdk-s3-3.1132.0
+- Merge pull request #722 from nocoo/agent/sde/c0ef187c89f7
+- Merge pull request #720 from nocoo/agent/sde/39c6e1224f73
+- Merge pull request #719 from nocoo/agent/sde/5c7576c71be2
+- chore(deps): bump @cloudflare/workers-types
+- chore(deps): bump ai to 7.0.100
+- chore(deps): upgrade lucide-react to 1.46.0
+- chore(deps): bump oxc-parser to 0.150.0
+- chore(deps): bump wrangler to 4.131.2 (#717)
+- chore(deps): bump aws sdk s3 to 3.1132.0
+- Merge pull request #711 from nocoo/agent/sde/c49c965e8938
+- Merge pull request #710 from nocoo/agent/sde/STU-5877-zod-4.6.5
+- chore(deps): bump @types/node to 26.5.1
+- chore(deps): bump zod to 4.6.5
+- Merge pull request #701 from nocoo/co/20260913-firefly-cleanup
+- Merge pull request #706 from nocoo/agent/sde/deps-20260913-followup
+- chore(deps): bump zod to 4.6.4 (#705)
+- chore(deps): bump tailwind-merge to 3.7.0 (#704)
+- chore(deps): bump marked to 18.0.13 (#703)
+- Merge pull request #702 from nocoo/agent/sde/deps-20260913
+- chore(deps): bump next to 16.3.5 (#699)
+- chore(deps): bump lucide-react to 1.45.0 (#698)
+- chore(deps): bump ai to 7.0.98 (#697)
+- chore(deps): bump wrangler to 4.131.1 (#700)
+- chore(deps): bump @cloudflare/workers-types to 5.20260911.1 (#696)
+- chore(deps): bump @aws-sdk/client-s3 to 3.1131.0 (#695)
+- chore(deps): bump zod to 4.6.2 (#694)
+- chore(deps): bump lint-staged to 17.5.1 (#691)
+- chore(deps): bump @biomejs/biome to 2.5.13 (#689)
+- chore(deps): bump juice to 12.1.3 (#682)
+- chore(deps): upgrade React 19.3 compatibility batch (#679 #680 #683 #684 #685)
+- Unreachable Skeleton component
+- fix: match text-only coverage report
+- fix: preserve verified base-ci integration
+- chore: preserve coverage-path report artifact in quality workflow
+- chore: migrate ci to base-ci quality and test-job
+- Merge pull request #687 from nocoo/co/20260911-firefly
+- chore: upgrade basalt to 2.1.7
+- Remove unused SQL helpers from data core
+- Merge pull request #677 from nocoo/agent/sde/77c08e936837
+- Merge pull request #676 from nocoo/agent/sde/deps-20260909
+- chore(worker): upgrade workers types
+- chore(deps): bump lucide-react to 1.43.0 (#673)
+- chore(deps): bump ai to 7.0.94 (#671)
+- chore(deps): bump @nocoo/basalt to 2.1.2 (#670)
+- chore(deps): bump @aws-sdk/client-s3 to 3.1128.0 (#668)
+- fix(deps): upgrade Worker sharp for security (#674)
+- chore(deps): bump wrangler to 4.130.0 (#675)
+- chore(deps): bump @cloudflare/workers-types to 5.20260908.1 (#669)
+- fix(deps): upgrade baseline-browser-mapping for security (#672)
+- docs: refresh bilingual project documentation
+- Merge pull request #667 from nocoo/agent/sde/deps-20260908
+- chore(deps): bump wrangler to 4.129.1 (#666)
+- chore(deps): bump @cloudflare/workers-types to 5.20260907.1 (#660)
+- chore(deps): bump oxc-parser to 0.149.0 (#665)
+- chore(deps): bump marked to 18.0.12 (#664)
+- chore(deps): bump lucide-react to 1.42.0 (#663)
+- chore(deps): bump @types/node to 26.5.0 (#662)
+
+
 ## v2.13.3 (2026-09-08)
 
 - fix: use settings site name for home title
