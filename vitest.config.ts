@@ -47,6 +47,7 @@ export default defineConfig({
     alias: {
       "@": srcAlias,
       "server-only": stubServerOnly,
+      "next/cache": new URL("./test/next-cache-stub.ts", import.meta.url).pathname,
     },
   },
 });

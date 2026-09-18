@@ -67,6 +67,14 @@ describe("listCategories", () => {
     await listCategories(db);
     expect(db.query).toHaveBeenCalledOnce();
   });
+
+  it("lets the public cache reload without reusing the inner taxonomy TTL", async () => {
+    vi.mocked(db.query).mockResolvedValue({ results: [sampleCategory], meta: { changes: 0, duration: 0 } });
+    await listCategories(db);
+    vi.mocked(db.query).mockResolvedValue({ results: [{ ...sampleCategory, name: "Renamed" }], meta: { changes: 0, duration: 0 } });
+    expect((await listCategories(db, false))[0].name).toBe("Renamed");
+    expect(db.query).toHaveBeenCalledTimes(2);
+  });
 });
 
 // ---------------------------------------------------------------------------

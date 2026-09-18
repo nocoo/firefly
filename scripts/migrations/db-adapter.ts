@@ -7,6 +7,7 @@
  */
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
+import { parse } from "dotenv";
 
 // ---------------------------------------------------------------------------
 // SQL statement splitter (quote/comment-aware)
@@ -237,16 +238,7 @@ export class WorkerHttpAdapter implements DbAdapter {
 // ---------------------------------------------------------------------------
 
 function loadEnvFile(path: string): Record<string, string> {
-  if (!existsSync(path)) return {};
-  const env: Record<string, string> = {};
-  for (const line of readFileSync(path, "utf-8").split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eqIdx = trimmed.indexOf("=");
-    if (eqIdx === -1) continue;
-    env[trimmed.slice(0, eqIdx)] = trimmed.slice(eqIdx + 1);
-  }
-  return env;
+  return existsSync(path) ? parse(readFileSync(path, "utf-8")) : {};
 }
 
 export function createAdapter(target: "prod" | "local"): DbAdapter {

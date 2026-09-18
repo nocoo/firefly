@@ -77,6 +77,7 @@ function buildOrderBy(
 export async function listPosts(
   db: Db,
   options: ListPostsOptions = {},
+  cacheCount = true,
 ): Promise<ListPostsResult> {
   const {
     page = 1,
@@ -104,7 +105,7 @@ export async function listPosts(
 
   const countSql = `SELECT COUNT(*) AS count FROM posts p ${where}`;
   const cacheKey = countCacheKey(where, params);
-  const cachedCount = countCacheGet(cacheKey);
+  const cachedCount = cacheCount ? countCacheGet(cacheKey) : undefined;
   let total: number;
 
   if (cachedCount) {
@@ -115,7 +116,7 @@ export async function listPosts(
       params,
     );
     total = countResult?.count ?? result.results.length;
-    countCacheSet(cacheKey, { value: total, cachedAt: Date.now() });
+    if (cacheCount) countCacheSet(cacheKey, { value: total, cachedAt: Date.now() });
   }
 
   return { posts: result.results, total };

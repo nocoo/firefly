@@ -1,8 +1,5 @@
 import { getDb } from "@/lib/db";
-import { listCategories } from "@/data/entities/category";
-import { listTags } from "@/data/entities/tag";
-import { listMonthlyArchives } from "@/data/entities/post";
-import { getSiteSettings } from "@/data/settings";
+import { listCategories, listTags, listMonthlyArchives, getSiteSettings } from "@/data/public-content";
 import { BlogLayoutClient } from "@/components/blog/blog-layout-client";
 import { BlogFooter } from "@/components/blog/blog-footer";
 import { JournalThemeColor } from "@/components/blog/journal-theme-color";

@@ -8,6 +8,7 @@ import type { FieldDef } from "@/data/core/types";
 import { EntityCacheManager } from "@/data/core/cache-manager";
 import { nowEpoch, newId } from "@/data/core/timestamps";
 import { buildSetClauses } from "@/data/core/sql";
+import { invalidatePublicContent } from "@/data/core/public-cache";
 
 // ---------------------------------------------------------------------------
 // Config & return types
@@ -34,7 +35,7 @@ export interface TaxonomyConfig<_T, CreateInput, _UpdateInput> {
 }
 
 export interface TaxonomyEntity<T, CreateInput, UpdateInput> {
-  list: (db: Db) => Promise<T[]>;
+  list: (db: Db, useCache?: boolean) => Promise<T[]>;
   getBySlug: (db: Db, slug: string) => Promise<T | null>;
   getById: (db: Db, id: string) => Promise<T | null>;
   create: (db: Db, input: CreateInput) => Promise<T>;
@@ -59,12 +60,18 @@ export function createTaxonomyEntity<T, CreateInput, UpdateInput extends object>
   const insertSql = `INSERT INTO ${table} (${insertColumns.join(", ")}) VALUES (${placeholders})`;
 
   // -- list ----------------------------------------------------------------
-  async function list(db: Db): Promise<T[]> {
+  async function list(db: Db, useCache = true): Promise<T[]> {
+    if (!useCache) return listUncached(db);
     const cached = cache.get();
     if (cached) return cached;
 
+    const rows = await listUncached(db);
+    cache.set(rows);
+    return rows;
+  }
+
+  async function listUncached(db: Db): Promise<T[]> {
     const result = await db.query<T>(`SELECT * FROM ${table} ORDER BY ${orderBy}`);
-    cache.set(result.results);
     return result.results;
   }
 
@@ -84,10 +91,10 @@ export function createTaxonomyEntity<T, CreateInput, UpdateInput extends object>
     const now = nowEpoch();
 
     await db.execute(insertSql, buildInsertParams(id, input, now));
+    invalidateCache();
 
     const row = await getById(db, id);
     if (!row) throw new Error(`Failed to retrieve ${entityName} ${id} after creation`);
-    cache.invalidate();
     return row;
   }
 
@@ -104,20 +111,21 @@ export function createTaxonomyEntity<T, CreateInput, UpdateInput extends object>
 
     await db.execute(`UPDATE ${table} SET ${setClauses.join(", ")} WHERE id = ?`, params);
 
-    cache.invalidate();
+    invalidateCache();
     return getById(db, id);
   }
 
   // -- delete --------------------------------------------------------------
   async function del(db: Db, id: string): Promise<boolean> {
     const meta = await db.execute(`DELETE FROM ${table} WHERE id = ?`, [id]);
-    if (meta.changes > 0) cache.invalidate();
+    if (meta.changes > 0) invalidateCache();
     return meta.changes > 0;
   }
 
   // -- invalidateCache -----------------------------------------------------
   function invalidateCache(): void {
     cache.invalidate();
+    invalidatePublicContent();
   }
 
   return { list, getBySlug, getById, create, update, delete: del, invalidateCache };

@@ -6,6 +6,9 @@ import { detectBot, parseDevice } from "./analytics";
 // ---------------------------------------------------------------------------
 
 describe("detectBot", () => {
+  it.each(["Uptime-Kuma/2.3.2", "uptime-kuma/3.0"])("classifies %s as monitoring", (ua) => {
+    expect(detectBot(ua)).toEqual({ isBot: true, botName: "Uptime Kuma", botCategory: "monitor" });
+  });
   it("detects Googlebot as search bot", () => {
     const result = detectBot(
       "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",

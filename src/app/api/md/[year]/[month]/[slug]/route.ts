@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import { getPostBySlug } from "@/data/entities/post";
+import { getPostBySlug } from "@/data/public-content";
 import { SITE_URL, postPath, formatDateISO } from "@/lib/seo";
 
 interface Params {
@@ -15,7 +15,7 @@ export async function GET(
 ) {
   const { year, month, slug } = await params;
   const db = getDb();
-  const post = await getPostBySlug(db, slug, "published");
+  const post = await getPostBySlug(db, slug);
 
   if (!post) {
     return new NextResponse("Not found", { status: 404 });
@@ -61,7 +61,7 @@ export async function GET(
     headers: {
       "Content-Type": "text/markdown; charset=utf-8",
       "x-markdown-tokens": String(tokenEstimate),
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": "public, max-age=0, must-revalidate",
     },
   });
 }

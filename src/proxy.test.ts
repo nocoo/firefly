@@ -589,6 +589,11 @@ describe("proxy — rate limiting", () => {
 // ---------------------------------------------------------------------------
 
 describe("skipStaticAssets — does not short-circuit /api paths", () => {
+  it.each(["/admin.rsc", "/admin/posts/example.json", "/_next/data/build/admin/posts.json"])("keeps auth active for raw Next data URL %s", (path) => {
+    expect(_testHelpers.isProtectedRoute(path)).toBe(true);
+    expect(skipStaticAssets(makeRequest(path))).toBeNull();
+  });
+
   it("does NOT skip /api/media/<uuid>.png (was the bypass)", () => {
     const req = makeRequest("/api/media/abc-123.png", undefined, "DELETE");
     expect(skipStaticAssets(req)).toBeNull();
@@ -702,5 +707,26 @@ describe("proxy — protected /api routes with dot in pathname reach authGuard",
     await proxy(req);
     expect(NextResponse.next).toHaveBeenCalled();
     expect(NextResponse.json).not.toHaveBeenCalled();
+  });
+});
+
+
+describe("analytics navigation filtering", () => {
+  it.each([
+    ["HEAD", {}],
+    ["POST", {}],
+    ["GET", { "user-agent": "Uptime-Kuma/2.3.2" }],
+    ["GET", { "next-router-prefetch": "1" }],
+    ["GET", { "next-router-segment-prefetch": "/_tree" }],
+    ["GET", { purpose: "prefetch" }],
+    ["GET", { "sec-purpose": "prefetch;prerender" }],
+  ])("does not count %s with %j", (method, headers) => {
+    expect(_testHelpers.shouldTrackNavigation(makeRequest("/", undefined, method, headers))).toBe(false);
+  });
+
+  it("retains real navigation, including RSC navigation and search crawlers", () => {
+    for (const headers of [{}, { rsc: "1" }, { "user-agent": "Googlebot/2.1" }]) {
+      expect(_testHelpers.shouldTrackNavigation(makeRequest("/", undefined, "GET", headers))).toBe(true);
+    }
   });
 });

@@ -3,7 +3,7 @@
  * E2E Runner — starts local wrangler worker + Next.js, runs E2E tests, tears down.
  *
  * All test infrastructure is local — no remote Cloudflare resources required:
- *   - D1: wrangler dev --local --persist-to .wrangler/e2e-d1 (Miniflare SQLite)
+ *   - D1: wrangler dev --local with a fresh per-run directory (Miniflare SQLite)
  *   - R2: filesystem adapter via E2E_R2_LOCAL_DIR (see src/lib/r2-client.ts)
  *   - Auth: bypassed via E2E_SKIP_AUTH=true
  *
@@ -28,8 +28,12 @@ import {
   mkdirSync,
   openSync,
   closeSync,
+  mkdtempSync,
+  writeFileSync,
 } from "node:fs";
 import { join, resolve } from "node:path";
+import { createServer } from "node:net";
+import { WorkerHttpAdapter } from "./migrations/db-adapter";
 import { SidecarSupervisor } from "./e2e-sidecar";
 
 // Use the current bun binary path for spawning subprocesses
@@ -42,17 +46,30 @@ const DEV_PORT = 7028;
 const API_E2E_PORT = DEV_PORT + 10000; // 17028
 const BROWSER_E2E_PORT = DEV_PORT + 20000; // 27028
 const WORKER_PORT = 8787;
+const SYSTEM_ENV = Object.fromEntries(
+  ["PATH", "HOME", "TMPDIR", "USER", "SHELL", "LANG"].map((key) => [key, process.env[key]]),
+);
 
 const args = process.argv.slice(2);
 const apiOnly = args.includes("--api-only");
 const browserOnly = args.includes("--browser-only");
 
 // ---------------------------------------------------------------------------
-// Persist directories — cleaned before each run
+// Each run owns fresh D1/R2 state and a non-production Worker binding.
 // ---------------------------------------------------------------------------
 
-const PERSIST_D1 = resolve("worker/.wrangler/e2e-d1");
-const PERSIST_R2 = resolve(".wrangler/e2e-r2");
+mkdirSync(resolve("worker/.wrangler"), { recursive: true });
+const RUN_DIR = mkdtempSync(resolve("worker/.wrangler/e2e-"));
+const RUN_ID = crypto.randomUUID();
+const PERSIST_D1 = join(RUN_DIR, "d1");
+const PERSIST_R2 = join(RUN_DIR, "r2");
+const WORKER_CONFIG = join(RUN_DIR, "wrangler.json");
+writeFileSync(WORKER_CONFIG, JSON.stringify({
+  name: "firefly-e2e-local",
+  main: resolve("worker/src/index.ts"),
+  compatibility_date: "2026-03-01",
+  d1_databases: [{ binding: "DB", database_name: "firefly-e2e-local", database_id: "00000000-0000-0000-0000-000000000000" }],
+}));
 
 // ---------------------------------------------------------------------------
 // Log capture — worker/next stdout+stderr land here so CI failures leave
@@ -99,19 +116,6 @@ function collectLogPaths(): string[] {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function loadEnvFile(path: string): Record<string, string> {
-  if (!existsSync(path)) return {};
-  const env: Record<string, string> = {};
-  for (const line of readFileSync(path, "utf-8").split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eqIdx = trimmed.indexOf("=");
-    if (eqIdx === -1) continue;
-    env[trimmed.slice(0, eqIdx)] = trimmed.slice(eqIdx + 1);
-  }
-  return env;
-}
 
 async function waitForServer(
   url: string,
@@ -183,6 +187,7 @@ function startWorkerProcess(): Subprocess {
       WRANGLER,
       "dev",
       "--local",
+      "--config", WORKER_CONFIG,
       `--persist-to=${PERSIST_D1}`,
       "--port",
       String(WORKER_PORT),
@@ -197,7 +202,7 @@ function startWorkerProcess(): Subprocess {
       // emits on stderr. Pin that file inside LOG_DIR so failure dumps include
       // the real exception instead of only Wrangler's blank `[ERROR]` banner.
       env: {
-        ...process.env,
+        ...SYSTEM_ENV,
         WRANGLER_LOG: "info",
         WRANGLER_LOG_PATH: WRANGLER_DEBUG_LOG,
       },
@@ -294,8 +299,8 @@ function buildNextOnce(env: Record<string, string | undefined>): void {
   // Next.js 16 refuses to run two `next dev` instances in the same directory,
   // so we use `bun run build` + `next start` which has no such restriction and
   // better matches production behavior.
-  console.log(`▸ Building Next.js for E2E (turbopack)...`);
-  const build = Bun.spawnSync([BUN, "x", "next", "build", "--turbo"], {
+  console.log(`▸ Building Next.js for E2E (production build)...`);
+  const build = Bun.spawnSync([BUN, "run", "build"], {
     cwd: process.cwd(),
     env,
     stdout: "ignore",
@@ -334,16 +339,17 @@ function startNextServer(
 }
 
 async function main() {
-  // --- Clean persist directories for a fresh run ---
-  for (const dir of [PERSIST_D1, PERSIST_R2]) {
-    rmSync(dir, { recursive: true, force: true });
+  // Fail before touching a database if a dev server or another run owns a port.
+  for (const port of [WORKER_PORT, ...(!browserOnly ? [API_E2E_PORT] : []), ...(!apiOnly ? [BROWSER_E2E_PORT] : [])]) {
+    await new Promise<void>((accept, reject) => {
+      const server = createServer();
+      server.once("error", reject);
+      server.listen(port, () => server.close(() => accept()));
+    });
   }
-  console.log("▸ Cleaned persist directories (D1 + R2)");
+  console.log(`▸ Isolated D1 + R2: ${RUN_DIR}`);
   prepareLogDir();
   console.log(`▸ Capturing worker/next output under ${LOG_DIR}`);
-
-  // --- Build env: load .env as base, then inject E2E overrides ---
-  const prodEnv = loadEnvFile(".env");
 
   // R2_PUBLIC_URL must point to a Next.js server that will actually be running.
   // --api-only  → only 17028 is started
@@ -352,8 +358,19 @@ async function main() {
   const r2Port = browserOnly ? BROWSER_E2E_PORT : API_E2E_PORT;
 
   const env: Record<string, string | undefined> = {
-    ...prodEnv,
-    ...process.env,
+    ...SYSTEM_ENV,
+    // Synthetic credentials also prevent Next's dotenv loader from filling
+    // these names from a developer's production .env.
+    CF_ACCOUNT_ID: "local-e2e",
+    CF_API_TOKEN: "",
+    CF_D1_DATABASE_ID: "00000000-0000-0000-0000-000000000000",
+    AUTH_SECRET: "firefly-local-e2e-secret-not-production",
+    AUTH_URL: `http://localhost:${r2Port}`,
+    AUTH_ALLOWED_EMAILS: "e2e@test.local",
+    AUTH_GOOGLE_ID: "local-e2e",
+    AUTH_GOOGLE_SECRET: "local-e2e",
+    R2_ACCESS_KEY_ID: "local-e2e",
+    R2_SECRET_ACCESS_KEY: "local-e2e",
     // Worker — always local
     WORKER_URL: `http://localhost:${WORKER_PORT}`,
     WORKER_SECRET: "test-secret",
@@ -362,6 +379,7 @@ async function main() {
     CI: "true",
     // E2E gate — activates local R2 adapter and /__e2e-r2 read route
     E2E_TEST_RUNNER: "true",
+    E2E_RUN_ID: RUN_ID,
     // R2 — local filesystem adapter (see src/lib/r2-client.ts)
     R2_BUCKET_NAME: "local-e2e",
     R2_PUBLIC_URL: `http://localhost:${r2Port}/__e2e-r2`,
@@ -373,6 +391,14 @@ async function main() {
   workerSupervisor = createWorkerSupervisor();
   workerSupervisor.start();
   await waitForWorkerReady();
+
+  const testDb = new WorkerHttpAdapter(`http://localhost:${WORKER_PORT}`, "test-secret");
+  const tables = await testDb.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'sqlite_%'");
+  if (tables.length !== 0) throw new Error("Refusing to seed a non-empty test database");
+  await testDb.execute("CREATE TABLE _test_marker (run_id TEXT NOT NULL)");
+  await testDb.execute(`INSERT INTO _test_marker (run_id) VALUES ('${RUN_ID}')`);
+  const marker = await testDb.query<{ run_id: string }>("SELECT run_id FROM _test_marker");
+  if (marker.length !== 1 || marker[0].run_id !== RUN_ID) throw new Error("Test database marker mismatch");
 
   // --- Apply DB migrations to local D1 ---
   console.log("▸ Applying DB migrations to local D1...");
@@ -426,6 +452,14 @@ async function main() {
     );
     const apiResult = await apiTest.exited;
     if (apiResult !== 0) exitCode = 1;
+
+    // Cache proofs mutate the DB outside app hooks. Run after other mutations
+    // so an unrelated suite cannot invalidate a deliberately warmed entry.
+    const cacheTest = spawn(
+      [BUN, "run", "vitest", "run", "--config", "e2e/cache.config.ts"],
+      { cwd: process.cwd(), env: { ...env, E2E_BASE_URL: `http://localhost:${apiPort}` }, stdout: "inherit", stderr: "inherit" },
+    );
+    if (await cacheTest.exited !== 0) exitCode = 1;
   }
 
   if (!apiOnly) {
@@ -493,4 +527,8 @@ async function waitForReady(port: number): Promise<void> {
   }
 }
 
-main();
+main().catch((error) => {
+  console.error(error);
+  cleanup();
+  process.exit(1);
+});

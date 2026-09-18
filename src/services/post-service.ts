@@ -164,7 +164,6 @@ export const PostService = {
 
     invalidateCategoryCache();
     invalidateTagCache();
-    invalidatePostCaches();
 
     // Best-effort FTS index sync
     await bestEffort("ftsSync:create", () =>
@@ -177,6 +176,7 @@ export const PostService = {
       }),
     );
 
+    invalidatePostCaches();
     return post;
   },
 
@@ -249,7 +249,6 @@ export const PostService = {
       }
     }
 
-    invalidatePostCaches();
 
     // Best-effort FTS index sync (re-index with latest content)
     if (updated) {
@@ -264,6 +263,7 @@ export const PostService = {
       );
     }
 
+    invalidatePostCaches();
     return updated;
   },
 
@@ -294,7 +294,6 @@ export const PostService = {
 
     invalidateCategoryCache();
     invalidateTagCache();
-    invalidatePostCaches();
 
     // Best-effort FTS cleanup — rowid captured before deletion
     if (rowid != null) {
@@ -303,6 +302,7 @@ export const PostService = {
       );
     }
 
+    invalidatePostCaches();
     return true;
   },
 

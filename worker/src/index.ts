@@ -13,7 +13,7 @@
  */
 
 import { handleFtsSync, handleFtsSearch } from "./fts";
-import pkg from "../package.json";
+import pkg from "../../package.json";
 
 const VERSION = pkg.version;
 

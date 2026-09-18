@@ -69,7 +69,7 @@ Follow README for local Worker startup on 8787 before `bun run migrate:local`. W
 | L3 | Critical blog/admin journeys | enforced | CI browser job → `test:e2e:browser` / Playwright |
 | G1 | Both type lanes, zero-error/warning Biome and AST/skip gates | enforced | `lint`, pre-push/CI; custom gates use index snapshots in pre-commit |
 | G2 | OSV + gitleaks, missing scanner fails; both lockfiles | planned | Root security script scans only root Bun lock; Worker lock coverage missing there |
-| D1 | Dedicated per-run local D1/R2 with guards/marker | planned | Runner uses fixed local directories shared by L2/L3 and Worker port 8787 |
+| D1 | Dedicated per-run local D1/R2 with guards/marker | enforced | Runner creates fresh local state, a zero-UUID binding and `_test_marker`, checks ports and supplies synthetic credentials |
 | Build | `tsc --noEmit && next build --webpack` | manual | Manifest; run for bundler/runtime changes |
 | Docs | Commands, migrations and contracts kept current | manual | Review linked guides |
 
@@ -80,10 +80,10 @@ Current pre-commit skips heavy gates for docs, otherwise runs lint-staged before
 | Purpose | Ports / state | Current behavior |
 | --- | --- | --- |
 | Dev | Web 7028, local Worker 8787 | Can use real configured R2 |
-| L2 | Web 17028, Worker 8787 | Rebuilds `worker/.wrangler/e2e-d1` and `.wrangler/e2e-r2` |
-| L3 | Web 27028, Worker 8787 | Shares those directories; never run alongside L2 or the dev Worker |
+| L2 | Web 17028, Worker 8787 | Fresh `worker/.wrangler/e2e-<random>/` D1/R2 state; cache proofs run after API mutations |
+| L3 | Web 27028, Worker 8787 | Own per-run state; ports remain shared, never run alongside another runner or dev Worker |
 
-The required target is per-run local Wrangler/Miniflare SQLite and local R2, with credential/binding guards and `_test_marker` verified before seed/reset/cleanup. Never touch daily-dev/production data or deploy remote `-test` resources. Fixed-path local isolation is incomplete, not a reason to weaken this contract.
+Use per-run local Wrangler/Miniflare SQLite and local R2, with credential/binding guards and `_test_marker` verified before seed/reset/cleanup. Never touch daily-dev/production data or deploy remote `-test` resources. The runner leaves its own state for failure inspection and never resets shared development state.
 
 ## Operations / Release
 

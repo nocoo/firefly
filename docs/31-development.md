@@ -72,9 +72,9 @@ OAuth 使用 Google 管理员会话、邮箱允许名单和 PKCE。完整授权�
 | `bun run test:e2e:bdd` | Chromium、本地 Worker 8787、Next.js 27028 |
 | `bun run test:e2e` | 顺序运行 API 与浏览器测试，需上述三个端口可用 |
 
-端到端 runner 使用 `worker/.wrangler/e2e-d1` 与 `.wrangler/e2e-r2`，每次先清空对应测试目录。它覆盖 Worker URL / secret，注入 `E2E_SKIP_AUTH` 与 `E2E_TEST_RUNNER`，使 R2 走本地文件、管理会话走测试身份。仅测试 runner 使用这些开关，普通开发与生产配置不应包含它们。
+端到端 runner 为每次运行创建 `worker/.wrangler/e2e-<随机串>/` 下的 D1/R2 目录，使用零 UUID 本地绑定并验证 `_test_marker`，启动前检查测试端口可用。只传入系统环境与合成测试凭据，注入 `E2E_SKIP_AUTH` 与 `E2E_TEST_RUNNER`，使 R2 走本地文件、管理会话走测试身份。仅测试 runner 使用这些开关，普通开发与生产配置不应包含它们。
 
-Next.js 端到端测试使用构建后的服务；日志位于 `.wrangler/e2e-logs`。不要并发启动两个 runner，也不要在保留开发 Worker 的 8787 端口上运行测试。这里的会话模拟不能证明真实 Google OAuth、模型服务或生产备份已经连通。
+Next.js 端到端测试使用 `bun run build` 构建后的服务，API 用例结束后单独运行真实缓存验收；日志位于 `.wrangler/e2e-logs`。不要并发启动两个 runner，也不要在保留开发 Worker 的 8787 端口上运行测试。这里的会话模拟不能证明真实 Google OAuth、模型服务或生产备份已经连通。
 
 ## 部署
 
@@ -93,3 +93,10 @@ Next.js 端到端测试使用构建后的服务；日志位于 `.wrangler/e2e-lo
 ```
 
 `scripts/migrations/archive/` 中的 WordPress 导出、图片和旧 URL 处理脚本保留历史迁移过程，不是新实例的通用初始化命令。
+
+
+## 内容缓存与 D1 用量
+
+公开数据使用 Next Data Cache，1 小时按访问重新验证，内容修改主动立即失效。当前实现仅适用于单运行副本；扩容前需要共享缓存和失效协调。Redis 未部署。监控过滤、索引、写入入口与半小时采样详见[运行说明](33-public-content-cache-plan.md)。
+
+发布使用 `bun run release -- minor` 等现有入口；根 `package.json` 是版本来源，脚本同步 Worker 包版本，Worker `/api/live` 直接读取根版本。Worker 和数据库迁移仍分别执行。

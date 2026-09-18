@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
-import { listMonthlyArchives } from "@/data/entities/post";
+import { listMonthlyArchives } from "@/data/public-content";
 import { loadSiteIdentity } from "@/lib/site-identity";
 import { ListPageHeader } from "@/components/blog/list-page-header";
 import { ArchiveHeatmap } from "@/components/blog/archive-heatmap";

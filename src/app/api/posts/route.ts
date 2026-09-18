@@ -1,7 +1,8 @@
 import type { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
-import { listPosts, type ListPostsOptions } from "@/data/entities/post";
+import { listPosts } from "@/data/public-content";
+import type { ListPostsOptions } from "@/data/entities/post";
 import type { PostStatus } from "@/models/types";
 import { PostAttributionError, PostService } from "@/services/post-service";
 
@@ -35,7 +36,9 @@ export async function GET(request: NextRequest) {
     if (pageSize) options.pageSize = parseInt(pageSize, 10);
 
     const result = await listPosts(db, options);
-    return jsonResponse(result);
+    const response = jsonResponse(result);
+    response.headers.set("Cache-Control", "public, max-age=0, must-revalidate");
+    return response;
   } catch (error) {
     return errorResponse(
       error instanceof Error ? error.message : "Internal server error",

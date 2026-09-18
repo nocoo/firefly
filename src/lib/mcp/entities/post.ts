@@ -8,7 +8,6 @@ import {
   listPosts,
   getPostById,
   getPostBySlug,
-  updatePost,
   getPostTags,
 } from "@/data/entities/post";
 import { PostService } from "@/services/post-service";
@@ -65,7 +64,7 @@ async function handleUnfurlReference(
       const description = ai?.description ?? raw.ogDescription ?? "";
       const image = raw.ogImage ?? raw.readmeImage ?? null;
 
-      await updatePost(ctx.db, resolved.id, {
+      await PostService.update(ctx.db, resolved.id, {
         referenceUrl: url,
         referenceTitle: title,
         referenceDescription: description,
@@ -278,7 +277,7 @@ export const postEntity: EntityConfig<Post> = {
             resolved.title,
             resolved.content,
           );
-          await updatePost(ctx.db, resolved.id, { excerpt });
+          await PostService.update(ctx.db, resolved.id, { excerpt });
           return ok({ slug: resolved.slug, excerpt, saved: true });
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);

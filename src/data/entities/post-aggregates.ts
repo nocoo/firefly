@@ -49,8 +49,8 @@ export async function refreshAllTagPostCounts(db: Db): Promise<void> {
   );
 }
 
-export async function listMonthlyArchives(db: Db): Promise<MonthlyArchive[]> {
-  const cached = archivesCache.get();
+export async function listMonthlyArchives(db: Db, useCache = true): Promise<MonthlyArchive[]> {
+  const cached = useCache ? archivesCache.get() : null;
   if (cached) return cached;
 
   const sql = `
@@ -65,7 +65,7 @@ export async function listMonthlyArchives(db: Db): Promise<MonthlyArchive[]> {
   `;
 
   const { results } = await db.query<MonthlyArchive>(sql);
-  archivesCache.set(results);
+  if (useCache) archivesCache.set(results);
   return results;
 }
 

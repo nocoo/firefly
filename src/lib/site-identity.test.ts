@@ -2,16 +2,12 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { Db } from "@/lib/db";
 import { createMockDb } from "@/data/core/test-utils";
 
-vi.mock("@/data/settings", () => ({
+vi.mock("@/data/public-content", () => ({
   getSiteSettings: vi.fn(),
-}));
-
-vi.mock("@/data/entities/human", () => ({
   getDefaultHuman: vi.fn(),
 }));
 
-import { getSiteSettings } from "@/data/settings";
-import { getDefaultHuman } from "@/data/entities/human";
+import { getSiteSettings, getDefaultHuman } from "@/data/public-content";
 import { loadSiteIdentity } from "./site-identity";
 
 const settings = {

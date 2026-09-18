@@ -1,14 +1,11 @@
 import { getDb } from "@/lib/db";
-import { listPosts } from "@/data/entities/post";
-import { listCategories } from "@/data/entities/category";
-import { getSiteSettings } from "@/data/settings";
-import { getDefaultHuman } from "@/data/entities/human";
+import { listPosts, listCategories, getSiteSettings, getDefaultHuman } from "@/data/public-content";
 import { SITE_URL, postPath } from "@/lib/seo";
 
 export async function GET() {
   const db = getDb();
   const [{ posts }, categories, settings, defaultHuman] = await Promise.all([
-    listPosts(db, { status: "published", pageSize: 250 }),
+    listPosts(db, { status: "published", pageSize: 30 }),
     listCategories(db),
     getSiteSettings(db),
     getDefaultHuman(db),
@@ -48,7 +45,7 @@ export async function GET() {
     headers: {
       "Content-Type": "text/markdown; charset=utf-8",
       "x-markdown-tokens": String(tokenEstimate),
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": "public, max-age=0, must-revalidate",
     },
   });
 }

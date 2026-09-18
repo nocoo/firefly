@@ -4,9 +4,9 @@ import { Suspense, cache } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { getDb } from "@/lib/db";
-import { getPostBySlug, getPostTags, getAdjacentPosts } from "@/data/entities/post";
+import { getPostBySlug, getPostTags, getAdjacentPosts, listCommentsByPost } from "@/data/public-content";
 import { isAdminSession } from "@/lib/auth";
-import { listCommentsByPost, buildCommentTree } from "@/data/entities/comment";
+import { buildCommentTree } from "@/data/entities/comment";
 import { FeaturedImage } from "@/components/blog/featured-image";
 import { renderMarkdown, extractToc } from "@/models/markdown";
 import { Calendar, Folder, Clock, SquarePen, User } from "lucide-react";
@@ -32,7 +32,7 @@ import { getPostAuthor, getPostAuthorForMeta } from "@/lib/ai-agent/author";
 // within the same request. React cache() is per-request in server components.
 const getCachedPost = cache((slug: string) => {
   const db = getDb();
-  return getPostBySlug(db, slug, "published");
+  return getPostBySlug(db, slug);
 });
 
 interface PostPageProps {

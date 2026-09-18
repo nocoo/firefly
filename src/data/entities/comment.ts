@@ -4,6 +4,7 @@
 
 import type { Db } from "@/lib/db";
 import type { Comment, CommentTree } from "@/models/types";
+import { invalidatePostCaches } from "./post-cache";
 
 // ---------------------------------------------------------------------------
 // listCommentsByPost
@@ -78,10 +79,14 @@ export async function createComment(
      ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)`,
     [id, input.postId, parentId, input.authorName, authorEmail, authorUrl, input.content, createdAt],
   );
-  await db.execute(
-    "UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?",
-    [input.postId],
-  );
+  try {
+    await db.execute(
+      "UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?",
+      [input.postId],
+    );
+  } finally {
+    invalidatePostCaches();
+  }
 
   return {
     id,
@@ -146,10 +151,14 @@ export async function deleteComment(
   await db.execute("DELETE FROM comments WHERE id = ?", [commentId]);
 
   // 4. Decrement post.comment_count
-  await db.execute(
-    "UPDATE posts SET comment_count = MAX(0, comment_count - ?) WHERE id = ?",
-    [deletedCount, comment.post_id],
-  );
+  try {
+    await db.execute(
+      "UPDATE posts SET comment_count = MAX(0, comment_count - ?) WHERE id = ?",
+      [deletedCount, comment.post_id],
+    );
+  } finally {
+    invalidatePostCaches();
+  }
 
   return true;
 }

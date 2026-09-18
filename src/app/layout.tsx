@@ -3,7 +3,7 @@ import { THEME_COLOR_DARK, THEME_COLOR_LIGHT } from "@/lib/theme-color";
 import { IBM_Plex_Sans, IBM_Plex_Mono, IBM_Plex_Serif } from "next/font/google";
 import { SITE_URL, OG_LOCALE, HTML_LANG, twitterAccountMeta } from "@/lib/seo";
 import { getDb } from "@/lib/db";
-import { getSiteSettings } from "@/data/settings";
+import { getSiteSettings } from "@/data/public-content";
 import { loadSiteIdentity } from "@/lib/site-identity";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";

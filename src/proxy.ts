@@ -5,6 +5,7 @@ import { createDb } from "@/lib/db";
 import { trackPageView } from "@/lib/tracking";
 import { createCache } from "@/lib/cache";
 import { rateLimit } from "@/lib/rate-limit";
+import { detectBot } from "@/models/analytics";
 
 // Routes that require authentication
 const PROTECTED_PREFIXES = ["/admin"];
@@ -40,7 +41,10 @@ function markdownRejected(accept: string): boolean {
 }
 
 function isProtectedRoute(pathname: string): boolean {
-  return PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  // skipProxyUrlNormalize keeps data URLs intact. Apply the same auth policy
+  // to a page's data URL, including when Next normalizes it after proxy.
+  const pagePath = pathname.replace(/^\/_next\/data\/[^/]+\/(.*)\.json$/, "/$1");
+  return PROTECTED_PREFIXES.some((prefix) => pagePath.startsWith(prefix));
 }
 
 // ---------------------------------------------------------------------------
@@ -187,6 +191,7 @@ function httpsRedirect(request: NextRequest): NextResponse | null {
 
 function skipStaticAssets(request: NextRequest): NextResponse | null {
   const { pathname } = request.nextUrl;
+  if (isProtectedRoute(pathname)) return null;
   if (pathname.startsWith("/_next/")) {
     return NextResponse.next();
   }
@@ -343,13 +348,15 @@ async function wordpressRedirect(
     if (!redirect) return null;
 
     // Fire-and-forget: increment hit counter
-    const db = createDb(workerUrl, workerSecret);
-    db.execute(
-      "UPDATE redirects SET hit_count = hit_count + 1 WHERE id = ?",
-      [redirect.id],
-    ).catch(() => {
-      // Ignore errors on hit counter update
-    });
+    if (shouldTrackNavigation(request)) {
+      const db = createDb(workerUrl, workerSecret);
+      db.execute(
+        "UPDATE redirects SET hit_count = hit_count + 1 WHERE id = ?",
+        [redirect.id],
+      ).catch(() => {
+        // Ignore errors on hit counter update
+      });
+    }
 
     const url = request.nextUrl.clone();
     url.pathname = redirect.target_path;
@@ -364,9 +371,19 @@ async function wordpressRedirect(
 // Stage 7: Fire-and-forget analytics + continue
 // ---------------------------------------------------------------------------
 
+function shouldTrackNavigation(request: NextRequest): boolean {
+  return request.method === "GET"
+    && request.headers.get("next-router-prefetch") === null
+    && request.headers.get("next-router-segment-prefetch") === null
+    && !/prefetch/i.test(request.headers.get("purpose") ?? "")
+    && !/prefetch/i.test(request.headers.get("sec-purpose") ?? "")
+    && detectBot(request.headers.get("user-agent")).botCategory !== "monitor";
+}
+
 function trackAnalyticsAndContinue(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
   if (
+    shouldTrackNavigation(request) &&
     !pathname.startsWith("/api/") &&
     !pathname.startsWith("/admin") &&
     !pathname.startsWith("/login")
@@ -405,4 +422,5 @@ export const _testHelpers = {
   getRateLimitConfig,
   extractClientIp,
   skipStaticAssets,
+  shouldTrackNavigation,
 };

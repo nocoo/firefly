@@ -13,6 +13,7 @@ import type {
   BatchUpdateInput,
 } from "./post-types";
 import { getPostById } from "./post-queries";
+import { invalidatePostCaches } from "./post-cache";
 
 export async function createPost(
   db: Db,
@@ -61,6 +62,7 @@ export async function createPost(
     now,
   ]);
 
+  invalidatePostCaches();
   const post = await getPostById(db, id);
   if (!post) throw new Error(`Failed to retrieve Post ${id} after creation`);
   return post;
@@ -181,12 +183,14 @@ export async function updatePost(
 
   const sql = `UPDATE posts SET ${b.clauses.join(", ")} WHERE id = ?`;
   await db.execute(sql, [...b.params, id]);
+  invalidatePostCaches();
 
   return getPostById(db, id);
 }
 
 export async function deletePost(db: Db, id: string): Promise<boolean> {
   const meta = await db.execute("DELETE FROM posts WHERE id = ?", [id]);
+  if (meta.changes > 0) invalidatePostCaches();
   return meta.changes > 0;
 }
 
@@ -224,5 +228,6 @@ export async function batchUpdatePosts(
 
   const sql = `UPDATE posts SET ${setClauses.join(", ")} WHERE id IN (${placeholders})`;
   const result = await db.execute(sql, params);
+  if (result.changes > 0) invalidatePostCaches();
   return result.changes;
 }

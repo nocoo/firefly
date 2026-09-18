@@ -3,6 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import { createCache } from "@/lib/cache";
+import { invalidatePublicContent } from "@/data/core/public-cache";
 import type { MonthlyArchive } from "./post-types";
 
 const COUNT_TTL = 5 * 60 * 1000;
@@ -48,4 +49,5 @@ export const archivesCache = createCache<MonthlyArchive[]>(5 * 60 * 1000);
 export function invalidatePostCaches(): void {
   countCache.clear();
   archivesCache.invalidate();
+  invalidatePublicContent();
 }

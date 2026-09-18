@@ -1,6 +1,6 @@
 import type { Db } from "@/lib/db";
-import { getSiteSettings, type SiteSettings } from "@/data/settings";
-import { getDefaultHuman } from "@/data/entities/human";
+import { getSiteSettings, getDefaultHuman } from "@/data/public-content";
+import type { SiteSettings } from "@/data/settings";
 import { toSiteIdentity, type SiteIdentity } from "@/lib/seo";
 
 export async function loadSiteIdentity(
@@ -8,7 +8,7 @@ export async function loadSiteIdentity(
   settings?: SiteSettings,
 ): Promise<{ settings: SiteSettings; identity: SiteIdentity }> {
   const resolved = settings ?? (await getSiteSettings(db));
-  const human = await getDefaultHuman(db);
+  const human = await getDefaultHuman(db, resolved.defaultHumanId);
   return {
     settings: resolved,
     identity: {

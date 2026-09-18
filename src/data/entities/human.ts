@@ -1,6 +1,7 @@
 import type { Db } from "@/lib/db";
 import type { Human, HumanWithMeta } from "@/models/types";
 import { nowEpoch, newId } from "@/data/core/timestamps";
+import { invalidatePublicContent } from "@/data/core/public-cache";
 
 export interface CreateHumanInput {
   name: string;
@@ -48,6 +49,7 @@ export async function createHuman(
     ],
   );
 
+  invalidatePublicContent();
   const human = await getHumanById(db, id);
   if (!human) throw new Error(`Failed to retrieve human ${id} after creation`);
   return human;
@@ -130,6 +132,7 @@ export async function updateHuman(
     `UPDATE humans SET ${sets.join(", ")} WHERE id = ?`,
     params,
   );
+  invalidatePublicContent();
   return getHumanById(db, id);
 }
 
@@ -142,6 +145,7 @@ export async function updateHumanAvatarVersion(
     "UPDATE humans SET avatar_version = ?, updated_at = ? WHERE id = ?",
     [version, nowEpoch(), id],
   );
+  invalidatePublicContent();
 }
 
 export async function getHumanPostCount(db: Db, humanId: string): Promise<number> {
@@ -182,6 +186,7 @@ export async function deleteHuman(
   if (postCount > 0) return { success: false, reason: "has_posts", postCount };
 
   const meta = await db.execute("DELETE FROM humans WHERE id = ?", [id]);
+  if (meta.changes > 0) invalidatePublicContent();
   return { success: meta.changes > 0 };
 }
 
@@ -192,8 +197,8 @@ export async function getDefaultHumanIdUncached(db: Db): Promise<string | null> 
   return row?.default_human_id ?? null;
 }
 
-export async function getDefaultHuman(db: Db): Promise<Human | null> {
-  const id = await getDefaultHumanIdUncached(db);
+export async function getDefaultHuman(db: Db, defaultId?: string | null): Promise<Human | null> {
+  const id = defaultId === undefined ? await getDefaultHumanIdUncached(db) : defaultId;
   if (!id) return null;
   return getHumanById(db, id);
 }

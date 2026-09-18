@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse, notFoundResponse } from "@/lib/api";
 import { getPostBySlug } from "@/data/entities/post";
+import { getPostBySlug as getPublicPostBySlug } from "@/data/public-content";
 import type { PostStatus } from "@/models/types";
 import { PostAttributionError, PostService } from "@/services/post-service";
 
@@ -18,11 +19,13 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
     // Public GET only returns published posts.
     // Admin edit page fetches via its own server component (getPostBySlug without status filter).
-    const post = await getPostBySlug(db, slug, "published");
+    const post = await getPublicPostBySlug(db, slug);
 
     if (!post) return notFoundResponse("Post");
 
-    return jsonResponse(post);
+    const response = jsonResponse(post);
+    response.headers.set("Cache-Control", "public, max-age=0, must-revalidate");
+    return response;
   } catch (error) {
     return errorResponse(
       error instanceof Error ? error.message : "Internal server error",

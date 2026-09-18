@@ -1,0 +1,1880 @@
+{
+  "auditDate": "2026-09-18",
+  "database": "lizhengme-db",
+  "timezone": "UTC; audit date uses Asia/Shanghai",
+  "scope": "Read-only production SQL, Cloudflare metrics, and separate local SQLite query-plan experiments. No production mutations.",
+  "initialWrangler24h": {
+    "databaseSizeBytes": 183074816,
+    "readQueries": 32712,
+    "writeQueries": 4023,
+    "rowsRead": 19849496,
+    "rowsWritten": 24867
+  },
+  "metrics": {
+    "capturedAt": "2026-09-17T22:40:21.667Z",
+    "start": "2026-08-18",
+    "end": "2026-09-17",
+    "daily": [
+      {
+        "dimensions": {
+          "date": "2026-08-18"
+        },
+        "sum": {
+          "readQueries": 21724,
+          "rowsRead": 9481744,
+          "rowsWritten": 17468,
+          "writeQueries": 3177
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-19"
+        },
+        "sum": {
+          "readQueries": 20265,
+          "rowsRead": 9331614,
+          "rowsWritten": 16336,
+          "writeQueries": 2908
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-20"
+        },
+        "sum": {
+          "readQueries": 30554,
+          "rowsRead": 18019293,
+          "rowsWritten": 23076,
+          "writeQueries": 4609
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-21"
+        },
+        "sum": {
+          "readQueries": 43745,
+          "rowsRead": 28611418,
+          "rowsWritten": 32249,
+          "writeQueries": 6682
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-22"
+        },
+        "sum": {
+          "readQueries": 23780,
+          "rowsRead": 10156065,
+          "rowsWritten": 19637,
+          "writeQueries": 3594
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-23"
+        },
+        "sum": {
+          "readQueries": 37151,
+          "rowsRead": 13978982,
+          "rowsWritten": 26773,
+          "writeQueries": 4369
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-24"
+        },
+        "sum": {
+          "readQueries": 25127,
+          "rowsRead": 10532019,
+          "rowsWritten": 27405,
+          "writeQueries": 4443
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-25"
+        },
+        "sum": {
+          "readQueries": 22027,
+          "rowsRead": 28667513,
+          "rowsWritten": 24432,
+          "writeQueries": 4010
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-26"
+        },
+        "sum": {
+          "readQueries": 20794,
+          "rowsRead": 8939854,
+          "rowsWritten": 16526,
+          "writeQueries": 3284
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-27"
+        },
+        "sum": {
+          "readQueries": 25071,
+          "rowsRead": 16435033,
+          "rowsWritten": 19401,
+          "writeQueries": 3676
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-28"
+        },
+        "sum": {
+          "readQueries": 21261,
+          "rowsRead": 21885145,
+          "rowsWritten": 19515,
+          "writeQueries": 3729
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-29"
+        },
+        "sum": {
+          "readQueries": 20624,
+          "rowsRead": 8967611,
+          "rowsWritten": 16147,
+          "writeQueries": 3115
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-30"
+        },
+        "sum": {
+          "readQueries": 24345,
+          "rowsRead": 10057794,
+          "rowsWritten": 19116,
+          "writeQueries": 3732
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-31"
+        },
+        "sum": {
+          "readQueries": 20972,
+          "rowsRead": 9143324,
+          "rowsWritten": 18446,
+          "writeQueries": 3566
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-01"
+        },
+        "sum": {
+          "readQueries": 19751,
+          "rowsRead": 8827396,
+          "rowsWritten": 15552,
+          "writeQueries": 3126
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-02"
+        },
+        "sum": {
+          "readQueries": 20932,
+          "rowsRead": 9204133,
+          "rowsWritten": 17636,
+          "writeQueries": 3398
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-03"
+        },
+        "sum": {
+          "readQueries": 19861,
+          "rowsRead": 8859910,
+          "rowsWritten": 17807,
+          "writeQueries": 3437
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-04"
+        },
+        "sum": {
+          "readQueries": 32273,
+          "rowsRead": 78268940,
+          "rowsWritten": 23033,
+          "writeQueries": 4353
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-05"
+        },
+        "sum": {
+          "readQueries": 36270,
+          "rowsRead": 26934951,
+          "rowsWritten": 26854,
+          "writeQueries": 4744
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-06"
+        },
+        "sum": {
+          "readQueries": 33999,
+          "rowsRead": 13318561,
+          "rowsWritten": 27947,
+          "writeQueries": 5033
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-07"
+        },
+        "sum": {
+          "readQueries": 27508,
+          "rowsRead": 25063656,
+          "rowsWritten": 22185,
+          "writeQueries": 4082
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-08"
+        },
+        "sum": {
+          "readQueries": 34231,
+          "rowsRead": 19889239,
+          "rowsWritten": 26621,
+          "writeQueries": 4906
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-09"
+        },
+        "sum": {
+          "readQueries": 21379,
+          "rowsRead": 9470866,
+          "rowsWritten": 18769,
+          "writeQueries": 3559
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-10"
+        },
+        "sum": {
+          "readQueries": 20976,
+          "rowsRead": 23045888,
+          "rowsWritten": 18149,
+          "writeQueries": 3468
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-11"
+        },
+        "sum": {
+          "readQueries": 27594,
+          "rowsRead": 31772237,
+          "rowsWritten": 21635,
+          "writeQueries": 4433
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-12"
+        },
+        "sum": {
+          "readQueries": 22002,
+          "rowsRead": 9504117,
+          "rowsWritten": 17785,
+          "writeQueries": 3512
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-13"
+        },
+        "sum": {
+          "readQueries": 26345,
+          "rowsRead": 10669965,
+          "rowsWritten": 20153,
+          "writeQueries": 3419
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-14"
+        },
+        "sum": {
+          "readQueries": 33111,
+          "rowsRead": 11418492,
+          "rowsWritten": 21509,
+          "writeQueries": 3617
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-15"
+        },
+        "sum": {
+          "readQueries": 22739,
+          "rowsRead": 9679241,
+          "rowsWritten": 18791,
+          "writeQueries": 3197
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-16"
+        },
+        "sum": {
+          "readQueries": 30582,
+          "rowsRead": 18926313,
+          "rowsWritten": 21762,
+          "writeQueries": 3530
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-17"
+        },
+        "sum": {
+          "readQueries": 31809,
+          "rowsRead": 19472223,
+          "rowsWritten": 24209,
+          "writeQueries": 3911
+        }
+      }
+    ],
+    "storage": [
+      {
+        "dimensions": {
+          "date": "2026-08-18"
+        },
+        "max": {
+          "databaseSizeBytes": 151011330
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-19"
+        },
+        "max": {
+          "databaseSizeBytes": 151801860
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-20"
+        },
+        "max": {
+          "databaseSizeBytes": 152944640
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-21"
+        },
+        "max": {
+          "databaseSizeBytes": 154693630
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-22"
+        },
+        "max": {
+          "databaseSizeBytes": 155668480
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-23"
+        },
+        "max": {
+          "databaseSizeBytes": 157093890
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-24"
+        },
+        "max": {
+          "databaseSizeBytes": 158416900
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-25"
+        },
+        "max": {
+          "databaseSizeBytes": 159850500
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-26"
+        },
+        "max": {
+          "databaseSizeBytes": 160583680
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-27"
+        },
+        "max": {
+          "databaseSizeBytes": 161542140
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-28"
+        },
+        "max": {
+          "databaseSizeBytes": 162443260
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-29"
+        },
+        "max": {
+          "databaseSizeBytes": 163078140
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-30"
+        },
+        "max": {
+          "databaseSizeBytes": 164053000
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-08-31"
+        },
+        "max": {
+          "databaseSizeBytes": 164868100
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-01"
+        },
+        "max": {
+          "databaseSizeBytes": 165531650
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-02"
+        },
+        "max": {
+          "databaseSizeBytes": 166248450
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-03"
+        },
+        "max": {
+          "databaseSizeBytes": 167174140
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-04"
+        },
+        "max": {
+          "databaseSizeBytes": 168529920
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-05"
+        },
+        "max": {
+          "databaseSizeBytes": 169947140
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-06"
+        },
+        "max": {
+          "databaseSizeBytes": 171433980
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-07"
+        },
+        "max": {
+          "databaseSizeBytes": 172548100
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-08"
+        },
+        "max": {
+          "databaseSizeBytes": 173965310
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-09"
+        },
+        "max": {
+          "databaseSizeBytes": 174829570
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-10"
+        },
+        "max": {
+          "databaseSizeBytes": 175661060
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-11"
+        },
+        "max": {
+          "databaseSizeBytes": 176828420
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-12"
+        },
+        "max": {
+          "databaseSizeBytes": 177762300
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-13"
+        },
+        "max": {
+          "databaseSizeBytes": 178769920
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-14"
+        },
+        "max": {
+          "databaseSizeBytes": 179871740
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-15"
+        },
+        "max": {
+          "databaseSizeBytes": 180781060
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-16"
+        },
+        "max": {
+          "databaseSizeBytes": 181796860
+        }
+      },
+      {
+        "dimensions": {
+          "date": "2026-09-17"
+        },
+        "max": {
+          "databaseSizeBytes": 183066620
+        }
+      }
+    ]
+  },
+  "last7CompleteUtcDays": {
+    "start": "2026-09-10",
+    "end": "2026-09-16",
+    "totals": {
+      "readQueries": 183349,
+      "writeQueries": 25176,
+      "rowsRead": 115016253,
+      "rowsWritten": 139784
+    }
+  },
+  "last30CompleteUtcDays": {
+    "start": "2026-08-18",
+    "end": "2026-09-16",
+    "totals": {
+      "readQueries": 786993,
+      "writeQueries": 116708,
+      "rowsRead": 519061314,
+      "rowsWritten": 632715
+    }
+  },
+  "account30d": {
+    "rowsRead": 39116160528,
+    "rowsWritten": 78508594,
+    "storageBytesOnLastCompleteDay": 12542431152,
+    "databaseCount": 28
+  },
+  "tables": {
+    "_migrations": 19,
+    "ai_agents": 3,
+    "attachments": 2051,
+    "categories": 9,
+    "comments": 578,
+    "daily_stats": 0,
+    "humans": 1,
+    "mcp_auth_codes": 0,
+    "mcp_clients": 29,
+    "mcp_tokens": 3,
+    "page_views": 475257,
+    "post_tags": 1000,
+    "posts": 882,
+    "posts_fts": 882,
+    "redirects": 1534,
+    "site_daily_stats": 272,
+    "site_settings": 1,
+    "tags": 35,
+    "users": 1
+  },
+  "pageViewsSummary": {
+    "rows": 475250,
+    "oldest": 1774221154,
+    "newest": 1789684803,
+    "bots": 93459,
+    "human_labeled": 381791,
+    "session_populated": 0,
+    "city_populated": 0,
+    "country_populated": 468791,
+    "with_post": 88989
+  },
+  "pageViewsTextPayload": {
+    "rows": 475257,
+    "id_bytes": 16109622,
+    "post_id_bytes": 1823898,
+    "path_bytes": 5149352,
+    "referrer_bytes": 2268477,
+    "user_agent_bytes": 26583441,
+    "ip_hash_bytes": 30416448,
+    "country_bytes": 937596,
+    "city_bytes": 0,
+    "device_type_bytes": 2940610,
+    "browser_bytes": 629075,
+    "os_bytes": 617686,
+    "bot_name_bytes": 1014472,
+    "bot_category_bytes": 467143,
+    "session_id_bytes": 0
+  },
+  "postsPayload": {
+    "rows": 882,
+    "markdown_bytes": 3600496,
+    "html_bytes": 3699545,
+    "excerpt_bytes": 245549,
+    "published": 494
+  },
+  "ftsPayload": {
+    "data_blob_bytes": 2548797,
+    "docsize_bytes": 3304,
+    "fts_content_bytes": 3923825
+  },
+  "retention": {
+    "older30": 386161,
+    "older90": 238882,
+    "older180": 0
+  },
+  "rollups": [
+    {
+      "name": "daily_stats",
+      "rows": 0,
+      "oldest": null,
+      "newest": null
+    },
+    {
+      "name": "site_daily_stats",
+      "rows": 272,
+      "oldest": "2025-05-19",
+      "newest": "2026-03-22"
+    }
+  ],
+  "monitorHistory": {
+    "views": 254448,
+    "oldest": 1774395624,
+    "newest": 1789685276,
+    "core_text_bytes": 29649574
+  },
+  "monitor7d": [
+    {
+      "date": "2026-09-10",
+      "path": "/",
+      "views": 1439,
+      "labeled_bot": 0
+    },
+    {
+      "date": "2026-09-11",
+      "path": "/",
+      "views": 1440,
+      "labeled_bot": 0
+    },
+    {
+      "date": "2026-09-12",
+      "path": "/",
+      "views": 1439,
+      "labeled_bot": 0
+    },
+    {
+      "date": "2026-09-13",
+      "path": "/",
+      "views": 1438,
+      "labeled_bot": 0
+    },
+    {
+      "date": "2026-09-14",
+      "path": "/",
+      "views": 1439,
+      "labeled_bot": 0
+    },
+    {
+      "date": "2026-09-15",
+      "path": "/",
+      "views": 1438,
+      "labeled_bot": 0
+    },
+    {
+      "date": "2026-09-16",
+      "path": "/",
+      "views": 1439,
+      "labeled_bot": 0
+    }
+  ],
+  "pageViewsDaily": [
+    {
+      "date": "2026-08-18",
+      "views": 2372,
+      "bots": 309,
+      "human_labeled": 2063,
+      "search_bots": 34,
+      "ai_bots": 3,
+      "with_post": 481
+    },
+    {
+      "date": "2026-08-19",
+      "views": 2238,
+      "bots": 226,
+      "human_labeled": 2012,
+      "search_bots": 49,
+      "ai_bots": 13,
+      "with_post": 316
+    },
+    {
+      "date": "2026-08-20",
+      "views": 3071,
+      "bots": 356,
+      "human_labeled": 2715,
+      "search_bots": 74,
+      "ai_bots": 1,
+      "with_post": 1177
+    },
+    {
+      "date": "2026-08-21",
+      "views": 4255,
+      "bots": 285,
+      "human_labeled": 3970,
+      "search_bots": 19,
+      "ai_bots": 0,
+      "with_post": 1963
+    },
+    {
+      "date": "2026-08-22",
+      "views": 2667,
+      "bots": 301,
+      "human_labeled": 2366,
+      "search_bots": 51,
+      "ai_bots": 1,
+      "with_post": 549
+    },
+    {
+      "date": "2026-08-23",
+      "views": 3734,
+      "bots": 1983,
+      "human_labeled": 1751,
+      "search_bots": 30,
+      "ai_bots": 0,
+      "with_post": 1433
+    },
+    {
+      "date": "2026-08-24",
+      "views": 3827,
+      "bots": 789,
+      "human_labeled": 3038,
+      "search_bots": 38,
+      "ai_bots": 4,
+      "with_post": 704
+    },
+    {
+      "date": "2026-08-25",
+      "views": 3316,
+      "bots": 301,
+      "human_labeled": 3015,
+      "search_bots": 37,
+      "ai_bots": 2,
+      "with_post": 251
+    },
+    {
+      "date": "2026-08-26",
+      "views": 2207,
+      "bots": 395,
+      "human_labeled": 1812,
+      "search_bots": 28,
+      "ai_bots": 0,
+      "with_post": 362
+    },
+    {
+      "date": "2026-08-27",
+      "views": 2583,
+      "bots": 467,
+      "human_labeled": 2116,
+      "search_bots": 19,
+      "ai_bots": 0,
+      "with_post": 598
+    },
+    {
+      "date": "2026-08-28",
+      "views": 2631,
+      "bots": 266,
+      "human_labeled": 2365,
+      "search_bots": 34,
+      "ai_bots": 1,
+      "with_post": 318
+    },
+    {
+      "date": "2026-08-29",
+      "views": 2172,
+      "bots": 301,
+      "human_labeled": 1871,
+      "search_bots": 59,
+      "ai_bots": 1,
+      "with_post": 298
+    },
+    {
+      "date": "2026-08-30",
+      "views": 2564,
+      "bots": 323,
+      "human_labeled": 2241,
+      "search_bots": 51,
+      "ai_bots": 1,
+      "with_post": 582
+    },
+    {
+      "date": "2026-08-31",
+      "views": 2480,
+      "bots": 269,
+      "human_labeled": 2211,
+      "search_bots": 20,
+      "ai_bots": 2,
+      "with_post": 309
+    },
+    {
+      "date": "2026-09-01",
+      "views": 2071,
+      "bots": 228,
+      "human_labeled": 1843,
+      "search_bots": 33,
+      "ai_bots": 0,
+      "with_post": 218
+    },
+    {
+      "date": "2026-09-02",
+      "views": 2373,
+      "bots": 340,
+      "human_labeled": 2033,
+      "search_bots": 27,
+      "ai_bots": 3,
+      "with_post": 272
+    },
+    {
+      "date": "2026-09-03",
+      "views": 2395,
+      "bots": 217,
+      "human_labeled": 2178,
+      "search_bots": 38,
+      "ai_bots": 4,
+      "with_post": 233
+    },
+    {
+      "date": "2026-09-04",
+      "views": 3097,
+      "bots": 724,
+      "human_labeled": 2373,
+      "search_bots": 53,
+      "ai_bots": 0,
+      "with_post": 859
+    },
+    {
+      "date": "2026-09-05",
+      "views": 3685,
+      "bots": 1444,
+      "human_labeled": 2241,
+      "search_bots": 40,
+      "ai_bots": 0,
+      "with_post": 1262
+    },
+    {
+      "date": "2026-09-06",
+      "views": 3819,
+      "bots": 1221,
+      "human_labeled": 2598,
+      "search_bots": 51,
+      "ai_bots": 1,
+      "with_post": 991
+    },
+    {
+      "date": "2026-09-07",
+      "views": 3009,
+      "bots": 735,
+      "human_labeled": 2274,
+      "search_bots": 43,
+      "ai_bots": 6,
+      "with_post": 457
+    },
+    {
+      "date": "2026-09-08",
+      "views": 3587,
+      "bots": 1018,
+      "human_labeled": 2569,
+      "search_bots": 49,
+      "ai_bots": 1,
+      "with_post": 886
+    },
+    {
+      "date": "2026-09-09",
+      "views": 2535,
+      "bots": 311,
+      "human_labeled": 2224,
+      "search_bots": 59,
+      "ai_bots": 15,
+      "with_post": 259
+    },
+    {
+      "date": "2026-09-10",
+      "views": 2439,
+      "bots": 331,
+      "human_labeled": 2108,
+      "search_bots": 30,
+      "ai_bots": 1,
+      "with_post": 242
+    },
+    {
+      "date": "2026-09-11",
+      "views": 2842,
+      "bots": 373,
+      "human_labeled": 2469,
+      "search_bots": 31,
+      "ai_bots": 10,
+      "with_post": 734
+    },
+    {
+      "date": "2026-09-12",
+      "views": 2358,
+      "bots": 190,
+      "human_labeled": 2168,
+      "search_bots": 24,
+      "ai_bots": 6,
+      "with_post": 243
+    },
+    {
+      "date": "2026-09-13",
+      "views": 2789,
+      "bots": 637,
+      "human_labeled": 2152,
+      "search_bots": 31,
+      "ai_bots": 47,
+      "with_post": 451
+    },
+    {
+      "date": "2026-09-14",
+      "views": 2982,
+      "bots": 1018,
+      "human_labeled": 1964,
+      "search_bots": 43,
+      "ai_bots": 15,
+      "with_post": 751
+    },
+    {
+      "date": "2026-09-15",
+      "views": 2599,
+      "bots": 317,
+      "human_labeled": 2282,
+      "search_bots": 21,
+      "ai_bots": 8,
+      "with_post": 300
+    },
+    {
+      "date": "2026-09-16",
+      "views": 3005,
+      "bots": 1019,
+      "human_labeled": 1986,
+      "search_bots": 37,
+      "ai_bots": 559,
+      "with_post": 930
+    },
+    {
+      "date": "2026-09-17",
+      "views": 3387,
+      "bots": 1305,
+      "human_labeled": 2082,
+      "search_bots": 60,
+      "ai_bots": 1019,
+      "with_post": 764
+    }
+  ],
+  "bots7d": [
+    {
+      "is_bot": 0,
+      "bot_name": "Unrecognized",
+      "bot_category": null,
+      "views": 15129
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "Unknown Bot",
+      "bot_category": "other",
+      "views": 2384
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "Unknown Crawler",
+      "bot_category": "other",
+      "views": 604
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "GPTBot",
+      "bot_category": "ai",
+      "views": 554
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "Bingbot",
+      "bot_category": "search",
+      "views": 130
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "Googlebot",
+      "bot_category": "search",
+      "views": 76
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "ChatGPT-User",
+      "bot_category": "ai",
+      "views": 64
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "YandexBot",
+      "bot_category": "search",
+      "views": 8
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "ClaudeBot",
+      "bot_category": "ai",
+      "views": 7
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "Headless Browser",
+      "bot_category": "other",
+      "views": 7
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "PerplexityBot",
+      "bot_category": "ai",
+      "views": 7
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "TelegramBot",
+      "bot_category": "social",
+      "views": 6
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "CCBot",
+      "bot_category": "ai",
+      "views": 5
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "Facebook",
+      "bot_category": "social",
+      "views": 5
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "Twitterbot",
+      "bot_category": "social",
+      "views": 5
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "Unknown Spider",
+      "bot_category": "other",
+      "views": 5
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "Bytespider",
+      "bot_category": "ai",
+      "views": 4
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "DiscordBot",
+      "bot_category": "social",
+      "views": 4
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "Google-Extended",
+      "bot_category": "ai",
+      "views": 4
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "Baiduspider",
+      "bot_category": "search",
+      "views": 3
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "Cohere",
+      "bot_category": "ai",
+      "views": 1
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "LinkedInBot",
+      "bot_category": "social",
+      "views": 1
+    },
+    {
+      "is_bot": 1,
+      "bot_name": "WhatsApp",
+      "bot_category": "social",
+      "views": 1
+    }
+  ],
+  "queryInsights": {
+    "windowStart": "2026-09-10",
+    "windowEnd": "2026-09-16",
+    "caveat": "Adaptive query insights do not reconcile exactly with database usage aggregates; use for ranking, not invoice arithmetic.",
+    "topReads": [
+      {
+        "avg": {
+          "queryDurationMs": 12.34422913832971,
+          "rowsRead": 1969,
+          "rowsReturned": 7,
+          "rowsWritten": 0
+        },
+        "count": 29408,
+        "dimensions": {
+          "query": "\n    \n  SELECT p.*, c.name AS category_name, c.slug AS category_slug,\n         a.name AS agent_name, a.slug AS agent_slug, a.avatar_version AS agent_avatar_version,\n         h.name AS human_name, h.slug AS human_slug, h.avatar_version AS human_avatar_version\n  FROM posts p\n  LEFT JOIN categories c ON p.category_id = c.id\n  LEFT JOIN ai_agents a ON p.ai_agent_id = a.id\n  LEFT JOIN humans h ON p.human_id = h.id\n\n    WHERE p.status = ?\n    ORDER BY p.published_at DESC, p.created_at DESC\n    LIMIT ? OFFSET ?\n  "
+        },
+        "sum": {
+          "queryDurationMs": 363019.0905000001,
+          "rowsRead": 57933012,
+          "rowsReturned": 222575,
+          "rowsWritten": 0
+        }
+      },
+      {
+        "avg": {
+          "queryDurationMs": 274.0817,
+          "rowsRead": 436746,
+          "rowsReturned": 6,
+          "rowsWritten": 0
+        },
+        "count": 10,
+        "dimensions": {
+          "query": "SELECT COALESCE(os, 'Unknown') AS os, COUNT(*) AS count\n         FROM page_views\n         WHERE date(viewed_at, 'unixepoch') BETWEEN date('now', '-' || ? || ' days') AND date('now', '-1 day') AND is_bot = 0\n         GROUP BY os\n         ORDER BY count DESC\n         LIMIT ?"
+        },
+        "sum": {
+          "queryDurationMs": 2740.817,
+          "rowsRead": 4367464,
+          "rowsReturned": 60,
+          "rowsWritten": 0
+        }
+      },
+      {
+        "avg": {
+          "queryDurationMs": 403.2524,
+          "rowsRead": 436713,
+          "rowsReturned": 6,
+          "rowsWritten": 0
+        },
+        "count": 10,
+        "dimensions": {
+          "query": "SELECT COALESCE(browser, 'Unknown') AS browser, COUNT(*) AS count\n         FROM page_views\n         WHERE date(viewed_at, 'unixepoch') BETWEEN date('now', '-' || ? || ' days') AND date('now', '-1 day') AND is_bot = 0\n         GROUP BY browser\n         ORDER BY count DESC\n         LIMIT ?"
+        },
+        "sum": {
+          "queryDurationMs": 4032.5240000000003,
+          "rowsRead": 4367130,
+          "rowsReturned": 60,
+          "rowsWritten": 0
+        }
+      },
+      {
+        "avg": {
+          "queryDurationMs": 450.2504,
+          "rowsRead": 433691,
+          "rowsReturned": 20,
+          "rowsWritten": 0
+        },
+        "count": 10,
+        "dimensions": {
+          "query": "SELECT COALESCE(country, 'Unknown') AS country, COUNT(*) AS count\n         FROM page_views\n         WHERE date(viewed_at, 'unixepoch') BETWEEN date('now', '-' || ? || ' days') AND date('now', '-1 day') AND is_bot = 0\n         GROUP BY country\n         ORDER BY count DESC\n         LIMIT ?"
+        },
+        "sum": {
+          "queryDurationMs": 4502.504,
+          "rowsRead": 4336910,
+          "rowsReturned": 200,
+          "rowsWritten": 0
+        }
+      },
+      {
+        "avg": {
+          "queryDurationMs": 227.9698,
+          "rowsRead": 542416,
+          "rowsReturned": 20,
+          "rowsWritten": 0
+        },
+        "count": 6,
+        "dimensions": {
+          "query": "SELECT COALESCE(country, 'Unknown') AS country, COUNT(*) AS count\n       FROM page_views\n       WHERE date(viewed_at, 'unixepoch') BETWEEN date('now', '-' || ? || ' days') AND date('now', '-1 day')\n       GROUP BY country\n       ORDER BY count DESC\n       LIMIT ?"
+        },
+        "sum": {
+          "queryDurationMs": 1367.8188,
+          "rowsRead": 3254496,
+          "rowsReturned": 120,
+          "rowsWritten": 0
+        }
+      },
+      {
+        "avg": {
+          "queryDurationMs": 3.543973932384341,
+          "rowsRead": 697,
+          "rowsReturned": 0,
+          "rowsWritten": 0
+        },
+        "count": 4496,
+        "dimensions": {
+          "query": "\n    SELECT slug, title, published_at\n    FROM posts\n    WHERE status = 'published'\n      AND (published_at > ? OR (published_at = ? AND id > ?))\n    ORDER BY published_at ASC, id ASC\n    LIMIT ?\n  "
+        },
+        "sum": {
+          "queryDurationMs": 15933.706799999998,
+          "rowsRead": 3136475,
+          "rowsReturned": 4309,
+          "rowsWritten": 0
+        }
+      },
+      {
+        "avg": {
+          "queryDurationMs": 3.5266200917168256,
+          "rowsRead": 788,
+          "rowsReturned": 1,
+          "rowsWritten": 0
+        },
+        "count": 3489,
+        "dimensions": {
+          "query": "\n    SELECT slug, title, published_at\n    FROM posts\n    WHERE status = 'published'\n      AND (published_at < ? OR (published_at = ? AND id < ?))\n    ORDER BY published_at DESC, id DESC\n    LIMIT ?\n  "
+        },
+        "sum": {
+          "queryDurationMs": 12304.377500000004,
+          "rowsRead": 2751701,
+          "rowsReturned": 3489,
+          "rowsWritten": 0
+        }
+      },
+      {
+        "avg": {
+          "queryDurationMs": 4.101856807780321,
+          "rowsRead": 1534,
+          "rowsReturned": 1534,
+          "rowsWritten": 0
+        },
+        "count": 1748,
+        "dimensions": {
+          "query": "SELECT id, source_path, target_path, status_code FROM redirects"
+        },
+        "sum": {
+          "queryDurationMs": 7170.0457,
+          "rowsRead": 2681432,
+          "rowsReturned": 2681432,
+          "rowsWritten": 0
+        }
+      },
+      {
+        "avg": {
+          "queryDurationMs": 219.0748,
+          "rowsRead": 367921,
+          "rowsReturned": 0,
+          "rowsWritten": 0
+        },
+        "count": 6,
+        "dimensions": {
+          "query": "SELECT city, COUNT(*) AS count\n         FROM page_views\n         WHERE date(viewed_at, 'unixepoch') BETWEEN date('now', '-' || ? || ' days') AND date('now', '-1 day') AND is_bot = 0\n           AND city IS NOT NULL AND city != ''\n         GROUP BY city\n         ORDER BY count DESC\n         LIMIT ?"
+        },
+        "sum": {
+          "queryDurationMs": 1314.4488000000001,
+          "rowsRead": 2207526,
+          "rowsReturned": 0,
+          "rowsWritten": 0
+        }
+      },
+      {
+        "avg": {
+          "queryDurationMs": 4.871360189573459,
+          "rowsRead": 984,
+          "rowsReturned": 62,
+          "rowsWritten": 0
+        },
+        "count": 1899,
+        "dimensions": {
+          "query": "\n    SELECT\n      CAST(strftime('%Y', published_at, 'unixepoch') AS INTEGER) AS year,\n      CAST(strftime('%m', published_at, 'unixepoch') AS INTEGER) AS month,\n      COUNT(*) AS count\n    FROM posts\n    WHERE status = 'published' AND published_at IS NOT NULL\n    GROUP BY year, month\n    ORDER BY year DESC, month DESC\n  "
+        },
+        "sum": {
+          "queryDurationMs": 9250.713,
+          "rowsRead": 1870496,
+          "rowsReturned": 117738,
+          "rowsWritten": 0
+        }
+      },
+      {
+        "avg": {
+          "queryDurationMs": 725.4626,
+          "rowsRead": 538229,
+          "rowsReturned": 30,
+          "rowsWritten": 0
+        },
+        "count": 3,
+        "dimensions": {
+          "query": "SELECT\n       date(viewed_at, 'unixepoch') AS date,\n       SUM(CASE WHEN is_bot = 0 THEN 1 ELSE 0 END) AS human,\n       SUM(CASE WHEN is_bot = 1 AND bot_category = 'search' THEN 1 ELSE 0 END) AS search,\n       SUM(CASE WHEN is_bot = 1 AND bot_category = 'ai' THEN 1 ELSE 0 END) AS ai,\n       SUM(CASE WHEN is_bot = 1 AND COALESCE(bot_category, 'other') NOT IN ('search', 'ai') THEN 1 ELSE 0 END) AS other_bot\n     FROM page_views\n     WHERE date(viewed_at, 'unixepoch') BETWEEN date('now', '-' || ? || ' days') AND date('now', '-1 day')\n     GROUP BY date\n     ORDER BY date ASC"
+        },
+        "sum": {
+          "queryDurationMs": 2176.3878,
+          "rowsRead": 1614687,
+          "rowsReturned": 90,
+          "rowsWritten": 0
+        }
+      },
+      {
+        "avg": {
+          "queryDurationMs": 250.9784,
+          "rowsRead": 453470,
+          "rowsReturned": 1,
+          "rowsWritten": 0
+        },
+        "count": 3,
+        "dimensions": {
+          "query": "\n  SELECT\n    COUNT(*) AS total,\n    SUM(CASE WHEN is_bot = 0 THEN 1 ELSE 0 END) AS human,\n    SUM(CASE WHEN is_bot = 1 AND bot_category = 'search' THEN 1 ELSE 0 END) AS search,\n    SUM(CASE WHEN is_bot = 1 AND bot_category = 'ai' THEN 1 ELSE 0 END) AS ai,\n    SUM(CASE WHEN is_bot = 1 AND COALESCE(bot_category, 'other') NOT IN ('search', 'ai') THEN 1 ELSE 0 END) AS other_bot\n  FROM page_views WHERE date(viewed_at, 'unixepoch') BETWEEN date('now', '-' || (2 * ?) || ' days') AND date('now', '-' || (? + 1) || ' days')"
+        },
+        "sum": {
+          "queryDurationMs": 752.9352,
+          "rowsRead": 1360410,
+          "rowsReturned": 3,
+          "rowsWritten": 0
+        }
+      }
+    ],
+    "topWrites": [
+      {
+        "avg": {
+          "queryDurationMs": 0.9969034144367444,
+          "rowsRead": 2,
+          "rowsReturned": 0,
+          "rowsWritten": 7
+        },
+        "count": 19769,
+        "dimensions": {
+          "query": "INSERT INTO page_views (id, post_id, path, referrer, user_agent, ip_hash, country, city, device_type, browser, os, is_bot, bot_name, bot_category, session_id)\n     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        },
+        "sum": {
+          "queryDurationMs": 19707.7836,
+          "rowsRead": 55175,
+          "rowsReturned": 0,
+          "rowsWritten": 138383
+        }
+      },
+      {
+        "avg": {
+          "queryDurationMs": 0.32112267223382046,
+          "rowsRead": 1,
+          "rowsReturned": 0,
+          "rowsWritten": 1
+        },
+        "count": 4790,
+        "dimensions": {
+          "query": "UPDATE mcp_tokens SET last_used_at = ? WHERE id = ?"
+        },
+        "sum": {
+          "queryDurationMs": 1538.1776,
+          "rowsRead": 4790,
+          "rowsReturned": 0,
+          "rowsWritten": 4790
+        }
+      },
+      {
+        "avg": {
+          "queryDurationMs": 0.3079148747390396,
+          "rowsRead": 1,
+          "rowsReturned": 0,
+          "rowsWritten": 1
+        },
+        "count": 1916,
+        "dimensions": {
+          "query": "UPDATE posts SET view_count = view_count + 1 WHERE id = ?"
+        },
+        "sum": {
+          "queryDurationMs": 589.9649,
+          "rowsRead": 1916,
+          "rowsReturned": 0,
+          "rowsWritten": 1916
+        }
+      },
+      {
+        "avg": {
+          "queryDurationMs": 21.501,
+          "rowsRead": 17370,
+          "rowsReturned": 0,
+          "rowsWritten": 34
+        },
+        "count": 2,
+        "dimensions": {
+          "query": "UPDATE tags SET post_count = (\n      SELECT COUNT(*) FROM post_tags pt\n      INNER JOIN posts p ON p.id = pt.post_id AND p.status = 'published'\n      WHERE pt.tag_id = tags.id\n    )"
+        },
+        "sum": {
+          "queryDurationMs": 43.002,
+          "rowsRead": 34740,
+          "rowsReturned": 0,
+          "rowsWritten": 68
+        }
+      },
+      {
+        "avg": {
+          "queryDurationMs": 1.2469,
+          "rowsRead": 2,
+          "rowsReturned": 0,
+          "rowsWritten": 8
+        },
+        "count": 7,
+        "dimensions": {
+          "query": "UPDATE posts SET title = ?, slug = ?, status = ?, category_id = ?, featured_image = ?, ai_agent_id = ?, human_id = ?, content = ?, reading_time = ?, content_html = ?, excerpt = ?, reference_url = ?, reference_title = ?, reference_description = ?, reference_image = ?, published_at = ?, updated_at = ? WHERE id = ?"
+        },
+        "sum": {
+          "queryDurationMs": 8.728299999999999,
+          "rowsRead": 14,
+          "rowsReturned": 0,
+          "rowsWritten": 56
+        }
+      }
+    ]
+  },
+  "productionBenchmarks": [
+    {
+      "name": "list_current",
+      "capturedAt": "2026-09-17T22:43:21.181Z",
+      "sql": "SELECT p.*, c.name AS category_name, c.slug AS category_slug,\n         a.name AS agent_name, a.slug AS agent_slug, a.avatar_version AS agent_avatar_version,\n         h.name AS human_name, h.slug AS human_slug, h.avatar_version AS human_avatar_version\n  FROM posts p\n  LEFT JOIN categories c ON p.category_id = c.id\n  LEFT JOIN ai_agents a ON p.ai_agent_id = a.id\n  LEFT JOIN humans h ON p.human_id = h.id\n\n    WHERE p.status = ?\n    ORDER BY p.published_at DESC, p.created_at DESC\n    LIMIT ? OFFSET ?",
+      "params": [
+        "published",
+        10,
+        0
+      ],
+      "rowsRead": 1976,
+      "rowsWritten": 0,
+      "durationMs": 14.9859,
+      "rowsReturned": 10,
+      "plan": [
+        {
+          "id": 16,
+          "parent": 0,
+          "notused": 61,
+          "detail": "SEARCH p USING INDEX idx_posts_status (status=?)"
+        },
+        {
+          "id": 23,
+          "parent": 0,
+          "notused": 46,
+          "detail": "SEARCH c USING INDEX sqlite_autoindex_categories_1 (id=?) LEFT-JOIN"
+        },
+        {
+          "id": 31,
+          "parent": 0,
+          "notused": 46,
+          "detail": "SEARCH a USING INDEX sqlite_autoindex_ai_agents_1 (id=?) LEFT-JOIN"
+        },
+        {
+          "id": 39,
+          "parent": 0,
+          "notused": 46,
+          "detail": "SEARCH h USING INDEX sqlite_autoindex_humans_1 (id=?) LEFT-JOIN"
+        },
+        {
+          "id": 99,
+          "parent": 0,
+          "notused": 0,
+          "detail": "USE TEMP B-TREE FOR ORDER BY"
+        }
+      ]
+    },
+    {
+      "name": "list_using_date_index",
+      "capturedAt": "2026-09-17T22:43:21.485Z",
+      "sql": "SELECT p.*, c.name AS category_name, c.slug AS category_slug,\n         a.name AS agent_name, a.slug AS agent_slug, a.avatar_version AS agent_avatar_version,\n         h.name AS human_name, h.slug AS human_slug, h.avatar_version AS human_avatar_version\n  FROM posts p INDEXED BY idx_posts_published\n  LEFT JOIN categories c ON p.category_id = c.id\n  LEFT JOIN ai_agents a ON p.ai_agent_id = a.id\n  LEFT JOIN humans h ON p.human_id = h.id\n\n    WHERE p.status = ?\n    ORDER BY p.published_at DESC, p.created_at DESC\n    LIMIT ? OFFSET ?",
+      "params": [
+        "published",
+        10,
+        0
+      ],
+      "rowsRead": 43,
+      "rowsWritten": 0,
+      "durationMs": 8.1237,
+      "rowsReturned": 10,
+      "plan": [
+        {
+          "id": 16,
+          "parent": 0,
+          "notused": 222,
+          "detail": "SCAN p USING INDEX idx_posts_published"
+        },
+        {
+          "id": 21,
+          "parent": 0,
+          "notused": 46,
+          "detail": "SEARCH c USING INDEX sqlite_autoindex_categories_1 (id=?) LEFT-JOIN"
+        },
+        {
+          "id": 29,
+          "parent": 0,
+          "notused": 46,
+          "detail": "SEARCH a USING INDEX sqlite_autoindex_ai_agents_1 (id=?) LEFT-JOIN"
+        },
+        {
+          "id": 37,
+          "parent": 0,
+          "notused": 46,
+          "detail": "SEARCH h USING INDEX sqlite_autoindex_humans_1 (id=?) LEFT-JOIN"
+        },
+        {
+          "id": 105,
+          "parent": 0,
+          "notused": 0,
+          "detail": "USE TEMP B-TREE FOR LAST TERM OF ORDER BY"
+        }
+      ]
+    },
+    {
+      "name": "list_projection_only",
+      "capturedAt": "2026-09-17T22:48:24.136Z",
+      "sql": "SELECT p.id, p.slug, p.title, p.published_at, c.name AS category_name, c.slug AS category_slug,\n         a.name AS agent_name, a.slug AS agent_slug, a.avatar_version AS agent_avatar_version,\n         h.name AS human_name, h.slug AS human_slug, h.avatar_version AS human_avatar_version\n  FROM posts p\n  LEFT JOIN categories c ON p.category_id = c.id\n  LEFT JOIN ai_agents a ON p.ai_agent_id = a.id\n  LEFT JOIN humans h ON p.human_id = h.id\n\n    WHERE p.status = ?\n    ORDER BY p.published_at DESC, p.created_at DESC\n    LIMIT ? OFFSET ?",
+      "params": [
+        "published",
+        10,
+        0
+      ],
+      "rowsRead": 1976,
+      "rowsWritten": 0,
+      "durationMs": 4.3595,
+      "rowsReturned": 10
+    },
+    {
+      "name": "browser_current30",
+      "capturedAt": "2026-09-17T22:43:21.938Z",
+      "sql": "SELECT COALESCE(browser, 'Unknown') AS browser, COUNT(*) AS count FROM page_views WHERE date(viewed_at, 'unixepoch') BETWEEN date('now', '-' || ? || ' days') AND date('now', '-1 day') AND is_bot = 0 GROUP BY browser ORDER BY count DESC LIMIT 10",
+      "params": [
+        30
+      ],
+      "rowsRead": 450814,
+      "rowsWritten": 0,
+      "durationMs": 271.7395,
+      "rowsReturned": 6,
+      "plan": [
+        {
+          "id": 9,
+          "parent": 0,
+          "notused": 61,
+          "detail": "SEARCH page_views USING INDEX idx_page_views_bot (is_bot=?)"
+        },
+        {
+          "id": 30,
+          "parent": 0,
+          "notused": 0,
+          "detail": "USE TEMP B-TREE FOR GROUP BY"
+        },
+        {
+          "id": 72,
+          "parent": 0,
+          "notused": 0,
+          "detail": "USE TEMP B-TREE FOR ORDER BY"
+        }
+      ]
+    },
+    {
+      "name": "browser_range30",
+      "capturedAt": "2026-09-17T22:43:22.379Z",
+      "sql": "SELECT COALESCE(browser, 'Unknown') AS browser, COUNT(*) AS count FROM page_views WHERE viewed_at >= unixepoch('now', 'start of day', '-' || ? || ' days') AND viewed_at < unixepoch('now', 'start of day') AND is_bot = 0 GROUP BY browser ORDER BY count DESC LIMIT 10",
+      "params": [
+        30
+      ],
+      "rowsRead": 450814,
+      "rowsWritten": 0,
+      "durationMs": 249.4812,
+      "rowsReturned": 6,
+      "plan": [
+        {
+          "id": 9,
+          "parent": 0,
+          "notused": 61,
+          "detail": "SEARCH page_views USING INDEX idx_page_views_bot (is_bot=?)"
+        },
+        {
+          "id": 31,
+          "parent": 0,
+          "notused": 0,
+          "detail": "USE TEMP B-TREE FOR GROUP BY"
+        },
+        {
+          "id": 73,
+          "parent": 0,
+          "notused": 0,
+          "detail": "USE TEMP B-TREE FOR ORDER BY"
+        }
+      ]
+    },
+    {
+      "name": "browser_range_timeindex30",
+      "capturedAt": "2026-09-17T22:43:22.650Z",
+      "sql": "SELECT COALESCE(browser, 'Unknown') AS browser, COUNT(*) AS count FROM page_views INDEXED BY idx_page_views_viewed_at WHERE viewed_at >= unixepoch('now', 'start of day', '-' || ? || ' days') AND viewed_at < unixepoch('now', 'start of day') AND is_bot = 0 GROUP BY browser ORDER BY count DESC LIMIT 10",
+      "params": [
+        30
+      ],
+      "rowsRead": 154717,
+      "rowsWritten": 0,
+      "durationMs": 85.5407,
+      "rowsReturned": 6,
+      "plan": [
+        {
+          "id": 9,
+          "parent": 0,
+          "notused": 162,
+          "detail": "SEARCH page_views USING INDEX idx_page_views_viewed_at (viewed_at>? AND viewed_at<?)"
+        },
+        {
+          "id": 34,
+          "parent": 0,
+          "notused": 0,
+          "detail": "USE TEMP B-TREE FOR GROUP BY"
+        },
+        {
+          "id": 76,
+          "parent": 0,
+          "notused": 0,
+          "detail": "USE TEMP B-TREE FOR ORDER BY"
+        }
+      ]
+    },
+    {
+      "name": "overview_current30",
+      "capturedAt": "2026-09-17T22:43:23.026Z",
+      "sql": "SELECT COUNT(*) AS total, SUM(is_bot = 0) AS human, SUM(is_bot = 1 AND bot_category = 'search') AS search, SUM(is_bot = 1 AND bot_category = 'ai') AS ai FROM page_views WHERE date(viewed_at, 'unixepoch') BETWEEN date('now', '-' || ? || ' days') AND date('now', '-1 day')",
+      "params": [
+        30
+      ],
+      "rowsRead": 475258,
+      "rowsWritten": 0,
+      "durationMs": 192.7381,
+      "rowsReturned": 1,
+      "plan": [
+        {
+          "id": 3,
+          "parent": 0,
+          "notused": 216,
+          "detail": "SCAN page_views"
+        }
+      ]
+    },
+    {
+      "name": "overview_range30",
+      "capturedAt": "2026-09-17T22:43:23.249Z",
+      "sql": "SELECT COUNT(*) AS total, SUM(is_bot = 0) AS human, SUM(is_bot = 1 AND bot_category = 'search') AS search, SUM(is_bot = 1 AND bot_category = 'ai') AS ai FROM page_views WHERE viewed_at >= unixepoch('now', 'start of day', '-' || ? || ' days') AND viewed_at < unixepoch('now', 'start of day')",
+      "params": [
+        30
+      ],
+      "rowsRead": 85703,
+      "rowsWritten": 0,
+      "durationMs": 46.9009,
+      "rowsReturned": 1,
+      "plan": [
+        {
+          "id": 4,
+          "parent": 0,
+          "notused": 162,
+          "detail": "SEARCH page_views USING INDEX idx_page_views_viewed_at (viewed_at>? AND viewed_at<?)"
+        }
+      ]
+    },
+    {
+      "name": "probe",
+      "capturedAt": "2026-09-17T22:48:24.550Z",
+      "sql": "SELECT 1 AS probe",
+      "params": [],
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "durationMs": 0.1377,
+      "rowsReturned": 1
+    }
+  ],
+  "resultComparisons": [
+    {
+      "a": "list_current",
+      "b": "list_using_date_index",
+      "identicalResults": true
+    },
+    {
+      "a": "browser_current30",
+      "b": "browser_range30",
+      "identicalResults": true
+    },
+    {
+      "a": "browser_current30",
+      "b": "browser_range_timeindex30",
+      "identicalResults": true
+    },
+    {
+      "a": "overview_current30",
+      "b": "overview_range30",
+      "identicalResults": true
+    }
+  ],
+  "localPostIndexExperiment": {
+    "checks": [
+      {
+        "name": "list_original",
+        "vm_steps": 30425,
+        "returned": 10,
+        "plan": [
+          "SEARCH p USING INDEX idx_posts_status (status=?)",
+          "SEARCH c USING INDEX sqlite_autoindex_categories_1 (id=?) LEFT-JOIN",
+          "SEARCH a USING INDEX sqlite_autoindex_ai_agents_1 (id=?) LEFT-JOIN",
+          "SEARCH h USING INDEX sqlite_autoindex_humans_1 (id=?) LEFT-JOIN",
+          "USE TEMP B-TREE FOR ORDER BY"
+        ]
+      },
+      {
+        "name": "list_composite_index",
+        "vm_steps": 632,
+        "returned": 10,
+        "plan": [
+          "SEARCH p USING INDEX idx_posts_status_published_created (status=?)",
+          "SEARCH c USING INDEX sqlite_autoindex_categories_1 (id=?) LEFT-JOIN",
+          "SEARCH a USING INDEX sqlite_autoindex_ai_agents_1 (id=?) LEFT-JOIN",
+          "SEARCH h USING INDEX sqlite_autoindex_humans_1 (id=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "name": "adjacent_existing",
+        "vm_steps": 1814,
+        "returned": 1,
+        "plan": [
+          "SEARCH posts USING INDEX idx_posts_status_published_created (status=?)",
+          "USE TEMP B-TREE FOR LAST TERM OF ORDER BY"
+        ]
+      },
+      {
+        "name": "adjacent_composite_rowvalue",
+        "vm_steps": 53,
+        "returned": 1,
+        "plan": [
+          "SEARCH posts USING INDEX idx_posts_status_published_id (status=? AND (published_at,id)<(?,?))"
+        ]
+      }
+    ],
+    "new_index_sizes": [
+      [
+        "idx_posts_status_published_created",
+        28672
+      ],
+      [
+        "idx_posts_status_published_id",
+        45056
+      ]
+    ],
+    "same_results": true,
+    "notes": "Local SQLite with production indexed-column distribution, placeholder body fields. VM steps are not D1 rows_read."
+  },
+  "localAnalyticsIndexExperiment": {
+    "checks": [
+      {
+        "name": "timestamp_range_existing_indexes_without_statistics",
+        "plan": [
+          "SEARCH page_views USING INDEX idx_page_views_bot (is_bot=?)",
+          "USE TEMP B-TREE FOR GROUP BY",
+          "USE TEMP B-TREE FOR ORDER BY"
+        ]
+      },
+      {
+        "name": "timestamp_range_existing_indexes_after_analyze",
+        "plan": [
+          "SEARCH page_views USING INDEX idx_page_views_viewed_at (viewed_at>? AND viewed_at<?)",
+          "USE TEMP B-TREE FOR GROUP BY",
+          "USE TEMP B-TREE FOR ORDER BY"
+        ]
+      },
+      {
+        "name": "source_time_index",
+        "plan": [
+          "SEARCH page_views USING INDEX idx_page_views_source_time (is_bot=? AND viewed_at>? AND viewed_at<?)",
+          "USE TEMP B-TREE FOR GROUP BY",
+          "USE TEMP B-TREE FOR ORDER BY"
+        ]
+      }
+    ],
+    "notes": "Local SQLite; real daily volume and bot/human counts, synthetic timestamps and browser/category values. Not a D1 billing measurement."
+  },
+  "auditQueryOverhead": {
+    "successfulStatementsCaptured": 34,
+    "rowsRead": 4789581,
+    "rowsWritten": 0,
+    "note": "Captured audit SQL only; excludes initial Wrangler schema read, GraphQL/control-plane requests, and local SQLite experiments."
+  },
+  "limits": [
+    "D1 rejects dbstat, page_count, and freelist_count; table physical sizes and reclaimable space were not measured.",
+    "Uptime Kuma saved API and login credentials did not authenticate; monitor configuration was not retrieved.",
+    "Cloudflare subscription details were not accessible; cost estimates use published paid marginal rates and observed account usage, not invoice totals."
+  ],
+  "sources": [
+    "https://developers.cloudflare.com/d1/platform/pricing/",
+    "https://developers.cloudflare.com/d1/observability/metrics-analytics/",
+    "https://developers.cloudflare.com/d1/best-practices/use-indexes/"
+  ]
+}

@@ -6,6 +6,7 @@ import type { Db } from "@/lib/db";
 import type { HumanDetailResponse } from "@/models/analytics-types";
 import {
   TIME_WINDOW_WHERE,
+  EXCLUDE_MONITORS,
   resolveTopPages,
   sourceCondition,
 } from "./analytics-helpers";
@@ -95,7 +96,7 @@ export async function getHumanDetail(
       // Recent 24h uses rolling window (unique exception per §3.4)
       db.firstOrNull<{ count: number }>(
         `SELECT COUNT(*) AS count FROM page_views
-         WHERE viewed_at >= unixepoch('now') - 86400 AND is_bot = 0`,
+         WHERE viewed_at >= unixepoch('now') - 86400 AND is_bot = 0 AND ${EXCLUDE_MONITORS}`,
       ),
     ]);
 

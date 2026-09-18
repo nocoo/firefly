@@ -6,8 +6,7 @@ import { JournalSurfaces } from "@/components/blog/journal-surfaces";
 import { JournalThemeToggle } from "@/components/blog/journal-theme-toggle";
 import { JournalThemeColor } from "@/components/blog/journal-theme-color";
 import { getDb } from "@/lib/db";
-import { getSiteSettings } from "@/data/settings";
-import { listPosts } from "@/data/entities/post";
+import { getSiteSettings, listPosts } from "@/data/public-content";
 import { BlogFooter } from "@/components/blog/blog-footer";
 import { postPath } from "@/lib/seo";
 

@@ -47,6 +47,9 @@ function buildScriptSrc(): string {
 }
 
 const nextConfig: NextConfig = {
+  // Preserve Next's prefetch headers for analytics filtering in proxy.ts.
+  // The default proxy adapter strips these before calling our handler.
+  skipProxyUrlNormalize: true,
   allowedDevOrigins: (process.env.ALLOWED_DEV_ORIGINS ?? "").split(",").filter(Boolean),
   env: {
     NEXT_PUBLIC_APP_VERSION: pkg.version,

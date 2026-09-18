@@ -19,7 +19,7 @@ export const categoryEntity: EntityConfig<Category> = {
   display: "Category",
   plural: "categories",
   dataLayer: {
-    list: listCategories,
+    list: (db) => listCategories(db),
     getById: getCategoryById,
     getBySlug: getCategoryBySlug,
     create: createCategory,

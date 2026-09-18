@@ -23,7 +23,6 @@ vi.mock("@/data/entities/post", () => ({
   listPosts: vi.fn(),
   getPostById: vi.fn(),
   getPostBySlug: vi.fn(),
-  updatePost: vi.fn(),
   getPostTags: vi.fn(),
 }));
 
@@ -56,7 +55,6 @@ import {
   listPosts,
   getPostById,
   getPostBySlug,
-  updatePost,
   getPostTags,
 } from "@/data/entities/post";
 import { PostService } from "@/services/post-service";
@@ -106,7 +104,7 @@ describe("post entity handlers", () => {
     vi.mocked(PostService.create).mockReset();
     vi.mocked(PostService.update).mockReset();
     vi.mocked(PostService.delete).mockReset();
-    vi.mocked(updatePost).mockReset();
+    vi.mocked(PostService.update).mockReset();
     vi.mocked(getPostTags).mockReset();
     vi.mocked(generateExcerpt).mockReset();
     vi.mocked(summarizeUnfurl).mockReset();
@@ -453,7 +451,7 @@ describe("generate_excerpt extra tool", () => {
     vi.mocked(getPostById).mockReset();
     vi.mocked(getPostBySlug).mockReset();
     vi.mocked(generateExcerpt).mockReset();
-    vi.mocked(updatePost).mockReset();
+    vi.mocked(PostService.update).mockReset();
   });
 
   const excerptTool = postEntity.extraTools!.find(
@@ -463,23 +461,23 @@ describe("generate_excerpt extra tool", () => {
   it("generates excerpt by slug and saves to DB", async () => {
     vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
     vi.mocked(generateExcerpt).mockResolvedValue("AI excerpt");
-    vi.mocked(updatePost).mockResolvedValue(samplePostWithAgent);
+    vi.mocked(PostService.update).mockResolvedValue(samplePostWithAgent);
 
     const result = await excerptTool.handler(ctx, { slug: "test-post" });
     const data = parseToolResult(result);
     expect(data).toEqual({ slug: "test-post", excerpt: "AI excerpt", saved: true });
-    expect(updatePost).toHaveBeenCalledWith(ctx.db, "post-1", { excerpt: "AI excerpt" });
+    expect(PostService.update).toHaveBeenCalledWith(ctx.db, "post-1", { excerpt: "AI excerpt" });
   });
 
   it("generates excerpt by id and saves to DB", async () => {
     vi.mocked(getPostById).mockResolvedValue(samplePostWithAgent);
     vi.mocked(generateExcerpt).mockResolvedValue("AI excerpt");
-    vi.mocked(updatePost).mockResolvedValue(samplePostWithAgent);
+    vi.mocked(PostService.update).mockResolvedValue(samplePostWithAgent);
 
     const result = await excerptTool.handler(ctx, { id: "post-1" });
     const data = parseToolResult(result);
     expect(data).toEqual({ slug: "test-post", excerpt: "AI excerpt", saved: true });
-    expect(updatePost).toHaveBeenCalledWith(ctx.db, "post-1", { excerpt: "AI excerpt" });
+    expect(PostService.update).toHaveBeenCalledWith(ctx.db, "post-1", { excerpt: "AI excerpt" });
   });
 
   it("returns error for missing post", async () => {
@@ -523,7 +521,7 @@ describe("unfurl_reference extra tool", () => {
     ctx = createMockContext();
     vi.mocked(getPostById).mockReset();
     vi.mocked(getPostBySlug).mockReset();
-    vi.mocked(updatePost).mockReset();
+    vi.mocked(PostService.update).mockReset();
     vi.mocked(unfurlUrl).mockReset();
     vi.mocked(summarizeUnfurl).mockReset();
   });
@@ -553,7 +551,7 @@ describe("unfurl_reference extra tool", () => {
     const data = parseToolResult(result) as Record<string, unknown>;
     expect(data.title).toBe("AI Title");
     expect(data).not.toHaveProperty("saved");
-    expect(updatePost).not.toHaveBeenCalled();
+    expect(PostService.update).not.toHaveBeenCalled();
   });
 
   it("save mode: unfurls and saves to post", async () => {
@@ -568,7 +566,7 @@ describe("unfurl_reference extra tool", () => {
       bodyText: "text",
     });
     vi.mocked(summarizeUnfurl).mockResolvedValue(null);
-    vi.mocked(updatePost).mockResolvedValue(samplePostWithAgent);
+    vi.mocked(PostService.update).mockResolvedValue(samplePostWithAgent);
 
     const result = await unfurlTool.handler(ctx, {
       slug: "test-post",
@@ -576,7 +574,7 @@ describe("unfurl_reference extra tool", () => {
     });
     const data = parseToolResult(result) as Record<string, unknown>;
     expect(data.saved).toBe(true);
-    expect(updatePost).toHaveBeenCalled();
+    expect(PostService.update).toHaveBeenCalled();
   });
 
   it("save mode: returns validation error when both id and slug are provided", async () => {
@@ -604,7 +602,7 @@ describe("unfurl_reference extra tool", () => {
       title: "AI Title",
       description: "AI Desc",
     });
-    vi.mocked(updatePost).mockResolvedValue(samplePostWithAgent);
+    vi.mocked(PostService.update).mockResolvedValue(samplePostWithAgent);
 
     const result = await unfurlTool.handler(ctx, {
       slug: "test-post",
@@ -632,7 +630,7 @@ describe("unfurl_reference extra tool", () => {
       bodyText: "text",
     });
     vi.mocked(summarizeUnfurl).mockResolvedValue(null);
-    vi.mocked(updatePost).mockResolvedValue(postWithRef);
+    vi.mocked(PostService.update).mockResolvedValue(postWithRef);
 
     const result = await unfurlTool.handler(ctx, { id: "post-1" });
     expect(unfurlUrl).toHaveBeenCalledWith("https://saved.com");
@@ -771,7 +769,7 @@ describe("unfurl_reference extra tool", () => {
       bodyText: "text",
     });
     vi.mocked(summarizeUnfurl).mockResolvedValue(null);
-    vi.mocked(updatePost).mockResolvedValue(samplePostWithAgent);
+    vi.mocked(PostService.update).mockResolvedValue(samplePostWithAgent);
 
     const result = await unfurlTool.handler(ctx, {
       slug: "test-post",
@@ -794,7 +792,7 @@ describe("unfurl_reference extra tool", () => {
       bodyText: "text",
     });
     vi.mocked(summarizeUnfurl).mockResolvedValue(null);
-    vi.mocked(updatePost).mockResolvedValue(samplePostWithAgent);
+    vi.mocked(PostService.update).mockResolvedValue(samplePostWithAgent);
 
     const result = await unfurlTool.handler(ctx, {
       slug: "test-post",

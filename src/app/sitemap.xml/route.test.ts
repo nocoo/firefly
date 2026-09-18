@@ -5,18 +5,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // (hoisted above variable declarations).
 // ---------------------------------------------------------------------------
 
-vi.mock("@/lib/db", () => ({
-  getDb: () => ({} as never),
-}));
-
-vi.mock("@/lib/seo", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/seo")>();
-  return { ...actual, SITE_URL: "http://localhost:3000" };
-});
-
-vi.mock("@/data/entities/post", () => ({
-  listPosts: vi.fn().mockResolvedValue({
-    posts: [
+const { sitemapRows } = vi.hoisted(() => ({ sitemapRows: [
       {
         id: "p1",
         title: "First Post",
@@ -39,22 +28,28 @@ vi.mock("@/data/entities/post", () => ({
         category_name: null,
         category_slug: null,
       },
-    ],
-    total: 2,
-  }),
+    ] }));
+
+vi.mock("@/lib/db", () => ({
+  getDb: () => ({}),
+}));
+
+vi.mock("@/lib/seo", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/seo")>();
+  return { ...actual, SITE_URL: "http://localhost:3000" };
+});
+
+vi.mock("@/data/public-content", () => ({
+  listSitemapPosts: vi.fn().mockResolvedValue({ posts: sitemapRows }),
   listMonthlyArchives: vi.fn().mockResolvedValue([
     { year: 2023, month: 11, count: 2 },
   ]),
-}));
 
-vi.mock("@/data/entities/category", () => ({
   listCategories: vi.fn().mockResolvedValue([
     { id: "cat-1", name: "General", slug: "general", description: null, post_count: 5 },
     { id: "cat-2", name: "Empty", slug: "empty", description: null, post_count: 0 },
   ]),
-}));
 
-vi.mock("@/data/entities/tag", () => ({
   listTags: vi.fn().mockResolvedValue([
     { id: "t1", name: "JavaScript", slug: "javascript", post_count: 5 },
     { id: "t2", name: "CSS", slug: "css", post_count: 2 },
@@ -84,7 +79,7 @@ describe("GET /sitemap.xml", () => {
   it("includes Cache-Control header", async () => {
     const response = await GET();
     expect(response.headers.get("Cache-Control")).toBe(
-      "public, max-age=3600, s-maxage=3600",
+      "public, max-age=0, must-revalidate",
     );
   });
 

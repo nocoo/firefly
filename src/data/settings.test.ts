@@ -224,6 +224,14 @@ describe("getSiteSettings", () => {
     expect(db.firstOrNull).toHaveBeenCalledOnce();
   });
 
+  it("lets the public cache reload without reusing the inner settings TTL", async () => {
+    vi.mocked(db.firstOrNull).mockResolvedValue(sampleRow);
+    await getSiteSettings(db);
+    vi.mocked(db.firstOrNull).mockResolvedValue({ ...sampleRow, site_name: "New name" });
+    expect((await getSiteSettings(db, false)).siteName).toBe("New name");
+    expect(db.firstOrNull).toHaveBeenCalledTimes(2);
+  });
+
   it("returns defaults when row is null", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(null);
 

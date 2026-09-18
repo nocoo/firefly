@@ -1,7 +1,5 @@
 import { getDb } from "@/lib/db";
-import { listPosts, listMonthlyArchives } from "@/data/entities/post";
-import { listCategories } from "@/data/entities/category";
-import { listTags } from "@/data/entities/tag";
+import { listSitemapPosts, listMonthlyArchives, listCategories, listTags } from "@/data/public-content";
 import { SITE_URL, postPath } from "@/lib/seo";
 import { escapeXml } from "@/lib/xml";
 
@@ -17,7 +15,7 @@ export async function GET() {
   const db = getDb();
 
   const [{ posts }, categories, tags, archives] = await Promise.all([
-    listPosts(db, { status: "published", pageSize: 50000 }),
+    listSitemapPosts(db),
     listCategories(db),
     listTags(db),
     listMonthlyArchives(db),
@@ -90,7 +88,7 @@ export async function GET() {
   return new Response(xml, {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, max-age=3600, s-maxage=3600",
+      "Cache-Control": "public, max-age=0, must-revalidate",
     },
   });
 }

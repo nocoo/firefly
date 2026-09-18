@@ -1,29 +1,22 @@
 import { getDb } from "@/lib/db";
-import { listPosts } from "@/data/entities/post";
-import { getSiteSettings } from "@/data/settings";
+import { listPosts, getSiteSettings, getDefaultHuman } from "@/data/public-content";
 import { renderMarkdown } from "@/models/markdown";
 import { SITE_URL, postPath, HTML_LANG } from "@/lib/seo";
 import { escapeXml } from "@/lib/xml";
 import { getPostAuthor } from "@/lib/ai-agent/author";
-import { getDefaultHuman } from "@/data/entities/human";
-import { createCache } from "@/lib/cache";
-
-// In-process response cache mirrors the public Cache-Control max-age=3600.
-// Avoids repeated DB fetch + 50× markdown render on every uncached hit.
-const RESPONSE_TTL_MS = 60_000;
-const feedCache = createCache<string>(RESPONSE_TTL_MS);
+import { readPublicContent } from "@/data/core/public-cache";
 
 export async function GET() {
-  const cached = feedCache.get();
-  if (cached) {
-    return new Response(cached, {
-      headers: {
-        "Content-Type": "application/rss+xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600, s-maxage=3600",
-      },
-    });
-  }
+  const xml = await readPublicContent(["feed"], buildFeed);
+  return new Response(xml, {
+    headers: {
+      "Content-Type": "application/rss+xml; charset=utf-8",
+      "Cache-Control": "public, max-age=0, must-revalidate",
+    },
+  });
+}
 
+async function buildFeed(): Promise<string> {
   const db = getDb();
   const [{ posts }, settings, defaultHuman] = await Promise.all([
     listPosts(db, {
@@ -79,12 +72,5 @@ ${items.join("\n")}
   </channel>
 </rss>`;
 
-  feedCache.set(xml);
-
-  return new Response(xml, {
-    headers: {
-      "Content-Type": "application/rss+xml; charset=utf-8",
-      "Cache-Control": "public, max-age=3600, s-maxage=3600",
-    },
-  });
+  return xml;
 }

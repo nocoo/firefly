@@ -53,6 +53,7 @@ const BOT_PATTERNS: [RegExp, string, BotCategory][] = [
   [/discordbot/i, "DiscordBot", "social"],
 
   // Monitoring
+  [/uptime-kuma\//i, "Uptime Kuma", "monitor"],
   [/uptimerobot/i, "UptimeRobot", "monitor"],
   [/pingdom/i, "Pingdom", "monitor"],
   [/statuscake/i, "StatusCake", "monitor"],

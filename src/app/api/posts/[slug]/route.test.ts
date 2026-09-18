@@ -11,12 +11,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/db", () => ({ getDb: vi.fn(() => ({})) }));
 vi.mock("@/data/entities/post", () => ({ getPostBySlug: vi.fn() }));
+vi.mock("@/data/public-content", () => ({ getPostBySlug: vi.fn() }));
 vi.mock("@/services/post-service", () => ({
   PostService: { update: vi.fn(), delete: vi.fn() },
 }));
 
 import { auth } from "@/lib/auth";
 import { getPostBySlug } from "@/data/entities/post";
+import { getPostBySlug as getPublicPostBySlug } from "@/data/public-content";
 import { PostService } from "@/services/post-service";
 import { GET, PUT, DELETE } from "./route";
 
@@ -96,12 +98,12 @@ describe("GET /api/posts/[slug] — remains public (no auth)", () => {
   });
 
   it("does NOT call auth() — GET is public for published posts", async () => {
-    vi.mocked(getPostBySlug).mockResolvedValue(null);
+    vi.mocked(getPublicPostBySlug).mockResolvedValue(null);
 
     const response = await GET({} as never, fakeParams);
 
     expect(auth).not.toHaveBeenCalled();
-    expect(getPostBySlug).toHaveBeenCalled();
+    expect(getPublicPostBySlug).toHaveBeenCalled();
     // 404 because mock returns null — what matters is auth was not invoked.
     expect(response.status).toBe(404);
   });

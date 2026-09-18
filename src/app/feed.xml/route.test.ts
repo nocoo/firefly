@@ -14,7 +14,8 @@ vi.mock("@/lib/seo", async (importOriginal) => {
   return { ...actual, SITE_URL: "http://localhost:3000" };
 });
 
-vi.mock("@/data/settings", () => ({
+vi.mock("@/data/public-content", () => ({
+  getDefaultHuman: vi.fn().mockResolvedValue({ id: "human-1", name: "Test Author" }),
   getSiteSettings: vi.fn().mockResolvedValue({
     postsPerPage: 10,
     commentsEnabled: false,
@@ -29,9 +30,7 @@ vi.mock("@/data/settings", () => ({
     socialLinks: [],
     updatedAt: 1700000000,
   }),
-}));
 
-vi.mock("@/data/entities/post", () => ({
   listPosts: vi.fn().mockResolvedValue({
     posts: [
       {
@@ -83,13 +82,6 @@ vi.mock("@/models/markdown", () => ({
   renderMarkdown: vi.fn((content: string) => `<p>${content}</p>`),
 }));
 
-vi.mock("@/data/entities/human", () => ({
-  getDefaultHuman: vi.fn().mockResolvedValue({
-    id: "human-1",
-    name: "Test Author",
-  }),
-}));
-
 vi.mock("@/lib/ai-agent/author", () => ({
   getPostAuthor: vi.fn().mockImplementation((post: { ai_agent_id: string | null; agent_name: string | null }) => {
     if (post.ai_agent_id && post.agent_name) {
@@ -121,7 +113,7 @@ describe("GET /feed.xml", () => {
   it("includes Cache-Control header", async () => {
     const response = await GET();
     expect(response.headers.get("Cache-Control")).toBe(
-      "public, max-age=3600, s-maxage=3600",
+      "public, max-age=0, must-revalidate",
     );
   });
 

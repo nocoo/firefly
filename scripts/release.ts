@@ -56,6 +56,7 @@ function success(msg: string) {
 
 const ROOT = resolve(import.meta.dirname, "..");
 const PKG_PATH = resolve(ROOT, "package.json");
+const WORKER_PKG_PATH = resolve(ROOT, "worker/package.json");
 const CHANGELOG_PATH = resolve(ROOT, "CHANGELOG.md");
 
 // ---------------------------------------------------------------------------
@@ -125,6 +126,9 @@ info("Updating package.json...");
 if (!dryRun) {
   pkg.version = newVersion;
   writeFileSync(PKG_PATH, `${JSON.stringify(pkg, null, 2)}\n`);
+  const workerPkg = JSON.parse(readFileSync(WORKER_PKG_PATH, "utf-8"));
+  workerPkg.version = newVersion;
+  writeFileSync(WORKER_PKG_PATH, `${JSON.stringify(workerPkg, null, 2)}\n`);
 }
 success(`package.json → ${newVersion}`);
 
@@ -135,6 +139,7 @@ success(`package.json → ${newVersion}`);
 info("Syncing lockfile (bun install)...");
 if (!dryRun) {
   run("bun install", { stdio: "inherit" });
+  run("bun install --cwd worker", { stdio: "inherit" });
 }
 success("Lockfile synced");
 
@@ -213,7 +218,7 @@ if (dryRun) {
 
 info(`Creating commit and tag ${tag}...`);
 if (!dryRun) {
-  run("git add package.json bun.lock CHANGELOG.md");
+  run("git add package.json bun.lock worker/package.json worker/bun.lock CHANGELOG.md");
   run(`git commit -m "chore: release ${tag}"`);
   run(`git tag -a ${tag} -m "Release ${tag}"`);
 }

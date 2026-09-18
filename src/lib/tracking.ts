@@ -95,10 +95,12 @@ export function _resetTrackingDb(): void {
 
 export async function trackPageView(input: TrackPageViewInput): Promise<void> {
   try {
+    const bot = detectBot(input.userAgent);
+    if (bot.botCategory === "monitor") return;
+
     const db = getTrackingDb();
     if (!db) return;
 
-    const bot = detectBot(input.userAgent);
     const device = parseDevice(input.userAgent);
     const ipHash = input.ip ? await hashIp(input.ip) : null;
     const postId = await resolvePostId(db, input.path);

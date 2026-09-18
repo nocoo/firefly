@@ -18,7 +18,7 @@ export const tagEntity: EntityConfig<Tag> = {
   name: "tag",
   display: "Tag",
   dataLayer: {
-    list: listTags,
+    list: (db) => listTags(db),
     getById: getTagById,
     getBySlug: getTagBySlug,
     create: createTag,

@@ -7,12 +7,15 @@ import type { Db } from "@/lib/db";
 import type { TopPageItem } from "@/models/analytics-types";
 
 /** Standard time window: complete UTC natural days, excludes today */
+export const EXCLUDE_MONITORS =
+  "(user_agent IS NULL OR user_agent NOT LIKE 'Uptime-Kuma/%') AND (bot_category IS NULL OR bot_category != 'monitor')";
+
 export const TIME_WINDOW_WHERE =
-  "date(viewed_at, 'unixepoch') BETWEEN date('now', '-' || ? || ' days') AND date('now', '-1 day')";
+  `viewed_at >= unixepoch('now', 'start of day', '-' || ? || ' days') AND viewed_at < unixepoch('now', 'start of day') AND ${EXCLUDE_MONITORS}`;
 
 /** Previous period window (shifted back by the same number of days) */
 export const PREV_WINDOW_WHERE =
-  "date(viewed_at, 'unixepoch') BETWEEN date('now', '-' || (2 * ?) || ' days') AND date('now', '-' || (? + 1) || ' days')";
+  `viewed_at >= unixepoch('now', 'start of day', '-' || (2 * ?) || ' days') AND viewed_at < unixepoch('now', 'start of day', '-' || ? || ' days') AND ${EXCLUDE_MONITORS}`;
 
 export type SourceType = "human" | "search" | "ai" | "other";
 

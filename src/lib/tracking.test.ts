@@ -23,6 +23,8 @@ vi.mock("@/data/analytics", () => ({
 
 // Must import after mocks
 import { trackPageView, resolvePostId, _resetSlugCache, _resetTrackingDb } from "./tracking";
+import { createDb } from "@/lib/db";
+import { hashIp } from "@/lib/hash";
 
 describe("trackPageView", () => {
   beforeEach(() => {
@@ -88,6 +90,20 @@ describe("trackPageView", () => {
     expect(call.botCategory).toBe("search");
     expect(call.deviceType).toBe("bot");
   });
+
+  it.each(["Uptime-Kuma/2.3.2", "uptime-kuma/9.0", "UptimeRobot/2.0"])(
+    "drops %s before obtaining a database, hashing IP or resolving a post",
+    async (userAgent) => {
+      await trackPageView({
+        path: "/2026/09/article", userAgent, ip: "127.0.0.1",
+        referrer: null, country: null, city: null,
+      });
+      expect(createDb).not.toHaveBeenCalled();
+      expect(hashIp).not.toHaveBeenCalled();
+      expect(mockFirstOrNull).not.toHaveBeenCalled();
+      expect(mockRecordPageView).not.toHaveBeenCalled();
+    },
+  );
 
   it("does not call recordPageView when WORKER_URL is missing", async () => {
     delete process.env.WORKER_URL;

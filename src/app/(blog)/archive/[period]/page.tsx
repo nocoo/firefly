@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { listPosts, listMonthlyArchives } from "@/data/entities/post";
-import { getSiteSettings } from "@/data/settings";
+import { listPosts, listMonthlyArchives, getSiteSettings } from "@/data/public-content";
 import { loadSiteIdentity } from "@/lib/site-identity";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";

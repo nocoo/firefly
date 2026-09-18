@@ -6,6 +6,7 @@
 import type { Db } from "@/lib/db";
 import type { AiAgent, AiAgentWithCategory } from "@/models/types";
 import { nowEpoch, newId } from "@/data/core/timestamps";
+import { invalidatePublicContent } from "@/data/core/public-cache";
 
 // ---------------------------------------------------------------------------
 // Input types (camelCase)
@@ -51,6 +52,7 @@ export async function createAiAgent(
     now,
   ]);
 
+  invalidatePublicContent();
   const agent = await getAiAgentById(db, id);
   if (!agent) throw new Error(`Failed to retrieve ai_agent ${id} after creation`);
   return agent;
@@ -148,6 +150,8 @@ export async function updateAiAgent(
     params,
   );
 
+  invalidatePublicContent();
+
   return getAiAgentById(db, id);
 }
 
@@ -168,6 +172,7 @@ export async function updateAvatarVersion(
     "UPDATE ai_agents SET avatar_version = ?, updated_at = ? WHERE id = ?",
     [version, now, id],
   );
+  invalidatePublicContent();
 }
 
 // ---------------------------------------------------------------------------
@@ -227,5 +232,6 @@ export async function deleteAiAgent(
     "DELETE FROM ai_agents WHERE id = ?",
     [id],
   );
+  if (meta.changes > 0) invalidatePublicContent();
   return { success: meta.changes > 0 };
 }

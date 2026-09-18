@@ -1,6 +1,7 @@
 import type { Db } from "@/lib/db";
 import { buildSetClauses } from "@/data/core/sql";
 import type { FieldDef } from "@/data/core/types";
+import { invalidatePublicContent } from "@/data/core/public-cache";
 
 export type FontStyle = "pingfang" | "classic" | "serif" | "sans";
 const FONT_STYLES: FontStyle[] = ["pingfang", "classic", "serif", "sans"];
@@ -112,22 +113,28 @@ function parseRow(row: SiteSettingsRow): SiteSettings {
  * Get site settings with process-level caching.
  * Cache is invalidated after TTL or by calling `invalidateSettingsCache()`.
  */
-export async function getSiteSettings(db: Db): Promise<SiteSettings> {
+export async function getSiteSettings(db: Db, useCache = true): Promise<SiteSettings> {
+  if (!useCache) return getSiteSettingsUncached(db);
   if (cached && Date.now() - cachedAt < TTL) return cached;
 
+  cached = await getSiteSettingsUncached(db);
+  cachedAt = Date.now();
+  return cached;
+}
+
+async function getSiteSettingsUncached(db: Db): Promise<SiteSettings> {
   const row = await db.firstOrNull<SiteSettingsRow>(
     "SELECT * FROM site_settings WHERE id = 1",
   );
 
-  cached = row ? parseRow(row) : { ...DEFAULTS };
-  cachedAt = Date.now();
-  return cached;
+  return row ? parseRow(row) : { ...DEFAULTS };
 }
 
 /** Force next `getSiteSettings` call to re-fetch from DB. */
 export function invalidateSettingsCache(): void {
   cached = null;
   cachedAt = 0;
+  invalidatePublicContent();
 }
 
 // ---------------------------------------------------------------------------
