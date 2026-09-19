@@ -98,12 +98,6 @@ function getClient(): { client: S3Client; config: R2Config } {
   return { client: _client, config: _config };
 }
 
-/** Reset singleton (for testing). */
-export function resetR2Client(): void {
-  _client = undefined;
-  _config = undefined;
-}
-
 // ---------------------------------------------------------------------------
 // Core upload (shared by all upload paths)
 // ---------------------------------------------------------------------------
