@@ -36,6 +36,9 @@ async function buildFeed(): Promise<string> {
       ? new Date(post.published_at * 1000).toUTCString()
       : new Date(post.created_at * 1000).toUTCString();
     const html = post.content_html || renderMarkdown(post.content);
+    const cover = post.featured_image
+      ? `<p><img src="${escapeXml(new URL(post.featured_image, SITE_URL).href)}" alt="${escapeXml(post.title)}" style="max-width:100%;height:auto" /></p>`
+      : "";
     const authorName = postAuthors[idx]?.name ?? defaultHumanName;
 
     return `    <item>
@@ -45,7 +48,7 @@ async function buildFeed(): Promise<string> {
       <pubDate>${pubDate}</pubDate>
       <dc:creator><![CDATA[${authorName}]]></dc:creator>
       <description><![CDATA[${post.excerpt ?? ""}]]></description>
-      <content:encoded><![CDATA[${html}]]></content:encoded>
+      <content:encoded><![CDATA[${cover}${html}]]></content:encoded>
       ${post.category_name ? `<category><![CDATA[${post.category_name}]]></category>` : ""}
     </item>`;
   });

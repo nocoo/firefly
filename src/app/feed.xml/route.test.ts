@@ -63,7 +63,7 @@ vi.mock("@/data/public-content", () => ({
         status: "published",
         category_id: null,
         ai_agent_id: null,
-        featured_image: null,
+        featured_image: "/images/cover.jpg?width=1200&format=webp",
         published_at: 1700100000,
         created_at: 1700100000,
         updated_at: 1700100000,
@@ -153,6 +153,9 @@ describe("GET /feed.xml", () => {
     expect(xml).toContain("<![CDATA[First Post]]>");
     expect(xml).toContain("<![CDATA[Hello world]]>");
     expect(xml).toContain("<content:encoded><![CDATA[<h1>Hello</h1>]]>");
+    expect(xml).toContain(
+      '<content:encoded><![CDATA[<p><img src="http://localhost:3000/images/cover.jpg?width=1200&amp;format=webp" alt="Second Post with &lt;Special&gt; &amp; &quot;Chars&quot;" style="max-width:100%;height:auto" /></p><p>World</p>]]>',
+    );
     expect(xml).toContain("<![CDATA[General]]></category>");
   });
 
