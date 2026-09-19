@@ -1,5 +1,23 @@
 # Changelog
 
+## v2.14.1 (2026-09-19)
+
+- fix(rss): prepend article cover images to feed content
+- Merge pull request #771 from nocoo/chore/deps-20260919-091616
+- chore(deps): update wrangler
+- chore(deps): update ai
+- chore(deps): update node
+- chore(deps): update workers-types
+- chore(deps): update client-s3
+- chore(deps): update lucide-react
+- Merge pull request #758 from nocoo/chore/deps-20260918-090205
+- chore(deps): update wrangler
+- chore(deps): update ai
+- chore(deps): update workers-types
+- chore(deps): update biome
+- chore(deps): update client-s3
+
+
 ## v2.14.0 (2026-09-18)
 
 - feat: cache public content and reduce D1 read and write costs
