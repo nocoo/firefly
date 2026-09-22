@@ -1,7 +1,7 @@
 "use client";
 
+import { AdminChoiceSelect } from "@/components/admin/admin-choice-select";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import type { SdkType } from "@/services/ai";
 import type { AuthType } from "@nocoo/next-ai";
 
@@ -41,15 +41,16 @@ export function AiSettingsCustomCard({
       <div className="space-y-2">
         <label className="text-sm font-medium text-foreground">SDK 协议</label>
         <p className="text-xs text-muted-foreground">API 使用的协议类型。</p>
-        <Select
+        <AdminChoiceSelect
           value={sdkType}
-          onChange={(e) => onSdkTypeChange(e.target.value as SdkType | "")}
+          onValueChange={(next) => onSdkTypeChange(next as SdkType | "")}
           className="max-w-xs"
-        >
-          <option value="">Select protocol</option>
-          <option value="anthropic">Anthropic</option>
-          <option value="openai">OpenAI</option>
-        </Select>
+          options={[
+            { value: "", label: "Select protocol" },
+            { value: "anthropic", label: "Anthropic" },
+            { value: "openai", label: "OpenAI" },
+          ]}
+        />
       </div>
 
       <div className="space-y-2">
@@ -60,16 +61,15 @@ export function AiSettingsCustomCard({
           默认 Anthropic 协议使用 x-api-key；如果上游网关（如 manifest）只接受
           Authorization: Bearer，请选择 Force Bearer。
         </p>
-        <Select
+        <AdminChoiceSelect
           value={authType}
-          onChange={(e) =>
-            onAuthTypeChange(e.target.value as AuthType | "")
-          }
+          onValueChange={(next) => onAuthTypeChange(next as AuthType | "")}
           className="max-w-xs"
-        >
-          <option value="">Default (x-api-key / Bearer)</option>
-          <option value="bearer">Force Bearer</option>
-        </Select>
+          options={[
+            { value: "", label: "Default (x-api-key / Bearer)" },
+            { value: "bearer", label: "Force Bearer" },
+          ]}
+        />
       </div>
     </div>
   );

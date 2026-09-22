@@ -434,19 +434,14 @@ test.describe("Feature: Admin MCP tokens page", () => {
     await page.goto("/admin/mcp", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/mcp");
 
-    // Then: scope label/select is in the create form via FormField
-    // id="mcp-scope". Scoping to the select by id avoids matching the 权限
-    // <th> in the tokens table (when tokens exist).
-    const scopeSelect = page.locator("select#mcp-scope");
+    // Then: scope trigger id="mcp-scope" via FormField. The id avoids the
+    // 权限 column header in the tokens table.
+    const scopeSelect = page.locator("#mcp-scope");
     await expect(scopeSelect).toBeVisible({ timeout: 10_000 });
-    await expect(scopeSelect).toHaveValue("full");
-    // Then: both <option> values exist (mcp-tokens-create-form.tsx:51-52).
-    await expect(
-      scopeSelect.locator('option[value="full"]'),
-    ).toHaveText("完整");
-    await expect(
-      scopeSelect.locator('option[value="author"]'),
-    ).toHaveText("作者");
+    await expect(scopeSelect).toHaveText("完整");
+    await scopeSelect.click();
+    await expect(page.getByRole("option", { name: "完整" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "作者" })).toBeVisible();
   });
 
   test("Given the Claude Code tab is active by default, When I view the snippet, Then a pre/code block containing mcpServers and YOUR_TOKEN is visible", async ({

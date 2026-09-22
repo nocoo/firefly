@@ -1,7 +1,7 @@
 "use client";
 
+import { AdminChoiceSelect } from "@/components/admin/admin-choice-select";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import type { SocialLink } from "@/data/settings";
 
 const BRAND_OPTIONS = [
@@ -24,17 +24,12 @@ function SocialLinkRow({
 }) {
   return (
     <div className="flex items-start gap-2">
-      <Select
+      <AdminChoiceSelect
         value={link.brand}
-        onChange={(e) => onChange({ ...link, brand: e.target.value })}
+        onValueChange={(brand) => onChange({ ...link, brand })}
         className="w-32 shrink-0"
-      >
-        {BRAND_OPTIONS.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </Select>
+        options={BRAND_OPTIONS}
+      />
       <Input
         value={link.name}
         onChange={(e) => onChange({ ...link, name: e.target.value })}

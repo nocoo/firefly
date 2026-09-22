@@ -7,7 +7,7 @@ import type { AiAgent, Category } from "@/models/types";
 import { Button } from "@nocoo/basalt/components/button";
 import { PageHeader } from "@nocoo/basalt/components/page-header";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { AdminChoiceSelect } from "@/components/admin/admin-choice-select";
 import { Textarea } from "@/components/ui/textarea";
 import { NewAgentModal } from "@/components/admin/ai-agents-manager";
 import { AgentAvatarUploader } from "./ai-agent-avatar-uploader";
@@ -169,19 +169,19 @@ export function AiAgentForm({
 
             <div>
               <label className="text-sm font-medium text-foreground">分类 *</label>
-              <Select
+              <AdminChoiceSelect
                 value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
+                onValueChange={setCategoryId}
                 className="mt-1"
                 disabled={!isNew}
-              >
-                <option value="">选择分类...</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </Select>
+                options={[
+                  { value: "", label: "选择分类..." },
+                  ...categories.map((cat) => ({
+                    value: cat.id,
+                    label: cat.name,
+                  })),
+                ]}
+              />
               <p className="mt-1 text-xs text-muted-foreground">
                 {isNew ? "代理只能在此分类下创建文章" : "分类创建后无法更改"}
               </p>

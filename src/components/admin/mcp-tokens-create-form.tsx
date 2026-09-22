@@ -2,7 +2,7 @@
 
 import { Plus } from "lucide-react";
 import type { McpTokenScope } from "@/models/types";
-import { Select } from "@/components/ui/select";
+import { AdminChoiceSelect } from "@/components/admin/admin-choice-select";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 import { Button } from "@nocoo/basalt/components/button";
@@ -45,13 +45,14 @@ export function McpTokenCreateForm({
         label="权限"
         className="w-32 shrink-0 space-y-1"
       >
-        <Select
+        <AdminChoiceSelect
           value={scope}
-          onChange={(e) => onScopeChange(e.target.value as McpTokenScope)}
-        >
-          <option value="full">完整</option>
-          <option value="author">作者</option>
-        </Select>
+          onValueChange={(next) => onScopeChange(next as McpTokenScope)}
+          options={[
+            { value: "full", label: "完整" },
+            { value: "author", label: "作者" },
+          ]}
+        />
       </FormField>
       <Button
         onClick={onCreate}

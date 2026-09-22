@@ -5,7 +5,7 @@ import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import type { AiAgent, Category, Human, PostStatus, Tag } from "@/models/types";
 import type { AuthorSelection } from "./post-form-helpers";
-import { Select } from "@/components/ui/select";
+import { AdminChoiceSelect } from "@/components/admin/admin-choice-select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 
@@ -100,34 +100,32 @@ export function PostStatusCategoryRow({
         <label htmlFor="status" className="text-sm font-medium text-foreground">
           {"状态"}
         </label>
-        <Select
+        <AdminChoiceSelect
           id="status"
           value={status}
-          onChange={(e) => onStatusChange(e.target.value as PostStatus)}
-        >
-          <option value="draft">{"草稿"}</option>
-          <option value="published">{"已发布"}</option>
-          <option value="private">{"私密"}</option>
-          <option value="archived">{"已归档"}</option>
-        </Select>
+          onValueChange={(next) => onStatusChange(next as PostStatus)}
+          options={[
+            { value: "draft", label: "草稿" },
+            { value: "published", label: "已发布" },
+            { value: "private", label: "私密" },
+            { value: "archived", label: "已归档" },
+          ]}
+        />
       </div>
 
       <div className="space-y-2">
         <label htmlFor="category" className="text-sm font-medium text-foreground">
           {"分类"}
         </label>
-        <Select
+        <AdminChoiceSelect
           id="category"
           value={categoryId}
-          onChange={(e) => onCategoryChange(e.target.value)}
-        >
-          <option value="">{"无分类"}</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </Select>
+          onValueChange={onCategoryChange}
+          options={[
+            { value: "", label: "无分类" },
+            ...categories.map((cat) => ({ value: cat.id, label: cat.name })),
+          ]}
+        />
       </div>
     </div>
   );
@@ -156,27 +154,26 @@ export function PostAuthorField({
       <label htmlFor="author" className="text-sm font-medium text-foreground">
         {"作者"}
       </label>
-      <Select
+      <AdminChoiceSelect
         id="author"
         value={value}
-        onChange={(e) => {
-          const [kind, id] = e.target.value.split(":");
+        onValueChange={(next) => {
+          const [kind, id] = next.split(":");
           if ((kind === "human" || kind === "agent") && id) {
             onAuthorChange({ kind, id });
           }
         }}
-      >
-        {humans.map((human) => (
-          <option key={human.id} value={`human:${human.id}`}>
-            {human.name}
-          </option>
-        ))}
-        {agents.map((agent) => (
-          <option key={agent.id} value={`agent:${agent.id}`}>
-            {`${agent.name} (AI)`}
-          </option>
-        ))}
-      </Select>
+        options={[
+          ...humans.map((human) => ({
+            value: `human:${human.id}`,
+            label: human.name,
+          })),
+          ...agents.map((agent) => ({
+            value: `agent:${agent.id}`,
+            label: `${agent.name} (AI)`,
+          })),
+        ]}
+      />
     </div>
   );
 }

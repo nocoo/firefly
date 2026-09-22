@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import type { Category } from "@/models/types";
-import { Select } from "@/components/ui/select";
+import { AdminChoiceSelect } from "@/components/admin/admin-choice-select";
 
 export function AdminPostsBulkActionBar({
   selectedIds,
@@ -85,36 +85,36 @@ export function AdminPostsBulkActionBar({
         <label className="text-xs text-muted-foreground whitespace-nowrap">
           设置状态
         </label>
-        <Select
+        <AdminChoiceSelect
           value={bulkStatus}
-          onChange={(e) => setBulkStatus(e.target.value)}
-          className="w-auto !h-8 !py-1 text-xs"
-        >
-          <option value="">—</option>
-          <option value="published">已发布</option>
-          <option value="draft">草稿</option>
-          <option value="private">私密</option>
-          <option value="archived">已归档</option>
-        </Select>
+          onValueChange={setBulkStatus}
+          size="sm"
+          className="w-auto"
+          options={[
+            { value: "", label: "—" },
+            { value: "published", label: "已发布" },
+            { value: "draft", label: "草稿" },
+            { value: "private", label: "私密" },
+            { value: "archived", label: "已归档" },
+          ]}
+        />
       </div>
 
       <div className="flex items-center gap-1.5">
         <label className="text-xs text-muted-foreground whitespace-nowrap">
           设置分类
         </label>
-        <Select
+        <AdminChoiceSelect
           value={bulkCategory}
-          onChange={(e) => setBulkCategory(e.target.value)}
-          className="w-auto !h-8 !py-1 text-xs"
-        >
-          <option value="">—</option>
-          <option value="__none__">无分类</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </Select>
+          onValueChange={setBulkCategory}
+          size="sm"
+          className="w-auto"
+          options={[
+            { value: "", label: "—" },
+            { value: "__none__", label: "无分类" },
+            ...categories.map((cat) => ({ value: cat.id, label: cat.name })),
+          ]}
+        />
       </div>
 
       <button

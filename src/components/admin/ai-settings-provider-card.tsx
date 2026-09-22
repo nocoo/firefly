@@ -1,7 +1,7 @@
 "use client";
 
+import { AdminChoiceSelect } from "@/components/admin/admin-choice-select";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import type { AiProvider } from "@/services/ai";
 
 export interface ProviderOption {
@@ -31,27 +31,25 @@ export function AiSettingsProviderCard({
       <h2 className="text-base font-medium text-foreground">服务商 & 模型</h2>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">AI 服务商</label>
+        <label htmlFor="ai-provider" className="text-sm font-medium text-foreground">AI 服务商</label>
         <p className="text-xs text-muted-foreground">
           选择 AI 服务商。内置服务商会自动填充 URL 和协议。
         </p>
-        <Select
+        <AdminChoiceSelect
+          id="ai-provider"
           value={provider}
-          onChange={(e) => onProviderChange(e.target.value as AiProvider | "")}
+          onValueChange={(next) => onProviderChange(next as AiProvider | "")}
           className="max-w-xs"
-        >
-          <option value="">请选择服务商</option>
-          {providers.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.label}
-            </option>
-          ))}
-        </Select>
+          options={[
+            { value: "", label: "请选择服务商" },
+            ...providers.map((p) => ({ value: p.id, label: p.label })),
+          ]}
+        />
       </div>
 
       {provider && (
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">模型</label>
+          <label htmlFor="ai-model" className="text-sm font-medium text-foreground">模型</label>
           <p className="text-xs text-muted-foreground">
             留空则使用服务商的默认模型。
             {selectedProvider?.defaultModel && (
@@ -59,22 +57,21 @@ export function AiSettingsProviderCard({
             )}
           </p>
           {selectedProvider && selectedProvider.models.length > 0 ? (
-            <Select
+            <AdminChoiceSelect
+              id="ai-model"
               value={model}
-              onChange={(e) => onModelChange(e.target.value)}
+              onValueChange={onModelChange}
               className="max-w-sm"
-            >
-              <option value="">
-                {selectedProvider.defaultModel} (default)
-              </option>
-              {selectedProvider.models
-                .filter((m) => m !== selectedProvider.defaultModel)
-                .map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-            </Select>
+              options={[
+                {
+                  value: "",
+                  label: `${selectedProvider.defaultModel} (default)`,
+                },
+                ...selectedProvider.models
+                  .filter((m) => m !== selectedProvider.defaultModel)
+                  .map((m) => ({ value: m, label: m })),
+              ]}
+            />
           ) : (
             <Input
               type="text"

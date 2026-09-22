@@ -2,7 +2,7 @@
 
 import { Ban, Shield, ShieldCheck, Trash2 } from "lucide-react";
 import type { McpToken, McpTokenScope } from "@/models/types";
-import { Select } from "@/components/ui/select";
+import { AdminChoiceSelect } from "@/components/admin/admin-choice-select";
 
 function formatDate(epoch: number | null): string {
   if (!epoch) return "—";
@@ -38,14 +38,15 @@ function ScopeCell({
     );
   }
   return (
-    <Select
+    <AdminChoiceSelect
       value={token.scope}
-      onChange={(e) => onScopeChange(token.id, e.target.value as McpTokenScope)}
-      className="h-7 py-1 pl-2 pr-8 text-xs"
-    >
-      <option value="full">完整</option>
-      <option value="author">作者</option>
-    </Select>
+      onValueChange={(next) => onScopeChange(token.id, next as McpTokenScope)}
+      size="sm"
+      options={[
+        { value: "full", label: "完整" },
+        { value: "author", label: "作者" },
+      ]}
+    />
   );
 }
 

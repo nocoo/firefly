@@ -70,7 +70,23 @@
  *      chart card. No three-layer page-wide fallback.
  *   5. Mapping spells out the two merges (AI 1+2; System memory+uptime) explicitly.
  */
+import type { Page } from "@playwright/test";
 import { test, expect, expectPathname } from "./fixtures";
+
+async function selectFirstProvider(page: Page): Promise<boolean> {
+  const providerSelect = page.locator("#ai-provider");
+  await providerSelect.click();
+  const options = page.getByRole("option");
+  const labels = (await options.allTextContents())
+    .map((label) => label.trim())
+    .filter((label) => label !== "" && label !== "请选择服务商");
+  if (labels.length === 0) {
+    await page.keyboard.press("Escape");
+    return false;
+  }
+  await page.getByRole("option", { name: labels[0], exact: true }).click();
+  return true;
+}
 
 // ---------------------------------------------------------------------------
 // Feature: Admin general settings page
@@ -192,13 +208,10 @@ test.describe("Feature: Admin AI settings page", () => {
     await expect(
       page.getByRole("heading", { level: 2, name: "服务商 & 模型" }),
     ).toBeVisible();
-    // Then: the provider <Select> renders the literal placeholder "请选择服务商"
-    // as its first <option> (provider-card.tsx:43).
-    const providerSelect = page.locator("select").first();
+    // Then: the provider combobox shows the empty choice "请选择服务商".
+    const providerSelect = page.locator("#ai-provider");
     await expect(providerSelect).toBeVisible();
-    await expect(
-      providerSelect.locator('option[value=""]'),
-    ).toHaveText("请选择服务商");
+    await expect(providerSelect).toHaveText("请选择服务商");
   });
 
   test("Given the first non-empty provider option is actively selected, When the form re-renders, Then the 认证 card with an API Key password input is visible", async ({
@@ -208,24 +221,11 @@ test.describe("Feature: Admin AI settings page", () => {
     await page.goto("/admin/ai-settings", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-settings");
 
-    // When: actively select the first non-empty provider option. The first
-    // <select> on the page is the provider one (AiSettingsProviderCard renders
-    // before the conditional model Select).
-    const providerSelect = page.locator("select").first();
-    const providerValues = await providerSelect
-      .locator("option")
-      .evaluateAll((opts) =>
-        (opts as HTMLOptionElement[])
-          .map((o) => o.value)
-          .filter((v) => v !== ""),
-      );
-    // Then: branch skips with reason iff the provider list is genuinely empty
-    // — a real defect the test should surface, not silently pass.
+    const selected = await selectFirstProvider(page);
     test.skip(
-      providerValues.length === 0,
-      "AI provider <select> exposed zero non-empty options (provider list misconfigured).",
+      !selected,
+      "AI provider list exposed zero non-empty options (provider list misconfigured).",
     );
-    await providerSelect.selectOption(providerValues[0]);
 
     // Then: ai-settings-form.tsx:132-151 — once `provider` is truthy, the 认证
     // card with the password Input becomes visible.
@@ -244,36 +244,20 @@ test.describe("Feature: Admin AI settings page", () => {
     await page.goto("/admin/ai-settings", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-settings");
 
-    // When: actively select the first non-empty provider option.
-    const providerSelect = page.locator("select").first();
-    const providerValues = await providerSelect
-      .locator("option")
-      .evaluateAll((opts) =>
-        (opts as HTMLOptionElement[])
-          .map((o) => o.value)
-          .filter((v) => v !== ""),
-      );
-    // Then: skip with reason if the provider list is empty.
+    const selected = await selectFirstProvider(page);
     test.skip(
-      providerValues.length === 0,
-      "AI provider <select> exposed zero non-empty options (provider list misconfigured).",
+      !selected,
+      "AI provider list exposed zero non-empty options (provider list misconfigured).",
     );
-    await providerSelect.selectOption(providerValues[0]);
 
     // Then: the 模型 label always renders inside the provider card after
-    // selection (provider-card.tsx:54). The control underneath is either a
-    // <Select> (when the provider has a model catalog) or a text <Input>
-    // (otherwise) — both branches are valid per provider-card.tsx:61-86.
+    // selection. The control is either #ai-model or a text input.
     await expect(page.getByText("模型", { exact: true })).toBeVisible({
       timeout: 10_000,
     });
-    // CSS tag/attribute selector: model control has no role/testid. The
-    // provider <select> is index 0; if a second select exists it is the
-    // model select; otherwise the model is a text input.
     const modelControl = page
-      .locator('select, input[type="text"]')
-      .nth(1)
-      .or(page.locator("select").nth(1));
+      .locator("#ai-model")
+      .or(page.getByPlaceholder("例如 claude-sonnet-4-20250514"));
     await expect(modelControl.first()).toBeVisible();
   });
 
@@ -284,21 +268,11 @@ test.describe("Feature: Admin AI settings page", () => {
     await page.goto("/admin/ai-settings", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-settings");
 
-    // When: actively select the first non-empty provider option.
-    const providerSelect = page.locator("select").first();
-    const providerValues = await providerSelect
-      .locator("option")
-      .evaluateAll((opts) =>
-        (opts as HTMLOptionElement[])
-          .map((o) => o.value)
-          .filter((v) => v !== ""),
-      );
-    // Then: skip with reason if the provider list is empty.
+    const selected = await selectFirstProvider(page);
     test.skip(
-      providerValues.length === 0,
-      "AI provider <select> exposed zero non-empty options (provider list misconfigured).",
+      !selected,
+      "AI provider list exposed zero non-empty options (provider list misconfigured).",
     );
-    await providerSelect.selectOption(providerValues[0]);
 
     // Then: ai-settings-form.tsx:172-186 — both buttons are gated on `provider`.
     await expect(

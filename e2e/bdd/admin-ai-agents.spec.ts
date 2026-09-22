@@ -284,11 +284,9 @@ test.describe("Feature: Admin AI agent new form", () => {
     await page.goto("/admin/ai-agents/new", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/ai-agents/new");
 
-    // Then: ai-agent-form.tsx:186 — placeholder option text "选择分类...".
-    // The new-mode form renders exactly one <select> (the category one); use
-    // hasText filter to keep the assertion semantic.
+    // Then: category trigger shows the empty choice "选择分类...".
     const categorySelect = page
-      .locator("select")
+      .getByRole("combobox")
       .filter({ hasText: "选择分类..." });
     await expect(categorySelect).toBeVisible({ timeout: 10_000 });
   });

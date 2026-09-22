@@ -401,11 +401,10 @@ test.describe("Feature: Admin post edit page", () => {
       "No posts available in seed to drive edit-form status/category/tag scenario.",
     );
 
-    // Then: post-form-fields.tsx PostStatusCategoryRow renders
-    // <Select id="status"> (L102-111) and <Select id="category"> (L118-129).
-    // CSS selectors are the stable signature — Select wraps a native <select>.
-    await expect(page.locator("select#status")).toBeVisible();
-    await expect(page.locator("select#category")).toBeVisible();
+    // Then: post-form-fields.tsx PostStatusCategoryRow renders Basalt
+    // triggers #status and #category.
+    await expect(page.locator("#status")).toBeVisible();
+    await expect(page.locator("#category")).toBeVisible();
 
     // Then: PostTagsField renders <label>标签</label> at L183. The admin
     // sidebar also surfaces "标签" as a <span> nav item; scoping to <label>
