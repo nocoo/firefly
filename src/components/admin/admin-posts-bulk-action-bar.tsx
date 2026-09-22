@@ -90,14 +90,14 @@ export function AdminPostsBulkActionBar({
       <div className="h-5 w-px bg-border" />
 
       <div className="flex items-center gap-1.5">
-        <label className="text-xs text-muted-foreground whitespace-nowrap">
+        <label htmlFor="bulk-status" className="text-xs text-muted-foreground whitespace-nowrap">
           设置状态
         </label>
         <Select
           value={bulkStatus === "" ? EMPTY : bulkStatus}
           onValueChange={(next) => setBulkStatus(next === EMPTY ? "" : next)}
         >
-          <SelectTrigger size="sm" className="w-auto">
+          <SelectTrigger id="bulk-status" size="sm" className="w-auto">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -111,14 +111,14 @@ export function AdminPostsBulkActionBar({
       </div>
 
       <div className="flex items-center gap-1.5">
-        <label className="text-xs text-muted-foreground whitespace-nowrap">
+        <label htmlFor="bulk-category" className="text-xs text-muted-foreground whitespace-nowrap">
           设置分类
         </label>
         <Select
           value={bulkCategory === "" ? EMPTY : bulkCategory}
           onValueChange={(next) => setBulkCategory(next === EMPTY ? "" : next)}
         >
-          <SelectTrigger size="sm" className="w-auto">
+          <SelectTrigger id="bulk-category" size="sm" className="w-auto">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

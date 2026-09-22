@@ -12,11 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@nocoo/basalt/components/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
 const EMPTY_CATEGORY = "__empty__";
 const UNSELECTED_AUTHOR = "__unselected__";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 
 // ---------------------------------------------------------------------------
 // Excerpt field with optional AI generation

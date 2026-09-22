@@ -47,7 +47,7 @@ export function AiSettingsCustomCard({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">SDK 协议</label>
+        <label htmlFor="ai-sdk-type" className="text-sm font-medium text-foreground">SDK 协议</label>
         <p className="text-xs text-muted-foreground">API 使用的协议类型。</p>
         <Select
           value={sdkType === "" ? EMPTY : sdkType}
@@ -55,7 +55,7 @@ export function AiSettingsCustomCard({
             onSdkTypeChange(next === EMPTY ? "" : (next as SdkType))
           }
         >
-          <SelectTrigger className="max-w-xs">
+          <SelectTrigger id="ai-sdk-type" className="max-w-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -67,7 +67,7 @@ export function AiSettingsCustomCard({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
+        <label htmlFor="ai-auth-type" className="text-sm font-medium text-foreground">
           认证头
         </label>
         <p className="text-xs text-muted-foreground">
@@ -80,7 +80,7 @@ export function AiSettingsCustomCard({
             onAuthTypeChange(next === EMPTY ? "" : (next as AuthType))
           }
         >
-          <SelectTrigger className="max-w-xs">
+          <SelectTrigger id="ai-auth-type" className="max-w-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

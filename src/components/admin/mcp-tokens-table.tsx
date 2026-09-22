@@ -48,7 +48,10 @@ function ScopeCell({
       value={token.scope}
       onValueChange={(next) => onScopeChange(token.id, next as McpTokenScope)}
     >
-      <SelectTrigger size="sm">
+      <SelectTrigger
+        size="sm"
+        aria-label={`${token.client_name ?? "令牌"} 权限`}
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

@@ -34,7 +34,7 @@ function SocialLinkRow({
         value={link.brand}
         onValueChange={(brand) => onChange({ ...link, brand })}
       >
-        <SelectTrigger className="w-32 shrink-0">
+        <SelectTrigger aria-label={link.name.trim() || "社交平台"} className="w-32 shrink-0">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

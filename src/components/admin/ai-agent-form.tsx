@@ -14,11 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@nocoo/basalt/components/select";
-
-const EMPTY_CATEGORY = "__empty__";
 import { Textarea } from "@/components/ui/textarea";
 import { NewAgentModal } from "@/components/admin/ai-agents-manager";
 import { AgentAvatarUploader } from "./ai-agent-avatar-uploader";
+
+const EMPTY_CATEGORY = "__empty__";
 
 interface AiAgentFormProps {
   agent: AiAgent | null;
@@ -176,15 +176,15 @@ export function AiAgentForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-foreground">分类 *</label>
+              <label htmlFor="ai-agent-category" className="text-sm font-medium text-foreground">分类 *</label>
               <Select
                 value={categoryId === "" ? EMPTY_CATEGORY : categoryId}
                 onValueChange={(next) =>
                   setCategoryId(next === EMPTY_CATEGORY ? "" : next)
                 }
-                {...(!isNew ? { disabled: true } : {})}
+                disabled={!isNew}
               >
-                <SelectTrigger className="mt-1">
+                <SelectTrigger id="ai-agent-category" className="mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
