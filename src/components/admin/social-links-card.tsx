@@ -1,6 +1,12 @@
 "use client";
 
-import { AdminChoiceSelect } from "@/components/admin/admin-choice-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@nocoo/basalt/components/select";
 import { Input } from "@/components/ui/input";
 import type { SocialLink } from "@/data/settings";
 
@@ -24,12 +30,21 @@ function SocialLinkRow({
 }) {
   return (
     <div className="flex items-start gap-2">
-      <AdminChoiceSelect
+      <Select
         value={link.brand}
         onValueChange={(brand) => onChange({ ...link, brand })}
-        className="w-32 shrink-0"
-        options={BRAND_OPTIONS}
-      />
+      >
+        <SelectTrigger className="w-32 shrink-0">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {BRAND_OPTIONS.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       <Input
         value={link.name}
         onChange={(e) => onChange({ ...link, name: e.target.value })}

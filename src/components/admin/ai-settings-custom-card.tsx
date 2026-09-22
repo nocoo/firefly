@@ -1,7 +1,15 @@
 "use client";
 
-import { AdminChoiceSelect } from "@/components/admin/admin-choice-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@nocoo/basalt/components/select";
 import { Input } from "@/components/ui/input";
+
+const EMPTY = "__empty__";
 import type { SdkType } from "@/services/ai";
 import type { AuthType } from "@nocoo/next-ai";
 
@@ -41,16 +49,21 @@ export function AiSettingsCustomCard({
       <div className="space-y-2">
         <label className="text-sm font-medium text-foreground">SDK 协议</label>
         <p className="text-xs text-muted-foreground">API 使用的协议类型。</p>
-        <AdminChoiceSelect
-          value={sdkType}
-          onValueChange={(next) => onSdkTypeChange(next as SdkType | "")}
-          className="max-w-xs"
-          options={[
-            { value: "", label: "Select protocol" },
-            { value: "anthropic", label: "Anthropic" },
-            { value: "openai", label: "OpenAI" },
-          ]}
-        />
+        <Select
+          value={sdkType === "" ? EMPTY : sdkType}
+          onValueChange={(next) =>
+            onSdkTypeChange(next === EMPTY ? "" : (next as SdkType))
+          }
+        >
+          <SelectTrigger className="max-w-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={EMPTY}>Select protocol</SelectItem>
+            <SelectItem value="anthropic">Anthropic</SelectItem>
+            <SelectItem value="openai">OpenAI</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
@@ -61,15 +74,20 @@ export function AiSettingsCustomCard({
           默认 Anthropic 协议使用 x-api-key；如果上游网关（如 manifest）只接受
           Authorization: Bearer，请选择 Force Bearer。
         </p>
-        <AdminChoiceSelect
-          value={authType}
-          onValueChange={(next) => onAuthTypeChange(next as AuthType | "")}
-          className="max-w-xs"
-          options={[
-            { value: "", label: "Default (x-api-key / Bearer)" },
-            { value: "bearer", label: "Force Bearer" },
-          ]}
-        />
+        <Select
+          value={authType === "" ? EMPTY : authType}
+          onValueChange={(next) =>
+            onAuthTypeChange(next === EMPTY ? "" : (next as AuthType))
+          }
+        >
+          <SelectTrigger className="max-w-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={EMPTY}>Default (x-api-key / Bearer)</SelectItem>
+            <SelectItem value="bearer">Force Bearer</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

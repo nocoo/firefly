@@ -1,7 +1,15 @@
 "use client";
 
-import { AdminChoiceSelect } from "@/components/admin/admin-choice-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@nocoo/basalt/components/select";
 import { Input } from "@/components/ui/input";
+
+const EMPTY = "__empty__";
 import type { AiProvider } from "@/services/ai";
 
 export interface ProviderOption {
@@ -35,16 +43,24 @@ export function AiSettingsProviderCard({
         <p className="text-xs text-muted-foreground">
           选择 AI 服务商。内置服务商会自动填充 URL 和协议。
         </p>
-        <AdminChoiceSelect
-          id="ai-provider"
-          value={provider}
-          onValueChange={(next) => onProviderChange(next as AiProvider | "")}
-          className="max-w-xs"
-          options={[
-            { value: "", label: "请选择服务商" },
-            ...providers.map((p) => ({ value: p.id, label: p.label })),
-          ]}
-        />
+        <Select
+          value={provider === "" ? EMPTY : provider}
+          onValueChange={(next) =>
+            onProviderChange(next === EMPTY ? "" : (next as AiProvider))
+          }
+        >
+          <SelectTrigger id="ai-provider" className="max-w-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={EMPTY}>请选择服务商</SelectItem>
+            {providers.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {provider && (
@@ -57,21 +73,26 @@ export function AiSettingsProviderCard({
             )}
           </p>
           {selectedProvider && selectedProvider.models.length > 0 ? (
-            <AdminChoiceSelect
-              id="ai-model"
-              value={model}
-              onValueChange={onModelChange}
-              className="max-w-sm"
-              options={[
-                {
-                  value: "",
-                  label: `${selectedProvider.defaultModel} (default)`,
-                },
-                ...selectedProvider.models
+            <Select
+              value={model === "" ? EMPTY : model}
+              onValueChange={(next) => onModelChange(next === EMPTY ? "" : next)}
+            >
+              <SelectTrigger id="ai-model" className="max-w-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={EMPTY}>
+                  {`${selectedProvider.defaultModel} (default)`}
+                </SelectItem>
+                {selectedProvider.models
                   .filter((m) => m !== selectedProvider.defaultModel)
-                  .map((m) => ({ value: m, label: m })),
-              ]}
-            />
+                  .map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {m}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
           ) : (
             <Input
               type="text"

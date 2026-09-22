@@ -5,7 +5,15 @@ import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import type { Category } from "@/models/types";
-import { AdminChoiceSelect } from "@/components/admin/admin-choice-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@nocoo/basalt/components/select";
+
+const EMPTY = "__empty__";
 
 export function AdminPostsBulkActionBar({
   selectedIds,
@@ -85,36 +93,44 @@ export function AdminPostsBulkActionBar({
         <label className="text-xs text-muted-foreground whitespace-nowrap">
           设置状态
         </label>
-        <AdminChoiceSelect
-          value={bulkStatus}
-          onValueChange={setBulkStatus}
-          size="sm"
-          className="w-auto"
-          options={[
-            { value: "", label: "—" },
-            { value: "published", label: "已发布" },
-            { value: "draft", label: "草稿" },
-            { value: "private", label: "私密" },
-            { value: "archived", label: "已归档" },
-          ]}
-        />
+        <Select
+          value={bulkStatus === "" ? EMPTY : bulkStatus}
+          onValueChange={(next) => setBulkStatus(next === EMPTY ? "" : next)}
+        >
+          <SelectTrigger size="sm" className="w-auto">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={EMPTY}>—</SelectItem>
+            <SelectItem value="published">已发布</SelectItem>
+            <SelectItem value="draft">草稿</SelectItem>
+            <SelectItem value="private">私密</SelectItem>
+            <SelectItem value="archived">已归档</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="flex items-center gap-1.5">
         <label className="text-xs text-muted-foreground whitespace-nowrap">
           设置分类
         </label>
-        <AdminChoiceSelect
-          value={bulkCategory}
-          onValueChange={setBulkCategory}
-          size="sm"
-          className="w-auto"
-          options={[
-            { value: "", label: "—" },
-            { value: "__none__", label: "无分类" },
-            ...categories.map((cat) => ({ value: cat.id, label: cat.name })),
-          ]}
-        />
+        <Select
+          value={bulkCategory === "" ? EMPTY : bulkCategory}
+          onValueChange={(next) => setBulkCategory(next === EMPTY ? "" : next)}
+        >
+          <SelectTrigger size="sm" className="w-auto">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={EMPTY}>—</SelectItem>
+            <SelectItem value="__none__">无分类</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat.id} value={cat.id}>
+                {cat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <button

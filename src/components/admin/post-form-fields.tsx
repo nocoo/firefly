@@ -5,7 +5,16 @@ import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import type { AiAgent, Category, Human, PostStatus, Tag } from "@/models/types";
 import type { AuthorSelection } from "./post-form-helpers";
-import { AdminChoiceSelect } from "@/components/admin/admin-choice-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@nocoo/basalt/components/select";
+
+const EMPTY_CATEGORY = "__empty__";
+const UNSELECTED_AUTHOR = "__unselected__";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 
@@ -100,32 +109,44 @@ export function PostStatusCategoryRow({
         <label htmlFor="status" className="text-sm font-medium text-foreground">
           {"状态"}
         </label>
-        <AdminChoiceSelect
-          id="status"
+        <Select
           value={status}
           onValueChange={(next) => onStatusChange(next as PostStatus)}
-          options={[
-            { value: "draft", label: "草稿" },
-            { value: "published", label: "已发布" },
-            { value: "private", label: "私密" },
-            { value: "archived", label: "已归档" },
-          ]}
-        />
+        >
+          <SelectTrigger id="status">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="draft">草稿</SelectItem>
+            <SelectItem value="published">已发布</SelectItem>
+            <SelectItem value="private">私密</SelectItem>
+            <SelectItem value="archived">已归档</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
         <label htmlFor="category" className="text-sm font-medium text-foreground">
           {"分类"}
         </label>
-        <AdminChoiceSelect
-          id="category"
-          value={categoryId}
-          onValueChange={onCategoryChange}
-          options={[
-            { value: "", label: "无分类" },
-            ...categories.map((cat) => ({ value: cat.id, label: cat.name })),
-          ]}
-        />
+        <Select
+          value={categoryId === "" ? EMPTY_CATEGORY : categoryId}
+          onValueChange={(next) =>
+            onCategoryChange(next === EMPTY_CATEGORY ? "" : next)
+          }
+        >
+          <SelectTrigger id="category">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={EMPTY_CATEGORY}>无分类</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat.id} value={cat.id}>
+                {cat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
@@ -154,26 +175,32 @@ export function PostAuthorField({
       <label htmlFor="author" className="text-sm font-medium text-foreground">
         {"作者"}
       </label>
-      <AdminChoiceSelect
-        id="author"
-        value={value}
+      <Select
+        value={value === "" ? UNSELECTED_AUTHOR : value}
         onValueChange={(next) => {
+          if (next === UNSELECTED_AUTHOR) return;
           const [kind, id] = next.split(":");
           if ((kind === "human" || kind === "agent") && id) {
             onAuthorChange({ kind, id });
           }
         }}
-        options={[
-          ...humans.map((human) => ({
-            value: `human:${human.id}`,
-            label: human.name,
-          })),
-          ...agents.map((agent) => ({
-            value: `agent:${agent.id}`,
-            label: `${agent.name} (AI)`,
-          })),
-        ]}
-      />
+      >
+        <SelectTrigger id="author">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {humans.map((human) => (
+            <SelectItem key={human.id} value={`human:${human.id}`}>
+              {human.name}
+            </SelectItem>
+          ))}
+          {agents.map((agent) => (
+            <SelectItem key={agent.id} value={`agent:${agent.id}`}>
+              {`${agent.name} (AI)`}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

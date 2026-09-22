@@ -7,7 +7,15 @@ import type { AiAgent, Category } from "@/models/types";
 import { Button } from "@nocoo/basalt/components/button";
 import { PageHeader } from "@nocoo/basalt/components/page-header";
 import { Input } from "@/components/ui/input";
-import { AdminChoiceSelect } from "@/components/admin/admin-choice-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@nocoo/basalt/components/select";
+
+const EMPTY_CATEGORY = "__empty__";
 import { Textarea } from "@/components/ui/textarea";
 import { NewAgentModal } from "@/components/admin/ai-agents-manager";
 import { AgentAvatarUploader } from "./ai-agent-avatar-uploader";
@@ -169,19 +177,25 @@ export function AiAgentForm({
 
             <div>
               <label className="text-sm font-medium text-foreground">分类 *</label>
-              <AdminChoiceSelect
-                value={categoryId}
-                onValueChange={setCategoryId}
-                className="mt-1"
-                disabled={!isNew}
-                options={[
-                  { value: "", label: "选择分类..." },
-                  ...categories.map((cat) => ({
-                    value: cat.id,
-                    label: cat.name,
-                  })),
-                ]}
-              />
+              <Select
+                value={categoryId === "" ? EMPTY_CATEGORY : categoryId}
+                onValueChange={(next) =>
+                  setCategoryId(next === EMPTY_CATEGORY ? "" : next)
+                }
+                {...(!isNew ? { disabled: true } : {})}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={EMPTY_CATEGORY}>选择分类...</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <p className="mt-1 text-xs text-muted-foreground">
                 {isNew ? "代理只能在此分类下创建文章" : "分类创建后无法更改"}
               </p>
