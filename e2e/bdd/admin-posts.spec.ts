@@ -313,6 +313,25 @@ test.describe("Feature: Admin post new editor", () => {
       page.getByPlaceholder("url-slug"),
     ).toHaveValue(expectedSlug);
   });
+
+  test("Given /admin/posts/new renders, When I choose status and the empty category, Then the triggers show 私密 and 无分类", async ({
+    page,
+  }) => {
+    await page.goto("/admin/posts/new", { waitUntil: "networkidle" });
+    await expectPathname(page, "/admin/posts/new");
+
+    const status = page.getByLabel("状态");
+    await expect(status).toBeVisible();
+    await status.click();
+    await page.getByRole("option", { name: "私密", exact: true }).click();
+    await expect(status).toHaveText("私密");
+
+    const category = page.getByLabel("分类");
+    await expect(category).toBeVisible();
+    await category.click();
+    await page.getByRole("option", { name: "无分类", exact: true }).click();
+    await expect(category).toHaveText("无分类");
+  });
 });
 
 // ---------------------------------------------------------------------------
