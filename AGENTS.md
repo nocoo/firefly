@@ -2,7 +2,7 @@
 
 Personal blog and administration platform with Next.js, a Cloudflare D1 Worker and R2 media.
 Profile: ts-worker-web.
-Direction: [development guide](docs/31-development.md), [architecture](docs/03-architecture.md).
+Human overview: [README.md](README.md). Direction: [development guide](docs/31-development.md), [architecture](docs/03-architecture.md). Maintain this root `AGENTS.md` as the only project handbook; do not create a `CLAUDE.md` alias, copy or import.
 
 ## Sources of Truth
 
@@ -59,21 +59,19 @@ Follow README for local Worker startup on 8787 before `bun run migrate:local`. W
 
 ## Verification
 
-6DQ = L1/L2/L3 + G1/G2 + D1. Status: `enforced`, `planned`, `manual`, `N/A`. L1 requires each of statements/branches/functions/lines ≥95%; no `.skip`/`.only`.
+6DQ = L1/L2/L3 + G2 + D1; the former G1 dimension was merged into L1 on 2026-09-21. Status: `enforced`, `planned`, `manual`, `N/A`. L1 requires each of statements/branches/functions/lines ≥95%; no `.skip`/`.only`; plus both type lanes with zero-error/warning Biome and AST/skip gates (the former G1 contract).
 
 | Piece | Requirement and current reality | Status | Evidence |
 | --- | --- | --- | --- |
-| L1 Web | Four metrics ≥95% for configured non-View TypeScript | enforced | Root Vitest thresholds; pre-push/CI coverage |
-| L1 Worker | Four metrics ≥95%; coverage command exists but CI runs plain tests | planned | `worker/vitest.config.ts`; CI `worker-tests` omits coverage |
+| L1 (incl. former G1 static) | Four metrics ≥95% for configured non-View TypeScript, both lanes; strict types, zero-error/warning Biome and AST/skip gates | planned | Web lane runs today at root Vitest thresholds via pre-push/CI coverage; `lint` and both type lanes run in pre-push/CI and custom gates use index snapshots in pre-commit. Worker coverage command exists but CI runs plain tests; full unified L1 (all lanes, full index, <30s, rejection proof) remains planned |
 | L2 | Real HTTP, 100% endpoint/method coverage, real SQL | planned | API runner enforced in CI; complete surface proof/isolated lane remains a gap |
 | L3 | Critical blog/admin journeys | enforced | CI browser job → `test:e2e:browser` / Playwright |
-| G1 | Both type lanes, zero-error/warning Biome and AST/skip gates | enforced | `lint`, pre-push/CI; custom gates use index snapshots in pre-commit |
 | G2 | OSV + gitleaks, missing scanner fails; both lockfiles | planned | Root security script scans only root Bun lock; Worker lock coverage missing there |
 | D1 | Dedicated per-run local D1/R2 with guards/marker | enforced | Runner creates fresh local state, a zero-UUID binding and `_test_marker`, checks ports and supplies synthetic credentials |
 | Build | `tsc --noEmit && next build --webpack` | manual | Manifest; run for bundler/runtime changes |
 | Docs | Commands, migrations and contracts kept current | manual | Review linked guides |
 
-Current pre-commit skips heavy gates for docs, otherwise runs lint-staged before worktree tests/types; only custom gates use the index. Pre-push runs root coverage/lint/security, despite a stale comment claiming Worker coverage. Its secret range uses upstream, not stdin push refs. Target: check-only full index L1/G1 <30s; pushed-ref L2/G2 in parallel <3min. Never bypass commit/branch-push hooks; remove autofix from future gate design.
+Current pre-commit skips heavy gates for docs, otherwise runs lint-staged before worktree tests/types; only custom gates use the index. Pre-push runs root coverage/lint/security, despite a stale comment claiming Worker coverage. Its secret range uses upstream, not stdin push refs. Target: check-only full index unified L1 (types, check-only lint, coverage) <30s; pushed-ref L2/G2 in parallel <3min. Never bypass commit/branch-push hooks; remove autofix from future gate design.
 
 ## Resources / Isolation
 
