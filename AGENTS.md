@@ -68,7 +68,7 @@ Follow README for local Worker startup on 8787 before `bun run migrate:local`. W
 | L3 | Critical blog/admin journeys | enforced | CI browser job → `test:e2e:browser` / Playwright |
 | G2 | OSV + gitleaks, missing scanner fails; both lockfiles | planned | Root security script scans only root Bun lock; Worker lock coverage missing there |
 | D1 | Dedicated per-run local D1/R2 with guards/marker | enforced | Runner creates fresh local state, a zero-UUID binding and `_test_marker`, checks ports and supplies synthetic credentials |
-| Build | `tsc --noEmit && next build --webpack` | manual | Manifest; run for bundler/runtime changes |
+| Build | `next typegen && tsc --noEmit && next build --webpack` | manual | Manifest; run for bundler/runtime changes |
 | Docs | Commands, migrations and contracts kept current | manual | Review linked guides |
 
 Current pre-commit skips heavy gates for docs, otherwise runs lint-staged before worktree tests/types; only custom gates use the index. Pre-push runs root coverage/lint/security, despite a stale comment claiming Worker coverage. Its secret range uses upstream, not stdin push refs. Target: check-only full index unified L1 (types, check-only lint, coverage) <30s; pushed-ref L2/G2 in parallel <3min. Never bypass commit/branch-push hooks; remove autofix from future gate design.
