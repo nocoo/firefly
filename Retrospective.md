@@ -43,6 +43,11 @@ Accident narratives and original lessons. Historical instructions below describe
 **修复**: 增加 `-- @batch` 标记支持。标记后的语句作为单个请求发送到 D1 REST API（支持分号分隔的多语句）。标记前的语句仍可单独执行并跳过已存在的错误。
 **教训**: SQLite PRAGMA 是连接级状态，不是数据库级持久配置。通过 REST API 执行 SQL 时，每个请求可能是独立连接。涉及 PRAGMA 的迁移必须确保相关语句在同一连接内执行。
 
+### 2026-10-01: Caddy 路由查找越出已知配置
+**问题**: 依赖升级验收需要本机站点时，查找扩大到用户主目录、Library 和 `.config`，超出已经给出的活动配置。
+**修复**: 停掉宽范围搜索。只读 `/opt/homebrew/etc/Caddyfile`：`firefly.dev.hexly.ai` 反代到 `localhost:7028`。
+**教训**: 活动配置路径已经给出时，只检查这个文件。不要扫描个人主目录，不要触发 ACL，也不要收集密钥。
+
 ### 2026-06-10: 安全响应头在 dev 触发回归（CSP + HSTS）
 **问题**: `next.config.ts` 的 `headers()` 对所有环境无差别发送严格安全头：
   1. CSP 没有 `unsafe-eval` → dev 的 react-refresh 报 `Uncaught EvalError`
