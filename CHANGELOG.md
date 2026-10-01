@@ -1,5 +1,47 @@
 # Changelog
 
+## v2.14.2 (2026-10-01)
+
+- docs: record caddy lookup scope miss
+- chore(deps): align biome schema with 2.5.15
+- chore(deps): patch transitive security overrides
+- chore(deps): upgrade wrangler to 4.145.0
+- chore(deps): upgrade dotenv to 18.0.5
+- chore(deps): upgrade next to 16.3.8
+- chore(deps): upgrade mcp sdk to 1.31.0
+- chore(deps): drop unused direct hono pin
+- chore(deps): upgrade ai to 7.0.126
+- chore(deps): upgrade vitest to 5.0.3
+- chore(deps): upgrade client-s3 to 3.1144.0
+- chore(deps): upgrade @types/node to 26.6.3
+- chore(deps): upgrade lint-staged to 17.6.0
+- chore(deps): upgrade lucide-react to 1.49.0
+- chore(deps): upgrade oxc-parser to 0.152.0
+- chore(deps): upgrade biome to 2.5.15
+- chore(deps): upgrade sharp to 0.35.5
+- chore(deps): upgrade juice to 12.2.0
+- fix: ignore generated next environment types
+- Merge pull request #789 from nocoo/chore/deps-20260923-062500-firefly
+- chore(deps): upgrade wrangler to 4.136.3 (#788)
+- chore(deps): upgrade next to 16.3.6 (#787)
+- chore(deps): upgrade marked to 18.0.14 (#786)
+- chore(deps): upgrade ai to 7.0.111 (#784)
+- chore(deps): upgrade @cloudflare/workers-types to 5.20260922.1 (#783)
+- chore(deps): upgrade @aws-sdk/client-s3 to 3.1138.0 (#782)
+- docs: migrate claude handbook to agents.md
+- Merge pull request #781 from nocoo/chore/deps-20260923-firefly
+- chore(deps): upgrade wrangler to 4.136.1 (#780)
+- chore(deps): upgrade oxc-parser to 0.151.0 (#779)
+- chore(deps): upgrade ai to 7.0.108 (#777)
+- chore(deps): upgrade @cloudflare/workers-types to 5.20260921.1 (#776)
+- chore(deps): upgrade @aws-sdk/client-s3 to 3.1137.0 (#775)
+- test: exercise new post selects
+- fix: name admin select triggers
+- refactor: inline basalt select at callers
+- fix: use basalt select in admin
+- fix: disable worker default and preview urls
+
+
 ## v2.14.1 (2026-09-19)
 
 - fix(rss): prepend article cover images to feed content
