@@ -2,6 +2,10 @@
 
 Accident narratives and original lessons. Historical instructions below describe their time; the current handbook and its local-isolation contract take precedence.
 
+### 2026-10-02: Preserve the isolated build environment
+
+A redundant bare build after successful E2E validation lacked `WORKER_URL` and `WORKER_SECRET`, failed prerendering, and left a partial `.next` tree that the runner considered fresh. Removed only the task clone's generated `.next` directory and reran the existing isolated API runner, which rebuilt with synthetic local credentials; API and browser gates passed again. Use the runner-owned build for this environment-dependent application, and do not reuse artifacts after a failed build.
+
 ### 2026-08-18: fake timers 跨文件泄漏导致 SidecarSupervisor 单测 5s 超时
 **问题**: CI L1 偶发 `waits when called immediately after an exit before recovery starts` 5s timeout。`vitest.config.ts` 设 `isolate: false`，`hash.test.ts` / `r2.test.ts` 的 `vi.useFakeTimers()` 未 `useRealTimers()` 还原，同 worker 后续文件的 `setTimeout` 永不触发；该用例用 `setTimeout(50)` 探测 pending，与未 resolve 的 recovery 一起挂死直到 testTimeout。
 **修复**: 两处 suite 补 `afterEach(vi.useRealTimers)`；sidecar 用例改为 flag + microtask 断言，并 `beforeEach/afterEach` 钉死 real timers。
