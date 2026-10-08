@@ -6,6 +6,10 @@ During dependency upgrades, raising the Vite override and running `bun install` 
 
 Resolved both package lanes with targeted `bun update vite`, then verified the installed version and reran coverage and static checks. Future dependency commits must verify the actual lockfile and installed versions before staging; a successful frozen install is not proof that an override changed the resolved package. Use an absolute `--cwd` or run inside the package directory when invoking `bun update` for the separate Worker package.
 
+### 2026-10-08: Coverage cleanup raced with a static gate
+
+Running full lint and coverage concurrently caused the test-skip gate to enumerate `coverage/` immediately before Vitest removed that directory, failing with `ENOENT`. This was an orchestration mistake, not a source regression. Rerunning lint after both coverage lanes completed passed without changing or weakening the gate. Serialize verification commands that enumerate or recreate shared generated directories; only parallelize checks with independent filesystem state.
+
 Accident narratives and original lessons. Historical instructions below describe their time; the current handbook and its local-isolation contract take precedence.
 
 ### 2026-10-02: Preserve the isolated build environment
