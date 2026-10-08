@@ -1,5 +1,11 @@
 # Retrospective
 
+### 2026-10-08: Peer-only override retained an older Vite
+
+During dependency upgrades, raising the Vite override and running `bun install` updated the constraint but retained the older peer-only lockfile resolution. Frozen installation, unit tests and type checks passed, so the initial commit recorded the intended version without actually installing it. A subsequent comparison of manifest constraints, lockfile entries and installed versions caught the mismatch.
+
+Resolved both package lanes with targeted `bun update vite`, then verified the installed version and reran coverage and static checks. Future dependency commits must verify the actual lockfile and installed versions before staging; a successful frozen install is not proof that an override changed the resolved package. Use an absolute `--cwd` or run inside the package directory when invoking `bun update` for the separate Worker package.
+
 Accident narratives and original lessons. Historical instructions below describe their time; the current handbook and its local-isolation contract take precedence.
 
 ### 2026-10-02: Preserve the isolated build environment
