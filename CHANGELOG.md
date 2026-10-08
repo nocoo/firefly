@@ -1,5 +1,51 @@
 # Changelog
 
+## v2.15.0 (2026-10-08)
+
+- docs: add generated Next.js agent rules
+- docs: record exact coverage comparison lesson
+- test: fold worker host probe into auth case
+- test: prune redundant mcp smoke cases
+- test: prune redundant post refresh cases
+- test: verify human backup preservation
+- refactor: remove unused post read services
+- refactor: remove unused sql test helper
+- docs: explain wechat identity configuration
+- test: verify wechat settings and image loading
+- fix: serve isolated r2 images on test origins
+- feat: configure wechat images in site identity
+- feat: persist wechat sidebar settings
+- docs: record verification scheduling lesson
+- fix: patch selector parser cpu exhaustion
+- fix: upgrade proxy addr to 2.0.8
+- fix: upgrade source map js to 1.2.2
+- fix: load worker vitest config as esm
+- fix: resolve vite overrides to 8.3.3
+- chore: upgrade ip-address to 10.7.3
+- chore: upgrade hono node server to 2.1.3
+- chore: upgrade hono to 4.13.13
+- chore: upgrade browser mapping to 2.11.27
+- chore: upgrade ws to 8.22.0
+- chore: upgrade esbuild to 0.28.2
+- chore: upgrade vite to 8.3.3
+- chore: upgrade postcss to 8.5.29
+- chore: upgrade undici to 7.30.0
+- chore: upgrade nanoid to 3.3.20
+- chore: upgrade next to 16.4.0
+- chore: upgrade worker tools to wrangler 4.148.0
+- chore: upgrade playwright to 1.64.0
+- chore: upgrade oxc parser to 0.153.0
+- chore: upgrade alert dialog to 1.1.24
+- chore: upgrade lucide to 1.52.0
+- chore: upgrade marked to 18.1.0
+- chore: upgrade ai sdk to 7.0.133
+- chore: upgrade mcp sdk to 1.32.1
+- chore: upgrade s3 sdk to 3.1147.0
+- chore: upgrade node types to 26.6.4
+- chore: upgrade dotenv to 18.0.6
+- chore: upgrade basalt to 2.2.0
+
+
 ## v2.14.2 (2026-10-01)
 
 - docs: record caddy lookup scope miss
