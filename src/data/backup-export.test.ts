@@ -2,7 +2,7 @@ import { gunzipSync } from "node:zlib";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db, DbQueryResult } from "@/lib/db";
 import { createMockDb } from "@/data/core/test-utils";
-import type { Post, Category, Tag, Comment, Attachment, Redirect } from "@/models/types";
+import type { Post, Human, Category, Tag, Comment, Attachment, Redirect } from "@/models/types";
 import { BACKUP_SCHEMA_VERSION } from "@/models/backup-schema";
 import type { FireflyBackupEnvelope } from "@/models/backup-schema";
 import { collectBackupData, serializeBackup, _testHelpers } from "./backup-export";
@@ -48,6 +48,18 @@ const samplePost: Post = {
   published_at: 1774483200,
   created_at: 1774483200,
   updated_at: 1774483200,
+};
+
+const sampleHuman: Human = {
+  id: "human-1",
+  name: "Blog Author",
+  slug: "blog-author",
+  description: "Author biography",
+  email: "author@example.com",
+  profile_public: 1,
+  avatar_version: "avatar-1",
+  created_at: 1774483200,
+  updated_at: 1774569600,
 };
 
 const sampleCategory: Category = {
@@ -254,7 +266,7 @@ describe("collectBackupData", () => {
   beforeEach(() => {
     db = createMockDb();
     vi.mocked(db.batch).mockResolvedValue([
-      mockResult([]),
+      mockResult([sampleHuman]),
       mockResult([samplePost]),
       mockResult([sampleSettingsRow]),
     ] as never);
@@ -280,7 +292,17 @@ describe("collectBackupData", () => {
   it("includes all entity arrays", async () => {
     const envelope = await collectBackupData(db);
     expect(envelope.posts).toHaveLength(1);
-    expect(envelope.humans).toHaveLength(0);
+    expect(envelope.humans).toEqual([{
+      id: "human-1",
+      name: "Blog Author",
+      slug: "blog-author",
+      description: "Author biography",
+      email: "author@example.com",
+      profile_public: 1,
+      avatar_version: "avatar-1",
+      created_at: "2026-03-26T00:00:00.000Z",
+      updated_at: "2026-03-27T00:00:00.000Z",
+    }]);
     expect(envelope.categories).toHaveLength(1);
     expect(envelope.tags).toHaveLength(1);
     expect(envelope.postTags).toHaveLength(1);
