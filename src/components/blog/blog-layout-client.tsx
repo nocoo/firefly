@@ -12,6 +12,7 @@ import { BlogSidebar } from "./blog-sidebar";
 import { JournalBrand } from "./journal-brand";
 import { JournalSurfaces } from "./journal-surfaces";
 import { JournalThemeToggle } from "./journal-theme-toggle";
+import type { WechatSettings } from "@/models/wechat";
 
 interface BlogLayoutClientProps {
   categories: Category[];
@@ -19,6 +20,7 @@ interface BlogLayoutClientProps {
   archives: MonthlyArchive[];
   siteName: string;
   socialLinks: SocialLink[];
+  wechat: WechatSettings;
   children: React.ReactNode;
 }
 
@@ -51,7 +53,7 @@ function getMobileServerSnapshot(): boolean {
 }
 
 export function BlogLayoutClient({
-  categories, tags, archives, siteName, socialLinks, children,
+  categories, tags, archives, siteName, socialLinks, wechat, children,
 }: BlogLayoutClientProps) {
   const pathname = usePathname();
   const isPostDetail = isPostDetailRoute(pathname);
@@ -221,6 +223,7 @@ export function BlogLayoutClient({
             tags={tags}
             archives={archives}
             socialLinks={socialLinks}
+            wechat={wechat}
             drawerOpen={drawerOpen}
             isMobile={isMobile}
           />

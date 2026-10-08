@@ -47,6 +47,7 @@
   --ff-quote: var(--ff-serif);
   --journal-olive: #76816a;
   --journal-orange: #bf5c3c;
+  --journal-qr-paper: #fff;
   --journal-ease: cubic-bezier(0.2, 0.75, 0.25, 1);
   --blog-layout-max: 1500px;
   --blog-sidebar-w: 272px;
@@ -186,10 +187,8 @@
   }
   .journal-wechat-mark { position: relative; }
   .journal-wechat-qr {
-    display: block; width: 100%; aspect-ratio: 1; opacity: 0.7;
-    background: var(--blog-text);
-    -webkit-mask: url("/journal-wechat-qr.svg?v=70") center / contain no-repeat;
-    mask: url("/journal-wechat-qr.svg?v=70") center / contain no-repeat;
+    display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: contain;
+    background: var(--journal-qr-paper);
   }
   .journal-wechat-name {
     display: flex; align-items: center; justify-content: center; gap: 6px;

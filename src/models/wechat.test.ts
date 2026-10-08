@@ -22,7 +22,7 @@ describe("WeChat image settings", () => {
   it.each([
     { wechat_name: "x".repeat(256) },
     { wechat_name: null },
-    { wechat_qr_image_url: "https://example.com/" + "x".repeat(2048) },
+    { wechat_qr_image_url: `https://example.com/${"x".repeat(2048)}` },
     { wechat_avatar_url: 1 },
   ])("rejects invalid field values", (value) => {
     expect(wechatSettingsSchema.safeParse(value).success).toBe(false);

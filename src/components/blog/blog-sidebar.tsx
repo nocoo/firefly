@@ -7,18 +7,20 @@ import type { SocialLink } from "@/data/settings";
 import { JournalSocialLinks } from "./social-link";
 import { ArchiveNavigation } from "./archive-navigation";
 import { JournalWechat } from "./journal-wechat";
+import type { WechatSettings } from "@/models/wechat";
 
 interface BlogSidebarProps {
   categories: Category[];
   tags: Tag[];
   archives: MonthlyArchive[];
   socialLinks: SocialLink[];
+  wechat: WechatSettings;
   drawerOpen?: boolean;
   isMobile?: boolean;
 }
 
 export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function BlogSidebar({
-  categories, tags, archives, socialLinks,
+  categories, tags, archives, socialLinks, wechat,
   drawerOpen = false, isMobile = false,
 }, ref) {
   // On mobile when closed, hide from a11y tree + disable keyboard focus
@@ -62,7 +64,7 @@ export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function Bl
 
       <div className="journal-connect">
         <JournalSocialLinks links={socialLinks} />
-        <JournalWechat />
+        <JournalWechat {...wechat} />
       </div>
 
       {tags.length > 0 && (

@@ -8,6 +8,8 @@ import type { SiteSettings, SocialLink } from "@/data/settings";
 import { SiteLogoCard } from "./site-logo-card";
 import { SocialLinksCard } from "./social-links-card";
 import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { WechatSettingsCard } from "./wechat-settings-card";
+import type { WechatSettings } from "@/models/wechat";
 
 interface SiteIdentityFormProps {
   settings: SiteSettings;
@@ -25,6 +27,11 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(
     settings.socialLinks,
   );
+  const [wechat, setWechat] = useState<WechatSettings>({
+    wechatName: settings.wechatName,
+    wechatQrImageUrl: settings.wechatQrImageUrl,
+    wechatAvatarUrl: settings.wechatAvatarUrl,
+  });
 
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{
@@ -47,6 +54,9 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
           authorEmail,
           twitterHandle,
           socialLinks,
+          wechat_name: wechat.wechatName,
+          wechat_qr_image_url: wechat.wechatQrImageUrl,
+          wechat_avatar_url: wechat.wechatAvatarUrl,
         }),
       });
 
@@ -160,6 +170,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
       </div>
 
       <SocialLinksCard socialLinks={socialLinks} onChange={setSocialLinks} />
+      <WechatSettingsCard value={wechat} onChange={setWechat} />
 
       {message && (
         <p

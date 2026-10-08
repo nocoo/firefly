@@ -1,3 +1,5 @@
+import { isImageUrl, type WechatSettings } from "@/models/wechat";
+
 function WechatIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
@@ -6,23 +8,26 @@ function WechatIcon({ className }: { className?: string }) {
   );
 }
 
-export function JournalWechat() {
+export function JournalWechat({ wechatName, wechatQrImageUrl, wechatAvatarUrl }: WechatSettings) {
+  if (!wechatName || !wechatQrImageUrl || !isImageUrl(wechatQrImageUrl)) return null;
   return (
-    <section className="journal-wechat" aria-label="微信公众号 不如喝杯咖啡">
+    <section className="journal-wechat" aria-label={`微信公众号 ${wechatName}`}>
       <figure className="journal-wechat-card">
         <div className="journal-wechat-mark">
-          <div
+          <img
             className="journal-wechat-qr"
-            role="img"
-            aria-label="微信公众号「不如喝杯咖啡」二维码"
+            src={wechatQrImageUrl}
+            width={180}
+            height={180}
+            alt={`微信公众号「${wechatName}」二维码`}
           />
-          <span className="journal-wechat-seal" aria-hidden="true">
-            <img src="/journal-wechat-cat.png" width={72} height={72} alt="" />
-          </span>
+          {wechatAvatarUrl && isImageUrl(wechatAvatarUrl) && <span className="journal-wechat-seal" aria-hidden="true">
+            <img src={wechatAvatarUrl} width={72} height={72} alt="" />
+          </span>}
         </div>
         <figcaption className="journal-wechat-name">
           <WechatIcon className="journal-wechat-icon" />
-          不如喝杯咖啡
+          {wechatName}
         </figcaption>
       </figure>
     </section>

@@ -51,6 +51,7 @@ export default async function BlogLayout({
         archives={archives}
         siteName={settings.siteName}
         socialLinks={settings.socialLinks}
+        wechat={{ wechatName: settings.wechatName, wechatQrImageUrl: settings.wechatQrImageUrl, wechatAvatarUrl: settings.wechatAvatarUrl }}
       >
         {children}
       </BlogLayoutClient>
