@@ -272,20 +272,6 @@ describe("PostService.update", () => {
     expect(result?.category_id).toBe("cat-2");
   });
 
-  it("refreshes tag counts when status changes", async () => {
-    vi.mocked(getPostById).mockResolvedValue({
-      ...samplePost,
-      status: "draft",
-    });
-    vi.mocked(updatePost).mockResolvedValue(samplePost);
-    vi.mocked(refreshCategoryPostCount).mockResolvedValue();
-    vi.mocked(refreshAllTagPostCounts).mockResolvedValue();
-
-    await PostService.update(db, "post-1", { status: "published" });
-
-    expect(refreshAllTagPostCounts).toHaveBeenCalledWith(db);
-  });
-
   it("skips extra tag refresh when status changes AND tagIds explicitly provided", async () => {
     vi.mocked(getPostById).mockResolvedValue({
       ...samplePost,
@@ -380,29 +366,6 @@ describe("PostService.update", () => {
     expect(errSpy).toHaveBeenCalled();
   });
 
-  // L148: Cover branch where categoryId is undefined but category changed (null → cat-1)
-  it("handles categoryId undefined when category changes from null (L148 branch)", async () => {
-    const existingWithNullCategory: PostWithAgent = {
-      ...samplePost,
-      category_id: null,
-    };
-    vi.mocked(getPostById).mockResolvedValue(existingWithNullCategory);
-    vi.mocked(updatePost).mockResolvedValue(samplePost); // has category_id: "cat-1"
-    vi.mocked(refreshCategoryPostCount).mockResolvedValue();
-    vi.mocked(ftsSync).mockResolvedValue();
-
-    // categoryId is explicitly set to undefined but triggers a change (from null)
-    // This tests input.categoryId ?? null falling back to null
-    await PostService.update(db, "post-1", {
-      categoryId: undefined, // This will trigger categoryChanged because undefined !== null
-    });
-
-    // categoryChanged should be false since undefined !== null is false for the change check
-    // Let's re-read the code: categoryChanged = input.categoryId !== undefined && input.categoryId !== existing.category_id
-    // So if categoryId is undefined, categoryChanged is false
-    // We need categoryId to be explicitly defined but falsy to test L148
-  });
-
   // L148: Cover branch where input.categoryId is null (explicitly set)
   it("refreshes new category with null when moving to no category (L148 branch)", async () => {
     vi.mocked(getPostById).mockResolvedValue(samplePost); // has category_id: "cat-1"
@@ -423,8 +386,7 @@ describe("PostService.update", () => {
     expect(refreshCategoryPostCount).toHaveBeenCalledWith(db, null); // new (L148: ?? null)
   });
 
-  // L158 & L166: Cover branches where status changes but no tagIds and no category change
-  it("refreshes tag counts when status changes without tagIds (L158 branch)", async () => {
+  it("refreshes tag and category counts when only status changes", async () => {
     vi.mocked(getPostById).mockResolvedValue({
       ...samplePost,
       status: "draft",
@@ -434,12 +396,9 @@ describe("PostService.update", () => {
     vi.mocked(refreshAllTagPostCounts).mockResolvedValue();
     vi.mocked(ftsSync).mockResolvedValue();
 
-    // Status changes, no tagIds provided, no category change
     await PostService.update(db, "post-1", { status: "published" });
 
-    // L158: !tagIds is true, so refreshAllTagPostCounts should be called
     expect(refreshAllTagPostCounts).toHaveBeenCalledWith(db);
-    // L166: !categoryChanged is true, so refreshCategoryPostCount should be called
     expect(refreshCategoryPostCount).toHaveBeenCalledWith(db, "cat-1");
   });
 
