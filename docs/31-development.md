@@ -43,6 +43,12 @@ AI 配置保存在站点设置中，由后台填写供应商、模型、认证�
 
 评论写入需要管理员会话，目标文章必须公开，站点和文章的评论开关也必须开启。当前不存在普通访客注册或匿名评论提交流程。
 
+### WeChat sidebar identity
+
+Configure the official account under `/admin/site-identity`: account name, QR image URL and avatar URL. Image fields accept HTTP(S) URLs or site-relative paths, as well as raster uploads and clipboard images through the existing media library. Save the form after uploading. Clearing the name or QR image hides the public card; clearing the avatar removes its center overlay. Use a QR image with enough error correction and center space for the overlay, or leave the avatar empty when the QR already includes one.
+
+Migration `021-wechat-settings` seeds the existing account name and the two bundled images. Apply it before running code that reads the new settings; there is no hardcoded fallback in the sidebar. The settings are included in backups, while uploaded R2 objects remain outside the backup payload.
+
 ## MCP
 
 服务地址为 `https://你的域名/api/mcp`，客户端使用支持 OAuth 的 Streamable HTTP transport。服务对每个 POST 创建独立请求上下文并返回 JSON；GET SSE 与会话终止接口返回 405。
