@@ -327,7 +327,7 @@ function startNextServer(
     [BUN, "run", "next", "start", "-p", String(port)],
     {
       cwd: process.cwd(),
-      env: { ...env, PORT: String(port) },
+      env: { ...env, PORT: String(port), R2_PUBLIC_URL: `http://localhost:${port}/__e2e-r2` },
       stdout: logFd,
       stderr: logFd,
     },
@@ -354,7 +354,7 @@ async function main() {
   // R2_PUBLIC_URL must point to a Next.js server that will actually be running.
   // --api-only  → only 17028 is started
   // --browser-only → only 27028 is started
-  // default       → both started; 17028 serves R2 reads for both L2 and L3
+  // default       → both started; each serves same-origin reads from shared R2
   const r2Port = browserOnly ? BROWSER_E2E_PORT : API_E2E_PORT;
 
   const env: Record<string, string | undefined> = {

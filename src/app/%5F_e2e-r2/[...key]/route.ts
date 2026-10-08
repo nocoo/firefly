@@ -5,7 +5,7 @@
 // (E2E_R2_LOCAL_DIR + E2E_SKIP_AUTH + E2E_TEST_RUNNER). In production none
 // of these env vars are set, so the route always returns 404.
 //
-// Path: /__e2e-r2/[...key]  (catch-all)
+// Escape the first underscore so Next registers /__e2e-r2 as a public route.
 // ---------------------------------------------------------------------------
 
 import { NextResponse } from "next/server";

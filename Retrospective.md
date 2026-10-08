@@ -1,5 +1,9 @@
 # Retrospective
 
+### 2026-10-08: Image URL assertions missed broken previews
+
+The first WeChat browser check asserted image URLs but not decoding. Its screenshots exposed broken images: the local R2 route used an underscore-prefixed private folder, so Next never registered it, and the combined runner served browser uploads from a different HTTP origin rejected by the existing CSP. Escaped the first folder underscore and made each test server return same-origin R2 URLs from the shared isolated directory, without weakening production CSP or the R2 isolation gates. Added assertions for image completion and nonzero natural width in both admin previews and the public sidebar. Also replaced an old generic file-input locator with the Logo field label after introducing two additional image pickers. A matching `src` and a passing upload response are not proof that an image is visible; verify browser decoding before accepting screenshots.
+
 ### 2026-10-08: Peer-only override retained an older Vite
 
 During dependency upgrades, raising the Vite override and running `bun install` updated the constraint but retained the older peer-only lockfile resolution. Frozen installation, unit tests and type checks passed, so the initial commit recorded the intended version without actually installing it. A subsequent comparison of manifest constraints, lockfile entries and installed versions caught the mismatch.
