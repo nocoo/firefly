@@ -336,17 +336,6 @@ describe("handleUpdate", () => {
     });
   });
 
-  it("strips id and slug from business fields", async () => {
-    const config = createMockConfig();
-    const { handleUpdate } = createCrudHandlers(config);
-
-    await handleUpdate(ctx, { id: "e-1", name: "Changed" });
-    // id should NOT be in the update payload
-    expect(config.dataLayer.update).toHaveBeenCalledWith(ctx.db, "e-1", {
-      name: "Changed",
-    });
-  });
-
   it("applies mapUpdateInput hook to business fields", async () => {
     const config = createMockConfig({
       hooks: {

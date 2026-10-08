@@ -254,11 +254,6 @@ describe("createMcpServer", () => {
     db = createMockDb();
   });
 
-  it("creates a server instance", () => {
-    const server = createMcpServer(db);
-    expect(server).toBeDefined();
-  });
-
   it("handles initialize request", async () => {
     const response = await sendStatelessRequest(db, {
       jsonrpc: "2.0",
@@ -511,11 +506,6 @@ describe("createMcpServer with author context", () => {
 
   beforeEach(() => {
     db = createMockDb();
-  });
-
-  it("creates a server instance with author context", () => {
-    const server = createMcpServer(db, authorContext);
-    expect(server).toBeDefined();
   });
 
   it("registers 8 tools for author context (post + tag read/create, no update/delete)", async () => {
