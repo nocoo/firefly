@@ -5,14 +5,12 @@
 // ---------------------------------------------------------------------------
 
 import type { Db } from "@/lib/db";
-import type { PostWithCategory, PostWithTags, PostStatus } from "@/models/types";
+import type { PostWithCategory } from "@/models/types";
 import {
   createPost,
   updatePost,
   deletePost,
   getPostById,
-  getPostBySlug,
-  getPostTags,
   setPostTags,
   batchUpdatePosts,
   refreshCategoryPostCount,
@@ -332,34 +330,4 @@ export const PostService = {
     return count;
   },
 
-  // -------------------------------------------------------------------------
-  // getWithTags — read: getById + getPostTags → PostWithTags
-  // -------------------------------------------------------------------------
-
-  async getWithTags(
-    db: Db,
-    id: string,
-  ): Promise<PostWithTags | null> {
-    const post = await getPostById(db, id);
-    if (!post) return null;
-
-    const tags = await getPostTags(db, id);
-    return { ...post, tags };
-  },
-
-  // -------------------------------------------------------------------------
-  // getBySlugWithTags — read: getBySlug + getPostTags → PostWithTags
-  // -------------------------------------------------------------------------
-
-  async getBySlugWithTags(
-    db: Db,
-    slug: string,
-    status?: PostStatus,
-  ): Promise<PostWithTags | null> {
-    const post = await getPostBySlug(db, slug, status);
-    if (!post) return null;
-
-    const tags = await getPostTags(db, post.id);
-    return { ...post, tags };
-  },
 };

@@ -9,8 +9,6 @@ vi.mock("@/data/entities/post", () => ({
   updatePost: vi.fn(),
   deletePost: vi.fn(),
   getPostById: vi.fn(),
-  getPostBySlug: vi.fn(),
-  getPostTags: vi.fn(),
   setPostTags: vi.fn(),
   batchUpdatePosts: vi.fn(),
   refreshCategoryPostCount: vi.fn(),
@@ -39,8 +37,6 @@ import {
   updatePost,
   deletePost,
   getPostById,
-  getPostBySlug,
-  getPostTags,
   setPostTags,
   batchUpdatePosts,
   refreshCategoryPostCount,
@@ -72,11 +68,6 @@ const samplePost = createMockPostWithAgent({
   category_name: "Tech",
   category_slug: "tech",
 });
-
-const sampleTags = [
-  { id: "t1", name: "React", slug: "react" },
-  { id: "t2", name: "TypeScript", slug: "typescript" },
-];
 
 // ---------------------------------------------------------------------------
 // PostService.create
@@ -195,21 +186,26 @@ describe("PostService.create", () => {
     });
   });
 
-  it("fills default human when neither id is provided", async () => {
+  it.each([
+    [undefined, "human-default"],
+    ["human-selected", "human-selected"],
+  ])("assigns human %s on create", async (humanId, expectedHumanId) => {
     vi.mocked(createPost).mockResolvedValue(samplePost);
     await PostService.create(db, {
       title: "Test",
       slug: "test",
       content: "Content",
       status: "draft",
+      humanId,
     });
     expect(createPost).toHaveBeenCalledWith(
       db,
       expect.objectContaining({
-        humanId: "human-default",
+        humanId: expectedHumanId,
         aiAgentId: undefined,
       }),
     );
+    if (humanId) expect(getDefaultHumanIdUncached).not.toHaveBeenCalled();
   });
 
   it("keeps agent-only create without a human", async () => {
@@ -482,7 +478,10 @@ describe("PostService.update", () => {
     });
   });
 
-  it("writes default human when clearing aiAgentId on an agent post", async () => {
+  it.each([
+    { aiAgentId: null },
+    { humanId: null },
+  ])("restores default human when clearing attribution with %j", async (input) => {
     vi.mocked(getPostById).mockResolvedValue({
       ...samplePost,
       ai_agent_id: "agent-1",
@@ -490,7 +489,7 @@ describe("PostService.update", () => {
     });
     vi.mocked(updatePost).mockResolvedValue(samplePost);
 
-    await PostService.update(db, "post-1", { aiAgentId: null });
+    await PostService.update(db, "post-1", input);
 
     expect(updatePost).toHaveBeenCalledWith(
       db,
@@ -640,75 +639,5 @@ describe("PostService.batchUpdate", () => {
       status: "draft",
     });
     expect(count).toBe(0);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// PostService.getWithTags
-// ---------------------------------------------------------------------------
-
-describe("PostService.getWithTags", () => {
-  let db: Db;
-  beforeEach(() => {
-    db = createMockDb();
-    vi.clearAllMocks();
-  });
-
-  it("returns post with tags", async () => {
-    vi.mocked(getPostById).mockResolvedValue(samplePost);
-    vi.mocked(getPostTags).mockResolvedValue(sampleTags);
-
-    const result = await PostService.getWithTags(db, "post-1");
-
-    expect(result).not.toBeNull();
-    expect(result!.tags).toHaveLength(2);
-    expect(result!.tags[0].name).toBe("React");
-  });
-
-  it("returns null when post not found", async () => {
-    vi.mocked(getPostById).mockResolvedValue(null);
-
-    const result = await PostService.getWithTags(db, "nope");
-    expect(result).toBeNull();
-    expect(getPostTags).not.toHaveBeenCalled();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// PostService.getBySlugWithTags
-// ---------------------------------------------------------------------------
-
-describe("PostService.getBySlugWithTags", () => {
-  let db: Db;
-  beforeEach(() => {
-    db = createMockDb();
-    vi.clearAllMocks();
-  });
-
-  it("returns post with tags by slug", async () => {
-    vi.mocked(getPostBySlug).mockResolvedValue(samplePost);
-    vi.mocked(getPostTags).mockResolvedValue(sampleTags);
-
-    const result = await PostService.getBySlugWithTags(db, "hello-world");
-
-    expect(result).not.toBeNull();
-    expect(result!.title).toBe("Hello World");
-    expect(result!.tags).toHaveLength(2);
-  });
-
-  it("passes status filter to getBySlug", async () => {
-    vi.mocked(getPostBySlug).mockResolvedValue(samplePost);
-    vi.mocked(getPostTags).mockResolvedValue([]);
-
-    await PostService.getBySlugWithTags(db, "hello-world", "published");
-
-    expect(getPostBySlug).toHaveBeenCalledWith(db, "hello-world", "published");
-  });
-
-  it("returns null when post not found", async () => {
-    vi.mocked(getPostBySlug).mockResolvedValue(null);
-
-    const result = await PostService.getBySlugWithTags(db, "nope");
-    expect(result).toBeNull();
   });
 });
