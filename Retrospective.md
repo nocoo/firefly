@@ -72,3 +72,20 @@ A redundant bare build after successful E2E validation lacked `WORKER_URL` and `
   2. `Strict-Transport-Security: max-age=63072000; preload` → 浏览器把 `localhost:7028` 加入 HSTS 缓存，之后所有 dev 访问被强制 https 升级 → `ERR_SSL_PROTOCOL_ERROR`
 **修复**: 用 `process.env.NODE_ENV === "production"` 守卫这两个 header：CSP 在 dev 加 `'unsafe-eval'`（用字符串拼接绕过测试 grep），HSTS 完全不发。
 **教训**: 任何加到 `headers()` 的"严格生产 header"在 dev 都要审查。HSTS 尤其阴险——浏览器记录后即使删 header 也不解封，需要手动 `chrome://net-internals/#hsts` 删 `localhost`/`127.0.0.1`。建议加 retro：审过 Strict-Transport-Security、Content-Security-Policy、Expect-CT、Cross-Origin-* 这几条之前永远先想"dev 也发吗"。
+
+### 2026-10-08: Rounded coverage hid a denominator change
+
+Removing unused PostService read methods kept displayed function coverage at
+99.45%, but the exact ratio changed from 550/553 to 548/551. The initial
+comparison used the rounded percentage, so the deletion commit briefly
+contained a small decrease despite the no-decrease requirement.
+
+The follow-up strengthened the existing backup envelope test with a real human
+row and independent expected fields and timestamps. Function coverage became
+549/551 (99.63%). Mutations omitting humans or mixing up their timestamps failed
+for the intended reason; no coverage scope or thresholds changed.
+
+For a no-decrease pruning batch, compare covered/total fractions before commit,
+not just printed percentages. If removing dead code changes a denominator,
+retain the batch until every metric satisfies the exact comparison. Strengthen
+only a missing observable contract, never add assertion-free coverage probes.
