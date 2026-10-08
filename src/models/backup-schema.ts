@@ -137,6 +137,9 @@ export interface ExportedSiteSettings {
   author_email: string;
   twitter_handle: string;
   social_links: string;
+  wechat_name: string;
+  wechat_qr_image_url: string;
+  wechat_avatar_url: string;
   ai_provider: string;
   ai_model: string;
   ai_base_url: string;

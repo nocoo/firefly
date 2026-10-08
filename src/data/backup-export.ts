@@ -45,6 +45,9 @@ interface BackupSiteSettingsRow {
   author_email: string;
   twitter_handle: string;
   social_links: string;
+  wechat_name: string;
+  wechat_qr_image_url: string;
+  wechat_avatar_url: string;
   ai_provider: string;
   ai_model: string;
   ai_base_url: string;
@@ -62,6 +65,7 @@ const SITE_SETTINGS_SQL =
   "SELECT locale, posts_per_page, comments_enabled, font_style, " +
   "site_logo_version, site_name, site_tagline, site_description, " +
   "default_human_id, author_email, twitter_handle, social_links, " +
+  "wechat_name, wechat_qr_image_url, wechat_avatar_url, " +
   "ai_provider, ai_model, ai_base_url, ai_sdk_type, ai_auth_type, updated_at " +
   "FROM site_settings WHERE id = 1";
 
@@ -190,6 +194,9 @@ function convertSiteSettings(row: BackupSiteSettingsRow): ExportedSiteSettings {
     author_email: row.author_email,
     twitter_handle: row.twitter_handle,
     social_links: row.social_links,
+    wechat_name: row.wechat_name,
+    wechat_qr_image_url: row.wechat_qr_image_url,
+    wechat_avatar_url: row.wechat_avatar_url,
     ai_provider: row.ai_provider,
     ai_model: row.ai_model,
     ai_base_url: row.ai_base_url,
@@ -239,6 +246,9 @@ export async function collectBackupData(
     author_email: "",
     twitter_handle: "",
     social_links: "[]",
+    wechat_name: "",
+    wechat_qr_image_url: "",
+    wechat_avatar_url: "",
     ai_provider: "",
     ai_model: "",
     ai_base_url: "",

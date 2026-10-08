@@ -2,6 +2,7 @@ import type { Db } from "@/lib/db";
 import { buildSetClauses } from "@/data/core/sql";
 import type { FieldDef } from "@/data/core/types";
 import { invalidatePublicContent } from "@/data/core/public-cache";
+import type { WechatSettings } from "@/models/wechat";
 
 export type FontStyle = "pingfang" | "classic" | "serif" | "sans";
 const FONT_STYLES: FontStyle[] = ["pingfang", "classic", "serif", "sans"];
@@ -31,11 +32,14 @@ interface SiteSettingsRow {
   author_email: string;
   twitter_handle: string;
   social_links: string;
+  wechat_name: string;
+  wechat_qr_image_url: string;
+  wechat_avatar_url: string;
   updated_at: number;
 }
 
 /** Parsed application-level settings */
-export interface SiteSettings {
+export interface SiteSettings extends WechatSettings {
   postsPerPage: number;
   commentsEnabled: boolean;
   fontStyle: FontStyle;
@@ -62,6 +66,9 @@ const DEFAULTS: SiteSettings = {
   authorEmail: "",
   twitterHandle: "",
   socialLinks: [],
+  wechatName: "",
+  wechatQrImageUrl: "",
+  wechatAvatarUrl: "",
   updatedAt: 0,
 };
 
@@ -105,6 +112,9 @@ function parseRow(row: SiteSettingsRow): SiteSettings {
     authorEmail: row.author_email ?? "",
     twitterHandle: row.twitter_handle ?? "",
     socialLinks: parseSocialLinks(row.social_links),
+    wechatName: row.wechat_name,
+    wechatQrImageUrl: row.wechat_qr_image_url,
+    wechatAvatarUrl: row.wechat_avatar_url,
     updatedAt: row.updated_at,
   };
 }
@@ -141,7 +151,7 @@ export function invalidateSettingsCache(): void {
 // Update
 // ---------------------------------------------------------------------------
 
-export interface UpdateSiteSettingsInput {
+export interface UpdateSiteSettingsInput extends Partial<WechatSettings> {
   postsPerPage?: number;
   commentsEnabled?: boolean;
   fontStyle?: FontStyle;
@@ -166,6 +176,9 @@ const settingsFields: Record<string, FieldDef> = {
   authorEmail: { column: "author_email" },
   twitterHandle: { column: "twitter_handle" },
   socialLinks: { column: "social_links" },
+  wechatName: { column: "wechat_name" },
+  wechatQrImageUrl: { column: "wechat_qr_image_url" },
+  wechatAvatarUrl: { column: "wechat_avatar_url" },
 };
 
 /**
@@ -190,6 +203,9 @@ function normalizeSettingsInput(
   if (input.authorEmail !== undefined) normalized.authorEmail = input.authorEmail.slice(0, 255);
   if (input.twitterHandle !== undefined) normalized.twitterHandle = input.twitterHandle.slice(0, 50);
   if (input.socialLinks !== undefined) normalized.socialLinks = JSON.stringify(input.socialLinks);
+  if (input.wechatName !== undefined) normalized.wechatName = input.wechatName;
+  if (input.wechatQrImageUrl !== undefined) normalized.wechatQrImageUrl = input.wechatQrImageUrl;
+  if (input.wechatAvatarUrl !== undefined) normalized.wechatAvatarUrl = input.wechatAvatarUrl;
 
   return normalized;
 }

@@ -7,6 +7,7 @@ import {
   type UpdateSiteSettingsInput,
   type FontStyle,
 } from "@/data/settings";
+import { wechatSettingsSchema } from "@/models/wechat";
 
 const FONT_STYLES: FontStyle[] = ["pingfang", "classic", "serif", "sans"];
 
@@ -98,6 +99,11 @@ function parseSettingsBody(
   body: Record<string, unknown>,
 ): UpdateSiteSettingsInput | string {
   const input: UpdateSiteSettingsInput = {};
+  const wechat = wechatSettingsSchema.safeParse(body);
+  if (!wechat.success) return wechat.error.issues[0].message;
+  if (wechat.data.wechat_name !== undefined) input.wechatName = wechat.data.wechat_name;
+  if (wechat.data.wechat_qr_image_url !== undefined) input.wechatQrImageUrl = wechat.data.wechat_qr_image_url;
+  if (wechat.data.wechat_avatar_url !== undefined) input.wechatAvatarUrl = wechat.data.wechat_avatar_url;
 
   const stringFields: Array<{
     key: string;

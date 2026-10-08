@@ -30,6 +30,9 @@ const sampleRow = {
   author_email: "",
   twitter_handle: "",
   social_links: "[]",
+  wechat_name: "Test account",
+  wechat_qr_image_url: "/qr.png",
+  wechat_avatar_url: "/avatar.png",
   updated_at: 1700000000,
 };
 
@@ -51,6 +54,9 @@ describe("parseRow", () => {
       authorEmail: "",
       twitterHandle: "",
       socialLinks: [],
+      wechatName: "Test account",
+      wechatQrImageUrl: "/qr.png",
+      wechatAvatarUrl: "/avatar.png",
       updatedAt: 1700000000,
     });
   });
@@ -70,6 +76,9 @@ describe("parseRow", () => {
       authorEmail: "",
       twitterHandle: "",
       socialLinks: [],
+      wechatName: "Test account",
+      wechatQrImageUrl: "/qr.png",
+      wechatAvatarUrl: "/avatar.png",
       updatedAt: 1700000000,
     });
   });
@@ -265,6 +274,18 @@ describe("updateSiteSettings", () => {
   beforeEach(() => {
     db = createMockDb();
     invalidateSettingsCache();
+  });
+
+  it("maps WeChat settings to database columns and reloads the cache", async () => {
+    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 0 });
+    vi.mocked(db.firstOrNull).mockResolvedValue(sampleRow);
+    await getSiteSettings(db);
+    const result = await updateSiteSettings(db, {
+      wechatName: "Test account", wechatQrImageUrl: "/qr.png", wechatAvatarUrl: "/avatar.png",
+    });
+    expect(db.execute).toHaveBeenCalledWith(expect.stringContaining("wechat_name = ?, wechat_qr_image_url = ?, wechat_avatar_url = ?"), ["Test account", "/qr.png", "/avatar.png"]);
+    expect(db.firstOrNull).toHaveBeenCalledTimes(2);
+    expect(result.wechatQrImageUrl).toBe("/qr.png");
   });
 
   it("updates fontStyle", async () => {

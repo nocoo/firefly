@@ -22,6 +22,9 @@ const settings = {
   authorEmail: "ed@example.com",
   twitterHandle: "",
   socialLinks: [],
+  wechatName: "",
+  wechatQrImageUrl: "",
+  wechatAvatarUrl: "",
   updatedAt: 1,
 };
 

@@ -118,6 +118,9 @@ const sampleSettingsRow = {
   author_email: "test@example.com",
   twitter_handle: "@test",
   social_links: "[]",
+  wechat_name: "Test account",
+  wechat_qr_image_url: "/qr.png",
+  wechat_avatar_url: "/avatar.png",
   ai_provider: "anthropic",
   ai_model: "claude-sonnet-4-20250514",
   ai_base_url: "",
@@ -195,6 +198,9 @@ describe("convertSiteSettings", () => {
     expect(exported.locale).toBe("zh");
     expect(exported.site_name).toBe("Test Blog");
     expect(exported.ai_provider).toBe("anthropic");
+    expect(exported.wechat_name).toBe("Test account");
+    expect(exported.wechat_qr_image_url).toBe("/qr.png");
+    expect(exported.wechat_avatar_url).toBe("/avatar.png");
   });
 });
 
