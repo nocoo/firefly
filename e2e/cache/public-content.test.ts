@@ -36,6 +36,22 @@ beforeAll(async () => {
 });
 
 describe("real Next.js public cache", () => {
+  it("refreshes configured WeChat images and hides cleared sidebar content", async () => {
+    const settings = await (await request("/api/settings")).json();
+    await request("/");
+    try {
+      expect((await write("/api/settings", { wechat_name: "Cache WeChat account", wechat_qr_image_url: "/cache-qr.png", wechat_avatar_url: "/cache-avatar.png" }, "PUT")).status).toBe(200);
+      const html = await (await request("/")).text();
+      expect(html).toContain('aria-label="微信公众号 Cache WeChat account"');
+      expect(html).toContain('src="/cache-qr.png"');
+      expect(html).toContain('src="/cache-avatar.png"');
+      expect((await write("/api/settings", { wechat_name: "" }, "PUT")).status).toBe(200);
+      expect(await (await request("/")).text()).not.toContain('class="journal-wechat"');
+    } finally {
+      expect((await write("/api/settings", { wechat_name: settings.wechatName, wechat_qr_image_url: settings.wechatQrImageUrl, wechat_avatar_url: settings.wechatAvatarUrl }, "PUT")).status).toBe(200);
+    }
+  });
+
   it("reuses content across HTTP requests and refreshes REST/MCP edits and withdrawals", async () => {
     const slug = `cache-${crypto.randomUUID()}`;
     const categoryResponse = await write("/api/categories", { name: "Cache category", slug });

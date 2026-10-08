@@ -351,7 +351,7 @@ test.describe("Feature: Admin site identity page", () => {
     // type="file"> is sr-only; assert it is attached (not visible) since the
     // sr-only class hides it from the AT-tree.
     await expect(page.getByText("上传图标")).toBeVisible();
-    await expect(page.locator('input[type="file"]')).toBeAttached();
+    await expect(page.getByLabel("上传图标")).toBeAttached();
   });
 
   test("Given /admin/site-identity renders, When I scroll, Then the 社交链接 card and + 添加链接 trigger are visible", async ({
