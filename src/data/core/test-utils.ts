@@ -21,15 +21,6 @@ export function createMockDb(): Db {
 }
 
 /**
- * Check whether a SQL string contains an expected fragment (case-insensitive).
- * Useful for verifying generated SQL without exact whitespace matching.
- */
-export function sqlContains(sql: string, fragment: string): boolean {
-  const normalize = (s: string) => s.replace(/\s+/g, " ").trim().toLowerCase();
-  return normalize(sql).includes(normalize(fragment));
-}
-
-/**
  * Create a mock Post with default values.
  * Override specific fields as needed for tests.
  */
