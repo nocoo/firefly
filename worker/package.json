@@ -1,6 +1,6 @@
 {
   "name": "firefly-worker",
-  "version": "2.15.0",
+  "version": "2.15.1",
   "private": true,
   "scripts": {
     "dev": "wrangler dev",
@@ -12,9 +12,9 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261007.1",
-    "@vitest/coverage-v8": "5.0.3",
+    "@vitest/coverage-v8": "5.0.4",
     "typescript": "7.0.2",
-    "vitest": "5.0.3",
+    "vitest": "5.0.4",
     "wrangler": "4.148.0"
   },
   "overrides": {
