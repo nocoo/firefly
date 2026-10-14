@@ -12,7 +12,7 @@ jobs:
   # L1 + G1 + G2 — Core quality gate from base-ci
   # ─────────────────────────────────────────────────────
   quality:
-    uses: nocoo/base-ci/.github/workflows/quality.yml@ad43150de3a2be2fa464b5cd2f921dc4fa9f8f0f
+    uses: nocoo/base-ci/.github/workflows/quality.yml@0394178ebcff0418c442d84a84119220f31f8987 # v2026.9
     with:
       runtime-version: "1.2.15"
       install-policy: "blocked"
@@ -27,7 +27,7 @@ jobs:
   # ─────────────────────────────────────────────────────
   api-e2e:
     name: "L2 API E2E"
-    uses: nocoo/base-ci/.github/workflows/test-job.yml@ad43150de3a2be2fa464b5cd2f921dc4fa9f8f0f
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@0394178ebcff0418c442d84a84119220f31f8987 # v2026.9
     with:
       runtime-version: "1.2.15"
       install-policy: "project"
@@ -44,7 +44,7 @@ jobs:
   # ─────────────────────────────────────────────────────
   browser-e2e:
     name: "L3 Browser E2E"
-    uses: nocoo/base-ci/.github/workflows/test-job.yml@ad43150de3a2be2fa464b5cd2f921dc4fa9f8f0f
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@0394178ebcff0418c442d84a84119220f31f8987 # v2026.9
     with:
       runtime-version: "1.2.15"
       install-policy: "project"
@@ -62,7 +62,7 @@ jobs:
   # ─────────────────────────────────────────────────────
   worker-tests:
     name: "Worker Tests"
-    uses: nocoo/base-ci/.github/workflows/test-job.yml@ad43150de3a2be2fa464b5cd2f921dc4fa9f8f0f
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@0394178ebcff0418c442d84a84119220f31f8987 # v2026.9
     with:
       runtime-version: "1.2.15"
       install-policy: "project"
