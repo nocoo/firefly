@@ -14,10 +14,10 @@ import {
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { renderMarkdown } from "@/models/markdown";
+import { renderPostExport } from "@/lib/post-export";
 import { ArticleBody } from "@/components/blog/article-body";
 import { ReferenceCard } from "@/components/blog/reference-card";
 import {
-  inlineWeChatHtml,
   buildWeChatStructure,
   copyWechatHtmlToClipboard,
   copyHtmlToClipboard,
@@ -102,15 +102,16 @@ export function MarkdownPreview({
 
   const handleCopyWeChat = useCallback(async () => {
     // Generate full inlined CSS with juice only on demand when user copies
-    const inlinedHtml = inlineWeChatHtml(html, {
-      title,
-      excerpt,
-      featuredImage,
-      referenceUrl,
-      referenceTitle,
-      referenceDescription,
-      referenceImage,
-    });
+    const inlinedHtml = renderPostExport({
+      content,
+      title: title ?? "",
+      excerpt: excerpt ?? null,
+      featured_image: featuredImage ?? null,
+      reference_url: referenceUrl ?? null,
+      reference_title: referenceTitle ?? null,
+      reference_description: referenceDescription ?? null,
+      reference_image: referenceImage ?? null,
+    }, "wechat");
 
     const success = await copyWechatHtmlToClipboard(inlinedHtml);
     if (success) {
@@ -121,7 +122,7 @@ export function MarkdownPreview({
       toast.error("复制失败，请重试");
     }
   }, [
-    html,
+    content,
     title,
     excerpt,
     featuredImage,

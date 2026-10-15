@@ -14,6 +14,7 @@ import {
 import { createMockPostWithAgent } from "@/data/core/test-utils";
 import { postEntity } from "./post";
 import type { ToolContext } from "../framework/types";
+import { renderPostExport } from "@/lib/post-export";
 
 // ---------------------------------------------------------------------------
 // Mock all external dependencies
@@ -442,6 +443,43 @@ describe("post entity handlers", () => {
 // ---------------------------------------------------------------------------
 // Extra tools
 // ---------------------------------------------------------------------------
+
+describe("export_post extra tool", () => {
+  const exportTool = postEntity.extraTools!.find((tool) => tool.name === "export_post")!;
+  let ctx: ToolContext;
+
+  beforeEach(() => {
+    ctx = createMockContext();
+    vi.mocked(getPostById).mockReset();
+    vi.mocked(getPostBySlug).mockReset();
+    vi.mocked(PostService.update).mockReset();
+  });
+
+  it.each([{ id: "post-1" }, { slug: "test-post" }])("exports by %o without writes", async (identifier) => {
+    vi.mocked(getPostById).mockResolvedValue(samplePostWithAgent);
+    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
+    const result = await exportTool.handler(ctx, { ...identifier, format: "wechat" });
+    expect(parseToolResult(result)).toEqual({
+      id: "post-1", slug: "test-post", format: "wechat",
+      html: renderPostExport(samplePostWithAgent, "wechat"),
+    });
+    expect(PostService.update).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [{}, "required"],
+    [{ id: "post-1", slug: "test-post" }, "not both"],
+    [{ id: "missing" }, "not found"],
+  ])("rejects invalid identifiers %o", async (identifier, message) => {
+    vi.mocked(getPostById).mockResolvedValue(null);
+    expectError(await exportTool.handler(ctx, { ...identifier, format: "wechat" }), message);
+  });
+
+  it.each(["website", "html", undefined])("rejects unsupported format %s", async (format) => {
+    expectError(await exportTool.handler(ctx, { id: "post-1", format }), "Unsupported export format");
+    expect(getPostById).not.toHaveBeenCalled();
+  });
+});
 
 describe("generate_excerpt extra tool", () => {
   let ctx: ToolContext;
