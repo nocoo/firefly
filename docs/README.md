@@ -9,7 +9,7 @@ Personal blog with a Next.js website and admin console, a separate D1 Worker, R2
 - [Development, configuration, and deployment](31-development.md): current local setup, Google auth, media storage, MCP scopes, backup limits, and test runners.
 - [D1 usage and cost audit, September 2026](32-d1-cost-audit-2026-09.md): production measurements, monitoring traffic, query plans, and prioritized savings.
 - [Public content caching and D1 monitoring](33-public-content-cache-plan.md): mutation-driven cache invalidation, traffic filtering, half-hourly usage sampling, and when shared Redis is needed.
-- [WeChat article export](34-wechat-export.md): shared admin/MCP inline HTML rendering and supported export formats.
+- [WeChat article export](34-wechat-export.md): shared admin/MCP inline HTML rendering and the local draft-only CLI.
 - The numbered design documents below retain implementation history. Current source and the development guide take precedence where an old schema, test command, or deployment example differs.
 
 ## Foundation

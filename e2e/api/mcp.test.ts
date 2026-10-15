@@ -7,6 +7,8 @@
  * Token seed strategy: E2E runs with E2E_SKIP_AUTH=true, so we use
  * POST /api/mcp/tokens (admin create) to generate valid Bearer tokens.
  */
+import { renderPostExport } from "../../src/lib/post-export";
+
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
 const MCP_HEADERS = {
@@ -211,7 +213,7 @@ describe.concurrent("MCP Main Endpoint — Tool Calls", () => {
     await cleanupToken(tokenId);
   });
 
-  it("initialize + tools/list returns 17 tools", async () => {
+  it("initialize + tools/list returns 18 tools", async () => {
     // Step 1: Initialize
     const initRes = await mcpRequest(
       {
@@ -243,7 +245,7 @@ describe.concurrent("MCP Main Endpoint — Tool Calls", () => {
     expect(listRes.status).toBe(200);
 
     const listData = await listRes.json();
-    expect(listData.result.tools).toHaveLength(17);
+    expect(listData.result.tools).toHaveLength(18);
 
     const toolNames = listData.result.tools.map(
       (t: { name: string }) => t.name,
@@ -252,6 +254,42 @@ describe.concurrent("MCP Main Endpoint — Tool Calls", () => {
     expect(toolNames).toContain("create_post");
     expect(toolNames).toContain("list_tags");
     expect(toolNames).toContain("list_categories");
+    expect(toolNames).toContain("export_post");
+  });
+
+  it("export_post returns the exact shared WeChat HTML by id and slug without changing the post", async () => {
+    const slug = `e2e-wechat-export-${crypto.randomUUID()}`;
+    const call = async (name: string, args: Record<string, unknown>) => {
+      const response = await mcpRequest({
+        jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args },
+      }, accessToken);
+      expect(response.status).toBe(200);
+      return (await response.json()).result;
+    };
+    const created = await call("create_post", {
+      title: "E2E WeChat export", slug, status: "draft", excerpt: "Export summary",
+      content: "## Heading\n\n[Reference](https://example.com/?a=1&b=2)\n\n![Image](https://example.com/body.png)",
+      featured_image: "https://example.com/cover.png",
+    });
+    expect(created.isError).toBeUndefined();
+    try {
+      const before = JSON.parse((await call("get_post", { slug })).content[0].text);
+      for (const identifier of [{ id: before.id }, { slug }]) {
+        const exported = await call("export_post", { ...identifier, format: "wechat" });
+        expect(exported.isError).toBeUndefined();
+        const data = JSON.parse(exported.content[0].text);
+        expect(data).toEqual({ id: before.id, slug, format: "wechat", html: renderPostExport(before, "wechat") });
+        expect(data.html).toContain("wechat-footnotes");
+        expect(data.html).toContain("wechat-featured-image");
+        expect(data.html).toContain('style="');
+      }
+      const unsupported = await call("export_post", { slug, format: "website" });
+      expect(unsupported.isError).toBe(true);
+      const after = JSON.parse((await call("get_post", { slug })).content[0].text);
+      expect(after).toEqual(before);
+    } finally {
+      await call("delete_post", { slug });
+    }
   });
 
   it("tools/call list_tags returns tag array", async () => {
