@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.17.1 (2026-10-16)
+
+- fix: preserve unicode in website html exports (#838)
+
+
 ## v2.17.0 (2026-10-16)
 
 - feat: export_post website format for X Article; WeChat author 李老板 (#837)
