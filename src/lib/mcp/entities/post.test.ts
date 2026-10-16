@@ -14,7 +14,7 @@ import {
 import { createMockPostWithAgent } from "@/data/core/test-utils";
 import { postEntity } from "./post";
 import type { ToolContext } from "../framework/types";
-import { renderPostExport } from "@/lib/post-export";
+import { POST_EXPORT_FORMATS, renderPostExport } from "@/lib/post-export";
 
 // ---------------------------------------------------------------------------
 // Mock all external dependencies
@@ -455,6 +455,10 @@ describe("export_post extra tool", () => {
     vi.mocked(PostService.update).mockReset();
   });
 
+  it("describes the supported formats from the shared registry", () => {
+    expect(exportTool.description).toContain(`Supported formats: ${POST_EXPORT_FORMATS.join(", ")}.`);
+  });
+
   it.each([{ id: "post-1" }, { slug: "test-post" }])("exports by %o without writes", async (identifier) => {
     vi.mocked(getPostById).mockResolvedValue(samplePostWithAgent);
     vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
@@ -476,7 +480,8 @@ describe("export_post extra tool", () => {
   });
 
   it.each(["website", "html", undefined])("rejects unsupported format %s", async (format) => {
-    expectError(await exportTool.handler(ctx, { id: "post-1", format }), "Unsupported export format");
+    expectError(await exportTool.handler(ctx, { id: "post-1", format }),
+      `Unsupported export format. Supported formats: ${POST_EXPORT_FORMATS.join(", ")}.`);
     expect(getPostById).not.toHaveBeenCalled();
   });
 });
