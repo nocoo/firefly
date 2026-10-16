@@ -29,7 +29,6 @@ const postSchema = z.object({
   status: z.enum(["draft", "published", "private", "archived"]),
   published_at: z.number().int().nullish(),
   canonical_url: z.string().nullable().optional(),
-  human_name: z.string().nullable().optional(),
 });
 
 interface RunOptions {
@@ -248,7 +247,7 @@ export async function runWeChatDraft(args: string[], options: RunOptions = {}) {
   const $ = load(html, null, false);
   const article = {
     title: post.title,
-    author: post.human_name?.trim() || "Zheng Li",
+    author: "李老板",
     digest: post.excerpt ?? "",
     content: $.html(),
     ...(sourceUrl ? { content_source_url: sourceUrl } : {}),

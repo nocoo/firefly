@@ -85,8 +85,9 @@ Other images are converted to JPEG (at most 1600 x 1600, first frame for animati
 if still too large for body-image upload. All images are preflighted before any
 WeChat writes. Alternate image sources are removed after URL replacement.
 
-Draft fields use the post title, `human_name` when available (otherwise
-`Zheng Li`), and the excerpt as the digest. Before any downloads or uploads, the
+Draft fields use the post title, the fixed author `李老板`, and the excerpt as
+the digest. `human_name` is ignored; there is no `--author` flag.
+Before any downloads or uploads, the
 script enforces the [draft/add limits](https://developers.weixin.qq.com/doc/service/api/draftbox/draftmanage/api_draft_add):
 title <=32, author <=16, digest <=120, and rendered HTML <20,000 Unicode code
 points. Oversized fields fail explicitly; no metadata is silently truncated.
