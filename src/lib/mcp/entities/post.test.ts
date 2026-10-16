@@ -490,7 +490,7 @@ describe("export_post extra tool", () => {
       title: "Example post",
       url: "https://lizheng.blog/2026/10/example-post",
       cover: "https://lizheng.blog/cover.png",
-      html: '<h2>Intro</h2>\n<p>Read <a href="https://example.com">source</a>.</p>\n<p>[图片 1]</p>',
+      html: '<h2>Intro</h2>\n<p>Read <a href="https://example.com/">source</a>.</p>\n<p>[图片 1]</p>',
       images: [{ index: 1, url: "https://lizheng.blog/images/diagram.png", alt: "Diagram", position: 2 }],
     });
     expect(post.content_html).toContain("Stale website cache");

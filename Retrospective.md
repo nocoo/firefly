@@ -173,3 +173,19 @@ and entity-encoded controls, mixed-case schemes, malformed URLs, safe protocols,
 and image-scheme bypasses. Treat parser normalization and the final decoded
 attribute as part of the security boundary, even when an earlier layer checked
 the input.
+
+### 2026-10-16: Semantic export cleanup must preserve document meaning
+
+Review found three content-fidelity gaps in the first website formatter: links
+remained relative to the destination editor, hard breaks became collapsible
+whitespace, and the attribute whitelist discarded ordered-list numbering.
+Earlier tests asserted those losses instead of checking the copied document's
+meaning outside the blog.
+
+Links now resolve against the original canonical article URL, including fragment
+links. Hard breaks remain `br` elements, even when images are extracted from the
+same block. The whitelist retains `start` on `ol` and `value` on `li`, while
+still removing presentation and event attributes. Regression tests cover direct
+HTML, Markdown rendering, and real MCP HTTP export. For content conversion,
+distinguish layout decoration from semantic structure and validate the exported
+document in its destination context.

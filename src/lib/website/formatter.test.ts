@@ -5,7 +5,7 @@ import { absoluteWebsiteImageUrl, formatWebsiteHtml } from "./formatter";
 const BASE_URL = "https://lizheng.blog/2026/10/example-post";
 
 describe("website HTML formatter", () => {
-  it("normalizes all headings and removes all attributes except inline link hrefs", () => {
+  it("normalizes all headings and removes presentation attributes", () => {
     const headings = [1, 2, 3, 4, 5, 6].map((depth) =>
       `<h${depth} id="heading" class="title" style="color:red">Heading ${depth}</h${depth}>`,
     ).join("");
@@ -39,6 +39,41 @@ describe("website HTML formatter", () => {
     expect(load(result.html, null, false)("a").attr("href")).toBe(href);
   });
 
+  it.each([
+    ["/x?a=1&amp;b=2", "https://lizheng.blog/x?a=1&b=2"],
+    ["../x", "https://lizheng.blog/2026/x"],
+    ["./x", "https://lizheng.blog/2026/10/x"],
+    ["x", "https://lizheng.blog/2026/10/x"],
+    ["#anchor", `${BASE_URL}#anchor`],
+    ["?q=two words", `${BASE_URL}?q=two%20words`],
+    ["//cdn.example.com/x", "https://cdn.example.com/x"],
+    ["HTTPS://EXAMPLE.COM:443/x", "https://example.com/x"],
+    ["ht&#9;tps://example.com/x", "https://example.com/x"],
+    ["/a b", "https://lizheng.blog/a%20b"],
+    ["/a%20b", "https://lizheng.blog/a%20b"],
+  ])("resolves and normalizes link %s against the post canonical URL", (source, expected) => {
+    const result = formatWebsiteHtml(`<p><a href="${source}">Link</a></p>`, BASE_URL);
+    expect(load(result.html, null, false)("a").attr("href")).toBe(expected);
+  });
+
+  it("preserves hard line break elements without presentation attributes", () => {
+    const result = formatWebsiteHtml('<p>One<br class="break" style="clear:both">Two<br>Three</p>', BASE_URL);
+    expect(result.html).toBe("<p>One<br>Two<br>Three</p>");
+    expect(result.images).toEqual([]);
+  });
+
+  it("retains a hard break in an image-containing block when extracting the image", () => {
+    const result = formatWebsiteHtml('<p><img src="/image.png"><br></p>', BASE_URL);
+    expect(result.html).toBe("<p><br></p>\n<p>[图片 1]</p>");
+    expect(result.images[0]?.position).toBe(0);
+  });
+
+  it.each([[7, 9], [-3, 0]])("preserves ordered-list start %i and item value %i only on their semantic elements", (start, value) => {
+    const result = formatWebsiteHtml(`<ol start="${start}" value="99" class="list" style="color:red"><li value="${value}" start="99" onclick="bad()">Item</li></ol><ul start="99"><li>Other</li></ul><p start="99" value="99">Text</p>`, BASE_URL);
+    expect(result.html).toBe(`<ol start="${start}"><li value="${value}">Item</li></ol>\n<ul><li>Other</li></ul>\n<p>Text</p>`);
+    expect(result.images).toEqual([]);
+  });
+
   it("replaces standalone images and emits each occurrence with its source block position", () => {
     const result = formatWebsiteHtml('<h2>First</h2>\n<p><img src="/one.png?a=1&amp;b=2" alt="One &amp; two"></p>\n<p>Text</p>\n<p><img src="//cdn.example.com/two.png"><img src="/one.png?a=1&amp;b=2" alt="Again"></p>', BASE_URL);
     expect(result.html).toBe("<h2>First</h2>\n<p>[图片 1]</p>\n<p>Text</p>\n<p>[图片 2]</p>\n<p>[图片 3]</p>");
@@ -64,22 +99,22 @@ describe("website HTML formatter", () => {
   it("unwraps non-semantic elements, preserves text, and removes form controls", () => {
     const result = formatWebsiteHtml('<div class="wrapper"><span>Text</span><p><del>Old</del><br><input type="checkbox">New</p><p><img src="/image.png"><hr></p></div>', BASE_URL);
     const $ = load(result.html, null, false);
-    expect($("div,span,del,br,input,[class],[style]")).toHaveLength(0);
+    expect($("div,span,del,input,[class],[style]")).toHaveLength(0);
     expect($.root().children().first().prop("tagName")).toBe("P");
-    expect($.text()).toContain("Old\nNew");
+    expect(result.html).toContain("<p>Old<br>New</p>");
     expect($("hr")).toHaveLength(1);
     expect(result.images).toEqual([{ index: 1, url: "https://lizheng.blog/image.png", alt: "", position: 2 }]);
   });
 
   it("wraps root-level inline elements and images without retaining wrapper divs", () => {
     const result = formatWebsiteHtml('<a href="/source">Source</a><img src="/image.png">', BASE_URL);
-    expect(result.html).toBe('<p><a href="/source">Source</a></p>\n<p>[图片 1]</p>');
+    expect(result.html).toBe('<p><a href="https://lizheng.blog/source">Source</a></p>\n<p>[图片 1]</p>');
     expect(result.images[0]?.position).toBe(1);
   });
 
   it("extracts linked images without leaving empty links or losing surrounding text", () => {
     const result = formatWebsiteHtml('<p><a href="/full"><strong><img src="/thumb.png" alt="Thumbnail"></strong></a></p><p>Read <a href="/article">article</a> <a href="/full"><img src="/thumb.png"></a></p>', BASE_URL);
-    expect(result.html).toBe('<p>[图片 1]</p>\n<p>Read <a href="/article">article</a> </p>\n<p>[图片 2]</p>');
+    expect(result.html).toBe('<p>[图片 1]</p>\n<p>Read <a href="https://lizheng.blog/article">article</a> </p>\n<p>[图片 2]</p>');
     expect(result.images.map(({ index, position }) => ({ index, position }))).toEqual([
       { index: 1, position: 0 }, { index: 2, position: 1 },
     ]);

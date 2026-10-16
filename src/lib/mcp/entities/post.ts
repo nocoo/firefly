@@ -261,7 +261,7 @@ export const postEntity: EntityConfig<Post> = {
     {
       name: "export_post",
       description:
-        `Export a post by id or slug (exactly one required). Supported formats: ${POST_EXPORT_FORMATS.join(", ")}. wechat returns inline-styled HTML matching the admin copy action. website returns clean semantic HTML for X Articles, h2 headings, inline links, numbered image placeholder paragraphs, and images with 1-based index, absolute url, alt, and 0-based source top-level block position. website also returns title, canonical url, and an absolute cover URL or null. Read-only; does not upload or publish.`,
+        `Export a post by id or slug (exactly one required). Supported formats: ${POST_EXPORT_FORMATS.join(", ")}. wechat returns inline-styled HTML matching the admin copy action. website returns clean semantic HTML for X Articles, h2 headings, absolute inline links, preserved hard breaks and list numbering, numbered image placeholder paragraphs, and images with 1-based index, absolute url, alt, and 0-based source top-level block position. website also returns title, canonical url, and an absolute cover URL or null. Read-only; does not upload or publish.`,
       schema: {
         id: z.string().optional(),
         slug: z.string().optional(),

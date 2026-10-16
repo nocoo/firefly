@@ -268,7 +268,7 @@ describe.concurrent("MCP Main Endpoint — Tool Calls", () => {
     };
     const created = await call("create_post", {
       title: "E2E WeChat export", slug, status: "draft", excerpt: "Export summary",
-      content: "## Heading\n\n[Reference](https://example.com/?a=1&b=2)\n\n![Image](https://example.com/body.png)",
+      content: "## Heading\n\n[Reference](https://example.com/?a=1&b=2)\n\n![Image](https://example.com/body.png)\n\n[Root](/guide) [Parent](../notes) [Section](#part)\n\nLine one  \nLine two\n\n7. Seven\n8. Eight\n\n[**Unsafe**](<java\tscript:alert(1)>)",
       featured_image: "https://example.com/cover.png",
     });
     expect(created.isError).toBeUndefined();
@@ -287,7 +287,9 @@ describe.concurrent("MCP Main Endpoint — Tool Calls", () => {
         expect(JSON.parse(website.content[0].text)).toEqual({
           id: before.id, slug, format: "website", title: "E2E WeChat export",
           url: `https://lizheng.blog/${slug}`, cover: "https://example.com/cover.png",
-          html: '<h2>Heading</h2>\n<p><a href="https://example.com/?a=1&amp;b=2">Reference</a></p>\n<p>[图片 1]</p>',
+          html: '<h2>Heading</h2>\n<p><a href="https://example.com/?a=1&amp;b=2">Reference</a></p>\n<p>[图片 1]</p>\n' +
+            `<p><a href="https://lizheng.blog/guide">Root</a> <a href="https://lizheng.blog/notes">Parent</a> <a href="https://lizheng.blog/${slug}#part">Section</a></p>\n` +
+            '<p>Line one<br>Line two</p>\n<ol start="7">\n<li>Seven</li>\n<li>Eight</li>\n</ol>\n<p><strong>Unsafe</strong></p>',
           images: [{ index: 1, url: "https://example.com/body.png", alt: "Image", position: 2 }],
         });
       }

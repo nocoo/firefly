@@ -37,7 +37,7 @@ unstyled semantic HTML for pasting into an X Article. The JSON result keeps
   "title": "Example post",
   "url": "https://lizheng.blog/2026/10/example-post",
   "cover": "https://lizheng.blog/cover.png",
-  "html": "<h2>Intro</h2>\n<p>Read <a href=\"https://example.com\">source</a>.</p>\n<p>[图片 1]</p>",
+  "html": "<h2>Intro</h2>\n<p>Read <a href=\"https://example.com/\">source</a>.</p>\n<p>[图片 1]</p>",
   "images": [
     {
       "index": 1,
@@ -50,8 +50,10 @@ unstyled semantic HTML for pasting into an X Article. The JSON result keeps
 ```
 
 All Markdown heading levels become `h2`. HTML uses only `h2`, `p`, `ul`, `ol`,
-`li`, `blockquote`, `pre`, `code`, `a`, `strong`, `em`, and `hr`; attributes are
-removed except link `href`. Links stay inline, not WeChat footnotes. Raw HTML
+`li`, `blockquote`, `pre`, `code`, `a`, `strong`, `em`, `hr`, and `br`; attributes
+are removed except link `href`, ordered-list `start`, and list-item `value`.
+Hard line breaks remain `br` elements, and list numbering is preserved.
+Links stay inline, not WeChat footnotes. Raw HTML
 uses the existing Markdown escaping policy. Unsupported formatting is unwrapped
 to retain its text. No styling, wrapper divs, title/excerpt header, cover image,
 or reference card is injected into the body.
@@ -61,6 +63,14 @@ removing control characters and checking whitespace-obfuscated schemes. Only
 HTTP, HTTPS, and mailto links are allowed; unsafe or malformed links retain
 their visible inline content without an anchor. The shared Markdown sanitizer
 uses this same policy, including for WeChat rendering.
+
+All links use browser URL serialization; relative links and fragment links
+resolve against the post canonical `url`.
+For `https://lizheng.blog/2026/10/example-post`, `/guide` becomes
+`https://lizheng.blog/guide`, `../notes` becomes
+`https://lizheng.blog/2026/notes`, and `#part` becomes
+`https://lizheng.blog/2026/10/example-post#part`. Mailto links remain mailto;
+spaces in URL paths and query values are percent-encoded rather than deleted.
 
 Body images become separate `<p>[图片 N]</p>` placeholders. `index` is one-based
 and follows document order; each occurrence is returned, including duplicate

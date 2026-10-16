@@ -10,7 +10,7 @@ export interface WebsiteImage {
 
 const SEMANTIC_TAGS = new Set([
   "h2", "p", "ul", "ol", "li", "blockquote", "pre", "code",
-  "a", "strong", "em", "hr", "img",
+  "a", "strong", "em", "hr", "br", "img",
 ]);
 const BLOCK_TAGS = new Set(["h2", "p", "ul", "ol", "blockquote", "pre", "hr"]);
 
@@ -33,9 +33,7 @@ export function formatWebsiteHtml(contentHtml: string, baseUrl: string): {
   });
   for (const element of $.root().find("*").toArray()) {
     const node = $(element);
-    if (element.name === "br") {
-      node.replaceWith("\n");
-    } else if (element.name === "input") {
+    if (element.name === "input") {
       node.remove();
     } else if (!SEMANTIC_TAGS.has(element.name)) {
       node.replaceWith(node.contents());
@@ -46,10 +44,13 @@ export function formatWebsiteHtml(contentHtml: string, baseUrl: string): {
           node.replaceWith(node.contents());
           continue;
         }
-        node.attr("href", href);
+        node.attr("href", new URL(href, baseUrl).href);
       }
       for (const attribute of Object.keys(element.attribs)) {
-        if (element.name !== "a" || attribute !== "href") node.removeAttr(attribute);
+        const semantic = (element.name === "a" && attribute === "href") ||
+          (element.name === "ol" && attribute === "start") ||
+          (element.name === "li" && attribute === "value");
+        if (!semantic) node.removeAttr(attribute);
       }
     }
   }
@@ -83,7 +84,7 @@ export function formatWebsiteHtml(contentHtml: string, baseUrl: string): {
       const node = $(descendant);
       if (!node.contents().length) node.remove();
     }
-    if (!placeholders.length || block.text().trim() || block.find("hr").length) {
+    if (!placeholders.length || block.text().trim() || block.find("hr,br").length) {
       blocks.push($.html(element));
     }
     blocks.push(...placeholders);
