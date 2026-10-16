@@ -465,9 +465,51 @@ describe("export_post extra tool", () => {
     const result = await exportTool.handler(ctx, { ...identifier, format: "wechat" });
     expect(parseToolResult(result)).toEqual({
       id: "post-1", slug: "test-post", format: "wechat",
-      html: renderPostExport(samplePostWithAgent, "wechat"),
+      html: renderPostExport(samplePostWithAgent, "wechat").html,
     });
     expect(PostService.update).not.toHaveBeenCalled();
+  });
+
+  it.each([{ id: "post-1" }, { slug: "example-post" }])("exports website metadata and image positions by %o without writes", async (identifier) => {
+    const post = {
+      ...samplePostWithAgent,
+      slug: "example-post",
+      title: "Example post",
+      published_at: Date.parse("2026-10-15T23:30:00Z") / 1000,
+      featured_image: "/cover.png",
+      content: "# Intro\n\nRead [source](https://example.com).\n\n![Diagram](/images/diagram.png)",
+      content_html: '<div style="color:red">Stale website cache</div>',
+    };
+    vi.mocked(getPostById).mockResolvedValue(post);
+    vi.mocked(getPostBySlug).mockResolvedValue(post);
+    const result = await exportTool.handler(ctx, { ...identifier, format: "website" });
+    expect(parseToolResult(result)).toEqual({
+      id: "post-1",
+      slug: "example-post",
+      format: "website",
+      title: "Example post",
+      url: "https://lizheng.blog/2026/10/example-post",
+      cover: "https://lizheng.blog/cover.png",
+      html: '<h2>Intro</h2>\n<p>Read <a href="https://example.com/">source</a>.</p>\n<p>[图片 1]</p>',
+      images: [{ index: 1, url: "https://lizheng.blog/images/diagram.png", alt: "Diagram", position: 2 }],
+    });
+    expect(post.content_html).toContain("Stale website cache");
+    expect(PostService.update).not.toHaveBeenCalled();
+  });
+
+  it.each([null, "https://assets.example.com/cover.png"])("returns website cover %s and the existing undated URL convention", async (cover) => {
+    vi.mocked(getPostById).mockResolvedValue({ ...samplePostWithAgent, published_at: null, featured_image: cover, content: "" });
+    const result = await exportTool.handler(ctx, { id: "post-1", format: "website" });
+    expect(parseToolResult(result)).toEqual({
+      id: "post-1", slug: "test-post", format: "website", title: "Test Post",
+      url: "https://lizheng.blog/test-post", cover, html: "", images: [],
+    });
+  });
+
+  it("uses the canonical UTC publication month at a local month boundary", async () => {
+    vi.mocked(getPostById).mockResolvedValue({ ...samplePostWithAgent, published_at: Date.parse("2026-03-31T23:30:00Z") / 1000 });
+    const result = await exportTool.handler(ctx, { id: "post-1", format: "website" });
+    expect(parseToolResult(result)).toMatchObject({ url: "https://lizheng.blog/2026/03/test-post" });
   });
 
   it.each([
@@ -479,7 +521,7 @@ describe("export_post extra tool", () => {
     expectError(await exportTool.handler(ctx, { ...identifier, format: "wechat" }), message);
   });
 
-  it.each(["website", "html", undefined])("rejects unsupported format %s", async (format) => {
+  it.each(["html", undefined])("rejects unsupported format %s", async (format) => {
     expectError(await exportTool.handler(ctx, { id: "post-1", format }),
       `Unsupported export format. Supported formats: ${POST_EXPORT_FORMATS.join(", ")}.`);
     expect(getPostById).not.toHaveBeenCalled();

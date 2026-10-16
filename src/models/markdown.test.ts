@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderMarkdown, extractToc } from "./markdown";
+import { renderMarkdown, extractToc, sanitizeUrl } from "./markdown";
 
 const originalR2PublicUrl = process.env.R2_PUBLIC_URL;
 
@@ -90,13 +90,10 @@ describe("renderMarkdown", () => {
     expect(html).toContain('alt="5D3L2883"');
   });
 
-  it("returns empty filename when URL parsing throws (out-of-range port)", () => {
-    // Port 99999 is out of range — `new URL("https://example.com:99999/x.png")`
-    // throws. filenameFromUrl's catch must produce an empty fallback so the
-    // image still renders with `alt=""`.
+  it("rejects an image with an out-of-range port before extracting its filename", () => {
     const html = renderMarkdown("![](https://example.com:99999/x.png)");
-    expect(html).toContain("src=\"https://example.com:99999/x.png\"");
-    expect(html).toContain("alt=\"\"");
+    expect(html).not.toContain("<img");
+    expect(html).not.toContain("src=");
   });
 
   it("uses postTitle when the image URL has no filename", () => {
@@ -327,12 +324,43 @@ const x = 1;
     expect(html).not.toContain("href=");
   });
 
-  it("allows mailto: and tel: URLs in links", () => {
+  it("allows mailto: URLs in links", () => {
     const html1 = renderMarkdown("[email](mailto:user@example.com)");
     expect(html1).toContain('href="mailto:user@example.com"');
+  });
 
-    const html2 = renderMarkdown("[call](tel:+1234567890)");
-    expect(html2).toContain('href="tel:+1234567890"');
+  it.each([
+    ["tel:+1234567890", "tel:+1234567890"],
+    ["TEL:+1-234-567;ext=89", "TEL:+1-234-567;ext=89"],
+    ["te\tl:+1234567890", "tel:+1234567890"],
+  ])("preserves supported telephone links after URL validation: %j", (href, expected) => {
+    const html = renderMarkdown(`[**Call**](<${href}>)`);
+    expect(html).toContain(`href="${expected}"`);
+    expect(html).toContain("<strong>Call</strong>");
+    expect(html).not.toContain('target="_blank"');
+  });
+
+  it.each(["java\tscript:alert(1)", "jav\u0000ascript:alert(1)", "java script:alert(1)", "\u0001javascript:alert(1)", "ftp://example.com/file"])("rejects obfuscated or disallowed link schemes: %j", (href) => {
+    const html = renderMarkdown(`[**click**](<${href}>)`);
+    expect(html).not.toContain("href=");
+    expect(html).toContain("<strong>click</strong>");
+  });
+
+  it.each(["java\tscript:alert(1)", "jav\u0000ascript:alert(1)"])("rejects control-character image scheme bypasses: %j", (href) => {
+    expect(renderMarkdown(`![Image](<${href}>)`)).not.toContain("<img");
+  });
+
+  it.each(["HTTPS://example.com/path", "ht\ttps://example.com/path"])("allows safe HTTP schemes after normalization: %j", (href) => {
+    const html = renderMarkdown(`[click](<${href}>)`);
+    expect(html).toContain('href="');
+    expect(html).not.toContain("\t");
+    expect(html).toContain('rel="noopener noreferrer"');
+  });
+
+  it("rejects malformed absolute URLs rather than emitting an unchecked href", () => {
+    const html = renderMarkdown("[click](https://[invalid)");
+    expect(html).not.toContain("href=");
+    expect(html).toContain("click");
   });
 
   it("allows bare relative paths in links", () => {
@@ -489,6 +517,30 @@ const x = 1;
     const html = renderMarkdown("正文[^1]\n\n---\n\n[^1]: [来源](https://example.com)");
     expect((html.match(/<hr class="blog-hr">/g) ?? []).length).toBe(1);
     expect(html).toMatch(/<section class="footnotes"[^>]*>\s*<hr class="blog-hr">/);
+  });
+});
+
+describe("sanitizeUrl", () => {
+  it.each([
+    ["tel:+1234567890", "tel:+1234567890"],
+    ["TEL:+1-234;ext=5", "TEL:+1-234;ext=5"],
+    ["\u0001te\tl:+123\r456\n7890 ", "tel:+1234567890"],
+  ])("allows parsed telephone URLs without weakening normalization: %j", (input, expected) => {
+    const result = sanitizeUrl(input);
+    expect(result).toBe(expected);
+    expect(new URL(result ?? "").protocol).toBe("tel:");
+  });
+
+  it.each(["", " \t\n", "java\nscript:alert(1)", "java\rscript:alert(1)", "java\u007fscript:alert(1)", "java\u009fscript:alert(1)", "java\u00a0script:alert(1)", "java\u2003script:alert(1)"])("rejects empty or control/whitespace-obfuscated URLs %j", (url) => {
+    expect(sanitizeUrl(url)).toBeNull();
+  });
+
+  it.each(["https://example.com/a b?q=two words", "/a b", "../a b", "#heading", "//example.com/path"])("preserves significant path/query spaces and relative URL syntax: %s", (url) => {
+    expect(sanitizeUrl(url)).toBe(url);
+  });
+
+  it("strips embedded controls from safe URLs before returning them", () => {
+    expect(sanitizeUrl(" \u0000ht\ttps://exa\rmple.com/a\n b \u001f")).toBe("https://example.com/a b");
   });
 });
 

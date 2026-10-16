@@ -75,7 +75,7 @@ function mockNetwork(options: {
       else {
         expect(rpc.params.name).toBe("export_post");
         expect(rpc.params.arguments).toEqual({ id: ID, format: "wechat" });
-        data = { id: article.id, slug: article.slug, format: "wechat", html: options.html ?? renderPostExport(article, "wechat") };
+        data = { id: article.id, slug: article.slug, format: "wechat", html: options.html ?? renderPostExport(article, "wechat").html };
       }
       return Response.json({ jsonrpc: "2.0", id: rpc.id, result: { content: [{ type: "text", text: JSON.stringify(data) }] } });
     }
@@ -136,7 +136,7 @@ describe("WeChat draft CLI", () => {
     expect(result.dryRun).toBe(true);
     if (!result.dryRun) throw new Error("Expected dry run");
     directories.push(join(result.htmlPath, ".."));
-    expect(await readFile(result.htmlPath, "utf8")).toBe(renderPostExport(post, "wechat"));
+    expect(await readFile(result.htmlPath, "utf8")).toBe(renderPostExport(post, "wechat").html);
     expect((await stat(result.htmlPath)).mode & 0o777).toBe(0o600);
     expect((await stat(join(result.htmlPath, ".."))).mode & 0o777).toBe(0o700);
     const rpcCalls = callsTo(network, "/api/mcp").map(([, init]) => JSON.parse(String(init?.body)));
@@ -156,7 +156,7 @@ describe("WeChat draft CLI", () => {
     if (!result.dryRun) throw new Error("Expected dry run");
     directories.push(join(result.htmlPath, ".."));
     expect(result.renderedLocally).toBe(true);
-    expect(await readFile(result.htmlPath, "utf8")).toBe(renderPostExport(post, "wechat"));
+    expect(await readFile(result.htmlPath, "utf8")).toBe(renderPostExport(post, "wechat").html);
     const toolCalls = callsTo(network, "/api/mcp").map(([, init]) => JSON.parse(String(init?.body))).filter((call) => call.method === "tools/call");
     expect(toolCalls).toEqual([expect.objectContaining({ params: { name: "get_post", arguments: { slug: "example-post" } } })]);
   });
@@ -179,7 +179,7 @@ describe("WeChat draft CLI", () => {
     }
     const article = JSON.parse(String(callsTo(network, "/cgi-bin/draft/add")[0][1]?.body)).articles[0];
     expect(article).toMatchObject({
-      title: post.title, author: "Li Zheng", digest: post.excerpt,
+      title: post.title, author: "李老板", digest: post.excerpt,
       content_source_url: "https://lizheng.blog/2026/03/example-post", thumb_media_id: "fixture-thumb-id",
     });
     const $ = load(article.content);
@@ -203,11 +203,11 @@ describe("WeChat draft CLI", () => {
     expect(content).toContain("<p>/body.png?a=1&amp;b=2</p>");
   });
 
-  it("uses the requested default author and preserves a digest at the Unicode code-point limit", async () => {
-    const network = mockNetwork({ post: { ...post, human_name: "", published_at: null, excerpt: "😀".repeat(120) } });
+  it.each([null, "", "   ", "Other Author", "x".repeat(17)])("always uses the fixed author regardless of human_name %j", async (humanName) => {
+    const network = mockNetwork({ post: { ...post, human_name: humanName, published_at: null, excerpt: "😀".repeat(120) } });
     await runWeChatDraft([ID], network.options);
     const article = JSON.parse(String(callsTo(network, "/cgi-bin/draft/add")[0][1]?.body)).articles[0];
-    expect(article.author).toBe("Zheng Li");
+    expect(article.author).toBe("李老板");
     expect(article.digest).toBe("😀".repeat(120));
     expect(article).not.toHaveProperty("content_source_url");
   });
@@ -273,7 +273,6 @@ describe("WeChat draft CLI", () => {
 
   it.each([
     { fields: { title: "x".repeat(33) }, message: "title exceeds 32 characters" },
-    { fields: { human_name: "x".repeat(17) }, message: "author exceeds 16 characters" },
     { fields: { excerpt: "x".repeat(121) }, message: "digest exceeds 120 characters" },
   ])("rejects oversized draft metadata before downloads or uploads: $message", async ({ fields, message }) => {
     const network = mockNetwork({ post: { ...post, ...fields } });
@@ -282,11 +281,11 @@ describe("WeChat draft CLI", () => {
   });
 
   it("accepts metadata at each Unicode code-point limit without truncation", async () => {
-    const fields = { title: "😀".repeat(32), human_name: "😀".repeat(16), excerpt: "😀".repeat(120) };
+    const fields = { title: "😀".repeat(32), excerpt: "😀".repeat(120) };
     const network = mockNetwork({ post: { ...post, ...fields } });
     await runWeChatDraft([ID], network.options);
     const article = JSON.parse(String(callsTo(network, "/cgi-bin/draft/add")[0][1]?.body)).articles[0];
-    expect(article).toMatchObject({ title: fields.title, author: fields.human_name, digest: fields.excerpt });
+    expect(article).toMatchObject({ title: fields.title, author: "李老板", digest: fields.excerpt });
   });
 
   it.each([20_000, 20_001])("rejects %i-character HTML before downloads or uploads", async (length) => {

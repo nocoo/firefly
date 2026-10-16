@@ -125,3 +125,82 @@ Non-public or undated posts now omit the source URL unless explicitly overridden
 Public URL month calculations and route checks share UTC rather than inheriting
 the CLI or server process timezone. Treat remote side-effect preflight and
 publish-time defaults as behavior to test, not assumptions to pin in fixtures.
+
+### 2026-10-16: Git identity environment overrides per-command configuration
+
+The default-author change was committed with the requested `-c user.name` and
+`-c user.email` flags, but the recorded author was `nocoo` rather than `Zheng Li`.
+Inherited `GIT_AUTHOR_NAME` and `GIT_COMMITTER_NAME` values take precedence over
+Git configuration. The commit remains local; no push, PR, or release occurred.
+
+After explicit user authorization, the local commit was amended with inline
+`GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and
+`GIT_COMMITTER_EMAIL` assignments as well as the requested `-c` configuration.
+Both recorded identities were verified with `git show --format=fuller`.
+For future task-specific identities, control the environment as well as Git
+configuration and verify the result immediately. Never silently rewrite history
+to conceal an identity error; obtain authorization before amending a commit.
+
+### 2026-10-16: Shared export contracts include separately configured E2E consumers
+
+The website exporter changed `renderPostExport` from an HTML string to a
+structured result. Source and script consumers were updated, and root unit
+tests, coverage, typecheck, lint, and the production build passed. The isolated
+API run then exposed an overlooked importer in `e2e/api/mcp.test.ts`: it still
+expected a string and still rejected the newly supported website format.
+
+The initial reference search was scoped to `src` and `scripts`; root Vitest and
+TypeScript do not include API E2E files. The search was repeated across the
+whole repository, and the HTTP test now checks both formats by ID and slug,
+including website image positions, metadata, and unchanged persisted content.
+When changing a shared function or accepted format set, search all importers
+and format assertions before choosing verification commands. Separate runner
+configuration is not evidence that those consumers were checked by root tests.
+
+### 2026-10-16: URL safety must match browser parsing, not a scheme regex
+
+Review reproduced a stored-content XSS path in the website export: a tab inside
+`java\tscript:` bypassed the shared Markdown sanitizer's scheme regex, and the
+formatter retained the decoded href without another check. The original tests
+only covered contiguous dangerous schemes and trusted the shared sanitizer.
+
+The shared sanitizer now removes control characters, validates both the actual
+URL and a whitespace-free protocol probe with the URL parser, and permits only
+HTTP, HTTPS, and mailto. Significant spaces in paths remain intact. The website
+formatter repeats the same validation after HTML attribute decoding and unwraps
+unsafe links without losing inline content. Regression cases exercise literal
+and entity-encoded controls, mixed-case schemes, malformed URLs, safe protocols,
+and image-scheme bypasses. Treat parser normalization and the final decoded
+attribute as part of the security boundary, even when an earlier layer checked
+the input.
+
+### 2026-10-16: Semantic export cleanup must preserve document meaning
+
+Review found three content-fidelity gaps in the first website formatter: links
+remained relative to the destination editor, hard breaks became collapsible
+whitespace, and the attribute whitelist discarded ordered-list numbering.
+Earlier tests asserted those losses instead of checking the copied document's
+meaning outside the blog.
+
+Links now resolve against the original canonical article URL, including fragment
+links. Hard breaks remain `br` elements, even when images are extracted from the
+same block. The whitelist retains `start` on `ol` and `value` on `li`, while
+still removing presentation and event attributes. Regression tests cover direct
+HTML, Markdown rendering, and real MCP HTTP export. For content conversion,
+distinguish layout decoration from semantic structure and validate the exported
+document in its destination context.
+
+### 2026-10-16: Export protocol restrictions must not remove supported site links
+
+The URL-safety fix reused the website export's protocol allowlist in the shared
+Markdown sanitizer. That removed existing `tel:` links across the blog rather
+than limiting only the export. The earlier telephone-link assertion was changed
+to rejection, hiding the unrelated regression until review.
+
+The shared sanitizer again permits telephone URLs after the same URL parsing,
+control removal, and whitespace-obfuscation checks. Website export applies its
+HTTP/HTTPS/mailto allowlist independently. Regression tests verify ordinary,
+mixed-case, and control-normalized telephone links in shared rendering while
+checking that website export still removes their anchors and preserves text.
+Keep common validation separate from destination-specific restrictions; a
+security fix must not silently redefine supported behavior in other consumers.

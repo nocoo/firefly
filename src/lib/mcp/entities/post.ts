@@ -16,7 +16,9 @@ import { unfurlUrl, UnfurlError } from "@/services/unfurl";
 import type { EntityConfig, ToolContext } from "../framework/types";
 import { resolveEntity } from "../framework/resolve";
 import { ok, error } from "../framework/response";
-import { POST_EXPORT_FORMATS, renderPostExport } from "@/lib/post-export";
+import { POST_EXPORT_FORMATS, POST_EXPORT_SITE_URL, renderPostExport } from "@/lib/post-export";
+import { postPath } from "@/lib/seo";
+import { absoluteWebsiteImageUrl } from "@/lib/website/formatter";
 
 // ---------------------------------------------------------------------------
 // Extra tool: unfurl_reference (two modes: preview + save)
@@ -259,11 +261,11 @@ export const postEntity: EntityConfig<Post> = {
     {
       name: "export_post",
       description:
-        `Export a post by id or slug (exactly one required) as inline-styled HTML matching the admin copy action. Supported formats: ${POST_EXPORT_FORMATS.join(", ")}. Read-only; does not upload or publish.`,
+        `Export a post by id or slug (exactly one required). Supported formats: ${POST_EXPORT_FORMATS.join(", ")}. wechat returns inline-styled HTML matching the admin copy action. website returns clean semantic HTML for X Articles, h2 headings, absolute inline links, preserved hard breaks and list numbering, numbered image placeholder paragraphs, and images with 1-based index, absolute url, alt, and 0-based source top-level block position. website also returns title, canonical url, and an absolute cover URL or null. Read-only; does not upload or publish.`,
       schema: {
         id: z.string().optional(),
         slug: z.string().optional(),
-        format: z.enum(POST_EXPORT_FORMATS),
+        format: z.enum(POST_EXPORT_FORMATS).describe("wechat: inline-styled HTML; website: unstyled X Article HTML with separate image metadata."),
       },
       handler: async (ctx, args) => {
         const format = z.enum(POST_EXPORT_FORMATS).safeParse(args.format);
@@ -272,11 +274,19 @@ export const postEntity: EntityConfig<Post> = {
           ctx.db, args, getPostById, getPostBySlug, "Post",
         );
         if ("error" in resolved) return error(resolved.error);
+        const url = `${POST_EXPORT_SITE_URL}${postPath(resolved.slug, resolved.published_at)}`;
         return ok({
           id: resolved.id,
           slug: resolved.slug,
           format: format.data,
-          html: renderPostExport(resolved, format.data),
+          ...renderPostExport(resolved, format.data, url),
+          ...(format.data === "website" ? {
+            title: resolved.title,
+            url,
+            cover: resolved.featured_image
+              ? absoluteWebsiteImageUrl(resolved.featured_image, url)
+              : null,
+          } : {}),
         });
       },
     },

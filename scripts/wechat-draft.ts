@@ -29,7 +29,6 @@ const postSchema = z.object({
   status: z.enum(["draft", "published", "private", "archived"]),
   published_at: z.number().int().nullish(),
   canonical_url: z.string().nullable().optional(),
-  human_name: z.string().nullable().optional(),
 });
 
 interface RunOptions {
@@ -236,7 +235,7 @@ export async function runWeChatDraft(args: string[], options: RunOptions = {}) {
   const byId = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(identifier);
   const post = validated(postSchema, await callTool("get_post", byId ? { id: identifier } : { slug: identifier }), "Firefly post");
   const renderedLocally = !tools.tools.some((tool) => tool.name === "export_post");
-  const html = renderedLocally ? renderPostExport(post, "wechat") : validated(z.object({
+  const html = renderedLocally ? renderPostExport(post, "wechat").html : validated(z.object({
     id: z.literal(post.id), slug: z.literal(post.slug), format: z.literal("wechat"), html: z.string().min(1),
   }), await callTool("export_post", { id: post.id, format: "wechat" }), "Firefly export").html;
   if (!post.featured_image) throw new DraftError("Post needs a featured image for the WeChat draft cover");
@@ -248,7 +247,7 @@ export async function runWeChatDraft(args: string[], options: RunOptions = {}) {
   const $ = load(html, null, false);
   const article = {
     title: post.title,
-    author: post.human_name?.trim() || "Zheng Li",
+    author: "李老板",
     digest: post.excerpt ?? "",
     content: $.html(),
     ...(sourceUrl ? { content_source_url: sourceUrl } : {}),

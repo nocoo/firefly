@@ -342,7 +342,7 @@ describe("createMcpServer", () => {
     expect(exportPost?.inputSchema.required).toEqual(["format"]);
     expect(exportPost?.inputSchema.properties).toMatchObject({
       id: { type: "string" }, slug: { type: "string" },
-      format: { type: "string", enum: ["wechat"] },
+      format: { type: "string", enum: ["wechat", "website"] },
     });
 
     // update_post has id and slug as optional identifiers
@@ -373,8 +373,23 @@ describe("createMcpServer", () => {
     expect(data.html).toContain('style="');
     expect(data.html).toContain("Body text");
     expectToolError(await callTool("export_post", { id: "missing", format: "wechat" }), "not found");
-    const unsupported = await callTool("export_post", { id: "p-1", format: "website" });
+    const unsupported = await callTool("export_post", { id: "p-1", format: "html" });
     expect(unsupported.result?.isError || unsupported.error).toBeTruthy();
+    await transport.close();
+    await server.close();
+  });
+
+  it("exports clean website HTML and metadata through the existing JSON-RPC success envelope", async () => {
+    const { server, transport, callTool } = await createSession(db);
+    for (const identifier of [{ id: "p-1" }, { slug: "hello-world" }]) {
+      expect(expectSuccess(await callTool("export_post", { ...identifier, format: "website" }))).toEqual({
+        id: "p-1", slug: "hello-world", format: "website", html: "<p>Body text</p>",
+        images: [], title: "Hello World", url: "https://lizheng.blog/hello-world", cover: null,
+      });
+    }
+    expectToolError(await callTool("export_post", { id: "missing", format: "website" }), "not found");
+    expectToolError(await callTool("export_post", { format: "website" }), "required");
+    expectToolError(await callTool("export_post", { id: "p-1", slug: "hello-world", format: "website" }), "not both");
     await transport.close();
     await server.close();
   });
@@ -565,8 +580,10 @@ describe("createMcpServer with author context", () => {
     expect(names).not.toContain("generate_excerpt");
     expect(names).not.toContain("unfurl_reference");
     expect(names).not.toContain("export_post");
-    const denied = await callTool("export_post", { id: "p-1", format: "wechat" });
-    expect(denied.result?.isError || denied.error).toBeTruthy();
+    for (const format of ["wechat", "website"]) {
+      const denied = await callTool("export_post", { id: "p-1", format });
+      expect(denied.result?.isError || denied.error).toBeTruthy();
+    }
 
     await transport.close();
     await server.close();
