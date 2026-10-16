@@ -86,7 +86,7 @@ export function formatWebsiteHtml(contentHtml: string, baseUrl: string): {
       if (!node.contents().length) node.remove();
     }
     if (!placeholders.length || block.text().trim() || block.find("hr,br").length) {
-      blocks.push($.html(element));
+      blocks.push($.html(element, { xml: { xmlMode: false, encodeEntities: "utf8" } }));
     }
     blocks.push(...placeholders);
   });

@@ -5,6 +5,27 @@ import { absoluteWebsiteImageUrl, formatWebsiteHtml } from "./formatter";
 const BASE_URL = "https://lizheng.blog/2026/10/example-post";
 
 describe("website HTML formatter", () => {
+  it.each([
+    "<h1>中文标题</h1><p>你好，世界！ café Ελληνικά 😀</p>",
+    "<h1>&#x4e2d;&#x6587;标题</h1><p>&#20320;&#22909;，世界！ café Ελληνικά 😀</p>",
+  ])("round-trips Unicode as readable characters without numeric entities: %s", (source) => {
+    const result = formatWebsiteHtml(source, BASE_URL);
+    expect(result.html).toBe("<h2>中文标题</h2>\n<p>你好，世界！ café Ελληνικά 😀</p>");
+    expect(result.html).not.toMatch(/&#(?:x[\da-f]+|\d+);/i);
+    const $ = load(result.html, null, false);
+    expect($("h2").text()).toBe("中文标题");
+    expect($("p").text()).toBe("你好，世界！ café Ελληνικά 😀");
+  });
+
+  it("keeps HTML-special text and link attributes safely escaped without double decoding", () => {
+    const result = formatWebsiteHtml('<p>&lt;script&gt; &amp; &quot;中文&quot; &apos;文本&apos; &amp;lt;tag&amp;gt; <a href="https://example.com/?a=1&amp;b=2">链接</a></p>', BASE_URL);
+    expect(result.html).toBe('<p>&lt;script&gt; &amp; "中文" \'文本\' &amp;lt;tag&amp;gt; <a href="https://example.com/?a=1&amp;b=2">链接</a></p>');
+    const $ = load(result.html, null, false);
+    expect($("script,tag")).toHaveLength(0);
+    expect($("p").text()).toBe('<script> & "中文" \'文本\' &lt;tag&gt; 链接');
+    expect($("a").attr("href")).toBe("https://example.com/?a=1&b=2");
+  });
+
   it("normalizes all headings and removes presentation attributes", () => {
     const headings = [1, 2, 3, 4, 5, 6].map((depth) =>
       `<h${depth} id="heading" class="title" style="color:red">Heading ${depth}</h${depth}>`,
