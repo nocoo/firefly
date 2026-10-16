@@ -32,6 +32,8 @@
   },
   "include": [
     "src",
+    "scripts/wechat-draft.ts",
+    "scripts/wechat-draft.test.ts",
     "vitest.config.ts",
     "next-env.d.ts",
     ".next/types/**/*.ts",

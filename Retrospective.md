@@ -89,3 +89,39 @@ For a no-decrease pruning batch, compare covered/total fractions before commit,
 not just printed percentages. If removing dead code changes a denominator,
 retain the batch until every metric satisfies the exact comparison. Strengthen
 only a missing observable contract, never add assertion-free coverage probes.
+
+### 2026-10-16: Keep standalone CLI types independent of Next.js environment augmentation
+
+The first WeChat CLI draft accepted `NodeJS.ProcessEnv` for its injected
+environment. Once the script and its tests were added to the root typecheck,
+Next.js's required `NODE_ENV` augmentation rejected otherwise valid credential
+fixtures. No remote writes occurred. The CLI now accepts a readonly string
+dictionary and reads only its three credential names. Its source and tests remain
+explicitly included in `tsconfig.json`; passing transpile-only script tests is
+not sufficient evidence that a Bun utility satisfies the repository's types.
+
+The initial standalone build also reached compilation but failed prerendering
+without a local Worker. Its leftover `.next/BUILD_ID` made the E2E runner reuse
+an incomplete build, which then failed on a missing `preview-props.json`.
+Removing only that generated marker forced a successful rebuild against the
+runner's fresh, marked local D1/R2 state. A build marker's presence or timestamp
+alone is not proof of a completed build; retain the command's exit status.
+
+### 2026-10-16: Preflight must validate decoded data and publish-time assumptions
+
+Review of the WeChat draft CLI found that image metadata was mistaken for a
+complete decode, the download cap was checked only after buffering the response,
+and draft field limits were left to the remote write API. The original PNG test
+fixture itself had readable metadata but corrupt pixel data, hiding the issue.
+The CLI now counts and caps streamed bytes, cancels overflowing downloads,
+decodes retained PNG/JPEG data fully, and checks draft field limits before
+uploads. Regression fixtures include a header-valid truncated PNG and an
+unbounded stream without Content-Length. All write behavior is tested through
+an injected mock fetcher; no real WeChat writes are needed for verification.
+
+The URL test also asserted a fictitious slug-only path for an undated draft.
+Publishing may assign the current timestamp, so that future path is not known.
+Non-public or undated posts now omit the source URL unless explicitly overridden.
+Public URL month calculations and route checks share UTC rather than inheriting
+the CLI or server process timezone. Treat remote side-effect preflight and
+publish-time defaults as behavior to test, not assumptions to pin in fixtures.

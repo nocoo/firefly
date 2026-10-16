@@ -16,6 +16,7 @@ import { unfurlUrl, UnfurlError } from "@/services/unfurl";
 import type { EntityConfig, ToolContext } from "../framework/types";
 import { resolveEntity } from "../framework/resolve";
 import { ok, error } from "../framework/response";
+import { POST_EXPORT_FORMATS, renderPostExport } from "@/lib/post-export";
 
 // ---------------------------------------------------------------------------
 // Extra tool: unfurl_reference (two modes: preview + save)
@@ -255,6 +256,30 @@ export const postEntity: EntityConfig<Post> = {
     },
   },
   extraTools: [
+    {
+      name: "export_post",
+      description:
+        `Export a post by id or slug (exactly one required) as inline-styled HTML matching the admin copy action. Supported formats: ${POST_EXPORT_FORMATS.join(", ")}. Read-only; does not upload or publish.`,
+      schema: {
+        id: z.string().optional(),
+        slug: z.string().optional(),
+        format: z.enum(POST_EXPORT_FORMATS),
+      },
+      handler: async (ctx, args) => {
+        const format = z.enum(POST_EXPORT_FORMATS).safeParse(args.format);
+        if (!format.success) return error(`Unsupported export format. Supported formats: ${POST_EXPORT_FORMATS.join(", ")}.`);
+        const resolved = await resolveEntity(
+          ctx.db, args, getPostById, getPostBySlug, "Post",
+        );
+        if ("error" in resolved) return error(resolved.error);
+        return ok({
+          id: resolved.id,
+          slug: resolved.slug,
+          format: format.data,
+          html: renderPostExport(resolved, format.data),
+        });
+      },
+    },
     {
       name: "generate_excerpt",
       description:

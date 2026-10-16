@@ -271,11 +271,11 @@ describe("createMcpServer", () => {
     expect(body.result.serverInfo.name).toBe("firefly");
   });
 
-  it("registers exactly 17 tools with expected names", async () => {
+  it("registers exactly 18 tools with expected names", async () => {
     const { server, transport, listTools } = await createSession(db);
 
     const body = await listTools();
-    expect(body.result.tools).toHaveLength(17);
+    expect(body.result.tools).toHaveLength(18);
 
     const names = body.result.tools
       .map((t: { name: string }) => t.name)
@@ -287,6 +287,7 @@ describe("createMcpServer", () => {
       "delete_category",
       "delete_post",
       "delete_tag",
+      "export_post",
       "generate_excerpt",
       "get_category",
       "get_post",
@@ -337,6 +338,13 @@ describe("createMcpServer", () => {
     const getPost = tools.find((t) => t.name === "get_post");
     expect(getPost?.inputSchema.required ?? []).toEqual([]);
 
+    const exportPost = tools.find((t) => t.name === "export_post");
+    expect(exportPost?.inputSchema.required).toEqual(["format"]);
+    expect(exportPost?.inputSchema.properties).toMatchObject({
+      id: { type: "string" }, slug: { type: "string" },
+      format: { type: "string", enum: ["wechat"] },
+    });
+
     // update_post has id and slug as optional identifiers
     const updatePost = tools.find((t) => t.name === "update_post");
     const updatePostProps = updatePost?.inputSchema.properties as
@@ -354,6 +362,22 @@ describe("createMcpServer", () => {
   });
 
   // ---- Post tools: success + error paths ----
+
+  it("exports inline-styled HTML through JSON-RPC and rejects unsupported formats", async () => {
+    const { server, transport, callTool } = await createSession(db);
+    const data = expectSuccess(await callTool("export_post", {
+      slug: "hello-world", format: "wechat",
+    })) as Record<string, unknown>;
+    expect(data).toMatchObject({ id: "p-1", slug: "hello-world", format: "wechat" });
+    expect(data.html).toContain('id="bm-md"');
+    expect(data.html).toContain('style="');
+    expect(data.html).toContain("Body text");
+    expectToolError(await callTool("export_post", { id: "missing", format: "wechat" }), "not found");
+    const unsupported = await callTool("export_post", { id: "p-1", format: "website" });
+    expect(unsupported.result?.isError || unsupported.error).toBeTruthy();
+    await transport.close();
+    await server.close();
+  });
 
   it("post tools succeed with valid data", async () => {
     const { server, transport, callTool } = await createSession(db);
@@ -532,14 +556,17 @@ describe("createMcpServer with author context", () => {
     await server.close();
   });
 
-  it("agent post tools do not include extra tools (generate_excerpt, unfurl_reference)", async () => {
-    const { server, transport, listTools } = await createSession(db, authorContext);
+  it("author scope cannot call admin extra tools", async () => {
+    const { server, transport, listTools, callTool } = await createSession(db, authorContext);
 
     const body = await listTools();
     const names = body.result.tools.map((t: { name: string }) => t.name);
 
     expect(names).not.toContain("generate_excerpt");
     expect(names).not.toContain("unfurl_reference");
+    expect(names).not.toContain("export_post");
+    const denied = await callTool("export_post", { id: "p-1", format: "wechat" });
+    expect(denied.result?.isError || denied.error).toBeTruthy();
 
     await transport.close();
     await server.close();
@@ -583,22 +610,22 @@ describe("createMcpServer with author context", () => {
     await server.close();
   });
 
-  it("full context registers all 17 tools", async () => {
+  it("full context registers all 18 tools", async () => {
     const fullContext: McpServerContext = { type: "full", userEmail: "admin@example.com" };
     const { server, transport, listTools } = await createSession(db, fullContext);
 
     const body = await listTools();
-    expect(body.result.tools).toHaveLength(17);
+    expect(body.result.tools).toHaveLength(18);
 
     await transport.close();
     await server.close();
   });
 
-  it("no context (undefined) registers all 17 tools (backward compatible)", async () => {
+  it("no context (undefined) registers all 18 tools", async () => {
     const { server, transport, listTools } = await createSession(db);
 
     const body = await listTools();
-    expect(body.result.tools).toHaveLength(17);
+    expect(body.result.tools).toHaveLength(18);
 
     await transport.close();
     await server.close();

@@ -188,14 +188,14 @@ export function formatDateISO(epoch: number): string {
 }
 
 /**
- * Extract year and month from unix epoch for URL path.
+ * Extract UTC year and month for URL paths, matching SQL archive queries.
  * Returns { year: "2026", month: "03" }
  */
 export function extractYearMonth(epoch: number): { year: string; month: string } {
   const d = new Date(epoch * 1000);
   return {
-    year: d.getFullYear().toString(),
-    month: (d.getMonth() + 1).toString().padStart(2, "0"),
+    year: d.getUTCFullYear().toString(),
+    month: (d.getUTCMonth() + 1).toString().padStart(2, "0"),
   };
 }
 

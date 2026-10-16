@@ -14,6 +14,7 @@ import {
   buildPageMeta,
   formatDateDisplay,
   formatDateISO,
+  extractYearMonth,
   postPath,
   SITE_URL,
 } from "@/lib/seo";
@@ -88,9 +89,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
   // Verify URL matches the post's actual date
   if (post.published_at) {
-    const d = new Date(post.published_at * 1000);
-    const expectedYear = d.getFullYear().toString();
-    const expectedMonth = (d.getMonth() + 1).toString().padStart(2, "0");
+    const { year: expectedYear, month: expectedMonth } = extractYearMonth(post.published_at);
     if (year !== expectedYear || month !== expectedMonth) {
       notFound();
     }

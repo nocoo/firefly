@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getPostBySlug } from "@/data/public-content";
-import { SITE_URL, postPath, formatDateISO } from "@/lib/seo";
+import { SITE_URL, postPath, formatDateISO, extractYearMonth } from "@/lib/seo";
 
 interface Params {
   year: string;
@@ -23,9 +23,7 @@ export async function GET(
 
   // Validate year/month match the published date (same logic as page.tsx)
   if (post.published_at) {
-    const d = new Date(post.published_at * 1000);
-    const expectedYear = String(d.getFullYear());
-    const expectedMonth = String(d.getMonth() + 1).padStart(2, "0");
+    const { year: expectedYear, month: expectedMonth } = extractYearMonth(post.published_at);
     if (year !== expectedYear || month !== expectedMonth) {
       return new NextResponse("Not found", { status: 404 });
     }
