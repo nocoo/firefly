@@ -125,3 +125,18 @@ Non-public or undated posts now omit the source URL unless explicitly overridden
 Public URL month calculations and route checks share UTC rather than inheriting
 the CLI or server process timezone. Treat remote side-effect preflight and
 publish-time defaults as behavior to test, not assumptions to pin in fixtures.
+
+### 2026-10-16: Git identity environment overrides per-command configuration
+
+The default-author change was committed with the requested `-c user.name` and
+`-c user.email` flags, but the recorded author was `nocoo` rather than `Zheng Li`.
+Inherited `GIT_AUTHOR_NAME` and `GIT_COMMITTER_NAME` values take precedence over
+Git configuration. The commit remains local; no push, PR, or release occurred.
+
+After explicit user authorization, the local commit was amended with inline
+`GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and
+`GIT_COMMITTER_EMAIL` assignments as well as the requested `-c` configuration.
+Both recorded identities were verified with `git show --format=fuller`.
+For future task-specific identities, control the environment as well as Git
+configuration and verify the result immediately. Never silently rewrite history
+to conceal an identity error; obtain authorization before amending a commit.
