@@ -1,5 +1,23 @@
 # Changelog
 
+## v2.17.0 (2026-10-16)
+
+- feat: export_post website format for X Article; WeChat author 李老板 (#837)
+- Merge pull request #836 from nocoo/cursor/deps-minor-patch-bumps-29d3
+- chore: release v2.16.1
+- deps: bump vitest 5.0.4 → 5.0.5
+- deps: bump @vitest/coverage-v8 5.0.4 → 5.0.5
+- deps: bump react-is 19.3.0 → 19.3.1
+- deps: bump react 19.3.0 → 19.3.1 and react-dom 19.3.0 → 19.3.1
+- deps: bump next 16.4.0 → 16.4.2
+- deps: bump dotenv 18.0.7 → 18.0.8
+- deps: bump @playwright/test 1.64.0 → 1.64.1
+- deps: bump oxc-parser 0.153.0 → 0.154.0
+- deps: bump lucide-react 1.55.0 → 1.57.0
+- deps: bump ai 7.0.138 → 7.0.142
+- deps: bump @aws-sdk/client-s3 3.1150.0 → 3.1152.0
+
+
 ## v2.16.0 (2026-10-16)
 
 - Merge pull request #835 from nocoo/feat/wechat-export-draft
