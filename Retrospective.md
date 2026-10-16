@@ -106,3 +106,22 @@ an incomplete build, which then failed on a missing `preview-props.json`.
 Removing only that generated marker forced a successful rebuild against the
 runner's fresh, marked local D1/R2 state. A build marker's presence or timestamp
 alone is not proof of a completed build; retain the command's exit status.
+
+### 2026-10-16: Preflight must validate decoded data and publish-time assumptions
+
+Review of the WeChat draft CLI found that image metadata was mistaken for a
+complete decode, the download cap was checked only after buffering the response,
+and draft field limits were left to the remote write API. The original PNG test
+fixture itself had readable metadata but corrupt pixel data, hiding the issue.
+The CLI now counts and caps streamed bytes, cancels overflowing downloads,
+decodes retained PNG/JPEG data fully, and checks draft field limits before
+uploads. Regression fixtures include a header-valid truncated PNG and an
+unbounded stream without Content-Length. All write behavior is tested through
+an injected mock fetcher; no real WeChat writes are needed for verification.
+
+The URL test also asserted a fictitious slug-only path for an undated draft.
+Publishing may assign the current timestamp, so that future path is not known.
+Non-public or undated posts now omit the source URL unless explicitly overridden.
+Public URL month calculations and route checks share UTC rather than inheriting
+the CLI or server process timezone. Treat remote side-effect preflight and
+publish-time defaults as behavior to test, not assumptions to pin in fixtures.

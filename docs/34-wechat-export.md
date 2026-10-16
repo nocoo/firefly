@@ -42,6 +42,8 @@ Run from the repository root on a Mac with Bun and installed dependencies:
 
 ```sh
 bun scripts/wechat-draft.ts <post-id-or-slug> --dry-run
+# Supply a confirmed source URL explicitly when exporting an unpublished post:
+bun scripts/wechat-draft.ts <post-id-or-slug> --dry-run --source-url https://lizheng.blog/2026/10/example
 ```
 
 `MCP_FIREFLY_API_KEY` must be in the environment and must have full scope.
@@ -76,17 +78,33 @@ cover/reference images present in the HTML) through `media/uploadimg`, rewrites
 only image source attributes, uploads the featured cover separately through
 `material/add_material?type=image`, then creates one draft through `draft/add`.
 It prints the resulting `media_id`. A featured image is required. Images use
-HTTP(S) without embedded credentials. Downloads over 20 MiB are rejected. Sharp
-inspects image metadata with a pixel limit; PNG/JPEG below 1 MiB are preserved.
+HTTP(S) without embedded credentials. Downloads are byte-counted while streaming;
+the stream is cancelled immediately above 20 MiB, even without Content-Length.
+Sharp fully decodes images with a pixel limit; valid PNG/JPEG below 1 MiB are preserved.
 Other images are converted to JPEG (at most 1600 x 1600, first frame for animations) and rejected
 if still too large for body-image upload. All images are preflighted before any
 WeChat writes. Alternate image sources are removed after URL replacement.
 
 Draft fields use the post title, `human_name` when available (otherwise
-`Zheng Li`), up to 120 Unicode code points from the excerpt, and the public URL
-built with the existing `postPath` routing (`/YYYY/MM/slug`, or `/slug` for undated
-posts). Neither credentials nor access tokens nor raw upstream error messages
-are logged. Credential-bearing requests reject redirects and have timeouts.
+`Zheng Li`), and the excerpt as the digest. Before any downloads or uploads, the
+script enforces the [draft/add limits](https://developers.weixin.qq.com/doc/service/api/draftbox/draftmanage/api_draft_add):
+title <=32, author <=16, digest <=120, and rendered HTML <20,000 Unicode code
+points. Oversized fields fail explicitly; no metadata is silently truncated.
+HTML is checked again after uploaded image URLs replace the originals; URL
+expansion can still cause failure after body-image uploads, but before cover
+material or draft creation.
+
+Only a published post with a publication timestamp gets an automatic
+`content_source_url`. A server-provided `canonical_url` takes precedence;
+otherwise the script uses `/YYYY/MM/slug` in UTC. Shared site URL generation
+and both article route date checks use UTC, matching SQL archive queries.
+Unpublished or undated posts omit the source field: publishing can assign the
+current timestamp, so a future URL cannot be predicted. `--source-url <url>`
+explicitly overrides this behavior with an absolute HTTP(S) URL without embedded
+credentials, without changing how original image URLs are resolved.
+
+Neither credentials nor access tokens nor raw upstream error messages are
+logged. Credential-bearing requests reject redirects and have timeouts.
 
 There are no publishing, mass-send, or freepublish calls. Uploads and draft
 creation are not retried automatically: an interrupted request may already have

@@ -26,7 +26,9 @@ const postSchema = z.object({
   reference_title: z.string().nullable(),
   reference_description: z.string().nullable(),
   reference_image: z.string().nullable(),
-  published_at: z.number().int().nullable(),
+  status: z.enum(["draft", "published", "private", "archived"]),
+  published_at: z.number().int().nullish(),
+  canonical_url: z.string().nullable().optional(),
   human_name: z.string().nullable().optional(),
 });
 
@@ -107,22 +109,63 @@ function imageUrl(src: string, sourceUrl: string): string {
   return url.href;
 }
 
+function validatedSourceUrl(value: string): string {
+  try {
+    const url = new URL(value);
+    if (["http:", "https:"].includes(url.protocol) && !url.username && !url.password) return url.href;
+  } catch {
+    // Do not echo a potentially credential-bearing URL.
+  }
+  throw new DraftError("Source URL must be an absolute HTTP(S) URL without credentials");
+}
+
+function validateDraft(article: { title: string; author: string; digest: string; content: string }) {
+  for (const [field, limit] of [["title", 32], ["author", 16], ["digest", 120]] as const) {
+    const length = [...article[field]].length;
+    if (length > limit) throw new DraftError(`WeChat draft ${field} exceeds ${limit} characters (${length})`);
+  }
+  const length = [...article.content].length;
+  if (length >= 20_000) throw new DraftError(`WeChat draft content must be fewer than 20000 characters (${length})`);
+}
+
 async function downloadImage(fetcher: typeof fetch, url: string): Promise<ImageAsset> {
   const response = await request(fetcher, url, { redirect: "follow" }, "Image download");
   if (Number(response.headers.get("content-length")) > MAX_DOWNLOAD_BYTES) {
+    await response.body?.cancel().catch(() => undefined);
     throw new DraftError("Image exceeds the 20 MiB download limit");
   }
-  let bytes: Uint8Array<ArrayBuffer>;
+  const reader = response.body?.getReader();
+  if (!reader) throw new DraftError("Could not read image download");
+  const chunks: Uint8Array[] = [];
+  let length = 0;
   try {
-    bytes = new Uint8Array(await response.arrayBuffer());
-  } catch {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      length += value.byteLength;
+      if (length > MAX_DOWNLOAD_BYTES) {
+        await reader.cancel().catch(() => undefined);
+        throw new DraftError("Image exceeds the 20 MiB download limit");
+      }
+      chunks.push(value);
+    }
+  } catch (error) {
+    if (error instanceof DraftError) throw error;
     throw new DraftError("Could not read image download");
+  } finally {
+    reader.releaseLock();
   }
-  if (bytes.byteLength > MAX_DOWNLOAD_BYTES) throw new DraftError("Image exceeds the 20 MiB download limit");
+  let bytes = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
   try {
-    const image = sharp(bytes, { limitInputPixels: 40_000_000 });
+    const image = sharp(bytes, { limitInputPixels: 40_000_000, failOn: "warning" });
     const metadata = await image.metadata();
     if (["jpeg", "png"].includes(metadata.format ?? "") && bytes.byteLength < MAX_BODY_IMAGE_BYTES) {
+      await image.stats();
       const png = metadata.format === "png";
       return { bytes, type: png ? "image/png" : "image/jpeg", filename: png ? "image.png" : "image.jpg" };
     }
@@ -137,13 +180,19 @@ async function downloadImage(fetcher: typeof fetch, url: string): Promise<ImageA
 }
 
 export async function runWeChatDraft(args: string[], options: RunOptions = {}) {
-  const identifiers = args.filter((arg) => !arg.startsWith("--"));
-  if (identifiers.length !== 1 || args.some((arg) => arg.startsWith("--") && arg !== "--dry-run") ||
-    args.filter((arg) => arg === "--dry-run").length > 1 || !identifiers[0]?.trim()) {
-    throw new DraftError("Usage: bun scripts/wechat-draft.ts <post id or slug> [--dry-run]");
+  const usage = "Usage: bun scripts/wechat-draft.ts <post id or slug> [--dry-run] [--source-url <url>]";
+  let identifier: string | undefined;
+  let dryRun = false;
+  let sourceOverride: string | undefined;
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "--dry-run" && !dryRun) dryRun = true;
+    else if (arg === "--source-url" && sourceOverride === undefined && args[i + 1] && !args[i + 1].startsWith("--")) {
+      sourceOverride = validatedSourceUrl(args[++i]);
+    } else if (!arg.startsWith("--") && identifier === undefined && arg.trim()) identifier = arg;
+    else throw new DraftError(usage);
   }
-  const identifier = identifiers[0];
-  const dryRun = args.includes("--dry-run");
+  if (!identifier) throw new DraftError(usage);
   const env = options.env ?? process.env;
   const fetcher = options.fetch ?? fetch;
   const log = options.log ?? console.log;
@@ -191,15 +240,27 @@ export async function runWeChatDraft(args: string[], options: RunOptions = {}) {
     id: z.literal(post.id), slug: z.literal(post.slug), format: z.literal("wechat"), html: z.string().min(1),
   }), await callTool("export_post", { id: post.id, format: "wechat" }), "Firefly export").html;
   if (!post.featured_image) throw new DraftError("Post needs a featured image for the WeChat draft cover");
-  const sourceUrl = `${SITE_URL}${postPath(post.slug, post.published_at)}`;
+  const publicSourceUrl = post.status === "published" && post.published_at
+    ? validatedSourceUrl(post.canonical_url ?? `${SITE_URL}${postPath(post.slug, post.published_at)}`)
+    : undefined;
+  const sourceUrl = sourceOverride ?? publicSourceUrl;
+  const imageBaseUrl = publicSourceUrl ?? `${SITE_URL}/`;
   const $ = load(html, null, false);
+  const article = {
+    title: post.title,
+    author: post.human_name?.trim() || "Zheng Li",
+    digest: post.excerpt ?? "",
+    content: $.html(),
+    ...(sourceUrl ? { content_source_url: sourceUrl } : {}),
+  };
+  validateDraft(article);
   const imageSources = new Set<string>();
   $("img").each((_, element) => {
     const src = $(element).attr("src");
     if (!src) throw new DraftError("Article contains an image without src");
-    imageSources.add(imageUrl(src, sourceUrl));
+    imageSources.add(imageUrl(src, imageBaseUrl));
   });
-  const coverUrl = imageUrl(post.featured_image, sourceUrl);
+  const coverUrl = imageUrl(post.featured_image, imageBaseUrl);
   imageSources.add(coverUrl);
   const images = new Map<string, ImageAsset>();
   for (const url of imageSources) images.set(url, await downloadImage(fetcher, url));
@@ -239,7 +300,7 @@ export async function runWeChatDraft(args: string[], options: RunOptions = {}) {
   const replacements = new Map<string, string>();
   for (const element of $("img").toArray()) {
     const image = $(element);
-    const url = imageUrl(image.attr("src") ?? "", sourceUrl);
+    const url = imageUrl(image.attr("src") ?? "", imageBaseUrl);
     let uploaded = replacements.get(url);
     if (!uploaded) {
       const value = await upload("/cgi-bin/media/uploadimg", url, "url");
@@ -255,15 +316,13 @@ export async function runWeChatDraft(args: string[], options: RunOptions = {}) {
     }
     image.attr("src", uploaded).removeAttr("srcset").removeAttr("sizes").removeAttr("data-original-src");
   }
+  article.content = $.html();
+  validateDraft(article);
   const thumbMediaId = await upload("/cgi-bin/material/add_material?type=image", coverUrl, "media_id");
   const draft = await wechat(`/cgi-bin/draft/add?access_token=${encodeURIComponent(token)}`, {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ articles: [{
-      title: post.title,
-      author: post.human_name?.trim() || "Zheng Li",
-      digest: [...(post.excerpt ?? "")].slice(0, 120).join(""),
-      content: $.html(),
-      content_source_url: sourceUrl,
+      ...article,
       thumb_media_id: thumbMediaId,
     }] }),
   }, "WeChat draft creation");

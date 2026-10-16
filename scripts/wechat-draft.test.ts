@@ -14,8 +14,15 @@ const env = {
   WECHAT_APPID: "fixture-app-id",
   WECHAT_APPSECRET: "fixture-app-secret",
 };
-const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6WQAAAABJRU5ErkJggg==", "base64");
-const post: ExportablePost & { id: string; slug: string; published_at: number | null; human_name: string | null } = {
+const png = await sharp({ create: { width: 2, height: 2, channels: 3, background: "red" } }).png().toBuffer();
+const post: ExportablePost & {
+  id: string;
+  slug: string;
+  status: "draft" | "published" | "private" | "archived";
+  published_at?: number | null;
+  canonical_url?: string | null;
+  human_name: string | null;
+} = {
   id: ID,
   slug: "example-post",
   title: "Example post",
@@ -26,6 +33,7 @@ const post: ExportablePost & { id: string; slug: string; published_at: number | 
   reference_title: "Reference",
   reference_description: "Description",
   reference_image: "https://assets.example.com/reference.png",
+  status: "published",
   published_at: 1773000000,
   human_name: "Li Zheng",
 };
@@ -104,7 +112,11 @@ function callsTo(network: ReturnType<typeof mockNetwork>, path: string) {
 }
 
 describe("WeChat draft CLI", () => {
-  it.each([[], ["--dry-run"], ["one", "two"], ["one", "--publish"], ["one", "--dry-run", "--dry-run"], [""]])(
+  it.each([
+    [], ["--dry-run"], ["one", "two"], ["one", "--publish"], ["one", "--dry-run", "--dry-run"], [""],
+    [ID, "--source-url"], [ID, "--source-url", "--dry-run"],
+    [ID, "--source-url", "https://example.com/one", "--source-url", "https://example.com/two"],
+  ])(
     "rejects invalid arguments %j before network access", async (...args) => {
       const network = mockNetwork();
       await expect(runWeChatDraft(args, network.options)).rejects.toThrow("Usage:");
@@ -191,13 +203,115 @@ describe("WeChat draft CLI", () => {
     expect(content).toContain("<p>/body.png?a=1&amp;b=2</p>");
   });
 
-  it("uses the requested default author, caps digest by code points, and reuses slug routing for undated posts", async () => {
-    const network = mockNetwork({ post: { ...post, human_name: "", published_at: null, excerpt: "😀".repeat(121) } });
+  it("uses the requested default author and preserves a digest at the Unicode code-point limit", async () => {
+    const network = mockNetwork({ post: { ...post, human_name: "", published_at: null, excerpt: "😀".repeat(120) } });
     await runWeChatDraft([ID], network.options);
     const article = JSON.parse(String(callsTo(network, "/cgi-bin/draft/add")[0][1]?.body)).articles[0];
     expect(article.author).toBe("Zheng Li");
     expect(article.digest).toBe("😀".repeat(120));
-    expect(article.content_source_url).toBe("https://lizheng.blog/example-post");
+    expect(article).not.toHaveProperty("content_source_url");
+  });
+
+  it.each([
+    { status: "draft" as const, published_at: null },
+    { status: "draft" as const, published_at: post.published_at ?? null },
+    { status: "private" as const, published_at: post.published_at ?? null },
+    { status: "archived" as const, published_at: post.published_at ?? null },
+    { status: "published" as const, published_at: null },
+    { status: "published" as const, published_at: 0 },
+    { status: "published" as const },
+  ])("omits source URLs for posts without a public, dated URL: %o", async (fields) => {
+    const { published_at: _publishedAt, ...undatedPost } = post;
+    const network = mockNetwork({ post: { ...undatedPost, ...fields, canonical_url: "https://lizheng.blog/not-public" } });
+    await runWeChatDraft([ID], network.options);
+    const article = JSON.parse(String(callsTo(network, "/cgi-bin/draft/add")[0][1]?.body)).articles[0];
+    expect(article).not.toHaveProperty("content_source_url");
+  });
+
+  it("prefers a server canonical URL for a public dated post", async () => {
+    const canonicalUrl = "https://lizheng.blog/2026/04/server-canonical";
+    const network = mockNetwork({ post: { ...post, canonical_url: canonicalUrl } });
+    await runWeChatDraft([ID], network.options);
+    const article = JSON.parse(String(callsTo(network, "/cgi-bin/draft/add")[0][1]?.body)).articles[0];
+    expect(article.content_source_url).toBe(canonicalUrl);
+  });
+
+  it.each(["Asia/Shanghai", "America/Los_Angeles"])("uses UTC routing at month boundaries regardless of local timezone %s", async (timezone) => {
+    const original = process.env.TZ;
+    process.env.TZ = timezone;
+    try {
+      const network = mockNetwork({ post: { ...post, published_at: Date.parse("2026-03-31T23:30:00Z") / 1000 } });
+      await runWeChatDraft([ID], network.options);
+      const article = JSON.parse(String(callsTo(network, "/cgi-bin/draft/add")[0][1]?.body)).articles[0];
+      expect(article.content_source_url).toBe("https://lizheng.blog/2026/03/example-post");
+    } finally {
+      if (original === undefined) Reflect.deleteProperty(process.env, "TZ");
+      else process.env.TZ = original;
+    }
+  });
+
+  it.each(["draft", "published"] as const)("allows an explicit source URL override for a %s post", async (status) => {
+    const network = mockNetwork({ post: { ...post, status, canonical_url: "https://lizheng.blog/old-url" } });
+    const sourceUrl = "https://lizheng.blog/2027/01/confirmed-future-url";
+    await runWeChatDraft(["--source-url", sourceUrl, ID], network.options);
+    const article = JSON.parse(String(callsTo(network, "/cgi-bin/draft/add")[0][1]?.body)).articles[0];
+    expect(article.content_source_url).toBe(sourceUrl);
+  });
+
+  it("does not resolve article images against the source URL override", async () => {
+    const network = mockNetwork({ post: { ...post, status: "draft", published_at: null }, html: '<img src="/body.png">' });
+    await runWeChatDraft([ID, "--source-url", "https://example.com/future-article"], network.options);
+    expect(network.fetcher.mock.calls.some(([url]) => url === "https://lizheng.blog/body.png")).toBe(true);
+    expect(network.fetcher.mock.calls.some(([url]) => String(url).startsWith("https://example.com"))).toBe(false);
+  });
+
+  it.each(["/relative", "file:///etc/passwd", "javascript:alert(1)", "https://user:pass@example.com"])("rejects unsafe source URL overrides before network access: %s", async (sourceUrl) => {
+    const network = mockNetwork();
+    await expect(runWeChatDraft([ID, "--source-url", sourceUrl], network.options)).rejects.toThrow("Source URL must be an absolute HTTP(S) URL without credentials");
+    expect(network.fetcher).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { fields: { title: "x".repeat(33) }, message: "title exceeds 32 characters" },
+    { fields: { human_name: "x".repeat(17) }, message: "author exceeds 16 characters" },
+    { fields: { excerpt: "x".repeat(121) }, message: "digest exceeds 120 characters" },
+  ])("rejects oversized draft metadata before downloads or uploads: $message", async ({ fields, message }) => {
+    const network = mockNetwork({ post: { ...post, ...fields } });
+    await expect(runWeChatDraft([ID], network.options)).rejects.toThrow(message);
+    expect(network.fetcher.mock.calls.every(([url]) => new URL(String(url)).pathname === "/api/mcp")).toBe(true);
+  });
+
+  it("accepts metadata at each Unicode code-point limit without truncation", async () => {
+    const fields = { title: "😀".repeat(32), human_name: "😀".repeat(16), excerpt: "😀".repeat(120) };
+    const network = mockNetwork({ post: { ...post, ...fields } });
+    await runWeChatDraft([ID], network.options);
+    const article = JSON.parse(String(callsTo(network, "/cgi-bin/draft/add")[0][1]?.body)).articles[0];
+    expect(article).toMatchObject({ title: fields.title, author: fields.human_name, digest: fields.excerpt });
+  });
+
+  it.each([20_000, 20_001])("rejects %i-character HTML before downloads or uploads", async (length) => {
+    const network = mockNetwork({ html: `<p>${"x".repeat(length - 7)}</p>` });
+    await expect(runWeChatDraft([ID], network.options)).rejects.toThrow("content must be fewer than 20000 characters");
+    expect(network.fetcher.mock.calls.every(([url]) => new URL(String(url)).pathname === "/api/mcp")).toBe(true);
+  });
+
+  it("accepts 19999-character HTML", async () => {
+    const html = `<p>${"x".repeat(19_999 - 7)}</p>`;
+    const network = mockNetwork({ html });
+    await runWeChatDraft([ID], network.options);
+    const article = JSON.parse(String(callsTo(network, "/cgi-bin/draft/add")[0][1]?.body)).articles[0];
+    expect(article.content).toBe(html);
+  });
+
+  it("revalidates content after uploaded URLs expand before creating the draft", async () => {
+    const network = mockNetwork({
+      html: `<p>${"x".repeat(19_800)}</p><img src="/body.png">`,
+      override: (url) => url.pathname === "/cgi-bin/media/uploadimg"
+        ? Response.json({ url: `https://mmbiz.qpic.cn/${"x".repeat(300)}.png` }) : undefined,
+    });
+    await expect(runWeChatDraft([ID], network.options)).rejects.toThrow("content must be fewer than 20000 characters");
+    expect(callsTo(network, "/cgi-bin/material/add_material")).toHaveLength(0);
+    expect(callsTo(network, "/cgi-bin/draft/add")).toHaveLength(0);
   });
 
   it("reads export-style credential lines as data, with environment values taking precedence", async () => {
@@ -294,6 +408,62 @@ describe("WeChat draft CLI", () => {
       await expect(runWeChatDraft([ID], network.options)).rejects.toThrow(/Image/);
       expect(callsTo(network, "/cgi-bin/media/uploadimg")).toHaveLength(0);
     }
+  });
+
+  it.each([undefined, "1"])("cancels an oversized stream even with absent or misleading content-length %s", async (contentLength) => {
+    const cancel = vi.fn();
+    const pull = vi.fn((controller: ReadableStreamDefaultController<Uint8Array>) => {
+      controller.enqueue(new Uint8Array(1024 * 1024));
+    });
+    const response = new Response(new ReadableStream({ pull, cancel }, { highWaterMark: 0 }), {
+      headers: contentLength ? { "Content-Length": contentLength } : {},
+    });
+    const network = mockNetwork({ override: (url) => url.hostname === "assets.example.com" ? response : undefined });
+    await expect(runWeChatDraft([ID], network.options)).rejects.toThrow("20 MiB download limit");
+    expect(pull).toHaveBeenCalledTimes(21);
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(callsTo(network, "/cgi-bin/stable_token")).toHaveLength(0);
+    expect(callsTo(network, "/cgi-bin/media/uploadimg")).toHaveLength(0);
+  });
+
+  it("rejects a PNG whose header is valid but compressed pixels are truncated", async () => {
+    const truncated = png.subarray(0, png.length - 25);
+    expect((await sharp(truncated).metadata()).format).toBe("png");
+    const network = mockNetwork({ override: (url) => url.hostname === "assets.example.com" ? new Response(truncated) : undefined });
+    await expect(runWeChatDraft([ID], network.options)).rejects.toThrow("Image could not be decoded or converted for WeChat");
+    expect(callsTo(network, "/cgi-bin/stable_token")).toHaveLength(0);
+    expect(callsTo(network, "/cgi-bin/media/uploadimg")).toHaveLength(0);
+  });
+
+  it("rejects a JPEG with readable metadata but a truncated scan", async () => {
+    const jpeg = await sharp(png).jpeg().toBuffer();
+    const truncated = jpeg.subarray(0, jpeg.length - 2);
+    expect((await sharp(truncated).metadata()).format).toBe("jpeg");
+    const network = mockNetwork({ override: (url) => url.hostname === "assets.example.com" ? new Response(truncated) : undefined });
+    await expect(runWeChatDraft([ID], network.options)).rejects.toThrow("Image could not be decoded or converted for WeChat");
+    expect(callsTo(network, "/cgi-bin/stable_token")).toHaveLength(0);
+    expect(callsTo(network, "/cgi-bin/media/uploadimg")).toHaveLength(0);
+  });
+
+  it.each(["missing", "broken"])("sanitizes %s image response streams before any writes", async (failure) => {
+    const response = failure === "missing" ? new Response(null) : new Response(new ReadableStream({
+      start(controller) { controller.error(new Error(TOKEN)); },
+    }));
+    const network = mockNetwork({ override: (url) => url.hostname === "assets.example.com" ? response : undefined });
+    await expect(runWeChatDraft([ID], network.options)).rejects.toThrow("Could not read image download");
+    expect(callsTo(network, "/cgi-bin/stable_token")).toHaveLength(0);
+    expect(network.log).not.toHaveBeenCalled();
+  });
+
+  it("preserves fully decoded JPEG bytes below the body-image limit", async () => {
+    const jpeg = await sharp(png).jpeg().toBuffer();
+    const network = mockNetwork({ override: (url) => url.hostname === "assets.example.com" ? new Response(jpeg) : undefined });
+    await runWeChatDraft([ID], network.options);
+    const form = callsTo(network, "/cgi-bin/media/uploadimg")[0][1]?.body as FormData;
+    const file = form.get("media") as File;
+    expect(file.type).toBe("image/jpeg");
+    expect(file.name).toBe("image.jpg");
+    expect(Buffer.from(await file.arrayBuffer())).toEqual(jpeg);
   });
 
   it("converts unsupported WebP images to JPEG before uploading", async () => {

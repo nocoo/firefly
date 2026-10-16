@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   buildPageMeta,
   buildHomeMeta,
@@ -275,5 +275,30 @@ describe("postPath", () => {
   it("returns /YYYY/MM/slug for published posts", () => {
     const epoch = Date.UTC(2026, 2, 1) / 1000;
     expect(postPath("hello", epoch)).toBe("/2026/03/hello");
+  });
+
+  it("never uses host-local date getters to build a post path", () => {
+    const year = vi.spyOn(Date.prototype, "getFullYear").mockReturnValue(2027);
+    const month = vi.spyOn(Date.prototype, "getMonth").mockReturnValue(0);
+    try {
+      expect(postPath("hello", Date.parse("2026-03-31T23:30:00Z") / 1000)).toBe("/2026/03/hello");
+      expect(year).not.toHaveBeenCalled();
+      expect(month).not.toHaveBeenCalled();
+    } finally {
+      year.mockRestore();
+      month.mockRestore();
+    }
+  });
+
+  it.each(["Asia/Shanghai", "America/Los_Angeles"])("uses UTC at year/month boundaries in %s", (timezone) => {
+    const original = process.env.TZ;
+    process.env.TZ = timezone;
+    try {
+      expect(postPath("hello", Date.parse("2026-03-31T23:30:00Z") / 1000)).toBe("/2026/03/hello");
+      expect(postPath("hello", Date.parse("2026-01-01T00:30:00Z") / 1000)).toBe("/2026/01/hello");
+    } finally {
+      if (original === undefined) Reflect.deleteProperty(process.env, "TZ");
+      else process.env.TZ = original;
+    }
   });
 });
