@@ -1,5 +1,26 @@
 # Changelog
 
+## v2.16.0 (2026-10-16)
+
+- Merge pull request #835 from nocoo/feat/wechat-export-draft
+- fix: derive supported post export formats
+- fix: harden wechat draft preflight
+- feat: add safe wechat draft cli
+- feat: export posts as wechat html via mcp
+- ci: upgrade base-ci to v2026.9
+- Merge pull request #821 from nocoo/cursor/deps-minor-patch-2ae4
+- chore: release v2.15.1
+- chore(deps): bump vitest 5.0.3 -> 5.0.4 and @vitest/coverage-v8 5.0.3 -> 5.0.4
+- chore(deps): bump marked 18.1.0 -> 18.1.1
+- chore(deps): bump @radix-ui/react-alert-dialog 1.1.24 -> 1.2.1
+- chore(deps): bump zod 4.6.5 -> 4.6.7
+- chore(deps): bump dotenv 18.0.6 -> 18.0.7
+- chore(deps): bump @types/node 26.6.4 -> 26.6.5
+- chore(deps): bump lucide-react 1.52.0 -> 1.55.0
+- chore(deps): bump ai 7.0.133 -> 7.0.138
+- chore(deps): bump @aws-sdk/client-s3 3.1147.0 -> 3.1150.0
+
+
 ## v2.15.0 (2026-10-08)
 
 - docs: add generated Next.js agent rules
