@@ -69,7 +69,7 @@ function escapeAttr(str: string): string {
     .replace(/>/g, "&gt;");
 }
 
-const ALLOWED_URL_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
+const ALLOWED_URL_PROTOCOLS = new Set(["http:", "https:", "mailto:", "tel:"]);
 
 export function sanitizeUrl(url: string): string | null {
   const normalized = url.replace(/\p{Cc}/gu, "").trim();

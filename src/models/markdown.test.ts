@@ -329,7 +329,18 @@ const x = 1;
     expect(html1).toContain('href="mailto:user@example.com"');
   });
 
-  it.each(["java\tscript:alert(1)", "jav\u0000ascript:alert(1)", "java script:alert(1)", "\u0001javascript:alert(1)", "tel:+1234567890", "ftp://example.com/file"])("rejects obfuscated or disallowed link schemes: %j", (href) => {
+  it.each([
+    ["tel:+1234567890", "tel:+1234567890"],
+    ["TEL:+1-234-567;ext=89", "TEL:+1-234-567;ext=89"],
+    ["te\tl:+1234567890", "tel:+1234567890"],
+  ])("preserves supported telephone links after URL validation: %j", (href, expected) => {
+    const html = renderMarkdown(`[**Call**](<${href}>)`);
+    expect(html).toContain(`href="${expected}"`);
+    expect(html).toContain("<strong>Call</strong>");
+    expect(html).not.toContain('target="_blank"');
+  });
+
+  it.each(["java\tscript:alert(1)", "jav\u0000ascript:alert(1)", "java script:alert(1)", "\u0001javascript:alert(1)", "ftp://example.com/file"])("rejects obfuscated or disallowed link schemes: %j", (href) => {
     const html = renderMarkdown(`[**click**](<${href}>)`);
     expect(html).not.toContain("href=");
     expect(html).toContain("<strong>click</strong>");
@@ -510,6 +521,16 @@ const x = 1;
 });
 
 describe("sanitizeUrl", () => {
+  it.each([
+    ["tel:+1234567890", "tel:+1234567890"],
+    ["TEL:+1-234;ext=5", "TEL:+1-234;ext=5"],
+    ["\u0001te\tl:+123\r456\n7890 ", "tel:+1234567890"],
+  ])("allows parsed telephone URLs without weakening normalization: %j", (input, expected) => {
+    const result = sanitizeUrl(input);
+    expect(result).toBe(expected);
+    expect(new URL(result ?? "").protocol).toBe("tel:");
+  });
+
   it.each(["", " \t\n", "java\nscript:alert(1)", "java\rscript:alert(1)", "java\u007fscript:alert(1)", "java\u009fscript:alert(1)", "java\u00a0script:alert(1)", "java\u2003script:alert(1)"])("rejects empty or control/whitespace-obfuscated URLs %j", (url) => {
     expect(sanitizeUrl(url)).toBeNull();
   });

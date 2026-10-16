@@ -23,6 +23,7 @@ describe("website HTML formatter", () => {
     "java&#x09;script:alert(1)", "java&#10;script:alert(1)", "java script:alert(1)",
     "&#1;javascript:alert(1)", "JaVaScRiPt:alert(1)", "data:text/html,bad",
     "vbscript:msgbox(1)", "file:///etc/passwd", "ftp://example.com/file", "tel:+123",
+    "TEL:+123", "te&#9;l:+123", "te\tl:+123",
     "https://[invalid", "", "   ",
   ])("removes unsafe or invalid decoded href %j while preserving inline content", (href) => {
     const result = formatWebsiteHtml(`<p><a href="${href}" class="bad"><strong>Link</strong></a></p>`, BASE_URL);

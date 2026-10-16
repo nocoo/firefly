@@ -189,3 +189,18 @@ still removing presentation and event attributes. Regression tests cover direct
 HTML, Markdown rendering, and real MCP HTTP export. For content conversion,
 distinguish layout decoration from semantic structure and validate the exported
 document in its destination context.
+
+### 2026-10-16: Export protocol restrictions must not remove supported site links
+
+The URL-safety fix reused the website export's protocol allowlist in the shared
+Markdown sanitizer. That removed existing `tel:` links across the blog rather
+than limiting only the export. The earlier telephone-link assertion was changed
+to rejection, hiding the unrelated regression until review.
+
+The shared sanitizer again permits telephone URLs after the same URL parsing,
+control removal, and whitespace-obfuscation checks. Website export applies its
+HTTP/HTTPS/mailto allowlist independently. Regression tests verify ordinary,
+mixed-case, and control-normalized telephone links in shared rendering while
+checking that website export still removes their anchors and preserves text.
+Keep common validation separate from destination-specific restrictions; a
+security fix must not silently redefine supported behavior in other consumers.

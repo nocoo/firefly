@@ -60,9 +60,12 @@ or reference card is injected into the body.
 
 Link protocols are validated with the browser-compatible URL parser after
 removing control characters and checking whitespace-obfuscated schemes. Only
-HTTP, HTTPS, and mailto links are allowed; unsafe or malformed links retain
-their visible inline content without an anchor. The shared Markdown sanitizer
-uses this same policy, including for WeChat rendering.
+HTTP, HTTPS, and mailto links are allowed in website exports; unsupported,
+unsafe, or malformed links retain their visible inline content without an
+anchor. The shared Markdown sanitizer uses the same parsing and normalization
+but also permits validated `tel:` links for the blog and other Markdown
+consumers. Website export applies its narrower protocol allowlist separately;
+restoring telephone links site-wide does not enable them in website exports.
 
 All links use browser URL serialization; relative links and fragment links
 resolve against the post canonical `url`.

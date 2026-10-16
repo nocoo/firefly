@@ -106,6 +106,13 @@ describe("post export", () => {
     expect(result.html).toBe("<p><strong>Unsafe</strong></p>");
   });
 
+  it("keeps the website protocol policy narrower than the shared Markdown sanitizer", () => {
+    const content = "[**Call**](tel:+1234567890) [Email](mailto:writer@example.com)";
+    expect(renderMarkdown(content)).toContain('href="tel:+1234567890"');
+    const result = renderPostExport({ ...websitePost, content }, "website");
+    expect(result.html).toBe('<p><strong>Call</strong> <a href="mailto:writer@example.com">Email</a></p>');
+  });
+
   it("uses the existing Markdown sanitizer rather than accepting raw executable HTML", () => {
     const result = renderPostExport({ ...websitePost, content: '<div class="bad" style="color:red"><script>alert(1)</script></div>\n\n[bad](javascript:alert(1))\n\n![bad](javascript:alert(1))' }, "website");
     const $ = load(result.html, null, false);

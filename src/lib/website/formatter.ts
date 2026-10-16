@@ -40,11 +40,12 @@ export function formatWebsiteHtml(contentHtml: string, baseUrl: string): {
     } else if (element.name !== "img") {
       if (element.name === "a") {
         const href = sanitizeUrl(node.attr("href") ?? "");
-        if (href === null) {
+        const url = href === null ? null : new URL(href, baseUrl);
+        if (url === null || !["http:", "https:", "mailto:"].includes(url.protocol)) {
           node.replaceWith(node.contents());
           continue;
         }
-        node.attr("href", new URL(href, baseUrl).href);
+        node.attr("href", url.href);
       }
       for (const attribute of Object.keys(element.attribs)) {
         const semantic = (element.name === "a" && attribute === "href") ||
