@@ -1,9 +1,10 @@
-# WeChat Article Export
+# Article Export: WeChat and Website
 
 ## MCP
 
 `export_post` is a read-only, full-scope MCP tool at `POST /api/mcp`.
-Provide exactly one of `id` or `slug`, and the required `format: "wechat"`:
+Provide exactly one of `id` or `slug`, and the required `format: "wechat"` or
+`format: "website"`:
 
 ```json
 {
@@ -22,13 +23,68 @@ the existing MCP success/error envelopes. Authentication and Origin validation
 are unchanged. Restricted author tokens cannot discover or invoke this tool.
 Exporting does not mutate the post, upload media, or publish anything.
 
+### Website / X Article
+
+Use `"arguments": { "slug": "example-post", "format": "website" }` to export
+unstyled semantic HTML for pasting into an X Article. The JSON result keeps
+`id`, `slug`, `format`, and `html`, and adds `title`, `url`, `cover`, and `images`:
+
+```json
+{
+  "id": "post-1",
+  "slug": "example-post",
+  "format": "website",
+  "title": "Example post",
+  "url": "https://lizheng.blog/2026/10/example-post",
+  "cover": "https://lizheng.blog/cover.png",
+  "html": "<h2>Intro</h2>\n<p>Read <a href=\"https://example.com\">source</a>.</p>\n<p>[图片 1]</p>",
+  "images": [
+    {
+      "index": 1,
+      "url": "https://lizheng.blog/images/diagram.png",
+      "alt": "Diagram",
+      "position": 2
+    }
+  ]
+}
+```
+
+All Markdown heading levels become `h2`. HTML uses only `h2`, `p`, `ul`, `ol`,
+`li`, `blockquote`, `pre`, `code`, `a`, `strong`, `em`, and `hr`; attributes are
+removed except link `href`. Links stay inline, not WeChat footnotes. Raw HTML
+uses the existing Markdown escaping policy. Unsupported formatting is unwrapped
+to retain its text. No styling, wrapper divs, title/excerpt header, cover image,
+or reference card is injected into the body.
+
+Body images become separate `<p>[图片 N]</p>` placeholders. `index` is one-based
+and follows document order; each occurrence is returned, including duplicate
+URLs. `position` is the zero-based index of the containing top-level semantic
+block, after HTML normalization but before image extraction. Whitespace-only
+root text is not a block. A block containing only images is replaced by its
+placeholder paragraphs; for mixed text or nested images, the containing block
+is retained and the placeholders follow it. Multiple images from the same
+source block share its position. Images inside links or lists follow this same
+rule, without nesting a placeholder paragraph inside a paragraph.
+
+`url` uses the existing UTC `postPath` convention on `https://lizheng.blog`:
+`/YYYY/MM/slug` when a publication timestamp is present, otherwise `/slug`.
+Exporting an unpublished post does not guarantee a future public URL. `cover`
+is the absolute featured image URL, or `null` when absent. Relative cover/body
+image URLs resolve against `url`; original absolute URLs are preserved. Image
+URLs must be HTTP(S) without embedded credentials. The returned image list does
+not include cover/reference images unless they also occur in the Markdown body.
+The tool does not download or upload any images; insert them separately using
+the placeholder numbers and image metadata.
+
 ## Shared Rendering
 
-`src/lib/post-export.ts` owns the format registry. Only `wechat` is implemented;
-`website` (for a future X Article workflow) is not accepted. Adding a format
-requires registering its renderer and updating `POST_EXPORT_FORMATS`.
+`src/lib/post-export.ts` owns the `wechat` and `website` format registry.
+`renderPostExport` returns an object containing `html`, plus `images` for website
+exports. The website formatter uses the browser-safe `cheerio/slim` entrypoint;
+the shared renderer remains usable by the admin client without Node-only imports.
 
-The admin clipboard action and MCP both call `renderPostExport`. It renders the
+The admin WeChat clipboard action and MCP both call `renderPostExport`. For
+`wechat`, it renders the
 Markdown source with `renderMarkdown`, builds the cover/reference card and link
 footnotes, and inlines `WECHAT_THEME_CSS` through the existing `juice` formatter.
 No browser DOM is required. Cached website `content_html` is deliberately ignored

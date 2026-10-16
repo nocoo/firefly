@@ -235,7 +235,7 @@ export async function runWeChatDraft(args: string[], options: RunOptions = {}) {
   const byId = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(identifier);
   const post = validated(postSchema, await callTool("get_post", byId ? { id: identifier } : { slug: identifier }), "Firefly post");
   const renderedLocally = !tools.tools.some((tool) => tool.name === "export_post");
-  const html = renderedLocally ? renderPostExport(post, "wechat") : validated(z.object({
+  const html = renderedLocally ? renderPostExport(post, "wechat").html : validated(z.object({
     id: z.literal(post.id), slug: z.literal(post.slug), format: z.literal("wechat"), html: z.string().min(1),
   }), await callTool("export_post", { id: post.id, format: "wechat" }), "Firefly export").html;
   if (!post.featured_image) throw new DraftError("Post needs a featured image for the WeChat draft cover");

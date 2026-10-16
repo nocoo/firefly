@@ -140,3 +140,19 @@ Both recorded identities were verified with `git show --format=fuller`.
 For future task-specific identities, control the environment as well as Git
 configuration and verify the result immediately. Never silently rewrite history
 to conceal an identity error; obtain authorization before amending a commit.
+
+### 2026-10-16: Shared export contracts include separately configured E2E consumers
+
+The website exporter changed `renderPostExport` from an HTML string to a
+structured result. Source and script consumers were updated, and root unit
+tests, coverage, typecheck, lint, and the production build passed. The isolated
+API run then exposed an overlooked importer in `e2e/api/mcp.test.ts`: it still
+expected a string and still rejected the newly supported website format.
+
+The initial reference search was scoped to `src` and `scripts`; root Vitest and
+TypeScript do not include API E2E files. The search was repeated across the
+whole repository, and the HTTP test now checks both formats by ID and slug,
+including website image positions, metadata, and unchanged persisted content.
+When changing a shared function or accepted format set, search all importers
+and format assertions before choosing verification commands. Separate runner
+configuration is not evidence that those consumers were checked by root tests.

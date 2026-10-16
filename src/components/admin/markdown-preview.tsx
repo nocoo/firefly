@@ -111,7 +111,7 @@ export function MarkdownPreview({
       reference_title: referenceTitle ?? null,
       reference_description: referenceDescription ?? null,
       reference_image: referenceImage ?? null,
-    }, "wechat");
+    }, "wechat").html;
 
     const success = await copyWechatHtmlToClipboard(inlinedHtml);
     if (success) {

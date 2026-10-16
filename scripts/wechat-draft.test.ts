@@ -75,7 +75,7 @@ function mockNetwork(options: {
       else {
         expect(rpc.params.name).toBe("export_post");
         expect(rpc.params.arguments).toEqual({ id: ID, format: "wechat" });
-        data = { id: article.id, slug: article.slug, format: "wechat", html: options.html ?? renderPostExport(article, "wechat") };
+        data = { id: article.id, slug: article.slug, format: "wechat", html: options.html ?? renderPostExport(article, "wechat").html };
       }
       return Response.json({ jsonrpc: "2.0", id: rpc.id, result: { content: [{ type: "text", text: JSON.stringify(data) }] } });
     }
@@ -136,7 +136,7 @@ describe("WeChat draft CLI", () => {
     expect(result.dryRun).toBe(true);
     if (!result.dryRun) throw new Error("Expected dry run");
     directories.push(join(result.htmlPath, ".."));
-    expect(await readFile(result.htmlPath, "utf8")).toBe(renderPostExport(post, "wechat"));
+    expect(await readFile(result.htmlPath, "utf8")).toBe(renderPostExport(post, "wechat").html);
     expect((await stat(result.htmlPath)).mode & 0o777).toBe(0o600);
     expect((await stat(join(result.htmlPath, ".."))).mode & 0o777).toBe(0o700);
     const rpcCalls = callsTo(network, "/api/mcp").map(([, init]) => JSON.parse(String(init?.body)));
@@ -156,7 +156,7 @@ describe("WeChat draft CLI", () => {
     if (!result.dryRun) throw new Error("Expected dry run");
     directories.push(join(result.htmlPath, ".."));
     expect(result.renderedLocally).toBe(true);
-    expect(await readFile(result.htmlPath, "utf8")).toBe(renderPostExport(post, "wechat"));
+    expect(await readFile(result.htmlPath, "utf8")).toBe(renderPostExport(post, "wechat").html);
     const toolCalls = callsTo(network, "/api/mcp").map(([, init]) => JSON.parse(String(init?.body))).filter((call) => call.method === "tools/call");
     expect(toolCalls).toEqual([expect.objectContaining({ params: { name: "get_post", arguments: { slug: "example-post" } } })]);
   });

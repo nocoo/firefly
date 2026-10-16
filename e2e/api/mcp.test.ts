@@ -257,8 +257,8 @@ describe.concurrent("MCP Main Endpoint — Tool Calls", () => {
     expect(toolNames).toContain("export_post");
   });
 
-  it("export_post returns the exact shared WeChat HTML by id and slug without changing the post", async () => {
-    const slug = `e2e-wechat-export-${crypto.randomUUID()}`;
+  it("export_post returns WeChat and website formats by id and slug without changing the post", async () => {
+    const slug = `e2e-post-export-${crypto.randomUUID()}`;
     const call = async (name: string, args: Record<string, unknown>) => {
       const response = await mcpRequest({
         jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args },
@@ -278,12 +278,20 @@ describe.concurrent("MCP Main Endpoint — Tool Calls", () => {
         const exported = await call("export_post", { ...identifier, format: "wechat" });
         expect(exported.isError).toBeUndefined();
         const data = JSON.parse(exported.content[0].text);
-        expect(data).toEqual({ id: before.id, slug, format: "wechat", html: renderPostExport(before, "wechat") });
+        expect(data).toEqual({ id: before.id, slug, format: "wechat", html: renderPostExport(before, "wechat").html });
         expect(data.html).toContain("wechat-footnotes");
         expect(data.html).toContain("wechat-featured-image");
         expect(data.html).toContain('style="');
+        const website = await call("export_post", { ...identifier, format: "website" });
+        expect(website.isError).toBeUndefined();
+        expect(JSON.parse(website.content[0].text)).toEqual({
+          id: before.id, slug, format: "website", title: "E2E WeChat export",
+          url: `https://lizheng.blog/${slug}`, cover: "https://example.com/cover.png",
+          html: '<h2>Heading</h2>\n<p><a href="https://example.com/?a=1&amp;b=2">Reference</a></p>\n<p>[图片 1]</p>',
+          images: [{ index: 1, url: "https://example.com/body.png", alt: "Image", position: 2 }],
+        });
       }
-      const unsupported = await call("export_post", { slug, format: "website" });
+      const unsupported = await call("export_post", { slug, format: "html" });
       expect(unsupported.isError).toBe(true);
       const after = JSON.parse((await call("get_post", { slug })).content[0].text);
       expect(after).toEqual(before);
