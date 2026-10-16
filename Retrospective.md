@@ -204,3 +204,16 @@ mixed-case, and control-normalized telephone links in shared rendering while
 checking that website export still removes their anchors and preserves text.
 Keep common validation separate from destination-specific restrictions; a
 security fix must not silently redefine supported behavior in other consumers.
+
+### 2026-10-16: Website export must verify Unicode serialization and option types
+
+Live website exports encoded Chinese as numeric entities because cheerio/slim's
+default serializer encodes non-ASCII characters. Existing body assertions used
+English, while Chinese image placeholders bypassed serialization. Final block
+serialization now uses `encodeEntities: "utf8"`, preserving context-safe HTML
+escaping without decoding the output. The first patch passed runtime tests but
+failed typecheck because Cheerio exposes serializer options under `xml`, not at
+the top level. Use that typed namespace with `xmlMode: false` to retain HTML
+semantics. Regression tests cover literal and entity-encoded Chinese, other
+Unicode, special characters, and existing entities; verify both runtime behavior
+and public option types before accepting a serialization change.
