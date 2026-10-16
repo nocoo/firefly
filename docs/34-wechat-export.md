@@ -56,6 +56,12 @@ uses the existing Markdown escaping policy. Unsupported formatting is unwrapped
 to retain its text. No styling, wrapper divs, title/excerpt header, cover image,
 or reference card is injected into the body.
 
+Link protocols are validated with the browser-compatible URL parser after
+removing control characters and checking whitespace-obfuscated schemes. Only
+HTTP, HTTPS, and mailto links are allowed; unsafe or malformed links retain
+their visible inline content without an anchor. The shared Markdown sanitizer
+uses this same policy, including for WeChat rendering.
+
 Body images become separate `<p>[图片 N]</p>` placeholders. `index` is one-based
 and follows document order; each occurrence is returned, including duplicate
 URLs. `position` is the zero-based index of the containing top-level semantic

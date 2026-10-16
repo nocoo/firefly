@@ -156,3 +156,20 @@ including website image positions, metadata, and unchanged persisted content.
 When changing a shared function or accepted format set, search all importers
 and format assertions before choosing verification commands. Separate runner
 configuration is not evidence that those consumers were checked by root tests.
+
+### 2026-10-16: URL safety must match browser parsing, not a scheme regex
+
+Review reproduced a stored-content XSS path in the website export: a tab inside
+`java\tscript:` bypassed the shared Markdown sanitizer's scheme regex, and the
+formatter retained the decoded href without another check. The original tests
+only covered contiguous dangerous schemes and trusted the shared sanitizer.
+
+The shared sanitizer now removes control characters, validates both the actual
+URL and a whitespace-free protocol probe with the URL parser, and permits only
+HTTP, HTTPS, and mailto. Significant spaces in paths remain intact. The website
+formatter repeats the same validation after HTML attribute decoding and unwraps
+unsafe links without losing inline content. Regression cases exercise literal
+and entity-encoded controls, mixed-case schemes, malformed URLs, safe protocols,
+and image-scheme bypasses. Treat parser normalization and the final decoded
+attribute as part of the security boundary, even when an earlier layer checked
+the input.

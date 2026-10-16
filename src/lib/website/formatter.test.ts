@@ -18,6 +18,27 @@ describe("website HTML formatter", () => {
     expect(result.images).toEqual([]);
   });
 
+  it.each([
+    "java\tscript:alert(1)", "java\nscript:alert(1)", "java\rscript:alert(1)",
+    "java&#x09;script:alert(1)", "java&#10;script:alert(1)", "java script:alert(1)",
+    "&#1;javascript:alert(1)", "JaVaScRiPt:alert(1)", "data:text/html,bad",
+    "vbscript:msgbox(1)", "file:///etc/passwd", "ftp://example.com/file", "tel:+123",
+    "https://[invalid", "", "   ",
+  ])("removes unsafe or invalid decoded href %j while preserving inline content", (href) => {
+    const result = formatWebsiteHtml(`<p><a href="${href}" class="bad"><strong>Link</strong></a></p>`, BASE_URL);
+    expect(result.html).toBe("<p><strong>Link</strong></p>");
+    expect(result.images).toEqual([]);
+  });
+
+  it("preserves the text of an anchor without href", () => {
+    expect(formatWebsiteHtml("<p><a>Link</a></p>", BASE_URL).html).toBe("<p>Link</p>");
+  });
+
+  it.each(["https://example.com/path", "http://example.com/path", "mailto:writer@example.com"])("allows only supported link protocols: %s", (href) => {
+    const result = formatWebsiteHtml(`<p><a href="${href}">Link</a></p>`, BASE_URL);
+    expect(load(result.html, null, false)("a").attr("href")).toBe(href);
+  });
+
   it("replaces standalone images and emits each occurrence with its source block position", () => {
     const result = formatWebsiteHtml('<h2>First</h2>\n<p><img src="/one.png?a=1&amp;b=2" alt="One &amp; two"></p>\n<p>Text</p>\n<p><img src="//cdn.example.com/two.png"><img src="/one.png?a=1&amp;b=2" alt="Again"></p>', BASE_URL);
     expect(result.html).toBe("<h2>First</h2>\n<p>[图片 1]</p>\n<p>Text</p>\n<p>[图片 2]</p>\n<p>[图片 3]</p>");

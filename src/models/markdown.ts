@@ -69,38 +69,29 @@ function escapeAttr(str: string): string {
     .replace(/>/g, "&gt;");
 }
 
-/** Allow only safe URL schemes; returns null for dangerous ones. */
-function sanitizeUrl(url: string): string | null {
-  const trimmed = url.trim();
-  // Allow relative URLs, http(s), mailto, tel, and hash links
-  if (
-    trimmed.startsWith("/") ||
-    trimmed.startsWith("#") ||
-    trimmed.startsWith("http://") ||
-    trimmed.startsWith("https://") ||
-    trimmed.startsWith("mailto:") ||
-    trimmed.startsWith("tel:")
-  ) {
-    return trimmed;
-  }
-  // Block everything else (javascript:, data:, vbscript:, etc.)
-  // Also block protocol-relative URLs that could be abused
-  if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) {
+const ALLOWED_URL_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
+
+export function sanitizeUrl(url: string): string | null {
+  const normalized = url.replace(/\p{Cc}/gu, "").trim();
+  if (!normalized) return null;
+  try {
+    const base = "https://markdown.invalid";
+    const parsed = new URL(normalized, base);
+    // Probe obfuscated schemes without deleting significant spaces in URL paths.
+    const probe = new URL(normalized.replace(/\s/gu, ""), base);
+    return ALLOWED_URL_PROTOCOLS.has(parsed.protocol) && ALLOWED_URL_PROTOCOLS.has(probe.protocol)
+      ? normalized
+      : null;
+  } catch {
     return null;
   }
-  // Allow bare relative paths (e.g., "page.html", "../file")
-  return trimmed;
 }
 
 /** Extract filename (without extension) from a URL for use as alt text fallback. */
 function filenameFromUrl(url: string): string {
-  try {
-    const pathname = new URL(url, "https://x").pathname;
-    const filename = pathname.split("/").pop() ?? "";
-    return filename.replace(/\.[^.]+$/, "");
-  } catch {
-    return "";
-  }
+  const pathname = new URL(url, "https://x").pathname;
+  const filename = pathname.split("/").pop() ?? "";
+  return filename.replace(/\.[^.]+$/, "");
 }
 
 /** Build alt text fallback: "Post Title - filename" or just one of them. */
@@ -271,8 +262,7 @@ function createRenderer(optimizeImages: boolean, postTitle?: string): MarkedExte
         const rendered = this.parser.parseInline(tokens);
         if (!safeHref) return rendered;
 
-        const isExternal =
-          safeHref.startsWith("http://") || safeHref.startsWith("https://");
+        const isExternal = /^https?:\/\//i.test(safeHref);
         const attrs = isExternal
           ? ` target="_blank" rel="noopener noreferrer"`
           : "";

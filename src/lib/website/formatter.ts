@@ -1,4 +1,5 @@
 import { load } from "cheerio/slim";
+import { sanitizeUrl } from "../../models/markdown";
 
 export interface WebsiteImage {
   index: number;
@@ -39,6 +40,14 @@ export function formatWebsiteHtml(contentHtml: string, baseUrl: string): {
     } else if (!SEMANTIC_TAGS.has(element.name)) {
       node.replaceWith(node.contents());
     } else if (element.name !== "img") {
+      if (element.name === "a") {
+        const href = sanitizeUrl(node.attr("href") ?? "");
+        if (href === null) {
+          node.replaceWith(node.contents());
+          continue;
+        }
+        node.attr("href", href);
+      }
       for (const attribute of Object.keys(element.attribs)) {
         if (element.name !== "a" || attribute !== "href") node.removeAttr(attribute);
       }
