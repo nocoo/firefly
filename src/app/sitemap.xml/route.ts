@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { getDb } from "@/lib/db";
 import { listSitemapPosts, listMonthlyArchives, listCategories, listTags } from "@/data/public-content";
 import { SITE_URL, postPath } from "@/lib/seo";
@@ -12,6 +13,7 @@ interface SitemapEntry {
 }
 
 export async function GET() {
+  await connection();
   const db = getDb();
 
   const [{ posts }, categories, tags, archives] = await Promise.all([

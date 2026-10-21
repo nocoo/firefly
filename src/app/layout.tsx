@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { connection } from "next/server";
 import { THEME_COLOR_DARK, THEME_COLOR_LIGHT } from "@/lib/theme-color";
 import { IBM_Plex_Sans, IBM_Plex_Mono, IBM_Plex_Serif } from "next/font/google";
 import { SITE_URL, OG_LOCALE, HTML_LANG, twitterAccountMeta } from "@/lib/seo";
@@ -28,13 +29,6 @@ const ibmPlexSerif = IBM_Plex_Serif({
   display: "swap",
 });
 
-/**
- * Revalidate every 5 minutes so metadata changes (site name, description,
- * tagline) propagate without a full redeploy. Without this, Next.js sets
- * s-maxage=31536000 and CDN caches the pre-rendered HTML indefinitely.
- */
-export const revalidate = 300;
-
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: THEME_COLOR_LIGHT },
@@ -44,6 +38,7 @@ export const viewport: Viewport = {
 };
 
 export async function generateMetadata(): Promise<Metadata> {
+  await connection();
   const db = getDb();
   const { settings, identity } = await loadSiteIdentity(db);
   const fullTitle = settings.siteTagline
@@ -109,6 +104,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  await connection();
   const db = getDb();
   const settings = await getSiteSettings(db);
 

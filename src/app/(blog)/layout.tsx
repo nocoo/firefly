@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { getDb } from "@/lib/db";
 import { listCategories, listTags, listMonthlyArchives, getSiteSettings } from "@/data/public-content";
 import { BlogLayoutClient } from "@/components/blog/blog-layout-client";
@@ -24,6 +25,7 @@ export default async function BlogLayout({
 }: {
   children: React.ReactNode;
 }) {
+  await connection();
   const db = getDb();
   const [categories, tags, archives, settings] = await Promise.all([
     listCategories(db),

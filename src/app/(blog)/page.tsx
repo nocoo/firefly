@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { getDb } from "@/lib/db";
 import { listPosts, getSiteSettings } from "@/data/public-content";
 import { loadSiteIdentity } from "@/lib/site-identity";
@@ -14,6 +15,7 @@ import { JournalIntro } from "@/components/blog/journal-intro";
 import homeSocial from "@/lib/home-social.json";
 
 export async function generateMetadata(): Promise<Metadata> {
+  await connection();
   const db = getDb();
   const settings = await getSiteSettings(db);
 
@@ -21,6 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
+  await connection();
   const db = getDb();
   const { settings, identity } = await loadSiteIdentity(db);
   const { posts, total } = await listPosts(db, {

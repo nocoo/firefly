@@ -1,5 +1,22 @@
 # Retrospective
 
+### 2026-10-21: Metadata exports need their own prerender boundary
+
+The first Docker migration investigation treated `sitemap.xml/route.ts` as an
+ordinary GET handler and concluded that Next's dynamic default was sufficient.
+Reading the installed Next.js 16.4.2 exporter showed that metadata routes bypass
+that default. The sitemap can therefore access site data during a supposedly
+database-independent build. Independent page, layout and metadata work can also
+start concurrently, so a parent layout boundary alone is not proof of isolation.
+
+The container slice adds request-time `connection()` boundaries before database
+access in the affected render entries and sitemap, without disabling the public
+Data Cache. The direct sitemap unit test retains the real `next/server` exports
+and mocks only `connection()`. Static contract tests are preliminary evidence;
+acceptance still requires a fresh build without Worker credentials and real
+cache and authorization tests. No production build or data mutation occurred
+during this investigation.
+
 ### 2026-10-08: Image URL assertions missed broken previews
 
 The first WeChat browser check asserted image URLs but not decoding. Its screenshots exposed broken images: the local R2 route used an underscore-prefixed private folder, so Next never registered it, and the combined runner served browser uploads from a different HTTP origin rejected by the existing CSP. Escaped the first folder underscore and made each test server return same-origin R2 URLs from the shared isolated directory, without weakening production CSP or the R2 isolation gates. Added assertions for image completion and nonzero natural width in both admin previews and the public sidebar. Also replaced an old generic file-input locator with the Logo field label after introducing two additional image pickers. A matching `src` and a passing upload response are not proof that an image is visible; verify browser decoding before accepting screenshots.

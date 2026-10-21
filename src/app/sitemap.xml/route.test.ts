@@ -30,6 +30,11 @@ const { sitemapRows } = vi.hoisted(() => ({ sitemapRows: [
       },
     ] }));
 
+vi.mock("next/server", async (importOriginal) => ({
+  ...await importOriginal<typeof import("next/server")>(),
+  connection: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("@/lib/db", () => ({
   getDb: () => ({}),
 }));

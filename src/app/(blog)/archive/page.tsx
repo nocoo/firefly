@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { getDb } from "@/lib/db";
 import { listMonthlyArchives } from "@/data/public-content";
 import { loadSiteIdentity } from "@/lib/site-identity";
@@ -16,6 +17,7 @@ import { Archive } from "lucide-react";
  */
 
 export async function generateMetadata(): Promise<Metadata> {
+  await connection();
   const db = getDb();
   const { identity } = await loadSiteIdentity(db);
   return buildPageMeta(
@@ -29,6 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ArchiveIndexPage() {
+  await connection();
   const db = getDb();
   const archives = await listMonthlyArchives(db);
   const total = archives.reduce((s, a) => s + a.count, 0);

@@ -47,6 +47,7 @@ function buildScriptSrc(): string {
 }
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   // Preserve Next's prefetch headers for analytics filtering in proxy.ts.
   // The default proxy adapter strips these before calling our handler.
   skipProxyUrlNormalize: true,

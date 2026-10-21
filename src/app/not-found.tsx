@@ -1,5 +1,6 @@
 import { HexlyLink } from "../components/header-links";
 import Link from "next/link";
+import { connection } from "next/server";
 import "./(blog)/journal.css";
 import { JournalBrand } from "@/components/blog/journal-brand";
 import { JournalSurfaces } from "@/components/blog/journal-surfaces";
@@ -11,6 +12,7 @@ import { BlogFooter } from "@/components/blog/blog-footer";
 import { postPath } from "@/lib/seo";
 
 export default async function NotFound() {
+  await connection();
   const db = getDb();
   const [settings, listing] = await Promise.all([
     getSiteSettings(db),
