@@ -320,17 +320,21 @@ test.describe("Feature: Admin post new editor", () => {
     await page.goto("/admin/posts/new", { waitUntil: "networkidle" });
     await expectPathname(page, "/admin/posts/new");
 
-    const status = page.getByLabel("状态");
+    const status = page.getByRole("combobox", { name: "状态", exact: true });
     await expect(status).toBeVisible();
     await status.click();
     await page.getByRole("option", { name: "私密", exact: true }).click();
     await expect(status).toHaveText("私密");
+    await expect(status).toHaveAttribute("aria-expanded", "false");
+    await expect(page.getByRole("listbox")).toBeHidden();
 
-    const category = page.getByLabel("分类");
+    const category = page.getByRole("combobox", { name: "分类", exact: true });
     await expect(category).toBeVisible();
     await category.click();
     await page.getByRole("option", { name: "无分类", exact: true }).click();
     await expect(category).toHaveText("无分类");
+    await expect(category).toHaveAttribute("aria-expanded", "false");
+    await expect(page.getByRole("listbox")).toBeHidden();
   });
 });
 

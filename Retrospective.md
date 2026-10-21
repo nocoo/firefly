@@ -1,5 +1,21 @@
 # Retrospective
 
+### 2026-10-22: Select assertions must identify the trigger, not closing options
+
+Upgrading Basalt from 2.2.0 to 3.2.1 exposed an ambiguous browser-test locator.
+After choosing the empty category, the broad category label matched both the
+combobox and the still-mounted option during its closing animation. The actual
+trigger had already updated and reported `aria-expanded=false`; retries failed
+on locator strictness, not a failed selection. The test now identifies each
+combobox by its exact accessible name and checks both the chosen text and popup
+closure. Keep native accessibility semantics in selectors rather than relying
+on an overlay's unmount timing.
+
+The first comparison capture also photographed the collapsing rail mid-motion.
+Subsequent geometry acceptance waits for the documented settled width before
+measuring or capturing it; button visibility alone does not prove animation
+completion. No production environment or UI behavior was changed for these checks.
+
 ### 2026-10-21: Disabled Caddy admin API does not require proxy restarts
 
 The migration investigation treated `admin off` as requiring a shared Caddy
