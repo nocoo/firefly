@@ -10,6 +10,7 @@ Personal blog with a Next.js website and admin console, a separate D1 Worker, R2
 - [D1 usage and cost audit, September 2026](32-d1-cost-audit-2026-09.md): production measurements, monitoring traffic, query plans, and prioritized savings.
 - [Public content caching and D1 monitoring](33-public-content-cache-plan.md): mutation-driven cache invalidation, traffic filtering, half-hourly usage sampling, and when shared Redis is needed.
 - [Article export: WeChat and website](34-wechat-export.md): shared admin/MCP rendering, clean X Article HTML with separate images, and the local WeChat draft-only CLI.
+- [Railway to jp2 migration](35-jp2-migration.md): standalone Docker delivery, production variable preservation, private-origin acceptance and the required cutover approval.
 - The numbered design documents below retain implementation history. Current source and the development guide take precedence where an old schema, test command, or deployment example differs.
 
 ## Foundation

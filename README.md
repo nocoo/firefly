@@ -119,6 +119,7 @@ bun run test:e2e:bdd
 
 - [文档索引](docs/README.md)
 - [开发、配置与部署](docs/31-development.md)
+- [jp2 migration and cutover approval](docs/35-jp2-migration.md)
 - [数据与服务分层](docs/03-architecture.md)
 - [MCP 连接协议](docs/11-mcp-server.md)与[实体工具框架](docs/16-mcp-framework.md)
 - [媒体库](docs/18-media-library.md)与[图片处理](docs/19-image-optimization.md)
