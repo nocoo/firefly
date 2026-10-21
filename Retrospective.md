@@ -1,5 +1,35 @@
 # Retrospective
 
+### 2026-10-21: Cutover acknowledgements did not prove ingress readiness
+
+During the approved jp2 cutover, two API acknowledgements were initially mistaken
+for the intended operational state. Railway's `deploymentStop` returned true but
+the instance stayed `RUNNING` and `deploymentStopped` stayed false throughout the
+bounded wait. The controller correctly withheld DNS changes, then used the
+documented `railway down` operation. Only its resulting `REMOVED` instance and
+`deploymentStopped=true` established the old write origin was stopped. Historical
+deployment restore flags remained true; project and variables were not deleted.
+
+The more consequential mistake was configuring Cloudflare's zone-level AOP
+endpoint while Caddy trusted the shared Cloudflare origin-pull CA. Zone-level
+AOP is for an uploaded custom client certificate. Shared-certificate AOP instead
+uses the zone setting `tls_client_auth=on`. Caddy configuration validation and a
+healthy old Railway response could not prove this new ingress path, so the first
+public requests to jp2 returned 520. Comparison with Ellie's live settings and
+the current Cloudflare documentation identified the mismatch. Enabling the shared
+toggle and restoring the unused custom toggle to false recovered both blog
+origins at 05:54:39 UTC. Strict server certificate validation and required client
+authentication remained enabled; security was not weakened to restore service.
+
+Before future cutovers, pair the actual origin trust CA with the exact Cloudflare
+API setting and verify the authenticated new ingress before shutting down the
+old service, using a temporary read-only/maintenance ingress if necessary.
+Separate control-plane acknowledgement, instance state, private application
+health and public ingress evidence. A shared proxy's successful syntax check
+does not prove Cloudflare will present the required client certificate. Preserve
+rollback snapshots before changes and do not claim zero downtime from sparse
+health samples. The observed cutover included failed public requests.
+
 ### 2026-10-21: Verifier fixtures must model accepted failures
 
 The first private-origin redirect fixture asserted rejection inside a mocked

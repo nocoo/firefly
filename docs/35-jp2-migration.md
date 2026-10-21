@@ -1,7 +1,9 @@
 # Railway to jp2 Migration
 
-Status: implementation authorized; production domain cutover requires a separate
-owner approval. Baseline: `d68c10b`, application version `2.17.1`.
+Status: owner approved the production cutover on 2026-10-21. Both public origins
+were verified on jp2 at 05:54:39 UTC with application version `2.18.0`. Railway
+is stopped and retained for rollback; project deletion is not authorized.
+Migration baseline: `d68c10b`, application version `2.17.1`.
 
 ## Boundaries
 
@@ -96,7 +98,7 @@ Never accept an old Railway response as evidence for the new origin. During
 pre-cutover CD, make private-origin verification explicit; any public-verification
 phase must fail closed if its target or origin identity is missing.
 
-## Cutover and Rollback (Not Yet Authorized)
+## Cutover and Rollback
 
 Before changing routing, capture the current DNS/origin configuration, Railway
 deployment, active/new image digests, and a rollback procedure. Confirm the
@@ -124,8 +126,10 @@ contains no schema or data migration.
 - [x] All 17 Railway application variables matched both the private environment file and the running container; no values were printed.
 - [x] Migration version `v2.18.0` published; exact-SHA CI/CD passed.
 - [x] Private jp2 origin acceptance completed.
-- [ ] Owner reviewed evidence and approved production domain cutover.
-- [ ] Public cutover, acceptance and rollback-window closure completed.
+- [x] Owner reviewed evidence and approved production domain cutover.
+- [x] Public cutover, health checks and existing-session acceptance completed.
+- [ ] Fresh Google OAuth and authenticated MCP/write acceptance completed.
+- [ ] Owner closed the rollback window and authorized Railway project deletion.
 
 ### Local evidence, 2026-10-21
 
@@ -171,9 +175,78 @@ login were exercised; these remain explicit cutover acceptance items.
 
 Deployment controls (`DEPLOY_PHASE`, `DEPLOY_URL`, `DEPLOY_ORIGIN_MARKER`) are
 repository variables so the reusable-workflow caller can resolve them. Credentials
-remain scoped to the `firefly / production` environment. The phase is still
+remain scoped to the `firefly / production` environment. At that checkpoint the phase was
 `precutover`; missing or invalid phase values fail closed.
 
 Rollback metadata is private at `/opt/firefly/railway-rollback.json`, and Docker
-receipts are in `/opt/firefly/.base-ci-releases/`. Neither production DNS nor
-shared Caddy/TLS configuration has changed. The owner has not approved cutover.
+receipts are in `/opt/firefly/.base-ci-releases/`. This staging checkpoint preceded
+the separately approved public cutover below.
+
+### Approved public cutover, 2026-10-21
+
+- Apex and `origin` now use proxied CNAME records targeting `jp2.nocoo.cloud`.
+  The independent `www` redirect Worker and mail records are unchanged.
+- A scoped Origin CA certificate covers only the two blog hostnames. Its private
+  key was generated and retained on jp2, mode 0600. Caddy requires the existing
+  shared Cloudflare origin-pull CA and adds `X-Firefly-Origin: jp2`.
+  Cloudflare uses `ssl=strict`, `tls_client_auth=on`; custom-certificate zone-level
+  AOP remains disabled. These are distinct API settings, not interchangeable.
+- The Caddy candidate passed validation before one shared-proxy restart. All six
+  existing hosts returned 200 afterward. Direct unauthenticated origin TLS was
+  rejected; Cloudflare ingress succeeded.
+- `deploymentStop` acknowledged success but left Railway running. `railway down`
+  actually stopped deployment `29946042-b67a-41d9-9003-e37e3420181a`: instance and
+  deployment `REMOVED`, `deploymentStopped=true`, `canRedeploy=true`,
+  `canRollback=true`. Project, domains, variables and old image record remain;
+  the GitHub trigger stays disconnected.
+- Firefly was cold-restarted after the old instance stopped, rotating its cache
+  epoch before DNS switched. No schema, data, Worker deployment or application
+  secret changed. All 17 Railway application variables again matched the container.
+- Initial ingress returned 520 because the wrong AOP toggle was selected.
+  Correcting it restored both origins at 05:54:39 UTC. See `Retrospective.md`;
+  this was not a zero-interruption cutover.
+
+The cutover image was
+`ghcr.io/nocoo/firefly@sha256:8fc87af34b5c44a565171b43d742ed2fbf5bbbc4afe6d9f04b9e1a8d64d54df5`,
+revision `cac904747d6942930df562c889d313703221b565`, with successful exact-revision
+[CI](https://github.com/nocoo/firefly/actions/runs/39541102780) and
+[CD](https://github.com/nocoo/firefly/actions/runs/39541395052). Subsequent main
+pushes produce their own receipts; consult Actions and `.base-ci-releases/`
+rather than treating this cutover image as permanently current.
+
+Public checks passed for no-store health/version/origin/D1, homepage, published
+article, archive, static chunks, optimized R2 image, RSS, sitemap/XSL, llms,
+robots, login and canonical Google callback configuration. Unauthenticated admin
+reads, post writes and MCP tool-list requests returned 401. The existing Chrome
+session survived and displayed the dashboard and authenticated article list.
+Chrome also reported a recoverable React #418 hydration error and blocked the
+Cloudflare analytics beacon under the existing CSP; the article list subsequently
+rendered. This is not a clean-console claim or proof of a fresh OAuth exchange or
+authenticated production writes. Do not broaden CSP or change auth to hide it.
+
+Kuma reported the existing health monitor up with valid TLS. Hexly's real scheduled
+probe observed 2.18.0 as operational after cutover. No monitoring target changes
+or synthetic heartbeats were needed. CD now uses `DEPLOY_PHASE=production` and
+`DEPLOY_URL=https://lizheng.blog`, retaining `DEPLOY_ORIGIN_MARKER=jp2`.
+
+### Retained rollback procedure
+
+Private before-images are in `/opt/firefly/cutover-20261021/`, including DNS,
+SSL/AOP, Caddy and Railway metadata. The original global `tls_client_auth` value
+was `off`; custom zone-level AOP was disabled. Runtime secrets remain in
+`/opt/firefly/.env.runtime`.
+
+1. Stop `firefly-app` to freeze writes and record its digest. Never keep two
+   independent application write origins running.
+2. For image rollback, use a previously accepted digest with the normal Compose
+   interpolation/override contract and cold-start it. Never use `latest` or bare
+   Compose without `IMAGE_SHA`.
+3. For Railway rollback, check the recorded deployment remains restorable under
+   the plan's retention policy, then use the inspected GraphQL operation
+   `deploymentRedeploy(id: ..., usePreviousImageTag: true)`, not a source rebuild.
+   Verify its health before restoring the two original DNS targets from the
+   private snapshot. Restore original TLS settings if needed. Inspect instance
+   state and responses, not just successful command exits.
+4. Verify the intended public origin and authentication before resuming writes;
+   leave the other origin stopped. Database writes are not undone by routing or
+   image rollback. Delete the Railway project only after owner approval.

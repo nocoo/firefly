@@ -84,7 +84,21 @@ Next.js 端到端测试使用 `bun run build` 构建后的服务，API 用例结
 
 ## 部署
 
-当前[公开资料说明](30-social-preview.md)记录博客主域名为 `https://lizheng.blog`，网站由 Railway 托管。仓库 [.github/workflows/ci.yml](../.github/workflows/ci.yml)定义验证工作流，没有网站或 Worker 的 GitHub Actions 自动部署步骤；托管平台上的自动部署设置需另行管理。
+The production website is `https://lizheng.blog`, hosted by one standalone Node
+container on jp2 since the owner-approved cutover on 2026-10-21. Cloudflare proxies
+the apex and `origin` names to jp2; the independent `www` redirect Worker is
+unchanged. Railway is stopped, with its project and variables retained for rollback.
+
+[CI](../.github/workflows/ci.yml) success on `main` triggers the pinned
+[Docker CD workflow](../.github/workflows/release.yml). It deploys an immutable
+image digest into `/opt/firefly`, checks the private container, then verifies the
+canonical public `/api/live`, version, database and `x-firefly-origin: jp2`.
+Repository variables are `DEPLOY_PHASE=production`,
+`DEPLOY_URL=https://lizheng.blog` and `DEPLOY_ORIGIN_MARKER=jp2`; credentials remain
+in the `firefly / production` environment. Even a documentation-only main push
+runs this pipeline. Worker deployment and migrations remain separate operations.
+See the [migration and rollback runbook](35-jp2-migration.md) for TLS, preserved
+runtime configuration, acceptance evidence and the single-write-origin rule.
 
 自行托管时分别配置：
 

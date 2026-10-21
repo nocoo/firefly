@@ -80,7 +80,7 @@ Open `http://localhost:7028`. `migrate:local` always connects to local port 8787
 | `worker/src/` | Native Fetch Worker, D1 SQL proxy, and full-text search |
 | `scripts/migrations/` | Current database migrations; `archive/` retains WordPress migration scripts |
 
-Existing deployment documentation records Railway as the website host. GitHub Actions in this repository defines CI; website hosting, Worker publication, and remote database migrations are configured separately. See the [development and deployment guide](31-development.md).
+The website runs as a standalone Node container on jp2 behind Cloudflare and Caddy. Successful `main` CI triggers an image build, digest-pinned deployment and public origin/database verification. Worker publication and remote database migrations remain separate operations. See the [development and deployment guide](31-development.md) and [migration record](35-jp2-migration.md).
 
 ## Tests
 

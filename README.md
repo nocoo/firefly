@@ -80,7 +80,7 @@ bun run dev
 | `worker/src/` | 原生 Fetch Worker、D1 SQL 代理和全文搜索 |
 | `scripts/migrations/` | 当前数据库迁移；`archive/` 保留 WordPress 迁移脚本 |
 
-现有部署文档记录网站运行于 Railway。仓库的 GitHub Actions 定义 CI；网站托管、Worker 发布和远程数据库迁移是分别配置的流程，见[开发与部署指南](docs/31-development.md)。
+网站运行于 jp2 的独立 Node 容器，Cloudflare 与 Caddy 提供 HTTPS 入口。`main` 的 CI 成功后，GitHub Actions 自动构建并按镜像摘要部署，再验证公网源站与数据库健康。Worker 发布和远程数据库迁移仍独立执行，见[开发与部署指南](docs/31-development.md)与[迁移记录](docs/35-jp2-migration.md)。
 
 ## 测试
 
