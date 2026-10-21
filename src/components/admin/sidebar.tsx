@@ -241,7 +241,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
         /* ── Expanded rail ── */
         <>
           <SidebarHeader>
-            <div className="flex w-full items-center justify-between">
+            <div className="flex w-full items-center justify-between pl-[calc((var(--basalt-size-rail)_-_1.5rem)/2_-_var(--basalt-space-nav-inset))]">
               <div className="flex items-center gap-3">
                 <img
                   src="/logo-24.png"

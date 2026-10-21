@@ -34,6 +34,45 @@
  */
 import { test, expect, expectPathname } from "./fixtures";
 
+test("Given the desktop sidebar, When collapse and expansion settle, Then the brand mark has the same horizontal position", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/admin/posts", { waitUntil: "networkidle" });
+  const sidebar = page.getByRole("complementary");
+  const logo = sidebar.getByRole("img", { name: "Firefly", exact: true });
+  await expect(logo).toBeVisible();
+  const expandedX = await logo.evaluate((node) => node.getBoundingClientRect().x);
+
+  await page.getByRole("button", { name: "收起侧边栏", exact: true }).click();
+  await expect.poll(() => sidebar.evaluate((node) => node.getBoundingClientRect().width)).toBe(68);
+  await expect.poll(async () => Math.abs(await logo.evaluate((node) => node.getBoundingClientRect().x) - expandedX)).toBeLessThan(1);
+
+  await page.getByRole("button", { name: "展开侧边栏", exact: true }).click();
+  await expect.poll(() => sidebar.evaluate((node) => node.getBoundingClientRect().width)).toBe(260);
+  await expect.poll(async () => Math.abs(await logo.evaluate((node) => node.getBoundingClientRect().x) - expandedX)).toBeLessThan(1);
+});
+
+for (const width of [390, 700]) {
+  test(`Given a ${width}px viewport, When I open navigation, Then it fits the drawer and closes accessibly`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/admin/posts", { waitUntil: "networkidle" });
+    const opener = page.getByRole("button", { name: "打开导航", exact: true });
+    await opener.click();
+    const drawer = page.getByRole("dialog");
+    await expect(drawer).toBeVisible();
+    await expect(drawer).toHaveCSS("padding", "0px");
+    await expect.poll(() => drawer.evaluate((node) => node.scrollWidth - node.clientWidth)).toBe(0);
+    await expect(drawer.getByRole("complementary")).toHaveCSS("width", "260px");
+
+    await page.keyboard.press("Escape");
+    await expect(drawer).toBeHidden();
+    await expect(opener).toBeFocused();
+    await opener.click();
+    await drawer.getByRole("link", { name: "分类", exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/categories$/);
+    await expect(drawer).toBeHidden();
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Feature: Admin dashboard shell + content stats
 // ---------------------------------------------------------------------------

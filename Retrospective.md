@@ -16,6 +16,15 @@ Subsequent geometry acceptance waits for the documented settled width before
 measuring or capturing it; button visibility alone does not prove animation
 completion. No production environment or UI behavior was changed for these checks.
 
+The independent review then identified Basalt's new `sm` Sheet padding conflicting
+with the application's 260px navigation at 700px. Browser measurement confirmed
+24px padding and 284px scroll width inside a 260px drawer. A matching `sm:p-0`
+keeps navigation responsible for its own inset. Settled brand geometry also
+showed the 24px logo at x=8 expanded and x=22 collapsed. A token-derived inset
+on the application's inner brand row aligns its resting positions without
+overriding the shared Header or rail. New browser tests failed on both unfixed
+layouts, then passed after integration alongside the complete browser suite.
+
 ### 2026-10-21: Disabled Caddy admin API does not require proxy restarts
 
 The migration investigation treated `admin off` as requiring a shared Caddy

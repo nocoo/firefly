@@ -195,7 +195,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
               {isMobile && (
                 <SheetContent
                   side="left"
-                  className="w-[260px] max-w-[260px] border-0 bg-basalt-background p-0"
+                  className="w-[260px] max-w-[260px] border-0 bg-basalt-background p-0 sm:p-0"
                 >
                   <SheetTitle className="sr-only">导航</SheetTitle>
                   <AdminSidebar
