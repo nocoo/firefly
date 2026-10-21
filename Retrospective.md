@@ -1,5 +1,23 @@
 # Retrospective
 
+### 2026-10-21: Disabled Caddy admin API does not require proxy restarts
+
+The migration investigation treated `admin off` as requiring a shared Caddy
+restart. Before retiring the duplicate origin, current Caddy documentation and
+the actual process arguments showed a native alternative: `SIGUSR1` reloads a
+configuration started with `caddy run --config`, provided `--resume` and later
+admin-API configuration changes are absent. The validated host-only change was
+applied through that signal, the loaded autosave configuration matched, and the
+container start time remained unchanged. Check the installed server's supported
+reload mechanisms before choosing a production restart.
+
+The first acceptance wrapper also required HTTP 200 from every unrelated site's
+root and stopped at Ellie's legitimate 307 to `/admin`; earlier probes had followed
+redirects. Inspect the actual destination rather than calling any redirect an
+outage. An unmatched Caddy host also returned an empty 200, not the guessed 404.
+Verify removal through the loaded host matchers, absence of application content
+and DNS state instead of assuming a framework-specific default status code.
+
 ### 2026-10-21: Cutover acknowledgements did not prove ingress readiness
 
 During the approved jp2 cutover, two API acknowledgements were initially mistaken

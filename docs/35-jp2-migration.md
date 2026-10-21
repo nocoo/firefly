@@ -4,6 +4,9 @@ Status: owner approved the production cutover on 2026-10-21. Both public origins
 were verified on jp2 at 05:54:39 UTC with application version `2.18.0`. Railway
 is stopped and retained for rollback; project deletion is not authorized.
 Migration baseline: `d68c10b`, application version `2.17.1`.
+The owner subsequently approved retiring the duplicate `origin.lizheng.blog`;
+only the canonical apex now routes to Firefly. The retirement section below
+supersedes the historical two-host cutover and its original DNS rollback scope.
 
 ## Boundaries
 
@@ -184,7 +187,7 @@ the separately approved public cutover below.
 
 ### Approved public cutover, 2026-10-21
 
-- Apex and `origin` now use proxied CNAME records targeting `jp2.nocoo.cloud`.
+- At cutover, apex and `origin` used proxied CNAME records targeting `jp2.nocoo.cloud`.
   The independent `www` redirect Worker and mail records are unchanged.
 - A scoped Origin CA certificate covers only the two blog hostnames. Its private
   key was generated and retained on jp2, mode 0600. Caddy requires the existing
@@ -197,7 +200,7 @@ the separately approved public cutover below.
 - `deploymentStop` acknowledged success but left Railway running. `railway down`
   actually stopped deployment `29946042-b67a-41d9-9003-e37e3420181a`: instance and
   deployment `REMOVED`, `deploymentStopped=true`, `canRedeploy=true`,
-  `canRollback=true`. Project, domains, variables and old image record remain;
+  `canRollback=true`. Project, variables and old image record remain;
   the GitHub trigger stays disconnected.
 - Firefly was cold-restarted after the old instance stopped, rotating its cache
   epoch before DNS switched. No schema, data, Worker deployment or application
@@ -244,9 +247,38 @@ was `off`; custom zone-level AOP was disabled. Runtime secrets remain in
 3. For Railway rollback, check the recorded deployment remains restorable under
    the plan's retention policy, then use the inspected GraphQL operation
    `deploymentRedeploy(id: ..., usePreviousImageTag: true)`, not a source rebuild.
-   Verify its health before restoring the two original DNS targets from the
-   private snapshot. Restore original TLS settings if needed. Inspect instance
+   Verify its health and canonical custom-domain attachment before restoring
+   only the apex DNS target from the private snapshot. Do not recreate the retired
+   `origin` alias. Restore original TLS settings if needed. Inspect instance
    state and responses, not just successful command exits.
 4. Verify the intended public origin and authentication before resuming writes;
    leave the other origin stopped. Database writes are not undone by routing or
    image rollback. Delete the Railway project only after owner approval.
+
+### Duplicate origin retirement, 2026-10-21
+
+The owner requested checking dependencies and removing `origin.lizheng.blog`.
+An exact-host scan of personal-workspace source/configuration files found only
+this migration history. Existing Codex, Claude, Gemini, OpenCode and Pi client
+configurations and the running Firefly environment contained no alias reference.
+Cloudflare had no zone Worker routes, legacy Page Rules, custom routing rulesets
+or DNS records targeting the alias. The only Worker custom domain in the zone
+was the independent `www` redirect. Railway's service-instance API returned no
+active deployments or custom-domain attachments, so no Railway mutation was
+needed. This bounded configuration inventory is not proof that no unknown
+external client ever used the public alias.
+
+Removed the duplicate hostname from Caddy, its proxied CNAME, and the obsolete
+`_railway-verify.origin.lizheng.blog` TXT. The candidate Caddy configuration passed
+validation, then `SIGUSR1` reloaded the file-backed configuration. The container's
+start time did not change. Loaded-config inspection confirmed the alias was gone;
+before DNS removal, its requests returned an empty unmatched-host response rather
+than Firefly content. All other DNS records compared unchanged. The shared Origin
+CA certificate/key were retained because the certificate also serves the apex;
+a retained SAN does not create a DNS record or an application route.
+
+Main health remained no-store, jp2, version 2.18.0 and database-connected. The six
+other Caddy sites remained reachable, including their normal redirects, and
+`www` retained its 301 to the apex. Before-images and a completion receipt are
+private at `/opt/firefly/retire-origin-20261021/`. Old migration backups describe
+historical routing and must not be restored wholesale.

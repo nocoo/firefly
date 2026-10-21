@@ -86,8 +86,9 @@ Next.js 端到端测试使用 `bun run build` 构建后的服务，API 用例结
 
 The production website is `https://lizheng.blog`, hosted by one standalone Node
 container on jp2 since the owner-approved cutover on 2026-10-21. Cloudflare proxies
-the apex and `origin` names to jp2; the independent `www` redirect Worker is
-unchanged. Railway is stopped, with its project and variables retained for rollback.
+the apex to jp2; the independent `www` redirect Worker is unchanged. The duplicate
+`origin.lizheng.blog` DNS and proxy route were subsequently retired with owner
+approval. Railway is stopped, with its project and variables retained for rollback.
 
 [CI](../.github/workflows/ci.yml) success on `main` triggers the pinned
 [Docker CD workflow](../.github/workflows/release.yml). It deploys an immutable

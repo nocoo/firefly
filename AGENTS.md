@@ -85,7 +85,7 @@ Use per-run local Wrangler/Miniflare SQLite and local R2, with credential/bindin
 
 ## Operations / Release
 
-For an authorized release use `bun run release`; it bumps, commits, tags and pushes. `bun run migrate` defaults to production, while `migrate:local` targets local 8787. Apply schema before dependent code and validate the deployed site/Worker using the [runbook](docs/31-development.md). Documentation updates do not require a release or deployment.
+For an authorized release use `bun run release`; it bumps, commits, tags and pushes. `bun run migrate` defaults to production, while `migrate:local` targets local 8787. Apply schema before dependent code and validate the deployed site/Worker using the [runbook](docs/31-development.md). Documentation updates do not require a version release; main pushes still run Docker CD.
 
 Docker CD uses `firefly / production`, `/opt/firefly`, the `web` Compose service
 and immutable image digests. Railway production application variables are copied
@@ -94,6 +94,11 @@ fixtures. Production uses proxied DNS, Full (strict) TLS and Caddy with the shar
 Cloudflare origin-pull CA: `tls_client_auth=on`, not the custom-certificate
 zone-level AOP toggle. Keep one active application instance/write origin. Do not
 restart Railway while jp2 accepts writes; project deletion needs owner approval.
+Only `lizheng.blog` routes to Firefly; `www` remains a separate redirect Worker.
+The duplicate `origin.lizheng.blog` was retired with owner approval. Do not
+restore it from pre-cutover DNS or Caddy backups. For this file-backed Caddy
+(`caddy run`, no `--resume`, admin API disabled), validate the candidate first,
+then use `SIGUSR1` to reload without restarting the shared proxy.
 Caller-visible repository variables control deployment phase; credentials remain
 environment-scoped. Production verification requires `DEPLOY_PHASE=production`, the canonical
 `DEPLOY_URL=https://lizheng.blog`, and `DEPLOY_ORIGIN_MARKER=jp2`.
