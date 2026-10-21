@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.18.0 (2026-10-21)
+
+- test: detect weakened origin redirect checks
+- feat: deploy verified containers to private jp2
+- feat: package a database-independent container
+- docs: plan jp2 migration approval boundary
+
+
 ## v2.17.1 (2026-10-16)
 
 - fix: preserve unicode in website html exports (#838)
