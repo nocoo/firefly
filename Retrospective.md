@@ -1,5 +1,73 @@
 # Retrospective
 
+### 2026-10-22: Loading boundaries must not turn missing resources into HTTP 200
+
+The first native admin loading boundaries inherited through parent list routes.
+A nonexistent post edit URL then streamed its skeleton before notFound(),
+changing the established HTTP 404 contract to a soft 404 with status 200. The
+existing browser test caught it. Overview and list entrypoints now use URL-neutral
+route groups so their fallbacks do not wrap resource descendants. Dynamic edit
+layouts validate resource existence before their own loading boundary can stream;
+author and AI-agent routes retain the special new path. Browser checks retain
+the post 404 assertion and cover the other resource types too. A separate eager
+textarea count now awaits actual attachment because a legitimate loading screen
+can precede the editor. Preserve response semantics rather than weakening status
+assertions to accept a new loading implementation.
+
+### 2026-10-22: Static React rendering does not validate the RSC boundary
+
+The first admin loading module used LayerCard.Header and LayerCard.Body inside
+a Server Component. Basalt exports LayerCard as a client compound component;
+the server module cannot resolve those attached members. Typechecking, building
+and renderToStaticMarkup tests passed, but live production rendering reported
+an undefined element type and displayed the global error screen. The run was
+stopped instead of accepting its retries. The shared skeleton composition now
+declares its client boundary, while each native loading.tsx remains a small
+server entrypoint. Verify actual Next rendering and slowed navigation in
+addition to plain React markup tests whenever component boundaries change.
+
+The temporary local delay proxy initially forwarded Fetch-decoded bytes with
+the upstream gzip headers intact, causing transport failures unrelated to the
+application. Rebuilding its response without encoding/length/transfer headers
+restored the synthetic Worker connection before slow-navigation acceptance.
+Test instrumentation must preserve HTTP framing and prove its own health first.
+
+### 2026-10-22: Responsive state must hydrate from the server snapshot
+
+Mobile acceptance exposed the existing breakpoint hooks initializing state from
+window width on the client but from desktop defaults on the server. React could
+replace the mismatched shell during hydration, invalidating geometry readings
+and interactions. Both hooks now use useSyncExternalStore with a shared desktop
+server snapshot and the existing resize subscription. Client width is applied
+after hydration without changing the breakpoints. The drawer checks now record
+page errors and verify resizing back to desktop. Do not hide hydration failures
+with sleeps or looser selectors; establish matching initial snapshots first.
+
+### 2026-10-22: A leading back action must not indent page filters
+
+The first shared admin heading put a text back action beside the whole Basalt
+PageHeader, including its filters. That made the filter region inherit the
+heading's indentation and used more horizontal space than the requested icon.
+The corrected composition keeps an accessible icon-only Button/Link beside the
+standard title and description, with filters as a full-width sibling below.
+Browser regression checks measure the filter's left edge and width at desktop
+and mobile sizes, and check every normal admin route's heading and parent link.
+Treat the title band and filter band as separate layout constraints instead of
+assuming one leading column should span both.
+
+Sidebar validation also initially assumed the existing command palette exposed
+a dialog role. Its DOM instead exposes a named search textbox. The interaction
+check now asserts that actual textbox, focus and Escape behavior rather than
+inventing an overlay role. Published component APIs and rendered semantics must
+both be inspected before writing integration assertions.
+
+Review caught a cleanup request using a post ID on a slug-only API, plus a
+geometry check comparing two elements that could drift together. Cleanup now
+checks every response using the route's actual key. Filter bounds also compare
+against the island's client box, excluding padding and scrollbar space. Tests
+must verify independent boundaries and cleanup, not merely agree with the new
+implementation.
+
 ### 2026-10-22: Select assertions must identify the trigger, not closing options
 
 Upgrading Basalt from 2.2.0 to 3.2.1 exposed an ambiguous browser-test locator.

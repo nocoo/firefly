@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { SiteSettings, SocialLink } from "@/data/settings";
 import { SiteLogoCard } from "./site-logo-card";
 import { SocialLinksCard } from "./social-links-card";
-import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { AdminPageHeader } from "./page-header";
 import { WechatSettingsCard } from "./wechat-settings-card";
 import type { WechatSettings } from "@/models/wechat";
 
@@ -78,7 +78,12 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="站点身份" />
+      <AdminPageHeader
+        title="站点身份"
+        description="维护博客名称、标语、介绍、Logo 与社交平台资料。"
+        backHref="/admin"
+        backLabel="返回管理"
+      />
       <SiteLogoCard initialLogoUrl={logoUrl} />
 
       {/* Card 2: Site Info */}

@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Clock, Cpu, HardDrive, RefreshCw, TrendingUp } from "lucide-react";
-import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { AdminPageHeader } from "./page-header";
+import { AdminSystemMonitorBodySkeleton } from "./loading-skeleton";
 import { Button } from "@nocoo/basalt/components/button";
 import { MemoryTrendChart } from "./system-monitor-chart";
 import {
   formatTimeAgo,
   formatUptime,
-  LoadingSkeleton,
   MemoryRecommendation,
   StatCard,
   type SystemStats,
@@ -48,12 +48,32 @@ export function SystemMonitorDashboard() {
     return () => clearInterval(interval);
   }, [fetchStats]);
 
-  if (loading) return <LoadingSkeleton />;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <AdminPageHeader
+          title="系统监控"
+          description="查看服务内存占用、历史趋势与运行状态。"
+          backHref="/admin"
+          backLabel="返回管理"
+        />
+        <AdminSystemMonitorBodySkeleton />
+      </div>
+    );
+  }
 
   if (error || !stats) {
     return (
-      <div className="flex items-center justify-center py-20 text-muted-foreground">
-        {error ?? "No data available"}
+      <div className="space-y-6">
+        <AdminPageHeader
+          title="系统监控"
+          description="查看服务内存占用、历史趋势与运行状态。"
+          backHref="/admin"
+          backLabel="返回管理"
+        />
+        <div className="flex items-center justify-center py-20 text-muted-foreground">
+          {error ?? "No data available"}
+        </div>
       </div>
     );
   }
@@ -65,9 +85,11 @@ export function SystemMonitorDashboard() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <AdminPageHeader
         title="系统监控"
-        description={lastUpdated ? `上次更新：${formatTimeAgo(lastUpdated)}` : undefined}
+        description={`查看服务内存占用、历史趋势与运行状态。${lastUpdated ? ` 上次更新：${formatTimeAgo(lastUpdated)}` : ""}`}
+        backHref="/admin"
+        backLabel="返回管理"
         actions={
           <Button variant="outline" size="sm" icon={<RefreshCw />} onClick={fetchStats}>
             刷新

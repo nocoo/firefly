@@ -33,6 +33,22 @@ bun run dev
 
 当前迁移器按文件记录校验和。`--target local` 经 Worker HTTP 应用 SQL，目标主要是本地初始化与测试；它会移除 PRAGMA 并拆分语句。远程适配器通过 Cloudflare REST API 执行迁移。不要将现有文件重新排序或修改校验和来模拟新迁移。
 
+## Admin loading boundaries
+
+Admin pages use native Next.js `loading.tsx` entrypoints and shared Basalt
+skeletons in `src/components/admin/loading-skeleton.tsx`. That composition stays
+a Client Component because Basalt's compound `LayerCard` members are client
+exports. Overview and list pages live in URL-neutral `(overview)` / `(list)`
+groups so their loading boundaries do not wrap dynamic resource layouts.
+Resource layouts check existence before streaming, preserving real HTTP 404s;
+do not add a blanket `admin/loading.tsx` or parent-list loading boundary.
+
+The shared admin heading keeps its icon-only parent link in the title/subtitle
+band and filters in a separate full-width row. Client data loaders reuse the
+same skeleton primitives, retain populated content during refresh and respect
+reduced-motion settings. Validate actual streamed navigation in addition to
+static markup tests; ordinary React SSR does not simulate Next's RSC boundary.
+
 ## 图片与可选服务
 
 普通开发没有通用的本地 R2 开关。图片上传、站点 Logo 与作者头像使用真实 R2，需设置 `CF_ACCOUNT_ID`、`R2_ACCESS_KEY_ID`、`R2_SECRET_ACCESS_KEY`、`R2_BUCKET_NAME`、`R2_PUBLIC_URL`，可用 `R2_KEY_PREFIX` 区分对象前缀。使用自己的开发存储桶；D1 本地化不会自动改变 R2 去向。

@@ -9,7 +9,7 @@ import { PostFilters } from "@/components/admin/post-filters";
 import { AdminPostsBulkActionBar } from "@/components/admin/admin-posts-bulk-action-bar";
 import { AdminPostsListView } from "@/components/admin/admin-posts-list-view";
 import { AdminPostsGridView } from "@/components/admin/admin-posts-grid-view";
-import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { AdminPageHeader } from "./page-header";
 import { Button } from "@nocoo/basalt/components/button";
 import {
   ToggleGroup,
@@ -150,21 +150,25 @@ export function AdminPostsClient({
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <AdminPageHeader
         title="文章"
-        description={`共 ${total} 篇文章`}
+        description={`管理文章，共 ${total} 篇。`}
+        backHref="/admin"
+        backLabel="返回管理"
         actions={
           <>
-            <PostFilters
-              categories={categories}
-              tags={tags}
-              yearCounts={yearCounts}
-            />
             <ViewModeToggle viewMode={viewMode} onChange={handleViewModeChange} />
             <Button asChild>
               <Link href="/admin/posts/new">新建文章</Link>
             </Button>
           </>
+        }
+        filters={
+          <PostFilters
+            categories={categories}
+            tags={tags}
+            yearCounts={yearCounts}
+          />
         }
       />
 

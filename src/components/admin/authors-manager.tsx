@@ -6,7 +6,7 @@ import { Pencil, Plus, Star, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
 import type { HumanWithMeta } from "@/models/types";
 import { Button } from "@nocoo/basalt/components/button";
-import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { AdminPageHeader } from "./page-header";
 import { ConfirmDialog } from "./confirm-dialog";
 import {
   AuthorProfileLookupDialog,
@@ -27,6 +27,7 @@ export function AuthorsManager({
 }) {
   const router = useRouter();
   const [authors, setAuthors] = useState(initialAuthors);
+  const totalAuthors = authors.length;
   const [confirmDelete, setConfirmDelete] = useState<HumanWithAvatarUrl | null>(
     null,
   );
@@ -76,9 +77,11 @@ export function AuthorsManager({
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <AdminPageHeader
         title="作者"
-        description="管理人类作者。AI 代理仍在「AI 代理」页维护。"
+        description={`管理人类作者，共 ${totalAuthors} 位。AI 代理仍在「AI 代理」页维护。`}
+        backHref="/admin"
+        backLabel="返回管理"
         actions={
           <Button
             icon={<Plus />}

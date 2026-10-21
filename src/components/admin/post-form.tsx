@@ -37,7 +37,7 @@ import {
 } from "./post-form-helpers";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
-import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { AdminPageHeader } from "./page-header";
 import { Button } from "@nocoo/basalt/components/button";
 
 interface PostFormProps {
@@ -420,7 +420,16 @@ export function PostForm({
 
   return (
     <div className="space-y-6">
-      <PageHeader title={isEditing ? "编辑文章" : "新建文章"} />
+      <AdminPageHeader
+        title={isEditing ? "编辑文章" : "新建文章"}
+        description={
+          isEditing
+            ? "更新文章内容、发布信息、分类标签与作者设置。"
+            : "撰写文章并设置发布信息、分类标签与作者。"
+        }
+        backHref="/admin/posts"
+        backLabel="返回文章"
+      />
     <div className="flex gap-6">
       <form
         onSubmit={handleSubmit}

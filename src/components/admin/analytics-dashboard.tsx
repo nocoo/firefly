@@ -2,7 +2,10 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { FileText, FolderOpen, Tags } from "lucide-react";
-import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { AdminPageHeader } from "./page-header";
+import { AdminAnalyticsBodySkeleton } from "./loading-skeleton";
+import { LayerCard } from "@nocoo/basalt/components/layer-card";
+import { SkeletonLine } from "@nocoo/basalt/components/skeleton-line";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -125,39 +128,16 @@ export function AnalyticsDashboard({
   }
 
   const subtitleText = summary
-    ? `${summary.period.startDate} — ${summary.period.endDate}`
-    : undefined;
-
-  if (error && !summary) {
-    return (
-      <div className="flex items-center justify-center py-20 text-destructive">
-        获取分析数据失败
-      </div>
-    );
-  }
-
-  if (summaryLoading && !summary) {
-    return <AnalyticsSkeleton />;
-  }
-
-  if (!summary) return null;
-
-  const currentTabData = sourceCache[activeTab];
-
-  // Compute tab counts from overview for badge display
-  const tabCounts: Record<SourceType, number> = {
-    human: summary.overview.human,
-    search: summary.overview.search,
-    ai: summary.overview.ai,
-    other: summary.overview.otherBot,
-  };
-
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="概览"
-        description={subtitleText}
-        actions={
+    ? `访问统计：${summary.period.startDate} — ${summary.period.endDate}`
+    : "查看博客访问趋势、来源分布与内容数据。";
+  const pageHeader = (
+    <AdminPageHeader
+      title="概览"
+      description={subtitleText}
+      backHref="/"
+      backLabel="返回首页"
+      actions={
+        summary ? (
           <ToggleGroup
             type="single"
             value={String(days)}
@@ -172,8 +152,41 @@ export function AnalyticsDashboard({
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-        }
-      />
+        ) : undefined
+      }
+    />
+  );
+
+  if (error && !summary) {
+    return (
+      <div className="space-y-6">
+        {pageHeader}
+        <div className="flex items-center justify-center py-20 text-destructive">
+          获取分析数据失败
+        </div>
+      </div>
+    );
+  }
+
+  if (summaryLoading && !summary) {
+    return <div className="space-y-6">{pageHeader}<AdminAnalyticsBodySkeleton /></div>;
+  }
+
+  if (!summary) return pageHeader;
+
+  const currentTabData = sourceCache[activeTab];
+
+  // Compute tab counts from overview for badge display
+  const tabCounts: Record<SourceType, number> = {
+    human: summary.overview.human,
+    search: summary.overview.search,
+    ai: summary.overview.ai,
+    other: summary.overview.otherBot,
+  };
+
+  return (
+    <div className="space-y-6">
+      {pageHeader}
     <div className="grid gap-6 lg:grid-cols-10">
       {/* ── Left column: charts + tabs (7/10) ── */}
       <div className="lg:col-span-7 space-y-6">
@@ -276,73 +289,17 @@ function SourceTabContent({ data }: { data: SourceDetailResponse }) {
 // Skeleton loaders
 // ---------------------------------------------------------------------------
 
-function SkeletonPulse({ className }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse rounded-[var(--radius-sm)] bg-muted ${className ?? ""}`}
-    />
-  );
-}
-
-function AnalyticsSkeleton() {
-  return (
-    <div className="grid gap-6 lg:grid-cols-10">
-      {/* Left */}
-      <div className="lg:col-span-7 space-y-6">
-        <div className="flex items-center justify-end">
-          <SkeletonPulse className="h-8 w-[120px]" />
-        </div>
-        <div className="rounded-widget bg-secondary p-4 space-y-3">
-          <SkeletonPulse className="h-4 w-36" />
-          <SkeletonPulse className="h-[260px] w-full" />
-        </div>
-        <TabSkeleton />
-      </div>
-      {/* Right */}
-      <div className="lg:col-span-3 space-y-2">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-3 rounded-widget bg-secondary p-4"
-          >
-            <SkeletonPulse className="h-9 w-9 rounded-lg" />
-            <div className="space-y-1.5 flex-1">
-              <SkeletonPulse className="h-3 w-16" />
-              <SkeletonPulse className="h-5 w-10" />
-            </div>
-          </div>
-        ))}
-        <div className="space-y-2 pt-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="rounded-widget bg-secondary p-4 space-y-2"
-            >
-              <SkeletonPulse className="h-3 w-20" />
-              <SkeletonPulse className="h-6 w-16" />
-              <SkeletonPulse className="h-3 w-12" />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function TabSkeleton() {
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 lg:grid-cols-2">
+    <div role="status" aria-busy="true" aria-label="正在加载来源统计">
+      <div className="grid gap-4 lg:grid-cols-2" aria-hidden="true">
         {Array.from({ length: 2 }).map((_, i) => (
-          <div
-            key={i}
-            className="rounded-widget bg-secondary p-4 space-y-3"
-          >
-            <SkeletonPulse className="h-4 w-28" />
+          <LayerCard key={i} className="space-y-3">
+            <SkeletonLine height={16} maxWidth={60} />
             {Array.from({ length: 5 }).map((_, j) => (
-              <SkeletonPulse key={j} className="h-4 w-full" />
+              <SkeletonLine key={j} height={16} minWidth={100} />
             ))}
-          </div>
+          </LayerCard>
         ))}
       </div>
     </div>

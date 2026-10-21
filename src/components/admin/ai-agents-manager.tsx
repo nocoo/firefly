@@ -6,7 +6,7 @@ import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 import type { Category } from "@/models/types";
 import { Button } from "@nocoo/basalt/components/button";
-import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { AdminPageHeader } from "./page-header";
 import {
   DeleteAgentDialog,
   NewAgentModal,
@@ -109,9 +109,11 @@ export function AiAgentsManager({
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <AdminPageHeader
         title="AI 代理"
         description="管理可发布内容的 AI 代理"
+        backHref="/admin"
+        backLabel="返回管理"
         actions={
           <Button icon={<Plus />} onClick={handleCreate}>
             创建代理

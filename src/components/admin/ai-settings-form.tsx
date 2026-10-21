@@ -10,7 +10,7 @@ import {
   type ProviderOption,
 } from "./ai-settings-provider-card";
 import { AiSettingsCustomCard } from "./ai-settings-custom-card";
-import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { AdminPageHeader } from "./page-header";
 
 interface AiSettingsFormProps {
   settings: {
@@ -139,7 +139,12 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="AI 设置" />
+      <AdminPageHeader
+        title="AI 设置"
+        description="配置 AI 内容生成服务商、模型及连接认证。"
+        backHref="/admin"
+        backLabel="返回管理"
+      />
       <AiSettingsProviderCard
         providers={providers}
         provider={provider}

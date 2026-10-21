@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import type { YearCount } from "@/data/entities/media";
 import { ConfirmDialog } from "./confirm-dialog";
-import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { AdminPageHeader } from "./page-header";
+import { AdminMediaGridSkeleton } from "./loading-skeleton";
 import { Button } from "@nocoo/basalt/components/button";
 import {
   buildQuery,
@@ -176,10 +177,12 @@ export function MediaLibrary({
         onDismiss={upload.dismissQueue}
       />
 
-      <PageHeader
+      <AdminPageHeader
         title="媒体库"
-        description={fetching ? "..." : `显示 ${media.length} / ${total}`}
-        actions={
+        description={`浏览并筛选已上传文件，${fetching ? "正在加载…" : `显示 ${media.length} / ${total} 项。`}`}
+        backHref="/admin"
+        backLabel="返回管理"
+        filters={
           <MediaLibraryFilterBar
             filters={filters}
             searchInput={searchInput}
@@ -192,6 +195,7 @@ export function MediaLibrary({
         }
       />
 
+      {media.length === 0 && fetching && <AdminMediaGridSkeleton />}
       {media.length === 0 && !fetching && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <p className="text-lg font-medium text-foreground">

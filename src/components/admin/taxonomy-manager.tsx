@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
-import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { AdminPageHeader } from "./page-header";
 import { Button } from "@nocoo/basalt/components/button";
 import {
   TaxonomyForm,
@@ -168,9 +168,11 @@ export function TaxonomyManager({
 
   return (
     <div className="space-y-4">
-      <PageHeader
+      <AdminPageHeader
         title={label}
-        description={totalText}
+        description={`管理文章${label}，${totalText}`}
+        backHref="/admin"
+        backLabel="返回管理"
         actions={
           !creating && !editing ? (
             <Button onClick={startCreate}>{`新建${label}`}</Button>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { AiAgent, Category } from "@/models/types";
 import { Button } from "@nocoo/basalt/components/button";
-import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { AdminPageHeader } from "./page-header";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -146,7 +146,16 @@ export function AiAgentForm({
 
   return (
     <div className="space-y-6">
-      <PageHeader title={isNew ? "创建 AI 代理" : "编辑 AI 代理"} />
+      <AdminPageHeader
+        title={isNew ? "创建 AI 代理" : "编辑 AI 代理"}
+        description={
+          isNew
+            ? "创建 AI 代理并设置名称、分类与内容生成身份。"
+            : "更新 AI 代理的名称、分类与内容生成身份。"
+        }
+        backHref="/admin/ai-agents"
+        backLabel="返回 AI 代理"
+      />
 
       <div className="rounded-lg bg-secondary p-6">
         <div className="grid gap-6 md:grid-cols-2">

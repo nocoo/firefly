@@ -254,7 +254,6 @@ test.describe("Feature: Admin post new editor", () => {
     const contentArea = page.locator(
       "textarea#content-mobile, textarea#content-desktop",
     );
-    expect(await contentArea.count()).toBeGreaterThan(0);
     await expect(contentArea.first()).toBeAttached();
   });
 
@@ -408,7 +407,6 @@ test.describe("Feature: Admin post edit page", () => {
     const contentArea = page.locator(
       "textarea#content-mobile, textarea#content-desktop",
     );
-    expect(await contentArea.count()).toBeGreaterThan(0);
     await expect(contentArea.first()).toBeAttached();
   });
 
@@ -486,9 +484,7 @@ test.describe("Feature: Admin post edit page", () => {
   test("Given a nil-uuid edit URL is requested, When I open it, Then the HTTP response status is exactly 404", async ({
     page,
   }) => {
-    // Given/When: request a nil-uuid edit URL. src/app/admin/posts/[id]/edit/
-    // page.tsx:30 calls notFound() when getPostById returns null. The nil
-    // uuid 00000000-... never matches a real post by construction.
+    // The resource layout rejects this ID before its loading boundary streams.
     const response = await page.goto(
       "/admin/posts/00000000-0000-0000-0000-000000000000/edit",
       { waitUntil: "networkidle" },

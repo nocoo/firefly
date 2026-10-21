@@ -6,7 +6,7 @@ import { Loader2, Upload, User, X } from "lucide-react";
 import { toast } from "sonner";
 import type { Human } from "@/models/types";
 import { Button } from "@nocoo/basalt/components/button";
-import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { AdminPageHeader } from "./page-header";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -126,7 +126,16 @@ export function AuthorForm({
 
   return (
     <div className="max-w-xl space-y-6">
-      <PageHeader title={isNew ? "创建作者" : "编辑作者"} />
+      <AdminPageHeader
+        title={isNew ? "创建作者" : "编辑作者"}
+        description={
+          isNew
+            ? "创建作者资料并配置公开信息与头像。"
+            : "更新作者资料、公开信息与头像。"
+        }
+        backHref="/admin/authors"
+        backLabel="返回作者"
+      />
 
       {!isNew && (
         <div className="flex items-center gap-4">

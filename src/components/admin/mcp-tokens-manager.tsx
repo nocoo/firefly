@@ -6,7 +6,7 @@ import { KeyRound, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { McpToken, McpTokenScope } from "@/models/types";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageHeader } from "@nocoo/basalt/components/page-header";
+import { AdminPageHeader } from "./page-header";
 import { McpSetupGuide } from "./mcp-tokens-setup-guide";
 import { McpTokensTable } from "./mcp-tokens-table";
 import { McpTokenCreateForm } from "./mcp-tokens-create-form";
@@ -139,7 +139,12 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="MCP 令牌" />
+      <AdminPageHeader
+        title="MCP 令牌"
+        description="创建和管理 MCP 访问令牌及其权限范围。"
+        backHref="/admin"
+        backLabel="返回管理"
+      />
       <McpSetupGuide mcpUrl={mcpUrl} />
 
       <hr className="border-border" />
