@@ -92,7 +92,8 @@ and immutable image digests. Railway production application variables are copied
 unchanged to the private host `.env.runtime`, never into build arguments or test
 fixtures. `DEPLOY_PHASE=precutover` verifies only the private jp2 origin; public
 routing, TLS/certificate changes and Railway retirement require owner approval.
-Production verification requires `DEPLOY_PHASE=production`, the canonical
+Caller-visible repository variables control deployment phase; credentials remain
+environment-scoped. Production verification requires `DEPLOY_PHASE=production`, the canonical
 `DEPLOY_URL=https://lizheng.blog`, and `DEPLOY_ORIGIN_MARKER=jp2`.
 
 CI additionally runs `bun scripts/run-e2e.ts --api-only --container-image=<image>`

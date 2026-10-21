@@ -102,8 +102,10 @@ Before changing routing, capture the current DNS/origin configuration, Railway
 deployment, active/new image digests, and a rollback procedure. Confirm the
 certificate covers `lizheng.blog`; unrelated wildcard certificates do not.
 
-Freeze administrative/MCP writes briefly, switch the intended public origin,
-verify jp2 identity and all critical flows, then resume writes. Keep only one
+Freeze administrative/MCP writes briefly and cold-start the jp2 application so
+its independently warmed caches cannot retain changes made through Railway while
+staging. Switch the intended public origin, verify jp2 identity and all critical
+flows, then resume writes. Keep only one
 active write origin. Change CD verification to the public target only after the
 switch; retain Railway for the agreed rollback window without leaving an
 uncontrolled alternate write endpoint.
@@ -118,10 +120,10 @@ contains no schema or data migration.
 - [x] Owner selected jp2 and main-CI-triggered CD.
 - [x] Host capacity and pinned shared deployment workflow inspected.
 - [x] Database-independent standalone build and image verified locally (Linux amd64).
-- [ ] CI/CD and deployment verification implemented and reviewed.
-- [x] Railway variables securely transferred and file equality verified (17 application variables; runtime equality remains a post-deploy check).
-- [ ] Migration version published; exact-SHA CI/CD passed.
-- [ ] Private jp2 origin acceptance completed.
+- [x] CI/CD and deployment verification implemented and independently reviewed.
+- [x] All 17 Railway application variables matched both the private environment file and the running container; no values were printed.
+- [x] Migration version `v2.18.0` published; exact-SHA CI/CD passed.
+- [x] Private jp2 origin acceptance completed.
 - [ ] Owner reviewed evidence and approved production domain cutover.
 - [ ] Public cutover, acceptance and rollback-window closure completed.
 
@@ -139,3 +141,39 @@ contains no schema or data migration.
 - The initial shell wrapper used zsh's read-only `status` name after Docker had
   already succeeded. The completed build log and resulting image were inspected
   instead of treating the wrapper error as a failed image or rebuilding blindly.
+
+### Initial staging receipt, 2026-10-21
+
+| Evidence | Result |
+| --- | --- |
+| Release | `v2.18.0`, `84708c3d01e4a3b391f5664ea3eeed6a172a5d09` |
+| CI | [39539639334](https://github.com/nocoo/firefly/actions/runs/39539639334), all enabled jobs successful |
+| Docker CD | [39539959171](https://github.com/nocoo/firefly/actions/runs/39539959171), successful |
+| Image | `ghcr.io/nocoo/firefly@sha256:86a80abc2f9412019b517418c5a731e7996bb12357fa7155a47db2f033a90a62` |
+| Private binding | `127.0.0.1:17028` on jp2, container `firefly-app`, healthy |
+| Environment | All 17 Railway application variables matched the running container; only `RAILWAY_*` platform variables were omitted |
+| Cache | Runtime UID 1000 owned the populated fetch-cache directory; no `EACCES` was observed |
+| Public site | Still Railway `2.17.1`; its GitHub deployment trigger was removed without stopping the active deployment |
+
+Local checks passed 1,860 root tests and 109 Worker tests, both configured
+four-metric coverage thresholds, strict lint/types and security. Local API tests
+passed 204 cases with 2 pre-existing TODOs; 4 real-cache cases passed. Browser
+tests passed 153 cases with 44 pre-existing conditional skips. The new Linux
+container CI lane independently passed the same 204 API and 4 cache cases using
+the image's native cache directory, not a replacement tmpfs.
+
+Private production-data reads passed for the homepage, a published article,
+Markdown export, Next image optimization, RSS, sitemap/XML stylesheet, llms,
+robots and login. The Google provider retained its canonical callback URL.
+SSH-forwarded desktop/mobile browser checks had no page errors, and screenshots
+were inspected. No authenticated production writes or complete Google OAuth
+login were exercised; these remain explicit cutover acceptance items.
+
+Deployment controls (`DEPLOY_PHASE`, `DEPLOY_URL`, `DEPLOY_ORIGIN_MARKER`) are
+repository variables so the reusable-workflow caller can resolve them. Credentials
+remain scoped to the `firefly / production` environment. The phase is still
+`precutover`; missing or invalid phase values fail closed.
+
+Rollback metadata is private at `/opt/firefly/railway-rollback.json`, and Docker
+receipts are in `/opt/firefly/.base-ci-releases/`. Neither production DNS nor
+shared Caddy/TLS configuration has changed. The owner has not approved cutover.
