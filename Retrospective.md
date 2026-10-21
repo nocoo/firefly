@@ -1,5 +1,19 @@
 # Retrospective
 
+### 2026-10-21: Verifier fixtures must model accepted failures
+
+The first private-origin redirect fixture asserted rejection inside a mocked
+HTTP opener. The verifier intentionally catches request failures while waiting
+for readiness, so that assertion could be swallowed: a broken redirect policy
+would still make the negative test pass. The fixture now returns a healthy
+response when redirects are permitted and raises HTTP 302 only when refused.
+A mutation check demonstrates that permitting redirects changes the verifier
+result to success, making the rejection test fail for the intended reason.
+
+Keep negative verification tests on a fully valid baseline and change one
+condition at a time. Test doubles must reproduce unsafe success paths, not throw
+assertions that the code under test can mistake for expected operational errors.
+
 ### 2026-10-21: Metadata exports need their own prerender boundary
 
 The first Docker migration investigation treated `sitemap.xml/route.ts` as an

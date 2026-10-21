@@ -38,8 +38,9 @@ class Opener:
         if path == '/api/live':
             if scenario == 'timeout': raise TimeoutError('fixture timeout')
             if scenario == 'redirect':
-                assert self.handler.redirect_request(req, None, 302, 'redirect', {}, 'https://lizheng.blog/api/live') is None
-                raise urllib.error.HTTPError(req.full_url, 302, 'redirect', {}, io.BytesIO(b''))
+                redirect = self.handler.redirect_request(req, None, 302, 'redirect', {}, 'https://lizheng.blog/api/live')
+                if redirect is None:
+                    raise urllib.error.HTTPError(req.full_url, 302, 'redirect', {}, io.BytesIO(b''))
             data = {'status':'ok', 'component':'firefly', 'version':'2.17.1', 'database':{'connected':True}}
             if scenario == 'version': data['version'] = '0.0.0'
             if scenario == 'database': data['database']['connected'] = False
@@ -56,6 +57,15 @@ exec(compile(sys.stdin.read(), 'private-deployment-verifier', 'exec'))
 `;
 
 describe("private deployment verifier behavior", () => {
+  it("follows a permitted redirect so the rejection fixture detects a weakened policy", () => {
+    const weakened = verifier.replace("return None", "return req");
+    expect(weakened).not.toBe(verifier);
+    const result = spawnSync("python3", ["-c", fixture, "redirect"], { input: weakened, encoding: "utf8", timeout: 10_000 });
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("Private Firefly acceptance passed");
+  });
+
   it.each(["valid", "digest", "revision", "redirect", "json", "timeout", "version", "database", "cache", "admin", "write"])(
     "fails closed for %s unless all private-origin checks pass",
     (scenario) => {
