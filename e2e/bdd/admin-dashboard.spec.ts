@@ -34,6 +34,59 @@
  */
 import { test, expect, expectPathname } from "./fixtures";
 
+test("Native sidebar groups, current state, collapsed tooltips and search remain interactive", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/admin/posts/new", { waitUntil: "networkidle" });
+  const sidebar = page.getByRole("complementary");
+  const posts = sidebar.getByRole("button", { name: "文章", exact: true });
+  await expect(posts).toHaveAttribute("data-sidebar-row", "");
+  await expect(posts).toHaveAttribute("aria-current", "page");
+  await expect(sidebar.locator('[data-slot="sidebar-group"]')).toHaveCount(4);
+  const content = sidebar.getByRole("button", { name: "内容", exact: true });
+  await content.click();
+  await expect(content).toHaveAttribute("aria-expanded", "false");
+  await expect(posts).toBeHidden();
+  await content.click();
+  await expect(posts).toBeVisible();
+
+  await page.getByRole("button", { name: "收起侧边栏", exact: true }).click();
+  await expect.poll(() => sidebar.evaluate((node) => node.getBoundingClientRect().width)).toBe(68);
+  await posts.hover();
+  await expect(page.getByRole("tooltip", { name: "文章", exact: true })).toBeVisible();
+  await sidebar.getByRole("button", { name: "搜索 (⌘K)", exact: true }).click();
+  const search = page.getByRole("textbox", { name: "搜索文章或跳转页面...", exact: true });
+  await expect(search).toBeVisible();
+  await expect(search).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(search).toBeHidden();
+  await posts.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/admin\/posts$/);
+});
+
+test("Native sidebar preserves external and modified-click new tabs", async ({ page, context }) => {
+  await page.goto("/admin/posts", { waitUntil: "networkidle" });
+  const sidebar = page.getByRole("complementary");
+  for (const modifiers of [["ControlOrMeta"], ["Shift"]] as const) {
+    const popupPromise = context.waitForEvent("page");
+    await sidebar.getByRole("button", { name: "分类", exact: true }).click({ modifiers: [...modifiers] });
+    const popup = await popupPromise;
+    await expect(popup).toHaveURL(/\/admin\/categories$/);
+    expect(await popup.evaluate(() => window.opener)).toBeNull();
+    await popup.close();
+    await expect(page).toHaveURL(/\/admin\/posts$/);
+  }
+  for (const [name, button, path] of [["分类", "middle", "/admin/categories"], ["访问站点", "left", "/"]] as const) {
+    const popupPromise = context.waitForEvent("page");
+    await sidebar.getByRole("button", { name, exact: true }).click({ button });
+    const popup = await popupPromise;
+    await expect(popup).toHaveURL(new RegExp(`${path}$`));
+    expect(await popup.evaluate(() => window.opener)).toBeNull();
+    await popup.close();
+    await expect(page).toHaveURL(/\/admin\/posts$/);
+  }
+});
+
 test("Given the desktop sidebar, When collapse and expansion settle, Then the brand mark has the same horizontal position", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/admin/posts", { waitUntil: "networkidle" });
@@ -53,6 +106,8 @@ test("Given the desktop sidebar, When collapse and expansion settle, Then the br
 
 for (const width of [390, 700]) {
   test(`Given a ${width}px viewport, When I open navigation, Then it fits the drawer and closes accessibly`, async ({ page }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/admin/posts", { waitUntil: "networkidle" });
     const opener = page.getByRole("button", { name: "打开导航", exact: true });
@@ -67,9 +122,13 @@ for (const width of [390, 700]) {
     await expect(drawer).toBeHidden();
     await expect(opener).toBeFocused();
     await opener.click();
-    await drawer.getByRole("link", { name: "分类", exact: true }).click();
+    await drawer.getByRole("button", { name: "分类", exact: true }).click();
     await expect(page).toHaveURL(/\/admin\/categories$/);
     await expect(drawer).toBeHidden();
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(opener).toBeHidden();
+    await expect(page.getByRole("complementary")).toBeVisible();
+    expect(errors).toEqual([]);
   });
 }
 
@@ -78,7 +137,7 @@ for (const width of [390, 700]) {
 // ---------------------------------------------------------------------------
 
 test.describe("Feature: Admin dashboard shell + content stats", () => {
-  test("Given E2E auth bypass is active, When I open /admin, Then the AdminShell sidebar exposes an aside, a nav, and a /admin/posts link", async ({
+  test("Given E2E auth bypass is active, When I use the native sidebar, Then the posts destination navigates to /admin/posts", async ({
     page,
   }) => {
     // Given: E2E auth bypass is active.
@@ -98,13 +157,9 @@ test.describe("Feature: Admin dashboard shell + content stats", () => {
     const sidebarNav = sidebar.getByRole("navigation").first();
     await expect(sidebarNav).toBeVisible();
 
-    // Then: the sidebar exposes a /admin/posts link. Scoped to sidebarNav
-    // so the scenario actually fails if the sidebar drops this nav item
-    // even though some other page region (command palette, breadcrumb)
-    // still renders an /admin/posts link.
-    await expect(
-      sidebarNav.locator('a[href^="/admin/posts"]').first(),
-    ).toBeVisible();
+    await sidebarNav.getByRole("button", { name: "文章", exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/posts$/);
+    await expect(sidebarNav.getByRole("button", { name: "文章", exact: true })).toHaveAttribute("aria-current", "page");
   });
 
   test("Given /admin renders, When I view it, Then the 概览 h1 and the content-stat cards (已发布文章 / 分类 / 标签) are visible", async ({

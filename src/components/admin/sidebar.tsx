@@ -1,8 +1,8 @@
 "use client";
 
 import { APP_VERSION } from "@/lib/version";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import type { MouseEvent } from "react";
 import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
@@ -26,24 +26,25 @@ import {
 import {
   Sidebar,
   SidebarHeader,
+  SidebarItem,
+  SidebarIconItem,
   SidebarNav,
   SidebarPartition,
+  SidebarGroup,
   SidebarFooter,
   SidebarUser,
   SidebarSearch,
-} from "@nocoo/basalt";
-import { Button } from "@nocoo/basalt/components/button";
-import {
+  Button,
+  Badge,
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
   Tooltip,
   TooltipTrigger,
   TooltipContent,
   TooltipProvider,
 } from "@nocoo/basalt";
-import { Avatar, AvatarFallback, AvatarImage } from "@nocoo/basalt";
 import { useCommandPalette } from "@/components/admin/command-palette";
-import { cn } from "@/lib/utils";
-
-// ── Navigation data model ──
 
 interface NavItem {
   title: string;
@@ -96,26 +97,6 @@ const NAV_GROUPS: NavGroup[] = [
 
 const ALL_NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
 
-// ── Item styling matching Basalt SidebarItem & SidebarIconItem tokens ──
-
-const sidebarIconItemClass = (active: boolean) =>
-  cn(
-    "relative flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
-    active
-      ? "bg-basalt-accent text-basalt-foreground"
-      : "text-basalt-muted-foreground hover:bg-basalt-accent hover:text-basalt-foreground",
-  );
-
-const sidebarItemClass = (active: boolean) =>
-  cn(
-    "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-normal transition-colors",
-    active
-      ? "bg-basalt-accent text-basalt-foreground"
-      : "text-basalt-muted-foreground hover:bg-basalt-accent hover:text-basalt-foreground",
-  );
-
-// ── Sidebar Component ──
-
 interface AdminSidebarProps {
   collapsed: boolean;
   onToggle: () => void;
@@ -128,12 +109,44 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { setOpen: openSearch } = useCommandPalette();
 
   const isItemActive = (item: NavItem) => {
     if (item.external) return false;
     if (item.href === "/admin") return pathname === "/admin";
-    return pathname.startsWith(item.href);
+    return pathname === item.href || pathname.startsWith(`${item.href}/`);
+  };
+
+  const navigate = (item: NavItem, event: MouseEvent<HTMLButtonElement>) => {
+    if (event.type === "auxclick" && event.button !== 1) return;
+    if (item.external || event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1) {
+      window.open(item.href, "_blank", "noopener,noreferrer");
+    } else {
+      router.push(item.href);
+    }
+  };
+
+  const renderDestination = (item: NavItem) => {
+    const Control = collapsed ? SidebarIconItem : SidebarItem;
+    const control = (
+      <Control
+        key={item.href}
+        active={isItemActive(item)}
+        aria-label={item.title}
+        onClick={(event) => navigate(item, event)}
+        onAuxClick={(event) => navigate(item, event)}
+      >
+        <item.icon size={16} strokeWidth={1.5} aria-hidden="true" />
+        {!collapsed && <span>{item.title}</span>}
+      </Control>
+    );
+    return collapsed ? (
+      <Tooltip key={item.href}>
+        <TooltipTrigger asChild>{control}</TooltipTrigger>
+        <TooltipContent side="right">{item.title}</TooltipContent>
+      </Tooltip>
+    ) : control;
   };
 
   const initials = (user.name ?? user.email ?? "A")
@@ -146,175 +159,82 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
   const userAvatar = (
     <Avatar className="h-9 w-9 shrink-0">
       {user.image && <AvatarImage src={user.image} alt={user.name ?? "用户"} />}
-      <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+      <AvatarFallback>{initials}</AvatarFallback>
     </Avatar>
   );
 
   return (
-    <Sidebar collapsed={collapsed}>
-      {collapsed ? (
-        /* ── Collapsed rail ── */
-        <TooltipProvider delayDuration={0}>
-          <SidebarHeader className="justify-center px-0">
-            <img
-              src="/logo-24.png"
-              alt="Firefly"
-              width={24}
-              height={24}
-              className="h-6 w-6"
-            />
-          </SidebarHeader>
-
+    <TooltipProvider delayDuration={0}>
+      <Sidebar collapsed={collapsed}>
+        <SidebarHeader>
+          <div className={collapsed
+            ? "flex w-full items-center justify-center"
+            : "flex w-full items-center justify-between pl-basalt-layout-sm"}
+          >
+            <div className="flex items-center gap-basalt-space-lg">
+              <img src="/logo-80.png" alt="Firefly" width={28} height={28} className="shrink-0" />
+              {!collapsed && (
+                <>
+                  <span className="text-basalt-xl font-semibold">Firefly</span>
+                  <Badge variant="secondary">v{APP_VERSION}</Badge>
+                </>
+              )}
+            </div>
+            {!collapsed && (
+              <Button variant="ghost" size="icon" onClick={onToggle} aria-label="收起侧边栏">
+                <PanelLeft size={16} strokeWidth={1.5} aria-hidden="true" />
+              </Button>
+            )}
+          </div>
+        </SidebarHeader>
+        {collapsed ? (
           <Button
             variant="ghost"
             size="icon"
-            className="mb-1 self-center"
+            className="mb-basalt-space-sm self-center"
             onClick={onToggle}
             aria-label="展开侧边栏"
           >
-            <PanelLeft className="h-4 w-4" aria-hidden="true" strokeWidth={1.5} />
+            <PanelLeft size={16} strokeWidth={1.5} aria-hidden="true" />
           </Button>
-
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                className={cn("mb-2 self-center", sidebarIconItemClass(false))}
-                onClick={() => openSearch(true)}
-                aria-label="搜索 (⌘K)"
-              >
-                <Search className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={8}>
-              搜索 (⌘K)
-            </TooltipContent>
-          </Tooltip>
-
-          <SidebarNav className="w-full items-center gap-1 pt-1">
-            {ALL_NAV_ITEMS.map((item) => {
-              const active = isItemActive(item);
-              return (
-                <Tooltip key={item.href} delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    {item.external ? (
-                      <a
-                        href={item.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={item.title}
-                        className={sidebarIconItemClass(active)}
-                      >
-                        <item.icon className="h-4 w-4" strokeWidth={1.5} />
-                      </a>
-                    ) : (
-                      <Link
-                        href={item.href}
-                        aria-label={item.title}
-                        aria-current={active ? "page" : undefined}
-                        className={sidebarIconItemClass(active)}
-                      >
-                        <item.icon className="h-4 w-4" strokeWidth={1.5} />
-                      </Link>
-                    )}
-                  </TooltipTrigger>
-                  <TooltipContent side="right" sideOffset={8}>
-                    {item.title}
-                  </TooltipContent>
-                </Tooltip>
-              );
-            })}
-          </SidebarNav>
-
-          <SidebarFooter className="flex w-full justify-center px-0">
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <span className="inline-flex cursor-pointer">{userAvatar}</span>
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8}>
-                {user.name ?? "管理员"}
-              </TooltipContent>
-            </Tooltip>
-          </SidebarFooter>
-        </TooltipProvider>
-      ) : (
-        /* ── Expanded rail ── */
-        <>
-          <SidebarHeader>
-            <div className="flex w-full items-center justify-between pl-[calc((var(--basalt-size-rail)_-_1.5rem)/2_-_var(--basalt-space-nav-inset))]">
-              <div className="flex items-center gap-3">
-                <img
-                  src="/logo-24.png"
-                  alt="Firefly"
-                  width={24}
-                  height={24}
-                  className="h-6 w-6"
-                />
-                <span className="text-lg font-bold tracking-tighter text-basalt-foreground">
-                  Firefly
-                </span>
-                <span className="rounded-md bg-basalt-secondary px-1.5 py-0.5 font-mono text-2xs font-medium text-basalt-muted-foreground leading-none">
-                  v{APP_VERSION}
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={onToggle}
-                aria-label="收起侧边栏"
-              >
-                <PanelLeft
-                  className="h-4 w-4"
-                  aria-hidden="true"
-                  strokeWidth={1.5}
-                />
-              </Button>
-            </div>
-          </SidebarHeader>
-
-          <div className="px-3 pb-1">
+        ) : (
+          <div className="px-basalt-nav-inset">
             <SidebarSearch shortcut="⌘K" onClick={() => openSearch(true)}>
               搜索
             </SidebarSearch>
           </div>
-
-          <SidebarNav className="pt-1">
-            {NAV_GROUPS.map((group) => (
-              <div key={group.label}>
-                <SidebarPartition>{group.label}</SidebarPartition>
-                <div className="flex flex-col gap-0.5 px-3">
-                  {group.items.map((item) => {
-                    const active = isItemActive(item);
-                    return item.external ? (
-                      <a
-                        key={item.href}
-                        href={item.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={sidebarItemClass(active)}
-                      >
-                        <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-                        <span className="flex-1 truncate text-left">{item.title}</span>
-                      </a>
-                    ) : (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        aria-current={active ? "page" : undefined}
-                        className={sidebarItemClass(active)}
-                      >
-                        <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-                        <span className="flex-1 truncate text-left">{item.title}</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </SidebarNav>
-
-          <SidebarFooter>
+        )}
+        <SidebarNav aria-label="管理导航">
+          {collapsed ? (
+            <>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SidebarIconItem onClick={() => openSearch(true)} aria-label="搜索 (⌘K)">
+                    <Search size={16} strokeWidth={1.5} aria-hidden="true" />
+                  </SidebarIconItem>
+                </TooltipTrigger>
+                <TooltipContent side="right">搜索 (⌘K)</TooltipContent>
+              </Tooltip>
+              {ALL_NAV_ITEMS.map(renderDestination)}
+            </>
+          ) : (
+            <>
+              <SidebarPartition>管理</SidebarPartition>
+              {NAV_GROUPS.map((group) => (
+                <SidebarGroup key={group.label} label={group.label}>
+                  {group.items.map(renderDestination)}
+                </SidebarGroup>
+              ))}
+            </>
+          )}
+        </SidebarNav>
+        <SidebarFooter>
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>{userAvatar}</TooltipTrigger>
+              <TooltipContent side="right">{user.name ?? "管理员"}</TooltipContent>
+            </Tooltip>
+          ) : (
             <SidebarUser
               avatar={userAvatar}
               name={user.name ?? "管理员"}
@@ -323,21 +243,16 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 shrink-0"
                   onClick={() => signOut({ callbackUrl: "/login" })}
                   aria-label="退出登录"
                 >
-                  <LogOut
-                    className="h-4 w-4 text-basalt-muted-foreground"
-                    aria-hidden="true"
-                    strokeWidth={1.5}
-                  />
+                  <LogOut size={16} strokeWidth={1.5} aria-hidden="true" />
                 </Button>
               }
             />
-          </SidebarFooter>
-        </>
-      )}
-    </Sidebar>
+          )}
+        </SidebarFooter>
+      </Sidebar>
+    </TooltipProvider>
   );
 }
