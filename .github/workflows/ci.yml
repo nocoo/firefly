@@ -12,7 +12,7 @@ jobs:
   # L1 + G1 + G2 — Core quality gate from base-ci
   # ─────────────────────────────────────────────────────
   quality:
-    uses: nocoo/base-ci/.github/workflows/quality.yml@0394178ebcff0418c442d84a84119220f31f8987 # v2026.9
+    uses: nocoo/base-ci/.github/workflows/quality.yml@0394178ebcff0418c442d84a84119220f31f8987  # v2026.9
     with:
       runtime-version: "1.2.15"
       install-policy: "blocked"
@@ -27,7 +27,7 @@ jobs:
   # ─────────────────────────────────────────────────────
   api-e2e:
     name: "L2 API E2E"
-    uses: nocoo/base-ci/.github/workflows/test-job.yml@0394178ebcff0418c442d84a84119220f31f8987 # v2026.9
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@0394178ebcff0418c442d84a84119220f31f8987  # v2026.9
     with:
       runtime-version: "1.2.15"
       install-policy: "project"
@@ -44,7 +44,7 @@ jobs:
   # ─────────────────────────────────────────────────────
   browser-e2e:
     name: "L3 Browser E2E"
-    uses: nocoo/base-ci/.github/workflows/test-job.yml@0394178ebcff0418c442d84a84119220f31f8987 # v2026.9
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@0394178ebcff0418c442d84a84119220f31f8987  # v2026.9
     with:
       runtime-version: "1.2.15"
       install-policy: "project"
@@ -62,10 +62,31 @@ jobs:
   # ─────────────────────────────────────────────────────
   worker-tests:
     name: "Worker Tests"
-    uses: nocoo/base-ci/.github/workflows/test-job.yml@0394178ebcff0418c442d84a84119220f31f8987 # v2026.9
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@0394178ebcff0418c442d84a84119220f31f8987  # v2026.9
     with:
       runtime-version: "1.2.15"
       install-policy: "project"
       working-directory: "worker"
       timeout-minutes: 10
       command: "bun run test"
+
+  container-e2e:
+    name: "Container L2 E2E"
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@0394178ebcff0418c442d84a84119220f31f8987  # v2026.9
+    with:
+      runtime-version: "1.2.15"
+      install-policy: "project"
+      extra-install-dirs: "worker"
+      timeout-minutes: 25
+      command: |
+        docker build --tag firefly-ci:${{ github.sha }} \
+          --build-arg AUTH_URL=http://localhost:17028 \
+          --build-arg R2_PUBLIC_URL=http://localhost:17028/__e2e-r2 .
+        bun scripts/run-e2e.ts --api-only --container-image=firefly-ci:${{ github.sha }}
+
+  release-smoke:
+    name: "Release Workflow Smoke"
+    uses: nocoo/base-ci/.github/workflows/workflow-lint.yml@0394178ebcff0418c442d84a84119220f31f8987  # v2026.9
+    with:
+      required-reusable-workflow: "nocoo/base-ci/.github/workflows/deploy-docker.yml"
+      yamllint: true

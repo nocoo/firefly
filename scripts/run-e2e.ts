@@ -30,6 +30,7 @@ import {
   closeSync,
   mkdtempSync,
   writeFileSync,
+  chmodSync,
 } from "node:fs";
 import { join, resolve } from "node:path";
 import { createServer } from "node:net";
@@ -53,6 +54,10 @@ const SYSTEM_ENV = Object.fromEntries(
 const args = process.argv.slice(2);
 const apiOnly = args.includes("--api-only");
 const browserOnly = args.includes("--browser-only");
+const containerImage = args.find((arg) => arg.startsWith("--container-image="))?.slice("--container-image=".length);
+if (containerImage !== undefined && (process.platform !== "linux" || !/^[a-zA-Z0-9][a-zA-Z0-9_./:@-]*$/.test(containerImage))) {
+  throw new Error("Container E2E requires Linux host networking and an explicit local image reference");
+}
 
 // ---------------------------------------------------------------------------
 // Each run owns fresh D1/R2 state and a non-production Worker binding.
@@ -145,6 +150,7 @@ async function waitForServer(
 // ---------------------------------------------------------------------------
 
 const procs: Subprocess[] = [];
+const containers: string[] = [];
 const prematureExits: string[] = [];
 let shuttingDown = false;
 let workerSupervisor: SidecarSupervisor<Subprocess> | undefined;
@@ -164,6 +170,9 @@ function watchPrematureExit(name: string, proc: Subprocess): void {
 
 function cleanup() {
   shuttingDown = true;
+  for (const name of containers.splice(0)) {
+    Bun.spawnSync(["docker", "rm", "--force", name], { stdout: "ignore", stderr: "ignore" });
+  }
   workerSupervisor?.stop();
   for (const p of procs) {
     try {
@@ -177,6 +186,10 @@ function cleanup() {
 process.on("SIGINT", () => {
   cleanup();
   process.exit(130);
+});
+process.on("SIGTERM", () => {
+  cleanup();
+  process.exit(143);
 });
 
 function startWorkerProcess(): Subprocess {
@@ -320,11 +333,32 @@ function startNextServer(
   env: Record<string, string | undefined>,
   port: number,
 ): Subprocess {
-  buildNextOnce(env);
+  if (!containerImage) buildNextOnce(env);
   console.log(`▸ Starting Next.js (production) on port ${port}...`);
   const logFd = openLogFd(NEXT_LOG(port));
+  let command = [BUN, "run", "next", "start", "-p", String(port)];
+  if (containerImage) {
+    const name = `firefly-e2e-${RUN_ID}-${port}`;
+    const containerEnv = {
+      ...Object.fromEntries(Object.entries(env).filter(([key]) => !(key in SYSTEM_ENV))),
+      NODE_ENV: "production",
+      PORT: String(port),
+      HOSTNAME: "0.0.0.0",
+      R2_PUBLIC_URL: `http://localhost:${port}/__e2e-r2`,
+    };
+    mkdirSync(PERSIST_R2, { recursive: true });
+    chmodSync(PERSIST_R2, 0o777);
+    containers.push(name);
+    command = [
+      "docker", "run", "--rm", "--pull=never", "--name", name,
+      "--network", "host",
+      "--volume", `${PERSIST_R2}:${PERSIST_R2}`,
+      ...Object.entries(containerEnv).flatMap(([key, value]) => value === undefined ? [] : ["--env", `${key}=${value}`]),
+      containerImage,
+    ];
+  }
   const proc = spawn(
-    [BUN, "run", "next", "start", "-p", String(port)],
+    command,
     {
       cwd: process.cwd(),
       env: { ...env, PORT: String(port), R2_PUBLIC_URL: `http://localhost:${port}/__e2e-r2` },

@@ -37,6 +37,11 @@ Firefly's Railway seven-day maximum was about 970 MB. These observations do not
 replace image-processing, backup or cold-start acceptance. Build images in CI,
 not on jp2; host I/O has occasional maintenance-related peaks.
 
+Railway's actual `NODE_OPTIONS` permits a 6144 MiB heap. The initial container
+therefore retains its 8 GiB Railway memory ceiling instead of applying the earlier
+2 GiB planning budget. This is a limit, not a reservation; tuning it is separate
+from preserving the migration's environment contract.
+
 ## Implementation and Atomic Commits
 
 1. Record this plan and the explicit approval boundary.
@@ -112,10 +117,25 @@ contains no schema or data migration.
 
 - [x] Owner selected jp2 and main-CI-triggered CD.
 - [x] Host capacity and pinned shared deployment workflow inspected.
-- [ ] Database-independent standalone build and image verified.
+- [x] Database-independent standalone build and image verified locally (Linux amd64).
 - [ ] CI/CD and deployment verification implemented and reviewed.
-- [ ] Railway variables securely transferred and equality verified.
+- [x] Railway variables securely transferred and file equality verified (17 application variables; runtime equality remains a post-deploy check).
 - [ ] Migration version published; exact-SHA CI/CD passed.
 - [ ] Private jp2 origin acceptance completed.
 - [ ] Owner reviewed evidence and approved production domain cutover.
 - [ ] Public cutover, acceptance and rollback-window closure completed.
+
+### Local evidence, 2026-10-21
+
+- The image built without Worker credentials or a database endpoint, and native
+  Sharp generated a PNG in the non-root runtime stage. The local-only dependency
+  installation used an approved mirror; CI builds the canonical Dockerfile.
+- A bare image ran as UID 1000 with no secret/test environment variables. Health
+  failed closed with 503 without the database configuration, protected reads and
+  writes returned 401, static assets returned 200, and the E2E file route returned
+  404. This is packaging proof, not production database or OAuth proof.
+- GitHub's scoped deployment environment was created with the existing jp2 SSH
+  authorization and registry pull credentials. No host access policy changed.
+- The initial shell wrapper used zsh's read-only `status` name after Docker had
+  already succeeded. The completed build log and resulting image were inspected
+  instead of treating the wrapper error as a failed image or rebuilding blindly.

@@ -18,7 +18,7 @@ This handbook is the contract; hooks, CI and config are enforcement. Raise weake
 
 ## Project Invariants
 
-- Deploy the Next.js application on Railway; the D1 Worker and migrations are separate operations. Preserve Google login and the administrator email allowlist.
+- Deploy Next.js as a standalone Node container on jp2 through successful main CI and the pinned Docker CD workflow. Railway remains the public origin until the owner approves the cutover in [the migration runbook](docs/35-jp2-migration.md). The D1 Worker and migrations remain separate operations. Preserve Google login and the administrator email allowlist.
 - `src/data/core/` owns SQL/cache/timestamp primitives; entities are pure CRUD, services orchestrate side effects. A primary failure throws; secondary/post-write hooks log failures without rollback (D6).
 - Entity inputs are camelCase; database columns and external MCP/REST fields are snake_case. Map only at boundaries through entity/route hooks.
 - MCP framework/entity configs retain `afterGet`, best-effort `afterCreate`/`afterUpdate`, `mapCreateInput` and `mapUpdateInput`. Reuse `createMockDb()` from `@/data/core/test-utils`.
@@ -86,6 +86,19 @@ Use per-run local Wrangler/Miniflare SQLite and local R2, with credential/bindin
 ## Operations / Release
 
 For an authorized release use `bun run release`; it bumps, commits, tags and pushes. `bun run migrate` defaults to production, while `migrate:local` targets local 8787. Apply schema before dependent code and validate the deployed site/Worker using the [runbook](docs/31-development.md). Documentation updates do not require a release or deployment.
+
+Docker CD uses `firefly / production`, `/opt/firefly`, the `web` Compose service
+and immutable image digests. Railway production application variables are copied
+unchanged to the private host `.env.runtime`, never into build arguments or test
+fixtures. `DEPLOY_PHASE=precutover` verifies only the private jp2 origin; public
+routing, TLS/certificate changes and Railway retirement require owner approval.
+Production verification requires `DEPLOY_PHASE=production`, the canonical
+`DEPLOY_URL=https://lizheng.blog`, and `DEPLOY_ORIGIN_MARKER=jp2`.
+
+CI additionally runs `bun scripts/run-e2e.ts --api-only --container-image=<image>`
+against its locally built Linux image. This Linux-only lane uses host networking
+and the same per-run marked D1/R2 isolation; it never pulls an unspecified image.
+Do not run it alongside another E2E lane or a development Worker.
 
 ## Retrospective
 

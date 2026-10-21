@@ -1,0 +1,131 @@
+name: Release
+'on':
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      ci-run-id:
+        description: Successful main push CI run ID for the exact tested commit
+        required: true
+        type: string
+jobs:
+  deploy:
+    if: |
+      github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main')
+    uses: nocoo/base-ci/.github/workflows/deploy-docker.yml@0394178ebcff0418c442d84a84119220f31f8987  # v2026.9
+    with:
+      environment: firefly / production
+      source-run-id: ${{ github.event_name == 'workflow_run' && format('{0}', github.event.workflow_run.id) || inputs.ci-run-id }}
+      images: '[{"image":"ghcr.io/nocoo/firefly","service":"web","build-args":"AUTH_URL=https://lizheng.blog\nR2_PUBLIC_URL=https://b.no.mt"}]'
+      deploy-directory: /opt/firefly
+      remote-verify-command: |
+        python3 - <<'PY'
+        import json, os, re, subprocess, time, urllib.error, urllib.request
+
+        source = os.environ['IMAGE_SHA']
+        releases = json.loads(os.environ['RELEASE_IMAGES'])
+        if not re.fullmatch(r'[a-f0-9]{40}', source) or len(releases) != 1:
+            raise SystemExit('Invalid Firefly release manifest')
+        release = releases[0]
+        if (release.get('service') != 'web' or release.get('image') != 'ghcr.io/nocoo/firefly'
+                or release.get('sourceSha') != source
+                or not re.fullmatch(r'sha256:[a-f0-9]{64}', release.get('digest', ''))):
+            raise SystemExit('Release manifest does not identify the expected Firefly image')
+
+        reference = release['image'] + '@' + release['digest']
+        image = json.loads(subprocess.check_output(['docker', 'image', 'inspect', reference], text=True))[0]
+        container = json.loads(subprocess.check_output(['docker', 'inspect', 'firefly-app'], text=True))[0]
+        if (container['Config']['Image'] != reference or container['Image'] != image['Id']
+                or reference not in image.get('RepoDigests', [])
+                or image.get('Config', {}).get('Labels', {}).get('org.opencontainers.image.revision') != source):
+            raise SystemExit('Running container does not match the verified image digest and source revision')
+        version = subprocess.check_output(
+            ['docker', 'exec', 'firefly-app', 'node', '-p', "JSON.parse(require('fs').readFileSync('/app/package.json')).version"],
+            text=True).strip()
+        if not re.fullmatch(r'\d+\.\d+\.\d+', version):
+            raise SystemExit('Running image package version is invalid')
+
+        class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, req, fp, code, msg, headers, newurl):
+                return None
+
+        opener = urllib.request.build_opener(NoRedirect())
+
+        def request(path, method='GET', body=None):
+            headers = {
+                'User-Agent': 'Uptime-Kuma/2.3.2',
+                'Host': 'lizheng.blog',
+                'X-Forwarded-Proto': 'https',
+            }
+            if body is not None:
+                headers['Content-Type'] = 'application/json'
+            req = urllib.request.Request('http://127.0.0.1:17028' + path, data=body, headers=headers, method=method)
+            try:
+                response = opener.open(req, timeout=10)
+                return response.status, response.headers, response.read()
+            except urllib.error.HTTPError as error:
+                return error.code, error.headers, error.read()
+
+        live = None
+        for attempt in range(10):
+            try:
+                status, headers, payload = request('/api/live')
+                if status == 200 and headers.get('Cache-Control') == 'no-store':
+                    live = json.loads(payload)
+                    break
+            except Exception:
+                pass
+            if attempt < 9:
+                time.sleep(3)
+        if not live or live.get('status') != 'ok' or live.get('component') != 'firefly' or live.get('database') != {'connected': True} or live.get('version') != version:
+            raise SystemExit('Private /api/live did not confirm image version and database health')
+
+        status, headers, body = request('/')
+        if status != 200 or 'text/html' not in headers.get('Content-Type', '') or not body:
+            raise SystemExit('Private read-only homepage check failed')
+        status, headers, body = request('/logo-80.png')
+        if status != 200 or 'image/png' not in headers.get('Content-Type', '') or not body:
+            raise SystemExit('Private static asset check failed')
+        status, _, body = request('/api/posts?page_size=1')
+        if status != 200:
+            raise SystemExit('Private read-only posts check failed')
+        json.loads(body)
+        if request('/api/admin/authors')[0] != 401 or request('/api/posts', 'POST', b'{}')[0] != 401:
+            raise SystemExit('Private unauthenticated admin/write denial check failed')
+        print(f"Private Firefly acceptance passed: revision {source}, {release['digest']}, version {live['version']}")
+        PY
+      verify-command: |
+        node --input-type=module <<'JS'
+        import { verifyDeployment } from './scripts/verify-deployment.mjs';
+        try {
+          console.log(await verifyDeployment({
+            phase: ${{ toJSON(vars.DEPLOY_PHASE) }},
+            target: ${{ toJSON(vars.DEPLOY_URL) }},
+            originMarker: ${{ toJSON(vars.DEPLOY_ORIGIN_MARKER) }},
+            sourceSha: process.env.SOURCE_SHA,
+            imageManifest: process.env.RELEASE_IMAGES,
+          }));
+        } catch (error) {
+          console.error(`Deployment verification failed: ${error.message}`);
+          process.exitCode = 1;
+        }
+        JS
+      timeout-minutes: 25
+    secrets:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+      VPS_PORT: ${{ secrets.VPS_PORT }}
+      VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+      GHCR_PULL_USER: ${{ secrets.GHCR_PULL_USER }}
+      GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+permissions:
+  contents: read
+  actions: read
+  packages: write
