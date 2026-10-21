@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.18.1 (2026-10-21)
+
+- feat: add admin headers and loading states
+- fix: use standard basalt admin navigation
+- fix: align basalt sidebar and mobile drawer
+- chore: upgrade basalt to 3.2.1
+- docs: retire duplicate blog origin
+- docs: record approved jp2 production cutover
+- docs: record private origin acceptance
+
+
 ## v2.18.0 (2026-10-21)
 
 - test: detect weakened origin redirect checks
