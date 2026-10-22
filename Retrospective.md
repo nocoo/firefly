@@ -389,3 +389,28 @@ the top level. Use that typed namespace with `xmlMode: false` to retain HTML
 semantics. Regression tests cover literal and entity-encoded Chinese, other
 Unicode, special characters, and existing entities; verify both runtime behavior
 and public option types before accepting a serialization change.
+
+### 2026-10-22: Verify token formats and seekable audio in player acceptance
+
+The inline podcast player's first styling pass assigned complete blog colors to
+Basalt tokens that are consumed as HSL channels. The resulting invalid CSS made
+the seek track transparent even though layout assertions passed. Screenshot and
+computed-style inspection caught this before commit. The track and played range
+now use blog colors directly, and light/dark browser tests assert a visible track.
+Inspect a library's token value format, not just its token names, before mapping
+application colors into it.
+
+The real-media interaction test initially returned a WAV body without HTTP Range
+support. Chromium decoded it but exposed a zero-length seekable range, so seeking
+returned to zero. The fixture now supplies byte ranges and 206 responses; playback,
+pause, keyboard seeking and speed changes pass against a real audio element.
+Playwright also loads the recorded JSON via the filesystem because its Node ESM
+loader requires JSON import attributes, unlike the application's bundler. Keep
+browser media fixtures faithful to transport behavior and test-runner semantics.
+
+The pre-commit full suite also exposed an existing order-dependent human-avatar
+test: with `isolate: false`, a cached module could retain the real R2 URL helper
+instead of that suite's mock. Resetting the module cache in `vi.hoisted` before
+imports makes its dependency mocks effective, following the existing entity-test
+pattern. The full suite and normal commit hook then passed without changing the
+avatar implementation or weakening assertions.

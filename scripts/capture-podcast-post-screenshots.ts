@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Capture podcast card inside journal article layout with live his.fm /api/card.
+ * Capture the inline podcast player inside the journal layout using recorded fixtures.
  * Requires Next on 7028 (WORKER_URL/SECRET for root layout) and Playwright.
  * Set SCREENSHOT_CAPTURE=true on the dev server to hide the Next dev indicator.
  */
@@ -35,10 +35,10 @@ async function shot(
     waitUntil: "networkidle",
     timeout: 60_000,
   });
-  await page.waitForSelector(".podcast-card", { timeout: 30_000 });
+  await page.waitForSelector(".podcast-player", { timeout: 30_000 });
   await page.waitForFunction(() => {
     const img = document.querySelector(
-      ".podcast-card-cover",
+      ".blog-featured-image img",
     ) as HTMLImageElement | null;
     return img?.complete && img.naturalWidth > 0;
   });
