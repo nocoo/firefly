@@ -101,9 +101,10 @@ export function buildPodcastCardViewModel(
   isDark: boolean,
 ): PodcastCardViewModel {
   const theme = card.theme ?? {};
+  /** Theme accent is stable across breakpoints; ink is fallback only when accent is absent. */
   const accent =
-    resolveCardAccent(theme, isDark) ??
     parseHexColor(theme.accent) ??
+    resolveCardAccent(theme, isDark) ??
     null;
   const playButtonColor = accent
     ? pickReadableOnAccent(accent)
