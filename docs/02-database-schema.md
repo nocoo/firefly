@@ -87,6 +87,7 @@ CREATE TABLE posts (
   reading_time    INTEGER,                          -- estimated minutes
   wp_id           INTEGER,                          -- original WordPress post ID for migration
   wp_permalink    TEXT,                             -- original WordPress permalink for 301 redirects
+  podcast_url     TEXT,                             -- optional his.fm episode page URL
   published_at    INTEGER,                          -- null if never published
   created_at      INTEGER NOT NULL DEFAULT (unixepoch()),
   updated_at      INTEGER NOT NULL DEFAULT (unixepoch())
