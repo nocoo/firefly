@@ -35,6 +35,10 @@ describe("podcast-card-vm", () => {
     const cover = buildCoverSrcSet(card.cover);
     expect(cover.srcSet).toContain("160w");
     expect(cover.src).toContain("his.fm");
+    for (const part of cover.srcSet?.split(",") ?? []) {
+      const url = part.trim().split(/\s+/)[0];
+      expect(url).toMatch(/^https:\/\/(his\.fm|f\.no\.mt)\//);
+    }
   });
 
   it("builds view model from EP.03 fixture", () => {

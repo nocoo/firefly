@@ -1,21 +1,23 @@
 import { describe, it, expect } from "vitest";
-import { isHisFmCardMediaUrl } from "./media-url";
+import { isHisFmCardMediaUrl, parseHisFmCardMediaUrl } from "./media-url";
 
-describe("isHisFmCardMediaUrl", () => {
-  it("accepts https on f.no.mt and his.fm", () => {
+describe("parseHisFmCardMediaUrl", () => {
+  it("accepts https on f.no.mt and his.fm and returns href", () => {
+    const raw = "https://f.no.mt/productions/x/audio.mp3";
+    expect(parseHisFmCardMediaUrl(raw)).toBe(new URL(raw).href);
     expect(
-      isHisFmCardMediaUrl(
-        "https://f.no.mt/productions/x/audio.mp3",
-      ),
-    ).toBe(true);
-    expect(
-      isHisFmCardMediaUrl(
+      parseHisFmCardMediaUrl(
         "https://his.fm/media/episode-thumbnails/x/160.webp",
       ),
-    ).toBe(true);
+    ).toBe("https://his.fm/media/episode-thumbnails/x/160.webp");
+    expect(isHisFmCardMediaUrl(raw)).toBe(true);
   });
 
-  it("rejects other schemes and hosts", () => {
+  it("rejects srcset injection and other schemes", () => {
+    const poisoned =
+      "https://his.fm/safe.png 160w, https://outside.invalid/cover.png";
+    expect(parseHisFmCardMediaUrl(poisoned)).toBeNull();
+    expect(isHisFmCardMediaUrl(poisoned)).toBe(false);
     expect(isHisFmCardMediaUrl("http://f.no.mt/x")).toBe(false);
     expect(isHisFmCardMediaUrl("javascript:alert(1)")).toBe(false);
     expect(isHisFmCardMediaUrl("https://evil.com/x")).toBe(false);

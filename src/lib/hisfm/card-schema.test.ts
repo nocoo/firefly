@@ -82,4 +82,22 @@ describe("parseHisFmCardPayload", () => {
       }),
     ).toBeNull();
   });
+
+  it("rejects poisoned cover size url in srcset", () => {
+    const base = mockHisFmCardPayload() as Record<string, unknown>;
+    expect(
+      parseHisFmCardPayload({
+        ...base,
+        cover: {
+          url: "https://f.no.mt/cover.png",
+          sizes: [
+            {
+              url: "https://his.fm/safe.png 160w, https://outside.invalid/x.png",
+              width: 160,
+            },
+          ],
+        },
+      }),
+    ).toBeNull();
+  });
 });

@@ -79,6 +79,25 @@ test.describe("Feature: his.fm podcast card layout", () => {
     await assertDesktopDescriptionAlignsWithCover(page);
   });
 
+  test("Given the preview page, When cover srcset is present, Then only allowlisted hosts appear", async ({
+    page,
+  }) => {
+    const probe = await page.goto(PREVIEW_PATH, { waitUntil: "commit" });
+    test.skip(probe?.status() === 404, "Preview route disabled in this run");
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(PREVIEW_PATH, { waitUntil: "networkidle" });
+    const srcset = await page
+      .locator(".podcast-card-cover")
+      .getAttribute("srcset");
+    expect(srcset).toBeTruthy();
+    const urls = srcset!
+      .split(",")
+      .map((part) => part.trim().split(/\s+/)[0]);
+    for (const url of urls) {
+      expect(url).toMatch(/^https:\/\/(his\.fm|f\.no\.mt)\//);
+    }
+  });
+
   test("Given desktop width, When I click the title, Then his.fm opens and play does not navigate", async ({
     page,
     context,

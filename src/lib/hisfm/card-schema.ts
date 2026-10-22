@@ -3,7 +3,7 @@
  */
 import { z } from "zod";
 import { HISFM_EPISODE_URL_RE } from "@/lib/hisfm/podcast-url";
-import { isHisFmCardMediaUrl } from "@/lib/hisfm/media-url";
+import { parseHisFmCardMediaUrl } from "@/lib/hisfm/media-url";
 
 export const HISFM_CARD_API_VERSION = 1;
 
@@ -13,9 +13,18 @@ const zEpisodePageUrl = z
     message: "invalid his.fm episode page_url",
   });
 
-const zMediaUrl = z.string().refine((s) => isHisFmCardMediaUrl(s), {
-  message: "invalid his.fm media url",
-});
+function normalizeMediaUrl(raw: string): string {
+  const href = parseHisFmCardMediaUrl(raw);
+  if (!href) throw new Error("invalid his.fm media url");
+  return href;
+}
+
+const zMediaUrl = z
+  .string()
+  .refine((s) => parseHisFmCardMediaUrl(s) !== null, {
+    message: "invalid his.fm media url",
+  })
+  .transform(normalizeMediaUrl);
 
 export const hisFmCardCoverSizeSchema = z.object({
   url: zMediaUrl,
