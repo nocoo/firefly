@@ -1,5 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 
+vi.hoisted(() => { vi.resetModules(); });
+
 vi.mock("./r2-client", () => ({
   getR2PublicUrl: vi.fn(() => "https://test-cdn.example.com"),
 }));
