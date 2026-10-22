@@ -5,6 +5,7 @@ import {
   FIXTURE_EPISODE_URL_EP02,
   FIXTURE_EPISODE_URL_EP03,
 } from "@/lib/hisfm/fixtures";
+import { isPodcastPostPreviewAllowed } from "@/lib/preview-gate";
 
 const EPISODES: Record<string, string> = {
   ep02: FIXTURE_EPISODE_URL_EP02,
@@ -17,7 +18,7 @@ interface PageProps {
 
 /** Dev-only: journal article shell with live his.fm card (no DB post required). */
 export default async function PodcastPostPreviewPage({ searchParams }: PageProps) {
-  if (process.env.NODE_ENV === "production") notFound();
+  if (!isPodcastPostPreviewAllowed()) notFound();
   const { episode = "ep03" } = await searchParams;
   const podcastUrl = EPISODES[episode] ?? EPISODES.ep03;
 
