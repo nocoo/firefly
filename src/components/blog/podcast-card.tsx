@@ -11,6 +11,7 @@ import {
 import { useTheme } from "next-themes";
 import { ExternalLink, Pause, Play } from "lucide-react";
 import type { HisFmPublishedCard } from "@/lib/hisfm/card-schema";
+import { parseHexColor } from "@/lib/hisfm/theme-colors";
 import {
   buildPodcastCardViewModel,
   formatPlaybackTime,
@@ -35,22 +36,27 @@ export function PodcastCard({ card }: PodcastCardProps) {
     [card, isDark],
   );
 
+  const themeAccent = parseHexColor(card.theme?.accent);
+
   const style = useMemo((): CSSProperties => {
     const vars: Record<string, string> = {};
-    if (model.accentColor) vars["--podcast-accent"] = model.accentColor;
+    const accent = themeAccent ?? model.accentColor;
+    if (accent) vars["--podcast-accent"] = accent;
     vars["--podcast-play-fg"] = model.playButtonColor;
-    if (model.cardTint) {
+    if (mounted && model.cardTint) {
       vars["--podcast-tint"] = model.cardTint;
     }
     return vars as CSSProperties;
-  }, [model.accentColor, model.playButtonColor, model.cardTint]);
+  }, [themeAccent, model.accentColor, model.playButtonColor, model.cardTint, mounted]);
+
+  const hasAccent = Boolean(themeAccent ?? model.accentColor);
 
   return (
     <div
       className="podcast-card"
-      data-has-accent={model.accentColor ? "true" : "false"}
+      data-has-accent={hasAccent ? "true" : "false"}
       data-has-player={model.player ? "true" : "false"}
-      style={mounted ? style : undefined}
+      style={style}
     >
       <a
         href={model.episodePageUrl}
@@ -62,18 +68,20 @@ export function PodcastCard({ card }: PodcastCardProps) {
         <span className="sr-only">在 his.fm 打开：{model.title}</span>
       </a>
       <PodcastCardCover model={model} />
-      <div className="podcast-card-head-text">
-        <PodcastCardMeta model={model} />
-        <h2 className="podcast-card-title">{model.title}</h2>
+      <div className="podcast-card-main">
+        <div className="podcast-card-head-text">
+          <PodcastCardMeta model={model} />
+          <h2 className="podcast-card-title">{model.title}</h2>
+        </div>
+        {model.description ? (
+          <p className="podcast-card-summary">{model.description}</p>
+        ) : null}
+        {model.player ? (
+          <PodcastCardPlayer model={model} player={model.player} />
+        ) : (
+          <PodcastCardListenCta />
+        )}
       </div>
-      {model.description ? (
-        <p className="podcast-card-summary">{model.description}</p>
-      ) : null}
-      {model.player ? (
-        <PodcastCardPlayer model={model} player={model.player} />
-      ) : (
-        <PodcastCardListenCta />
-      )}
     </div>
   );
 }
