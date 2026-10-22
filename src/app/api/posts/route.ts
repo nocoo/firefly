@@ -1,6 +1,10 @@
 import type { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
+import {
+  BodyFieldTypeError,
+  readOptionalBodyString,
+} from "@/lib/api/body-fields";
 import { listPosts } from "@/data/public-content";
 import type { ListPostsOptions } from "@/data/entities/post";
 import type { PostStatus } from "@/models/types";
@@ -67,6 +71,18 @@ export async function POST(request: NextRequest) {
       return errorResponse("content is required");
     }
 
+    let humanId: string | null | undefined;
+    let podcastUrl: string | null | undefined;
+    try {
+      humanId = readOptionalBodyString(body, "humanId", "human_id");
+      podcastUrl = readOptionalBodyString(body, "podcastUrl", "podcast_url");
+    } catch (err) {
+      if (err instanceof BodyFieldTypeError) {
+        return errorResponse(err.message, 400);
+      }
+      throw err;
+    }
+
     const post = await PostService.create(db, {
       title: title.trim(),
       slug: slug.trim(),
@@ -75,7 +91,7 @@ export async function POST(request: NextRequest) {
       excerpt: body.excerpt as string | undefined,
       categoryId: (body.categoryId ?? body.category_id) as string | undefined,
       aiAgentId: (body.aiAgentId ?? body.ai_agent_id) as string | undefined,
-      humanId: (body.humanId ?? body.human_id) as string | undefined,
+      humanId: humanId ?? undefined,
       featuredImage: (body.featuredImage ?? body.featured_image) as string | undefined,
       commentEnabled: (body.commentEnabled ?? body.comment_enabled) as number | undefined,
       publishedAt: (body.publishedAt ?? body.published_at) as number | undefined,
@@ -83,7 +99,7 @@ export async function POST(request: NextRequest) {
       referenceTitle: (body.referenceTitle ?? body.reference_title) as string | undefined,
       referenceDescription: (body.referenceDescription ?? body.reference_description) as string | undefined,
       referenceImage: (body.referenceImage ?? body.reference_image) as string | undefined,
-      podcastUrl: (body.podcastUrl ?? body.podcast_url) as string | null | undefined,
+      podcastUrl,
       tagIds: (body.tagIds ?? body.tag_ids) as string[] | undefined,
     });
 
