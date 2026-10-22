@@ -5,10 +5,10 @@
  * Set SCREENSHOT_CAPTURE=true on the dev server to hide the Next dev indicator.
  */
 import { mkdirSync } from "node:fs";
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { chromium } from "playwright";
 
-const OUT = resolve("/workspace/docs/images/podcast-card");
+const OUT = join(import.meta.dir, "..", "docs", "images", "podcast-card");
 const BASE = process.env.SCREENSHOT_BASE ?? "http://localhost:7028";
 const EPISODE = process.env.SCREENSHOT_EPISODE ?? "ep03";
 
