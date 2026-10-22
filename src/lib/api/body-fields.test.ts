@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readOptionalBodyString } from "./body-fields";
+import { BodyFieldTypeError, readOptionalBodyString } from "./body-fields";
 
 describe("readOptionalBodyString", () => {
   it("returns null when key is explicitly null", () => {
@@ -31,16 +31,19 @@ describe("readOptionalBodyString", () => {
     ).toBe("https://his.fm/episodes/a/b");
   });
 
-  it("returns undefined for non-string values", () => {
-    expect(
+  it("throws for non-string values", () => {
+    expect(() =>
       readOptionalBodyString({ podcastUrl: 1 }, "podcastUrl", "podcast_url"),
-    ).toBeUndefined();
-    expect(
+    ).toThrow(BodyFieldTypeError);
+    expect(() =>
       readOptionalBodyString(
         { podcast_url: false },
         "podcastUrl",
         "podcast_url",
       ),
-    ).toBeUndefined();
+    ).toThrow(BodyFieldTypeError);
+    expect(() =>
+      readOptionalBodyString({ human_id: [] }, "humanId", "human_id"),
+    ).toThrow(BodyFieldTypeError);
   });
 });

@@ -2,7 +2,10 @@ import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse, notFoundResponse } from "@/lib/api";
-import { readOptionalBodyString } from "@/lib/api/body-fields";
+import {
+  BodyFieldTypeError,
+  readOptionalBodyString,
+} from "@/lib/api/body-fields";
 import { getPostBySlug } from "@/data/entities/post";
 import { getPostBySlug as getPublicPostBySlug } from "@/data/public-content";
 import type { PostStatus } from "@/models/types";
@@ -54,6 +57,18 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     const body = (await request.json()) as Record<string, unknown>;
 
+    let podcastUrl: string | null | undefined;
+    let humanId: string | null | undefined;
+    try {
+      podcastUrl = readOptionalBodyString(body, "podcastUrl", "podcast_url");
+      humanId = readOptionalBodyString(body, "humanId", "human_id");
+    } catch (err) {
+      if (err instanceof BodyFieldTypeError) {
+        return errorResponse(err.message, 400);
+      }
+      throw err;
+    }
+
     const updated = await PostService.update(db, existing.id, {
       title: body.title as string | undefined,
       slug: body.slug as string | undefined,
@@ -62,7 +77,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       excerpt: body.excerpt as string | null | undefined,
       categoryId: (body.categoryId ?? body.category_id) as string | null | undefined,
       aiAgentId: (body.aiAgentId ?? body.ai_agent_id) as string | null | undefined,
-      humanId: (body.humanId ?? body.human_id) as string | null | undefined,
+      humanId,
       featuredImage: (body.featuredImage ?? body.featured_image) as string | null | undefined,
       commentEnabled: (body.commentEnabled ?? body.comment_enabled) as number | undefined,
       publishedAt: (body.publishedAt ?? body.published_at) as number | null | undefined,
@@ -70,7 +85,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       referenceTitle: (body.referenceTitle ?? body.reference_title) as string | null | undefined,
       referenceDescription: (body.referenceDescription ?? body.reference_description) as string | null | undefined,
       referenceImage: (body.referenceImage ?? body.reference_image) as string | null | undefined,
-      podcastUrl: readOptionalBodyString(body, "podcastUrl", "podcast_url"),
+      podcastUrl,
       tagIds: (body.tagIds ?? body.tag_ids) as string[] | undefined,
     });
 

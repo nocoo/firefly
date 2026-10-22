@@ -65,6 +65,38 @@ describe("PUT /api/posts/[slug] — in-route auth", () => {
     expect(response.status).toBe(404);
   });
 
+  it("returns 400 when humanId has wrong type", async () => {
+    vi.mocked(auth).mockResolvedValue({ user: { email: "admin@example.com" } } as any);
+    vi.mocked(getPostBySlug).mockResolvedValue({
+      id: "post-1",
+      slug: "hello-world",
+    } as never);
+
+    const response = await PUT(
+      fakeRequestWithBody({ humanId: { bad: true } }),
+      fakeParams,
+    );
+
+    expect(response.status).toBe(400);
+    expect(PostService.update).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when podcast_url has wrong type", async () => {
+    vi.mocked(auth).mockResolvedValue({ user: { email: "admin@example.com" } } as any);
+    vi.mocked(getPostBySlug).mockResolvedValue({
+      id: "post-1",
+      slug: "hello-world",
+    } as never);
+
+    const response = await PUT(
+      fakeRequestWithBody({ podcast_url: 42, title: "changed" }),
+      fakeParams,
+    );
+
+    expect(response.status).toBe(400);
+    expect(PostService.update).not.toHaveBeenCalled();
+  });
+
   it("passes podcastUrl null to clear the field", async () => {
     vi.mocked(auth).mockResolvedValue({ user: { email: "admin@example.com" } } as any);
     vi.mocked(getPostBySlug).mockResolvedValue({
