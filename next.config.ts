@@ -63,6 +63,8 @@ const nextConfig: NextConfig = {
         protocol: assetsOrigin.protocol,
         hostname: assetsOrigin.hostname,
       },
+      { protocol: "https", hostname: "f.no.mt" },
+      { protocol: "https", hostname: "his.fm" },
     ],
   },
   // TypeScript 7.0 no longer ships lib/typescript.js (classic Compiler API).
