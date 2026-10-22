@@ -6,6 +6,7 @@ import { getPostBySlug } from "@/data/entities/post";
 import { getPostBySlug as getPublicPostBySlug } from "@/data/public-content";
 import type { PostStatus } from "@/models/types";
 import { PostAttributionError, PostService } from "@/services/post-service";
+import { PostFieldValidationError } from "@/services/post-field-validation";
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -68,6 +69,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       referenceTitle: (body.referenceTitle ?? body.reference_title) as string | null | undefined,
       referenceDescription: (body.referenceDescription ?? body.reference_description) as string | null | undefined,
       referenceImage: (body.referenceImage ?? body.reference_image) as string | null | undefined,
+      podcastUrl: (body.podcastUrl ?? body.podcast_url) as string | null | undefined,
       tagIds: (body.tagIds ?? body.tag_ids) as string[] | undefined,
     });
 
@@ -75,7 +77,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     return jsonResponse(updated);
   } catch (error) {
-    if (error instanceof PostAttributionError) {
+    if (
+      error instanceof PostAttributionError ||
+      error instanceof PostFieldValidationError
+    ) {
       return errorResponse(error.message, 400);
     }
     return errorResponse(

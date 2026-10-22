@@ -5,6 +5,7 @@ import { listPosts } from "@/data/public-content";
 import type { ListPostsOptions } from "@/data/entities/post";
 import type { PostStatus } from "@/models/types";
 import { PostAttributionError, PostService } from "@/services/post-service";
+import { PostFieldValidationError } from "@/services/post-field-validation";
 
 // GET /api/posts — list posts with optional filters
 export async function GET(request: NextRequest) {
@@ -82,12 +83,16 @@ export async function POST(request: NextRequest) {
       referenceTitle: (body.referenceTitle ?? body.reference_title) as string | undefined,
       referenceDescription: (body.referenceDescription ?? body.reference_description) as string | undefined,
       referenceImage: (body.referenceImage ?? body.reference_image) as string | undefined,
+      podcastUrl: (body.podcastUrl ?? body.podcast_url) as string | null | undefined,
       tagIds: (body.tagIds ?? body.tag_ids) as string[] | undefined,
     });
 
     return jsonResponse(post, 201);
   } catch (error) {
-    if (error instanceof PostAttributionError) {
+    if (
+      error instanceof PostAttributionError ||
+      error instanceof PostFieldValidationError
+    ) {
       return errorResponse(error.message, 400);
     }
     return errorResponse(

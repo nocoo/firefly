@@ -62,6 +62,7 @@ export interface Post {
   reference_title: string | null;
   reference_description: string | null;
   reference_image: string | null;
+  podcast_url: string | null;
   published_at: number | null;
   created_at: number;
   updated_at: number;

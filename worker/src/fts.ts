@@ -165,6 +165,7 @@ interface FtsSearchResult {
   reference_title: string | null;
   reference_description: string | null;
   reference_image: string | null;
+  podcast_url: string | null;
   search_snippet: string;
 }
 

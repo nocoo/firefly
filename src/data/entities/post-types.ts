@@ -20,6 +20,7 @@ export interface CreatePostInput {
   referenceTitle?: string | undefined;
   referenceDescription?: string | undefined;
   referenceImage?: string | undefined;
+  podcastUrl?: string | null | undefined;
 }
 
 export interface UpdatePostInput {
@@ -37,6 +38,7 @@ export interface UpdatePostInput {
   referenceTitle?: string | null | undefined;
   referenceDescription?: string | null | undefined;
   referenceImage?: string | null | undefined;
+  podcastUrl?: string | null | undefined;
   aiAgentId?: string | null | undefined;
   humanId?: string | null | undefined;
 }

@@ -35,8 +35,9 @@ export async function createPost(
       category_id, ai_agent_id, human_id, featured_image, comment_enabled,
       reading_time, published_at,
       reference_url, reference_title, reference_description, reference_image,
+      podcast_url,
       created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   await db.execute(sql, [
@@ -58,6 +59,7 @@ export async function createPost(
     input.referenceTitle ?? null,
     input.referenceDescription ?? null,
     input.referenceImage ?? null,
+    input.podcastUrl ?? null,
     now,
     now,
   ]);
@@ -159,6 +161,7 @@ function applySimpleFields(b: SetBuilder, input: UpdatePostInput): void {
     addSet(b, "comment_enabled", input.commentEnabled);
   if (input.aiAgentId !== undefined) addSet(b, "ai_agent_id", input.aiAgentId);
   if (input.humanId !== undefined) addSet(b, "human_id", input.humanId);
+  if (input.podcastUrl !== undefined) addSet(b, "podcast_url", input.podcastUrl);
 }
 
 export async function updatePost(
