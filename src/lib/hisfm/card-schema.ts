@@ -2,17 +2,29 @@
  * his.fm GET /api/card protocol v1 — see nocoo/his.fm docs/card-api.md
  */
 import { z } from "zod";
+import { HISFM_EPISODE_URL_RE } from "@/lib/hisfm/podcast-url";
+import { isHisFmCardMediaUrl } from "@/lib/hisfm/media-url";
 
 export const HISFM_CARD_API_VERSION = 1;
 
+const zEpisodePageUrl = z
+  .string()
+  .refine((s) => HISFM_EPISODE_URL_RE.test(s), {
+    message: "invalid his.fm episode page_url",
+  });
+
+const zMediaUrl = z.string().refine((s) => isHisFmCardMediaUrl(s), {
+  message: "invalid his.fm media url",
+});
+
 export const hisFmCardCoverSizeSchema = z.object({
-  url: z.string().url(),
+  url: zMediaUrl,
   width: z.number().int().positive(),
 });
 
 export const hisFmCardAudioSchema = z
   .object({
-    url: z.string().url(),
+    url: zMediaUrl,
     mime: z.string(),
     bytes: z.number().int().nonnegative().optional(),
   })
@@ -20,11 +32,11 @@ export const hisFmCardAudioSchema = z
 
 export const hisFmCardCoverSchema = z
   .object({
-    url: z.string().url(),
+    url: zMediaUrl,
     width: z.number().int().positive().optional(),
     height: z.number().int().positive().optional(),
     sizes: z.array(hisFmCardCoverSizeSchema).optional(),
-    frame_svg: z.string().url().optional(),
+    frame_svg: zMediaUrl.optional(),
   })
   .passthrough();
 
@@ -41,7 +53,7 @@ export const hisFmCardResponseSchema = z
   .object({
     v: z.literal(HISFM_CARD_API_VERSION),
     status: z.enum(["published", "not_found"]),
-    page_url: z.string().url().optional(),
+    page_url: zEpisodePageUrl.optional(),
     title: z.string().optional(),
     description: z.string().optional(),
     show: z.string().optional(),
@@ -60,7 +72,7 @@ export type HisFmCardResponse = z.infer<typeof hisFmCardResponseSchema>;
 export const hisFmPublishedCardSchema = z.object({
   v: z.literal(HISFM_CARD_API_VERSION),
   status: z.literal("published"),
-  page_url: z.string().url(),
+  page_url: zEpisodePageUrl,
   title: z.string().min(1),
   description: z.string().optional(),
   show: z.string().optional(),

@@ -38,4 +38,48 @@ describe("parseHisFmCardPayload", () => {
     ).toBeNull();
     expect(parseHisFmCardPayload({ v: 2, status: "published" })).toBeNull();
   });
+
+  it("rejects javascript and http media urls", () => {
+    const base = mockHisFmCardPayload() as Record<string, unknown>;
+    expect(
+      parseHisFmCardPayload({
+        ...base,
+        page_url: "javascript:alert(1)",
+      }),
+    ).toBeNull();
+    expect(
+      parseHisFmCardPayload({
+        ...base,
+        audio: {
+          url: "http://f.no.mt/x.mp3",
+          mime: "audio/mpeg",
+        },
+      }),
+    ).toBeNull();
+    expect(
+      parseHisFmCardPayload({
+        ...base,
+        cover: {
+          url: "https://evil.com/cover.png",
+          width: 1400,
+          height: 1400,
+        },
+      }),
+    ).toBeNull();
+    expect(
+      parseHisFmCardPayload({
+        ...base,
+        cover: {
+          url: "https://f.no.mt/cover.png",
+          frame_svg: "javascript:alert(1)",
+        },
+      }),
+    ).toBeNull();
+    expect(
+      parseHisFmCardPayload({
+        ...base,
+        page_url: "http://his.fm/episodes/a/b",
+      }),
+    ).toBeNull();
+  });
 });
