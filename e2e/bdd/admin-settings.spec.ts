@@ -421,23 +421,22 @@ test.describe("Feature: Admin system monitor page", () => {
     // After /api/system/memory resolves, the loading skeleton is replaced with
     // the dashboard. Use generous timeout since the fetch is real.
     //
-    // exact: true on every label — the StatCard <div> only contains the label
-    // string (Icon contributes no accessible text), so exact matches. The
-    // recommendation panel (system-monitor-helpers.tsx:143,146) renders <li>
-    // copy like "堆内存使用率偏高（>70%）。…" which is NOT exact-equal to
-    // "堆内存使用" and is therefore correctly filtered out. Without exact, a
-    // warning recommendation triggers strict-mode violations on this scenario.
+    // Scope to the four StatCard tiles — MemoryTrendChart legend reuses
+    // "RSS（总内存）" and would trip Playwright strict mode on a page-wide query.
+    const statTiles = page.locator(
+      "div.grid.gap-2.sm\\:grid-cols-2.lg\\:grid-cols-4",
+    );
     await expect(
-      page.getByText("堆内存使用", { exact: true }),
+      statTiles.getByText("堆内存使用", { exact: true }),
     ).toBeVisible({ timeout: 15_000 });
     await expect(
-      page.getByText("RSS（总内存）", { exact: true }),
+      statTiles.getByText("RSS（总内存）", { exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByText("峰值 / 平均", { exact: true }),
+      statTiles.getByText("峰值 / 平均", { exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByText("运行时间", { exact: true }),
+      statTiles.getByText("运行时间", { exact: true }),
     ).toBeVisible();
   });
 
