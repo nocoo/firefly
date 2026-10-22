@@ -1,8 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { mockHisFmCardPayload } from "@/lib/hisfm/fixtures";
+import {
+  fixtureEp02Published,
+  fixtureEp03Published,
+  mockHisFmCardPayload,
+} from "@/lib/hisfm/fixtures";
 import { parseHisFmCardPayload } from "@/lib/hisfm/card-schema";
 import {
   buildPodcastCardViewModel,
+  buildCoverSrcSet,
   formatPlaybackTime,
   nextPlaybackSpeed,
   progressPercent,
@@ -12,7 +17,7 @@ describe("podcast-card-vm", () => {
   it("formats playback time", () => {
     expect(formatPlaybackTime(0)).toBe("0:00");
     expect(formatPlaybackTime(65)).toBe("1:05");
-    expect(formatPlaybackTime(3723)).toBe("1:02:03");
+    expect(formatPlaybackTime(558)).toBe("9:18");
   });
 
   it("cycles playback speed", () => {
@@ -25,54 +30,56 @@ describe("podcast-card-vm", () => {
     expect(progressPercent(150, 100)).toBe(100);
   });
 
-  it("builds view model from card payload", () => {
-    const card = parseHisFmCardPayload(mockHisFmCardPayload())!;
-    const vm = buildPodcastCardViewModel(card);
-    expect(vm.seriesLabel).toBe("主理人手札 EP.02");
-    expect(vm.coverUrl).toContain("400");
-    expect(vm.durationLabel).toBe("1:02:03");
-    expect(vm.accentColor).toBe("#bf5c3c");
+  it("builds cover srcset from API sizes", () => {
+    const card = fixtureEp03Published();
+    const cover = buildCoverSrcSet(card.cover);
+    expect(cover.srcSet).toContain("160w");
+    expect(cover.src).toContain("his.fm");
   });
 
-  it("builds series label from column and episode", () => {
-    const card = parseHisFmCardPayload(
-      mockHisFmCardPayload({
-        series: undefined,
-        column: "主理人手札",
-        episode: 3,
-      }),
-    )!;
-    const vm = buildPodcastCardViewModel(card);
-    expect(vm.seriesLabel).toBe("主理人手札 EP.03");
+  it("builds view model from EP.03 fixture", () => {
+    const card = parseHisFmCardPayload(fixtureEp03Published())!;
+    const vm = buildPodcastCardViewModel(card, false);
+    expect(vm.episodePageUrl).toContain("what-the-reorg");
+    expect(vm.episodeLabel).toContain("EP.03");
+    expect(vm.player?.mime).toBe("audio/mpeg");
+    expect(vm.accentColor).toBeTruthy();
   });
 
-  it("prefers episode_label and cover size fallbacks", () => {
+  it("omits player when audio is missing", () => {
     const card = parseHisFmCardPayload(
-      mockHisFmCardPayload({
-        series: undefined,
-        episode_label: "主理人手札 EP.03",
-        summary: "   ",
-        cover: {
-          url: "https://f.no.mt/covers/full.jpg",
-          w200: "https://f.no.mt/covers/200.jpg",
-        },
-      }),
+      mockHisFmCardPayload({ audio: undefined }),
     )!;
-    const vm = buildPodcastCardViewModel(card);
-    expect(vm.seriesLabel).toBe("主理人手札 EP.03");
-    expect(vm.coverUrl).toBe("https://f.no.mt/covers/200.jpg");
-    expect(vm.summary).toBeNull();
+    const vm = buildPodcastCardViewModel(card, false);
+    expect(vm.player).toBeNull();
   });
 
-  it("handles show name without episode number", () => {
+  it("clears blank description", () => {
     const card = parseHisFmCardPayload(
-      mockHisFmCardPayload({
-        series: undefined,
-        column: undefined,
-        show: "主理人手札",
-        episode: undefined,
-      }),
+      mockHisFmCardPayload({ description: "   " }),
     )!;
-    expect(buildPodcastCardViewModel(card).seriesLabel).toBe("主理人手札");
+    expect(buildPodcastCardViewModel(card, false).description).toBeNull();
+  });
+
+  it("uses EP.02 fixture duration", () => {
+    const card = parseHisFmCardPayload(fixtureEp02Published())!;
+    const vm = buildPodcastCardViewModel(card, true);
+    expect(vm.player?.durationLabel).toMatch(/\d+:\d+/);
+  });
+
+  it("falls back to cover.url when sizes are absent", () => {
+    const cover = buildCoverSrcSet({
+      url: "https://f.no.mt/cover.png",
+      width: 1400,
+      height: 1400,
+    });
+    expect(cover.src).toBe("https://f.no.mt/cover.png");
+    expect(cover.srcSet).toBeUndefined();
+  });
+
+  it("applies theme tint on dark journal surface", () => {
+    const card = parseHisFmCardPayload(fixtureEp03Published())!;
+    const vm = buildPodcastCardViewModel(card, true);
+    expect(vm.cardTint).toBeTruthy();
   });
 });

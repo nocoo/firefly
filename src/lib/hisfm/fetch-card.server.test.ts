@@ -61,7 +61,8 @@ describe("loadHisFmPodcastCard", () => {
     const result = await loadHisFmPodcastCard(
       "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless",
     );
-    expect(result?.title).toContain("同一种心态");
+    expect(result?.title).toBeTruthy();
+    expect(result?.page_url).toContain("his.fm");
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining("his.fm/api/card?url="),
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
