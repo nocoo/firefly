@@ -78,4 +78,31 @@ test.describe("Feature: his.fm podcast card layout", () => {
     test.skip(probe?.status() === 404, "Preview route disabled in this run");
     await assertDesktopDescriptionAlignsWithCover(page);
   });
+
+  test("Given desktop width, When I click the title, Then his.fm opens and play does not navigate", async ({
+    page,
+    context,
+  }) => {
+    const probe = await page.goto(PREVIEW_PATH, { waitUntil: "commit" });
+    test.skip(probe?.status() === 404, "Preview route disabled in this run");
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(PREVIEW_PATH, { waitUntil: "networkidle" });
+
+    const link = page.locator(".podcast-card-link-hit");
+    await expect(link).toHaveAttribute(
+      "href",
+      /his\.fm\/episodes\/manager-notes\//,
+    );
+
+    const [popup] = await Promise.all([
+      context.waitForEvent("page"),
+      page.locator(".podcast-card-title").click(),
+    ]);
+    await expect(popup).toHaveURL(/his\.fm\/episodes\//);
+    await popup.close();
+
+    const urlBefore = page.url();
+    await page.locator(".podcast-card-play").click();
+    expect(page.url()).toBe(urlBefore);
+  });
 });
