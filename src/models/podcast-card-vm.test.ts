@@ -43,7 +43,22 @@ describe("podcast-card-vm", () => {
     expect(vm.episodePageUrl).toContain("what-the-reorg");
     expect(vm.episodeLabel).toContain("EP.03");
     expect(vm.player?.mime).toBe("audio/mpeg");
-    expect(vm.accentColor).toBeTruthy();
+    expect(vm.accentColor).toBe("#A6AF94");
+  });
+
+  it("keeps theme accent on light and dark surfaces", () => {
+    const card = parseHisFmCardPayload(fixtureEp03Published())!;
+    expect(buildPodcastCardViewModel(card, false).accentColor).toBe("#A6AF94");
+    expect(buildPodcastCardViewModel(card, true).accentColor).toBe("#A6AF94");
+  });
+
+  it("falls back to ink when theme accent is not hex", () => {
+    const card = parseHisFmCardPayload(
+      mockHisFmCardPayload({
+        theme: { accent: "not-a-color", ink: "#263C35" },
+      }),
+    )!;
+    expect(buildPodcastCardViewModel(card, false).accentColor).toBe("#263C35");
   });
 
   it("omits player when audio is missing", () => {
