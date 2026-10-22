@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse, notFoundResponse } from "@/lib/api";
+import { readOptionalBodyString } from "@/lib/api/body-fields";
 import { getPostBySlug } from "@/data/entities/post";
 import { getPostBySlug as getPublicPostBySlug } from "@/data/public-content";
 import type { PostStatus } from "@/models/types";
@@ -69,7 +70,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       referenceTitle: (body.referenceTitle ?? body.reference_title) as string | null | undefined,
       referenceDescription: (body.referenceDescription ?? body.reference_description) as string | null | undefined,
       referenceImage: (body.referenceImage ?? body.reference_image) as string | null | undefined,
-      podcastUrl: (body.podcastUrl ?? body.podcast_url) as string | null | undefined,
+      podcastUrl: readOptionalBodyString(body, "podcastUrl", "podcast_url"),
       tagIds: (body.tagIds ?? body.tag_ids) as string[] | undefined,
     });
 
