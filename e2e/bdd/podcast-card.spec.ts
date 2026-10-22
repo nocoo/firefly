@@ -1,0 +1,44 @@
+import { test, expect } from "./fixtures";
+
+const PREVIEW_PATH = "/podcast-post-preview?episode=ep03";
+
+async function assertPodcastCardFitsViewport(
+  page: import("@playwright/test").Page,
+  width: number,
+) {
+  await page.setViewportSize({ width, height: 720 });
+  await page.goto(PREVIEW_PATH, { waitUntil: "networkidle" });
+  const card = page.locator(".podcast-card");
+  await expect(card).toBeVisible();
+  await expect(page.locator(".podcast-card-time")).toBeVisible();
+
+  const metrics = await page.evaluate(() => {
+    const card = document.querySelector(".podcast-card");
+    const time = document.querySelector(".podcast-card-time");
+    if (!card || !time) return { ok: false };
+    const cardRect = card.getBoundingClientRect();
+    const timeRect = time.getBoundingClientRect();
+    const overflowsCard = card.scrollWidth > card.clientWidth + 1;
+    const timeClipped =
+      timeRect.right > cardRect.right + 1 ||
+      timeRect.left < cardRect.left - 1;
+    return {
+      ok: !overflowsCard && !timeClipped,
+      overflowsCard,
+      timeClipped,
+    };
+  });
+  expect(metrics.ok, JSON.stringify(metrics)).toBe(true);
+}
+
+test.describe("Feature: his.fm podcast card layout", () => {
+  test("Given the preview page, When viewport is 320px or 390px, Then the card does not clip the player time", async ({
+    page,
+  }) => {
+    const probe = await page.goto(PREVIEW_PATH, { waitUntil: "commit" });
+    test.skip(probe?.status() === 404, "Preview route disabled in this run");
+    for (const width of [320, 390]) {
+      await assertPodcastCardFitsViewport(page, width);
+    }
+  });
+});
