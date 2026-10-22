@@ -1,5 +1,55 @@
 # Changelog
 
+## v2.19.1 (2026-10-22)
+
+- fix: inline podcast player below article cover
+- test: isolate human avatar module mocks
+- Merge pull request #845 from nocoo/cursor/node-base-ci-security-30a5
+- docs: sync base-ci pin in jp2 guide
+- build: bump docker node to 22.23.4
+- ci: repin base-ci to ac635753
+- Merge pull request #844 from nocoo/cursor/podcast-hisfm-card-428e
+- fix(api): validate post create optional strings
+- fix(hisfm): skip caching transient card errors
+- fix(api): 400 on wrong-type body fields
+- fix(hisfm): harden media url srcset parsing
+- test(e2e): fix podcast card link click
+- chore(ci): retrigger browser e2e
+- chore: derive screenshot output path
+- fix(api): clear podcast url with null body
+- fix(ui): podcast card link hit stacking
+- fix(hisfm): card fetch redirect and cache
+- fix(hisfm): https media allowlist in schema
+- fix(hisfm): strict episode url validation
+- test(e2e): scope system monitor stat labels
+- docs: refresh podcast card screenshots
+- test: podcast card layout regressions
+- fix(podcast): stable theme accent color
+- fix(ui): restore desktop podcast column
+- docs: refresh podcast card screenshots
+- test(e2e): podcast card narrow viewports
+- chore: drop redundant podcast fixture route
+- fix(podcast): csp media and hydration
+- fix(ui): mobile podcast card layout
+- chore: remove stale card screenshot script
+- docs: post preview screenshots and api note
+- test: his.fm live card fixtures
+- chore(next): whitelist his.fm cdn hosts
+- feat(ui): podcast card for live api v1
+- feat(hisfm): validate theme colors for card
+- feat(hisfm): align card schema to live api
+- docs: add podcast card screenshots
+- test: raise branch coverage for podcast
+- chore(release): v2.19.0
+- docs: podcast_url and his.fm card
+- test: podcast url and card coverage
+- feat(mcp): podcast_url and human_id on posts
+- feat(ui): native podcast card on posts
+- feat(hisfm): card api client and vm
+- feat(data): persist and validate podcast_url
+- feat(db): add podcast_url to posts
+
+
 ## v2.19.0 (2026-10-22)
 
 - feat: link posts to his.fm episodes with native podcast card
