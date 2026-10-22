@@ -26,7 +26,10 @@ interface PodcastCardProps {
 
 export function PodcastCard({ card }: PodcastCardProps) {
   const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const isDark = mounted && resolvedTheme === "dark";
   const model = useMemo(
     () => buildPodcastCardViewModel(card, isDark),
     [card, isDark],
@@ -47,7 +50,7 @@ export function PodcastCard({ card }: PodcastCardProps) {
       className="podcast-card"
       data-has-accent={model.accentColor ? "true" : "false"}
       data-has-player={model.player ? "true" : "false"}
-      style={style}
+      style={mounted ? style : undefined}
     >
       <a
         href={model.episodePageUrl}
@@ -59,18 +62,18 @@ export function PodcastCard({ card }: PodcastCardProps) {
         <span className="sr-only">在 his.fm 打开：{model.title}</span>
       </a>
       <PodcastCardCover model={model} />
-      <div className="podcast-card-body">
+      <div className="podcast-card-head-text">
         <PodcastCardMeta model={model} />
         <h2 className="podcast-card-title">{model.title}</h2>
-        {model.description ? (
-          <p className="podcast-card-summary">{model.description}</p>
-        ) : null}
-        {model.player ? (
-          <PodcastCardPlayer model={model} player={model.player} />
-        ) : (
-          <PodcastCardListenCta />
-        )}
       </div>
+      {model.description ? (
+        <p className="podcast-card-summary">{model.description}</p>
+      ) : null}
+      {model.player ? (
+        <PodcastCardPlayer model={model} player={model.player} />
+      ) : (
+        <PodcastCardListenCta />
+      )}
     </div>
   );
 }
@@ -94,6 +97,8 @@ function PodcastCardCover({ model }: { model: PodcastCardViewModel }) {
           src={model.frameSvgUrl}
           alt=""
           className="podcast-card-cover-frame"
+          width={120}
+          height={120}
           aria-hidden="true"
         />
       ) : null}
@@ -198,19 +203,19 @@ function PodcastCardPlayer({
       <audio ref={audioRef} preload="none" src={player.audioUrl}>
         <source src={player.audioUrl} type={player.mime} />
       </audio>
-      <button
-        type="button"
-        className="podcast-card-play"
-        onClick={togglePlay}
-        aria-label={playing ? "暂停" : "播放"}
-      >
-        {playing ? (
-          <Pause className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
-        ) : (
-          <Play className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
-        )}
-      </button>
-      <div className="podcast-card-progress-wrap">
+      <div className="podcast-card-player-controls">
+        <button
+          type="button"
+          className="podcast-card-play"
+          onClick={togglePlay}
+          aria-label={playing ? "暂停" : "播放"}
+        >
+          {playing ? (
+            <Pause className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+          ) : (
+            <Play className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+          )}
+        </button>
         <input
           type="range"
           className="podcast-card-progress"
@@ -235,15 +240,15 @@ function PodcastCardPlayer({
         <span className="podcast-card-time" aria-live="off">
           {formatPlaybackTime(current)} / {totalLabel}
         </span>
+        <button
+          type="button"
+          className="podcast-card-speed"
+          onClick={() => setSpeed((s) => nextPlaybackSpeed(s))}
+          aria-label={`播放速度 ${speed} 倍，点击切换`}
+        >
+          {speed}x
+        </button>
       </div>
-      <button
-        type="button"
-        className="podcast-card-speed"
-        onClick={() => setSpeed((s) => nextPlaybackSpeed(s))}
-        aria-label={`播放速度 ${speed} 倍，点击切换`}
-      >
-        {speed}x
-      </button>
       <span className="podcast-card-source">{model.showName ?? "his.fm"}</span>
     </div>
   );
