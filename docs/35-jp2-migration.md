@@ -77,7 +77,7 @@ such as the R2 image origin must match production; runtime secrets must not be
 build inputs.
 
 Reuse `nocoo/base-ci/.github/workflows/deploy-docker.yml` at the inspected commit
-`0394178ebcff0418c442d84a84119220f31f8987`. It verifies successful main CI, rechecks
+`ac635753a869cb85fad1f52aae4ccbd6119f3cae`. It verifies successful main CI, rechecks
 the source before deployment, records image digests, and deploys those digests.
 Its remote verification runs after replacement: failure does not automatically
 restore the old container. Deployment records live in `.base-ci-releases/`.
