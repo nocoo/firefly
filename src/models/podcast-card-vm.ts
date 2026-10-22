@@ -1,20 +1,43 @@
 import type { HisFmPublishedCard } from "@/lib/hisfm/card-schema";
+import {
+  parseHexColor,
+  pickReadableOnAccent,
+  resolveCardAccent,
+  resolveCardTint,
+} from "@/lib/hisfm/theme-colors";
 
 export const PLAYBACK_SPEEDS = [1, 1.5, 2] as const;
 export type PlaybackSpeed = (typeof PLAYBACK_SPEEDS)[number];
 
+export interface PodcastCoverViewModel {
+  src: string;
+  srcSet: string | undefined;
+  sizes: string | undefined;
+  width: number;
+  height: number;
+}
+
+export interface PodcastPlayerViewModel {
+  audioUrl: string;
+  mime: string;
+  durationSeconds: number;
+  durationLabel: string;
+}
+
 export interface PodcastCardViewModel {
   episodePageUrl: string;
   title: string;
-  summary: string | null;
-  seriesLabel: string | null;
-  coverUrl: string;
+  description: string | null;
+  episodeLabel: string | null;
+  column: string | null;
+  showName: string | null;
+  themeName: string | null;
+  cover: PodcastCoverViewModel;
   frameSvgUrl: string | null;
   accentColor: string | null;
-  audioUrl: string;
-  audioType: string;
-  durationSeconds: number;
-  durationLabel: string;
+  playButtonColor: string;
+  cardTint: string | null;
+  player: PodcastPlayerViewModel | null;
 }
 
 export function formatPlaybackTime(seconds: number): string {
@@ -44,53 +67,75 @@ export function nextPlaybackSpeed(current: PlaybackSpeed): PlaybackSpeed {
   return PLAYBACK_SPEEDS[next];
 }
 
-function resolveSeriesLabel(card: HisFmPublishedCard): string | null {
-  if (card.series?.trim()) return card.series.trim();
-  if (card.episode_label?.trim()) return card.episode_label.trim();
-  const show = (card.show ?? card.column)?.trim();
-  if (!show) return null;
-  if (card.episode !== undefined && card.episode !== "") {
-    const ep =
-      typeof card.episode === "number"
-        ? String(card.episode).padStart(2, "0")
-        : String(card.episode);
-    return `${show} EP.${ep}`;
+export function buildCoverSrcSet(
+  cover: HisFmPublishedCard["cover"],
+): PodcastCoverViewModel {
+  const display = 112;
+  const sizesList = cover.sizes;
+  if (sizesList && sizesList.length > 0) {
+    const sorted = [...sizesList].sort((a, b) => a.width - b.width);
+    const srcSet = sorted.map((s) => `${s.url} ${s.width}w`).join(", ");
+    const src =
+      sorted.find((s) => s.width >= 320)?.url ??
+      sorted[sorted.length - 1]?.url ??
+      cover.url;
+    return {
+      src,
+      srcSet,
+      sizes: "(max-width: 640px) 88px, 112px",
+      width: display,
+      height: display,
+    };
   }
-  return show;
-}
-
-function resolveCoverUrl(card: HisFmPublishedCard): string {
-  const cover = card.cover;
-  return (
-    cover.w400 ??
-    cover.w200 ??
-    cover.url ??
-    cover.w1400 ??
-    ""
-  );
-}
-
-function resolveAccent(card: HisFmPublishedCard): string | null {
-  const brand = card.brand;
-  if (!brand) return null;
-  return brand.accent ?? brand.accent_color ?? brand.colors?.[0] ?? null;
+  return {
+    src: cover.url,
+    srcSet: undefined,
+    sizes: undefined,
+    width: display,
+    height: display,
+  };
 }
 
 export function buildPodcastCardViewModel(
   card: HisFmPublishedCard,
+  isDark: boolean,
 ): PodcastCardViewModel {
-  const durationSeconds = card.duration;
+  const theme = card.theme ?? {};
+  const accent =
+    resolveCardAccent(theme, isDark) ??
+    parseHexColor(theme.accent) ??
+    null;
+  const playButtonColor = accent
+    ? pickReadableOnAccent(accent)
+    : "#FFFFFF";
+
+  const durationSeconds = card.duration ?? 0;
+  const player =
+    card.audio?.url && card.audio.mime
+      ? {
+          audioUrl: card.audio.url,
+          mime: card.audio.mime,
+          durationSeconds,
+          durationLabel:
+            durationSeconds > 0
+              ? formatPlaybackTime(durationSeconds)
+              : "--:--",
+        }
+      : null;
+
   return {
-    episodePageUrl: card.url,
+    episodePageUrl: card.page_url,
     title: card.title,
-    summary: card.summary?.trim() ? card.summary.trim() : null,
-    seriesLabel: resolveSeriesLabel(card),
-    coverUrl: resolveCoverUrl(card),
-    frameSvgUrl: card.cover.frame_svg ?? card.cover.frame ?? null,
-    accentColor: resolveAccent(card),
-    audioUrl: card.audio.url,
-    audioType: card.audio.type,
-    durationSeconds,
-    durationLabel: formatPlaybackTime(durationSeconds),
+    description: card.description?.trim() ? card.description.trim() : null,
+    episodeLabel: card.episode_label?.trim() ?? null,
+    column: card.column?.trim() ?? null,
+    showName: card.show?.trim() ?? null,
+    themeName: theme.name?.trim() ?? null,
+    cover: buildCoverSrcSet(card.cover),
+    frameSvgUrl: card.cover.frame_svg ?? null,
+    accentColor: accent,
+    playButtonColor,
+    cardTint: resolveCardTint(theme.paper, isDark),
+    player,
   };
 }
