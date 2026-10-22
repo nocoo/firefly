@@ -75,6 +75,7 @@ const samplePost: PostWithAgent = createMockPostWithAgent({
   reference_title: null,
   reference_description: null,
   reference_image: null,
+  podcast_url: null,
   published_at: null,
   created_at: now,
   updated_at: now,

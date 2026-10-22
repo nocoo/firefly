@@ -286,6 +286,24 @@ describe("post entity handlers", () => {
       expect(createCallArgs).not.toHaveProperty("ai_agent_id");
     });
 
+    it("maps human_id and podcast_url on create", async () => {
+      vi.mocked(PostService.create).mockResolvedValue(samplePostWithAgent);
+      const episode =
+        "https://his.fm/episodes/manager-notes/what-the-reorg-did-not-write";
+
+      await handlers.handleCreate(ctx, {
+        title: "New",
+        slug: "new",
+        content: "body",
+        human_id: "human-1",
+        podcast_url: episode,
+      });
+
+      const createCallArgs = vi.mocked(PostService.create).mock.calls[0][1];
+      expect(createCallArgs).toHaveProperty("humanId", "human-1");
+      expect(createCallArgs).toHaveProperty("podcastUrl", episode);
+    });
+
     it("omits tagIds when no tag_ids provided", async () => {
       vi.mocked(PostService.create).mockResolvedValue(samplePostWithAgent);
 
@@ -329,6 +347,19 @@ describe("post entity handlers", () => {
       const callArgs = vi.mocked(PostService.update).mock.calls[0][2];
       expect(callArgs).toHaveProperty("aiAgentId", "agent-x");
       expect(callArgs).not.toHaveProperty("ai_agent_id");
+    });
+
+    it("maps podcast_url null to clear on update", async () => {
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
+      vi.mocked(PostService.update).mockResolvedValue(samplePostWithAgent);
+
+      await handlers.handleUpdate(ctx, {
+        slug: "test-post",
+        podcast_url: null,
+      });
+
+      const callArgs = vi.mocked(PostService.update).mock.calls[0][2];
+      expect(callArgs).toHaveProperty("podcastUrl", null);
     });
 
     it("maps new_slug to slug and tag_ids to tagIds", async () => {

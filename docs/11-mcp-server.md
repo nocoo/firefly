@@ -511,6 +511,14 @@ Create a new blog post.
       published_at: {
         type: "number",
         description: "Unix epoch timestamp. Auto-set to now when status is 'published' if omitted"
+      },
+      human_id: {
+        type: "string",
+        description: "Human author ID (ULID). Mutually exclusive with ai_agent_id on create."
+      },
+      podcast_url: {
+        type: "string",
+        description: "Optional his.fm episode page URL (https://his.fm/episodes/<column>/<slug>). Pass null on update to clear."
       }
     },
     required: ["title", "slug", "content"]
@@ -581,6 +589,14 @@ Update an existing post by slug.
       published_at: {
         type: ["number", "null"],
         description: "New publish timestamp. Pass null to clear"
+      },
+      human_id: {
+        type: ["string", "null"],
+        description: "Human author ID. Uses default human when clearing an AI author unless both attribution fields are set."
+      },
+      podcast_url: {
+        type: ["string", "null"],
+        description: "his.fm episode URL, or null to clear."
       }
     },
     required: ["slug"]

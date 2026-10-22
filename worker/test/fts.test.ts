@@ -371,6 +371,7 @@ describe('handleFtsSearch', () => {
           created_at: 1704067200000,
           updated_at: 1704067200000,
           reference_url: null,
+          podcast_url: null,
           reference_title: null,
           reference_description: null,
           reference_image: null,

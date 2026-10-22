@@ -95,6 +95,7 @@ function convertPost(p: Post): ExportedPost {
     reference_title: p.reference_title,
     reference_description: p.reference_description,
     reference_image: p.reference_image,
+    podcast_url: p.podcast_url,
     published_at: nullableEpochToIso(p.published_at),
     created_at: epochToIso(p.created_at),
     updated_at: epochToIso(p.updated_at),

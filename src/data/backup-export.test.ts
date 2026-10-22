@@ -43,6 +43,7 @@ const samplePost: Post = {
   reference_title: null,
   reference_description: null,
   reference_image: null,
+  podcast_url: null,
   ai_agent_id: null,
   human_id: "human-1",
   published_at: 1774483200,

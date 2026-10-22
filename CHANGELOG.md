@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.19.0 (2026-10-22)
+
+- feat: link posts to his.fm episodes with native podcast card
+- feat(mcp): podcast_url and human_id on create_post/update_post
+- feat(db): add posts.podcast_url migration (run `bun run migrate` before deploy)
+
+
 ## v2.18.1 (2026-10-21)
 
 - feat: add admin headers and loading states

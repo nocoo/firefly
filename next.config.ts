@@ -52,6 +52,8 @@ const nextConfig: NextConfig = {
   // The default proxy adapter strips these before calling our handler.
   skipProxyUrlNormalize: true,
   allowedDevOrigins: (process.env.ALLOWED_DEV_ORIGINS ?? "").split(",").filter(Boolean),
+  devIndicators:
+    process.env.SCREENSHOT_CAPTURE === "true" ? false : undefined,
   env: {
     NEXT_PUBLIC_APP_VERSION: pkg.version,
   },
@@ -63,6 +65,8 @@ const nextConfig: NextConfig = {
         protocol: assetsOrigin.protocol,
         hostname: assetsOrigin.hostname,
       },
+      { protocol: "https", hostname: "f.no.mt" },
+      { protocol: "https", hostname: "his.fm" },
     ],
   },
   // TypeScript 7.0 no longer ships lib/typescript.js (classic Compiler API).
@@ -152,6 +156,7 @@ const nextConfig: NextConfig = {
               buildScriptSrc(),
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
+              "media-src 'self' https://f.no.mt https://his.fm",
               "font-src 'self' https:",
               "connect-src 'self' https: wss:",
               "frame-ancestors 'none'",

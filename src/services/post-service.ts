@@ -28,6 +28,7 @@ import type {
 import { invalidateCategoryCache } from "@/data/entities/category";
 import { invalidateTagCache } from "@/data/entities/tag";
 import { getDefaultHumanIdUncached } from "@/data/entities/human";
+import { assertValidPodcastUrlInput } from "@/services/post-field-validation";
 
 export class PostAttributionError extends Error {
   constructor(message: string) {
@@ -136,6 +137,7 @@ export const PostService = {
     input: CreatePostServiceInput,
   ): Promise<PostWithCategory> {
     const { tagIds, ...postInput } = input;
+    assertValidPodcastUrlInput(postInput.podcastUrl);
     const attribution = await resolveCreateAttribution(db, postInput);
 
     // Primary write — throws on failure
@@ -193,6 +195,7 @@ export const PostService = {
     const existing = await getPostById(db, id);
     if (!existing) return null;
 
+    assertValidPodcastUrlInput(postInput.podcastUrl);
     const attribution = await resolveUpdateAttribution(db, existing, postInput);
 
     // Primary write — always write both attribution columns together

@@ -47,6 +47,7 @@ export function createMockPost(overrides: Partial<Post> = {}): Post {
     reference_title: null,
     reference_description: null,
     reference_image: null,
+    podcast_url: null,
     published_at: 1700000000,
     created_at: 1700000000,
     updated_at: 1700000000,

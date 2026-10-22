@@ -54,7 +54,7 @@ vi.mock("@/data/entities/post", () => {
     published_at: 0, created_at: 0, updated_at: 0,
     wp_id: null, wp_permalink: null, comment_enabled: true,
     reference_url: null, reference_title: null,
-    reference_description: null, reference_image: null,
+    reference_description: null, reference_image: null, podcast_url: null,
   };
   const tag = { id: "t-1", name: "TypeScript", slug: "typescript", post_count: 5, created_at: 0, updated_at: 0 };
   return {
@@ -75,7 +75,7 @@ vi.mock("@/services/post-service", () => {
     published_at: 0, created_at: 0, updated_at: 0,
     wp_id: null, wp_permalink: null, comment_enabled: true,
     reference_url: null, reference_title: null,
-    reference_description: null, reference_image: null,
+    reference_description: null, reference_image: null, podcast_url: null,
   };
   return {
     PostService: {

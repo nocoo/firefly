@@ -7,6 +7,8 @@ interface ArticleBodyProps {
   header?: ReactNode;
   /** Optional featured image element */
   featuredImage?: ReactNode;
+  /** Optional podcast episode card — after header, before featured image */
+  podcastCard?: ReactNode;
   /** Optional reference URL card — renders between featured image and content */
   referenceCard?: ReactNode;
   /** Optional footer to render below content (tags, etc.) */
@@ -26,6 +28,7 @@ export function ArticleBody({
   html,
   header,
   featuredImage,
+  podcastCard,
   referenceCard,
   footer,
   className,
@@ -33,6 +36,7 @@ export function ArticleBody({
   return (
     <article className={className}>
       {header}
+      {podcastCard}
       {featuredImage}
       {referenceCard}
       {html ? (

@@ -19,6 +19,7 @@ import { ok, error } from "../framework/response";
 import { POST_EXPORT_FORMATS, POST_EXPORT_SITE_URL, renderPostExport } from "@/lib/post-export";
 import { postPath } from "@/lib/seo";
 import { absoluteWebsiteImageUrl } from "@/lib/website/formatter";
+import { mcpPodcastUrlSchema } from "@/lib/mcp/podcast-url-schema";
 
 // ---------------------------------------------------------------------------
 // Extra tool: unfurl_reference (two modes: preview + save)
@@ -174,6 +175,10 @@ export const postEntity: EntityConfig<Post> = {
       featured_image: z.string().optional(),
       published_at: z.number().optional(),
       ai_agent_id: z.string().optional().describe("AI author ID. Optional in full mode; omit for normal (human) posts."),
+      human_id: z.string().optional().describe("Human author ID. Mutually exclusive with ai_agent_id."),
+      podcast_url: mcpPodcastUrlSchema.describe(
+        "his.fm episode page URL (https://his.fm/episodes/<column>/<slug>), or null to clear.",
+      ),
     },
     update: {
       title: z.string().optional(),
@@ -192,6 +197,10 @@ export const postEntity: EntityConfig<Post> = {
       reference_description: z.string().nullable().optional(),
       reference_image: z.string().nullable().optional(),
       ai_agent_id: z.string().nullable().optional().describe("AI author ID. Set to reassign, null to clear."),
+      human_id: z.string().nullable().optional().describe("Human author ID. Set to reassign; null uses default human when clearing an AI author."),
+      podcast_url: mcpPodcastUrlSchema.describe(
+        "his.fm episode page URL, or null to clear.",
+      ),
     },
   },
   hooks: {
@@ -200,7 +209,16 @@ export const postEntity: EntityConfig<Post> = {
       tags: await getPostTags(ctx.db, post.id),
     }),
     mapCreateInput: (args) => {
-      const { tag_ids, category_id, featured_image, published_at, ai_agent_id, ...rest } = args;
+      const {
+        tag_ids,
+        category_id,
+        featured_image,
+        published_at,
+        ai_agent_id,
+        human_id,
+        podcast_url,
+        ...rest
+      } = args;
       return {
         ...rest,
         ...(tag_ids !== undefined && { tagIds: tag_ids }),
@@ -208,6 +226,8 @@ export const postEntity: EntityConfig<Post> = {
         ...(featured_image !== undefined && { featuredImage: featured_image }),
         ...(published_at !== undefined && { publishedAt: published_at }),
         ...(ai_agent_id !== undefined && { aiAgentId: ai_agent_id }),
+        ...(human_id !== undefined && { humanId: human_id }),
+        ...(podcast_url !== undefined && { podcastUrl: podcast_url }),
       };
     },
     mapUpdateInput: (args) => {
@@ -222,6 +242,8 @@ export const postEntity: EntityConfig<Post> = {
         reference_description,
         reference_image,
         ai_agent_id,
+        human_id,
+        podcast_url,
         ...rest
       } = args;
       return {
@@ -236,6 +258,8 @@ export const postEntity: EntityConfig<Post> = {
         ...(reference_description !== undefined && { referenceDescription: reference_description }),
         ...(reference_image !== undefined && { referenceImage: reference_image }),
         ...(ai_agent_id !== undefined && { aiAgentId: ai_agent_id }),
+        ...(human_id !== undefined && { humanId: human_id }),
+        ...(podcast_url !== undefined && { podcastUrl: podcast_url }),
       };
     },
   },

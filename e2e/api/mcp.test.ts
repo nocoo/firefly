@@ -444,6 +444,68 @@ describe.concurrent("MCP Main Endpoint — Tool Calls", () => {
     expect(text).toContain("not both");
   });
 
+  it("create_post rejects invalid podcast_url and persists valid episode URL", async () => {
+    const slug = `e2e-podcast-${Date.now()}`;
+    const episode =
+      "https://his.fm/episodes/manager-notes/what-the-reorg-did-not-write";
+
+    const bad = await mcpRequest(
+      {
+        jsonrpc: "2.0",
+        id: 40,
+        method: "tools/call",
+        params: {
+          name: "create_post",
+          arguments: {
+            title: "Podcast URL test",
+            slug,
+            content: "body",
+            status: "draft",
+            podcast_url: "https://example.com/not-hisfm",
+          },
+        },
+      },
+      accessToken,
+    );
+    expect(bad.status).toBe(200);
+    const badData = await bad.json();
+    expect(badData.result.isError).toBe(true);
+
+    const createRes = await mcpRequest(
+      {
+        jsonrpc: "2.0",
+        id: 41,
+        method: "tools/call",
+        params: {
+          name: "create_post",
+          arguments: {
+            title: "Podcast URL test",
+            slug,
+            content: "body",
+            status: "draft",
+            podcast_url: episode,
+          },
+        },
+      },
+      accessToken,
+    );
+    expect(createRes.status).toBe(200);
+    const createData = await createRes.json();
+    expect(createData.result.isError).toBeUndefined();
+    const created = JSON.parse(createData.result.content[0].text);
+    expect(created.podcast_url).toBe(episode);
+
+    await mcpRequest(
+      {
+        jsonrpc: "2.0",
+        id: 42,
+        method: "tools/call",
+        params: { name: "delete_post", arguments: { slug } },
+      },
+      accessToken,
+    );
+  });
+
   it("list_posts omits content by default (projection)", async () => {
     const slug = `e2e-proj-${Date.now()}`;
 

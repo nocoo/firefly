@@ -24,6 +24,7 @@ import { Comments } from "@/components/blog/comments";
 import { ArticleBody } from "@/components/blog/article-body";
 import { ContentImageLightbox } from "@/components/blog/content-image-lightbox";
 import { ReferenceCard } from "@/components/blog/reference-card";
+import { PodcastCardSection } from "@/components/blog/podcast-card-section";
 import { ArticleNav } from "@/components/blog/article-nav";
 import { CodeBlockActions } from "@/components/blog/code-block-actions";
 import { ArticleToc } from "@/components/blog/article-toc";
@@ -209,6 +210,11 @@ export default async function PostPage({ params }: PostPageProps) {
               )}
             </div>
           </header>
+        }
+        podcastCard={
+          post.podcast_url ? (
+            <PodcastCardSection podcastUrl={post.podcast_url} />
+          ) : undefined
         }
         featuredImage={
           post.featured_image ? (
