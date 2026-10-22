@@ -9,7 +9,83 @@ vi.mock("next/cache", () => ({
   unstable_cache: (fn: () => Promise<unknown>) => cacheFn(fn),
 }));
 
-import { loadHisFmPodcastCard } from "./fetch-card.server";
+import {
+  fetchHisFmCardForCache,
+  HisFmCardCacheMissError,
+  loadHisFmPodcastCard,
+} from "./fetch-card.server";
+
+const EPISODE =
+  "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless";
+
+describe("fetchHisFmCardForCache", () => {
+  const fetchMock = vi.fn();
+
+  beforeEach(() => {
+    vi.stubGlobal("fetch", fetchMock);
+    fetchMock.mockReset();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("returns null for HTTP 404 and not_found JSON", async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 404 });
+    expect(await fetchHisFmCardForCache(EPISODE)).toBeNull();
+
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ v: 1, status: "not_found" }),
+    });
+    expect(await fetchHisFmCardForCache(EPISODE)).toBeNull();
+  });
+
+  it("throws on invalid JSON and timeout", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => {
+        throw new SyntaxError("bad json");
+      },
+    });
+    await expect(fetchHisFmCardForCache(EPISODE)).rejects.toBeInstanceOf(
+      HisFmCardCacheMissError,
+    );
+
+    fetchMock.mockRejectedValueOnce(new DOMException("Aborted", "AbortError"));
+    await expect(fetchHisFmCardForCache(EPISODE)).rejects.toBeInstanceOf(
+      HisFmCardCacheMissError,
+    );
+  });
+
+  it("throws on 503 and invalid published payload", async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 503 });
+    await expect(fetchHisFmCardForCache(EPISODE)).rejects.toBeInstanceOf(
+      HisFmCardCacheMissError,
+    );
+
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ v: 1, status: "published", title: "incomplete" }),
+    });
+    await expect(fetchHisFmCardForCache(EPISODE)).rejects.toBeInstanceOf(
+      HisFmCardCacheMissError,
+    );
+  });
+
+  it("returns card on success", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockHisFmCardPayload(),
+    });
+    const card = await fetchHisFmCardForCache(EPISODE);
+    expect(card?.title).toBeTruthy();
+  });
+});
 
 describe("loadHisFmPodcastCard", () => {
   const fetchMock = vi.fn();
@@ -36,33 +112,14 @@ describe("loadHisFmPodcastCard", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("returns null when response json fails schema", async () => {
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({ v: 1, status: "published", title: "no audio" }),
-    });
-    expect(
-      await loadHisFmPodcastCard(
-        "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless",
-      ),
-    ).toBeNull();
-  });
-
-  it("returns null on HTTP error", async () => {
-    fetchMock.mockResolvedValue({ ok: false, status: 404 });
-    const result = await loadHisFmPodcastCard(
-      "https://his.fm/episodes/manager-notes/what-the-reorg-did-not-write",
-    );
-    expect(result).toBeNull();
+  it("returns null to the page when cache fetch throws", async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 503 });
+    expect(await loadHisFmPodcastCard(EPISODE)).toBeNull();
   });
 
   it("returns null when fetch rejects redirects", async () => {
     fetchMock.mockRejectedValue(new TypeError("redirected"));
-    const result = await loadHisFmPodcastCard(
-      "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless",
-    );
-    expect(result).toBeNull();
+    expect(await loadHisFmPodcastCard(EPISODE)).toBeNull();
   });
 
   it("uses redirect error mode", async () => {
@@ -71,9 +128,7 @@ describe("loadHisFmPodcastCard", () => {
       status: 200,
       json: async () => mockHisFmCardPayload(),
     });
-    await loadHisFmPodcastCard(
-      "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless",
-    );
+    await loadHisFmPodcastCard(EPISODE);
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining("his.fm/api/card?url="),
       expect.objectContaining({ redirect: "error" }),
@@ -86,29 +141,15 @@ describe("loadHisFmPodcastCard", () => {
       status: 200,
       json: async () => mockHisFmCardPayload(),
     });
-    const result = await loadHisFmPodcastCard(
-      "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless",
-    );
-    expect(result?.title).toBeTruthy();
+    const result = await loadHisFmPodcastCard(EPISODE);
     expect(result?.page_url).toContain("his.fm");
-  });
-
-  it("returns null when fetch aborts", async () => {
-    fetchMock.mockRejectedValue(new DOMException("Aborted", "AbortError"));
-    const result = await loadHisFmPodcastCard(
-      "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless",
-    );
-    expect(result).toBeNull();
   });
 
   it("returns null when unstable_cache throws", async () => {
     cacheFn.mockImplementationOnce(
       () => () => Promise.reject(new Error("cache down")),
     );
-    const result = await loadHisFmPodcastCard(
-      "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless",
-    );
-    expect(result).toBeNull();
+    expect(await loadHisFmPodcastCard(EPISODE)).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

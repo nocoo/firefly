@@ -12,7 +12,29 @@ const REVALIDATE_SECONDS = 300;
 const FETCH_TIMEOUT_MS = 3_000;
 const CACHE_TAG = "hisfm-podcast-card";
 
-async function fetchCardUncached(
+/** Thrown for transient failures — must not be written into unstable_cache. */
+export class HisFmCardCacheMissError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "HisFmCardCacheMissError";
+  }
+}
+
+function isNotFoundPayload(json: unknown): boolean {
+  return (
+    typeof json === "object" &&
+    json !== null &&
+    "v" in json &&
+    "status" in json &&
+    (json as { status: string }).status === "not_found"
+  );
+}
+
+/**
+ * Fetch card for cache storage. Returns null only for definitive not-found (HTTP 404
+ * or protocol not_found). Throws on transient errors so stale cache can serve.
+ */
+export async function fetchHisFmCardForCache(
   podcastUrl: string,
 ): Promise<HisFmPublishedCard | null> {
   const cardUrl = `${HISFM_CARD_API}?url=${encodeURIComponent(podcastUrl)}`;
@@ -25,23 +47,32 @@ async function fetchCardUncached(
       redirect: "error",
       next: { revalidate: REVALIDATE_SECONDS },
     });
+    if (response.status === 404) return null;
     if (!response.ok) {
-      console.warn(
-        `[hisfm] card fetch failed (${response.status}) for ${podcastUrl}`,
+      throw new HisFmCardCacheMissError(
+        `hisfm card HTTP ${response.status}`,
       );
-      return null;
     }
-    const json: unknown = await response.json();
+    let json: unknown;
+    try {
+      json = await response.json();
+    } catch {
+      throw new HisFmCardCacheMissError("hisfm card invalid JSON");
+    }
+    if (isNotFoundPayload(json)) return null;
     const card = parseHisFmCardPayload(json);
     if (!card) {
-      console.warn(`[hisfm] card payload invalid or not published for ${podcastUrl}`);
-      return null;
+      throw new HisFmCardCacheMissError("hisfm card invalid published payload");
     }
     return card;
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.warn(`[hisfm] card fetch error for ${podcastUrl}: ${msg}`);
-    return null;
+    if (err instanceof HisFmCardCacheMissError) throw err;
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new HisFmCardCacheMissError("hisfm card fetch timeout");
+    }
+    throw new HisFmCardCacheMissError(
+      err instanceof Error ? err.message : String(err),
+    );
   } finally {
     clearTimeout(timeout);
   }
@@ -49,7 +80,7 @@ async function fetchCardUncached(
 
 function cachedFetch(podcastUrl: string): Promise<HisFmPublishedCard | null> {
   return unstable_cache(
-    () => fetchCardUncached(podcastUrl),
+    () => fetchHisFmCardForCache(podcastUrl),
     ["hisfm-card-v1", podcastUrl],
     { revalidate: REVALIDATE_SECONDS, tags: [CACHE_TAG] },
   )();
@@ -72,7 +103,7 @@ export async function loadHisFmPodcastCard(
     return await cachedFetch(trimmed);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.warn(`[hisfm] card cache error for ${trimmed}: ${msg}`);
+    console.warn(`[hisfm] card cache miss for ${trimmed}: ${msg}`);
     return null;
   }
 }
