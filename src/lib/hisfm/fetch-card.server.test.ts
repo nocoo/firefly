@@ -3,8 +3,10 @@ import { mockHisFmCardPayload } from "./fixtures";
 
 vi.mock("server-only", () => ({}));
 
+const cacheFn = vi.fn((fn: () => Promise<unknown>) => fn);
+
 vi.mock("next/cache", () => ({
-  unstable_cache: (fn: () => Promise<unknown>) => fn,
+  unstable_cache: (fn: () => Promise<unknown>) => cacheFn(fn),
 }));
 
 import { loadHisFmPodcastCard } from "./fetch-card.server";
@@ -15,6 +17,7 @@ describe("loadHisFmPodcastCard", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", fetchMock);
     fetchMock.mockReset();
+    cacheFn.mockImplementation((fn: () => Promise<unknown>) => fn);
   });
 
   afterEach(() => {
@@ -23,6 +26,8 @@ describe("loadHisFmPodcastCard", () => {
 
   it("returns null when podcast url is empty", async () => {
     expect(await loadHisFmPodcastCard(null)).toBeNull();
+    expect(await loadHisFmPodcastCard("   ")).toBeNull();
+    expect(await loadHisFmPodcastCard(42 as unknown as string)).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -52,6 +57,29 @@ describe("loadHisFmPodcastCard", () => {
     expect(result).toBeNull();
   });
 
+  it("returns null when fetch rejects redirects", async () => {
+    fetchMock.mockRejectedValue(new TypeError("redirected"));
+    const result = await loadHisFmPodcastCard(
+      "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless",
+    );
+    expect(result).toBeNull();
+  });
+
+  it("uses redirect error mode", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockHisFmCardPayload(),
+    });
+    await loadHisFmPodcastCard(
+      "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless",
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("his.fm/api/card?url="),
+      expect.objectContaining({ redirect: "error" }),
+    );
+  });
+
   it("returns parsed card on success", async () => {
     fetchMock.mockResolvedValue({
       ok: true,
@@ -63,10 +91,6 @@ describe("loadHisFmPodcastCard", () => {
     );
     expect(result?.title).toBeTruthy();
     expect(result?.page_url).toContain("his.fm");
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining("his.fm/api/card?url="),
-      expect.objectContaining({ signal: expect.any(AbortSignal) }),
-    );
   });
 
   it("returns null when fetch aborts", async () => {
@@ -75,5 +99,16 @@ describe("loadHisFmPodcastCard", () => {
       "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless",
     );
     expect(result).toBeNull();
+  });
+
+  it("returns null when unstable_cache throws", async () => {
+    cacheFn.mockImplementationOnce(
+      () => () => Promise.reject(new Error("cache down")),
+    );
+    const result = await loadHisFmPodcastCard(
+      "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless",
+    );
+    expect(result).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

@@ -22,6 +22,7 @@ async function fetchCardUncached(
     const response = await fetch(cardUrl, {
       signal: controller.signal,
       headers: { Accept: "application/json" },
+      redirect: "error",
       next: { revalidate: REVALIDATE_SECONDS },
     });
     if (!response.ok) {
@@ -61,12 +62,19 @@ function cachedFetch(podcastUrl: string): Promise<HisFmPublishedCard | null> {
 export async function loadHisFmPodcastCard(
   podcastUrl: string | null | undefined,
 ): Promise<HisFmPublishedCard | null> {
-  if (!podcastUrl?.trim()) return null;
-  if (!isValidPodcastEpisodeUrl(podcastUrl)) {
-    console.warn(`[hisfm] invalid podcast_url on post: ${podcastUrl}`);
+  if (typeof podcastUrl !== "string" || !podcastUrl.trim()) return null;
+  const trimmed = podcastUrl.trim();
+  if (!isValidPodcastEpisodeUrl(trimmed)) {
+    console.warn(`[hisfm] invalid podcast_url on post: ${trimmed}`);
     return null;
   }
-  return cachedFetch(podcastUrl);
+  try {
+    return await cachedFetch(trimmed);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`[hisfm] card cache error for ${trimmed}: ${msg}`);
+    return null;
+  }
 }
 
 export { CACHE_TAG as HISFM_PODCAST_CARD_CACHE_TAG };
