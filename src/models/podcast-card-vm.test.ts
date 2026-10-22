@@ -45,4 +45,34 @@ describe("podcast-card-vm", () => {
     const vm = buildPodcastCardViewModel(card);
     expect(vm.seriesLabel).toBe("主理人手札 EP.03");
   });
+
+  it("prefers episode_label and cover size fallbacks", () => {
+    const card = parseHisFmCardPayload(
+      mockHisFmCardPayload({
+        series: undefined,
+        episode_label: "主理人手札 EP.03",
+        summary: "   ",
+        cover: {
+          url: "https://f.no.mt/covers/full.jpg",
+          w200: "https://f.no.mt/covers/200.jpg",
+        },
+      }),
+    )!;
+    const vm = buildPodcastCardViewModel(card);
+    expect(vm.seriesLabel).toBe("主理人手札 EP.03");
+    expect(vm.coverUrl).toBe("https://f.no.mt/covers/200.jpg");
+    expect(vm.summary).toBeNull();
+  });
+
+  it("handles show name without episode number", () => {
+    const card = parseHisFmCardPayload(
+      mockHisFmCardPayload({
+        series: undefined,
+        column: undefined,
+        show: "主理人手札",
+        episode: undefined,
+      }),
+    )!;
+    expect(buildPodcastCardViewModel(card).seriesLabel).toBe("主理人手札");
+  });
 });

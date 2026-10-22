@@ -26,6 +26,24 @@ describe("loadHisFmPodcastCard", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("returns null for malformed stored podcast_url", async () => {
+    expect(await loadHisFmPodcastCard("https://example.com/x")).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("returns null when response json fails schema", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ v: 1, status: "published", title: "no audio" }),
+    });
+    expect(
+      await loadHisFmPodcastCard(
+        "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless",
+      ),
+    ).toBeNull();
+  });
+
   it("returns null on HTTP error", async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 404 });
     const result = await loadHisFmPodcastCard(
