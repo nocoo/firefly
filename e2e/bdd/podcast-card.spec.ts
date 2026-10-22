@@ -94,9 +94,12 @@ test.describe("Feature: his.fm podcast card layout", () => {
       /his\.fm\/episodes\/manager-notes\//,
     );
 
+    const title = page.locator(".podcast-card-title");
+    const box = await title.boundingBox();
+    expect(box).not.toBeNull();
     const [popup] = await Promise.all([
       context.waitForEvent("page"),
-      page.locator(".podcast-card-title").click(),
+      page.mouse.click(box!.x + 8, box!.y + 8),
     ]);
     await expect(popup).toHaveURL(/his\.fm\/episodes\//);
     await popup.close();
