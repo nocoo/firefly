@@ -52,7 +52,7 @@
     "@radix-ui/react-alert-dialog": "1.2.1",
     "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/typography": "^0.5.20",
-    "ai": "7.0.150",
+    "ai": "7.0.152",
     "cheerio": "1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -94,7 +94,7 @@
     "vite": ">=8.3.3",
     "sharp": ">=0.35.5",
     "undici": "7.30.0",
-    "ai": "7.0.150",
+    "ai": "7.0.152",
     "@radix-ui/react-alert-dialog": "1.2.1"
   },
   "lint-staged": {
