@@ -31,7 +31,7 @@ describe("production container", () => {
 
   it("uses the native stable typecheck and webpack build without canary workarounds", () => {
     const pkg = JSON.parse(source("package.json"));
-    expect(pkg.dependencies.next).toBe("16.4.2");
+    expect(pkg.dependencies.next).toBe("16.4.3");
     expect(pkg.scripts.build).toBe("next typegen && tsc --noEmit && next build --webpack");
     expect(dockerfile).toContain("npm run build");
     expect(dockerfile).not.toMatch(/bun (?:--bun|run build)|ignoreBuildErrors|canary|NEXT_PRIVATE_/);
