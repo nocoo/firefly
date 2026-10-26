@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.19.4 (2026-10-26)
+
+- ci: Tailscale WIF deploy to jp2
+
+
 ## v2.19.1 (2026-10-22)
 
 - fix: inline podcast player below article cover
