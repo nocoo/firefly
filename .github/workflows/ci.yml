@@ -12,7 +12,7 @@ jobs:
   # L1 + G1 + G2 — Core quality gate from base-ci
   # ─────────────────────────────────────────────────────
   quality:
-    uses: nocoo/base-ci/.github/workflows/quality.yml@ac635753a869cb85fad1f52aae4ccbd6119f3cae  # main 2026-10-22
+    uses: nocoo/base-ci/.github/workflows/quality.yml@af9a2b3f82c367d6eb6def5c3583ac717e0868ad  # main 2026-10-26
     with:
       runtime-version: "1.2.15"
       install-policy: "blocked"
@@ -27,7 +27,7 @@ jobs:
   # ─────────────────────────────────────────────────────
   api-e2e:
     name: "L2 API E2E"
-    uses: nocoo/base-ci/.github/workflows/test-job.yml@ac635753a869cb85fad1f52aae4ccbd6119f3cae  # main 2026-10-22
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@af9a2b3f82c367d6eb6def5c3583ac717e0868ad  # main 2026-10-26
     with:
       runtime-version: "1.2.15"
       install-policy: "project"
@@ -44,7 +44,7 @@ jobs:
   # ─────────────────────────────────────────────────────
   browser-e2e:
     name: "L3 Browser E2E"
-    uses: nocoo/base-ci/.github/workflows/test-job.yml@ac635753a869cb85fad1f52aae4ccbd6119f3cae  # main 2026-10-22
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@af9a2b3f82c367d6eb6def5c3583ac717e0868ad  # main 2026-10-26
     with:
       runtime-version: "1.2.15"
       install-policy: "project"
@@ -62,7 +62,7 @@ jobs:
   # ─────────────────────────────────────────────────────
   worker-tests:
     name: "Worker Tests"
-    uses: nocoo/base-ci/.github/workflows/test-job.yml@ac635753a869cb85fad1f52aae4ccbd6119f3cae  # main 2026-10-22
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@af9a2b3f82c367d6eb6def5c3583ac717e0868ad  # main 2026-10-26
     with:
       runtime-version: "1.2.15"
       install-policy: "project"
@@ -72,7 +72,7 @@ jobs:
 
   container-e2e:
     name: "Container L2 E2E"
-    uses: nocoo/base-ci/.github/workflows/test-job.yml@ac635753a869cb85fad1f52aae4ccbd6119f3cae  # main 2026-10-22
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@af9a2b3f82c367d6eb6def5c3583ac717e0868ad  # main 2026-10-26
     with:
       runtime-version: "1.2.15"
       install-policy: "project"
@@ -86,7 +86,7 @@ jobs:
 
   release-smoke:
     name: "Release Workflow Smoke"
-    uses: nocoo/base-ci/.github/workflows/workflow-lint.yml@ac635753a869cb85fad1f52aae4ccbd6119f3cae  # main 2026-10-22
+    uses: nocoo/base-ci/.github/workflows/workflow-lint.yml@af9a2b3f82c367d6eb6def5c3583ac717e0868ad  # main 2026-10-26
     with:
       required-reusable-workflow: "nocoo/base-ci/.github/workflows/deploy-docker.yml"
       yamllint: true
