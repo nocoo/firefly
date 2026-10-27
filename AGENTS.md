@@ -18,7 +18,7 @@ This handbook is the contract; hooks, CI and config are enforcement. Raise weake
 
 ## Project Invariants
 
-- Deploy Next.js as a standalone Node container on jp2 through successful main CI and the pinned Docker CD workflow. The owner-approved cutover completed on 2026-10-21; Railway is stopped and retained only for rollback. See [the migration runbook](docs/35-jp2-migration.md). The D1 Worker and migrations remain separate operations. Preserve Google login and the administrator email allowlist.
+- Deploy Next.js as a standalone Node container on jp4 (Tailscale) through successful main CI and the pinned Docker CD workflow into `/data/firefly`. Public DNS may still route `lizheng.blog` to jp2 until steward cutover; until then `x-firefly-origin` and `DEPLOY_ORIGIN_MARKER` remain `jp2`. The owner-approved Railway→jp2 cutover completed on 2026-10-21; Railway is stopped and retained only for rollback. See [the migration runbook](docs/35-jp2-migration.md). The D1 Worker and migrations remain separate operations. Preserve Google login and the administrator email allowlist.
 - `src/data/core/` owns SQL/cache/timestamp primitives; entities are pure CRUD, services orchestrate side effects. A primary failure throws; secondary/post-write hooks log failures without rollback (D6).
 - Entity inputs are camelCase; database columns and external MCP/REST fields are snake_case. Map only at boundaries through entity/route hooks.
 - MCP framework/entity configs retain `afterGet`, best-effort `afterCreate`/`afterUpdate`, `mapCreateInput` and `mapUpdateInput`. Reuse `createMockDb()` from `@/data/core/test-utils`.
@@ -87,13 +87,14 @@ Use per-run local Wrangler/Miniflare SQLite and local R2, with credential/bindin
 
 For an authorized release use `bun run release`; it bumps, commits, tags and pushes. `bun run migrate` defaults to production, while `migrate:local` targets local 8787. Apply schema before dependent code and validate the deployed site/Worker using the [runbook](docs/31-development.md). Documentation updates do not require a version release; main pushes still run Docker CD.
 
-Docker CD uses `firefly / production`, `/opt/firefly`, the `web` Compose service
-and immutable image digests. Railway production application variables are copied
-unchanged to the private host `.env.runtime`, never into build arguments or test
-fixtures. Production uses proxied DNS, Full (strict) TLS and Caddy with the shared
-Cloudflare origin-pull CA: `tls_client_auth=on`, not the custom-certificate
-zone-level AOP toggle. Keep one active application instance/write origin. Do not
-restart Railway while jp2 accepts writes; project deletion needs owner approval.
+Docker CD uses `firefly / production`, `/data/firefly` on jp4, the `web` Compose
+service and immutable image digests. Railway production application variables are
+copied unchanged to the private host `.env.runtime`, never into build arguments or
+test fixtures. Production uses proxied DNS, Full (strict) TLS and Caddy with the
+shared Cloudflare origin-pull CA: `tls_client_auth=on`, not the custom-certificate
+zone-level AOP toggle. Keep one active application instance/write origin until DNS
+cutover; do not restart Railway while jp2 still accepts public writes; project
+deletion needs owner approval.
 Only `lizheng.blog` routes to Firefly; `www` remains a separate redirect Worker.
 The duplicate `origin.lizheng.blog` was retired with owner approval. Do not
 restore it from pre-cutover DNS or Caddy backups. For this file-backed Caddy

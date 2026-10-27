@@ -100,16 +100,18 @@ Next.js 端到端测试使用 `bun run build` 构建后的服务，API 用例结
 
 ## 部署
 
-The production website is `https://lizheng.blog`, hosted by one standalone Node
-container on jp2 since the owner-approved cutover on 2026-10-21. Cloudflare proxies
-the apex to jp2; the independent `www` redirect Worker is unchanged. The duplicate
-`origin.lizheng.blog` DNS and proxy route were subsequently retired with owner
+The production website is `https://lizheng.blog`. Docker CD deploys one standalone
+Node container on jp4 (Tailscale) into `/data/firefly`. Until DNS is cut over,
+Cloudflare may still proxy the apex to jp2, so public verification continues to
+expect `x-firefly-origin: jp2`. The independent `www` redirect Worker is unchanged.
+The duplicate `origin.lizheng.blog` DNS and proxy route were retired with owner
 approval. Railway is stopped, with its project and variables retained for rollback.
 
 [CI](../.github/workflows/ci.yml) success on `main` triggers the pinned
 [Docker CD workflow](../.github/workflows/release.yml). It deploys an immutable
-image digest into `/opt/firefly`, checks the private container, then verifies the
-canonical public `/api/live`, version, database and `x-firefly-origin: jp2`.
+image digest into `/data/firefly` on jp4, checks the private container, then
+verifies the canonical public `/api/live`, version, database and
+`x-firefly-origin: jp2` (unchanged until DNS cutover).
 Repository variables are `DEPLOY_PHASE=production`,
 `DEPLOY_URL=https://lizheng.blog` and `DEPLOY_ORIGIN_MARKER=jp2`; credentials remain
 in the `firefly / production` environment. Even a documentation-only main push
