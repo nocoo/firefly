@@ -26,11 +26,16 @@ supersedes the historical two-host cutover and its original DNS rollback scope.
 
 ## Target
 
+Current Docker CD (post–jp4 path migration) uses host directory `/data/firefly` on
+Tailscale jp4. The table below records the jp2 cutover target; rollback artifacts
+under `/opt/firefly` on jp2 remain historical.
+
 | Item | Target |
 | --- | --- |
 | Image | `ghcr.io/nocoo/firefly`, deployed by digest |
 | GitHub environment | `firefly / production` |
-| Host directory | `/opt/firefly` |
+| Host directory (jp2 cutover) | `/opt/firefly` |
+| Host directory (current CD) | `/data/firefly` on jp4 |
 | Compose service / container | `web` / `firefly-app` |
 | Internal port | `7028` |
 | Runtime | One Node process; standalone output with static and public assets |
