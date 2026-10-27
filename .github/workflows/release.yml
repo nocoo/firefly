@@ -24,7 +24,7 @@ jobs:
       environment: firefly / production
       source-run-id: ${{ github.event_name == 'workflow_run' && format('{0}', github.event.workflow_run.id) || inputs.ci-run-id }}
       images: '[{"image":"ghcr.io/nocoo/firefly","service":"web","build-args":"AUTH_URL=https://lizheng.blog\nR2_PUBLIC_URL=https://b.no.mt"}]'
-      deploy-directory: /opt/firefly
+      deploy-directory: /data/firefly
       remote-verify-command: |
         python3 - <<'PY'
         import json, os, re, subprocess, time, urllib.error, urllib.request
