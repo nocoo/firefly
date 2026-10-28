@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.19.7 (2026-10-28)
+
+- feat(blog): add self-hosted Traks analytics on public pages
+
 ## v2.19.5 (2026-10-28)
 
 - fix(ci): honor DEPLOY_ORIGIN_MARKER in production verify
