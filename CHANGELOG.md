@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.19.5 (2026-10-28)
+
+- fix(ci): honor DEPLOY_ORIGIN_MARKER in production verify
+
 ## v2.19.4 (2026-10-26)
 
 - ci: Tailscale WIF deploy to jp2
