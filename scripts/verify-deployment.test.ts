@@ -11,6 +11,7 @@ const imageManifest = JSON.stringify([{
 }]);
 const expectedVersion = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
 const releaseWorkflow = readFileSync(new URL("../.github/workflows/release.yml", import.meta.url), "utf8");
+const productionOriginMarker = "jp4";
 
 function options(overrides: Record<string, unknown> = {}) {
   return {
@@ -43,19 +44,22 @@ describe("deployment verification", () => {
     }]) }))).rejects.toThrow("release manifest");
   });
 
-  it("requires the explicit jp2 marker and a configured HTTPS origin in production", async () => {
+  it("requires a non-empty origin marker and a configured HTTPS origin in production", async () => {
     const fetchImpl = vi.fn();
     await expect(verifyDeployment(options({
       phase: "production", target: "https://example.com", fetchImpl,
-    }))).rejects.toThrow("DEPLOY_ORIGIN_MARKER=jp2");
+    }))).rejects.toThrow("DEPLOY_ORIGIN_MARKER");
     await expect(verifyDeployment(options({
-      phase: "production", originMarker: "jp2", fetchImpl,
+      phase: "production", originMarker: "", fetchImpl,
+    }))).rejects.toThrow("DEPLOY_ORIGIN_MARKER");
+    await expect(verifyDeployment(options({
+      phase: "production", originMarker: productionOriginMarker, fetchImpl,
     }))).rejects.toThrow("DEPLOY_URL is required");
     await expect(verifyDeployment(options({
-      phase: "production", target: "http://localhost", originMarker: "jp2", fetchImpl,
+      phase: "production", target: "http://localhost", originMarker: productionOriginMarker, fetchImpl,
     }))).rejects.toThrow("canonical https://lizheng.blog");
     await expect(verifyDeployment(options({
-      phase: "production", target: "https://lizheng.blog/old", originMarker: "jp2", fetchImpl,
+      phase: "production", target: "https://lizheng.blog/old", originMarker: productionOriginMarker, fetchImpl,
     }))).rejects.toThrow("without a path");
     expect(fetchImpl).not.toHaveBeenCalled();
   });
@@ -73,7 +77,7 @@ describe("deployment verification", () => {
   it("rejects redirects rather than accepting an old or unexpected production origin", async () => {
     const fetchImpl = vi.fn().mockRejectedValue(new TypeError("redirect mode is error"));
     await expect(verifyDeployment(options({
-      phase: "production", target: "https://lizheng.blog", originMarker: "jp2",
+      phase: "production", target: "https://lizheng.blog", originMarker: productionOriginMarker,
       fetchImpl, sleep: vi.fn(),
     }))).rejects.toThrow("request to /api/live failed");
     expect(fetchImpl).toHaveBeenCalledWith(
@@ -82,25 +86,33 @@ describe("deployment verification", () => {
     );
   });
 
-  it("requires jp2 response identity, exact package version and live database health", async () => {
+  it("requires matching response identity, exact package version and live database health", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({
       status: "ok", component: "firefly", version: expectedVersion, database: { connected: true },
     }), {
       status: 200,
-      headers: { "Content-Type": "application/json", "x-firefly-origin": "jp2", "Cache-Control": "no-store" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-firefly-origin": productionOriginMarker,
+        "Cache-Control": "no-store",
+      },
     }));
-    await expect(verifyDeployment(options({
-      phase: "production", target: "https://lizheng.blog", originMarker: "jp2", fetchImpl,
-    }))).resolves.toContain(`Firefly ${expectedVersion}`);
+    const message = await verifyDeployment(options({
+      phase: "production", target: "https://lizheng.blog", originMarker: productionOriginMarker,
+      fetchImpl, sleep: vi.fn(),
+    }));
+    expect(message).toContain(`Production origin verified: ${productionOriginMarker}`);
+    expect(message).toContain(`Firefly ${expectedVersion}`);
     expect(fetchImpl).toHaveBeenCalledWith(new URL("https://lizheng.blog/api/live"), expect.objectContaining({ redirect: "error" }));
 
     const validBody = { status: "ok", component: "firefly", version: expectedVersion, database: { connected: true } };
-    const validHeaders = { "x-firefly-origin": "jp2", "Cache-Control": "no-store" };
+    const validHeaders = { "x-firefly-origin": productionOriginMarker, "Cache-Control": "no-store" };
     for (const variant of [
       { body: { ...validBody, version: "0.0.0" }, headers: validHeaders, status: 200 },
       { body: { ...validBody, database: { connected: false } }, headers: validHeaders, status: 200 },
       { body: { ...validBody, component: "other" }, headers: validHeaders, status: 200 },
       { body: { ...validBody, status: "error" }, headers: validHeaders, status: 200 },
+      { body: validBody, headers: { ...validHeaders, "x-firefly-origin": "jp2" }, status: 200 },
       { body: validBody, headers: { ...validHeaders, "x-firefly-origin": "railway" }, status: 200 },
       { body: validBody, headers: { ...validHeaders, "Cache-Control": "public, max-age=0" }, status: 200 },
       { body: validBody, headers: validHeaders, status: 503 },
@@ -110,9 +122,9 @@ describe("deployment verification", () => {
         headers: variant.headers,
       })));
       await expect(verifyDeployment(options({
-        phase: "production", target: "https://lizheng.blog", originMarker: "jp2",
+        phase: "production", target: "https://lizheng.blog", originMarker: productionOriginMarker,
         fetchImpl: wrongIdentity, sleep: vi.fn(),
-      }))).rejects.toThrow("did not prove jp2 origin");
+      }))).rejects.toThrow(`did not prove ${productionOriginMarker} origin`);
       expect(wrongIdentity).toHaveBeenCalledTimes(5);
     }
   });
