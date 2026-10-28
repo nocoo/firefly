@@ -4,6 +4,7 @@ import { listCategories, listTags, listMonthlyArchives, getSiteSettings } from "
 import { BlogLayoutClient } from "@/components/blog/blog-layout-client";
 import { BlogFooter } from "@/components/blog/blog-footer";
 import { JournalThemeColor } from "@/components/blog/journal-theme-color";
+import { TraksAnalytics } from "@/components/blog/traks-analytics";
 import type { Metadata, Viewport } from "next";
 import "./journal.css";
 
@@ -40,6 +41,7 @@ export default async function BlogLayout({
 
   return (
     <div className="blog-shell journal-theme">
+      <TraksAnalytics />
       <JournalThemeColor />
       <a
         href="#main"

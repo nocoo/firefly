@@ -38,8 +38,10 @@ const assetsOrigin = getAssetsOrigin();
  * never appears in the source — keeps the security regression test honest
  * (it greps the source for the bare keyword).
  */
+const TRAKS_SCRIPT_ORIGIN = "https://track-collect.nocoo.cloud";
+
 function buildScriptSrc(): string {
-  const base = ["'self'", "'unsafe-inline'"];
+  const base = ["'self'", "'unsafe-inline'", TRAKS_SCRIPT_ORIGIN];
   if (process.env.NODE_ENV !== "production") {
     base.push(`'unsafe-${"eval"}'`);
   }
