@@ -11,6 +11,7 @@ import { getPostBySlug as getPublicPostBySlug } from "@/data/public-content";
 import type { PostStatus } from "@/models/types";
 import { PostAttributionError, PostService } from "@/services/post-service";
 import { PostFieldValidationError } from "@/services/post-field-validation";
+import { PUBLIC_CONTENT_CACHE_CONTROL } from "@/lib/public-http-cache";
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -29,7 +30,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     if (!post) return notFoundResponse("Post");
 
     const response = jsonResponse(post);
-    response.headers.set("Cache-Control", "public, max-age=0, must-revalidate");
+    response.headers.set("Cache-Control", PUBLIC_CONTENT_CACHE_CONTROL);
     return response;
   } catch (error) {
     return errorResponse(

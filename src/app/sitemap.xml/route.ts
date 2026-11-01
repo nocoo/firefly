@@ -1,8 +1,9 @@
 import { connection } from "next/server";
 import { getDb } from "@/lib/db";
-import { listSitemapPosts, listMonthlyArchives, listCategories, listTags } from "@/data/public-content";
+import { listSitemapPosts, listMonthlyArchives, listSitemapCategories, listTags } from "@/data/public-content";
 import { SITE_URL, postPath } from "@/lib/seo";
 import { escapeXml } from "@/lib/xml";
+import { PUBLIC_CONTENT_CACHE_CONTROL } from "@/lib/public-http-cache";
 
 interface SitemapEntry {
   url: string;
@@ -16,9 +17,9 @@ export async function GET() {
   await connection();
   const db = getDb();
 
-  const [{ posts }, categories, tags, archives] = await Promise.all([
+  const [{ posts }, sitemapCategories, tags, archives] = await Promise.all([
     listSitemapPosts(db),
-    listCategories(db),
+    listSitemapCategories(db),
     listTags(db),
     listMonthlyArchives(db),
   ]);
@@ -53,15 +54,13 @@ export async function GET() {
     });
   }
 
-  // Categories
-  for (const cat of categories) {
-    if (cat.post_count > 0) {
-      entries.push({
-        url: `${SITE_URL}/category/${cat.slug}`,
-        changeFrequency: "weekly",
-        priority: 0.6,
-      });
-    }
+  // Categories with at least one published post (live EXISTS, not denormalized post_count)
+  for (const cat of sitemapCategories) {
+    entries.push({
+      url: `${SITE_URL}/category/${cat.slug}`,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    });
   }
 
   // Tags (exclude thin-content tags with fewer than 3 posts)
@@ -90,7 +89,7 @@ export async function GET() {
   return new Response(xml, {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, max-age=0, must-revalidate",
+      "Cache-Control": PUBLIC_CONTENT_CACHE_CONTROL,
     },
   });
 }

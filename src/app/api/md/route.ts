@@ -1,6 +1,7 @@
 import { getDb } from "@/lib/db";
 import { listPosts, listCategories, getSiteSettings, getDefaultHuman } from "@/data/public-content";
 import { SITE_URL, postPath } from "@/lib/seo";
+import { PUBLIC_CONTENT_CACHE_CONTROL } from "@/lib/public-http-cache";
 
 export async function GET() {
   const db = getDb();
@@ -45,7 +46,7 @@ export async function GET() {
     headers: {
       "Content-Type": "text/markdown; charset=utf-8",
       "x-markdown-tokens": String(tokenEstimate),
-      "Cache-Control": "public, max-age=0, must-revalidate",
+      "Cache-Control": PUBLIC_CONTENT_CACHE_CONTROL,
     },
   });
 }

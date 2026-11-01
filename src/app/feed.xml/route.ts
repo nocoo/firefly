@@ -5,13 +5,14 @@ import { SITE_URL, postPath, HTML_LANG } from "@/lib/seo";
 import { escapeXml } from "@/lib/xml";
 import { getPostAuthor } from "@/lib/ai-agent/author";
 import { readPublicContent } from "@/data/core/public-cache";
+import { PUBLIC_CONTENT_CACHE_CONTROL } from "@/lib/public-http-cache";
 
 export async function GET() {
   const xml = await readPublicContent(["feed"], buildFeed);
   return new Response(xml, {
     headers: {
       "Content-Type": "application/rss+xml; charset=utf-8",
-      "Cache-Control": "public, max-age=0, must-revalidate",
+      "Cache-Control": PUBLIC_CONTENT_CACHE_CONTROL,
     },
   });
 }

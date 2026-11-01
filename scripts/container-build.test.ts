@@ -98,7 +98,7 @@ describe("database-independent prerendering", () => {
     expect(cache).toContain("unstable_cache(async () =>");
     expect(cache).toContain("revalidate: REVALIDATE_SECONDS");
     expect(cache).toContain('revalidateTag(TAG, { expire: 0 })');
-    expect(source("src/app/sitemap.xml/route.ts")).toContain('"public, max-age=0, must-revalidate"');
+    expect(source("src/app/sitemap.xml/route.ts")).toContain("PUBLIC_CONTENT_CACHE_CONTROL");
   });
 
   it("leaves other database-backed GET exports request-time by native Next defaults", () => {

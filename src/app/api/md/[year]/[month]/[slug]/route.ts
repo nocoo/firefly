@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getPostBySlug } from "@/data/public-content";
 import { SITE_URL, postPath, formatDateISO, extractYearMonth } from "@/lib/seo";
+import { PUBLIC_CONTENT_CACHE_CONTROL } from "@/lib/public-http-cache";
 
 interface Params {
   year: string;
@@ -59,7 +60,7 @@ export async function GET(
     headers: {
       "Content-Type": "text/markdown; charset=utf-8",
       "x-markdown-tokens": String(tokenEstimate),
-      "Cache-Control": "public, max-age=0, must-revalidate",
+      "Cache-Control": PUBLIC_CONTENT_CACHE_CONTROL,
     },
   });
 }
