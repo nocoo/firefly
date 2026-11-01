@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.19.8 (2026-11-01)
+
+- feat(cache): allow Cloudflare edge caching for anonymous public HTML and read APIs
+- fix(seo): include categories with published posts in sitemap via live query
+- perf(blog): preload home journal keepsake image for faster LCP
+
 ## v2.19.7 (2026-10-28)
 
 - feat(blog): add self-hosted Traks analytics on public pages
