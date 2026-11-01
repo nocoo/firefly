@@ -7,8 +7,10 @@ export async function JournalIntro({ siteName, tagline, total }: { siteName: str
   await connection();
   const initialScene = randomKeepsake();
   const { first, punct, rest } = splitJournalSlogan(tagline, siteName);
+  const keepsakeSrc = `/journal-keepsakes/${initialScene}.svg`;
   return (
     <header className="journal-intro">
+      <link rel="preload" as="image" href={keepsakeSrc} fetchPriority="high" />
       <div className="journal-intro-copy">
         <p className="journal-eyebrow" lang="en"><span /> A PERSONAL JOURNAL / ZHENG LI</p>
         <h1>
