@@ -33,6 +33,7 @@
  *       → "Given a published post has inline images, ... the rendered <img> src uses /_next/image"
  */
 import { test, expect, emptyDataGate, seedPostIdempotent } from "./fixtures";
+import { e2eBddTestImageUrl } from "../../src/lib/e2e-bdd-image";
 
 // ---------------------------------------------------------------------------
 // Seed helpers — used by the image-optimization scenarios. A post with inline
@@ -47,15 +48,7 @@ import { test, expect, emptyDataGate, seedPostIdempotent } from "./fixtures";
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:27028";
 const SLUG = `e2e-seo-rss-img-${Date.now()}`;
 const NOW_EPOCH = Math.floor(Date.now() / 1000);
-const IMAGE_URL = (() => {
-  const url = process.env.R2_PUBLIC_URL;
-  if (!url) return "https://assets.example.com/wp-content/uploads/test-e2e.jpg";
-  try {
-    return `${new URL(url).origin}/wp-content/uploads/test-e2e.jpg`;
-  } catch {
-    return "https://assets.example.com/wp-content/uploads/test-e2e.jpg";
-  }
-})();
+const IMAGE_URL = e2eBddTestImageUrl(process.env.R2_PUBLIC_URL);
 const CONTENT = [
   `# Image Optimization Test`,
   ``,

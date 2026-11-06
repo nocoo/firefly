@@ -86,6 +86,7 @@
  *       → "Given a post with a linked image, ... clicking it navigates without opening the lightbox"
  */
 import { test, expect, emptyDataGate, seedPostIdempotent } from "./fixtures";
+import { e2eBddTestImageUrl } from "../../src/lib/e2e-bdd-image";
 import type { Page } from "@playwright/test";
 
 // ---------------------------------------------------------------------------
@@ -97,15 +98,7 @@ import type { Page } from "@playwright/test";
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:27028";
 const SLUG = `e2e-content-img-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 const NOW_EPOCH = Math.floor(Date.now() / 1000);
-const IMAGE_URL = (() => {
-  const url = process.env.R2_PUBLIC_URL;
-  if (!url) return "https://assets.example.com/wp-content/uploads/test-e2e.jpg";
-  try {
-    return `${new URL(url).origin}/wp-content/uploads/test-e2e.jpg`;
-  } catch {
-    return "https://assets.example.com/wp-content/uploads/test-e2e.jpg";
-  }
-})();
+const IMAGE_URL = e2eBddTestImageUrl(process.env.R2_PUBLIC_URL);
 const LINK_HREF = "https://example.com";
 const CONTENT = [
   `# Image Optimization Test`,
