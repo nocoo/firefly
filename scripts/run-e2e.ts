@@ -32,7 +32,7 @@ import {
   writeFileSync,
   chmodSync,
 } from "node:fs";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { createServer } from "node:net";
 import { WorkerHttpAdapter } from "./migrations/db-adapter";
 import { SidecarSupervisor } from "./e2e-sidecar";
@@ -68,6 +68,17 @@ const RUN_DIR = mkdtempSync(resolve("worker/.wrangler/e2e-"));
 const RUN_ID = crypto.randomUUID();
 const PERSIST_D1 = join(RUN_DIR, "d1");
 const PERSIST_R2 = join(RUN_DIR, "r2");
+
+/** L3 BDD markdown seeds reference this key; `/_next/image` must resolve it via __e2e-r2. */
+const E2E_BDD_TEST_JPEG = "wp-content/uploads/test-e2e.jpg";
+
+function seedLocalR2TestAsset(): void {
+  mkdirSync(PERSIST_R2, { recursive: true });
+  const sampleJpeg = resolve("public/social/journal-zh.57dfb0b67f98.jpg");
+  const dest = join(PERSIST_R2, ...E2E_BDD_TEST_JPEG.split("/"));
+  mkdirSync(dirname(dest), { recursive: true });
+  writeFileSync(dest, readFileSync(sampleJpeg));
+}
 const WORKER_CONFIG = join(RUN_DIR, "wrangler.json");
 writeFileSync(WORKER_CONFIG, JSON.stringify({
   name: "firefly-e2e-local",
@@ -382,6 +393,7 @@ async function main() {
     });
   }
   console.log(`▸ Isolated D1 + R2: ${RUN_DIR}`);
+  seedLocalR2TestAsset();
   prepareLogDir();
   console.log(`▸ Capturing worker/next output under ${LOG_DIR}`);
 

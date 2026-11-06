@@ -62,6 +62,9 @@ const nextConfig: NextConfig = {
   images: {
     // Dev fake-ip (198.18.0.0/15) is treated as SSRF by /_next/image.
     unoptimized: process.env.NODE_ENV !== "production",
+    // L3 E2E runs `next start` (optimized images) with R2 assets at same-origin
+    // localhost — Next refuses upstreams that resolve to loopback unless opted in.
+    dangerouslyAllowLocalIP: process.env.E2E_TEST_RUNNER === "true",
     remotePatterns: [
       {
         protocol: assetsOrigin.protocol,

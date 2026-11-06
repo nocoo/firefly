@@ -78,6 +78,10 @@ vi.mock("@/data/public-content", () => ({
   }),
 }));
 
+vi.mock("@/data/core/public-cache", () => ({
+  readPublicContent: vi.fn((_key: unknown, load: () => unknown) => load()),
+}));
+
 vi.mock("@/models/markdown", () => ({
   renderMarkdown: vi.fn((content: string) => `<p>${content}</p>`),
 }));
@@ -96,6 +100,7 @@ vi.mock("@/lib/ai-agent/author", () => ({
 // ---------------------------------------------------------------------------
 
 import { GET } from "./route";
+import { PUBLIC_CONTENT_CACHE_CONTROL } from "@/lib/public-http-cache";
 
 describe("GET /feed.xml", () => {
   beforeEach(() => {
@@ -113,7 +118,7 @@ describe("GET /feed.xml", () => {
   it("includes Cache-Control header", async () => {
     const response = await GET();
     expect(response.headers.get("Cache-Control")).toBe(
-      "public, max-age=0, must-revalidate",
+      PUBLIC_CONTENT_CACHE_CONTROL,
     );
   });
 

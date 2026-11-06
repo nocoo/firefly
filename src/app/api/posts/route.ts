@@ -10,6 +10,7 @@ import type { ListPostsOptions } from "@/data/entities/post";
 import type { PostStatus } from "@/models/types";
 import { PostAttributionError, PostService } from "@/services/post-service";
 import { PostFieldValidationError } from "@/services/post-field-validation";
+import { PUBLIC_CONTENT_CACHE_CONTROL } from "@/lib/public-http-cache";
 
 // GET /api/posts — list posts with optional filters
 export async function GET(request: NextRequest) {
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     const result = await listPosts(db, options);
     const response = jsonResponse(result);
-    response.headers.set("Cache-Control", "public, max-age=0, must-revalidate");
+    response.headers.set("Cache-Control", PUBLIC_CONTENT_CACHE_CONTROL);
     return response;
   } catch (error) {
     return errorResponse(

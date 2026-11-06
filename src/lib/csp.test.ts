@@ -27,4 +27,10 @@ describe("CSP policy (next.config.ts)", () => {
     // the guard, this test catches it.
     expect(configSource).toMatch(/NODE_ENV.*production/);
   });
+
+  it("gates localhost image optimization for E2E only", () => {
+    expect(configSource).toContain(
+      "dangerouslyAllowLocalIP: process.env.E2E_TEST_RUNNER === \"true\"",
+    );
+  });
 });

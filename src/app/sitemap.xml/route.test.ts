@@ -46,13 +46,12 @@ vi.mock("@/lib/seo", async (importOriginal) => {
 
 vi.mock("@/data/public-content", () => ({
   listSitemapPosts: vi.fn().mockResolvedValue({ posts: sitemapRows }),
+  listSitemapCategories: vi.fn().mockResolvedValue([
+    { slug: "general" },
+    { slug: "reading" },
+  ]),
   listMonthlyArchives: vi.fn().mockResolvedValue([
     { year: 2023, month: 11, count: 2 },
-  ]),
-
-  listCategories: vi.fn().mockResolvedValue([
-    { id: "cat-1", name: "General", slug: "general", description: null, post_count: 5 },
-    { id: "cat-2", name: "Empty", slug: "empty", description: null, post_count: 0 },
   ]),
 
   listTags: vi.fn().mockResolvedValue([
@@ -67,6 +66,7 @@ vi.mock("@/data/public-content", () => ({
 // ---------------------------------------------------------------------------
 
 import { GET } from "./route";
+import { PUBLIC_CONTENT_CACHE_CONTROL } from "@/lib/public-http-cache";
 
 describe("GET /sitemap.xml", () => {
   beforeEach(() => {
@@ -84,7 +84,7 @@ describe("GET /sitemap.xml", () => {
   it("includes Cache-Control header", async () => {
     const response = await GET();
     expect(response.headers.get("Cache-Control")).toBe(
-      "public, max-age=0, must-revalidate",
+      PUBLIC_CONTENT_CACHE_CONTROL,
     );
   });
 
@@ -140,6 +140,9 @@ describe("GET /sitemap.xml", () => {
 
     expect(xml).toContain(
       "<loc>http://localhost:3000/category/general</loc>",
+    );
+    expect(xml).toContain(
+      "<loc>http://localhost:3000/category/reading</loc>",
     );
     expect(xml).not.toContain(
       "<loc>http://localhost:3000/category/empty</loc>",

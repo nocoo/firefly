@@ -6,6 +6,12 @@ import { trackPageView } from "@/lib/tracking";
 import { createCache } from "@/lib/cache";
 import { rateLimit } from "@/lib/rate-limit";
 import { detectBot } from "@/models/analytics";
+import {
+  PRIVATE_NOCACHE,
+  PUBLIC_CONTENT_CACHE_CONTROL,
+  cacheControlForPublicApiGet,
+  shouldCachePublicHtmlRequest,
+} from "@/lib/public-http-cache";
 
 // Routes that require authentication
 const PROTECTED_PREFIXES = ["/admin"];
@@ -200,7 +206,7 @@ function skipStaticAssets(request: NextRequest): NextResponse | null {
     !pathname.startsWith("/api/") &&
     !pathname.startsWith("/index.php")
   ) {
-    return NextResponse.next();
+    return applyPublicCacheControl(request, NextResponse.next());
   }
   return null;
 }
@@ -269,7 +275,9 @@ async function authGuard(
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
-  return NextResponse.next();
+  const response = NextResponse.next();
+  response.headers.set("Cache-Control", PRIVATE_NOCACHE);
+  return response;
 }
 
 // ---------------------------------------------------------------------------
@@ -380,6 +388,26 @@ function shouldTrackNavigation(request: NextRequest): boolean {
     && detectBot(request.headers.get("user-agent")).botCategory !== "monitor";
 }
 
+function applyPublicCacheControl(
+  request: NextRequest,
+  response: NextResponse,
+): NextResponse {
+  const { pathname } = request.nextUrl;
+  const cookieHeader = request.headers.get("cookie");
+  if (
+    shouldCachePublicHtmlRequest(pathname, request.method, cookieHeader)
+  ) {
+    response.headers.set("Cache-Control", PUBLIC_CONTENT_CACHE_CONTROL);
+    return response;
+  }
+
+  const apiCache = cacheControlForPublicApiGet(pathname, request.method);
+  if (apiCache) {
+    response.headers.set("Cache-Control", apiCache);
+  }
+  return response;
+}
+
 function trackAnalyticsAndContinue(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
   if (
@@ -400,7 +428,7 @@ function trackAnalyticsAndContinue(request: NextRequest): NextResponse {
       // Never let analytics break the response
     });
   }
-  return NextResponse.next();
+  return applyPublicCacheControl(request, NextResponse.next());
 }
 
 export const config = {

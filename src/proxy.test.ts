@@ -4,7 +4,16 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 vi.mock("next/server", () => ({
   NextRequest: vi.fn(),
   NextResponse: {
-    next: vi.fn(() => ({ type: "next" })),
+    next: vi.fn(() => {
+      const headers = new Map<string, string>();
+      return {
+        type: "next",
+        headers: {
+          set: (k: string, v: string) => headers.set(k.toLowerCase(), v),
+          get: (k: string) => headers.get(k.toLowerCase()) ?? null,
+        },
+      };
+    }),
     redirect: vi.fn((url, status) => ({ type: "redirect", url, status })),
     json: vi.fn((body, init) => ({ type: "json", body, init })),
     rewrite: vi.fn((url) => {
@@ -31,6 +40,7 @@ import { NextResponse } from "next/server";
 import { _testHelpers, proxy } from "./proxy";
 import { _testHelpers as rlTestHelpers } from "./lib/rate-limit";
 import { auth } from "@/lib/auth";
+import { PUBLIC_CONTENT_CACHE_CONTROL } from "@/lib/public-http-cache";
 
 const {
   isProtectedApiRoute,
@@ -710,6 +720,31 @@ describe("proxy — protected /api routes with dot in pathname reach authGuard",
   });
 });
 
+
+describe("public cache headers", () => {
+  it("sets cache-control on anonymous public HTML", async () => {
+    const response = await proxy(makeRequest("/"));
+    expect(response.headers.get("cache-control")).toBe(
+      PUBLIC_CONTENT_CACHE_CONTROL,
+    );
+  });
+
+  it("skips cache-control override when a session cookie is present", async () => {
+    const response = await proxy(
+      makeRequest("/", undefined, "GET", {
+        cookie: "authjs.session-token=abc",
+      }),
+    );
+    expect(response.headers.get("cache-control")).toBeNull();
+  });
+
+  it("sets cache-control on public read APIs", async () => {
+    const response = await proxy(makeRequest("/api/posts/demo", undefined, "GET"));
+    expect(response.headers.get("cache-control")).toBe(
+      PUBLIC_CONTENT_CACHE_CONTROL,
+    );
+  });
+});
 
 describe("analytics navigation filtering", () => {
   it.each([

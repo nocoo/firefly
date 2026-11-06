@@ -22,6 +22,8 @@ export function JournalKeepsake({ initialScene }: { initialScene: KeepsakeId }) 
       alt=""
       aria-hidden="true"
       draggable={false}
+      fetchPriority="high"
+      decoding="async"
     />
   );
 }

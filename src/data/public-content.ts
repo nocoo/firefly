@@ -1,5 +1,5 @@
 import type { Db } from "@/lib/db";
-import type { Human, PostWithAgent } from "@/models/types";
+import type { Category, Human, PostWithAgent } from "@/models/types";
 import { readPublicContent } from "./core/public-cache";
 import * as posts from "./entities/post";
 import * as categories from "./entities/category";
@@ -27,6 +27,21 @@ export async function getDefaultHuman(db: Db, defaultId?: string | null) {
 
 export function listCategories(db: Db) {
   return readPublicContent(["categories"], () => categories.listCategories(db, false));
+}
+
+export function listSitemapCategories(db: Db) {
+  return readPublicContent(["sitemap-categories"], async () => {
+    const { results } = await db.query<Pick<Category, "slug">>(
+      `SELECT c.slug
+         FROM categories c
+        WHERE EXISTS (
+          SELECT 1 FROM posts p
+           WHERE p.category_id = c.id AND p.status = 'published'
+        )
+        ORDER BY c.sort_order DESC, c.name ASC`,
+    );
+    return results;
+  });
 }
 
 export function listTags(db: Db) {
