@@ -1,10 +1,11 @@
 /**
  * Shared Cache-Control for anonymous public blog content.
  * Aligns with `public-content` Data Cache revalidate (1h) while keeping
- * browser max-age short enough for reasonable freshness.
+ * browser cache must revalidate every navigation (withdrawal E2E expects an
+ * immediate 404). The CDN may still honor s-maxage + stale-while-revalidate.
  */
 export const PUBLIC_CONTENT_CACHE_CONTROL =
-  "public, max-age=60, s-maxage=300, stale-while-revalidate=3600";
+  "public, max-age=0, must-revalidate, s-maxage=300, stale-while-revalidate=3600";
 
 export const PRIVATE_NOCACHE =
   "private, no-store, max-age=0, must-revalidate";
