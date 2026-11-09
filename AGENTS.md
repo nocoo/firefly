@@ -63,7 +63,7 @@ Follow README for local Worker startup on 8787 before `bun run migrate:local`. W
 
 | Piece | Requirement and current reality | Status | Evidence |
 | --- | --- | --- | --- |
-| L1 (incl. former G1 static) | Four metrics ≥95% for configured non-View TypeScript, both lanes; strict types, zero-error/warning Biome and AST/skip gates | planned | Web lane runs today at root Vitest thresholds via pre-push/CI coverage; `lint` and both type lanes run in pre-push/CI and custom gates use index snapshots in pre-commit. Worker coverage command exists but CI runs plain tests; full unified L1 (all lanes, full index, <30s, rejection proof) remains planned |
+| L1 (incl. former G1 static) | Four metrics ≥95% for configured non-View TypeScript, both lanes; strict types, zero-error/warning Biome and AST/skip gates | enforced | Pre-commit exports the Git index via `git checkout-index`, then runs `lint` (typecheck both lanes, Biome check-only, custom gates), `test:coverage` and `test:worker:coverage` (Vitest thresholds 95/95/95/95). Every staged commit runs the full gate; pre-push adds root `test:coverage` again plus `security`. CI runs root coverage on web/worker test jobs |
 | L2 | Real HTTP, 100% endpoint/method coverage, real SQL | planned | API runner enforced in CI; complete surface proof/isolated lane remains a gap |
 | L3 | Critical blog/admin journeys | enforced | CI browser job → `test:e2e:browser` / Playwright |
 | G2 | OSV + gitleaks, missing scanner fails; both lockfiles | planned | Root security script scans only root Bun lock; Worker lock coverage missing there |
@@ -71,7 +71,7 @@ Follow README for local Worker startup on 8787 before `bun run migrate:local`. W
 | Build | `next typegen && tsc --noEmit && next build --webpack` | manual | Manifest; run for bundler/runtime changes |
 | Docs | Commands, migrations and contracts kept current | manual | Review linked guides |
 
-Current pre-commit skips heavy gates for docs, otherwise runs lint-staged before worktree tests/types; only custom gates use the index. Pre-push runs root coverage/lint/security, despite a stale comment claiming Worker coverage. Its secret range uses upstream, not stdin push refs. Target: check-only full index unified L1 (types, check-only lint, coverage) <30s; pushed-ref L2/G2 in parallel <3min. Never bypass commit/branch-push hooks; remove autofix from future gate design.
+Pre-commit always gates the index snapshot (no extension-based fast path; no lint-staged autofix). Pre-push runs root `test:coverage`, full `lint`, and `security` on the worktree (not index); worker coverage is enforced at pre-commit. Its secret range uses upstream, not stdin push refs. Target: index L1 <30s warm; pushed-ref L2/G2 in parallel <3min. Never bypass commit/branch-push hooks.
 
 ## Resources / Isolation
 
