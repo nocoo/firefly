@@ -180,10 +180,11 @@ export function AdminShell({ user, children }: AdminShellProps) {
             {/* Sheet wraps main column always; SheetTrigger only appears on mobile */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <AppMain>
-                <ShellHeader
-                  title={title}
-                  breadcrumbs={getAdminBreadcrumbs(pathname)}
+                <AppHeader
                   leading={isMobile ? mobileTrigger : null}
+                  breadcrumbs={getAdminBreadcrumbs(pathname)}
+                  title={title}
+                  actions={<ShellHeaderActions />}
                 />
 
                 {/* Content island */}
@@ -218,17 +219,8 @@ export function AdminShell({ user, children }: AdminShellProps) {
   );
 }
 
-// Extracted header consuming AppHeader from basalt
-function ShellHeader({
-  title,
-  breadcrumbs,
-  leading,
-}: {
-  title: string;
-  breadcrumbs: { label: string; href?: string }[];
-  leading: React.ReactNode;
-}) {
-  const actions = (
+function ShellHeaderActions() {
+  return (
     <div className="flex items-center gap-1.5">
       <HeaderTooltip label="GitHub 仓库">
         <Button variant="ghost" size="icon" asChild>
@@ -249,14 +241,5 @@ function ShellHeader({
       <HexlyLink />
       <ThemeToggle />
     </div>
-  );
-
-  return (
-    <AppHeader
-      leading={leading}
-      breadcrumbs={breadcrumbs}
-      title={title}
-      actions={actions}
-    />
   );
 }
