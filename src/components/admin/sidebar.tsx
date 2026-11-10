@@ -43,7 +43,6 @@ import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
-  TooltipProvider,
 } from "@nocoo/basalt";
 import { useCommandPalette } from "@/components/admin/command-palette";
 
@@ -222,106 +221,98 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
     </Avatar>
   );
 
-  return (
-    <TooltipProvider delayDuration={0}>
-      <Sidebar collapsed={collapsed}>
-        <SidebarHeader>
-          <div
-            className={cn(
-              SIDEBAR_MARK_SLOT_CLASS,
-              collapsed ? "justify-center" : "justify-between pl-basalt-layout-sm",
-            )}
-          >
-            <Link
-              href="/admin"
-              aria-label="管理首页"
-              className="flex items-center gap-basalt-space-lg text-basalt-foreground no-underline hover:no-underline"
-            >
-              <img
-                src="/logo-80.png"
-                alt="Firefly"
-                width={28}
-                height={28}
-                className="h-7 w-7 shrink-0 object-contain"
-              />
-              {collapsed ? null : (
-                <>
-                  <span className="text-basalt-xl font-semibold text-basalt-foreground">Firefly</span>
-                  <span className="rounded-basalt-md bg-basalt-secondary px-basalt-space-md py-basalt-space-xs text-basalt-sm leading-basalt-tight font-medium text-basalt-muted-foreground">
-                    v{APP_VERSION}
-                  </span>
-                </>
-              )}
-            </Link>
-            {collapsed ? null : (
-              <Button variant="ghost" size="icon" onClick={onToggle} aria-label="收起侧边栏">
-                <PanelLeft aria-hidden="true" />
-              </Button>
-            )}
-          </div>
-        </SidebarHeader>
-        {collapsed ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mb-basalt-space-sm self-center"
-            onClick={onToggle}
-            aria-label="展开侧边栏"
-          >
-            <PanelLeft aria-hidden="true" />
-          </Button>
-        ) : (
-          <div className="px-basalt-nav-inset">
-            <SidebarSearch shortcut="⌘K" onClick={() => openSearch(true)}>
-              搜索
-            </SidebarSearch>
-          </div>
+  const sidebarHeader = (
+    <SidebarHeader>
+      <div
+        className={cn(
+          SIDEBAR_MARK_SLOT_CLASS,
+          collapsed ? "justify-center" : "justify-between pl-basalt-layout-sm",
         )}
-        <SidebarNav aria-label="管理导航">
-          {collapsed ? (
+      >
+        <Link
+          href="/admin"
+          aria-label="管理首页"
+          className="flex items-center gap-basalt-space-lg text-basalt-foreground no-underline hover:no-underline"
+        >
+          <img
+            src="/logo-80.png"
+            alt="Firefly"
+            width={28}
+            height={28}
+            className="h-7 w-7 shrink-0 object-contain"
+          />
+          {collapsed ? null : (
             <>
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <SidebarIconItem onClick={() => openSearch(true)} aria-label="搜索 (⌘K)">
-                    <Search className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-                  </SidebarIconItem>
-                </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8}>
-                  搜索 (⌘K)
-                </TooltipContent>
-              </Tooltip>
-              {ALL_NAV_ITEMS.map((item) => (
-                <CollapsedNavItem
-                  key={item.href}
-                  item={item}
-                  active={isItemActive(item)}
-                  onNavigate={navigate}
-                />
-              ))}
-            </>
-          ) : (
-            <>
-              <SidebarPartition>管理</SidebarPartition>
-              {NAV_GROUPS.map((group) => (
-                <NavGroupSection
-                  key={group.label}
-                  group={group}
-                  isItemActive={isItemActive}
-                  onNavigate={navigate}
-                />
-              ))}
+              <span className="text-basalt-xl font-semibold text-basalt-foreground">Firefly</span>
+              <span className="rounded-basalt-md bg-basalt-secondary px-basalt-space-md py-basalt-space-xs text-basalt-sm leading-basalt-tight font-medium text-basalt-muted-foreground">
+                v{APP_VERSION}
+              </span>
             </>
           )}
-        </SidebarNav>
-        <SidebarFooter>
-          {collapsed ? (
+        </Link>
+        {collapsed ? null : (
+          <Button variant="ghost" size="icon" onClick={onToggle} aria-label="收起侧边栏">
+            <PanelLeft aria-hidden="true" />
+          </Button>
+        )}
+      </div>
+    </SidebarHeader>
+  );
+
+  return (
+    <Sidebar collapsed={collapsed}>
+      {sidebarHeader}
+      {collapsed ? (
+        <>
+          <Button variant="ghost" size="icon" onClick={onToggle} aria-label="展开侧边栏">
+            <PanelLeft aria-hidden="true" />
+          </Button>
+          <SidebarNav aria-label="管理导航">
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <SidebarIconItem onClick={() => openSearch(true)} aria-label="搜索 (⌘K)">
+                  <Search className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                </SidebarIconItem>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>
+                搜索 (⌘K)
+              </TooltipContent>
+            </Tooltip>
+            {ALL_NAV_ITEMS.map((item) => (
+              <CollapsedNavItem
+                key={item.href}
+                item={item}
+                active={isItemActive(item)}
+                onNavigate={navigate}
+              />
+            ))}
+          </SidebarNav>
+          <SidebarFooter>
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>{userAvatar}</TooltipTrigger>
               <TooltipContent side="right" sideOffset={8}>
                 {user.name ?? "管理员"}
               </TooltipContent>
             </Tooltip>
-          ) : (
+          </SidebarFooter>
+        </>
+      ) : (
+        <>
+          <SidebarSearch shortcut="⌘K" onClick={() => openSearch(true)}>
+            搜索
+          </SidebarSearch>
+          <SidebarNav aria-label="管理导航">
+            <SidebarPartition>管理</SidebarPartition>
+            {NAV_GROUPS.map((group) => (
+              <NavGroupSection
+                key={group.label}
+                group={group}
+                isItemActive={isItemActive}
+                onNavigate={navigate}
+              />
+            ))}
+          </SidebarNav>
+          <SidebarFooter>
             <SidebarUser
               avatar={userAvatar}
               name={user.name ?? "管理员"}
@@ -337,9 +328,9 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
                 </Button>
               }
             />
-          )}
-        </SidebarFooter>
-      </Sidebar>
-    </TooltipProvider>
+          </SidebarFooter>
+        </>
+      )}
+    </Sidebar>
   );
 }
