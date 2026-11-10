@@ -13,7 +13,8 @@ import { defineConfig } from "@playwright/test";
 //   - 20 cores → workers = 10 (typical dev workstation)
 // availableParallelism() is Node 20+ and respects cgroup / container CPU
 // limits, whereas cpus() returns the host cores even inside a container.
-// The project's engines / CI pin Node 20+, so no fallback is provided;
+// The project's toolchain pins Node 26+; availableParallelism() needs Node 20+,
+// so no fallback is provided;
 // running on older Node throws at import time, which is preferable to
 // silently over-scheduling.
 function computeWorkers(): number {
