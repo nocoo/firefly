@@ -110,6 +110,61 @@ interface AdminSidebarProps {
   };
 }
 
+function NavItemButton({
+  item,
+  active,
+  onNavigate,
+}: {
+  item: NavItem;
+  active: boolean;
+  onNavigate: (item: NavItem, event: MouseEvent<HTMLButtonElement>) => void;
+}) {
+  return (
+    <SidebarItem
+      active={active}
+      aria-label={item.title}
+      onClick={(event) => onNavigate(item, event)}
+      onAuxClick={(event) => onNavigate(item, event)}
+    >
+      <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+      <span className="flex-1 truncate text-left">{item.title}</span>
+      {item.external ? (
+        <span className="flex size-basalt-icon-lg shrink-0 items-center justify-center">
+          <ExternalLink className="h-3 w-3 text-basalt-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
+        </span>
+      ) : null}
+    </SidebarItem>
+  );
+}
+
+function CollapsedNavItem({
+  item,
+  active,
+  onNavigate,
+}: {
+  item: NavItem;
+  active: boolean;
+  onNavigate: (item: NavItem, event: MouseEvent<HTMLButtonElement>) => void;
+}) {
+  return (
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>
+        <SidebarIconItem
+          active={active}
+          aria-label={item.title}
+          onClick={(event) => onNavigate(item, event)}
+          onAuxClick={(event) => onNavigate(item, event)}
+        >
+          <item.icon className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+        </SidebarIconItem>
+      </TooltipTrigger>
+      <TooltipContent side="right" sideOffset={8}>
+        {item.title}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -128,28 +183,6 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
     } else {
       router.push(item.href);
     }
-  };
-
-  const renderDestination = (item: NavItem) => {
-    const Control = collapsed ? SidebarIconItem : SidebarItem;
-    const control = (
-      <Control
-        key={item.href}
-        active={isItemActive(item)}
-        aria-label={item.title}
-        onClick={(event) => navigate(item, event)}
-        onAuxClick={(event) => navigate(item, event)}
-      >
-        <item.icon size={16} strokeWidth={1.5} aria-hidden="true" />
-        {!collapsed && <span>{item.title}</span>}
-      </Control>
-    );
-    return collapsed ? (
-      <Tooltip key={item.href}>
-        <TooltipTrigger asChild>{control}</TooltipTrigger>
-        <TooltipContent side="right">{item.title}</TooltipContent>
-      </Tooltip>
-    ) : control;
   };
 
   const initials = (user.name ?? user.email ?? "A")
@@ -224,22 +257,38 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
         <SidebarNav aria-label="管理导航">
           {collapsed ? (
             <>
-              <Tooltip>
+              <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
                   <SidebarIconItem onClick={() => openSearch(true)} aria-label="搜索 (⌘K)">
-                    <Search size={16} strokeWidth={1.5} aria-hidden="true" />
+                    <Search className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                   </SidebarIconItem>
                 </TooltipTrigger>
-                <TooltipContent side="right">搜索 (⌘K)</TooltipContent>
+                <TooltipContent side="right" sideOffset={8}>
+                  搜索 (⌘K)
+                </TooltipContent>
               </Tooltip>
-              {ALL_NAV_ITEMS.map(renderDestination)}
+              {ALL_NAV_ITEMS.map((item) => (
+                <CollapsedNavItem
+                  key={item.href}
+                  item={item}
+                  active={isItemActive(item)}
+                  onNavigate={navigate}
+                />
+              ))}
             </>
           ) : (
             <>
               <SidebarPartition>管理</SidebarPartition>
               {NAV_GROUPS.map((group) => (
                 <SidebarGroup key={group.label} label={group.label}>
-                  {group.items.map(renderDestination)}
+                  {group.items.map((item) => (
+                    <NavItemButton
+                      key={item.href}
+                      item={item}
+                      active={isItemActive(item)}
+                      onNavigate={navigate}
+                    />
+                  ))}
                 </SidebarGroup>
               ))}
             </>
