@@ -160,9 +160,9 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
     .toUpperCase();
 
   const userAvatar = (
-    <Avatar className="h-9 w-9 shrink-0">
+    <Avatar className={cn("h-9 w-9 shrink-0", collapsed && "cursor-pointer")}>
       {user.image && <AvatarImage src={user.image} alt={user.name ?? "用户"} />}
-      <AvatarFallback>{initials}</AvatarFallback>
+      <AvatarFallback className="text-basalt-sm">{initials}</AvatarFallback>
     </Avatar>
   );
 
@@ -247,9 +247,11 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
         </SidebarNav>
         <SidebarFooter>
           {collapsed ? (
-            <Tooltip>
+            <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>{userAvatar}</TooltipTrigger>
-              <TooltipContent side="right">{user.name ?? "管理员"}</TooltipContent>
+              <TooltipContent side="right" sideOffset={8}>
+                {user.name ?? "管理员"}
+              </TooltipContent>
             </Tooltip>
           ) : (
             <SidebarUser
@@ -263,7 +265,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
                   onClick={() => signOut({ callbackUrl: "/login" })}
                   aria-label="退出登录"
                 >
-                  <LogOut size={16} strokeWidth={1.5} aria-hidden="true" />
+                  <LogOut aria-hidden="true" />
                 </Button>
               }
             />
