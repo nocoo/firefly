@@ -60,14 +60,6 @@
   color: var(--blog-muted);
 }
 
-/* Search results page */
-.blog-search-results h1 {
-  font-size: 1.25em;
-  font-weight: 600;
-  color: var(--blog-text);
-  margin-bottom: 1.5em;
-}
-
 /* FTS snippet highlight */
 .blog-search-results mark,
 .blog-entry mark {

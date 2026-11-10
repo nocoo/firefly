@@ -238,9 +238,6 @@
   .blog-read-more:hover svg { transform: translateX(3px); }
   .blog-entry mark, .blog-search-results mark { color: var(--blog-text); }
 
-  .journal-list-header { margin-bottom: 36px; padding-bottom: 28px; border-bottom: 1px solid var(--blog-separator); }
-  .journal-list-header h1, .blog-search-results h1 { font: 600 34px / 1.5 var(--ff-heading); letter-spacing: -0.03em; }
-  .journal-list-header > p:last-child { margin-top: 14px; font-size: 14px; }
   .journal-search-form { display: flex; align-items: center; gap: 14px; padding: 8px 8px 8px 18px; margin-bottom: 38px; border: 1px solid var(--blog-separator); background: var(--blog-surface); border-radius: 7px; }
   .journal-search-form:focus-within { border-color: var(--blog-accent); }
   .journal-search-form > svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--blog-muted); }
@@ -426,7 +423,6 @@
     .journal-article-header h1 { font-size: 28px; line-height: 1.55; }
     .journal-article-header .journal-eyebrow { font-size: 8px; }
     .journal-article-layout .blog-featured-image { margin-block: 24px; }
-    .journal-list-header h1, .blog-search-results h1 { font-size: 28px; }
     nav[aria-label="分页"] { gap: 2px; }
     nav[aria-label="分页"] :is(a, span) { min-width: 28px; padding-inline: 5px; }
     .journal-footer { margin-inline: 22px; }
