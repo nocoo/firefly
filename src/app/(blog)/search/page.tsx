@@ -56,7 +56,10 @@ export default async function SearchPage({
 
   return (
     <div className="blog-search-results">
-      <ListPageHeader title={`搜索 "${q}" 共 ${result.total} 条结果`} />
+      <ListPageHeader
+        title={`搜索 "${q}"`}
+        description={`共 ${result.total} 条结果`}
+      />
       {searchForm}
 
       {result.posts.length === 0 ? (
