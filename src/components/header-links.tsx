@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactElement } from "react";
+import { LinkButton } from "@nocoo/basalt/components/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@nocoo/basalt/components/tooltip";
 
 export function HeaderTooltip({ label, children }: { label: string; children: ReactElement }) {
@@ -17,19 +18,19 @@ export function HeaderTooltip({ label, children }: { label: string; children: Re
 }
 
 export function HexlyLink({ className }: { className?: string } = {}) {
-  const fallback =
-    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-basalt-muted-foreground transition-colors hover:bg-basalt-accent hover:text-basalt-foreground";
   return (
     <HeaderTooltip label="Firefly on hexly.ai">
-      <a
+      <LinkButton
+        variant="ghost"
+        size="icon"
         href="https://hexly.ai/projects/firefly"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Firefly on hexly.ai (opens in a new tab)"
-        className={`${className ?? fallback} relative cursor-pointer before:absolute before:inset-0`}
+        className={`${className ?? "w-8 rounded-basalt-md text-basalt-muted-foreground hover:text-basalt-foreground"} [&_svg]:size-[1.125rem]`}
       >
+        <span className="sr-only">Firefly on hexly.ai (opens in a new tab)</span>
         <svg
-          className="pointer-events-none size-[18px]"
           width="18"
           height="18"
           viewBox="0 0 24 24"
@@ -43,8 +44,7 @@ export function HexlyLink({ className }: { className?: string } = {}) {
           <path d="m12 2 8.66 5v10L12 22l-8.66-5V7Z" />
           <path d="M12 2v20M3.34 7l17.32 10m0-10L3.34 17" />
         </svg>
-        <span className="sr-only">Firefly on hexly.ai (opens in a new tab)</span>
-      </a>
+      </LinkButton>
     </HeaderTooltip>
   );
 }

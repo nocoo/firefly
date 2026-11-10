@@ -1,6 +1,7 @@
 "use client";
 
 import { APP_VERSION } from "@/lib/version";
+import { cn } from "@/lib/utils";
 import { usePathname, useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { signOut } from "next-auth/react";
@@ -35,7 +36,7 @@ import {
   SidebarUser,
   SidebarSearch,
   Button,
-  Badge,
+  Link,
   Avatar,
   AvatarFallback,
   AvatarImage,
@@ -97,6 +98,8 @@ const NAV_GROUPS: NavGroup[] = [
 
 const ALL_NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
 
+const SIDEBAR_MARK_SLOT_CLASS = "flex w-full items-center";
+
 interface AdminSidebarProps {
   collapsed: boolean;
   onToggle: () => void;
@@ -157,9 +160,9 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
     .toUpperCase();
 
   const userAvatar = (
-    <Avatar className="h-9 w-9 shrink-0">
+    <Avatar className={cn("h-9 w-9 shrink-0", collapsed && "cursor-pointer")}>
       {user.image && <AvatarImage src={user.image} alt={user.name ?? "用户"} />}
-      <AvatarFallback>{initials}</AvatarFallback>
+      <AvatarFallback className="text-basalt-sm">{initials}</AvatarFallback>
     </Avatar>
   );
 
@@ -167,22 +170,36 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
     <TooltipProvider delayDuration={0}>
       <Sidebar collapsed={collapsed}>
         <SidebarHeader>
-          <div className={collapsed
-            ? "flex w-full items-center justify-center"
-            : "flex w-full items-center justify-between pl-basalt-layout-sm"}
+          <div
+            className={cn(
+              SIDEBAR_MARK_SLOT_CLASS,
+              collapsed ? "justify-center" : "justify-between pl-basalt-layout-sm",
+            )}
           >
-            <div className="flex items-center gap-basalt-space-lg">
-              <img src="/logo-80.png" alt="Firefly" width={28} height={28} className="shrink-0" />
-              {!collapsed && (
+            <Link
+              href="/admin"
+              aria-label="管理首页"
+              className="flex items-center gap-basalt-space-lg text-basalt-foreground no-underline hover:no-underline"
+            >
+              <img
+                src="/logo-80.png"
+                alt="Firefly"
+                width={28}
+                height={28}
+                className="h-7 w-7 shrink-0 object-contain"
+              />
+              {collapsed ? null : (
                 <>
-                  <span className="text-basalt-xl font-semibold">Firefly</span>
-                  <Badge variant="secondary">v{APP_VERSION}</Badge>
+                  <span className="text-basalt-xl font-semibold text-basalt-foreground">Firefly</span>
+                  <span className="rounded-basalt-md bg-basalt-secondary px-basalt-space-md py-basalt-space-xs text-basalt-sm leading-basalt-tight font-medium text-basalt-muted-foreground">
+                    v{APP_VERSION}
+                  </span>
                 </>
               )}
-            </div>
-            {!collapsed && (
+            </Link>
+            {collapsed ? null : (
               <Button variant="ghost" size="icon" onClick={onToggle} aria-label="收起侧边栏">
-                <PanelLeft size={16} strokeWidth={1.5} aria-hidden="true" />
+                <PanelLeft aria-hidden="true" />
               </Button>
             )}
           </div>
@@ -195,7 +212,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
             onClick={onToggle}
             aria-label="展开侧边栏"
           >
-            <PanelLeft size={16} strokeWidth={1.5} aria-hidden="true" />
+            <PanelLeft aria-hidden="true" />
           </Button>
         ) : (
           <div className="px-basalt-nav-inset">
@@ -230,9 +247,11 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
         </SidebarNav>
         <SidebarFooter>
           {collapsed ? (
-            <Tooltip>
+            <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>{userAvatar}</TooltipTrigger>
-              <TooltipContent side="right">{user.name ?? "管理员"}</TooltipContent>
+              <TooltipContent side="right" sideOffset={8}>
+                {user.name ?? "管理员"}
+              </TooltipContent>
             </Tooltip>
           ) : (
             <SidebarUser
@@ -246,7 +265,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
                   onClick={() => signOut({ callbackUrl: "/login" })}
                   aria-label="退出登录"
                 >
-                  <LogOut size={16} strokeWidth={1.5} aria-hidden="true" />
+                  <LogOut aria-hidden="true" />
                 </Button>
               }
             />

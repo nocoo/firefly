@@ -23,6 +23,7 @@ import {
   AppSkipLink,
 } from "@nocoo/basalt/components/app-shell";
 import { AppHeader } from "@nocoo/basalt/components/app-header";
+import { LinkButton } from "@nocoo/basalt/components/button";
 import {
   ContentIsland,
   Sheet,
@@ -150,13 +151,8 @@ export function AdminShell({ user, children }: AdminShellProps) {
   const mobileTrigger = (
     <HeaderTooltip label="打开导航">
       <SheetTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          aria-label="打开导航"
-        >
-          <Menu className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
+        <Button variant="ghost" size="icon" aria-label="打开导航">
+          <Menu aria-hidden="true" strokeWidth={1.5} />
         </Button>
       </SheetTrigger>
     </HeaderTooltip>
@@ -180,10 +176,11 @@ export function AdminShell({ user, children }: AdminShellProps) {
             {/* Sheet wraps main column always; SheetTrigger only appears on mobile */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <AppMain>
-                <ShellHeader
-                  title={title}
-                  breadcrumbs={getAdminBreadcrumbs(pathname)}
+                <AppHeader
                   leading={isMobile ? mobileTrigger : null}
+                  breadcrumbs={getAdminBreadcrumbs(pathname)}
+                  title={title}
+                  actions={<ShellHeaderActions />}
                 />
 
                 {/* Content island */}
@@ -218,45 +215,24 @@ export function AdminShell({ user, children }: AdminShellProps) {
   );
 }
 
-// Extracted header consuming AppHeader from basalt
-function ShellHeader({
-  title,
-  breadcrumbs,
-  leading,
-}: {
-  title: string;
-  breadcrumbs: { label: string; href?: string }[];
-  leading: React.ReactNode;
-}) {
-  const actions = (
-    <div className="flex items-center gap-1.5">
+function ShellHeaderActions() {
+  return (
+    <>
       <HeaderTooltip label="GitHub 仓库">
-        <Button variant="ghost" size="icon" asChild>
-          <a
-            href="https://github.com/nocoo/firefly"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="GitHub"
-          >
-            <Github
-              className="h-[18px] w-[18px]"
-              aria-hidden="true"
-              strokeWidth={1.5}
-            />
-          </a>
-        </Button>
+        <LinkButton
+          variant="ghost"
+          size="icon"
+          href="https://github.com/nocoo/firefly"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="GitHub"
+          className="w-8 rounded-basalt-md text-basalt-muted-foreground hover:text-basalt-foreground [&_svg]:size-[1.125rem]"
+        >
+          <Github className="h-[1.125rem] w-[1.125rem]" aria-hidden="true" strokeWidth={1.5} />
+        </LinkButton>
       </HeaderTooltip>
       <HexlyLink />
       <ThemeToggle />
-    </div>
-  );
-
-  return (
-    <AppHeader
-      leading={leading}
-      breadcrumbs={breadcrumbs}
-      title={title}
-      actions={actions}
-    />
+    </>
   );
 }
