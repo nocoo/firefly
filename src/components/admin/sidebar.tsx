@@ -137,6 +137,29 @@ function NavItemButton({
   );
 }
 
+function NavGroupSection({
+  group,
+  isItemActive,
+  onNavigate,
+}: {
+  group: NavGroup;
+  isItemActive: (item: NavItem) => boolean;
+  onNavigate: (item: NavItem, event: MouseEvent<HTMLButtonElement>) => void;
+}) {
+  return (
+    <SidebarGroup label={group.label}>
+      {group.items.map((item) => (
+        <NavItemButton
+          key={item.href}
+          item={item}
+          active={isItemActive(item)}
+          onNavigate={onNavigate}
+        />
+      ))}
+    </SidebarGroup>
+  );
+}
+
 function CollapsedNavItem({
   item,
   active,
@@ -280,16 +303,12 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
             <>
               <SidebarPartition>管理</SidebarPartition>
               {NAV_GROUPS.map((group) => (
-                <SidebarGroup key={group.label} label={group.label}>
-                  {group.items.map((item) => (
-                    <NavItemButton
-                      key={item.href}
-                      item={item}
-                      active={isItemActive(item)}
-                      onNavigate={navigate}
-                    />
-                  ))}
-                </SidebarGroup>
+                <NavGroupSection
+                  key={group.label}
+                  group={group}
+                  isItemActive={isItemActive}
+                  onNavigate={navigate}
+                />
               ))}
             </>
           )}
