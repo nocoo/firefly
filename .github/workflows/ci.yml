@@ -19,7 +19,7 @@ jobs:
       runtime-version: "1.2.15"
       install-policy: project
       extra-install-dirs: worker
-      coverage-path: coverage
+      coverage-path: ""
       test-command: bun run test:coverage
       osv-config: osv-scanner.toml
       gitleaks-config: .gitleaks.toml
