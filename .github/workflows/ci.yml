@@ -39,11 +39,6 @@ jobs:
       l3: true
       l3-browser: chromium
       l3-command: bun run test:e2e:browser
-      l3-artifact-name: browser-evidence
-      l3-artifact-path: |
-        test-results/
-        playwright-report/
-      l3-artifact-retention-days: 7
       env-json: '{"CI": "true"}'
       slot-status: >-
         {"S1": {"status": "impl"},
