@@ -43,6 +43,7 @@ import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
+  TooltipProvider,
 } from "@nocoo/basalt";
 import { useCommandPalette } from "@/components/admin/command-palette";
 
@@ -260,6 +261,7 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
   );
 
   return (
+    <TooltipProvider delayDuration={0}>
     <Sidebar collapsed={collapsed}>
       {sidebarHeader}
       {collapsed ? (
@@ -332,5 +334,6 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
         </>
       )}
     </Sidebar>
+    </TooltipProvider>
   );
 }
