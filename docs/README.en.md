@@ -33,7 +33,7 @@ An MCP client supporting OAuth can connect to `https://your-domain/api/mcp` usin
 
 ## Development
 
-Install Bun and Node.js 22+; the current Worker toolchain requires Node.js 22. The website and `worker/` are separate Bun packages, so install dependencies in both.
+Install Bun and Node.js 26+; the current Worker toolchain requires Node.js 26. The website and `worker/` are separate Bun packages, so install dependencies in both.
 
 ```bash
 git clone https://github.com/nocoo/firefly.git

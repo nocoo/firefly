@@ -33,7 +33,7 @@ Firefly 是 lizheng.blog 使用的个人博客系统，由 WordPress 迁移而�
 
 ## 开发
 
-安装 Bun 和 Node.js 22+；当前 Worker 工具链要求 Node.js 22。网站与 `worker/` 是两个独立的 Bun 包，需要分别安装依赖。
+安装 Bun 和 Node.js 26+；当前 Worker 工具链要求 Node.js 26。网站与 `worker/` 是两个独立的 Bun 包，需要分别安装依赖。
 
 ```bash
 git clone https://github.com/nocoo/firefly.git

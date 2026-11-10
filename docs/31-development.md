@@ -10,7 +10,7 @@
 
 ## 首次本地运行
 
-按根 README 分别安装根包与 Worker 包，并将 `.env.example` 复制为根 `.env`。当前完整工具链需要 Node.js 22+。
+按根 README 分别安装根包与 Worker 包，并将 `.env.example` 复制为根 `.env`。当前完整工具链需要 Node.js 26+。
 
 1. 根 `.env` 设置 `WORKER_URL=http://localhost:8787`、`WORKER_SECRET=test-secret`、`AUTH_URL=http://localhost:7028`，生成自己的 `AUTH_SECRET`。
 2. 准备 Google OAuth 客户端，设置 `AUTH_GOOGLE_ID`、`AUTH_GOOGLE_SECRET` 与 `AUTH_ALLOWED_EMAILS`。邮箱允许名单为空时所有账户都会被拒绝。Google 回调为 `http://localhost:7028/api/auth/callback/google`。

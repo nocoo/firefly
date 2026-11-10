@@ -39,7 +39,7 @@ MVVM: keep ViewModels independent of Views/DOM; routes remain thin. Next's nativ
 
 ## Commands
 
-Run from root; install root and Worker packages separately. Node 22+ is needed; current CI pins Bun 1.2.15.
+Run from root; install root and Worker packages separately. Node 26+ is needed; current CI pins Bun 1.2.15.
 
 ```sh
 bun install --frozen-lockfile

@@ -16,9 +16,9 @@ const requestTimeEntries = [
 ] as const;
 
 describe("production container", () => {
-  it("pins a shared Node 22 Debian base and the project's frozen Bun installer", () => {
+  it("pins a shared Node 26 Debian base and the project's frozen Bun installer", () => {
     expect(dockerfile).toMatch(
-      /FROM node:22\.\d+\.\d+-bookworm-slim@sha256:[a-f0-9]{64} AS base/,
+      /FROM node:26\.\d+\.\d+-bookworm-slim@sha256:[a-f0-9]{64} AS base/,
     );
     expect(dockerfile).toMatch(/FROM oven\/bun:1\.2\.15@sha256:[a-f0-9]{64} AS bun/);
     expect(dockerfile).toContain("FROM base AS dependencies");
