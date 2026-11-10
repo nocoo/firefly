@@ -1,3 +1,5 @@
+# CI slot standard v1 (nocoo/base-ci docs/slots.md): S1–G2, B1, L1, L1.5, L2, L3, S3, Z1 via quality.yml;
+# P1 na in slot-status. nocoo/base-ci v2026.12: top-level slot jobs, L2/L3 test-env-json, L3 evidence artifacts.
 name: CI
 
 on:
@@ -7,86 +9,67 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  # ─────────────────────────────────────────────────────
-  # L1 + G1 + G2 — Core quality gate from base-ci
-  # ─────────────────────────────────────────────────────
   quality:
-    uses: nocoo/base-ci/.github/workflows/quality.yml@633a5545fcfec91b688840650d4edf3e9cc1abbd  # v2026.10
+    uses: nocoo/base-ci/.github/workflows/quality.yml@1ea10ecab22b72512399485391603fe03a161016 # v2026.12
     with:
       runtime-version: "1.2.15"
-      install-policy: "blocked"
+      install-policy: project
+      extra-install-dirs: worker
       coverage-path: ""
-      extra-install-dirs: "worker"
-      test-command: "bun run test:coverage"
-      osv-config: "osv-scanner.toml"
-
-  # ─────────────────────────────────────────────────────
-  # L2: API E2E (fully local — Miniflare D1 + filesystem R2)
-  # Runs in PARALLEL with quality for faster CI.
-  # ─────────────────────────────────────────────────────
-  api-e2e:
-    name: "L2 API E2E"
-    uses: nocoo/base-ci/.github/workflows/test-job.yml@633a5545fcfec91b688840650d4edf3e9cc1abbd  # v2026.10
-    with:
-      runtime-version: "1.2.15"
-      install-policy: "project"
-      extra-install-dirs: "worker"
-      timeout-minutes: 20
-      command: "bun run test:e2e:api"
-      env-json: '{"AUTH_URL": "http://localhost:17028"}'
+      test-command: bun run test:coverage
+      osv-config: osv-scanner.toml
+      gitleaks-config: .gitleaks.toml
+      lockfiles: |
+        bun.lock
+        worker/bun.lock
+      build: true
+      build-command: bun run build
+      worker: true
+      worker-directory: worker
+      worker-command: bun run test:coverage
+      workflow-lint: true
+      workflow-lint-required-workflow: nocoo/base-ci/.github/workflows/deploy-docker.yml
+      workflow-lint-yamllint: true
+      l2: true
+      l2-command: bun run test:e2e:api
+      l3: true
+      l3-browser: chromium
+      l3-command: bun run test:e2e:browser
+      env-json: '{"CI": "true"}'
+      slot-status: >-
+        {"S1": {"status": "impl"},
+        "S2": {"status": "impl"},
+        "S3": {"status": "impl"},
+        "G1": {"status": "impl"},
+        "G2": {"status": "impl"},
+        "B1": {"status": "impl"},
+        "L1": {"status": "impl"},
+        "L1.5": {"status": "impl"},
+        "L2": {"status": "impl"},
+        "L3": {"status": "impl"},
+        "P1": {"status": "na", "reason": "package.json 为 private，不发布 npm 包"},
+        "Z1": {"status": "impl"}}
     secrets:
       test-env-json: ${{ format('{{"AUTH_SECRET":{0},"AUTH_ALLOWED_EMAILS":{1}}}', toJSON(secrets.AUTH_SECRET), toJSON(secrets.AUTH_ALLOWED_EMAILS)) }}
 
-  # ─────────────────────────────────────────────────────
-  # L3: Browser E2E (fully local — same as L2)
-  # Runs in PARALLEL with quality for faster CI.
-  # ─────────────────────────────────────────────────────
-  browser-e2e:
-    name: "L3 Browser E2E"
-    uses: nocoo/base-ci/.github/workflows/test-job.yml@633a5545fcfec91b688840650d4edf3e9cc1abbd  # v2026.10
-    with:
-      runtime-version: "1.2.15"
-      install-policy: "project"
-      extra-install-dirs: "worker"
-      browser: "chromium"
-      timeout-minutes: 25
-      command: "bun run test:e2e:browser"
-      env-json: '{"AUTH_URL": "http://localhost:27028"}'
-    secrets:
-      test-env-json: ${{ format('{{"AUTH_SECRET":{0},"AUTH_ALLOWED_EMAILS":{1}}}', toJSON(secrets.AUTH_SECRET), toJSON(secrets.AUTH_ALLOWED_EMAILS)) }}
-
-  # ─────────────────────────────────────────────────────
-  # Worker: Edge Worker unit tests
-  # Runs in PARALLEL with quality for faster CI.
-  # ─────────────────────────────────────────────────────
-  worker-tests:
-    name: "Worker Tests"
-    uses: nocoo/base-ci/.github/workflows/test-job.yml@633a5545fcfec91b688840650d4edf3e9cc1abbd  # v2026.10
-    with:
-      runtime-version: "1.2.15"
-      install-policy: "project"
-      working-directory: "worker"
-      timeout-minutes: 10
-      command: "bun run test"
-
+  # Linux 主机网络下对已构建容器镜像跑 API E2E；不属于 slots.md 的 L2 槽位（验证 Docker 产物而非进程内 HTTP）。
   container-e2e:
     name: "Container L2 E2E"
-    uses: nocoo/base-ci/.github/workflows/test-job.yml@633a5545fcfec91b688840650d4edf3e9cc1abbd  # v2026.10
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@1ea10ecab22b72512399485391603fe03a161016 # v2026.12
     with:
       runtime-version: "1.2.15"
-      install-policy: "project"
-      extra-install-dirs: "worker"
+      install-policy: project
+      extra-install-dirs: worker
       timeout-minutes: 25
       command: |
         docker build --tag firefly-ci:${{ github.sha }} \
           --build-arg AUTH_URL=http://localhost:17028 \
           --build-arg R2_PUBLIC_URL=http://localhost:17028/__e2e-r2 .
         bun scripts/run-e2e.ts --api-only --container-image=firefly-ci:${{ github.sha }}
-
-  release-smoke:
-    name: "Release Workflow Smoke"
-    uses: nocoo/base-ci/.github/workflows/workflow-lint.yml@633a5545fcfec91b688840650d4edf3e9cc1abbd  # v2026.10
-    with:
-      required-reusable-workflow: "nocoo/base-ci/.github/workflows/deploy-docker.yml"
-      yamllint: true
+      env-json: '{"AUTH_URL": "http://localhost:17028", "CI": "true"}'
+    secrets:
+      test-env-json: ${{ format('{{"AUTH_SECRET":{0},"AUTH_ALLOWED_EMAILS":{1}}}', toJSON(secrets.AUTH_SECRET), toJSON(secrets.AUTH_ALLOWED_EMAILS)) }}
