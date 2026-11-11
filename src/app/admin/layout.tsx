@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { ThemeProvider as BasaltThemeProvider } from "@nocoo/basalt/providers/theme";
 import { auth } from "@/lib/auth";
 import { isE2EMode } from "@/lib/auth-utils";
 import { AdminShell } from "@/components/admin/shell";
@@ -20,14 +21,16 @@ export default async function AdminLayout({
   }
 
   return (
-    <AdminShell
-      user={{
-        name: session?.user?.name,
-        email: session?.user?.email,
-        image: session?.user?.image,
-      }}
-    >
-      {children}
-    </AdminShell>
+    <BasaltThemeProvider defaultTheme="system">
+      <AdminShell
+        user={{
+          name: session?.user?.name,
+          email: session?.user?.email,
+          image: session?.user?.image,
+        }}
+      >
+        {children}
+      </AdminShell>
+    </BasaltThemeProvider>
   );
 }
