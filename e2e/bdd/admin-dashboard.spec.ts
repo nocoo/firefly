@@ -34,6 +34,12 @@
  */
 import { test, expect, expectPathname } from "./fixtures";
 
+test("Sidebar user row wires basalt sign-out control", async ({ page }) => {
+  await page.goto("/admin", { waitUntil: "networkidle" });
+  const sidebar = page.getByRole("complementary");
+  await expect(sidebar.getByRole("button", { name: "退出登录", exact: true })).toBeVisible();
+});
+
 test("Native sidebar groups, current state, collapsed tooltips and search remain interactive", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/admin/posts/new", { waitUntil: "networkidle" });
