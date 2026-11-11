@@ -212,9 +212,19 @@ jobs:
           install-policy: project
           extra-install-dirs: worker
       - name: Root coverage (>= 95% x4)
-        run: bun run test:coverage | tee "$RUNNER_TEMP/l1-root.log"
+        run: |
+          set -euo pipefail
+          if ! bun run test:coverage > "$RUNNER_TEMP/l1-root.log" 2>&1; then
+            tail -200 "$RUNNER_TEMP/l1-root.log"; exit 1
+          fi
+          tail -20 "$RUNNER_TEMP/l1-root.log"
       - name: Worker coverage (>= 95% x4)
-        run: bun run test:worker:coverage | tee "$RUNNER_TEMP/l1-worker.log"
+        run: |
+          set -euo pipefail
+          if ! bun run test:worker:coverage > "$RUNNER_TEMP/l1-worker.log" 2>&1; then
+            tail -200 "$RUNNER_TEMP/l1-worker.log"; exit 1
+          fi
+          tail -20 "$RUNNER_TEMP/l1-worker.log"
       - name: Assert both lanes actually ran
         run: |
           set -euo pipefail
@@ -263,8 +273,15 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           install-policy: project
           extra-install-dirs: worker
+      # The runner spawns Next.js and wrangler with inherited stdout; piping would
+      # hand them a closed pipe ("Unable to flush stdout: Broken pipe").
       - name: Real HTTP over the local stack
-        run: bun run test:e2e:api | tee "$RUNNER_TEMP/l3.log"
+        run: |
+          set -euo pipefail
+          if ! bun run test:e2e:api > "$RUNNER_TEMP/l3.log" 2>&1; then
+            tail -200 "$RUNNER_TEMP/l3.log"; exit 1
+          fi
+          tail -30 "$RUNNER_TEMP/l3.log"
       - name: Assert integration tests ran
         run: |
           set -euo pipefail
@@ -305,7 +322,12 @@ jobs:
       - name: Install Chromium
         run: bunx playwright install --with-deps chromium
       - name: Browser journeys
-        run: bun run test:e2e:browser | tee "$RUNNER_TEMP/l4.log"
+        run: |
+          set -euo pipefail
+          if ! bun run test:e2e:browser > "$RUNNER_TEMP/l4.log" 2>&1; then
+            tail -200 "$RUNNER_TEMP/l4.log"; exit 1
+          fi
+          tail -30 "$RUNNER_TEMP/l4.log"
       - name: Assert browser journeys ran
         run: |
           set -euo pipefail
