@@ -142,8 +142,28 @@ the Z1 validator extracted from the workflow.
 
 ### 5.1 Recorded runs
 
-Filled in by the alignment run that introduced System0; see the commit that
-updates this section and [AGENTS.md](../AGENTS.md) for the exact commands.
+Local injections ran against the real hooks and `gate.ts`; each one was reverted
+immediately. CI injections ran against the Z1 validator extracted from
+`quality-slots.yml` with synthetic `needs` payloads.
+
+| Injected fault | Command | Observed |
+| --- | --- | --- |
+| `const x: number = "s"` in `src/` | `.husky/pre-commit` | `S1 ✗ typecheck 0.8s — exit 1`, gate exit 1 |
+| `export const injected: any = 1` | `.husky/pre-commit` | `S2 ✗ lint 0.2s — exit 1` (`noExplicitAny`) |
+| live Stripe token staged | `.husky/pre-commit` | `G1 ✗ staged 0.4s — exit 1`, `leaks found: 1` |
+| live Stripe token in one pushed commit | `.husky/pre-push` (range `parent..commit`) | `G1 ✗ range … — exit 1` |
+| `gitleaks` removed from `PATH` | `gate.ts --only=G1` | preflight `✗ gitleaks: not found on PATH (need >= 8.30.1)` |
+| `lodash@4.17.20` in `bun.lock` | `bun run security` | `G2: FAILED — vulnerabilities found in bun.lock` (4 advisories) |
+| type error under `src/` | `gate.ts --stage=pre-push --only=B1` | `B1 ✗ build 0.5s — exit 1` |
+| failing test in `e2e/api/` | `gate.ts --stage=pre-push --only=L3` | `L3 FAIL 5.7s` |
+| failing spec in `e2e/bdd/` | `gate.ts --stage=pre-push --only=L4` | `L4 FAIL 30.0s` |
+| step timeout lowered to 200ms | `gate.ts --only=S2` | `S2 timeout: exceeded 200ms` |
+| stage budget lowered to 800ms | `gate.ts --only=S1,S2` | `budget (timeout: stage took 1.2s over the 1s budget)` |
+| `.mise.toml` bun bumped to 1.3.9 | `gate.ts --only=S1` | preflight `✗ bun: 1.4.4 does not match .mise.toml 1.3.9` |
+| dependency added to `worker/package.json` without a lockfile update | `gate.ts --only=S1` | preflight `✗ lockfile worker: bun install --frozen-lockfile --dry-run failed` |
+| broken commit on `tmp-pin`, clean worktree on `main` | `.husky/pre-push` with that OID on stdin | S1 failed on `src/inject-pin.ts`, which only exists in the pushed commit |
+| ref deletion (`local OID` all zeros) | `.husky/pre-push` | `deletion, no source checks`, exit 0 |
+| Z1: `impl` job failed / `na` job ran / missing SHA / SHA mismatch / illegal status / missing declaration / empty reason / blocking extra failed or cancelled | extracted validator | each rejected with its own `::error::` message |
 
 ## 6. Known gaps (honest list)
 
