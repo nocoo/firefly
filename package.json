@@ -13,7 +13,7 @@
     "test:worker": "cd worker && bun run test",
     "test:worker:coverage": "cd worker && bun run test:coverage",
     "typecheck": "next typegen && tsc --noEmit && cd worker && tsc --noEmit",
-    "lint": "bun run typecheck && biome check --no-errors-on-unmatched --error-on-warnings --max-diagnostics=500 . && bun run gate:dynamic-delete && bun run gate:ts-expect-error && bun run gate:test-skip",
+    "lint": "biome check --no-errors-on-unmatched --error-on-warnings --max-diagnostics=500 . && bun run gate:dynamic-delete && bun run gate:ts-expect-error && bun run gate:test-skip",
     "lint:fix": "biome check --write --no-errors-on-unmatched --error-on-warnings --max-diagnostics=500 .",
     "gate:dynamic-delete": "bun run scripts/check-dynamic-delete.ts",
     "gate:ts-expect-error": "bun run scripts/check-ts-expect-error.ts",
@@ -22,7 +22,8 @@
     "test:e2e": "bun scripts/run-e2e.ts",
     "test:e2e:api": "bun scripts/run-e2e.ts --api-only",
     "test:e2e:browser": "bun scripts/run-e2e.ts --browser-only",
-    "test:e2e:bdd": "bun run test:e2e:browser",
+    "gate:pre-commit": "bun run scripts/quality/gate.ts --stage=pre-commit",
+    "gate:pre-push": "bun run scripts/quality/gate.ts --stage=pre-push",
     "migrate": "bun scripts/migrations/migrate.ts up",
     "migrate:status": "bun scripts/migrations/migrate.ts status",
     "migrate:local": "bun scripts/migrations/migrate.ts up --target local",
@@ -39,7 +40,6 @@
     "@vitest/coverage-v8": "5.1.0",
     "dotenv": "18.0.9",
     "husky": "^9.1.7",
-    "lint-staged": "17.6.0",
     "oxc-parser": "0.156.0",
     "typescript": "7.0.2",
     "vitest": "5.1.0"
@@ -98,10 +98,5 @@
     "ai": "7.0.155",
     "marked": "18.1.3",
     "@radix-ui/react-alert-dialog": "1.2.1"
-  },
-  "lint-staged": {
-    "*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,json}": [
-      "biome check --no-errors-on-unmatched --error-on-warnings --max-diagnostics=500 --staged"
-    ]
   }
 }
