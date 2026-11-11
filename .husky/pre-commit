@@ -1,8 +1,8 @@
 #!/usr/bin/env sh
 
-# === Quality Gate: pre-commit ===
-# L1 (6DQ): checks the Git index snapshot, not the working tree.
-# G0 lockfile + strict static (typecheck, Biome check-only, custom gates) + UT coverage (root + worker).
+# === System0 gate: pre-commit ===
+# Gates the Git index snapshot (not the working tree) with S1, S2, L1, G1 and —
+# when workflows are staged — S3. See scripts/quality/slots.ts for the slot map.
 set -e
 command -v git >/dev/null 2>&1 || {
 	echo "pre-commit: git is required" >&2
@@ -28,23 +28,12 @@ trap "exit 130" INT
 trap "exit 143" TERM
 trap "exit 129" HUP
 
-# G0: verify frozen lockfiles when dependency manifests are part of this commit.
-STAGED_FILES=$(git diff --cached --name-only)
-ROOT_PKG_CHANGES=$(echo "$STAGED_FILES" | grep -E '^(package\.json|bun\.lock)$' || true)
-WORKER_PKG_CHANGES=$(echo "$STAGED_FILES" | grep -E '^worker/(package\.json|bun\.lock)$' || true)
-
-if [ -n "$ROOT_PKG_CHANGES" ]; then
-	echo "▸ G0: root lockfile (--frozen-lockfile)"
-	bun install --frozen-lockfile 2>&1
-fi
-if [ -n "$WORKER_PKG_CHANGES" ]; then
-	echo "▸ G0: worker lockfile (--frozen-lockfile)"
-	(cd worker && bun install --frozen-lockfile 2>&1)
-fi
+repo=$(git rev-parse --show-toplevel)
+GATE_STAGED_FILES=$(git diff --cached --name-only)
+export GATE_STAGED_FILES
 
 snapshot=$(mktemp -d "${TMPDIR:-/tmp}/firefly-index-XXXXXX")
 git checkout-index --all --prefix="$snapshot/"
-repo=$(git rev-parse --show-toplevel)
 
 if [ ! -d "$repo/node_modules" ]; then
 	echo "pre-commit: node_modules is required — run bun install" >&2
@@ -54,11 +43,13 @@ if [ ! -f "$snapshot/package.json" ] || [ ! -f "$snapshot/bun.lock" ]; then
 	echo "pre-commit: index must contain package.json and bun.lock" >&2
 	exit 1
 fi
+
+# The installed tree must belong to the manifests being committed, otherwise the
+# gates would run against dependencies that the commit does not declare.
 if ! cmp -s "$snapshot/package.json" "$repo/package.json" || ! cmp -s "$snapshot/bun.lock" "$repo/bun.lock"; then
 	echo "pre-commit: index package.json/bun.lock must match installed worktree copies (run bun install)" >&2
 	exit 1
 fi
-
 if [ -f "$snapshot/worker/package.json" ] && [ -f "$snapshot/worker/bun.lock" ]; then
 	if [ ! -d "$repo/worker/node_modules" ]; then
 		echo "pre-commit: worker/node_modules is required — run bun install --cwd worker" >&2
@@ -71,6 +62,7 @@ if [ -f "$snapshot/worker/package.json" ] && [ -f "$snapshot/worker/bun.lock" ];
 	fi
 fi
 
+# Reuse the installed dependencies read-only; caches stay inside the snapshot.
 mkdir "$snapshot/node_modules"
 for entry in "$repo/node_modules"/*; do
 	[ -e "$entry" ] || continue
@@ -92,6 +84,7 @@ unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_PREFIX
 unset GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES
 export XDG_CACHE_HOME="$snapshot/.cache"
 export XDG_STATE_HOME="$snapshot/.cache"
+export GATE_GIT_ROOT="$repo"
 PATH="$snapshot/node_modules/.bin:$PATH"
 
 cd "$snapshot"
@@ -101,13 +94,4 @@ if ! grep -Fq -- '--coverage' package.json; then
 	exit 1
 fi
 
-echo "▸ L1: static analysis (typecheck + Biome + gates) on index snapshot"
-bun run lint
-
-echo "▸ L1: unit tests + coverage (root)"
-bun run test:coverage
-
-echo "▸ L1: unit tests + coverage (worker)"
-bun run test:worker:coverage
-
-echo "✅ pre-commit passed: G0 lockfile + L1 (index snapshot)"
+bun run scripts/quality/gate.ts --stage=pre-commit
