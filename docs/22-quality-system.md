@@ -84,8 +84,6 @@ Blocked-by-design conditions that are easy to get wrong and are therefore explic
 - The stage budget fails the stage only for slots it prevented from starting; a
   stage whose every slot finished over budget prints a governance warning instead
   of turning a green run red.
-- The stage budget fails a stage only when it prevented a slot from starting; a
-  stage whose every slot ran over budget prints a governance warning.
 - G1 refuses to run outside a real target: `--index-snapshot` requires the
   exported-snapshot marker, and pre-push requires an explicit commit range, so a
   manual `gate.ts` run can never quietly scan the working tree.

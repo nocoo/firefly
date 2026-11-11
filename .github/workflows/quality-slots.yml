@@ -303,9 +303,15 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: l3-integration-logs
-          path: |
-            .wrangler/e2e-logs/
-            ${{ runner.temp }}/*.log
+          path: .wrangler/e2e-logs/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload integration test output
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: l3-integration-output
+          path: ${{ runner.temp }}/*.log
           if-no-files-found: ignore
           retention-days: 7
       - name: Record tested SHA
@@ -354,7 +360,14 @@ jobs:
           path: |
             test-results/
             .wrangler/e2e-logs/
-            ${{ runner.temp }}/*.log
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload browser test output
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: l4-e2e-output
+          path: ${{ runner.temp }}/*.log
           if-no-files-found: ignore
           retention-days: 7
       - name: Record tested SHA
