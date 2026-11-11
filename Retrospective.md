@@ -1,5 +1,33 @@
 # Retrospective
 
+### 2026-11-11: A gate that cannot fail is not a gate
+
+Aligning the repository with System0 (base-ci v2026.13) exposed four checks that
+reported green while verifying nothing. `.gitleaks.toml` supplied a config with
+only an `[allowlist]`, which replaces the built-in rule set instead of extending
+it, so every scan since the file existed ran with zero rules. `gitleaks git
+--staged` scans the diff header of a newly added file rather than its content, so
+a staged live token passed. The npm entry points for the local gates called
+`gate.ts` in the working tree, so the "index snapshot" secret scan walked `.env`
+and build output. And the stage budget turned a fully executed green stage red
+because it was treated as a timeout rather than a governance target.
+
+Each was found by injecting a fault, not by reading the code: a synthetic Stripe
+token, a deliberately broken type, a vulnerable `lodash` version, failing
+fixtures in the API and browser suites, a shortened timeout, a mismatched
+toolchain, and a push of a side branch whose commit was the only broken object.
+Two CI failures were also produced by the guards themselves (Vitest colourises
+its summary; `tee` hands the E2E runner's children a closed pipe), which is why
+CI now forces `NO_COLOR`, strips escapes before matching, and captures output in
+files.
+
+Prevention is mechanical: every slot declares what it inspects
+(`scripts/quality/slots.ts`), G1 refuses to run without the exported-snapshot
+marker or an explicit commit range, empty runs and missing scanners fail, and
+`docs/22-quality-system.md` §5 records the injection and the observed blocking
+result. Never accept "the check passed" as evidence that the check examined the
+right object; make the failure path observable and run it.
+
 ### 2026-10-22: Loading boundaries must not turn missing resources into HTTP 200
 
 The first native admin loading boundaries inherited through parent list routes.
