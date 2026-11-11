@@ -82,8 +82,9 @@ async function runStep(
   label: string,
 ): Promise<StepResult> {
   const started = performance.now();
+  const seconds = (timeoutMs / 1000).toFixed(3);
   const invocation = timeoutBin
-    ? [timeoutBin, "-s", "KILL", String(Math.ceil(timeoutMs / 1000)), "sh", "-c", command]
+    ? [timeoutBin, "-s", "KILL", seconds, "sh", "-c", command]
     : ["sh", "-c", command];
   const proc = Bun.spawn(invocation, {
     cwd: root,
@@ -113,7 +114,7 @@ async function runStep(
   const ms = performance.now() - started;
 
   if (code === 124 || code === 137) {
-    return { label, command, outcome: "timeout", ms, note: `exceeded ${Math.round(timeoutMs / 1000)}s` };
+    return { label, command, outcome: "timeout", ms, note: `exceeded ${timeoutMs < 1000 ? `${timeoutMs}ms` : `${Math.round(timeoutMs / 1000)}s`}` };
   }
   if (code !== 0) {
     return { label, command, outcome: "fail", ms, note: `exit ${code}` };
@@ -266,7 +267,17 @@ for (const entry of NOT_APPLICABLE) {
 console.log(`${"─".repeat(78)}`);
 console.log(`total ${formatMs(totalMs)} (stage budget ${Math.round(stageBudgetMs / 1000)}s)`);
 
+const overBudget = totalMs > stageBudgetMs;
 const failedSlots = results.filter((result) => result.outcome === "fail" || result.outcome === "timeout");
+if (overBudget) {
+  failedSlots.push({
+    slot: { id: "budget", name: "stage budget", stages: [], target: "", steps: [] },
+    outcome: "timeout",
+    ms: totalMs,
+    steps: [],
+    note: `stage took ${formatMs(totalMs)} over the ${Math.round(stageBudgetMs / 1000)}s budget`,
+  });
+}
 if (failedSlots.length > 0) {
   console.error(`\n❌ ${stage} gate failed: ${failedSlots.map((result) => `${result.slot.id} (${result.outcome}${result.note ? `: ${result.note}` : ""})`).join(", ")}`);
   process.exit(1);

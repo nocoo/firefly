@@ -32,7 +32,7 @@ if (missing.length > 0) {
 }
 
 const configArgs = existsSync(config) ? [`--config=${config}`] : [];
-let findings = false;
+const findings: string[] = [];
 let scannerError = false;
 
 for (const lockfile of LOCKFILES) {
@@ -46,7 +46,7 @@ for (const lockfile of LOCKFILES) {
   if (code === 0) {
     console.log(`[G2] ${lockfile}: no vulnerabilities`);
   } else if (code === 1) {
-    findings = true;
+    findings.push(lockfile);
   } else {
     scannerError = true;
   }
@@ -56,8 +56,8 @@ if (scannerError) {
   console.error("=== G2: FAILED — scanner error (not a finding) ===");
   process.exit(1);
 }
-if (findings) {
-  console.error(`=== G2: FAILED — vulnerabilities found in ${LOCKFILES.length} lockfiles ===`);
+if (findings.length > 0) {
+  console.error(`=== G2: FAILED — vulnerabilities found in ${findings.join(", ")} ===`);
   process.exit(1);
 }
 
