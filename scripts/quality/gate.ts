@@ -199,7 +199,12 @@ if (!(await preflight())) {
   process.exit(1);
 }
 
+let abortAfter: string | undefined;
 for (const slot of selected) {
+  if (abortAfter) {
+    results.push({ slot, outcome: "skip", ms: 0, steps: [], note: `not run after ${abortAfter} failed` });
+    continue;
+  }
   if (stageBudgetExceeded()) {
     results.push({
       slot,
@@ -240,6 +245,7 @@ for (const slot of selected) {
     steps: stepResults,
     note: failed?.note ?? "",
   });
+  if (failed) abortAfter = slot.id;
 }
 
 const totalMs = performance.now() - startedAt;
@@ -250,6 +256,9 @@ for (const result of results) {
   console.log(
     `${result.slot.id.padEnd(4)}${result.slot.name.slice(4).padEnd(17)}${result.outcome.toUpperCase().padEnd(9)}${formatMs(result.ms).padEnd(8)}${result.slot.target}`,
   );
+}
+for (const result of results) {
+  if (result.note) console.log(`  ${result.slot.id}: ${result.note}`);
 }
 for (const entry of NOT_APPLICABLE) {
   console.log(`${entry.id.padEnd(4)}${entry.name.slice(4).padEnd(17)}${"N/A".padEnd(9)}${"-".padEnd(8)}${entry.reason}`);
