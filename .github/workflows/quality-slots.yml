@@ -26,6 +26,7 @@ env:
   BASE_CI: e4598815d171e2281f77f27a4800ff8fc2537f3f # v2026.13
   BUN_VERSION: "1.4.4"
   NODE_VERSION: "26.13.0"
+  NO_COLOR: "1"
   SLOT_STATUS: >-
     {"S1": {"status": "impl"},
     "S2": {"status": "impl"},
@@ -217,8 +218,9 @@ jobs:
       - name: Assert both lanes actually ran
         run: |
           set -euo pipefail
-          grep -Eq 'Tests +[1-9][0-9]* passed' "$RUNNER_TEMP/l1-root.log"
-          grep -Eq 'Tests +[1-9][0-9]* passed' "$RUNNER_TEMP/l1-worker.log"
+          strip() { perl -pe 's/\e\[[0-9;]*[A-Za-z]//g' "$1"; }
+          strip "$RUNNER_TEMP/l1-root.log" | grep -Eq 'Tests +[1-9][0-9]* passed'
+          strip "$RUNNER_TEMP/l1-worker.log" | grep -Eq 'Tests +[1-9][0-9]* passed'
       - name: Record tested SHA
         id: record-sha
         if: always()
@@ -266,7 +268,7 @@ jobs:
       - name: Assert integration tests ran
         run: |
           set -euo pipefail
-          grep -Eq 'Tests +[1-9][0-9]* passed' "$RUNNER_TEMP/l3.log"
+          perl -pe 's/\e\[[0-9;]*[A-Za-z]//g' "$RUNNER_TEMP/l3.log" | grep -Eq 'Tests +[1-9][0-9]* passed'
         env:
           CI: "true"
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
@@ -307,7 +309,7 @@ jobs:
       - name: Assert browser journeys ran
         run: |
           set -euo pipefail
-          grep -Eq '[1-9][0-9]* passed' "$RUNNER_TEMP/l4.log"
+          perl -pe 's/\e\[[0-9;]*[A-Za-z]//g' "$RUNNER_TEMP/l4.log" | grep -Eq '[1-9][0-9]* passed'
         env:
           CI: "true"
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}

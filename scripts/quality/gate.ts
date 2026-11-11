@@ -76,6 +76,8 @@ const stagedPaths = (process.env.GATE_STAGED_FILES ?? "")
   .map((line) => line.trim())
   .filter(Boolean);
 
+const ANSI = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*[A-Za-z]`, "g");
+
 function tee(chunk: string, stream: "out" | "err") {
   const target = stream === "out" ? process.stdout : process.stderr;
   target.write(chunk);
@@ -126,7 +128,8 @@ async function runStep(
     return { label, command, outcome: "fail", ms, note: `exit ${code}` };
   }
   if (expect) {
-    const matches = [...output.matchAll(new RegExp(expect.pattern.source, "g"))];
+    const plain = output.replace(ANSI, "");
+    const matches = [...plain.matchAll(new RegExp(expect.pattern.source, "g"))];
     const count = matches.reduce((sum, match) => sum + Number(match[1] ?? 0), 0);
     if (count < expect.min) {
       return {
