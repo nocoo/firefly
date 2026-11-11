@@ -49,13 +49,6 @@
 @import "./styles/misc.css";
 @import "./styles/print.css";
 
-/* Basalt places sidebar-drawer padding resets in @layer components; SheetContent padding utilities win unless mirrored here. */
-@layer utilities {
-  [data-basalt-sheet][data-slot="sidebar-drawer"].basalt-sidebar-drawer {
-    padding: 0;
-  }
-}
-
 /*
  * ==========================================================================
  * Base styles
