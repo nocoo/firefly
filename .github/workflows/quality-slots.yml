@@ -1,0 +1,545 @@
+# System0 quality slots, native mode (nocoo/workflow system0-quality v1.3.0).
+#
+# Every slot is a top-level job whose name is exactly "<ID>: <Name>", so the
+# caller (ci.yml job `quality`) renders the canonical check names
+# `quality / S1: Types` ... `quality / Z1: Gate`. Steps are inlined; only
+# composite actions from nocoo/base-ci are reused, pinned to a full SHA.
+#
+# L2 Runtime and P1 Package are declared `na` in AGENTS.md and stay skipped.
+# `container-image-e2e` is the one blocking job outside the 12 slots; it is named
+# without a slot id and aggregated by Z1.
+name: Quality slots
+
+on:
+  workflow_call:
+    secrets:
+      AUTH_SECRET:
+        required: true
+      AUTH_ALLOWED_EMAILS:
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  BASE_CI: e4598815d171e2281f77f27a4800ff8fc2537f3f # v2026.13
+  BUN_VERSION: "1.4.4"
+  NODE_VERSION: "26.13.0"
+  SLOT_STATUS: >-
+    {"S1": {"status": "impl"},
+    "S2": {"status": "impl"},
+    "S3": {"status": "impl"},
+    "G1": {"status": "impl"},
+    "G2": {"status": "impl"},
+    "B1": {"status": "impl"},
+    "L1": {"status": "impl"},
+    "L2": {"status": "na", "reason": "worker/test runs in Node with a mocked D1 binding (L1 evidence); no workerd or vitest-pool-workers runtime suite exists. Real D1 execution is covered by L3 Integration."},
+    "L3": {"status": "impl"},
+    "L4": {"status": "impl"},
+    "P1": {"status": "na", "reason": "root package.json is private and nothing is published to npm"},
+    "Z1": {"status": "impl"}}
+
+jobs:
+  s1-types:
+    name: "S1: Types"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      tested-sha: ${{ steps.record-sha.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: nocoo/base-ci/.github/actions/setup-js@e4598815d171e2281f77f27a4800ff8fc2537f3f # v2026.13
+        with:
+          runtime-version: ${{ env.BUN_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
+          install-policy: project
+          extra-install-dirs: worker
+      - name: Typecheck both lanes
+        run: bun run typecheck
+      - name: Record tested SHA
+        id: record-sha
+        if: always()
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  s2-lint:
+    name: "S2: Lint"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      tested-sha: ${{ steps.record-sha.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: nocoo/base-ci/.github/actions/setup-js@e4598815d171e2281f77f27a4800ff8fc2537f3f # v2026.13
+        with:
+          runtime-version: ${{ env.BUN_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
+          install-policy: project
+          extra-install-dirs: worker
+      - name: Biome (0 error / 0 warning) and AST gates
+        run: bun run lint
+      - name: Record tested SHA
+        id: record-sha
+        if: always()
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  s3-workflow:
+    name: "S3: Workflow"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      tested-sha: ${{ steps.record-sha.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install verified actionlint
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 3 \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
+            -o "$RUNNER_TEMP/actionlint.tar.gz"
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $RUNNER_TEMP/actionlint.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      - uses: nocoo/base-ci/.github/actions/setup-js@e4598815d171e2281f77f27a4800ff8fc2537f3f # v2026.13
+        with:
+          runtime-version: ${{ env.BUN_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
+          install-policy: project
+      - name: actionlint and immutable base-ci pins
+        run: bun run scripts/quality/workflow-lint.ts
+      - name: YAML style
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet 'yamllint==1.38.0'
+          yamllint -d '{extends: default, rules: {line-length: disable, document-start: disable, truthy: disable}}' .github/workflows/*.yml
+      - name: Record tested SHA
+        id: record-sha
+        if: always()
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  g1-secrets:
+    name: "G1: Secrets"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      tested-sha: ${{ steps.record-sha.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: nocoo/base-ci/.github/actions/setup-security-scanners@e4598815d171e2281f77f27a4800ff8fc2537f3f # v2026.13
+      - name: Gitleaks over the checked-out content
+        run: |
+          set -euo pipefail
+          gitleaks dir . --no-banner --redact --config=.gitleaks.toml --gitleaks-ignore-path=.
+      - name: Record tested SHA
+        id: record-sha
+        if: always()
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  g2-dependencies:
+    name: "G2: Dependencies"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      tested-sha: ${{ steps.record-sha.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: nocoo/base-ci/.github/actions/setup-security-scanners@e4598815d171e2281f77f27a4800ff8fc2537f3f # v2026.13
+      - name: OSV scan both lockfiles
+        run: |
+          set -euo pipefail
+          for lockfile in bun.lock worker/bun.lock; do
+            test -f "$lockfile" || { echo "::error::missing $lockfile"; exit 1; }
+            echo "::group::scan $lockfile"
+            osv-scanner scan --lockfile="$lockfile" --config=osv-scanner.toml
+            echo "::endgroup::"
+          done
+      - name: Record tested SHA
+        id: record-sha
+        if: always()
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  b1-build:
+    name: "B1: Build"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      tested-sha: ${{ steps.record-sha.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: nocoo/base-ci/.github/actions/setup-js@e4598815d171e2281f77f27a4800ff8fc2537f3f # v2026.13
+        with:
+          runtime-version: ${{ env.BUN_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
+          install-policy: project
+          extra-install-dirs: worker
+      - name: Build the standalone site
+        run: bun run build
+        env:
+          CI: "true"
+      - name: Record tested SHA
+        id: record-sha
+        if: always()
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  l1-unit:
+    name: "L1: Unit"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      tested-sha: ${{ steps.record-sha.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: nocoo/base-ci/.github/actions/setup-js@e4598815d171e2281f77f27a4800ff8fc2537f3f # v2026.13
+        with:
+          runtime-version: ${{ env.BUN_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
+          install-policy: project
+          extra-install-dirs: worker
+      - name: Root coverage (>= 95% x4)
+        run: bun run test:coverage
+      - name: Worker coverage (>= 95% x4)
+        run: bun run test:worker:coverage
+      - name: Record tested SHA
+        id: record-sha
+        if: always()
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  l2-runtime:
+    name: "L2: Runtime"
+    # Declared na in AGENTS.md: no workerd / vitest-pool-workers suite exists yet.
+    if: ${{ vars.ENABLE_L2_RUNTIME == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      tested-sha: ${{ steps.record-sha.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: No runtime suite
+        run: |
+          echo "::error::L2 Runtime is declared na; add a workerd / vitest-pool-workers suite before enabling this slot"
+          exit 1
+      - name: Record tested SHA
+        id: record-sha
+        if: always()
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  l3-integration:
+    name: "L3: Integration"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    outputs:
+      tested-sha: ${{ steps.record-sha.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: nocoo/base-ci/.github/actions/setup-js@e4598815d171e2281f77f27a4800ff8fc2537f3f # v2026.13
+        with:
+          runtime-version: ${{ env.BUN_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
+          install-policy: project
+          extra-install-dirs: worker
+      - name: Real HTTP over the local stack
+        run: bun run test:e2e:api
+        env:
+          CI: "true"
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          AUTH_ALLOWED_EMAILS: ${{ secrets.AUTH_ALLOWED_EMAILS }}
+      - name: Upload runtime logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: l3-integration-logs
+          path: .wrangler/e2e-logs/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Record tested SHA
+        id: record-sha
+        if: always()
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  l4-e2e:
+    name: "L4: E2E"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      tested-sha: ${{ steps.record-sha.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: nocoo/base-ci/.github/actions/setup-js@e4598815d171e2281f77f27a4800ff8fc2537f3f # v2026.13
+        with:
+          runtime-version: ${{ env.BUN_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
+          install-policy: project
+          extra-install-dirs: worker
+      - name: Install Chromium
+        run: bunx playwright install --with-deps chromium
+      - name: Browser journeys
+        run: bun run test:e2e:browser
+        env:
+          CI: "true"
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          AUTH_ALLOWED_EMAILS: ${{ secrets.AUTH_ALLOWED_EMAILS }}
+      - name: Upload Playwright evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: l4-e2e-results
+          path: |
+            test-results/
+            .wrangler/e2e-logs/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Record tested SHA
+        id: record-sha
+        if: always()
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  p1-package:
+    name: "P1: Package"
+    # Declared na in AGENTS.md: private root package, nothing published.
+    if: ${{ vars.ENABLE_P1_PACKAGE == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      tested-sha: ${{ steps.record-sha.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: No published package
+        run: |
+          echo "::error::P1 Package is declared na; drop the private flag and add a consumer check before enabling this slot"
+          exit 1
+      - name: Record tested SHA
+        id: record-sha
+        if: always()
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  # Blocking job outside the 12 slots: verifies the Docker artifact CI builds.
+  # It is named without a slot id and aggregated by Z1.
+  container-image-e2e:
+    name: "Container image E2E"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      tested-sha: ${{ steps.record-sha.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: nocoo/base-ci/.github/actions/setup-js@e4598815d171e2281f77f27a4800ff8fc2537f3f # v2026.13
+        with:
+          runtime-version: ${{ env.BUN_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
+          install-policy: project
+          extra-install-dirs: worker
+      - name: Build the release image
+        run: |
+          set -euo pipefail
+          docker build --tag "firefly-ci:${GITHUB_SHA}" \
+            --build-arg AUTH_URL=http://localhost:17028 \
+            --build-arg R2_PUBLIC_URL=http://localhost:17028/__e2e-r2 .
+      - name: Real HTTP against the built image
+        run: bun scripts/run-e2e.ts --api-only --container-image="firefly-ci:${GITHUB_SHA}"
+        env:
+          CI: "true"
+          AUTH_URL: http://localhost:17028
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          AUTH_ALLOWED_EMAILS: ${{ secrets.AUTH_ALLOWED_EMAILS }}
+      - name: Record tested SHA
+        id: record-sha
+        if: always()
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  z1-gate:
+    name: "Z1: Gate"
+    if: always()
+    needs:
+      - s1-types
+      - s2-lint
+      - s3-workflow
+      - g1-secrets
+      - g2-dependencies
+      - b1-build
+      - l1-unit
+      - l2-runtime
+      - l3-integration
+      - l4-e2e
+      - p1-package
+      - container-image-e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify slot declarations against the jobs that ran
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+          import urllib.request
+
+          SLOT_JOBS = {
+              "S1": ("s1-types", "S1: Types"),
+              "S2": ("s2-lint", "S2: Lint"),
+              "S3": ("s3-workflow", "S3: Workflow"),
+              "G1": ("g1-secrets", "G1: Secrets"),
+              "G2": ("g2-dependencies", "G2: Dependencies"),
+              "B1": ("b1-build", "B1: Build"),
+              "L1": ("l1-unit", "L1: Unit"),
+              "L2": ("l2-runtime", "L2: Runtime"),
+              "L3": ("l3-integration", "L3: Integration"),
+              "L4": ("l4-e2e", "L4: E2E"),
+              "P1": ("p1-package", "P1: Package"),
+          }
+          EXTRA_BLOCKING = {"container-image-e2e": "Container image E2E"}
+          VALID = ("impl", "na", "todo")
+          TARGET_SECONDS = 5 * 60
+          LIMIT_SECONDS = 10 * 60
+
+          def fail(message):
+              sys.stderr.write(f"::error::{message}\n")
+              print(f"| Z1 | **FAIL** | {message} |", file=summary)
+              sys.exit(1)
+
+          def durations():
+              token = os.environ.get("GITHUB_TOKEN", "").strip()
+              repo = os.environ.get("GITHUB_REPOSITORY", "").strip()
+              run_id = os.environ.get("GITHUB_RUN_ID", "").strip()
+              if not (token and repo and run_id):
+                  return {}
+              request = urllib.request.Request(
+                  f"{os.environ.get('GITHUB_API_URL', 'https://api.github.com')}/repos/{repo}/actions/runs/{run_id}/jobs?per_page=100",
+                  headers={
+                      "Authorization": f"Bearer {token}",
+                      "Accept": "application/vnd.github+json",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                      "User-Agent": "firefly-z1-gate",
+                  },
+              )
+              try:
+                  with urllib.request.urlopen(request, timeout=60) as response:
+                      payload = json.loads(response.read().decode("utf-8"))
+              except Exception as exc:
+                  print(f"::warning::Z1 could not read job timings ({exc})")
+                  return {}
+              seconds = {}
+              for job in payload.get("jobs", []):
+                  started, completed = job.get("started_at"), job.get("completed_at")
+                  if not (started and completed):
+                      continue
+                  from datetime import datetime
+
+                  fmt = "%Y-%m-%dT%H:%M:%SZ"
+                  seconds[job.get("name", "")] = int(
+                      (datetime.strptime(completed, fmt) - datetime.strptime(started, fmt)).total_seconds()
+                  )
+              return seconds
+
+          summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+          summary = open(summary_path, "w") if summary_path else sys.stdout
+          needs = json.loads(os.environ["NEEDS_JSON"])
+          declarations = json.loads(os.environ["SLOT_STATUS"])
+          timings = durations()
+
+          if not isinstance(declarations, dict):
+              fail("SLOT_STATUS must be a JSON object")
+          unknown = sorted(set(declarations) - set(SLOT_JOBS) - {"Z1"})
+          if unknown:
+              fail(f"declares unknown slots: {', '.join(unknown)}")
+          missing = [slot for slot in [*SLOT_JOBS, "Z1"] if slot not in declarations]
+          if missing:
+              fail(f"is missing slot declarations: {', '.join(missing)}")
+
+          verified = []
+          rows = ["| Slot | Status | Reason | Result | Time |", "| --- | --- | --- | --- | --- |"]
+          for slot, (job, name) in SLOT_JOBS.items():
+              entry = declarations[slot]
+              if not isinstance(entry, dict) or entry.get("status") not in VALID:
+                  fail(f"{slot} has an invalid status")
+              status = entry["status"]
+              reason = entry.get("reason", "")
+              if status in ("na", "todo") and not str(reason).strip():
+                  fail(f"{slot} is declared {status} without a reason")
+              state = needs.get(job, {})
+              result = state.get("result", "missing")
+              sha = (state.get("outputs") or {}).get("tested-sha", "")
+              seconds = timings.get(name, "")
+              time_cell = f"{seconds}s" if seconds != "" else "-"
+              if status == "impl":
+                  if result != "success":
+                      fail(f"{slot} is declared impl but its job finished '{result}'")
+                  if not sha:
+                      fail(f"{slot} is declared impl but reported no tested SHA")
+                  verified.append((slot, sha))
+              else:
+                  if result != "skipped":
+                      fail(f"{slot} is declared {status} but its job finished '{result}'")
+              rows.append(f"| {slot} | {status} | {reason or '-'} | {result} | {time_cell} |")
+
+          if declarations.get("Z1", {}).get("status") != "impl":
+              fail("Z1 must be declared impl")
+          if not verified:
+              fail("no implemented slot besides Z1")
+
+          for job, name in EXTRA_BLOCKING.items():
+              state = needs.get(job, {})
+              result = state.get("result", "missing")
+              sha = (state.get("outputs") or {}).get("tested-sha", "")
+              seconds = timings.get(name, "")
+              rows.append(
+                  f"| {name} | extra | blocking, not a slot | {result} | {seconds if seconds != '' else '-'} |"
+              )
+              if result != "success":
+                  fail(f"blocking job {name} finished '{result}'")
+              if not sha:
+                  fail(f"blocking job {name} reported no tested SHA")
+              verified.append((name, sha))
+
+          shas = {sha for _, sha in verified}
+          if len(shas) != 1:
+              detail = ", ".join(f"{name}={sha}" for name, sha in verified)
+              fail(f"slot jobs tested different commits: {detail}")
+          tested_sha = shas.pop()
+
+          total = sum(value for value in timings.values() if isinstance(value, int)) or ""
+          verdict = ""
+          if total != "":
+              if total <= TARGET_SECONDS:
+                  verdict = f"within the {TARGET_SECONDS // 60} min target"
+              elif total <= LIMIT_SECONDS:
+                  verdict = f"over the {TARGET_SECONDS // 60} min target, within the {LIMIT_SECONDS // 60} min limit"
+              else:
+                  verdict = f"over the {LIMIT_SECONDS // 60} min limit"
+              verdict = f" — job time sum {total}s, {verdict}"
+
+          rows.append("| Z1 | impl | all impl slots succeeded on the same SHA | success | - |")
+          print("\n".join(rows), file=summary)
+          print(f"\nTested SHA: `{tested_sha}`{verdict}", file=summary)
+          if summary is not sys.stdout:
+              summary.close()
+          print(f"Z1: {len(verified)} jobs verified on {tested_sha}{verdict}")
+          PY
