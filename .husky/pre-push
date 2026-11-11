@@ -1,12 +1,103 @@
 #!/usr/bin/env sh
 
-# === Quality Gate: pre-push ===
-# L1 Coverage (root + worker) + G1 Lint + G2 Security
-echo "▸ Lockfile sync check"
-bun install --frozen-lockfile --silent
-echo "▸ L1: unit tests (coverage ≥95%, root lane; worker at pre-commit)"
-bun run test:coverage
-echo "▸ G1: lint (typecheck + Biome + custom gates)"
-bun run lint
-echo "▸ G2: security"
-bun run security
+# === System0 gate: pre-push ===
+# Verifies exactly the commits being pushed (never the working tree): one detached
+# worktree per pushed OID, then G2, B1, L3, L4 plus S1/S2/L1/G1 as bypass evidence.
+# Deleted refs are skipped; a new branch scans "<oid> --not --remotes" for secrets.
+set -e
+zero=0000000000000000000000000000000000000000
+command -v git >/dev/null 2>&1 || {
+	echo "pre-push: git is required" >&2
+	exit 1
+}
+command -v bun >/dev/null 2>&1 || {
+	echo "pre-push: bun is required" >&2
+	exit 1
+}
+
+repo=$(git rev-parse --show-toplevel)
+tmp_root=$(mktemp -d "${TMPDIR:-/tmp}/firefly-push-XXXXXX")
+worktrees="$tmp_root/worktrees"
+mkdir -p "$worktrees"
+
+cleanup() {
+	status=$?
+	trap - EXIT INT TERM HUP
+	if [ -d "$worktrees" ]; then
+		for path in "$worktrees"/*; do
+			[ -e "$path" ] || continue
+			git worktree remove --force "$path" >/dev/null 2>&1 || :
+		done
+	fi
+	git worktree prune >/dev/null 2>&1 || :
+	rm -rf "$tmp_root" || :
+	exit "$status"
+}
+trap cleanup EXIT
+trap "exit 130" INT
+trap "exit 143" TERM
+trap "exit 129" HUP
+
+link_dependencies() {
+	target=$1
+	mkdir -p "$target/node_modules"
+	for entry in "$repo/node_modules"/*; do
+		[ -e "$entry" ] || continue
+		ln -s "$entry" "$target/node_modules/${entry##*/}"
+	done
+	ln -s "$repo/node_modules/.bin" "$target/node_modules/.bin"
+	if [ -d "$repo/worker/node_modules" ]; then
+		mkdir -p "$target/worker/node_modules"
+		for entry in "$repo/worker/node_modules"/*; do
+			[ -e "$entry" ] || continue
+			ln -s "$entry" "$target/worker/node_modules/${entry##*/}"
+		done
+		ln -s "$repo/worker/node_modules/.bin" "$target/worker/node_modules/.bin"
+	fi
+}
+
+status=0
+verified=
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+	[ -n "$local_sha" ] || continue
+	if [ "$local_sha" = "$zero" ]; then
+		echo "▸ $remote_ref: deletion, no source checks"
+		continue
+	fi
+
+	commit=$(git rev-parse --verify "$local_sha^{commit}")
+	case " $verified " in
+	*" $commit "*)
+		echo "▸ $remote_ref: $commit already verified in this push"
+		continue
+		;;
+	esac
+	verified="$verified $commit"
+
+	if [ "$remote_sha" = "$zero" ]; then
+		range="$commit --not --remotes"
+		echo "▸ $remote_ref: new ref at $commit (secret range: $range)"
+	else
+		range="$remote_sha..$commit"
+		echo "▸ $remote_ref: $commit (range $range)"
+	fi
+
+	worktree="$worktrees/$(printf '%s' "$commit" | cut -c1-12)"
+	git worktree add --detach "$worktree" "$commit" >/dev/null
+	link_dependencies "$worktree"
+
+	if ! (
+		cd "$worktree"
+		unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_PREFIX
+		export GATE_GIT_ROOT="$repo"
+		export XDG_CACHE_HOME="$tmp_root/cache"
+		export XDG_STATE_HOME="$tmp_root/cache"
+		mkdir -p "$XDG_CACHE_HOME"
+		bun run scripts/quality/gate.ts --stage=pre-push --g1-range="$range"
+	); then
+		status=1
+	fi
+done
+
+exit $status
