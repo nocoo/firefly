@@ -39,7 +39,7 @@ MVVM: keep ViewModels independent of Views/DOM; routes remain thin. Next's nativ
 
 ## Commands
 
-Run from root; install root and Worker packages separately. Node 26+ is needed; current CI pins Bun 1.2.15.
+Run from root; install root and Worker packages separately. `.mise.toml` pins the toolchain (bun 1.4.4, node 26.13.0); CI pins the same versions and the local gate fails when the installed bun differs.
 
 ```sh
 bun install --frozen-lockfile
@@ -53,33 +53,44 @@ bun run test:worker:coverage
 bun run test:e2e:api
 bun run test:e2e:browser
 bun run security
+bun run gate:pre-commit
+bun run gate:pre-push
 ```
 
 Follow README for local Worker startup on 8787 before `bun run migrate:local`. Web dev uses 7028. Names required for normal login: `AUTH_SECRET`, `AUTH_URL`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_ALLOWED_EMAILS`; Worker connection uses `WORKER_URL`/`WORKER_SECRET`. Ordinary dev uploads use configured R2; E2E uses the local file adapter. Install Chromium with `bunx playwright install chromium`. CI supplies `AUTH_SECRET`/`AUTH_ALLOWED_EMAILS`; never copy production secrets into fixtures.
 
 ## Verification
 
-6DQ = L1/L2/L3 + G2 + D1; the former G1 dimension was merged into L1 on 2026-09-21. Status: `enforced`, `planned`, `manual`, `N/A`. L1 requires each of statements/branches/functions/lines ≥95%; no `.skip`/`.only`; plus both type lanes with zero-error/warning Biome and AST/skip gates (the former G1 contract).
+System0 is the 12-slot set of the `system0-quality` skill (v1.3.0, nocoo/workflow); base-ci v2026.13 only supplies composite actions and the deploy interface. Slot names, stages and timeouts live in `scripts/quality/slots.ts`. Status: `enforced`, `planned`, `manual`, `na`.
 
-| Piece | Requirement and current reality | Status | Evidence |
-| --- | --- | --- | --- |
-| L1 (incl. former G1 static) | Four metrics ≥95% for configured non-View TypeScript, both lanes; strict types, zero-error/warning Biome and AST/skip gates | enforced | Pre-commit exports the Git index via `git checkout-index`, then runs `lint` (typecheck both lanes, Biome check-only, custom gates), `test:coverage` and `test:worker:coverage` (Vitest thresholds 95/95/95/95). Every staged commit runs the full gate; pre-push adds root `test:coverage` again plus `security`. CI runs root coverage on web/worker test jobs |
-| L2 | Real HTTP, 100% endpoint/method coverage, real SQL | planned | API runner enforced in CI; complete surface proof/isolated lane remains a gap |
-| L3 | Critical blog/admin journeys | enforced | CI browser job → `test:e2e:browser` / Playwright |
-| G2 | OSV + gitleaks, missing scanner fails; both lockfiles | planned | Root security script scans only root Bun lock; Worker lock coverage missing there |
-| D1 | Dedicated per-run local D1/R2 with guards/marker | enforced | Runner creates fresh local state, a zero-UUID binding and `_test_marker`, checks ports and supplies synthetic credentials |
-| Build | `next typegen && tsc --noEmit && next build --webpack` | manual | Manifest; run for bundler/runtime changes |
-| Docs | Commands, migrations and contracts kept current | manual | Review linked guides |
+| Slot | Stage | Command and object | Target | Status | Measured |
+| --- | --- | --- | --- | --- | --- |
+| S1 Types | pre-commit, pre-push, CI | `bun run typecheck`: `next typegen` + `tsc --noEmit` on the root and Worker lanes | `src/`, `worker/src/` | enforced | 1.0s |
+| S2 Lint | pre-commit, pre-push, CI | `bun run lint`: Biome check-only (`--error-on-warnings`) plus oxc AST gates (dynamic delete, `@ts-expect-error`, permanent test skip) | every tracked TS/JSON file | enforced | 0.6s |
+| S3 Workflow | pre-commit (when workflows are staged), CI | `bun run scripts/quality/workflow-lint.ts`: actionlint 1.7.12 + `nocoo/base-ci` references pinned to a full SHA; CI adds yamllint 1.38.0 | `.github/workflows/*.yml` | enforced | 0.2s |
+| G1 Secrets | pre-commit (Git index), pre-push (pushed range), CI (checkout) | gitleaks 8.30.1 `--staged`, `--log-opts=<remote-sha>..<local-sha>` (`<oid> --not --remotes` for new refs), `dir .` in CI; every scan redacted | staged content / pushed commits / checked-out tree | enforced | 0.3s |
+| G2 Dependencies | pre-push, CI | `bun run security`: osv-scanner over `bun.lock` and `worker/bun.lock`; a missing or too-old scanner fails separately from findings | both lockfiles | enforced | 2.2s |
+| B1 Build | pre-push, CI | `bun run build`: `next typegen && tsc --noEmit && next build --webpack` | standalone site bundle | enforced | 11.9s |
+| L1 Unit | pre-commit, pre-push, CI | root `test:coverage` + `test:worker:coverage`; statements/branches/functions/lines each ≥95% in both lanes | `src/`, `scripts/`, `worker/src` | enforced | 2.2s |
+| L2 Runtime | — | no workerd / vitest-pool-workers suite exists; `worker/test` runs in Node with a mocked D1 binding and is counted as L1. Real D1 execution is proven by L3 | — | na | — |
+| L3 Integration | pre-push, CI | `bun run test:e2e:api`: real HTTP against `wrangler dev` + `next start` with per-run D1/R2, `_test_marker` and synthetic credentials | every API route | enforced | 5.5s |
+| L4 E2E | pre-push, CI | `bun run test:e2e:browser`: Playwright chromium journeys | blog and admin journeys | enforced | 29.4s |
+| P1 Package | — | `package.json` is private and nothing is published to npm | — | na | — |
+| Z1 Gate | every stage | local: `scripts/quality/gate.ts`; CI: the `Z1: Gate` validator in `quality-slots.yml` | all slots above | enforced | see below |
 
-Pre-commit always gates the index snapshot (no extension-based fast path; no lint-staged autofix). Pre-push runs root `test:coverage`, full `lint`, and `security` on the worktree (not index); worker coverage is enforced at pre-commit. Its secret range uses upstream, not stdin push refs. Target: index L1 <30s warm; pushed-ref L2/G2 in parallel <3min. Never bypass commit/branch-push hooks.
+Local gates are check-only and never touch the worktree. Pre-commit exports the Git index with `git checkout-index` into a temporary snapshot, symlinks the installed `node_modules` read-only after proving the index manifests match them, and runs S1, S2, L1, G1 plus S3 when workflows change; frozen-lockfile validation is `--dry-run` only. Pre-push reads the push refs from stdin, creates one detached worktree per commit and runs S1, S2, L1, G1, G2, B1, L3 and L4 there — never on the working tree. Every step has a timeout, every slot has an empty-run guard, and a missing scanner, a failing step or a timeout fails the stage.
+
+Measured on the development machine (warm): pre-commit 3.6–4.5s end to end against a 15s bar; pre-push 54.4s end to end (S1 1.0, S2 0.6, G1 0.0, L1 2.2, G2 2.2, B1 11.9, L3 5.5, L4 29.4) against the skill's 2.5min target and 5min limit. CI runs the same slots as separate jobs and aggregates them in `quality / Z1: Gate`.
+
+CI is native mode: `.github/workflows/ci.yml` is a single caller job (key `quality`, no `name`) over `./.github/workflows/quality-slots.yml`, whose jobs are named exactly `<ID>: <Name>`. `quality / Z1: Gate` is the only required check on `main`; direct pushes stay possible through the admin bypass. Never bypass commit or branch-push hooks.
 
 ## Resources / Isolation
 
 | Purpose | Ports / state | Current behavior |
 | --- | --- | --- |
 | Dev | Web 7028, local Worker 8787 | Can use real configured R2 |
-| L2 | Web 17028, Worker 8787 | Fresh `worker/.wrangler/e2e-<random>/` D1/R2 state; cache proofs run after API mutations |
-| L3 | Web 27028, Worker 8787 | Own per-run state; ports remain shared, never run alongside another runner or dev Worker |
+| L3 | Web 17028, Worker 8787 | Fresh `worker/.wrangler/e2e-<random>/` D1/R2 state; cache proofs run after API mutations |
+| L4 | Web 27028, Worker 8787 | Own per-run state; ports remain shared, never run alongside another runner or dev Worker |
 
 Use per-run local Wrangler/Miniflare SQLite and local R2, with credential/binding guards and `_test_marker` verified before seed/reset/cleanup. Never touch daily-dev/production data or deploy remote `-test` resources. The runner leaves its own state for failure inspection and never resets shared development state.
 
@@ -105,9 +116,11 @@ environment-scoped. Production verification requires `DEPLOY_PHASE=production`, 
 `DEPLOY_URL=https://lizheng.blog`, and `DEPLOY_ORIGIN_MARKER=jp2`.
 
 CI additionally runs `bun scripts/run-e2e.ts --api-only --container-image=<image>`
-against its locally built Linux image. This Linux-only lane uses host networking
-and the same per-run marked D1/R2 isolation; it never pulls an unspecified image.
-Do not run it alongside another E2E lane or a development Worker.
+from the `container-image-e2e` job in `quality-slots.yml`. This Linux-only lane
+uses host networking and the same per-run marked D1/R2 isolation; it never pulls
+an unspecified image. It is the one blocking job outside the 12 slots: the name
+carries no slot id and `Z1: Gate` aggregates it. Do not run it alongside another
+E2E lane or a development Worker.
 
 ## Retrospective
 

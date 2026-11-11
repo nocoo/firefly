@@ -74,7 +74,7 @@ bun run dev
 | 命令 / 路径 | 用途 |
 | --- | --- |
 | `bun run build`、`bun run start` | 类型检查和网站构建；运行生产网站 |
-| `bun run typecheck`、`bun run lint` | 网站与 Worker 的类型、代码检查 |
+| `bun run typecheck`、`bun run lint` | 网站与 Worker 的类型检查（S1）、Biome 与 AST 门禁（S2） |
 | `src/app/` | 博客、后台、HTTP API 与 MCP 入口 |
 | `src/data/`、`src/services/` | 数据访问与内容操作流程 |
 | `worker/src/` | 原生 Fetch Worker、D1 SQL 代理和全文搜索 |
@@ -84,7 +84,7 @@ bun run dev
 
 ## 测试
 
-先安装根目录与 `worker/` 依赖：
+先安装根目录与 `worker/` 依赖。质量门禁按 System0 槽位划分，完整清单见[质量体系](docs/22-quality-system.md)：
 
 ```bash
 bun run test
@@ -96,10 +96,10 @@ bun run test:e2e:api
 
 ```bash
 bunx playwright install chromium
-bun run test:e2e:bdd
+bun run test:e2e:browser
 ```
 
-浏览器 runner 使用 8787、27028 端口。两类端到端测试共用并重建 `worker/.wrangler/e2e-d1` 和 `.wrangler/e2e-r2`，不要同时运行，也不要与占用 8787 的开发 Worker 同时启动。runner 注入测试会话；真实 Google 登录、外部模型调用与生产备份投递不属于这些测试的验证范围。
+浏览器 runner 使用 8787、27028 端口。两类端到端测试各自在 `worker/.wrangler/e2e-<随机>/` 下创建独立的 D1/R2 状态并写入 `_test_marker`，但共用 8787、17028、27028 端口，不要同时运行，也不要与占用 8787 的开发 Worker 同时启动。runner 注入测试会话；真实 Google 登录、外部模型调用与生产备份投递不属于这些测试的验证范围。
 
 ## 技术栈
 

@@ -1,5 +1,11 @@
 # 07 — Quality System Upgrade (L1+L2+L3+G1+G2)
 
+> **Superseded.** This document describes the retired "6DQ / six-dimensional"
+> numbering (L1/L2/L3 + G1 + G2 + D1). The current quality contract is
+> [22-quality-system.md](./22-quality-system.md) (System0 slots, v1.3.0) and the
+> Verification section of [AGENTS.md](../AGENTS.md). Kept for history only.
+>
+
 > Upgrade firefly from Tier B to Tier S using the 6-dimensional quality system.
 >
 > Date: 2026-03-24

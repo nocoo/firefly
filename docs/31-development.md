@@ -91,12 +91,26 @@ OAuth 使用 Google 管理员会话、邮箱允许名单和 PKCE。完整授权�
 | `bun run test` | 根包单元测试 |
 | `bun run test:worker` | 安装 `worker/` 依赖后运行 Worker 单元测试 |
 | `bun run test:e2e:api` | 本地 Worker 8787、Next.js 17028；自动迁移 D1 |
-| `bun run test:e2e:bdd` | Chromium、本地 Worker 8787、Next.js 27028 |
+| `bun run test:e2e:browser` | Chromium、本地 Worker 8787、Next.js 27028 |
 | `bun run test:e2e` | 顺序运行 API 与浏览器测试，需上述三个端口可用 |
 
 端到端 runner 为每次运行创建 `worker/.wrangler/e2e-<随机串>/` 下的 D1/R2 目录，使用零 UUID 本地绑定并验证 `_test_marker`，启动前检查测试端口可用。只传入系统环境与合成测试凭据，注入 `E2E_SKIP_AUTH` 与 `E2E_TEST_RUNNER`，使 R2 走本地文件、管理会话走测试身份。仅测试 runner 使用这些开关，普通开发与生产配置不应包含它们。
 
 Next.js 端到端测试使用 `bun run build` 构建后的服务，API 用例结束后单独运行真实缓存验收；日志位于 `.wrangler/e2e-logs`。不要并发启动两个 runner，也不要在保留开发 Worker 的 8787 端口上运行测试。这里的会话模拟不能证明真实 Google OAuth、模型服务或生产备份已经连通。
+
+## Quality gate timings
+
+System0 槽位、命令与本地实测见[质量体系](22-quality-system.md)。本节的数字来自真实运行，随工作流变更更新。
+
+| 阶段 | 实测 | 标准 | 结论 |
+| --- | --- | --- | --- |
+| pre-commit（S1/S2/L1/G1，S3 按需） | 3.6–4.5s | 15s 合格，15–30s 超目标，>30s 不合格 | 合格 |
+| pre-push（S1/S2/L1/G1/G2/B1/L3/L4） | 54.4s | 目标约 2.5min，参考上限 5min | 达标 |
+| CI（全部槽位 + 容器镜像 + Z1） | 见 `Z1: Gate` 步骤摘要 | 目标约 5min，参考上限 10min | 由摘要与下方瓶颈表记录 |
+
+pre-push 的耗时构成：准备（worktree、依赖软链）约 1s，S1 1.0s、S2 0.6s、L1 2.2s、G1 0.0s、G2 2.2s、B1 11.9s、L3 5.5s、L4 29.4s，清理并入 trap。L4 是主要成本，也是"构建后的站点仍可用"最便宜的诚实证明，因此保留在默认路径。
+
+CI 侧每个槽位是独立作业，各自安装依赖；当前瓶颈是 `Container image E2E` 的镜像构建与端到端验证，它与槽位作业并行，Z1 等待其结束。可做的优化已内联在作业中（固定工具链、单次冻结安装、证据工件仅在需要时上传）；进一步缩短需要镜像层缓存，属于后续项。
 
 ## 部署
 

@@ -28,7 +28,7 @@ Personal blog with a Next.js website and admin console, a separate D1 Worker, R2
 | # | Document | Date |
 |---|----------|------|
 | 06 | [Design Review & Optimization Plan](./06-design-review.md) | 2026-03-23 |
-| 07 | [Quality System Upgrade (L1+L2+L3+G1+G2)](./07-quality-system-upgrade.md) | 2026-03-24 |
+| 07 | [Quality System Upgrade (superseded)](./07-quality-system-upgrade.md) | 2026-03-24 |
 | 08 | [Blog Sidebar Responsive Layout Fix](./08-blog-responsive-fix.md) | |
 | 09 | [AI Excerpt Generation](./09-ai-excerpt.md) | |
 | 10 | [Image Upload System](./10-image-upload.md) | |
@@ -37,7 +37,7 @@ Personal blog with a Next.js website and admin console, a separate D1 Worker, R2
 | 14 | [Reference URL (Link Bookmark)](./14-reference-url.md) | |
 | 15 | [Backy Backup Integration](./15-backy-backup.md) | |
 | 16 | [Entity-Driven MCP Framework](./16-mcp-framework.md) | |
-| 17 | [Quality Upgrade: S-Tier Hardening](./17-quality-upgrade.md) | 2026-03-27 |
+| 17 | [Quality Upgrade: S-Tier Hardening (superseded)](./17-quality-upgrade.md) | 2026-03-27 |
 | 18 | [Media Library](./18-media-library.md) | 2026-03-27 |
 | 19 | [Image Optimization & Content Lightbox](./19-image-optimization.md) | 2026-03-27 |
 | 29 | [Journal / Play-side Theme](./29-journal-play-side.md) | 2026-09-05 |
@@ -49,7 +49,7 @@ Personal blog with a Next.js website and admin console, a separate D1 Worker, R2
 |---|----------|-------------|
 | 13 | [Analytics Dashboard Redesign](./13-analytics-redesign.md) | Multi-source traffic analytics |
 | 20 | [Full-Text Search](./20-full-text-search.md) | D1/FTS5 full-text search |
-| 22 | [Quality System](./22-quality-system.md) | Six-dimensional testing pyramid & CI |
+| 22 | [Quality System](./22-quality-system.md) | System0 12 slots: local gates, CI, timings |
 | 26 | [Biome migration + TypeScript 7](./26-biome-migration-ts7.md) | ESLint → Biome；TS 7.0.2 + native-preview |
 | 28 | [Human Authors](./28-human-authors.md) | 人类独立成表；agent 零改动；发文选人/AI；公开邮箱查询 |
 

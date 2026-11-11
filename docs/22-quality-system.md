@@ -1,197 +1,163 @@
-# 质量体系：六维测试金字塔
+# 22 — Quality System (System0 slots)
 
-本文档描述 Firefly 项目的完整质量保障体系（L1 + L2 + L3 + G1 + G2 + Worker）。
-
-> 更新日期: 2026-05-03
-
----
-
-## 一、体系概览
-
-### 测试金字塔
-
-```
-                        ┌─────────────┐
-                        │  L3 (158)   │  ← CI (Playwright)
-                        │   Browser   │
-                    ┌───┴─────────────┴───┐
-                    │      L2 (330)       │  ← pre-push + CI (API E2E)
-                    │   真实 HTTP 请求     │
-                ┌───┴─────────────────────┴───┐
-                │         L1 (1,404)          │  ← pre-commit
-                │  Unit + Integration + Cov   │
-            ┌───┴─────────────────────────────┴───┐
-            │          Worker (96)                │  ← CI
-            │      Edge Worker 单元测试            │
-        ┌───┴─────────────────────────────────────┴───┐
-        │              G1 + G2 (静态分析 + 安全)         │  ← pre-commit + pre-push
-        │   TypeScript + ESLint + gitleaks + osv-scanner │
-        └─────────────────────────────────────────────────┘
-```
-
-### 层级定义
-
-| 层级 | 名称 | 验证对象 | 执行时机 | 门控类型 |
-|------|------|----------|----------|----------|
-| **L1** | 单元 + 集成测试 | 纯函数、数据层、服务层、组件 | pre-commit | Hard |
-| **L2** | API E2E | 真实 HTTP 请求到运行中的 Next.js 服务器 | pre-push + CI | Hard |
-| **L3** | 系统 E2E | 真实用户端到端流程（Playwright 浏览器自动化） | CI | Hard |
-| **G1** | 静态分析 | 类型检查 (`tsc --noEmit`，TypeScript 7.0.2) + Biome 2.5 + custom gates (`dynamic-delete` / `@ts-expect-error`) | pre-commit | Hard |
-| **G2** | 安全检查 | Secrets 泄露 (gitleaks) + 依赖漏洞 (osv-scanner) | pre-push + CI | Hard |
-| **Worker** | Edge Worker | Cloudflare Worker 边缘逻辑 | CI | Hard |
-
-### 当前指标
-
-| 指标 | 当前值 | 目标 |
-|------|--------|------|
-| L1 测试数量 | 1,404 | - |
-| L1 语句覆盖率 | 99% | ≥ 90% |
-| L1 分支覆盖率 | 97.69% | ≥ 80% |
-| L1 函数覆盖率 | 97.6% | ≥ 85% |
-| L1 行覆盖率 | 99.34% | ≥ 90% |
-| L2 API 路由覆盖 | 49/49 (100%) | 100% |
-| L2 测试数量 | 330 | - |
-| L3 页面覆盖 | 27/27 (100%) | 100% |
-| L3 测试数量 | 158 | - |
-| Worker 测试数量 | 96 | - |
-| **总测试数量** | **1,988** | - |
+> Authoritative quality document for this repository. Slot semantics come from the
+> `system0-quality` skill (v1.3.0, nocoo/workflow); base-ci v2026.13 only supplies
+> composite actions and the deploy interface.
+>
+> Supersedes [07](./07-quality-system-upgrade.md) and [17](./17-quality-upgrade.md)
+> (the retired "6DQ / six-dimensional" numbering). Command surface and gates are
+> mirrored in [AGENTS.md](../AGENTS.md).
 
 ---
 
-## 二、CI/CD 配置
+## 1. Slots
 
-### GitHub Actions 工作流
+Twelve slots, no more and no fewer. `impl` means the check really runs and blocks;
+`na` means the product has nothing for the slot to cover.
 
-四个 job 并行执行：
+| Slot | Stage | Command | Checks | Status | Measured (dev machine, warm) |
+| --- | --- | --- | --- | --- | --- |
+| S1 Types | pre-commit, pre-push, CI | `bun run typecheck` | `next typegen` + `tsc --noEmit` on root and Worker lanes | impl | 1.0s |
+| S2 Lint | pre-commit, pre-push, CI | `bun run lint` | Biome check-only, 0 error / 0 warning, plus oxc AST gates (dynamic delete, `@ts-expect-error` justification, permanent test skip) | impl | 0.6s |
+| S3 Workflow | pre-commit (staged workflows), CI | `bun run scripts/quality/workflow-lint.ts` | actionlint 1.7.12, full-SHA `nocoo/base-ci` pins; CI adds yamllint 1.38.0 | impl | 0.2s |
+| G1 Secrets | pre-commit (`--staged`), pre-push (pushed range), CI (`dir .`) | `bun run scripts/quality/secrets.ts` | gitleaks 8.30.1 over the exact content of the stage; redacted output | impl | 0.3s |
+| G2 Dependencies | pre-push, CI | `bun run security` | osv-scanner over `bun.lock` + `worker/bun.lock`; missing or too-old scanner fails separately from findings | impl | 2.2s |
+| B1 Build | pre-push, CI | `bun run build` | standalone Next bundle from the snapshot under test | impl | 11.9s |
+| L1 Unit | pre-commit, pre-push, CI | `bun run test:coverage`, `bun run test:worker:coverage` | statements/branches/functions/lines ≥95% in both lanes | impl | 2.2s |
+| L2 Runtime | — | — | no workerd / vitest-pool-workers suite; `worker/test` is Node with a mocked D1 binding and counts as L1; real D1 execution is proven by L3 | **na** | — |
+| L3 Integration | pre-push, CI | `bun run test:e2e:api` | real HTTP through `wrangler dev` + `next start`, per-run D1/R2, `_test_marker`, synthetic credentials | impl | 5.5s |
+| L4 E2E | pre-push, CI | `bun run test:e2e:browser` | Playwright chromium journeys (blog + admin) | impl | 29.4s |
+| P1 Package | — | — | `package.json` is private and nothing is published to npm | **na** | — |
+| Z1 Gate | every stage | `scripts/quality/gate.ts` (local), `Z1: Gate` job (CI) | all slots above | impl | — |
 
-```yaml
-jobs:
-  quality:      # L1 + G1 + G2 (from base-ci)
-  api-e2e:      # L2 API E2E
-  browser-e2e:  # L3 Playwright
-  worker-tests: # Worker 单元测试
-```
+Coverage today: root 98.63 / 95.67 / 99.16 / 99.18 (statements/branches/functions/lines),
+worker 98.64 / 96.59 / 100 / 99.52. The 95% floor is a floor, not a target.
 
-### 环境隔离
+### Why L2 and P1 are `na`
 
-E2E 使用完全本地的测试基础设施，零远程 Cloudflare 资源依赖：
+`worker/test` imports Vitest, mocks the whole `D1Database` interface and runs with
+`environment: "node"`; there is no `@cloudflare/vitest-pool-workers` or workerd
+dependency. Under the slot definition that is L1 evidence, not a runtime suite.
+Real runtime and SQL behavior is covered by the L3 lane, which drives a real
+`wrangler dev` process against per-run SQLite. Adding a workerd suite would let
+L2 move to `impl`; it is tracked as an optional follow-up, not a current gap.
 
-| 资源 | 生产 | E2E 测试 |
-|------|------|----------|
-| D1 Database | 远程 `lizhengme-db` via Worker | 本地 Miniflare SQLite (`.wrangler/e2e-d1`) |
-| R2 Storage | 远程 `lizhengblog` via S3 SDK | 本地文件系统 (`.wrangler/e2e-r2`) |
-| Worker | `firefly.worker.hexly.ai` | 本地 `wrangler dev --local` |
+`P1` would only apply if this repository published a package; it does not.
 
-### GitHub Secrets
+## 2. Local gates
 
-| Secret | 用途 |
-|--------|------|
-| `AUTH_SECRET` | NextAuth 密钥 (Next.js 启动需要) |
-| `AUTH_ALLOWED_EMAILS` | 允许的 E2E 测试邮箱 |
+`.husky/pre-commit` and `.husky/pre-push` both delegate to
+`scripts/quality/gate.ts`, which runs one stage's slots, prints a table
+(slot, command, target, result, duration) and fails the stage on the first
+problem. Slot definitions, stages and timeouts live in `scripts/quality/slots.ts`.
 
----
+| Property | pre-commit | pre-push |
+| --- | --- | --- |
+| Object under test | Git index exported with `git checkout-index` into a temp snapshot | one detached `git worktree` per pushed OID from stdin |
+| Slots | S1, S2, L1, G1, S3 (only when `.github/workflows/**` is staged) | S1, S2, L1, G1, G2, B1, L3, L4 |
+| Dependencies | installed `node_modules` symlinked read-only, after proving the index manifests/lockfiles equal the installed ones | same, per worktree |
+| Lockfiles | `bun install --frozen-lockfile --dry-run` (no writes) | same |
+| Isolation | caches (`XDG_CACHE_HOME`) inside the snapshot; worktree untouched | caches in the temp root; worktrees removed afterwards |
+| Timeout | 60s stage budget, per-step timeouts | 300s stage budget, per-step timeouts |
+| Failure modes | failing step, missing/too-old scanner, toolchain drift, empty run, timeout, stage budget | same |
 
-## 三、本地开发
+Blocked-by-design conditions that are easy to get wrong and are therefore explicit:
 
-### 环境变量
+- A missing `gitleaks` / `osv-scanner` / `actionlint`, or a version below the
+  minimum, fails the stage — it never silently skips the slot.
+- The toolchain is checked against `.mise.toml` (bun 1.4.4, node 26.13.0); a
+  mismatched `bun` fails before anything runs.
+- L1/L3/L4 assert a minimum number of passed tests, so a suite that silently
+  collects nothing fails instead of passing empty.
+- Push deletion of a ref skips source checks; a new branch scans
+  `<oid> --not --remotes` for secrets; the same commit pushed for two refs is
+  verified once.
+- A busy port fails the L3/L4 lane instead of skipping it.
 
-复制 `.env.example` 到 `.env` 并配置：
+## 3. CI
 
-```bash
-cp .env.example .env
-```
+Native mode: `.github/workflows/ci.yml` is a single caller job (key `quality`, no
+`name`) over `./.github/workflows/quality-slots.yml`.
 
-必需的环境变量见 `.env.example` 和 README.md。
+- Each slot is a top-level job named exactly `<ID>: <Name>`, so checks render as
+  `quality / S1: Types` … `quality / Z1: Gate`.
+- No matrix suffixes and no nested reusable workflows; steps are inlined. base-ci
+  composite actions
+  (`setup-js`, `setup-security-scanners`) are pinned to
+  `e4598815d171e2281f77f27a4800ff8fc2537f3f # v2026.13`.
+- `na` slots keep their job with a job-level `if:` so all twelve names exist and
+  stay visibly skipped.
+- `Z1: Gate` runs with `if: always()`, needs every slot job plus the one blocking
+  job outside the slots (`Container image E2E`), and fails when an `impl` slot did
+  not succeed, an `na`/`todo` slot actually ran, a job reports no `tested-sha`,
+  the reported SHAs differ, or the declaration itself is malformed.
+- L3 uploads `.wrangler/e2e-logs/`, L4 uploads `test-results/` and the logs with
+  `if: always()` and `if-no-files-found: ignore`, retention 7 days.
+- Branch protection on `main` requires exactly `quality / Z1: Gate`. Admin bypass
+  is enabled so direct pushes to `main` keep working; no other check is required.
+- Releases: `release.yml` calls `deploy-docker.yml@e4598815… # v2026.13`, which
+  proves the source run/SHA before deploying; the Z1 success on that SHA is the
+  release precondition.
 
-### E2E 测试环境
+## 4. Performance
 
-E2E runner (`scripts/run-e2e.ts`) 自动注入所有必要的环境变量：
+Standards: pre-commit ≤15s good, 15–30s over target, >30s unacceptable; pre-push
+~2.5min target / 5min reference limit; CI ~5min target / 10min reference limit.
 
-```bash
-WORKER_URL=http://localhost:8787    # 本地 Worker (wrangler dev --local)
-WORKER_SECRET=test-secret
-E2E_SKIP_AUTH=true                  # 跳过认证
-CI=true                             # 启用 E2E 模式
-R2_BUCKET_NAME=local-e2e            # 本地 R2 adapter
-R2_PUBLIC_URL=http://localhost:17028/__e2e-r2
-E2E_R2_LOCAL_DIR=.wrangler/e2e-r2   # 文件系统 R2 替身
-```
+| Stage | Wall time | Composition | Verdict |
+| --- | --- | --- | --- |
+| pre-commit | 3.6–4.5s | index export + symlink ~0.6s, S1 1.0s, S2 0.6s, L1 2.2s, G1 0.3s, S3 0.2s when applicable | within the 15s bar |
+| pre-push | 54.4s | worktree + symlink ~1s, S1 1.0s, S2 0.6s, L1 2.2s, G1 0.0s, G2 2.2s, B1 11.9s, L3 5.5s, L4 29.4s | within the 2.5min target |
 
----
+The pre-commit snapshot is created fresh on every run with its own cache root, so
+no incremental state (`tsbuildinfo`, Vitest/Vite caches) survives between runs —
+the numbers above are not warmed by a previous gate run, only by the OS file
+cache. L4 dominates pre-push; it is the cheapest honest proof that the built site
+still works, so it stays in the default path.
 
-## 四、测试命令速查
+CI timings (per-job and total) are recorded in the `Z1: Gate` step summary of each
+run; the current numbers and the bottleneck analysis live in
+[31-development](./31-development.md#quality-gate-timings) and are refreshed when
+the workflow changes.
 
-| 命令 | 层级 | 说明 |
-|------|------|------|
-| `bun run test` | L1 | 单元测试 |
-| `bun run test:watch` | L1 | Watch 模式 |
-| `bun run test:coverage` | L1 | 覆盖率报告 (90% 门槛) |
-| `bun run test:e2e:api` | L2 | API E2E (启动 server，真 HTTP) |
-| `bun run test:e2e:browser` | L3 | Playwright E2E |
-| `bun run typecheck` | G1 | TypeScript 7 类型检查（root + worker） |
-| `bun run lint` | G1 | typecheck + Biome + custom gates |
-| `bun run gate:dynamic-delete` | G1 | 禁止 `delete obj[computed]` |
-| `bun run gate:ts-expect-error` | G1 | `@ts-expect-error` 必须带 ≥10 字说明 |
-| `cd worker && bun test` | Worker | Worker 单元测试 |
+## 5. Failure injection evidence
 
----
+Every gate was verified to fail for the right reason (not just to pass when
+healthy). Local injections run against the real hooks; CI injections run against
+the Z1 validator extracted from the workflow.
 
-## 五、Git Hooks
+| Injected fault | Expected | Observed |
+| --- | --- | --- |
+| Type error in `src/` | S1 blocks | see §5.1 |
+| Biome error | S2 blocks | see §5.1 |
+| Fake secret in a staged file | G1 blocks at pre-commit | see §5.1 |
+| Fake secret only in an unpushed commit | G1 blocks at pre-push for that OID | see §5.1 |
+| Outdated lockfile vs `package.json` | preflight blocks before any slot | see §5.1 |
+| `gitleaks` / `osv-scanner` / `actionlint` removed from `PATH` | stage fails, names the missing tool | see §5.1 |
+| Truncated test suite (empty run) | L1 blocks on the empty-run guard | see §5.1 |
+| Deliberately failing L3 | pre-push blocks, L3 marked FAIL | see §5.1 |
+| Deliberately failing L4 | pre-push blocks, L4 marked FAIL | see §5.1 |
+| `bun` version differing from `.mise.toml` | preflight blocks | see §5.1 |
+| Z1: `impl` job failed / `na` job ran / SHA mismatch / missing SHA / illegal status / missing declaration / empty reason / blocking extra failed | Z1 fails with a specific message | verified locally against the extracted validator |
 
-### pre-commit
+### 5.1 Recorded runs
 
-```bash
-# 并行执行
-G1a: tsc --noEmit (root + worker)
-G1b: lint-staged (Biome on staged files)
-L1: vitest run
-# 串行
-G1c: gate:dynamic-delete + gate:ts-expect-error（扫 INDEX 快照）
-```
+Filled in by the alignment run that introduced System0; see the commit that
+updates this section and [AGENTS.md](../AGENTS.md) for the exact commands.
 
-### pre-push
+## 6. Known gaps (honest list)
 
-```bash
-L1: vitest run --coverage (≥95% 门槛)
-G1: bun run lint（typecheck + Biome + gates）
-G2: gitleaks + osv-scanner
-```
-
----
-
-## 六、测试目录结构
-
-```
-src/
-├── **/*.test.ts          # L1: 单元测试 (与源文件同目录)
-
-e2e/
-├── api/                  # L2: API E2E 测试
-│   ├── posts.test.ts
-│   ├── tags.test.ts
-│   ├── categories.test.ts
-│   ├── mcp.test.ts
-│   └── ...
-├── browser/              # L3: Playwright E2E 测试
-│   ├── admin-posts.spec.ts
-│   ├── content-images.spec.ts
-│   └── ...
-├── vitest.config.ts      # L2 vitest 配置
-└── playwright.config.ts  # L3 playwright 配置
-
-worker/
-└── test/                 # Worker 单元测试
-    ├── fts.test.ts
-    └── index.test.ts
-```
-
----
-
-## 七、端口分配
-
-| 端口 | 用途 |
-|------|------|
-| 7028 | 开发服务器 (`bun run dev`) |
-| 17028 | L2 API E2E 测试 |
-| 27028 | L3 Playwright E2E 测试 |
-| 8787 | 本地 Worker (wrangler dev) |
+- **2 `it.todo`** in `e2e/api/upload-logo.test.ts` (square-PNG upload, logo
+  removal) — declared but unimplemented L3 cases.
+- **36 conditional `test.skip`** in `e2e/bdd/**`: environment/feature gates, not
+  permanent skips (the AST gate blocks the permanent form). They are honest
+  coverage gaps for those configurations.
+- **L2 Runtime** has no workerd suite (see §1).
+- **yamllint** runs in CI only; developer machines do not have it, so S3 is
+  actionlint + pin checks locally.
+- **Scanner version drift**: CI pins gitleaks 8.30.1 / osv-scanner 2.5.1 with
+  checksums; the local gate accepts any version ≥ those minimums (dev machine
+  currently osv-scanner 2.7.0).
+- **CI wall time** is dominated by the container lane and by per-job installs; the
+  numbers and the feasible optimizations are tracked in
+  [31-development](./31-development.md#quality-gate-timings).
