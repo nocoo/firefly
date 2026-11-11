@@ -211,9 +211,14 @@ jobs:
           install-policy: project
           extra-install-dirs: worker
       - name: Root coverage (>= 95% x4)
-        run: bun run test:coverage
+        run: bun run test:coverage | tee "$RUNNER_TEMP/l1-root.log"
       - name: Worker coverage (>= 95% x4)
-        run: bun run test:worker:coverage
+        run: bun run test:worker:coverage | tee "$RUNNER_TEMP/l1-worker.log"
+      - name: Assert both lanes actually ran
+        run: |
+          set -euo pipefail
+          grep -Eq 'Tests +[1-9][0-9]* passed' "$RUNNER_TEMP/l1-root.log"
+          grep -Eq 'Tests +[1-9][0-9]* passed' "$RUNNER_TEMP/l1-worker.log"
       - name: Record tested SHA
         id: record-sha
         if: always()
@@ -257,7 +262,11 @@ jobs:
           install-policy: project
           extra-install-dirs: worker
       - name: Real HTTP over the local stack
-        run: bun run test:e2e:api
+        run: bun run test:e2e:api | tee "$RUNNER_TEMP/l3.log"
+      - name: Assert integration tests ran
+        run: |
+          set -euo pipefail
+          grep -Eq 'Tests +[1-9][0-9]* passed' "$RUNNER_TEMP/l3.log"
         env:
           CI: "true"
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
@@ -294,7 +303,11 @@ jobs:
       - name: Install Chromium
         run: bunx playwright install --with-deps chromium
       - name: Browser journeys
-        run: bun run test:e2e:browser
+        run: bun run test:e2e:browser | tee "$RUNNER_TEMP/l4.log"
+      - name: Assert browser journeys ran
+        run: |
+          set -euo pipefail
+          grep -Eq '[1-9][0-9]* passed' "$RUNNER_TEMP/l4.log"
         env:
           CI: "true"
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
@@ -393,6 +406,7 @@ jobs:
       - name: Verify slot declarations against the jobs that ran
         env:
           NEEDS_JSON: ${{ toJSON(needs) }}
+          EXPECTED_SHA: ${{ github.sha }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
@@ -430,7 +444,7 @@ jobs:
               repo = os.environ.get("GITHUB_REPOSITORY", "").strip()
               run_id = os.environ.get("GITHUB_RUN_ID", "").strip()
               if not (token and repo and run_id):
-                  return {}
+                  return {}, None
               request = urllib.request.Request(
                   f"{os.environ.get('GITHUB_API_URL', 'https://api.github.com')}/repos/{repo}/actions/runs/{run_id}/jobs?per_page=100",
                   headers={
@@ -445,7 +459,7 @@ jobs:
                       payload = json.loads(response.read().decode("utf-8"))
               except Exception as exc:
                   print(f"::warning::Z1 could not read job timings ({exc})")
-                  return {}
+                  return {}, None
               seconds = {}
               for job in payload.get("jobs", []):
                   started, completed = job.get("started_at"), job.get("completed_at")
@@ -457,13 +471,40 @@ jobs:
                   seconds[job.get("name", "")] = int(
                       (datetime.strptime(completed, fmt) - datetime.strptime(started, fmt)).total_seconds()
                   )
-              return seconds
+              run_url = f"{os.environ.get('GITHUB_API_URL', 'https://api.github.com')}/repos/{repo}/actions/runs/{run_id}"
+              wall = None
+              try:
+                  request = urllib.request.Request(
+                      run_url,
+                      headers={
+                          "Authorization": f"Bearer {token}",
+                          "Accept": "application/vnd.github+json",
+                          "X-GitHub-Api-Version": "2022-11-28",
+                          "User-Agent": "firefly-z1-gate",
+                      },
+                  )
+                  with urllib.request.urlopen(request, timeout=60) as response:
+                      run = json.loads(response.read().decode("utf-8"))
+                  from datetime import datetime
+
+                  fmt = "%Y-%m-%dT%H:%M:%SZ"
+                  if run.get("run_started_at") and run.get("updated_at"):
+                      wall = int(
+                          (
+                              datetime.strptime(run["updated_at"], fmt)
+                              - datetime.strptime(run["run_started_at"], fmt)
+                          ).total_seconds()
+                      )
+              except Exception as exc:
+                  print(f"::warning::Z1 could not read the run duration ({exc})")
+              return seconds, wall
 
           summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
           summary = open(summary_path, "w") if summary_path else sys.stdout
           needs = json.loads(os.environ["NEEDS_JSON"])
           declarations = json.loads(os.environ["SLOT_STATUS"])
-          timings = durations()
+          timings, wall = durations()
+          expected_sha = os.environ.get("EXPECTED_SHA", "").strip()
 
           if not isinstance(declarations, dict):
               fail("SLOT_STATUS must be a JSON object")
@@ -524,17 +565,18 @@ jobs:
               detail = ", ".join(f"{name}={sha}" for name, sha in verified)
               fail(f"slot jobs tested different commits: {detail}")
           tested_sha = shas.pop()
+          if expected_sha and tested_sha != expected_sha:
+              fail(f"slot jobs tested {tested_sha} but this run is {expected_sha}")
 
-          total = sum(value for value in timings.values() if isinstance(value, int)) or ""
           verdict = ""
-          if total != "":
-              if total <= TARGET_SECONDS:
+          if wall is not None:
+              if wall <= TARGET_SECONDS:
                   verdict = f"within the {TARGET_SECONDS // 60} min target"
-              elif total <= LIMIT_SECONDS:
+              elif wall <= LIMIT_SECONDS:
                   verdict = f"over the {TARGET_SECONDS // 60} min target, within the {LIMIT_SECONDS // 60} min limit"
               else:
                   verdict = f"over the {LIMIT_SECONDS // 60} min limit"
-              verdict = f" — job time sum {total}s, {verdict}"
+              verdict = f" — wall time {wall}s, {verdict}"
 
           rows.append("| Z1 | impl | all impl slots succeeded on the same SHA | success | - |")
           print("\n".join(rows), file=summary)

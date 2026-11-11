@@ -60,6 +60,12 @@ interface SlotResult {
   note: string;
 }
 
+const wantsG1 = slotsForStage(stage).some((slot) => slot.id === "G1") && (!only || only.split(",").includes("G1"));
+if (stage === "pre-push" && wantsG1 && !g1Range) {
+  console.error("gate: pre-push secret scanning requires --g1-range=<remote-sha>..<local-sha>; run .husky/pre-push");
+  process.exit(2);
+}
+
 const selected = slotsForStage(stage).filter((slot) => {
   if (!only) return true;
   return only.split(",").includes(slot.id);
@@ -268,15 +274,22 @@ console.log(`${"─".repeat(78)}`);
 console.log(`total ${formatMs(totalMs)} (stage budget ${Math.round(stageBudgetMs / 1000)}s)`);
 
 const overBudget = totalMs > stageBudgetMs;
+const notStarted = results.filter((result) => result.note.startsWith("stage budget"));
 const failedSlots = results.filter((result) => result.outcome === "fail" || result.outcome === "timeout");
 if (overBudget) {
-  failedSlots.push({
-    slot: { id: "budget", name: "stage budget", stages: [], target: "", steps: [] },
-    outcome: "timeout",
-    ms: totalMs,
-    steps: [],
-    note: `stage took ${formatMs(totalMs)} over the ${Math.round(stageBudgetMs / 1000)}s budget`,
-  });
+  if (notStarted.length > 0) {
+    failedSlots.push({
+      slot: { id: "budget", name: "stage budget", stages: [], target: "", steps: [] },
+      outcome: "timeout",
+      ms: totalMs,
+      steps: [],
+      note: `${notStarted.length} slot(s) never started within the ${Math.round(stageBudgetMs / 1000)}s budget`,
+    });
+  } else {
+    console.warn(
+      `\n⚠ ${stage} took ${formatMs(totalMs)}, over the ${Math.round(stageBudgetMs / 1000)}s stage budget (governance gap, every slot ran)`,
+    );
+  }
 }
 if (failedSlots.length > 0) {
   console.error(`\n❌ ${stage} gate failed: ${failedSlots.map((result) => `${result.slot.id} (${result.outcome}${result.note ? `: ${result.note}` : ""})`).join(", ")}`);

@@ -32,7 +32,7 @@ repo=$(git rev-parse --show-toplevel)
 GATE_STAGED_FILES=$(git diff --cached --name-only)
 export GATE_STAGED_FILES
 
-snapshot=$(mktemp -d "${TMPDIR:-/tmp}/firefly-index-XXXXXX")
+snapshot=$(mktemp -d "${TMPDIR:-/tmp}"/firefly-index-XXXXXX)
 git checkout-index --all --prefix="$snapshot/"
 
 if [ ! -d "$repo/node_modules" ]; then
@@ -85,6 +85,7 @@ unset GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES
 export XDG_CACHE_HOME="$snapshot/.cache"
 export XDG_STATE_HOME="$snapshot/.cache"
 export GATE_GIT_ROOT="$repo"
+export GATE_SNAPSHOT_ROOT="$snapshot"
 PATH="$snapshot/node_modules/.bin:$PATH"
 
 cd "$snapshot"

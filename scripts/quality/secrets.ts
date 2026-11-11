@@ -12,7 +12,7 @@
  * `gitleaks git --staged` is deliberately not used: with 8.30.1 it scans the diff
  * header of a new file instead of its content, so a staged secret passed clean.
  */
-import { existsSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 import { join } from "node:path";
 import { checkTool } from "./tools";
 
@@ -21,9 +21,28 @@ const value = (name: string) => args.find((arg) => arg.startsWith(`--${name}=`))
 
 const indexSnapshot = args.includes("--index-snapshot");
 const range = value("range");
+const snapshotRoot = process.env.GATE_SNAPSHOT_ROOT;
 
 if (indexSnapshot === Boolean(range)) {
   console.error("G1: pass exactly one of --index-snapshot or --range=<a..b>");
+  process.exit(2);
+}
+
+// Without the marker, `gitleaks dir .` would scan the working tree — including
+// gitignored .env and build output — instead of the exported index.
+const sameDir = (a: string | undefined, b: string) => {
+  if (!a) return false;
+  try {
+    return realpathSync(a) === realpathSync(b);
+  } catch {
+    return false;
+  }
+};
+
+if (indexSnapshot && !sameDir(snapshotRoot, process.cwd())) {
+  console.error(
+    `G1: --index-snapshot requires GATE_SNAPSHOT_ROOT to be the current directory (got ${snapshotRoot ?? "unset"}); run .husky/pre-commit instead`,
+  );
   process.exit(2);
 }
 

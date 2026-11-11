@@ -55,7 +55,7 @@ problem. Slot definitions, stages and timeouts live in `scripts/quality/slots.ts
 | --- | --- | --- |
 | Object under test | Git index exported with `git checkout-index` into a temp snapshot | one detached `git worktree` per pushed OID from stdin |
 | Slots | S1, S2, L1, G1, S3 (only when `.github/workflows/**` is staged) | S1, S2, L1, G1, G2, B1, L3, L4 |
-| Dependencies | installed `node_modules` symlinked read-only, after proving the index manifests/lockfiles equal the installed ones | same, per worktree |
+| Dependencies | installed `node_modules` symlinked read-only after comparing the index manifests/lockfiles with the working-tree copies; the lockfile is validated with `--frozen-lockfile --dry-run` (a stale local install is not detected) | symlinked only when the pushed commit's manifests equal the installed ones, otherwise `bun install --frozen-lockfile` runs inside that worktree |
 | Lockfiles | `bun install --frozen-lockfile --dry-run` (no writes) | same |
 | Isolation | caches (`XDG_CACHE_HOME`) inside the snapshot; worktree untouched | caches in the temp root; worktrees removed afterwards |
 | Timeout | 60s stage budget, per-step timeouts | 300s stage budget, per-step timeouts |
@@ -73,6 +73,12 @@ Blocked-by-design conditions that are easy to get wrong and are therefore explic
   `<oid> --not --remotes` for secrets; the same commit pushed for two refs is
   verified once.
 - A busy port fails the L3/L4 lane instead of skipping it.
+- The stage budget fails the stage only for slots it prevented from starting; a
+  stage whose every slot finished over budget prints a governance warning instead
+  of turning a green run red.
+- G1 refuses to run outside a real target: `--index-snapshot` requires the
+  exported-snapshot marker, and pre-push requires an explicit commit range, so a
+  manual `gate.ts` run can never quietly scan the working tree.
 
 ## 3. CI
 
@@ -178,6 +184,12 @@ immediately. CI injections ran against the Z1 validator extracted from
 - **Scanner version drift**: CI pins gitleaks 8.30.1 / osv-scanner 2.5.1 with
   checksums; the local gate accepts any version ≥ those minimums (dev machine
   currently osv-scanner 2.7.0).
+- **G1 allowlists `e2e/**/*.{test,spec}.ts`** as synthetic-fixture space, so a real
+  secret committed to an e2e test would not be reported. Fixture tokens elsewhere
+  are obviously fake rather than allowlisted.
+- **Local `node_modules` provenance** is not cryptographic: both gates prove the
+  commit's manifests and lockfile agree with the installed ones only insofar as
+  the files are compared; a hand-edited `node_modules` is not detected.
 - **CI wall time** is dominated by the container lane and by per-job installs; the
   numbers and the feasible optimizations are tracked in
   [31-development](./31-development.md#quality-gate-timings).

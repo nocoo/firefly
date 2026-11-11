@@ -38,31 +38,56 @@ trap "exit 130" INT
 trap "exit 143" TERM
 trap "exit 129" HUP
 
-link_dependencies() {
-	target=$1
-	mkdir -p "$target/node_modules"
-	for entry in "$repo/node_modules"/*; do
+# Read every ref before running anything: gate steps inherit stdin, and a step that
+# reads it would swallow the refs that have not been verified yet.
+refs_file="$tmp_root/refs"
+cat >"$refs_file"
+if [ ! -s "$refs_file" ]; then
+	echo "pre-push: no refs on stdin — this hook only runs from 'git push'" >&2
+	exit 1
+fi
+
+link_tree() {
+	from=$1
+	to=$2
+	mkdir -p "$to/node_modules"
+	for entry in "$from/node_modules"/*; do
 		[ -e "$entry" ] || continue
-		ln -s "$entry" "$target/node_modules/${entry##*/}"
+		ln -s "$entry" "$to/node_modules/${entry##*/}"
 	done
-	ln -s "$repo/node_modules/.bin" "$target/node_modules/.bin"
-	if [ -d "$repo/worker/node_modules" ]; then
-		mkdir -p "$target/worker/node_modules"
-		for entry in "$repo/worker/node_modules"/*; do
-			[ -e "$entry" ] || continue
-			ln -s "$entry" "$target/worker/node_modules/${entry##*/}"
-		done
-		ln -s "$repo/worker/node_modules/.bin" "$target/worker/node_modules/.bin"
+	ln -s "$from/node_modules/.bin" "$to/node_modules/.bin"
+}
+
+# The worktree must run against the dependencies its own manifests declare.
+prepare_dependencies() {
+	worktree=$1
+	if cmp -s "$worktree/package.json" "$repo/package.json" && cmp -s "$worktree/bun.lock" "$repo/bun.lock"; then
+		link_tree "$repo" "$worktree"
+	else
+		echo "▸ manifests differ from the installed tree — frozen install in the worktree"
+		(cd "$worktree" && bun install --frozen-lockfile)
+	fi
+	if [ -f "$worktree/worker/package.json" ] && [ -f "$worktree/worker/bun.lock" ]; then
+		if cmp -s "$worktree/worker/package.json" "$repo/worker/package.json" &&
+			cmp -s "$worktree/worker/bun.lock" "$repo/worker/bun.lock"; then
+			link_tree "$repo/worker" "$worktree/worker"
+		else
+			echo "▸ worker manifests differ from the installed tree — frozen install in the worktree"
+			(cd "$worktree/worker" && bun install --frozen-lockfile)
+		fi
 	fi
 }
 
 status=0
 verified=
+count=0
+deleted=0
 
 while read -r local_ref local_sha remote_ref remote_sha; do
 	[ -n "$local_sha" ] || continue
 	if [ "$local_sha" = "$zero" ]; then
 		echo "▸ $remote_ref: deletion, no source checks"
+		deleted=$((deleted + 1))
 		continue
 	fi
 
@@ -74,6 +99,7 @@ while read -r local_ref local_sha remote_ref remote_sha; do
 		;;
 	esac
 	verified="$verified $commit"
+	count=$((count + 1))
 
 	if [ "$remote_sha" = "$zero" ]; then
 		range="$commit --not --remotes"
@@ -85,7 +111,7 @@ while read -r local_ref local_sha remote_ref remote_sha; do
 
 	worktree="$worktrees/$(printf '%s' "$commit" | cut -c1-12)"
 	git worktree add --detach "$worktree" "$commit" >/dev/null
-	link_dependencies "$worktree"
+	prepare_dependencies "$worktree"
 
 	if ! (
 		cd "$worktree"
@@ -98,6 +124,11 @@ while read -r local_ref local_sha remote_ref remote_sha; do
 	); then
 		status=1
 	fi
-done
+done <"$refs_file"
+
+if [ "$count" -eq 0 ] && [ "$deleted" -eq 0 ]; then
+	echo "pre-push: no source ref found in the push input" >&2
+	exit 1
+fi
 
 exit $status
