@@ -1,5 +1,10 @@
 title = "Firefly gitleaks config"
 
+# Without this section a config file replaces the built-in rule set instead of
+# extending it, which silently turned every scan into a no-op.
+[extend]
+useDefault = true
+
 [allowlist]
   description = "Known non-secret patterns in test fixtures"
 

@@ -45,7 +45,7 @@ describe("validateBackyConfig", () => {
   it("returns valid for complete config", () => {
     const result = validateBackyConfig({
       webhookUrl: "https://example.com/api/webhook/abc",
-      apiKey: "test-api-key-12345",
+      apiKey: "test-api-key-placeholder",
     });
     expect(result).toEqual({ valid: true });
   });

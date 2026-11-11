@@ -81,7 +81,7 @@ export const SLOTS: SlotDefinition[] = [
         label: ctx.g1Range ? `range ${ctx.g1Range}` : "staged",
         command: ctx.g1Range
           ? `bun run scripts/quality/secrets.ts --range=${ctx.g1Range}`
-          : `bun run scripts/quality/secrets.ts --staged --git-root=${ctx.gitRoot}`,
+          : "bun run scripts/quality/secrets.ts --index-snapshot",
         timeoutMs: 2 * MIN,
       },
     ],

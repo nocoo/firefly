@@ -32,7 +32,7 @@ const now = Math.floor(Date.now() / 1000);
 const sampleToken: McpToken = {
   id: "tok-1",
   access_token_hash: "hash_at",
-  access_token_preview: "firefly_at_a1b2",
+  access_token_preview: "firefly_at_preview_fixture",
   refresh_token_hash: "hash_rt",
   client_id: "firefly_mcp_01HQ",
   user_email: "admin@example.com",
@@ -101,7 +101,7 @@ describe("createMcpToken", () => {
   it("inserts token and returns it", async () => {
     const input: CreateMcpTokenInput = {
       access_token_hash: "hash_at",
-      access_token_preview: "firefly_at_a1b2",
+      access_token_preview: "firefly_at_preview_fixture",
       refresh_token_hash: "hash_rt",
       client_id: "firefly_mcp_01HQ",
       user_email: "admin@example.com",

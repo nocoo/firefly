@@ -1115,7 +1115,7 @@ Response:
     {
       "id": "01JQ...",
       "client_name": "Claude Code",
-      "access_token_preview": "firefly_at_a1b2",
+      "access_token_preview": "firefly_at_preview_fixture",
       "scope": "mcp:full",
       "last_used_at": 1711234567,
       "revoked": false,

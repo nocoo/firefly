@@ -2,26 +2,28 @@
 /**
  * G1: Secrets — gitleaks over the content of a single gate stage.
  *
- *   --staged              pre-commit: scan the Git index (staged content)
+ *   --index-snapshot      pre-commit: scan the exported Git index (the content
+ *                         that becomes the commit), path allowlists included
  *   --range=<a..b>        pre-push: scan the commits this push introduces
  *
  * Missing scanner, wrong version, or a scanner error is reported as a gate
  * failure distinct from "leaks found". Findings are redacted.
+ *
+ * `gitleaks git --staged` is deliberately not used: with 8.30.1 it scans the diff
+ * header of a new file instead of its content, so a staged secret passed clean.
  */
 import { existsSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { checkTool } from "./tools";
 
 const args = process.argv.slice(2);
 const value = (name: string) => args.find((arg) => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
 
-const staged = args.includes("--staged");
+const indexSnapshot = args.includes("--index-snapshot");
 const range = value("range");
-const gitRoot = value("git-root") ?? process.cwd();
-const configRoot = resolve(import.meta.dir, "../..");
 
-if (staged === Boolean(range)) {
-  console.error("G1: pass exactly one of --staged or --range=<a..b>");
+if (indexSnapshot === Boolean(range)) {
+  console.error("G1: pass exactly one of --index-snapshot or --range=<a..b>");
   process.exit(2);
 }
 
@@ -31,25 +33,18 @@ if (!tool.ok) {
   process.exit(2);
 }
 
-const config = [join(process.cwd(), ".gitleaks.toml"), join(configRoot, ".gitleaks.toml")].find((path) =>
-  existsSync(path),
-);
+const cwd = process.cwd();
+const config = [join(cwd, ".gitleaks.toml")].find((path) => existsSync(path));
 if (!config) {
-  console.error("G1: .gitleaks.toml not found");
+  console.error(`G1: .gitleaks.toml not found in ${cwd}`);
   process.exit(2);
 }
 
-const cwd = range ? process.cwd() : gitRoot;
-const target = range ? `range ${range}` : "staged content";
-const invocation = [
-  "gitleaks",
-  "git",
-  ...(range ? [`--log-opts=${range}`] : ["--staged"]),
-  "--no-banner",
-  "--redact",
-  `--config=${config}`,
-  `--gitleaks-ignore-path=${configRoot}`,
-];
+const target = range ? `range ${range}` : "index snapshot";
+const invocation = range
+  ? ["gitleaks", "git", `--log-opts=${range}`, "--no-banner", "--redact"]
+  : ["gitleaks", "dir", ".", "--no-banner", "--redact"];
+invocation.push(`--config=${config}`, `--gitleaks-ignore-path=${cwd}`);
 
 console.log(`G1: gitleaks (${tool.detail}) — ${target} in ${cwd}`);
 const proc = Bun.spawn(invocation, { cwd, stdout: "inherit", stderr: "inherit" });

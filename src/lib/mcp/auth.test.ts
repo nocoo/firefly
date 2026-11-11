@@ -26,7 +26,7 @@ const now = Math.floor(Date.now() / 1000);
 const sampleToken: McpToken = {
   id: "tok-1",
   access_token_hash: "hashed_firefly_at_abc",
-  access_token_preview: "firefly_at_abc1",
+  access_token_preview: "firefly_at_preview_fixture",
   refresh_token_hash: "hashed_rt",
   client_id: "firefly_mcp_01HQ",
   user_email: "admin@example.com",
