@@ -54,7 +54,6 @@ bun run test:e2e:api
 bun run test:e2e:browser
 bun run security
 bun run gate:pre-commit
-bun run gate:pre-push
 ```
 
 Follow README for local Worker startup on 8787 before `bun run migrate:local`. Web dev uses 7028. Names required for normal login: `AUTH_SECRET`, `AUTH_URL`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_ALLOWED_EMAILS`; Worker connection uses `WORKER_URL`/`WORKER_SECRET`. Ordinary dev uploads use configured R2; E2E uses the local file adapter. Install Chromium with `bunx playwright install chromium`. CI supplies `AUTH_SECRET`/`AUTH_ALLOWED_EMAILS`; never copy production secrets into fixtures.
@@ -80,7 +79,7 @@ System0 is the 12-slot set of the `system0-quality` skill (v1.3.0, nocoo/workflo
 
 Local gates are check-only and never touch the worktree. Pre-commit exports the Git index with `git checkout-index` into a temporary snapshot, symlinks the installed `node_modules` read-only after comparing the index manifests with the working-tree copies, and runs S1, S2, L1, G1 plus S3 when workflows change; frozen-lockfile validation is `--dry-run` only. Pre-push reads every push ref from stdin first, creates one detached worktree per commit (frozen-installing dependencies when that commit's manifests differ from the installed ones) and runs S1, S2, L1, G1, G2, B1, L3 and L4 there — never on the working tree. Every step has a timeout, every slot has an empty-run guard, and a missing scanner, a failing step or a timeout fails the stage.
 
-Measured on the development machine (warm): pre-commit 3.6–5.2s end to end against a 15s bar; pre-push 54–61s end to end (S1 1.0, S2 0.7, G1 0.1, L1 2.2, G2 2.2, B1 12.0, L3 6.0, L4 30.0) against the skill's 2.5min target and 5min limit. CI runs the same slots as separate jobs and aggregates them in `quality / Z1: Gate`: 211s wall on 2026-11-11, critical path `L4: E2E` 204s. Failure injection evidence lives in [docs/22 §5](./docs/22-quality-system.md#5-failure-injection-evidence).
+Measured on the development machine (warm): pre-commit 3.6–5.2s end to end against a 15s bar; pre-push 54–61s end to end (S1 1.0, S2 0.7, G1 0.1, L1 2.2, G2 2.2, B1 12.0, L3 6.0, L4 30.0) against the skill's 2.5min target and 5min limit. CI runs the same slots as separate jobs and aggregates them in `quality / Z1: Gate`: 210s wall on 2026-11-11 (run 43024724240), critical path `L4: E2E` 202s. Failure injection evidence lives in [docs/22 §5](./docs/22-quality-system.md#5-failure-injection-evidence).
 
 CI is native mode: `.github/workflows/ci.yml` is a single caller job (key `quality`, no `name`) over `./.github/workflows/quality-slots.yml`, whose jobs are named exactly `<ID>: <Name>`. `quality / Z1: Gate` is the only required check on `main`; direct pushes stay possible through the admin bypass. Never bypass commit or branch-push hooks.
 

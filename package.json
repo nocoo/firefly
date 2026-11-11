@@ -23,7 +23,6 @@
     "test:e2e:api": "bun scripts/run-e2e.ts --api-only",
     "test:e2e:browser": "bun scripts/run-e2e.ts --browser-only",
     "gate:pre-commit": "sh .husky/pre-commit",
-    "gate:pre-push": "sh .husky/pre-push",
     "migrate": "bun scripts/migrations/migrate.ts up",
     "migrate:status": "bun scripts/migrations/migrate.ts status",
     "migrate:local": "bun scripts/migrations/migrate.ts up --target local",

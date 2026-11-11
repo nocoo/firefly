@@ -61,6 +61,14 @@ problem. Slot definitions, stages and timeouts live in `scripts/quality/slots.ts
 | Timeout | 60s stage budget, per-step timeouts | 300s stage budget, per-step timeouts |
 | Failure modes | failing step, missing/too-old scanner, toolchain drift, empty run, timeout, stage budget | same |
 
+`bun run gate:pre-commit` runs the pre-commit hook directly. The pre-push hook has
+no standalone script because it verifies push refs from stdin; to exercise it
+manually, feed it refs (the worktree and its `node_modules` stay untouched):
+
+```sh
+printf 'refs/heads/x %s refs/heads/x %s\n' "$(git rev-parse HEAD)" "$(git rev-parse HEAD~1)" | .husky/pre-push origin origin
+```
+
 Blocked-by-design conditions that are easy to get wrong and are therefore explicit:
 
 - A missing `gitleaks` / `osv-scanner` / `actionlint`, or a version below the
@@ -76,6 +84,8 @@ Blocked-by-design conditions that are easy to get wrong and are therefore explic
 - The stage budget fails the stage only for slots it prevented from starting; a
   stage whose every slot finished over budget prints a governance warning instead
   of turning a green run red.
+- The stage budget fails a stage only when it prevented a slot from starting; a
+  stage whose every slot ran over budget prints a governance warning.
 - G1 refuses to run outside a real target: `--index-snapshot` requires the
   exported-snapshot marker, and pre-push requires an explicit commit range, so a
   manual `gate.ts` run can never quietly scan the working tree.
@@ -164,7 +174,7 @@ immediately. CI injections ran against the Z1 validator extracted from
 | failing test in `e2e/api/` | `gate.ts --stage=pre-push --only=L3` | `L3 FAIL 5.7s` |
 | failing spec in `e2e/bdd/` | `gate.ts --stage=pre-push --only=L4` | `L4 FAIL 30.0s` |
 | step timeout lowered to 200ms | `gate.ts --only=S2` | `S2 timeout: exceeded 200ms` |
-| stage budget lowered to 800ms | `gate.ts --only=S1,S2` | `budget (timeout: stage took 1.2s over the 1s budget)` |
+| stage budget lowered to 1ms (slots cannot start) | `gate.ts --stage=pre-commit --only=S1,S2` | `S1 (timeout: stage budget 0s exceeded before this slot)`, `S2 (…)`, `budget (timeout: 2 slot(s) never started within the 0s budget)` |
 | `.mise.toml` bun bumped to 1.3.9 | `gate.ts --only=S1` | preflight `✗ bun: 1.4.4 does not match .mise.toml 1.3.9` |
 | dependency added to `worker/package.json` without a lockfile update | `gate.ts --only=S1` | preflight `✗ lockfile worker: bun install --frozen-lockfile --dry-run failed` |
 | broken commit on `tmp-pin`, clean worktree on `main` | `.husky/pre-push` with that OID on stdin | S1 failed on `src/inject-pin.ts`, which only exists in the pushed commit |

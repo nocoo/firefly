@@ -225,6 +225,14 @@ jobs:
             tail -200 "$RUNNER_TEMP/l1-worker.log"; exit 1
           fi
           tail -20 "$RUNNER_TEMP/l1-worker.log"
+      - name: Upload lane logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: l1-unit-logs
+          path: ${{ runner.temp }}/*.log
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Assert both lanes actually ran
         run: |
           set -euo pipefail
@@ -295,7 +303,9 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: l3-integration-logs
-          path: .wrangler/e2e-logs/
+          path: |
+            .wrangler/e2e-logs/
+            ${{ runner.temp }}/*.log
           if-no-files-found: ignore
           retention-days: 7
       - name: Record tested SHA
@@ -344,6 +354,7 @@ jobs:
           path: |
             test-results/
             .wrangler/e2e-logs/
+            ${{ runner.temp }}/*.log
           if-no-files-found: ignore
           retention-days: 7
       - name: Record tested SHA

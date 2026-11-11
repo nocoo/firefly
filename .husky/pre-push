@@ -47,6 +47,17 @@ if [ ! -s "$refs_file" ]; then
 	exit 1
 fi
 
+# A pushed commit that changes dependencies needs its own install. On failure say
+# why, because the raw registry error is unhelpful: the lockfile is authoritative
+# and a blocked registry is an environment problem, not a code problem.
+install_in() {
+	if ! (cd "$1" && bun install --frozen-lockfile); then
+		echo "pre-push: frozen install failed in $1" >&2
+		echo "pre-push: the pushed lockfile is authoritative; if the registry is blocked, point BUN_CONFIG_REGISTRY at a reachable mirror and retry" >&2
+		exit 1
+	fi
+}
+
 link_tree() {
 	from=$1
 	to=$2
@@ -65,7 +76,7 @@ prepare_dependencies() {
 		link_tree "$repo" "$worktree"
 	else
 		echo "▸ manifests differ from the installed tree — frozen install in the worktree"
-		(cd "$worktree" && bun install --frozen-lockfile)
+		install_in "$worktree"
 	fi
 	if [ -f "$worktree/worker/package.json" ] && [ -f "$worktree/worker/bun.lock" ]; then
 		if cmp -s "$worktree/worker/package.json" "$repo/worker/package.json" &&
@@ -73,7 +84,7 @@ prepare_dependencies() {
 			link_tree "$repo/worker" "$worktree/worker"
 		else
 			echo "▸ worker manifests differ from the installed tree — frozen install in the worktree"
-			(cd "$worktree/worker" && bun install --frozen-lockfile)
+			install_in "$worktree/worker"
 		fi
 	fi
 }
