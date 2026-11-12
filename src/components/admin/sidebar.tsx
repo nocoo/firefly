@@ -1,7 +1,6 @@
 "use client";
 
 import { APP_VERSION } from "@/lib/version";
-import { cn } from "@/lib/utils";
 import { usePathname, useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { signOut } from "next-auth/react";
@@ -11,15 +10,12 @@ import {
   FolderOpen,
   Tags,
   Image,
-  LogOut,
-  PanelLeft,
   Settings,
   ExternalLink,
   Bot,
   KeyRound,
   Fingerprint,
   CloudUpload,
-  Search,
   Activity,
   Users,
   UserRound,
@@ -27,6 +23,8 @@ import {
 import {
   Sidebar,
   SidebarHeader,
+  SidebarBrand,
+  SidebarToggle,
   SidebarItem,
   SidebarIconItem,
   SidebarNav,
@@ -35,7 +33,6 @@ import {
   SidebarFooter,
   SidebarUser,
   SidebarSearch,
-  Button,
   Link,
   Avatar,
   AvatarFallback,
@@ -45,6 +42,7 @@ import {
   TooltipContent,
   TooltipProvider,
 } from "@nocoo/basalt";
+import { useSidebar } from "@nocoo/basalt/components/sidebar";
 import { useCommandPalette } from "@/components/admin/command-palette";
 
 interface NavItem {
@@ -98,11 +96,10 @@ const NAV_GROUPS: NavGroup[] = [
 
 const ALL_NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
 
-const SIDEBAR_MARK_SLOT_CLASS = "flex w-full items-center";
-
 interface AdminSidebarProps {
-  collapsed: boolean;
-  onToggle: () => void;
+  resizable?: boolean;
+  /** When set, brand toggle dismisses the mobile drawer instead of collapsing the rail. */
+  onMobileDismiss?: () => void;
   user: {
     name?: string | null | undefined;
     email?: string | null | undefined;
@@ -129,9 +126,11 @@ function NavItemButton({
       <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
       <span className="flex-1 truncate text-left">{item.title}</span>
       {item.external ? (
-        <span className="flex size-basalt-icon-lg shrink-0 items-center justify-center">
-          <ExternalLink className="h-3 w-3 text-basalt-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
-        </span>
+        <ExternalLink
+          className="h-3 w-3 shrink-0 text-basalt-muted-foreground"
+          strokeWidth={1.5}
+          aria-hidden="true"
+        />
       ) : null}
     </SidebarItem>
   );
@@ -188,10 +187,56 @@ function CollapsedNavItem({
   );
 }
 
-export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
+function AdminSidebarNav({
+  isItemActive,
+  onNavigate,
+}: {
+  isItemActive: (item: NavItem) => boolean;
+  onNavigate: (item: NavItem, event: MouseEvent<HTMLButtonElement>) => void;
+}) {
+  const { collapsed, peeking } = useSidebar();
+  const { setOpen: openSearch } = useCommandPalette();
+  const railCollapsed = collapsed && !peeking;
+
+  if (railCollapsed) {
+    return (
+      <SidebarNav aria-label="管理导航">
+        <SidebarSearch shortcut="⌘K" onClick={() => openSearch(true)} aria-label="搜索 (⌘K)">
+          搜索
+        </SidebarSearch>
+        {ALL_NAV_ITEMS.map((item) => (
+          <CollapsedNavItem
+            key={item.href}
+            item={item}
+            active={isItemActive(item)}
+            onNavigate={onNavigate}
+          />
+        ))}
+      </SidebarNav>
+    );
+  }
+
+  return (
+    <SidebarNav aria-label="管理导航">
+      <SidebarSearch shortcut="⌘K" onClick={() => openSearch(true)}>
+        搜索
+      </SidebarSearch>
+      <SidebarPartition>管理</SidebarPartition>
+      {NAV_GROUPS.map((group) => (
+        <NavGroupSection
+          key={group.label}
+          group={group}
+          isItemActive={isItemActive}
+          onNavigate={onNavigate}
+        />
+      ))}
+    </SidebarNav>
+  );
+}
+
+export function AdminSidebar({ resizable = true, onMobileDismiss, user }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { setOpen: openSearch } = useCommandPalette();
 
   const isItemActive = (item: NavItem) => {
     if (item.external) return false;
@@ -216,124 +261,48 @@ export function AdminSidebar({ collapsed, onToggle, user }: AdminSidebarProps) {
     .toUpperCase();
 
   const userAvatar = (
-    <Avatar className={cn("h-9 w-9 shrink-0", collapsed && "cursor-pointer")}>
+    <Avatar>
       {user.image && <AvatarImage src={user.image} alt={user.name ?? "用户"} />}
-      <AvatarFallback className="text-basalt-sm">{initials}</AvatarFallback>
+      <AvatarFallback>{initials}</AvatarFallback>
     </Avatar>
   );
 
-  const sidebarHeader = (
-    <SidebarHeader>
-      <div
-        className={cn(
-          SIDEBAR_MARK_SLOT_CLASS,
-          collapsed ? "justify-center" : "justify-between pl-basalt-layout-sm",
-        )}
-      >
-        <Link
-          href="/admin"
-          aria-label="管理首页"
-          className="flex items-center gap-basalt-space-lg text-basalt-foreground no-underline hover:no-underline"
-        >
-          <img
-            src="/logo-80.png"
-            alt="Firefly"
-            width={28}
-            height={28}
-            className="h-7 w-7 shrink-0 object-contain"
-          />
-          {collapsed ? null : (
-            <>
-              <span className="text-basalt-xl font-semibold text-basalt-foreground">Firefly</span>
-              <span className="rounded-basalt-md bg-basalt-secondary px-basalt-space-md py-basalt-space-xs text-basalt-sm leading-basalt-tight font-medium text-basalt-muted-foreground">
-                v{APP_VERSION}
-              </span>
-            </>
-          )}
-        </Link>
-        {collapsed ? null : (
-          <Button variant="ghost" size="icon" onClick={onToggle} aria-label="收起侧边栏">
-            <PanelLeft aria-hidden="true" />
-          </Button>
-        )}
-      </div>
-    </SidebarHeader>
+  const brandAction = onMobileDismiss ? (
+    <SidebarToggle
+      mode="dismiss"
+      onDismiss={onMobileDismiss}
+      dismissLabel="关闭导航"
+    />
+  ) : (
+    <SidebarToggle expandLabel="展开侧边栏" collapseLabel="收起侧边栏" />
   );
 
   return (
     <TooltipProvider delayDuration={0}>
-    <Sidebar collapsed={collapsed}>
-      {sidebarHeader}
-      {collapsed ? (
-        <>
-          <Button variant="ghost" size="icon" onClick={onToggle} aria-label="展开侧边栏">
-            <PanelLeft aria-hidden="true" />
-          </Button>
-          <SidebarNav aria-label="管理导航">
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <SidebarIconItem onClick={() => openSearch(true)} aria-label="搜索 (⌘K)">
-                  <Search className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-                </SidebarIconItem>
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8}>
-                搜索 (⌘K)
-              </TooltipContent>
-            </Tooltip>
-            {ALL_NAV_ITEMS.map((item) => (
-              <CollapsedNavItem
-                key={item.href}
-                item={item}
-                active={isItemActive(item)}
-                onNavigate={navigate}
-              />
-            ))}
-          </SidebarNav>
-          <SidebarFooter>
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>{userAvatar}</TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8}>
-                {user.name ?? "管理员"}
-              </TooltipContent>
-            </Tooltip>
-          </SidebarFooter>
-        </>
-      ) : (
-        <>
-          <SidebarSearch shortcut="⌘K" onClick={() => openSearch(true)}>
-            搜索
-          </SidebarSearch>
-          <SidebarNav aria-label="管理导航">
-            <SidebarPartition>管理</SidebarPartition>
-            {NAV_GROUPS.map((group) => (
-              <NavGroupSection
-                key={group.label}
-                group={group}
-                isItemActive={isItemActive}
-                onNavigate={navigate}
-              />
-            ))}
-          </SidebarNav>
-          <SidebarFooter>
-            <SidebarUser
-              avatar={userAvatar}
-              name={user.name ?? "管理员"}
-              email={user.email}
-              action={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => signOut({ callbackUrl: "/login" })}
-                  aria-label="退出登录"
-                >
-                  <LogOut aria-hidden="true" />
-                </Button>
-              }
-            />
-          </SidebarFooter>
-        </>
-      )}
-    </Sidebar>
+      <Sidebar resizable={resizable}>
+        <SidebarHeader>
+          <SidebarBrand
+            logo={
+              <Link href="/admin" aria-label="管理首页">
+                <img src="/logo-80.png" alt="Firefly" width={24} height={24} />
+              </Link>
+            }
+            name="Firefly"
+            version={`v${APP_VERSION}`}
+            action={brandAction}
+          />
+        </SidebarHeader>
+        <AdminSidebarNav isItemActive={isItemActive} onNavigate={navigate} />
+        <SidebarFooter>
+          <SidebarUser
+            avatar={userAvatar}
+            name={user.name ?? "管理员"}
+            email={user.email}
+            signOutLabel="退出登录"
+            onSignOut={() => signOut({ callbackUrl: "/login" })}
+          />
+        </SidebarFooter>
+      </Sidebar>
     </TooltipProvider>
   );
 }

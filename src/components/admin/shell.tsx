@@ -1,14 +1,9 @@
 "use client";
 
-import { HeaderTooltip, HexlyLink } from "../header-links";
-
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useId } from "react";
 import { usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
-import { Github } from "@/components/icons/brand";
 import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
 import { AdminSidebar } from "@/components/admin/sidebar";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Toaster } from "@/components/ui/sonner";
 import { t, type TranslationKey } from "@/lib/i18n";
 import {
@@ -22,20 +17,18 @@ import {
   AppMain,
   AppSkipLink,
 } from "@nocoo/basalt/components/app-shell";
-import { AppHeader } from "@nocoo/basalt/components/app-header";
-import { LinkButton } from "@nocoo/basalt/components/button";
+import {
+  AppHeader,
+  AppHeaderMenuButton,
+  ProjectLinks,
+} from "@nocoo/basalt/components/app-header";
 import {
   ContentIsland,
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetTitle,
-  Button,
+  SidebarDrawer,
+  SidebarProvider,
+  ThemeToggle,
 } from "@nocoo/basalt";
 
-// Map admin routes to dictionary keys. Title strings live in the dictionary
-// so they are translatable and share a source of truth with command-palette
-// navigation labels.
 const PAGE_TITLE_KEYS: Record<string, TranslationKey> = {
   "/admin": "admin.page.dashboard",
   "/admin/posts": "admin.page.posts",
@@ -52,7 +45,6 @@ const PAGE_TITLE_KEYS: Record<string, TranslationKey> = {
   "/admin/system": "admin.page.system",
 };
 
-// Generate hierarchical breadcrumbs for admin routes
 function getAdminBreadcrumbs(pathname: string): { label: string; href?: string }[] {
   if (pathname === "/admin") {
     return [];
@@ -80,7 +72,6 @@ function getAdminBreadcrumbs(pathname: string): { label: string; href?: string }
   return items;
 }
 
-// Resolve page title for the current route, taking specific sub-routes into account
 function getAdminPageTitle(pathname: string): string {
   if (pathname === "/admin/posts/new") return "新建文章";
   if (pathname.startsWith("/admin/posts/") && pathname.endsWith("/edit")) return "编辑文章";
@@ -113,9 +104,9 @@ export function AdminShell({ user, children }: AdminShellProps) {
   const [collapsed, setCollapsed] = useState(isTablet);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const mobileTriggerRef = useRef<HTMLButtonElement>(null);
+  const mobileSheetId = useId();
 
-  // Auto-collapse once when entering tablet range; user toggle still works.
-  // Uses a ref to track previous isTablet so we only fire on the transition.
   const wasTablet = useRef(isTablet);
   useEffect(() => {
     if (isTablet && !wasTablet.current) {
@@ -124,10 +115,8 @@ export function AdminShell({ user, children }: AdminShellProps) {
     wasTablet.current = isTablet;
   }, [isTablet]);
 
-  // Resolve page title from pathname
   const title = getAdminPageTitle(pathname);
 
-  // Close mobile sidebar on route change
   const prevPathname = useRef(pathname);
   useEffect(() => {
     if (prevPathname.current !== pathname) {
@@ -136,79 +125,58 @@ export function AdminShell({ user, children }: AdminShellProps) {
     }
   }, [pathname]);
 
-  // Prevent body scroll when mobile sidebar is open
-  useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [mobileOpen]);
-
-  const mobileTrigger = (
-    <HeaderTooltip label="打开导航">
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="打开导航">
-          <Menu aria-hidden="true" strokeWidth={1.5} />
-        </Button>
-      </SheetTrigger>
-    </HeaderTooltip>
-  );
-
   return (
     <LinkProvider render={Link}>
       <CommandPaletteProvider>
         <AppShell>
-            <AppSkipLink>跳至主要内容</AppSkipLink>
+          <AppSkipLink>跳至主要内容</AppSkipLink>
 
-            {/* Desktop sidebar */}
-            {!isMobile && (
-              <AdminSidebar
-                collapsed={collapsed}
-                onToggle={() => setCollapsed(!collapsed)}
-                user={user}
-              />
-            )}
+          {!isMobile ? (
+            <SidebarProvider collapsed={collapsed} onCollapsedChange={setCollapsed}>
+              <AdminSidebar user={user} />
+            </SidebarProvider>
+          ) : null}
 
-            {/* Sheet wraps main column always; SheetTrigger only appears on mobile */}
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <AppMain>
-                <AppHeader
-                  leading={isMobile ? mobileTrigger : null}
-                  breadcrumbs={getAdminBreadcrumbs(pathname)}
-                  title={title}
-                  actions={<ShellHeaderActions />}
-                />
+          <SidebarDrawer
+            id={mobileSheetId}
+            open={mobileOpen}
+            onOpenChange={setMobileOpen}
+            returnFocusRef={mobileTriggerRef}
+            title="导航"
+            description="管理后台导航链接与操作"
+          >
+            <AdminSidebar
+              resizable={false}
+              user={user}
+              onMobileDismiss={() => setMobileOpen(false)}
+            />
+          </SidebarDrawer>
 
-                {/* Content island */}
-                <div className="flex min-h-0 flex-1 flex-col px-2 pb-2 md:px-3 md:pb-3">
-                  <ContentIsland>{children}</ContentIsland>
-                </div>
-              </AppMain>
-
-              {isMobile && (
-                <SheetContent
-                  side="left"
-                  className="w-[260px] max-w-[260px] border-0 bg-basalt-background p-0 sm:p-0"
-                >
-                  <SheetTitle className="sr-only">导航</SheetTitle>
-                  <AdminSidebar
-                    collapsed={false}
-                    onToggle={() => setMobileOpen(false)}
-                    user={user}
+          <AppMain>
+            <AppHeader
+              leading={
+                isMobile ? (
+                  <AppHeaderMenuButton
+                    ref={mobileTriggerRef}
+                    label="打开导航"
+                    aria-controls={mobileSheetId}
+                    onClick={() => setMobileOpen(true)}
                   />
-                </SheetContent>
-              )}
-            </Sheet>
+                ) : null
+              }
+              breadcrumbsLabel="面包屑导航"
+              breadcrumbs={getAdminBreadcrumbs(pathname)}
+              title={title}
+              actions={<ShellHeaderActions />}
+            />
 
-            {/* Global toast notifications */}
-            <Toaster />
+            <div className="flex min-h-0 flex-1 flex-col px-basalt-space-lg pb-basalt-space-lg md:px-basalt-layout-sm md:pb-basalt-layout-sm">
+              <ContentIsland>{children}</ContentIsland>
+            </div>
+          </AppMain>
 
-            {/* Global command palette */}
-            <CommandPalette />
+          <Toaster />
+          <CommandPalette />
         </AppShell>
       </CommandPaletteProvider>
     </LinkProvider>
@@ -218,21 +186,21 @@ export function AdminShell({ user, children }: AdminShellProps) {
 function ShellHeaderActions() {
   return (
     <>
-      <HeaderTooltip label="GitHub 仓库">
-        <LinkButton
-          variant="ghost"
-          size="icon"
-          href="https://github.com/nocoo/firefly"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="GitHub"
-          className="w-8 rounded-basalt-md text-basalt-muted-foreground hover:text-basalt-foreground [&_svg]:size-[1.125rem]"
-        >
-          <Github className="h-[1.125rem] w-[1.125rem]" aria-hidden="true" strokeWidth={1.5} />
-        </LinkButton>
-      </HeaderTooltip>
-      <HexlyLink />
-      <ThemeToggle />
+      <ProjectLinks
+        github="nocoo/firefly"
+        hexly="firefly"
+        name="Firefly"
+        githubLabel="GitHub 仓库"
+        hexlyLabel="Firefly on hexly.ai"
+        newTabLabel="（在新标签页中打开）"
+      />
+      <ThemeToggle
+        labels={{
+          light: `${t("theme.toggle.tip.next")}：${t("theme.toggle.label.light")}`,
+          dark: `${t("theme.toggle.tip.next")}：${t("theme.toggle.label.dark")}`,
+          system: `${t("theme.toggle.tip.next")}：${t("theme.toggle.label.system")}`,
+        }}
+      />
     </>
   );
 }

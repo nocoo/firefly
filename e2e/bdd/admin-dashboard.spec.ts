@@ -34,6 +34,12 @@
  */
 import { test, expect, expectPathname } from "./fixtures";
 
+test("Sidebar user row wires basalt sign-out control", async ({ page }) => {
+  await page.goto("/admin", { waitUntil: "networkidle" });
+  const sidebar = page.getByRole("complementary");
+  await expect(sidebar.getByRole("button", { name: "退出登录", exact: true })).toBeVisible();
+});
+
 test("Native sidebar groups, current state, collapsed tooltips and search remain interactive", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/admin/posts/new", { waitUntil: "networkidle" });
@@ -114,7 +120,9 @@ for (const width of [390, 700]) {
     await opener.click();
     const drawer = page.getByRole("dialog");
     await expect(drawer).toBeVisible();
+    await expect(drawer).toHaveAttribute("data-slot", "sidebar-drawer");
     await expect(drawer).toHaveCSS("padding", "0px");
+    await expect(drawer.getByRole("button", { name: /搜索/ })).toBeVisible();
     await expect.poll(() => drawer.evaluate((node) => node.scrollWidth - node.clientWidth)).toBe(0);
     await expect(drawer.getByRole("complementary")).toHaveCSS("width", "260px");
 
