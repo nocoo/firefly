@@ -1,7 +1,7 @@
 # 22 — Quality System (System0 slots)
 
 > Authoritative quality document for this repository. Slot semantics come from the
-> `system0-quality` skill (v1.3.0, nocoo/workflow); base-ci v2026.13 only supplies
+> `system0-quality` skill (v1.3.0, nocoo/workflow); base-ci v2026.14 only supplies
 > composite actions and the deploy interface.
 >
 > Supersedes [07](./07-quality-system-upgrade.md) and [17](./17-quality-upgrade.md)
@@ -98,7 +98,7 @@ Native mode: `.github/workflows/ci.yml` is a single caller job (key `quality`, n
 - No matrix suffixes and no nested reusable workflows; steps are inlined. base-ci
   composite actions
   (`setup-js`, `setup-security-scanners`) are pinned to
-  `e4598815d171e2281f77f27a4800ff8fc2537f3f # v2026.13`.
+  `9ec93ad01928da34fdd0a4c7274b23b2c7d77bb6 # v2026.14`.
 - `na` slots keep their job with a job-level `if:` so all twelve names exist and
   stay visibly skipped.
 - `Z1: Gate` runs with `if: always()`, needs every slot job plus the one blocking
@@ -109,9 +109,13 @@ Native mode: `.github/workflows/ci.yml` is a single caller job (key `quality`, n
   `if: always()` and `if-no-files-found: ignore`, retention 7 days.
 - Branch protection on `main` requires exactly `quality / Z1: Gate`. Admin bypass
   is enabled so direct pushes to `main` keep working; no other check is required.
-- Releases: `release.yml` calls `deploy-docker.yml@e4598815… # v2026.13`, which
-  proves the source run/SHA before deploying; the Z1 success on that SHA is the
-  release precondition.
+- Releases: `release.yml` calls `deploy-docker.yml@e4598815…# v2026.13`, which
+  proves the source run/SHA before deploying. It is the one base-ci reference that
+  cannot move to v2026.14 yet: that tag's deploy workflows reference
+  `nocoo/base-ci/.github/actions/release-source@e215ac80…`, a commit that does not
+  exist upstream, so every deploy step would fail with "Unable to resolve action"
+  (base-ci's own `Self Test Quality` is red on the tag for the same reason). Bump it
+  in the same commit that moves to a tag whose internal pin resolves.
 
 ## 4. Performance
 

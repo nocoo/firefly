@@ -60,7 +60,7 @@ Follow README for local Worker startup on 8787 before `bun run migrate:local`. W
 
 ## Verification
 
-System0 is the 12-slot set of the `system0-quality` skill (v1.3.0, nocoo/workflow); base-ci v2026.13 only supplies composite actions and the deploy interface. Slot names, stages and timeouts live in `scripts/quality/slots.ts`. Status: `enforced`, `planned`, `manual`, `na`.
+System0 is the 12-slot set of the `system0-quality` skill (v1.3.0, nocoo/workflow); base-ci v2026.14 only supplies composite actions and the deploy interface. Slot names, stages and timeouts live in `scripts/quality/slots.ts`. Status: `enforced`, `planned`, `manual`, `na`.
 
 | Slot | Stage | Command and object | Target | Status | Measured |
 | --- | --- | --- | --- | --- | --- |
