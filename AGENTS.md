@@ -39,7 +39,7 @@ MVVM: keep ViewModels independent of Views/DOM; routes remain thin. Next's nativ
 
 ## Commands
 
-Run from root; install root and Worker packages separately. `.mise.toml` pins the toolchain (bun 1.4.4, node 26.13.0); CI pins the same versions and the local gate fails when the installed bun differs.
+Run from root; install root and Worker packages separately. `.mise.toml` pins the toolchain (bun 1.4.4, node 26.13.1); CI pins the same versions and the local gate fails when the installed bun differs.
 
 ```sh
 bun install --frozen-lockfile

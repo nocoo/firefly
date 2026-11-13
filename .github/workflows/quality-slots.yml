@@ -24,7 +24,7 @@ permissions:
 
 env:
   BUN_VERSION: "1.4.4"
-  NODE_VERSION: "26.13.0"
+  NODE_VERSION: "26.13.1"
   NO_COLOR: "1"
   SLOT_STATUS: >-
     {"S1": {"status": "impl"},
