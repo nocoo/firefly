@@ -1,7 +1,7 @@
 # 22 — Quality System (System0 slots)
 
 > Authoritative quality document for this repository. Slot semantics come from the
-> `sys1-quality` skill (v1.3.0, system repository); base-ci v2026.15 only supplies
+> `system1-quality` skill (v1.3.0, system repository); base-ci v2026.15 only supplies
 > composite actions and the deploy interface.
 >
 > Supersedes [07](./07-quality-system-upgrade.md) and [17](./17-quality-upgrade.md)
