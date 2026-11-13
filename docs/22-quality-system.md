@@ -73,7 +73,7 @@ Blocked-by-design conditions that are easy to get wrong and are therefore explic
 
 - A missing `gitleaks` / `osv-scanner` / `actionlint`, or a version below the
   minimum, fails the stage — it never silently skips the slot.
-- The toolchain is checked against `.mise.toml` (bun 1.4.4, node 26.13.0); a
+- The toolchain is checked against `.mise.toml` (bun 1.4.4, node 26.13.1); a
   mismatched `bun` fails before anything runs.
 - L1/L3/L4 assert a minimum number of passed tests, so a suite that silently
   collects nothing fails instead of passing empty.
