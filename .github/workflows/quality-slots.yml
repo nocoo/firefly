@@ -1,4 +1,4 @@
-# System0 quality slots, native mode (nocoo/workflow system0-quality v1.3.0).
+# System1 quality slots, native mode (system1-quality v1.3.0).
 #
 # Every slot is a top-level job whose name is exactly "<ID>: <Name>", so the
 # caller (ci.yml job `quality`) renders the canonical check names
