@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.19.11 (2026-11-17)
+
+- refactor: migrate ui to basalt 3.5
+- docs: use spelled-out system skill names
+- docs: point skill references to system1 names
+
+
 ## v2.19.10 (2026-11-18)
 
 - chore: bump @nocoo/basalt to 3.5.1
