@@ -1,2 +1,7 @@
 # OSV-Scanner configuration for vulnerability management
 # https://google.github.io/osv-scanner/configuration/
+
+[[IgnoredVulns]]
+id = "GHSA-fc5q-39xc-vjpf"
+ignoreUntil = 2027-02-18
+reason = "picomatch ReDoS via repeated extglobs; affects all 4.x through 4.0.7 and no fixed release exists yet. Only reached through dev tooling (vite, vitest, tinyglobby) in worker/bun.lock; not in the deployed Worker bundle. Remove this entry when a fixed picomatch is published and adopted."
