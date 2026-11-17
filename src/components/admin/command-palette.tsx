@@ -28,7 +28,7 @@ import {
   Building2,
   UserRound,
   type LucideIcon,
-} from "lucide-react";
+} from "@nocoo/basalt/icons";
 import { cn } from "@/lib/utils";
 import { filterCommandsByQuery } from "@/lib/command-filter";
 import type { PostWithCategory } from "@/models/types";

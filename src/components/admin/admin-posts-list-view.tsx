@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Pencil, MessageSquare, ExternalLink } from "lucide-react";
+import { Pencil, MessageSquare, ExternalLink } from "@nocoo/basalt/icons";
 import type { PostWithCategory, PostStatus } from "@/models/types";
 import { formatDateDisplay } from "@/lib/seo";
 import { STATUS_COLORS } from "@/lib/status-colors";
@@ -38,7 +38,7 @@ function PostTableHeader(props: {
   const sortableProps = { currentSortBy, currentSortOrder, currentParams };
   return (
     <thead>
-      <tr className="border-b border-border bg-secondary/50">
+      <tr className="border-b border-basalt-border bg-basalt-secondary/50">
         <th className="w-10 px-3 py-3">
           <input
             type="checkbox"
@@ -47,7 +47,7 @@ function PostTableHeader(props: {
               if (el) el.indeterminate = someSelected && !allSelected;
             }}
             onChange={onToggleAll}
-            className="h-4 w-4 rounded border-border text-primary focus:ring-ring cursor-pointer"
+            className="h-4 w-4 rounded border-basalt-border text-basalt-primary focus:ring-basalt-ring cursor-pointer"
             aria-label={allSelected ? "取消全选" : "全选"}
           />
         </th>
@@ -58,7 +58,7 @@ function PostTableHeader(props: {
         <SortableHeader column="tags" label="标签" {...sortableProps} className="hidden lg:table-cell" sortable={false} />
         <SortableHeader column="published_at" label="发布时间" {...sortableProps} className="hidden xl:table-cell" />
         <SortableHeader column="created_at" label="创建时间" {...sortableProps} className="hidden xl:table-cell" />
-        <th className="px-4 py-3 text-right font-medium text-muted-foreground">操作</th>
+        <th className="px-4 py-3 text-right font-medium text-basalt-muted-foreground">操作</th>
       </tr>
     </thead>
   );
@@ -69,12 +69,12 @@ function PostRowTags({ tags }: { tags: PostWithTags["tags"] }) {
   return (
     <div className="flex flex-wrap gap-1 max-w-[200px]">
       {tags.slice(0, 3).map((tag) => (
-        <span key={tag.id} className="inline-block rounded-md bg-accent px-1.5 py-0.5 text-xs">
+        <span key={tag.id} className="inline-block rounded-md bg-basalt-accent px-1.5 py-0.5 text-xs">
           {tag.name}
         </span>
       ))}
       {tags.length > 3 && (
-        <span className="text-xs text-muted-foreground">+{tags.length - 3}</span>
+        <span className="text-xs text-basalt-muted-foreground">+{tags.length - 3}</span>
       )}
     </div>
   );
@@ -85,7 +85,7 @@ function PostRowActions({ post }: { post: PostWithTags }) {
     <div className="flex items-center justify-end gap-1">
       <Link
         href={`/admin/posts/${post.id}/edit`}
-        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        className="rounded-md p-1.5 text-basalt-muted-foreground transition-colors hover:bg-basalt-accent hover:text-basalt-foreground"
         title="编辑"
       >
         <Pencil className="h-4 w-4" strokeWidth={1.5} />
@@ -95,7 +95,7 @@ function PostRowActions({ post }: { post: PostWithTags }) {
         href={getPreviewUrl(post)}
         target="_blank"
         rel="noopener noreferrer"
-        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        className="rounded-md p-1.5 text-basalt-muted-foreground transition-colors hover:bg-basalt-accent hover:text-basalt-foreground"
         title="在新标签页打开"
       >
         <ExternalLink className="h-4 w-4" strokeWidth={1.5} />
@@ -116,8 +116,8 @@ function PostRow({
 }) {
   return (
     <tr
-      className={`border-b border-border last:border-0 transition-colors ${
-        isSelected ? "bg-primary/5" : "hover:bg-accent/50"
+      className={`border-b border-basalt-border last:border-0 transition-colors ${
+        isSelected ? "bg-basalt-primary/5" : "hover:bg-basalt-accent/50"
       }`}
     >
       <td className="w-10 px-3 py-3">
@@ -125,13 +125,13 @@ function PostRow({
           type="checkbox"
           checked={isSelected}
           onChange={() => onToggleSelect(post.id)}
-          className="h-4 w-4 rounded border-border text-primary focus:ring-ring cursor-pointer"
+          className="h-4 w-4 rounded border-basalt-border text-basalt-primary focus:ring-basalt-ring cursor-pointer"
         />
       </td>
       <td className="px-4 py-3">
         <Link
           href={`/admin/posts/${post.id}/edit`}
-          className="font-medium text-foreground hover:text-primary transition-colors"
+          className="font-medium text-basalt-foreground hover:text-basalt-primary transition-colors"
         >
           {post.title}
         </Link>
@@ -141,22 +141,22 @@ function PostRow({
           {STATUS_LABELS[post.status as PostStatus] ?? post.status}
         </span>
       </td>
-      <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+      <td className="px-4 py-3 text-basalt-muted-foreground hidden md:table-cell">
         {post.category_name ?? "—"}
       </td>
-      <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+      <td className="px-4 py-3 text-basalt-muted-foreground hidden md:table-cell">
         <span className="inline-flex items-center gap-1">
           <MessageSquare className="h-3.5 w-3.5" strokeWidth={1.5} />
           {post.comment_count ?? 0}
         </span>
       </td>
-      <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
+      <td className="px-4 py-3 text-basalt-muted-foreground hidden lg:table-cell">
         <PostRowTags tags={post.tags} />
       </td>
-      <td className="px-4 py-3 text-muted-foreground hidden xl:table-cell">
+      <td className="px-4 py-3 text-basalt-muted-foreground hidden xl:table-cell">
         {post.published_at ? formatDateDisplay(post.published_at) : "—"}
       </td>
-      <td className="px-4 py-3 text-muted-foreground hidden xl:table-cell">
+      <td className="px-4 py-3 text-basalt-muted-foreground hidden xl:table-cell">
         {formatDateDisplay(post.created_at)}
       </td>
       <td className="px-4 py-3 text-right">
@@ -194,7 +194,7 @@ export function AdminPostsListView({
 
   return (
     <>
-      <div className="overflow-x-auto rounded-widget border border-border bg-secondary">
+      <div className="overflow-x-auto rounded-widget border border-basalt-border bg-basalt-secondary">
         <table className="w-full text-sm">
           <PostTableHeader
             currentSortBy={currentSortBy}
@@ -207,7 +207,7 @@ export function AdminPostsListView({
           <tbody>
             {posts.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={9} className="px-4 py-8 text-center text-basalt-muted-foreground">
                   未找到文章
                 </td>
               </tr>

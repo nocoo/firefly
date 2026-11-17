@@ -2,10 +2,10 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { KeyRound, Trash2 } from "@nocoo/basalt/icons";
+import { toast } from "@nocoo/basalt/components/toast";
 import type { McpToken, McpTokenScope } from "@/models/types";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@/components/empty-state";
 import { AdminPageHeader } from "./page-header";
 import { McpSetupGuide } from "./mcp-tokens-setup-guide";
 import { McpTokensTable } from "./mcp-tokens-table";
@@ -147,10 +147,10 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
       />
       <McpSetupGuide mcpUrl={mcpUrl} />
 
-      <hr className="border-border" />
+      <hr className="border-basalt-border" />
 
       {error && (
-        <div className="rounded-widget border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-widget border border-basalt-destructive/50 bg-basalt-destructive/10 px-4 py-3 text-sm text-basalt-destructive">
           {error}
         </div>
       )}
@@ -183,7 +183,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
             <div className="flex justify-end">
               <button type="button"
                 onClick={() => setShowBulkDelete(true)}
-                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs text-basalt-muted-foreground hover:text-basalt-destructive transition-colors"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 {`删除 ${revokedCount} 个已撤销`}

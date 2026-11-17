@@ -1,6 +1,8 @@
-import { createLucideIcon } from "lucide-react";
+"use client";
 
-// Extracted from lucide-react 0.577.0 (ISC license).
+import { createLucideIcon } from "@/components/icons/basalt";
+
+// Extracted from Lucide 0.577.0 (ISC license).
 // Brand icons were removed in lucide v1.
 
 export const Github = createLucideIcon("github", [

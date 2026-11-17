@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@nocoo/basalt/components/input";
+import { Button } from "@nocoo/basalt/components/button";
+import { InputArea } from "@nocoo/basalt/components/input-area";
 import type { SiteSettings, SocialLink } from "@/data/settings";
 import { SiteLogoCard } from "./site-logo-card";
 import { SocialLinksCard } from "./social-links-card";
@@ -87,12 +87,12 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
       <SiteLogoCard initialLogoUrl={logoUrl} />
 
       {/* Card 2: Site Info */}
-      <div className="rounded-card bg-secondary p-5 md:p-6 space-y-5">
-        <h2 className="text-base font-medium text-foreground">站点信息</h2>
+      <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-5">
+        <h2 className="text-base font-medium text-basalt-foreground">站点信息</h2>
 
         <div className="space-y-1">
-          <label className="text-sm font-medium text-foreground">站点名称</label>
-          <p className="text-xs text-muted-foreground">
+          <label className="text-sm font-medium text-basalt-foreground">站点名称</label>
+          <p className="text-xs text-basalt-muted-foreground">
             博客名称，显示在标题栏、侧边栏和 Meta 标签中。
           </p>
           <Input
@@ -105,8 +105,8 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
         </div>
 
         <div className="space-y-1">
-          <label className="text-sm font-medium text-foreground">标语</label>
-          <p className="text-xs text-muted-foreground">
+          <label className="text-sm font-medium text-basalt-foreground">标语</label>
+          <p className="text-xs text-basalt-muted-foreground">
             显示在侧边栏的简短座右铭或标语。
           </p>
           <Input
@@ -119,11 +119,11 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
         </div>
 
         <div className="space-y-1">
-          <label className="text-sm font-medium text-foreground">站点描述</label>
-          <p className="text-xs text-muted-foreground">
+          <label className="text-sm font-medium text-basalt-foreground">站点描述</label>
+          <p className="text-xs text-basalt-muted-foreground">
             用于 Meta Description 和 llms.txt。建议不超过几句话。
           </p>
-          <Textarea
+          <InputArea
             className="max-w-lg"
             value={siteDescription}
             onChange={(e) => setSiteDescription(e.target.value)}
@@ -135,12 +135,12 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
       </div>
 
       {/* Card 3: Author Info */}
-      <div className="rounded-card bg-secondary p-5 md:p-6 space-y-5">
-        <h2 className="text-base font-medium text-foreground">作者信息</h2>
+      <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-5">
+        <h2 className="text-base font-medium text-basalt-foreground">作者信息</h2>
 
         <div className="space-y-1">
-          <label className="text-sm font-medium text-foreground">作者邮箱</label>
-          <p className="text-xs text-muted-foreground">
+          <label className="text-sm font-medium text-basalt-foreground">作者邮箱</label>
+          <p className="text-xs text-basalt-muted-foreground">
             用于 RSS 订阅的 managingEditor 字段。与人类作者邮箱无关。可选。
           </p>
           <Input
@@ -154,14 +154,14 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
         </div>
 
         <div className="space-y-1">
-          <label className="text-sm font-medium text-foreground">
+          <label className="text-sm font-medium text-basalt-foreground">
             Twitter/X 用户名
           </label>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-basalt-muted-foreground">
             用于 Twitter Card Meta 标签。无需 @ 前缀。
           </p>
           <div className="flex items-center gap-1 max-w-xs">
-            <span className="text-sm text-muted-foreground">@</span>
+            <span className="text-sm text-basalt-muted-foreground">@</span>
             <Input
               value={twitterHandle}
               onChange={(e) =>
@@ -180,7 +180,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
       {message && (
         <p
           className={`text-sm ${
-            message.type === "success" ? "text-success" : "text-destructive"
+            message.type === "success" ? "text-basalt-success" : "text-basalt-destructive"
           }`}
         >
           {message.text}

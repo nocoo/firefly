@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Loader2, Upload, X, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2, Upload, X, XCircle } from "@nocoo/basalt/icons";
 import type { UploadItem } from "./media-library-upload";
 
 interface MediaUploadQueueProps {
@@ -28,9 +28,9 @@ export function MediaUploadQueue({
   const successCount = items.filter((it) => it.status === "success").length;
 
   return (
-    <div className="mb-4 rounded-widget border border-border bg-secondary">
+    <div className="mb-4 rounded-widget border border-basalt-border bg-basalt-secondary">
       <div className="flex items-center justify-between gap-3 px-4 py-2 text-sm">
-        <div className="flex items-center gap-2 text-muted-foreground">
+        <div className="flex items-center gap-2 text-basalt-muted-foreground">
           {uploading ? (
             <Loader2
               className="h-4 w-4 animate-spin"
@@ -52,27 +52,27 @@ export function MediaUploadQueue({
           <button
             type="button"
             onClick={onDismiss}
-            className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="inline-flex h-6 w-6 items-center justify-center rounded text-basalt-muted-foreground transition-colors hover:bg-basalt-accent hover:text-basalt-foreground"
             aria-label="关闭"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />
           </button>
         )}
       </div>
-      <ul className="max-h-48 divide-y divide-border overflow-y-auto">
+      <ul className="max-h-48 divide-y divide-basalt-border overflow-y-auto">
         {items.map((item) => (
           <li
             key={item.id}
             className="flex items-center gap-2 px-4 py-2 text-xs"
           >
             {renderStatusIcon(item.status)}
-            <span className="flex-1 truncate text-foreground">{item.name}</span>
-            <span className="shrink-0 text-muted-foreground">
+            <span className="flex-1 truncate text-basalt-foreground">{item.name}</span>
+            <span className="shrink-0 text-basalt-muted-foreground">
               {formatBytes(item.size)}
             </span>
             {item.status === "error" && item.errorMessage && (
               <span
-                className="ml-2 shrink-0 max-w-[12rem] truncate text-destructive"
+                className="ml-2 shrink-0 max-w-[12rem] truncate text-basalt-destructive"
                 title={item.errorMessage}
               >
                 {item.errorMessage}
@@ -90,14 +90,14 @@ function renderStatusIcon(status: UploadItem["status"]) {
     case "pending":
       return (
         <span
-          className="h-3.5 w-3.5 shrink-0 rounded-full border border-border"
+          className="h-3.5 w-3.5 shrink-0 rounded-full border border-basalt-border"
           aria-label="排队中"
         />
       );
     case "uploading":
       return (
         <Loader2
-          className="h-3.5 w-3.5 shrink-0 animate-spin text-primary"
+          className="h-3.5 w-3.5 shrink-0 animate-spin text-basalt-primary"
           strokeWidth={2}
           aria-label="上传中"
         />
@@ -105,7 +105,7 @@ function renderStatusIcon(status: UploadItem["status"]) {
     case "success":
       return (
         <CheckCircle2
-          className="h-3.5 w-3.5 shrink-0 text-success"
+          className="h-3.5 w-3.5 shrink-0 text-basalt-success"
           strokeWidth={2}
           aria-label="已完成"
         />
@@ -113,7 +113,7 @@ function renderStatusIcon(status: UploadItem["status"]) {
     case "error":
       return (
         <XCircle
-          className="h-3.5 w-3.5 shrink-0 text-destructive"
+          className="h-3.5 w-3.5 shrink-0 text-basalt-destructive"
           strokeWidth={2}
           aria-label="失败"
         />

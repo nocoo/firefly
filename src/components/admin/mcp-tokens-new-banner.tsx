@@ -19,17 +19,17 @@ export function McpNewTokenBanner({
         令牌创建成功！请立即复制 — 此后将无法再次查看。
       </p>
       <div className="flex items-center gap-2">
-        <code className="flex-1 rounded bg-secondary px-2 py-1 text-xs font-mono break-all">
+        <code className="flex-1 rounded bg-basalt-secondary px-2 py-1 text-xs font-mono break-all">
           {accessToken}
         </code>
         <CopyButton text={accessToken} />
       </div>
-      <p className="mt-1 text-xs text-muted-foreground">
+      <p className="mt-1 text-xs text-basalt-muted-foreground">
         此令牌仅显示一次，请安全保存。
       </p>
       <button type="button"
         onClick={onClose}
-        className="mt-2 text-xs text-muted-foreground underline hover:text-foreground"
+        className="mt-2 text-xs text-basalt-muted-foreground underline hover:text-basalt-foreground"
       >
         关闭
       </button>

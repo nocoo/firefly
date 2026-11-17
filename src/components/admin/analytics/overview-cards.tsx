@@ -12,10 +12,10 @@ export function OverviewCards({ overview, days }: OverviewCardsProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-baseline justify-between px-1">
-        <h3 className="text-sm font-medium text-foreground">
+        <h3 className="text-sm font-medium text-basalt-foreground">
           概览
         </h3>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-basalt-muted-foreground">
           {`最近 ${days} 天`}
         </span>
       </div>
@@ -83,15 +83,15 @@ function StatCard({
   const d = formatDelta(delta, value);
   return (
     <div
-      className="rounded-widget bg-secondary p-3 animate-fade-up"
+      className="rounded-widget bg-basalt-secondary p-3 animate-fade-up"
       style={{ animationDelay: `${index * 60}ms` }}
     >
       <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-xs text-basalt-muted-foreground">{label}</p>
         <p
           className={`text-xs tabular-nums ${
             d.positive === null
-              ? "text-muted-foreground"
+              ? "text-basalt-muted-foreground"
               : d.positive
                 ? "text-emerald-600 dark:text-emerald-400"
                 : "text-red-600 dark:text-red-400"
@@ -100,10 +100,10 @@ function StatCard({
           {d.text}
         </p>
       </div>
-      <p className="mt-0.5 text-lg font-semibold font-display text-foreground tabular-nums">
+      <p className="mt-0.5 text-lg font-semibold font-display text-basalt-foreground tabular-nums">
         {formatNumber(value)}
       </p>
-      <p className="text-2xs text-muted-foreground/60">
+      <p className="text-2xs text-basalt-muted-foreground/60">
         {`较前 ${days} 天`}
       </p>
     </div>

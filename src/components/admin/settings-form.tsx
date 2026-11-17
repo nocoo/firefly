@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Input } from "@nocoo/basalt/components/input";
+import { Button } from "@nocoo/basalt/components/button";
+import { SegmentControl } from "@nocoo/basalt/components/segment-control";
 import { AdminPageHeader } from "./page-header";
 import type { SiteSettings, FontStyle } from "@/data/settings";
 
@@ -89,17 +89,17 @@ export function SettingsForm({ settings }: SettingsFormProps) {
         backLabel="返回管理"
       />
       {/* Card 1: Display Settings */}
-      <div className="rounded-card bg-secondary p-5 md:p-6 space-y-5">
-        <h2 className="text-base font-medium text-foreground">
+      <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-5">
+        <h2 className="text-base font-medium text-basalt-foreground">
           显示设置
         </h2>
 
         {/* Posts per page */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">
+          <label className="text-sm font-medium text-basalt-foreground">
             每页文章数
           </label>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-basalt-muted-foreground">
             每页显示的文章数量（1–100）。
           </p>
           <Input
@@ -114,13 +114,13 @@ export function SettingsForm({ settings }: SettingsFormProps) {
 
         {/* Font style */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">
+          <label className="text-sm font-medium text-basalt-foreground">
             正文字体风格
           </label>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-basalt-muted-foreground">
             博客正文的排版风格。苹方：全苹方（默认）；经典：宋体正文 + 楷体标题；衬线：全宋体；无衬线：全黑体。
           </p>
-          <SegmentedControl
+          <SegmentControl
             options={[
               { value: "pingfang", label: "苹方" },
               { value: "classic", label: "经典" },
@@ -128,43 +128,43 @@ export function SettingsForm({ settings }: SettingsFormProps) {
               { value: "sans", label: "无衬线" },
             ]}
             value={fontStyle}
-            onChange={(v) => setFontStyle(v as FontStyle)}
+            onValueChange={(v) => setFontStyle(v as FontStyle)}
           />
         </div>
       </div>
 
       {/* Card 2: Content Settings */}
-      <div className="rounded-card bg-secondary p-5 md:p-6 space-y-5">
-        <h2 className="text-base font-medium text-foreground">
+      <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-5">
+        <h2 className="text-base font-medium text-basalt-foreground">
           内容设置
         </h2>
 
         {/* Comments enabled */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">
+          <label className="text-sm font-medium text-basalt-foreground">
             评论功能
           </label>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-basalt-muted-foreground">
             全局评论开关。关闭后所有文章的评论区都将隐藏。
           </p>
-          <SegmentedControl
+          <SegmentControl
             options={[
               { value: "on", label: "开启" },
               { value: "off", label: "关闭" },
             ]}
             value={commentsEnabled ? "on" : "off"}
-            onChange={(v) => setCommentsEnabled(v === "on")}
+            onValueChange={(v) => setCommentsEnabled(v === "on")}
           />
         </div>
       </div>
 
       {/* Card 3: Internal URLs */}
-      <div className="rounded-card bg-secondary p-5 md:p-6 space-y-4">
+      <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-4">
         <div>
-          <h2 className="text-base font-medium text-foreground">
+          <h2 className="text-base font-medium text-basalt-foreground">
             内部功能链接
           </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-xs text-basalt-muted-foreground">
             这些链接可用于提交搜索引擎或订阅 RSS。点击复制按钮快速复制。
           </p>
         </div>
@@ -175,18 +175,18 @@ export function SettingsForm({ settings }: SettingsFormProps) {
             return (
               <div
                 key={path}
-                className="flex items-center gap-2 rounded-widget border border-border bg-secondary px-3 py-2"
+                className="flex items-center gap-2 rounded-widget border border-basalt-border bg-basalt-secondary px-3 py-2"
               >
-                <span className="min-w-0 flex-1 truncate font-mono text-xs text-foreground">
+                <span className="min-w-0 flex-1 truncate font-mono text-xs text-basalt-foreground">
                   {fullUrl}
                 </span>
-                <span className="shrink-0 text-xs text-muted-foreground">
+                <span className="shrink-0 text-xs text-basalt-muted-foreground">
                   {label}
                 </span>
                 <button
                   type="button"
                   onClick={() => copyUrl(fullUrl)}
-                  className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+                  className="shrink-0 text-basalt-muted-foreground transition-colors hover:text-basalt-foreground"
                   title="复制链接"
                 >
                   {isCopied ? (
@@ -203,7 +203,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
                   href={fullUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+                  className="shrink-0 text-basalt-muted-foreground transition-colors hover:text-basalt-foreground"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -219,7 +219,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
       {message && (
         <p
           className={`text-sm ${
-            message.type === "success" ? "text-success" : "text-destructive"
+            message.type === "success" ? "text-basalt-success" : "text-basalt-destructive"
           }`}
         >
           {message.text}

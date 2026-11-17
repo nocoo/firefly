@@ -10,7 +10,7 @@ import {
   FileText,
   FileVideo,
   ImageIcon,
-} from "lucide-react";
+} from "@/components/icons/basalt";
 import type { Attachment } from "@/models/types";
 
 export interface MediaWithUrl extends Attachment {

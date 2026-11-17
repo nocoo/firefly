@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { toast } from "@nocoo/basalt/components/toast";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { AdminPageHeader } from "./page-header";
 import { Button } from "@nocoo/basalt/components/button";
@@ -181,7 +181,7 @@ export function TaxonomyManager({
       />
 
       {error && (
-        <div className="rounded-widget border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-widget border border-basalt-destructive/50 bg-basalt-destructive/10 px-4 py-3 text-sm text-basalt-destructive">
           {error}
         </div>
       )}

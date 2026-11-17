@@ -11,8 +11,8 @@ import {
 } from "react";
 import { renderMarkdown } from "@/models/markdown";
 import { ArticleBody } from "@/components/blog/article-body";
-import { SegmentedControl } from "@/components/ui/segmented-control";
-import { Textarea } from "@/components/ui/textarea";
+import { SegmentControl } from "@nocoo/basalt/components/segment-control";
+import { InputArea } from "@nocoo/basalt/components/input-area";
 import { ImageUploadZone, type UploadResult } from "./image-upload-zone";
 
 export interface PostContentEditorHandle {
@@ -37,7 +37,7 @@ interface PostContentEditorProps {
  * Content editor: textarea + image upload zone, with a mobile Write/Preview tab
  * switcher and a desktop layout that delegates the preview to the right column.
  *
- * Mobile and desktop each mount a separate Textarea (only one is visible at a
+ * Mobile and desktop each mount a separate InputArea (only one is visible at a
  * time via Tailwind responsive utilities). The parent uses the imperative
  * `focusVisible()` handle to focus whichever one the user actually sees on save
  * errors — without it, a shared ref would clobber to the last-mounted (desktop)
@@ -69,7 +69,7 @@ export const PostContentEditor = forwardRef<
    *  flip out of preview mode. Cleared by the effect below. */
   const pendingFocusRef = useRef(false);
 
-  const focusTargetTextarea = useCallback(() => {
+  const focusTargetInputArea = useCallback(() => {
     // `offsetParent` is null when the element (or an ancestor) is
     // `display: none` — the canonical "is it visible?" check for hidden
     // siblings. Prefer the visible one; fall back to whichever is mounted.
@@ -87,8 +87,8 @@ export const PostContentEditor = forwardRef<
     if (!pendingFocusRef.current) return;
     if (previewMode) return; // still in preview — wait for the next render
     pendingFocusRef.current = false;
-    focusTargetTextarea();
-  }, [previewMode, focusTargetTextarea]);
+    focusTargetInputArea();
+  }, [previewMode, focusTargetInputArea]);
 
   useImperativeHandle(
     ref,
@@ -103,16 +103,16 @@ export const PostContentEditor = forwardRef<
           setPreviewMode(false);
           return;
         }
-        focusTargetTextarea();
+        focusTargetInputArea();
       },
     }),
-    [previewMode, focusTargetTextarea],
+    [previewMode, focusTargetInputArea],
   );
 
   const uploadProps = postId ? { postId } : {};
   const errorId = error ? "content-error" : undefined;
   const editorClassName = error
-    ? "min-h-[480px] font-mono border-destructive"
+    ? "min-h-[480px] font-mono border-basalt-destructive"
     : "min-h-[480px] font-mono";
   const ariaInvalidProp = error ? { "aria-invalid": true as const } : {};
   const ariaDescribedByProp = errorId ? { "aria-describedby": errorId } : {};
@@ -128,24 +128,24 @@ export const PostContentEditor = forwardRef<
         <label
           id="content-label"
           htmlFor="content-mobile"
-          className="text-sm font-medium text-foreground lg:hidden"
+          className="text-sm font-medium text-basalt-foreground lg:hidden"
         >
           {"内容 (Markdown)"}
         </label>
         <label
           htmlFor="content-desktop"
-          className="hidden text-sm font-medium text-foreground lg:block"
+          className="hidden text-sm font-medium text-basalt-foreground lg:block"
         >
           {"内容 (Markdown)"}
         </label>
         {/* Tab switcher — hidden on lg+ where preview is side-by-side */}
-        <SegmentedControl
+        <SegmentControl
           options={[
             { value: "write", label: "编辑" },
             { value: "preview", label: "预览" },
           ]}
           value={previewMode ? "preview" : "write"}
-          onChange={(v) => setPreviewMode(v === "preview")}
+          onValueChange={(v) => setPreviewMode(v === "preview")}
           className="lg:hidden"
         />
       </div>
@@ -153,11 +153,11 @@ export const PostContentEditor = forwardRef<
       {/* Mobile: tab-based preview */}
       <div className="lg:hidden">
         {previewMode ? (
-          <div className="blog-preview-theme min-h-[480px] rounded-widget border border-border overflow-y-auto">
+          <div className="blog-preview-theme min-h-[480px] rounded-widget border border-basalt-border overflow-y-auto">
             {content ? (
               <ArticleBody html={previewHtml} />
             ) : (
-              <p className="text-sm text-muted-foreground">{"暂无内容可预览"}</p>
+              <p className="text-sm text-basalt-muted-foreground">{"暂无内容可预览"}</p>
             )}
           </div>
         ) : (
@@ -168,7 +168,7 @@ export const PostContentEditor = forwardRef<
               onResultsChange={onUploadedMediaChange}
               {...uploadProps}
             />
-            <Textarea
+            <InputArea
               ref={mobileRef}
               id="content-mobile"
               value={content}
@@ -192,7 +192,7 @@ export const PostContentEditor = forwardRef<
           onResultsChange={onUploadedMediaChange}
           {...uploadProps}
         />
-        <Textarea
+        <InputArea
           ref={desktopRef}
           id="content-desktop"
           value={content}
@@ -207,7 +207,7 @@ export const PostContentEditor = forwardRef<
       </div>
 
       {error && (
-        <p id={errorId} className="text-xs text-destructive">
+        <p id={errorId} className="text-xs text-basalt-destructive">
           {error}
         </p>
       )}

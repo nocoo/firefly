@@ -9,8 +9,8 @@ import { ListPageHeader } from "@/components/blog/list-page-header";
 import { buildPageMeta, SITE_URL, postPath } from "@/lib/seo";
 import { collectionPageJsonLd } from "@/lib/jsonld";
 import { ListOriginTracker } from "@/components/blog/list-origin-tracker";
-import { EmptyState } from "@/components/blog/empty-state";
-import { Tag } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
+import { Tag } from "@/components/icons/basalt";
 import { getPostAuthor } from "@/lib/ai-agent/author";
 
 interface TagPageProps {

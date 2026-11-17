@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@nocoo/basalt/components/select";
-import { Input } from "@/components/ui/input";
+import { Input } from "@nocoo/basalt/components/input";
 import type { SocialLink } from "@/data/settings";
 
 const BRAND_OPTIONS = [
@@ -60,7 +60,7 @@ function SocialLinkRow({
       <button
         type="button"
         onClick={onRemove}
-        className="shrink-0 rounded px-2 py-2 text-xs text-destructive hover:text-destructive/80 transition-colors"
+        className="shrink-0 rounded px-2 py-2 text-xs text-basalt-destructive hover:text-basalt-destructive/80 transition-colors"
         title="移除"
       >
         <svg
@@ -103,10 +103,10 @@ export function SocialLinksCard({
   };
 
   return (
-    <div className="rounded-card bg-secondary p-5 md:p-6 space-y-4">
+    <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-4">
       <div>
-        <h2 className="text-base font-medium text-foreground">社交链接</h2>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <h2 className="text-base font-medium text-basalt-foreground">社交链接</h2>
+        <p className="mt-1 text-xs text-basalt-muted-foreground">
           显示在博客侧边栏的链接。选择平台并输入 URL。
         </p>
       </div>
@@ -125,7 +125,7 @@ export function SocialLinksCard({
       <button
         type="button"
         onClick={addLink}
-        className="text-xs text-primary hover:text-primary/80 transition-colors"
+        className="text-xs text-basalt-primary hover:text-basalt-primary/80 transition-colors"
       >
         + 添加链接
       </button>

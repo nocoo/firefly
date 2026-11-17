@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Users } from "lucide-react";
-import { toast } from "sonner";
+import { Plus, Users } from "@nocoo/basalt/icons";
+import { toast } from "@nocoo/basalt/components/toast";
 import type { Category } from "@/models/types";
 import { Button } from "@nocoo/basalt/components/button";
 import { AdminPageHeader } from "./page-header";
@@ -122,9 +122,9 @@ export function AiAgentsManager({
       />
 
       {agents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-card bg-secondary py-12">
-          <Users className="h-12 w-12 text-muted-foreground/50" />
-          <p className="mt-4 text-sm text-muted-foreground">
+        <div className="flex flex-col items-center justify-center rounded-card bg-basalt-secondary py-12">
+          <Users className="h-12 w-12 text-basalt-muted-foreground/50" />
+          <p className="mt-4 text-sm text-basalt-muted-foreground">
             还没有 AI 代理。创建一个以允许 AI 发布内容。
           </p>
           <Button variant="outline" className="mt-4" onClick={handleCreate}>
@@ -161,8 +161,8 @@ export function AiAgentsManager({
 
       {loadingPrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/50">
-          <div className="rounded-lg bg-background border border-border px-6 py-4">
-            <p className="text-sm text-muted-foreground">Loading prompt...</p>
+          <div className="rounded-lg bg-basalt-background border border-basalt-border px-6 py-4">
+            <p className="text-sm text-basalt-muted-foreground">Loading prompt...</p>
           </div>
         </div>
       )}

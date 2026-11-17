@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Paperclip } from "lucide-react";
+import { Paperclip } from "@nocoo/basalt/icons";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -143,11 +143,11 @@ export function ImageUploadZone({
         onDragLeave={handleDragLeave}
         className={`flex items-center gap-2 rounded-widget border border-dashed px-3 py-2 text-xs transition-colors ${
           dragOver
-            ? "border-primary bg-primary/5"
-            : "border-border hover:border-muted-foreground"
+            ? "border-basalt-primary bg-basalt-primary/5"
+            : "border-basalt-border hover:border-basalt-muted-foreground"
         }`}
       >
-        <label className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
+        <label className="cursor-pointer text-basalt-muted-foreground hover:text-basalt-foreground transition-colors">
           <span className="inline-flex items-center gap-1.5">
             <Paperclip className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
             {uploading ? "上传中..." : "上传图片"}
@@ -161,13 +161,13 @@ export function ImageUploadZone({
           />
         </label>
         {!uploading && (
-          <span className="text-muted-foreground/60">或拖拽上传</span>
+          <span className="text-basalt-muted-foreground/60">或拖拽上传</span>
         )}
       </div>
 
       {/* Error */}
       {error && (
-        <p className="mt-1 text-xs text-destructive">{error}</p>
+        <p className="mt-1 text-xs text-basalt-destructive">{error}</p>
       )}
 
       {/* Results list — scrollable when >3 items */}
@@ -176,7 +176,7 @@ export function ImageUploadZone({
           {results.map((result) => (
             <div
               key={result.id}
-              className="flex items-center gap-3 rounded-widget border border-border bg-secondary/50 px-3 py-2"
+              className="flex items-center gap-3 rounded-widget border border-basalt-border bg-basalt-secondary/50 px-3 py-2"
             >
               {/* Thumbnail */}
               <img
@@ -190,7 +190,7 @@ export function ImageUploadZone({
                 <button
                   type="button"
                   onClick={() => copyToClipboard(result.url, `url-${result.id}`)}
-                  className="rounded px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                  className="rounded px-2 py-1 text-xs text-basalt-muted-foreground hover:text-basalt-foreground hover:bg-basalt-accent transition-colors"
                 >
                   {copiedField === `url-${result.id}` ? "已复制！" : "复制链接"}
                 </button>
@@ -199,7 +199,7 @@ export function ImageUploadZone({
                   onClick={() =>
                     copyToClipboard(`![${result.filename}](${result.url})`, `md-${result.id}`)
                   }
-                  className="rounded px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                  className="rounded px-2 py-1 text-xs text-basalt-muted-foreground hover:text-basalt-foreground hover:bg-basalt-accent transition-colors"
                 >
                   {copiedField === `md-${result.id}`
                     ? "已复制！"
@@ -211,7 +211,7 @@ export function ImageUploadZone({
               <button
                 type="button"
                 onClick={() => dismiss(result.id)}
-                className="shrink-0 rounded p-1 text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"
+                className="shrink-0 rounded p-1 text-basalt-muted-foreground/60 hover:text-basalt-foreground hover:bg-basalt-accent transition-colors"
                 aria-label="关闭"
               >
                 <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

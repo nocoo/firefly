@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Plus, Star, Trash2, User } from "lucide-react";
-import { toast } from "sonner";
+import { Pencil, Plus, Star, Trash2, User } from "@nocoo/basalt/icons";
+import { toast } from "@nocoo/basalt/components/toast";
 import type { HumanWithMeta } from "@/models/types";
 import { Button } from "@nocoo/basalt/components/button";
 import { AdminPageHeader } from "./page-header";
@@ -92,23 +92,23 @@ export function AuthorsManager({
         }
       />
 
-      <div className="overflow-x-auto rounded-card bg-secondary p-1">
+      <div className="overflow-x-auto rounded-card bg-basalt-secondary p-1">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-border">
-              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
+            <tr className="border-b border-basalt-border">
+              <th className="px-4 py-2 text-left text-xs font-medium text-basalt-muted-foreground">
                 作者
               </th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
+              <th className="px-4 py-2 text-left text-xs font-medium text-basalt-muted-foreground">
                 标识
               </th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
+              <th className="px-4 py-2 text-left text-xs font-medium text-basalt-muted-foreground">
                 邮箱
               </th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
+              <th className="px-4 py-2 text-left text-xs font-medium text-basalt-muted-foreground">
                 公开
               </th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
+              <th className="px-4 py-2 text-left text-xs font-medium text-basalt-muted-foreground">
                 文章
               </th>
               <th className="px-4 py-2 w-32" />
@@ -118,7 +118,7 @@ export function AuthorsManager({
             {authors.map((author) => (
               <tr
                 key={author.id}
-                className="border-b border-border last:border-0 transition-colors hover:bg-accent/50"
+                className="border-b border-basalt-border last:border-0 transition-colors hover:bg-basalt-accent/50"
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
@@ -129,15 +129,15 @@ export function AuthorsManager({
                         className="h-8 w-8 rounded-full object-cover"
                       />
                     ) : (
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-basalt-secondary text-basalt-muted-foreground">
                         <User className="h-4 w-4" />
                       </span>
                     )}
                     <div>
-                      <div className="flex items-center gap-2 font-medium text-foreground">
+                      <div className="flex items-center gap-2 font-medium text-basalt-foreground">
                         {author.name}
                         {author.is_default === 1 && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-2xs text-primary">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-basalt-primary/10 px-2 py-0.5 text-2xs text-basalt-primary">
                             <Star className="h-3 w-3" />
                             默认
                           </span>
@@ -146,16 +146,16 @@ export function AuthorsManager({
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                <td className="px-4 py-3 font-mono text-xs text-basalt-muted-foreground">
                   {author.slug}
                 </td>
-                <td className="px-4 py-3 text-sm text-muted-foreground">
+                <td className="px-4 py-3 text-sm text-basalt-muted-foreground">
                   {author.email ?? "—"}
                 </td>
-                <td className="px-4 py-3 text-sm text-muted-foreground">
+                <td className="px-4 py-3 text-sm text-basalt-muted-foreground">
                   {author.profile_public === 1 ? "是" : "否"}
                 </td>
-                <td className="px-4 py-3 text-sm text-muted-foreground">
+                <td className="px-4 py-3 text-sm text-basalt-muted-foreground">
                   {author.post_count}
                 </td>
                 <td className="px-4 py-3">
@@ -164,7 +164,7 @@ export function AuthorsManager({
                       <button
                         type="button"
                         onClick={() => handleSetDefault(author)}
-                        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        className="rounded-md p-1.5 text-basalt-muted-foreground transition-colors hover:bg-basalt-accent hover:text-basalt-foreground"
                         title="设为默认"
                       >
                         <Star className="h-4 w-4" />
@@ -174,7 +174,7 @@ export function AuthorsManager({
                     <button
                       type="button"
                       onClick={() => router.push(`/admin/authors/${author.id}`)}
-                      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      className="rounded-md p-1.5 text-basalt-muted-foreground transition-colors hover:bg-basalt-accent hover:text-basalt-foreground"
                       title="编辑"
                     >
                       <Pencil className="h-4 w-4" />
@@ -182,7 +182,7 @@ export function AuthorsManager({
                     <button
                       type="button"
                       onClick={() => setConfirmDelete(author)}
-                      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      className="rounded-md p-1.5 text-basalt-muted-foreground transition-colors hover:bg-basalt-destructive/10 hover:text-basalt-destructive"
                       title="删除"
                     >
                       <Trash2 className="h-4 w-4" />

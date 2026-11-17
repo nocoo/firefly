@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { Button } from "@nocoo/basalt/components/button";
 import { Slider } from "@nocoo/basalt/components/slider";
-import { Pause, Play } from "lucide-react";
+import { Pause, Play } from "@nocoo/basalt/icons";
 import type { HisFmPublishedCard } from "@/lib/hisfm/card-schema";
 import { BrandSymbol, Wordmark } from "@/components/blog/hisfm-brand";
 import {

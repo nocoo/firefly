@@ -5,9 +5,9 @@ import { listMonthlyArchives } from "@/data/public-content";
 import { loadSiteIdentity } from "@/lib/site-identity";
 import { ListPageHeader } from "@/components/blog/list-page-header";
 import { ArchiveHeatmap } from "@/components/blog/archive-heatmap";
-import { EmptyState } from "@/components/blog/empty-state";
+import { EmptyState } from "@/components/empty-state";
 import { buildPageMeta } from "@/lib/seo";
-import { Archive } from "lucide-react";
+import { Archive } from "@/components/icons/basalt";
 
 /**
  * /archive — overview page showing every year × month with publish counts as

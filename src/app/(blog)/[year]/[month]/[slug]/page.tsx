@@ -9,7 +9,7 @@ import { isAdminSession } from "@/lib/auth";
 import { buildCommentTree } from "@/data/entities/comment";
 import { FeaturedImage } from "@/components/blog/featured-image";
 import { renderMarkdown, extractToc } from "@/models/markdown";
-import { Calendar, Folder, Clock, SquarePen, User } from "lucide-react";
+import { Calendar, Folder, Clock, SquarePen, User } from "@/components/icons/basalt";
 import {
   buildPageMeta,
   formatDateDisplay,

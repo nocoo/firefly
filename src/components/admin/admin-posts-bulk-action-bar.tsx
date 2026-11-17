@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { X } from "lucide-react";
-import { toast } from "sonner";
+import { X } from "@nocoo/basalt/icons";
+import { toast } from "@nocoo/basalt/components/toast";
 import type { Category } from "@/models/types";
 import {
   Select,
@@ -72,25 +72,25 @@ export function AdminPostsBulkActionBar({
   const hasUpdates = bulkStatus !== "" || bulkCategory !== "";
 
   return (
-    <div className="sticky top-0 z-20 flex flex-wrap items-center gap-3 rounded-widget border border-primary/30 bg-primary/5 px-4 py-3 shadow-sm backdrop-blur-sm">
+    <div className="sticky top-0 z-20 flex flex-wrap items-center gap-3 rounded-widget border border-basalt-primary/30 bg-basalt-primary/5 px-4 py-3 shadow-sm backdrop-blur-sm">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-foreground">
+        <span className="text-sm font-medium text-basalt-foreground">
           {`已选 ${selectedIds.size} 篇`}
         </span>
         <button
           type="button"
           onClick={onClearSelection}
-          className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
+          className="flex h-5 w-5 items-center justify-center rounded text-basalt-muted-foreground hover:text-basalt-foreground transition-colors"
           aria-label="取消全选"
         >
           <X className="h-3.5 w-3.5" strokeWidth={1.5} />
         </button>
       </div>
 
-      <div className="h-5 w-px bg-border" />
+      <div className="h-5 w-px bg-basalt-border" />
 
       <div className="flex items-center gap-1.5">
-        <label htmlFor="bulk-status" className="text-xs text-muted-foreground whitespace-nowrap">
+        <label htmlFor="bulk-status" className="text-xs text-basalt-muted-foreground whitespace-nowrap">
           设置状态
         </label>
         <Select
@@ -111,7 +111,7 @@ export function AdminPostsBulkActionBar({
       </div>
 
       <div className="flex items-center gap-1.5">
-        <label htmlFor="bulk-category" className="text-xs text-muted-foreground whitespace-nowrap">
+        <label htmlFor="bulk-category" className="text-xs text-basalt-muted-foreground whitespace-nowrap">
           设置分类
         </label>
         <Select
@@ -137,7 +137,7 @@ export function AdminPostsBulkActionBar({
         type="button"
         onClick={handleApply}
         disabled={applying || !hasUpdates}
-        className="inline-flex items-center gap-1 rounded-widget bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center gap-1 rounded-widget bg-basalt-primary px-3 py-1.5 text-xs font-medium text-basalt-primary-foreground transition-colors hover:bg-basalt-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {applying ? "应用中..." : "应用"}
       </button>

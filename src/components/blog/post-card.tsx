@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Calendar, User } from "lucide-react";
+import { ArrowRight, Calendar, User } from "@/components/icons/basalt";
 import type { PostWithAgent } from "@/models/types";
 import { postPath, formatDateDisplay } from "@/lib/seo";
 import { sanitizeSnippet } from "@/lib/sanitize-snippet";

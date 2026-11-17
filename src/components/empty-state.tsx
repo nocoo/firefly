@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "@nocoo/basalt/icons";
 
 export interface EmptyStateAction {
   label: string;
@@ -34,14 +34,14 @@ export function EmptyState({
   variant = "blog",
 }: EmptyStateProps) {
   const colorClass =
-    variant === "admin" ? "text-muted-foreground" : "text-blog-muted";
+    variant === "admin" ? "text-basalt-muted-foreground" : "text-blog-muted";
   const linkClass =
     variant === "admin"
-      ? "text-primary hover:underline"
+      ? "text-basalt-primary hover:underline"
       : "text-blog-text underline decoration-blog-accent decoration-2 underline-offset-4 hover:decoration-blog-text";
   const secondaryLinkClass =
     variant === "admin"
-      ? "text-muted-foreground hover:text-foreground"
+      ? "text-basalt-muted-foreground hover:text-basalt-foreground"
       : "text-blog-muted hover:text-blog-text";
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Copy, FileCode2, Trash2 } from "lucide-react";
+import { Copy, FileCode2, Trash2 } from "@nocoo/basalt/icons";
 import { formatFileSize } from "@/models/backup";
 import {
   FileTypeIcon,
@@ -23,7 +23,7 @@ function MediaGridCard({
 }) {
   return (
     <div
-      className="group relative aspect-square overflow-hidden rounded-[var(--radius-sm)] border border-border bg-secondary cursor-pointer"
+      className="group relative aspect-square overflow-hidden rounded-[var(--radius-sm)] border border-basalt-border bg-basalt-secondary cursor-pointer"
       onClick={() => onPreview(item)}
     >
       {/* Thumbnail */}
@@ -36,7 +36,7 @@ function MediaGridCard({
           className="object-cover transition-transform group-hover:scale-105"
         />
       ) : (
-        <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-muted-foreground">
+        <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-basalt-muted-foreground">
           <FileTypeIcon mime={item.mime_type} className="h-8 w-8" />
           <span className="max-w-full truncate px-1.5 text-3xs">
             {item.filename.split(".").pop()?.toUpperCase()}

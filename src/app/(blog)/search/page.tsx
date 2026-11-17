@@ -4,8 +4,8 @@ import { searchPosts } from "@/data/entities/post";
 import { ListPageHeader } from "@/components/blog/list-page-header";
 import { PostCard } from "@/components/blog/post-card";
 import { Pagination } from "@/components/blog/pagination";
-import { EmptyState } from "@/components/blog/empty-state";
-import { Search } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
+import { Search } from "@/components/icons/basalt";
 import { getPostAuthor } from "@/lib/ai-agent/author";
 
 export const metadata: Metadata = {

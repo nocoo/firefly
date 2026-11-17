@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import { Upload } from "lucide-react";
+import { toast } from "@nocoo/basalt/components/toast";
+import { Upload } from "@nocoo/basalt/icons";
 import type { YearCount } from "@/data/entities/media";
 import { ConfirmDialog } from "./confirm-dialog";
 import { AdminPageHeader } from "./page-header";
@@ -165,9 +165,9 @@ export function MediaLibrary({
       className="relative"
     >
       {upload.dragOver && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 rounded-widget border-2 border-dashed border-primary bg-primary/5 backdrop-blur-sm">
-          <Upload className="h-10 w-10 text-primary" />
-          <p className="text-sm font-medium text-primary">拖放文件上传</p>
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 rounded-widget border-2 border-dashed border-basalt-primary bg-basalt-primary/5 backdrop-blur-sm">
+          <Upload className="h-10 w-10 text-basalt-primary" />
+          <p className="text-sm font-medium text-basalt-primary">拖放文件上传</p>
         </div>
       )}
 
@@ -198,10 +198,10 @@ export function MediaLibrary({
       {media.length === 0 && fetching && <AdminMediaGridSkeleton />}
       {media.length === 0 && !fetching && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-lg font-medium text-foreground">
+          <p className="text-lg font-medium text-basalt-foreground">
             {hasActiveFilters(filters) ? "无匹配结果" : "暂无媒体文件"}
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm text-basalt-muted-foreground">
             {hasActiveFilters(filters) ? "请调整筛选条件。" : "通过文章编辑器上传图片。"}
           </p>
         </div>

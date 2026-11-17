@@ -35,14 +35,14 @@ function ImageField({ id, label, value, onChange }: {
               {uploading ? "上传中..." : `上传${label}`}
             </Button>
             {value && <Button type="button" variant="ghost" size="sm" disabled={uploading} onClick={() => onChange("")}>清除{label}</Button>}
-            <span className="text-xs text-muted-foreground">支持粘贴图片，上传后需保存设置</span>
+            <span className="text-xs text-basalt-muted-foreground">支持粘贴图片，上传后需保存设置</span>
           </div>
           <input ref={picker} type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" aria-label={`选择${label}文件`} className="sr-only" disabled={uploading} onChange={(event) => {
             const file = event.target.files?.[0];
             if (file) void upload(file);
             event.target.value = "";
           }} />
-          {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
+          {error && <p role="alert" className="text-xs text-basalt-destructive">{error}</p>}
         </div>
       </div>
     </div>
@@ -57,7 +57,7 @@ export function WechatSettingsCard({ value, onChange }: {
     <LayerCard padding="lg">
       <LayerCard.Header>
         <h2 className="text-base font-medium">微信公众号</h2>
-        <p className="text-xs text-muted-foreground">显示在博客侧边栏。填写现成二维码图片，头像单独显示在二维码中央；清空名称或二维码可隐藏卡片。</p>
+        <p className="text-xs text-basalt-muted-foreground">显示在博客侧边栏。填写现成二维码图片，头像单独显示在二维码中央；清空名称或二维码可隐藏卡片。</p>
       </LayerCard.Header>
       <LayerCard.Body className="space-y-4">
         <div className="space-y-2">

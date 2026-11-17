@@ -59,7 +59,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
         defaultHumanId={defaultHumanId}
       />
       {commentTree.length > 0 && (
-        <section className="mt-8 rounded-widget border border-border p-6">
+        <section className="mt-8 rounded-widget border border-basalt-border p-6">
           <h2 className="mb-4 text-lg font-semibold">
             评论 ({comments.length})
           </h2>

@@ -1,9 +1,9 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Plus } from "@nocoo/basalt/icons";
 import type { McpTokenScope } from "@/models/types";
-import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
+import { Input } from "@nocoo/basalt/components/input";
+import { Field } from "@nocoo/basalt/components/field";
 import { Button } from "@nocoo/basalt/components/button";
 import {
   Select,
@@ -33,23 +33,24 @@ export function McpTokenCreateForm({
 }) {
   return (
     <div className="flex items-end gap-3">
-      <FormField
-        id="mcp-client-name"
+      <Field
+        htmlFor="mcp-client-name"
         label="客户端名称"
         className="flex-1 space-y-1"
       >
         <Input
+          id="mcp-client-name"
           type="text"
           value={clientName}
           onChange={(e) => onClientNameChange(e.target.value)}
           placeholder="e.g. Claude Code"
           onKeyDown={(e) => e.key === "Enter" && onCreate()}
         />
-      </FormField>
+      </Field>
       <div className="w-32 shrink-0 space-y-1">
         <label
           htmlFor="mcp-scope"
-          className="text-sm font-medium text-foreground"
+          className="text-sm font-medium text-basalt-foreground"
         >
           权限
         </label>

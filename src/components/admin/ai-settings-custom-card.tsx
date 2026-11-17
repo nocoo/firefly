@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@nocoo/basalt/components/select";
-import { Input } from "@/components/ui/input";
+import { Input } from "@nocoo/basalt/components/input";
 
 const EMPTY = "__empty__";
 import type { SdkType } from "@/services/ai";
@@ -29,12 +29,12 @@ export function AiSettingsCustomCard({
   onAuthTypeChange: (next: AuthType | "") => void;
 }) {
   return (
-    <div className="rounded-card bg-secondary p-5 md:p-6 space-y-5">
-      <h2 className="text-base font-medium text-foreground">自定义服务商</h2>
+    <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-5">
+      <h2 className="text-base font-medium text-basalt-foreground">自定义服务商</h2>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">Base URL</label>
-        <p className="text-xs text-muted-foreground">
+        <label className="text-sm font-medium text-basalt-foreground">Base URL</label>
+        <p className="text-xs text-basalt-muted-foreground">
           自定义服务商的 API 端点。
         </p>
         <Input
@@ -47,8 +47,8 @@ export function AiSettingsCustomCard({
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="ai-sdk-type" className="text-sm font-medium text-foreground">SDK 协议</label>
-        <p className="text-xs text-muted-foreground">API 使用的协议类型。</p>
+        <label htmlFor="ai-sdk-type" className="text-sm font-medium text-basalt-foreground">SDK 协议</label>
+        <p className="text-xs text-basalt-muted-foreground">API 使用的协议类型。</p>
         <Select
           value={sdkType === "" ? EMPTY : sdkType}
           onValueChange={(next) =>
@@ -67,10 +67,10 @@ export function AiSettingsCustomCard({
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="ai-auth-type" className="text-sm font-medium text-foreground">
+        <label htmlFor="ai-auth-type" className="text-sm font-medium text-basalt-foreground">
           认证头
         </label>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-basalt-muted-foreground">
           默认 Anthropic 协议使用 x-api-key；如果上游网关（如 manifest）只接受
           Authorization: Bearer，请选择 Force Bearer。
         </p>

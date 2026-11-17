@@ -1,7 +1,7 @@
 "use client";
 
-import { Link2 } from "lucide-react";
-import { toast } from "sonner";
+import { Link2 } from "@nocoo/basalt/icons";
+import { toast } from "@nocoo/basalt/components/toast";
 import type { PostWithCategory, PostStatus } from "@/models/types";
 import { postPath } from "@/lib/seo";
 
@@ -36,7 +36,7 @@ export function CopyLinkButton({ post }: { post: PostWithCategory }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      className="rounded-md p-1.5 text-basalt-muted-foreground transition-colors hover:bg-basalt-accent hover:text-basalt-foreground"
       title="复制链接"
     >
       <Link2 className="h-4 w-4" strokeWidth={1.5} />

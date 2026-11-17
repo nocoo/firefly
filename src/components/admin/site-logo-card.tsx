@@ -93,17 +93,17 @@ export function SiteLogoCard({ initialLogoUrl }: SiteLogoCardProps) {
   const handleLogoDragLeave = () => setLogoDragOver(false);
 
   return (
-    <div className="rounded-card bg-secondary p-5 md:p-6 space-y-4">
+    <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-4">
       <div>
-        <h2 className="text-base font-medium text-foreground">站点图标</h2>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <h2 className="text-base font-medium text-basalt-foreground">站点图标</h2>
+        <p className="mt-1 text-xs text-basalt-muted-foreground">
           上传一张正方形图片，将用作站点 favicon 和登录页头像。
         </p>
       </div>
 
       <div className="flex items-center gap-4">
         {/* Logo preview */}
-        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-basalt-border bg-basalt-muted">
           {currentLogoUrl ? (
             <img
               src={currentLogoUrl}
@@ -112,7 +112,7 @@ export function SiteLogoCard({ initialLogoUrl }: SiteLogoCardProps) {
             />
           ) : (
             <svg
-              className="h-8 w-8 text-muted-foreground/40"
+              className="h-8 w-8 text-basalt-muted-foreground/40"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -135,11 +135,11 @@ export function SiteLogoCard({ initialLogoUrl }: SiteLogoCardProps) {
             onDragLeave={handleLogoDragLeave}
             className={`flex items-center gap-2 rounded-widget border border-dashed px-3 py-2 text-xs transition-colors ${
               logoDragOver
-                ? "border-primary bg-primary/5"
-                : "border-border hover:border-muted-foreground"
+                ? "border-basalt-primary bg-basalt-primary/5"
+                : "border-basalt-border hover:border-basalt-muted-foreground"
             }`}
           >
-            <label className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
+            <label className="cursor-pointer text-basalt-muted-foreground hover:text-basalt-foreground transition-colors">
               <span>{logoUploading ? "上传中..." : "上传图标"}</span>
               <input
                 type="file"
@@ -150,11 +150,11 @@ export function SiteLogoCard({ initialLogoUrl }: SiteLogoCardProps) {
               />
             </label>
             {!logoUploading && (
-              <span className="text-muted-foreground/60">或拖拽上传</span>
+              <span className="text-basalt-muted-foreground/60">或拖拽上传</span>
             )}
           </div>
 
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-basalt-muted-foreground">
             图片必须为正方形（宽高相等）。
           </p>
 
@@ -163,7 +163,7 @@ export function SiteLogoCard({ initialLogoUrl }: SiteLogoCardProps) {
               type="button"
               onClick={removeLogo}
               disabled={logoBusy}
-              className="self-start text-xs text-destructive hover:text-destructive/80 transition-colors disabled:opacity-50"
+              className="self-start text-xs text-basalt-destructive hover:text-basalt-destructive/80 transition-colors disabled:opacity-50"
             >
               {logoRemoving ? "保存中..." : "移除"}
             </button>
@@ -171,7 +171,7 @@ export function SiteLogoCard({ initialLogoUrl }: SiteLogoCardProps) {
         </div>
       </div>
 
-      {logoError && <p className="text-xs text-destructive">{logoError}</p>}
+      {logoError && <p className="text-xs text-basalt-destructive">{logoError}</p>}
     </div>
   );
 }

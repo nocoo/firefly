@@ -2,10 +2,10 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { Loader2, Upload, X } from "lucide-react";
-import { toast } from "sonner";
+import { Loader2, Upload, X } from "@nocoo/basalt/icons";
+import { toast } from "@nocoo/basalt/components/toast";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button } from "@nocoo/basalt/components/button";
 
 interface AvatarUploaderProps {
   agentId: string;
@@ -84,9 +84,9 @@ export function AgentAvatarUploader({
 
   return (
     <div className="space-y-4">
-      <label className="text-sm font-medium text-foreground">头像</label>
+      <label className="text-sm font-medium text-basalt-foreground">头像</label>
       <div className="flex items-start gap-4">
-        <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-lg border border-border bg-secondary">
+        <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-lg border border-basalt-border bg-basalt-secondary">
           {avatarUrl ? (
             <>
               <Image
@@ -104,7 +104,7 @@ export function AgentAvatarUploader({
               </button>
             </>
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+            <div className="flex h-full w-full items-center justify-center text-basalt-muted-foreground">
               <Upload className="h-8 w-8" />
             </div>
           )}
@@ -132,7 +132,7 @@ export function AgentAvatarUploader({
             <Upload className="mr-2 h-4 w-4" />
             {avatarUrl ? "更换头像" : "上传头像"}
           </Button>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-basalt-muted-foreground">
             正方形图片，至少 256×256 像素
           </p>
         </div>

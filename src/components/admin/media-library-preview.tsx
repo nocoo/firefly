@@ -1,8 +1,8 @@
 "use client";
 
-import { Calendar, Copy, FileCode2, HardDrive, RulerIcon, Trash2 } from "lucide-react";
+import { Calendar, Copy, FileCode2, HardDrive, RulerIcon, Trash2 } from "@nocoo/basalt/icons";
 import { formatFileSize } from "@/models/backup";
-import { ImageLightbox } from "@/components/ui/image-lightbox";
+import { ImageLightbox } from "@/components/image-lightbox";
 import {
   FileTypeIcon,
   formatDate,
@@ -30,7 +30,7 @@ export function MediaLibraryPreview({
       previewContent={
         preview && !isImageMime(preview.mime_type)
           ? (
-            <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
+            <div className="flex flex-col items-center justify-center gap-3 text-basalt-muted-foreground">
               <FileTypeIcon mime={preview.mime_type} className="h-16 w-16" />
               <span className="text-sm font-medium">{preview.filename}</span>
             </div>
@@ -40,11 +40,11 @@ export function MediaLibraryPreview({
     >
       {preview && (
         <>
-          <h3 className="truncate text-sm font-semibold text-foreground">
+          <h3 className="truncate text-sm font-semibold text-basalt-foreground">
             {preview.filename}
           </h3>
 
-          <div className="flex flex-col gap-2.5 text-xs text-muted-foreground">
+          <div className="flex flex-col gap-2.5 text-xs text-basalt-muted-foreground">
             <div className="flex items-center gap-2">
               <FileTypeIcon mime={preview.mime_type} className="h-3.5 w-3.5 shrink-0" />
               <span className="truncate">{preview.mime_type}</span>
@@ -73,7 +73,7 @@ export function MediaLibraryPreview({
             <button
               type="button"
               onClick={() => onCopy(preview.url)}
-              className="flex items-center justify-center gap-1.5 rounded-widget border border-border bg-secondary px-3 py-2 text-xs text-foreground transition-colors hover:bg-accent"
+              className="flex items-center justify-center gap-1.5 rounded-widget border border-basalt-border bg-basalt-secondary px-3 py-2 text-xs text-basalt-foreground transition-colors hover:bg-basalt-accent"
             >
               <Copy className="h-3.5 w-3.5" />
               复制链接
@@ -81,7 +81,7 @@ export function MediaLibraryPreview({
             <button
               type="button"
               onClick={() => onCopy(`![${preview.filename}](${preview.url})`)}
-              className="flex items-center justify-center gap-1.5 rounded-widget border border-border bg-secondary px-3 py-2 text-xs text-foreground transition-colors hover:bg-accent"
+              className="flex items-center justify-center gap-1.5 rounded-widget border border-basalt-border bg-basalt-secondary px-3 py-2 text-xs text-basalt-foreground transition-colors hover:bg-basalt-accent"
             >
               <FileCode2 className="h-3.5 w-3.5" />
               复制 Markdown
@@ -89,7 +89,7 @@ export function MediaLibraryPreview({
             <button
               type="button"
               onClick={() => onDelete(preview)}
-              className="flex items-center justify-center gap-1.5 rounded-widget border border-destructive/30 px-3 py-2 text-xs text-destructive transition-colors hover:bg-destructive/10"
+              className="flex items-center justify-center gap-1.5 rounded-widget border border-basalt-destructive/30 px-3 py-2 text-xs text-basalt-destructive transition-colors hover:bg-basalt-destructive/10"
             >
               <Trash2 className="h-3.5 w-3.5" />
               删除

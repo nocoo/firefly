@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "@nocoo/basalt/icons";
 import { buildPageSlots } from "@/lib/pagination";
 
 export function AdminPostsPagination({
@@ -28,15 +28,15 @@ export function AdminPostsPagination({
 
   const linkBase =
     "inline-flex h-8 min-w-[2rem] items-center justify-center rounded-widget border px-2 text-sm transition-colors";
-  const activeClass = "border-primary bg-primary text-primary-foreground";
+  const activeClass = "border-basalt-primary bg-basalt-primary text-basalt-primary-foreground";
   const inactiveClass =
-    "border-border bg-secondary text-foreground hover:bg-accent";
+    "border-basalt-border bg-basalt-secondary text-basalt-foreground hover:bg-basalt-accent";
   const disabledClass =
-    "border-border bg-secondary text-muted-foreground/50 pointer-events-none";
+    "border-basalt-border bg-basalt-secondary text-basalt-muted-foreground/50 pointer-events-none";
 
   return (
     <div className="flex items-center justify-between">
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-basalt-muted-foreground">
         {`第 ${currentPage} 页 / 共 ${totalPages} 页`}
       </p>
       <nav className="flex items-center gap-1" aria-label="分页">
@@ -61,7 +61,7 @@ export function AdminPostsPagination({
           slot === "..." ? (
             <span
               key={`ellipsis-${i}`}
-              className={`${linkBase} border-transparent bg-transparent text-muted-foreground/60 pointer-events-none`}
+              className={`${linkBase} border-transparent bg-transparent text-basalt-muted-foreground/60 pointer-events-none`}
             >
               …
             </span>

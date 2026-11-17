@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { Trash2 } from "@nocoo/basalt/icons";
+import { toast } from "@nocoo/basalt/components/toast";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 interface DeletePostButtonProps {
@@ -52,7 +52,7 @@ export function DeletePostButton({ slug, title, iconOnly }: DeletePostButtonProp
         <button type="button"
           onClick={openConfirm}
           disabled={deleting}
-          className="flex h-8 w-8 items-center justify-center rounded-widget bg-white/90 text-destructive transition-colors hover:bg-white disabled:opacity-50"
+          className="flex h-8 w-8 items-center justify-center rounded-widget bg-white/90 text-basalt-destructive transition-colors hover:bg-white disabled:opacity-50"
           title="删除"
         >
           <Trash2 className="h-4 w-4" strokeWidth={1.5} />
@@ -61,7 +61,7 @@ export function DeletePostButton({ slug, title, iconOnly }: DeletePostButtonProp
         <button type="button"
           onClick={openConfirm}
           disabled={deleting}
-          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+          className="rounded-md p-1.5 text-basalt-muted-foreground transition-colors hover:bg-basalt-destructive/10 hover:text-basalt-destructive disabled:opacity-50"
           title="删除"
         >
           <Trash2 className="h-4 w-4" strokeWidth={1.5} />

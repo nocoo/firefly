@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useId } from "react";
 import { usePathname } from "next/navigation";
 import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
 import { AdminSidebar } from "@/components/admin/sidebar";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@nocoo/basalt/components/toast";
 import { t, type TranslationKey } from "@/lib/i18n";
 import {
   CommandPaletteProvider,

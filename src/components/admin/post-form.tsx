@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@nocoo/basalt/components/toast";
 import type {
   AiAgent,
   Category,
@@ -35,8 +35,8 @@ import {
   type AuthorSelection,
   type PostFormField,
 } from "./post-form-helpers";
-import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
+import { Input } from "@nocoo/basalt/components/input";
+import { Field } from "@nocoo/basalt/components/field";
 import { AdminPageHeader } from "./page-header";
 import { Button } from "@nocoo/basalt/components/button";
 
@@ -287,18 +287,19 @@ export function PostForm({
   const editorFields = (
     <>
       {error && (
-        <div className="rounded-widget border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-widget border border-basalt-destructive/50 bg-basalt-destructive/10 px-4 py-3 text-sm text-basalt-destructive">
           {error}
         </div>
       )}
 
       {/* Title */}
-      <FormField
-        id="title"
+      <Field
+        htmlFor="title"
         label="标题"
         error={fieldError?.field === "title" ? fieldError.message : null}
       >
         <Input
+          id="title"
           ref={titleRef}
           type="text"
           value={title}
@@ -306,15 +307,16 @@ export function PostForm({
           required
           placeholder="文章标题"
         />
-      </FormField>
+      </Field>
 
       {/* Slug */}
-      <FormField
-        id="slug"
+      <Field
+        htmlFor="slug"
         label="别名"
         error={fieldError?.field === "slug" ? fieldError.message : null}
       >
         <Input
+          id="slug"
           ref={slugRef}
           type="text"
           value={slug}
@@ -322,7 +324,7 @@ export function PostForm({
           required
           placeholder="url-slug"
         />
-      </FormField>
+      </Field>
 
       <PostContentEditor
         ref={contentRef}
@@ -379,7 +381,7 @@ export function PostForm({
       />
 
       {/* Actions */}
-      <div className="flex items-center gap-3 pt-4 border-t border-border">
+      <div className="flex items-center gap-3 pt-4 border-t border-basalt-border">
         <Button type="submit" disabled={saving} loading={saving}>
           {saving ? "保存中..." : isEditing ? "更新文章" : "创建文章"}
         </Button>
@@ -439,7 +441,7 @@ export function PostForm({
       </form>
 
       {/* Right: Live preview — visible only on lg+ */}
-      <div className="sticky top-0 hidden h-[calc(100vh-var(--header-height)-12px-40px)] w-1/2 min-w-0 overflow-y-auto rounded-widget border border-border lg:block">
+      <div className="sticky top-0 hidden h-[calc(100vh-var(--header-height)-12px-40px)] w-1/2 min-w-0 overflow-y-auto rounded-widget border border-basalt-border lg:block">
         <MarkdownPreview
           title={title}
           excerpt={excerpt}

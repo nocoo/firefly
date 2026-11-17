@@ -1,6 +1,6 @@
 "use client";
 
-import { Ban, Shield, ShieldCheck, Trash2 } from "lucide-react";
+import { Ban, Shield, ShieldCheck, Trash2 } from "@nocoo/basalt/icons";
 import type { McpToken, McpTokenScope } from "@/models/types";
 import {
   Select,
@@ -19,7 +19,7 @@ function statusFor(token: McpToken): { label: string; cls: string } {
   const isRevoked = token.revoked === 1;
   const label = isRevoked ? "已撤销" : "有效";
   const cls = isRevoked
-    ? "text-muted-foreground"
+    ? "text-basalt-muted-foreground"
     : "text-green-600 dark:text-green-400";
   return { label, cls };
 }
@@ -33,7 +33,7 @@ function ScopeCell({
 }) {
   if (token.revoked === 1) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+      <span className="inline-flex items-center gap-1 text-xs text-basalt-muted-foreground">
         {token.scope === "author" ? (
           <ShieldCheck className="h-3.5 w-3.5" />
         ) : (
@@ -77,20 +77,20 @@ function TokenRow({
   const isRevoked = token.revoked === 1;
 
   return (
-    <tr className="border-b border-border last:border-0 hover:bg-accent/50 transition-colors">
+    <tr className="border-b border-basalt-border last:border-0 hover:bg-basalt-accent/50 transition-colors">
       <td className="px-4 py-3 font-medium">{token.client_name ?? "—"}</td>
       <td className="px-4 py-3 hidden sm:table-cell">
-        <code className="rounded bg-secondary px-1.5 py-0.5 text-xs font-mono">
+        <code className="rounded bg-basalt-secondary px-1.5 py-0.5 text-xs font-mono">
           {token.access_token_preview}…
         </code>
       </td>
       <td className="px-4 py-3">
         <ScopeCell token={token} onScopeChange={onScopeChange} />
       </td>
-      <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+      <td className="px-4 py-3 text-basalt-muted-foreground hidden md:table-cell">
         {formatDate(token.last_used_at)}
       </td>
-      <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
+      <td className="px-4 py-3 text-basalt-muted-foreground hidden lg:table-cell">
         {formatDate(token.created_at)}
       </td>
       <td className="px-4 py-3">
@@ -102,7 +102,7 @@ function TokenRow({
             <button
               type="button"
               onClick={() => onDelete(token.id)}
-              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+              className="rounded-md p-1.5 text-basalt-muted-foreground transition-colors hover:bg-basalt-destructive/10 hover:text-basalt-destructive"
               title="删除"
             >
               <Trash2 className="h-4 w-4" />
@@ -111,7 +111,7 @@ function TokenRow({
             <button
               type="button"
               onClick={() => onRevoke(token.id)}
-              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+              className="rounded-md p-1.5 text-basalt-muted-foreground transition-colors hover:bg-basalt-destructive/10 hover:text-basalt-destructive"
               title="撤销"
             >
               <Ban className="h-4 w-4" />
@@ -135,17 +135,17 @@ export function McpTokensTable({
   onDelete: (id: string) => void;
 }) {
   return (
-    <div className="overflow-x-auto rounded-widget border border-border bg-secondary">
+    <div className="overflow-x-auto rounded-widget border border-basalt-border bg-basalt-secondary">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-border bg-secondary/50">
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground">客户端</th>
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">令牌</th>
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground">权限</th>
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">最后使用</th>
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden lg:table-cell">创建时间</th>
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground">状态</th>
-            <th className="px-4 py-3 text-right font-medium text-muted-foreground"></th>
+          <tr className="border-b border-basalt-border bg-basalt-secondary/50">
+            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground">客户端</th>
+            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground hidden sm:table-cell">令牌</th>
+            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground">权限</th>
+            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground hidden md:table-cell">最后使用</th>
+            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground hidden lg:table-cell">创建时间</th>
+            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground">状态</th>
+            <th className="px-4 py-3 text-right font-medium text-basalt-muted-foreground"></th>
           </tr>
         </thead>
         <tbody>

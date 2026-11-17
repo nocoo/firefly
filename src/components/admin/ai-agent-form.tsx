@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { toast } from "@nocoo/basalt/components/toast";
 import type { AiAgent, Category } from "@/models/types";
 import { Button } from "@nocoo/basalt/components/button";
 import { AdminPageHeader } from "./page-header";
-import { Input } from "@/components/ui/input";
+import { Input } from "@nocoo/basalt/components/input";
 import {
   Select,
   SelectContent,
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@nocoo/basalt/components/select";
-import { Textarea } from "@/components/ui/textarea";
+import { InputArea } from "@nocoo/basalt/components/input-area";
 import { NewAgentModal } from "@/components/admin/ai-agents-manager";
 import { AgentAvatarUploader } from "./ai-agent-avatar-uploader";
 
@@ -157,12 +157,12 @@ export function AiAgentForm({
         backLabel="返回 AI 代理"
       />
 
-      <div className="rounded-lg bg-secondary p-6">
+      <div className="rounded-lg bg-basalt-secondary p-6">
         <div className="grid gap-6 md:grid-cols-2">
           {/* Left column: Basic info */}
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-foreground">名称 *</label>
+              <label className="text-sm font-medium text-basalt-foreground">名称 *</label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -172,20 +172,20 @@ export function AiAgentForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-foreground">标识符 *</label>
+              <label className="text-sm font-medium text-basalt-foreground">标识符 *</label>
               <Input
                 value={slug}
                 onChange={(e) => handleSlugChange(e.target.value)}
                 placeholder="如：tech-writer"
                 className="mt-1 font-mono text-sm"
               />
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-xs text-basalt-muted-foreground">
                 URL 友好的标识符（小写字母、数字、连字符）
               </p>
             </div>
 
             <div>
-              <label htmlFor="ai-agent-category" className="text-sm font-medium text-foreground">分类 *</label>
+              <label htmlFor="ai-agent-category" className="text-sm font-medium text-basalt-foreground">分类 *</label>
               <Select
                 value={categoryId === "" ? EMPTY_CATEGORY : categoryId}
                 onValueChange={(next) =>
@@ -205,14 +205,14 @@ export function AiAgentForm({
                   ))}
                 </SelectContent>
               </Select>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-xs text-basalt-muted-foreground">
                 {isNew ? "代理只能在此分类下创建文章" : "分类创建后无法更改"}
               </p>
             </div>
 
             <div>
-              <label className="text-sm font-medium text-foreground">描述</label>
-              <Textarea
+              <label className="text-sm font-medium text-basalt-foreground">描述</label>
+              <InputArea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="代理的可选描述"
@@ -223,15 +223,15 @@ export function AiAgentForm({
 
             {!isNew && agent && (
               <div>
-                <label className="text-sm font-medium text-foreground">
+                <label className="text-sm font-medium text-basalt-foreground">
                   Author ID
                 </label>
-                <div className="mt-1 flex items-center gap-2 rounded-md border border-border bg-secondary px-3 py-2">
-                  <code className="flex-1 text-xs font-mono text-foreground select-all">
+                <div className="mt-1 flex items-center gap-2 rounded-md border border-basalt-border bg-basalt-secondary px-3 py-2">
+                  <code className="flex-1 text-xs font-mono text-basalt-foreground select-all">
                     {agent.id}
                   </code>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-xs text-basalt-muted-foreground">
                   通过 MCP 创建文章时，在 author_id 字段使用此 ID
                 </p>
               </div>
@@ -249,7 +249,7 @@ export function AiAgentForm({
           )}
         </div>
 
-        <div className="mt-6 flex items-center gap-3 border-t border-border pt-6">
+        <div className="mt-6 flex items-center gap-3 border-t border-basalt-border pt-6">
           <Button onClick={handleSave} disabled={saving} loading={saving}>
             {isNew ? "创建代理" : "保存更改"}
           </Button>

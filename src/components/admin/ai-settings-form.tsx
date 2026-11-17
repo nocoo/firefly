@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Input } from "@nocoo/basalt/components/input";
+import { Button } from "@nocoo/basalt/components/button";
 import type { AiProvider, SdkType } from "@/services/ai";
 import type { AuthType } from "@nocoo/next-ai";
 import {
@@ -154,13 +154,13 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
       />
 
       {provider && (
-        <div className="rounded-card bg-secondary p-5 md:p-6 space-y-5">
-          <h2 className="text-base font-medium text-foreground">认证</h2>
+        <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-5">
+          <h2 className="text-base font-medium text-basalt-foreground">认证</h2>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
+            <label className="text-sm font-medium text-basalt-foreground">
               API Key
             </label>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-basalt-muted-foreground">
               API 密钥将会安全存储。
             </p>
             <Input
@@ -188,7 +188,7 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
       {message && (
         <p
           className={`text-sm ${
-            message.type === "success" ? "text-success" : "text-destructive"
+            message.type === "success" ? "text-basalt-success" : "text-basalt-destructive"
           }`}
         >
           {message.text}

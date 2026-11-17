@@ -10,9 +10,9 @@ import {
   Share2,
   Copy,
   Check,
-} from "lucide-react";
+} from "@nocoo/basalt/icons";
 import { useTheme } from "next-themes";
-import { toast } from "sonner";
+import { toast } from "@nocoo/basalt/components/toast";
 import { renderMarkdown } from "@/models/markdown";
 import { renderPostExport } from "@/lib/post-export";
 import { ArticleBody } from "@/components/blog/article-body";
@@ -163,13 +163,13 @@ export function MarkdownPreview({
   const isCurrentEmpty = platformMode === "wechat" ? wechatIsEmpty : webIsEmpty;
 
   return (
-    <div className="flex h-full flex-col bg-muted/20">
+    <div className="flex h-full flex-col bg-basalt-muted/20">
       {/* Top Action / Mode Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-card px-3 py-2 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-basalt-border bg-basalt-card px-3 py-2 text-sm">
         {/* Left: Mode toggles */}
         <div className="flex items-center gap-1.5">
           {/* Group 1: Device (Desktop / Mobile) */}
-          <div className="inline-flex items-center rounded-lg border border-border bg-muted/40 p-0.5">
+          <div className="inline-flex items-center rounded-lg border border-basalt-border bg-basalt-muted/40 p-0.5">
             <button
               type="button"
               onClick={() => setDeviceMode("desktop")}
@@ -177,8 +177,8 @@ export function MarkdownPreview({
               title="桌面视图"
               className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
                 deviceMode === "desktop"
-                  ? "bg-background text-foreground shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-basalt-background text-basalt-foreground shadow-xs"
+                  : "text-basalt-muted-foreground hover:text-basalt-foreground"
               }`}
             >
               <Monitor className="h-3.5 w-3.5" />
@@ -191,8 +191,8 @@ export function MarkdownPreview({
               title="移动视图"
               className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
                 deviceMode === "mobile"
-                  ? "bg-background text-foreground shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-basalt-background text-basalt-foreground shadow-xs"
+                  : "text-basalt-muted-foreground hover:text-basalt-foreground"
               }`}
             >
               <Smartphone className="h-3.5 w-3.5" />
@@ -201,7 +201,7 @@ export function MarkdownPreview({
           </div>
 
           {/* Group 2: Platform (Web / WeChat) */}
-          <div className="inline-flex items-center rounded-lg border border-border bg-muted/40 p-0.5">
+          <div className="inline-flex items-center rounded-lg border border-basalt-border bg-basalt-muted/40 p-0.5">
             <button
               type="button"
               onClick={() => setPlatformMode("web")}
@@ -209,8 +209,8 @@ export function MarkdownPreview({
               title="网站模式"
               className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
                 platformMode === "web"
-                  ? "bg-background text-foreground shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-basalt-background text-basalt-foreground shadow-xs"
+                  : "text-basalt-muted-foreground hover:text-basalt-foreground"
               }`}
             >
               <Globe className="h-3.5 w-3.5" />
@@ -223,8 +223,8 @@ export function MarkdownPreview({
               title="微信公众号模式"
               className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
                 platformMode === "wechat"
-                  ? "bg-background text-foreground shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-basalt-background text-basalt-foreground shadow-xs"
+                  : "text-basalt-muted-foreground hover:text-basalt-foreground"
               }`}
             >
               <Share2 className="h-3.5 w-3.5" />
@@ -241,7 +241,7 @@ export function MarkdownPreview({
               onClick={handleCopyWeChat}
               disabled={wechatIsEmpty}
               title="复制微信公众号排版到剪贴板（不含标题与摘要，含图片）"
-              className="inline-flex items-center gap-1.5 rounded-md border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-md border border-basalt-primary/20 bg-basalt-primary/10 px-2.5 py-1 text-xs font-medium text-basalt-primary transition-colors hover:bg-basalt-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {wechatCopied ? (
                 <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -258,7 +258,7 @@ export function MarkdownPreview({
               onClick={handleCopyWebText}
               disabled={!content?.trim()}
               title="复制正文内容（不含标题、摘要及图片）"
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-md border border-basalt-border bg-basalt-card px-2.5 py-1 text-xs font-medium text-basalt-foreground transition-colors hover:bg-basalt-accent disabled:cursor-not-allowed disabled:opacity-50"
             >
               {webCopied ? (
                 <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -275,7 +275,7 @@ export function MarkdownPreview({
             onClick={togglePreviewTheme}
             aria-label={previewDark ? "切换为浅色" : "切换为深色"}
             title={previewDark ? "切换为浅色" : "切换为深色"}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-basalt-border bg-basalt-card text-basalt-muted-foreground transition-colors hover:bg-basalt-accent hover:text-basalt-foreground"
           >
             {previewDark ? (
               <Sun className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -290,7 +290,7 @@ export function MarkdownPreview({
       <div className="flex-1 overflow-y-auto p-4 flex justify-center">
         {isCurrentEmpty ? (
           <div className="flex h-full items-center justify-center self-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-basalt-muted-foreground">
               开始编写以查看实时预览
             </p>
           </div>
@@ -298,7 +298,7 @@ export function MarkdownPreview({
           <div
             className={`w-full transition-all duration-200 ${
               deviceMode === "mobile"
-                ? "max-w-[390px] shadow-lg rounded-2xl border border-border overflow-hidden my-auto"
+                ? "max-w-[390px] shadow-lg rounded-2xl border border-basalt-border overflow-hidden my-auto"
                 : "max-w-none"
             }`}
           >

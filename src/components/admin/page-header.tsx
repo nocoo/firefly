@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/components/icons/basalt";
 import Link from "next/link";
 import { Button } from "@nocoo/basalt/components/button";
 import {

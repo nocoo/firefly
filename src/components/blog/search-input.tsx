@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { Search } from "lucide-react";
+import { Search } from "@nocoo/basalt/icons";
 
 export function SearchInput() {
   const inputRef = useRef<HTMLInputElement>(null);

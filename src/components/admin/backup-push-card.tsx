@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Input } from "@nocoo/basalt/components/input";
+import { Button } from "@nocoo/basalt/components/button";
 import {
   CloudUpload,
   Pencil,
@@ -10,7 +10,7 @@ import {
   RefreshCw,
   Trash2,
   X,
-} from "lucide-react";
+} from "@nocoo/basalt/icons";
 import { cn } from "@/lib/utils";
 import type {
   BackyHistoryResponse,
@@ -33,7 +33,7 @@ function PushDetailBox({ detail }: { detail: BackyPushDetail }) {
   if (!detail.request) return null;
   const { tag, fileName, fileSizeBytes, backupStats } = detail.request;
   return (
-    <div className="rounded-md bg-muted/50 p-3 text-xs space-y-1 font-mono">
+    <div className="rounded-md bg-basalt-muted/50 p-3 text-xs space-y-1 font-mono">
       <div>Tag: {tag}</div>
       <div>File: {fileName}</div>
       <div>
@@ -43,7 +43,7 @@ function PushDetailBox({ detail }: { detail: BackyPushDetail }) {
           : `${(fileSizeBytes / 1024).toFixed(1)} KB`}
       </div>
       {detail.durationMs && <div>Duration: {detail.durationMs}ms</div>}
-      <div className="text-muted-foreground">
+      <div className="text-basalt-muted-foreground">
         {Object.entries(backupStats)
           .map(([k, v]) => `${v} ${k}`)
           .join(" · ")}
@@ -62,9 +62,9 @@ function HistorySection({
   onRefresh: () => void;
 }) {
   return (
-    <div className="border-t border-border pt-4 space-y-3">
+    <div className="border-t border-basalt-border pt-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-foreground">备份记录</h3>
+        <h3 className="text-sm font-medium text-basalt-foreground">备份记录</h3>
         <Button variant="ghost" size="sm" onClick={onRefresh} disabled={loading}>
           <RefreshCw className={cn("h-3.5 w-3.5 mr-1", loading && "animate-spin")} />
           刷新
@@ -73,16 +73,16 @@ function HistorySection({
 
       {history ? (
         history.recent_backups.length > 0 ? (
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-basalt-border">
             {history.recent_backups.map((entry) => (
               <HistoryRow key={entry.id} entry={entry} />
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">暂无备份记录</p>
+          <p className="text-sm text-basalt-muted-foreground">暂无备份记录</p>
         )
       ) : (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-basalt-muted-foreground">
           推送备份后将显示远程备份记录。
         </p>
       )}
@@ -232,19 +232,19 @@ export function BackupPushCard({ initialConfig }: BackupPushCardProps) {
   };
 
   return (
-    <div className="rounded-card bg-secondary p-6 space-y-6">
+    <div className="rounded-card bg-basalt-secondary p-6 space-y-6">
       <div className="flex items-center gap-2">
         <CloudUpload className="h-5 w-5 text-purple-500" />
-        <h2 className="text-lg font-medium text-foreground">远程备份</h2>
+        <h2 className="text-lg font-medium text-basalt-foreground">远程备份</h2>
       </div>
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-basalt-muted-foreground">
         将博客数据推送至 Backy 远程备份服务。
       </p>
 
       {editMode ? (
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
+            <label className="text-sm font-medium text-basalt-foreground">
               Webhook URL
             </label>
             <Input
@@ -254,7 +254,7 @@ export function BackupPushCard({ initialConfig }: BackupPushCardProps) {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">API Key</label>
+            <label className="text-sm font-medium text-basalt-foreground">API Key</label>
             <Input
               type="password"
               value={editKey}
@@ -282,11 +282,11 @@ export function BackupPushCard({ initialConfig }: BackupPushCardProps) {
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 space-y-1">
               <div className="flex items-center gap-2">
-                <code className="text-xs text-muted-foreground truncate block max-w-md">
+                <code className="text-xs text-basalt-muted-foreground truncate block max-w-md">
                   {webhookUrl}
                 </code>
               </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs text-basalt-muted-foreground">
                 Key: {maskedApiKey}
               </div>
             </div>

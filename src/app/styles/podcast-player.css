@@ -7,7 +7,7 @@
   gap: var(--podcast-gap);
   min-width: 0;
   margin-block: 1rem 1.5rem;
-  color: var(--blog-text-secondary);
+  color: var(--blog-text-basalt-secondary);
 }
 
 .podcast-player .podcast-play,
@@ -37,13 +37,13 @@
 }
 
 .podcast-progress > span:first-child > span {
-  background: var(--blog-text-secondary);
+  background: var(--blog-text-basalt-secondary);
 }
 
 .podcast-progress [role="slider"] {
   width: 0.625rem;
   height: 0.625rem;
-  background: var(--blog-text-secondary);
+  background: var(--blog-text-basalt-secondary);
   border: none;
   box-shadow: none;
 }

@@ -109,7 +109,7 @@ export function AdminTableSkeleton({
 			{filters && <FilterSkeleton />}
 			<LayerCard padding="none" className="overflow-hidden" aria-hidden="true">
 				<div
-					className="grid gap-4 border-b border-border px-4 py-3"
+					className="grid gap-4 border-b border-basalt-border px-4 py-3"
 					style={gridStyle}
 				>
 					{Array.from({ length: columns }, (_, i) => (
@@ -119,7 +119,7 @@ export function AdminTableSkeleton({
 				{Array.from({ length: 6 }, (_, row) => (
 					<div
 						key={row}
-						className="grid gap-4 border-b border-border px-4 py-4 last:border-0"
+						className="grid gap-4 border-b border-basalt-border px-4 py-4 last:border-0"
 						style={gridStyle}
 					>
 						{Array.from({ length: columns }, (_, column) => (

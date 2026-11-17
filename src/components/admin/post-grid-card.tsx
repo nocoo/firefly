@@ -3,12 +3,12 @@
 import { memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Eye, Pencil } from "lucide-react";
+import { Eye, Pencil } from "@nocoo/basalt/icons";
 import type { PostWithCategory, PostStatus } from "@/models/types";
 import { postPath, formatDateDisplay } from "@/lib/seo";
 import { STATUS_COLORS } from "@/lib/status-colors";
 import { DeletePostButton } from "./delete-post-button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { LayerCard } from "@nocoo/basalt/components/layer-card";
 
 const POST_STATUS_LABEL: Record<string, string> = {
   draft: "草稿",
@@ -39,11 +39,12 @@ export const PostGridCard = memo(function PostGridCard({
   const date = post.published_at ? formatDateDisplay(post.published_at) : "—";
 
   return (
-    <Card
+    <LayerCard
+      padding="none"
       className={`group relative overflow-hidden transition-colors ${
         selected
-          ? "border-primary ring-2 ring-primary/20"
-          : "hover:border-primary/50"
+          ? "border-basalt-primary ring-2 ring-basalt-primary/20"
+          : "hover:border-basalt-primary/50"
       }`}
     >
       {/* Selection checkbox — always visible in top-left */}
@@ -56,7 +57,7 @@ export const PostGridCard = memo(function PostGridCard({
               e.stopPropagation();
               onToggleSelect(post.id);
             }}
-            className={`h-4 w-4 cursor-pointer rounded border-border text-primary focus:ring-ring ${
+            className={`h-4 w-4 cursor-pointer rounded border-basalt-border text-basalt-primary focus:ring-basalt-ring ${
               selected
                 ? "opacity-100"
                 : "opacity-0 group-hover:opacity-100"
@@ -68,7 +69,7 @@ export const PostGridCard = memo(function PostGridCard({
       {/* Top area — featured image or text preview */}
       <Link href={`/admin/posts/${post.id}/edit`} className="block">
         {post.featured_image ? (
-          <div className="relative h-[var(--card-thumb-height)] bg-secondary">
+          <div className="relative h-[var(--card-thumb-height)] bg-basalt-secondary">
             <Image
               src={post.featured_image}
               alt={post.title}
@@ -94,7 +95,7 @@ export const PostGridCard = memo(function PostGridCard({
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
-          className="flex h-8 w-8 items-center justify-center rounded-widget bg-card/90 text-card-foreground transition-colors hover:bg-card"
+          className="flex h-8 w-8 items-center justify-center rounded-widget bg-basalt-card/90 text-basalt-card-foreground transition-colors hover:bg-basalt-card"
           title="预览"
         >
           <Eye className="h-4 w-4" strokeWidth={1.5} />
@@ -102,7 +103,7 @@ export const PostGridCard = memo(function PostGridCard({
         <Link
           href={`/admin/posts/${post.id}/edit`}
           onClick={(e) => e.stopPropagation()}
-          className="flex h-8 w-8 items-center justify-center rounded-widget bg-card/90 text-card-foreground transition-colors hover:bg-card"
+          className="flex h-8 w-8 items-center justify-center rounded-widget bg-basalt-card/90 text-basalt-card-foreground transition-colors hover:bg-basalt-card"
           title="编辑"
         >
           <Pencil className="h-4 w-4" strokeWidth={1.5} />
@@ -111,26 +112,26 @@ export const PostGridCard = memo(function PostGridCard({
       </div>
 
       {/* Title — flex-1 fills remaining space so footer always sits at bottom */}
-      <CardContent className="border-t border-border px-2.5 py-2">
+      <LayerCard.Body className="border-t border-basalt-border px-2.5 py-2">
         <Link
           href={`/admin/posts/${post.id}/edit`}
-          className="block text-sm font-medium leading-snug text-foreground line-clamp-2 hover:text-primary transition-colors"
+          className="block text-sm font-medium leading-snug text-basalt-foreground line-clamp-2 hover:text-basalt-primary transition-colors"
         >
           {post.title}
         </Link>
-      </CardContent>
+      </LayerCard.Body>
 
       {/* Status + date — always pinned to bottom */}
-      <CardFooter className="px-2.5 pb-2 pt-0">
+      <LayerCard.Footer className="px-2.5 pb-2 pt-0">
         <div className="flex items-center gap-1.5">
           <span
             className={`inline-block rounded-full px-1.5 py-0.5 text-2xs font-medium leading-none ${STATUS_COLORS[post.status as PostStatus] ?? ""}`}
           >
             {POST_STATUS_LABEL[post.status] ?? post.status}
           </span>
-          <span className="text-xs text-muted-foreground">{date}</span>
+          <span className="text-xs text-basalt-muted-foreground">{date}</span>
         </div>
-      </CardFooter>
-    </Card>
+      </LayerCard.Footer>
+    </LayerCard>
   );
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { ArrowUp, ArrowDown, ArrowUpDown } from "@nocoo/basalt/icons";
 
 export function SortableHeader({
   column,
@@ -22,7 +22,7 @@ export function SortableHeader({
 }) {
   if (!sortable) {
     return (
-      <th className={`px-4 py-3 text-left font-medium text-muted-foreground ${className}`}>
+      <th className={`px-4 py-3 text-left font-medium text-basalt-muted-foreground ${className}`}>
         {label}
       </th>
     );
@@ -50,12 +50,12 @@ export function SortableHeader({
 
   return (
     <th
-      className={`px-4 py-3 text-left font-medium text-muted-foreground ${className}`}
+      className={`px-4 py-3 text-left font-medium text-basalt-muted-foreground ${className}`}
       aria-sort={ariaSort}
     >
       <Link
         href={href}
-        className={`inline-flex items-center gap-1 transition-colors hover:text-foreground ${isActive ? "text-foreground" : ""}`}
+        className={`inline-flex items-center gap-1 transition-colors hover:text-basalt-foreground ${isActive ? "text-basalt-foreground" : ""}`}
       >
         {label}
         <Icon className="h-3.5 w-3.5" strokeWidth={1.5} />

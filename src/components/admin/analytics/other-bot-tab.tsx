@@ -28,15 +28,15 @@ function DonutTooltip({
   const item = payload[0] as (typeof payload)[number];
 
   return (
-    <div className="rounded-widget border border-border bg-popover p-2.5 shadow-sm">
+    <div className="rounded-widget border border-basalt-border bg-basalt-popover p-2.5 shadow-sm">
       <div className="flex items-center gap-2">
         <div
           className="h-3 w-3 rounded-full"
           style={{ backgroundColor: item.payload.fill }}
         />
-        <span className="text-sm font-medium text-foreground">{item.name}</span>
+        <span className="text-sm font-medium text-basalt-foreground">{item.name}</span>
       </div>
-      <div className="text-sm text-muted-foreground">
+      <div className="text-sm text-basalt-muted-foreground">
         {formatNumber(item.value)} ({(item.payload.percent * 100).toFixed(1)}%)
       </div>
     </div>
@@ -84,10 +84,10 @@ function DonutWithLegend({
               className="h-2 w-2 shrink-0 rounded-full"
               style={{ background: item.fill }}
             />
-            <span className="text-xs text-muted-foreground truncate">
+            <span className="text-xs text-basalt-muted-foreground truncate">
               {item.name}
             </span>
-            <span className="ml-auto text-xs font-medium text-foreground">
+            <span className="ml-auto text-xs font-medium text-basalt-foreground">
               {formatNumber(item.value)}
             </span>
           </div>
@@ -165,7 +165,7 @@ export function OtherBotTab({ data }: OtherBotTabProps) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-muted-foreground">
+                <tr className="text-left text-xs text-basalt-muted-foreground">
                   <th className="pb-2 font-medium">
                     爬虫
                   </th>
@@ -179,9 +179,9 @@ export function OtherBotTab({ data }: OtherBotTabProps) {
               </thead>
               <tbody>
                 {data.unknownBots.map((bot, i) => (
-                  <tr key={i} className="border-t border-border/50">
+                  <tr key={i} className="border-t border-basalt-border/50">
                     <td className="py-1.5 pr-3">{bot.botName}</td>
-                    <td className="py-1.5 pr-3 truncate max-w-[300px] text-muted-foreground text-xs font-mono">
+                    <td className="py-1.5 pr-3 truncate max-w-[300px] text-basalt-muted-foreground text-xs font-mono">
                       {bot.userAgent}
                     </td>
                     <td className="py-1.5 text-right tabular-nums font-medium">
@@ -210,13 +210,13 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-widget bg-secondary p-4">
-      <h3 className="text-sm font-medium text-foreground mb-3">{title}</h3>
+    <div className="rounded-widget bg-basalt-secondary p-4">
+      <h3 className="text-sm font-medium text-basalt-foreground mb-3">{title}</h3>
       {children}
     </div>
   );
 }
 
 function NoData({ text }: { text: string }) {
-  return <p className="text-sm text-muted-foreground py-4">{text}</p>;
+  return <p className="text-sm text-basalt-muted-foreground py-4">{text}</p>;
 }

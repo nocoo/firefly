@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { LayoutList, LayoutGrid } from "lucide-react";
+import { LayoutList, LayoutGrid } from "@nocoo/basalt/icons";
 import type { PostWithCategory, Category, Tag } from "@/models/types";
 import type { PostYearCount } from "@/data/entities/post";
 import { PostFilters } from "@/components/admin/post-filters";

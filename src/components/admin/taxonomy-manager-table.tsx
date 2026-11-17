@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, ChevronUp, ExternalLink, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, ExternalLink, Pencil, Trash2 } from "@nocoo/basalt/icons";
 
 export interface TaxonomyItem {
   id: string;
@@ -34,7 +34,7 @@ function ReorderCell({
           onClick={() => onMove(-1)}
           disabled={index === 0}
           aria-label="Move up"
-          className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+          className="rounded p-1 text-basalt-muted-foreground transition-colors hover:bg-basalt-accent hover:text-basalt-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
         >
           <ChevronUp className="h-4 w-4" strokeWidth={1.5} />
         </button>
@@ -43,7 +43,7 @@ function ReorderCell({
           onClick={() => onMove(1)}
           disabled={index === total - 1}
           aria-label="Move down"
-          className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+          className="rounded p-1 text-basalt-muted-foreground transition-colors hover:bg-basalt-accent hover:text-basalt-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
         >
           <ChevronDown className="h-4 w-4" strokeWidth={1.5} />
         </button>
@@ -61,10 +61,10 @@ function PostCountCell({
 }) {
   if (hasStats) {
     return (
-      <td className="px-4 py-3 text-center text-muted-foreground">
+      <td className="px-4 py-3 text-center text-basalt-muted-foreground">
         <span title={`已发布: ${item.published_posts ?? 0}, 草稿: ${item.draft_posts ?? 0}`}>
           {item.total_posts ?? 0}
-          <span className="text-xs text-muted-foreground/60 ml-1">
+          <span className="text-xs text-basalt-muted-foreground/60 ml-1">
             ({item.published_posts ?? 0}/{item.draft_posts ?? 0})
           </span>
         </span>
@@ -72,7 +72,7 @@ function PostCountCell({
     );
   }
   return (
-    <td className="px-4 py-3 text-center text-muted-foreground">
+    <td className="px-4 py-3 text-center text-basalt-muted-foreground">
       {item.post_count}
     </td>
   );
@@ -96,7 +96,7 @@ function ActionsCell({
         {totalCount > 0 && (
           <Link
             href={`/admin/posts?${type === "category" ? "category" : "tag"}=${item.id}`}
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="rounded-md p-1.5 text-basalt-muted-foreground transition-colors hover:bg-basalt-accent hover:text-basalt-foreground"
             title="查看全部"
           >
             <ExternalLink className="h-4 w-4" strokeWidth={1.5} />
@@ -105,7 +105,7 @@ function ActionsCell({
         <button
           type="button"
           onClick={onEdit}
-          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="rounded-md p-1.5 text-basalt-muted-foreground transition-colors hover:bg-basalt-accent hover:text-basalt-foreground"
           title="编辑"
         >
           <Pencil className="h-4 w-4" strokeWidth={1.5} />
@@ -113,7 +113,7 @@ function ActionsCell({
         <button
           type="button"
           onClick={onDelete}
-          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+          className="rounded-md p-1.5 text-basalt-muted-foreground transition-colors hover:bg-basalt-destructive/10 hover:text-basalt-destructive"
           title="删除"
         >
           <Trash2 className="h-4 w-4" strokeWidth={1.5} />
@@ -142,22 +142,22 @@ export function TaxonomyTable({
   const emptyMessage = type === "category" ? "暂无分类" : "暂无标签";
 
   return (
-    <div className="overflow-x-auto rounded-widget border border-border bg-secondary">
+    <div className="overflow-x-auto rounded-widget border border-basalt-border bg-basalt-secondary">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-border bg-secondary/50">
+          <tr className="border-b border-basalt-border bg-basalt-secondary/50">
             {sortable && <th className="w-16 pl-2 pr-0 py-3" />}
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground">名称</th>
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">别名</th>
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">描述</th>
-            <th className="px-4 py-3 text-center font-medium text-muted-foreground">文章数</th>
-            <th className="px-4 py-3 text-right font-medium text-muted-foreground">操作</th>
+            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground">名称</th>
+            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground hidden sm:table-cell">别名</th>
+            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground hidden md:table-cell">描述</th>
+            <th className="px-4 py-3 text-center font-medium text-basalt-muted-foreground">文章数</th>
+            <th className="px-4 py-3 text-right font-medium text-basalt-muted-foreground">操作</th>
           </tr>
         </thead>
         <tbody>
           {items.length === 0 ? (
             <tr>
-              <td colSpan={colCount} className="px-4 py-8 text-center text-muted-foreground">
+              <td colSpan={colCount} className="px-4 py-8 text-center text-basalt-muted-foreground">
                 {emptyMessage}
               </td>
             </tr>
@@ -165,7 +165,7 @@ export function TaxonomyTable({
             items.map((item, index) => (
               <tr
                 key={item.id}
-                className="border-b border-border last:border-0 hover:bg-accent/50 transition-colors"
+                className="border-b border-basalt-border last:border-0 hover:bg-basalt-accent/50 transition-colors"
               >
                 {sortable && (
                   <ReorderCell
@@ -174,11 +174,11 @@ export function TaxonomyTable({
                     onMove={(dir) => onMove(index, dir)}
                   />
                 )}
-                <td className="px-4 py-3 font-medium text-foreground">{item.name}</td>
-                <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                <td className="px-4 py-3 font-medium text-basalt-foreground">{item.name}</td>
+                <td className="px-4 py-3 text-basalt-muted-foreground hidden sm:table-cell">
                   {item.slug}
                 </td>
-                <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                <td className="px-4 py-3 text-basalt-muted-foreground hidden md:table-cell">
                   {item.description ?? "—"}
                 </td>
                 <PostCountCell item={item} hasStats={hasStats} />

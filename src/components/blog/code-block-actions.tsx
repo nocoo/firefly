@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy } from "@nocoo/basalt/icons";
 import { createPortal } from "react-dom";
 
 /**

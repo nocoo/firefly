@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
-import { toast } from "sonner";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
+import { Sparkles } from "@nocoo/basalt/icons";
+import { toast } from "@nocoo/basalt/components/toast";
+import { InputArea } from "@nocoo/basalt/components/input-area";
+import { Input } from "@nocoo/basalt/components/input";
 
 export interface ReferenceState {
   url: string;
@@ -101,10 +101,10 @@ export function PostReferenceFields({
     <div className="space-y-2">
       <label
         htmlFor="reference-url"
-        className="text-sm font-medium text-foreground"
+        className="text-sm font-medium text-basalt-foreground"
       >
         {"引用链接"}{" "}
-        <span className="text-muted-foreground font-normal">{"（可选）"}</span>
+        <span className="text-basalt-muted-foreground font-normal">{"（可选）"}</span>
       </label>
       <div className="flex gap-2">
         <Input
@@ -119,7 +119,7 @@ export function PostReferenceFields({
           type="button"
           onClick={handleUnfurl}
           disabled={isUnfurling || !state.url.trim()}
-          className="inline-flex items-center rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent disabled:opacity-50"
+          className="inline-flex items-center rounded-widget border border-basalt-border bg-basalt-secondary px-3 py-2 text-sm text-basalt-foreground transition-colors hover:bg-basalt-accent disabled:opacity-50"
         >
           {isUnfurling ? "获取中..." : hasFetched ? "重新获取" : "获取"}
         </button>
@@ -127,19 +127,19 @@ export function PostReferenceFields({
           <button
             type="button"
             onClick={handleClear}
-            className="inline-flex items-center rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
+            className="inline-flex items-center rounded-widget border border-basalt-border bg-basalt-secondary px-3 py-2 text-sm text-basalt-destructive transition-colors hover:bg-basalt-destructive/10"
           >
             {"清除"}
           </button>
         )}
       </div>
       {hasFetched && (
-        <div className="space-y-2 rounded-widget border border-border p-3">
+        <div className="space-y-2 rounded-widget border border-basalt-border p-3">
           <div className="space-y-1">
             <div className="flex items-center justify-between">
               <label
                 htmlFor="reference-title"
-                className="text-xs text-muted-foreground"
+                className="text-xs text-basalt-muted-foreground"
               >
                 {"标题"}
               </label>
@@ -147,7 +147,7 @@ export function PostReferenceFields({
                 type="button"
                 onClick={handleEnhance}
                 disabled={isEnhancing}
-                className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
+                className="inline-flex items-center gap-1 text-xs text-basalt-primary hover:text-basalt-primary/80 disabled:opacity-50 transition-colors"
               >
                 <Sparkles className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
                 {isEnhancing ? "翻译中..." : "AI 翻译"}
@@ -164,11 +164,11 @@ export function PostReferenceFields({
           <div className="space-y-1">
             <label
               htmlFor="reference-description"
-              className="text-xs text-muted-foreground"
+              className="text-xs text-basalt-muted-foreground"
             >
               {"描述"}
             </label>
-            <Textarea
+            <InputArea
               id="reference-description"
               value={state.description}
               onChange={(e) =>
@@ -180,7 +180,7 @@ export function PostReferenceFields({
           </div>
           {state.image && (
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">{"图片"}</label>
+              <label className="text-xs text-basalt-muted-foreground">{"图片"}</label>
               <img
                 src={state.image}
                 alt={state.title || "Reference"}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy } from "@nocoo/basalt/icons";
 import { cn } from "@/lib/utils";
 import type { BackyBackupEntry } from "@/models/backup";
 import { formatFileSize, formatTimeAgo } from "@/models/backup";
@@ -17,9 +17,9 @@ export function StatusMessage({
     <p
       className={cn(
         "text-sm",
-        type === "success" && "text-success",
-        type === "error" && "text-destructive",
-        type === "info" && "text-muted-foreground",
+        type === "success" && "text-basalt-success",
+        type === "error" && "text-basalt-destructive",
+        type === "info" && "text-basalt-muted-foreground",
       )}
     >
       {text}
@@ -42,7 +42,7 @@ export function BackupCopyButton({ text }: { text: string }) {
   return (
     <button type="button"
       onClick={handleCopy}
-      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+      className="inline-flex items-center gap-1 text-xs text-basalt-muted-foreground hover:text-basalt-foreground transition-colors"
       title="Copy"
     >
       {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
@@ -64,11 +64,11 @@ export function HistoryRow({ entry }: { entry: BackyBackupEntry }) {
         >
           {entry.environment}
         </span>
-        <span className="truncate text-muted-foreground font-mono text-xs">
+        <span className="truncate text-basalt-muted-foreground font-mono text-xs">
           {entry.tag}
         </span>
       </div>
-      <div className="flex items-center gap-4 shrink-0 text-muted-foreground text-xs">
+      <div className="flex items-center gap-4 shrink-0 text-basalt-muted-foreground text-xs">
         <span>{formatFileSize(entry.file_size)}</span>
         <span>{formatTimeAgo(entry.created_at)}</span>
       </div>

@@ -1,4 +1,4 @@
-import { FileUser, Globe, Mail } from "lucide-react";
+import { FileUser, Globe, Mail } from "@/components/icons/basalt";
 import { Facebook, Github, Linkedin } from "@/components/icons/brand";
 import type { SocialLink as SocialLinkData } from "@/data/settings";
 

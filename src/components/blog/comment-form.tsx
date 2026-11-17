@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { Loader2 } from "@nocoo/basalt/icons";
+import { toast } from "@nocoo/basalt/components/toast";
 
 interface CommentFormProps {
   postId: string;

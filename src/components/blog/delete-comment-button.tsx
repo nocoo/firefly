@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { Trash2 } from "@nocoo/basalt/icons";
+import { toast } from "@nocoo/basalt/components/toast";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 interface DeleteCommentButtonProps {
@@ -53,7 +53,7 @@ export function DeleteCommentButton({
         type="button"
         onClick={() => setConfirmOpen(true)}
         disabled={deleting}
-        className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-destructive/80 transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+        className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-basalt-destructive/80 transition-colors hover:bg-basalt-destructive/10 hover:text-basalt-destructive disabled:opacity-50"
         aria-label={deleteLabel}
       >
         <Trash2 className="h-3 w-3" strokeWidth={1.5} />

@@ -4,7 +4,7 @@ import { HeaderTooltip, HexlyLink } from "../header-links";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X } from "@nocoo/basalt/icons";
 import type { Category, Tag } from "@/models/types";
 import type { MonthlyArchive } from "@/data/entities/post";
 import type { SocialLink } from "@/data/settings";

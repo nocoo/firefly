@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { FileText, FolderOpen, Tags } from "lucide-react";
+import { FileText, FolderOpen, Tags } from "@nocoo/basalt/icons";
 import { AdminPageHeader } from "./page-header";
 import { AdminAnalyticsBodySkeleton } from "./loading-skeleton";
 import { LayerCard } from "@nocoo/basalt/components/layer-card";
@@ -161,7 +161,7 @@ export function AnalyticsDashboard({
     return (
       <div className="space-y-6">
         {pageHeader}
-        <div className="flex items-center justify-center py-20 text-destructive">
+        <div className="flex items-center justify-center py-20 text-basalt-destructive">
           获取分析数据失败
         </div>
       </div>
@@ -196,7 +196,7 @@ export function AnalyticsDashboard({
         {/* Source tabs */}
         <div className="space-y-4">
           {/* Tab bar */}
-          <div className="flex gap-1 rounded-widget border border-border bg-secondary p-1">
+          <div className="flex gap-1 rounded-widget border border-basalt-border bg-basalt-secondary p-1">
             {SOURCE_TYPES.map((type) => (
               <button
                 key={type}
@@ -204,16 +204,16 @@ export function AnalyticsDashboard({
                 onClick={() => handleTabChange(type)}
                 className={`flex-1 flex items-center justify-center gap-2 rounded-[calc(var(--radius-widget)-4px)] px-3 py-2 text-xs font-medium transition-colors ${
                   activeTab === type
-                    ? "bg-secondary text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-basalt-secondary text-basalt-foreground shadow-sm"
+                    : "text-basalt-muted-foreground hover:text-basalt-foreground"
                 }`}
               >
                 <span>{TAB_LABELS[type]}</span>
                 <span
                   className={`tabular-nums rounded-full px-1.5 py-0.5 text-2xs leading-none ${
                     activeTab === type
-                      ? "bg-secondary text-foreground"
-                      : "bg-background/50 text-muted-foreground"
+                      ? "bg-basalt-secondary text-basalt-foreground"
+                      : "bg-basalt-background/50 text-basalt-muted-foreground"
                   }`}
                 >
                   {formatNumber(tabCounts[type])}
@@ -323,15 +323,15 @@ function ContentStatCard({
 }) {
   return (
     <div
-      className="flex items-center gap-3 rounded-widget bg-secondary p-4 animate-fade-up"
+      className="flex items-center gap-3 rounded-widget bg-basalt-secondary p-4 animate-fade-up"
       style={{ animationDelay: `${index * 60}ms` }}
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-background">
-        <Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-basalt-background">
+        <Icon className="h-4 w-4 text-basalt-muted-foreground" strokeWidth={1.5} />
       </div>
       <div>
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className="text-xl font-semibold font-display text-foreground">{value}</p>
+        <p className="text-sm text-basalt-muted-foreground">{label}</p>
+        <p className="text-xl font-semibold font-display text-basalt-foreground">{value}</p>
       </div>
     </div>
   );

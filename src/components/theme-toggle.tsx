@@ -4,7 +4,7 @@ import { HeaderTooltip } from "./header-links";
 
 import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
-import { Sun, Moon, Monitor } from "lucide-react";
+import { Sun, Moon, Monitor } from "@nocoo/basalt/icons";
 import { Button } from "@nocoo/basalt/components/button";
 import { t } from "@/lib/i18n";
 

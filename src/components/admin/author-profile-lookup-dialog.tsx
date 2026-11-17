@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Hash } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Hash } from "@nocoo/basalt/icons";
+import { Button } from "@nocoo/basalt/components/button";
 import { CopyButton } from "@/components/admin/ai-agents-helpers";
 import {
   buildAuthorProfileBrief,
@@ -101,17 +101,17 @@ export function AuthorProfileLookupDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="profile-lookup-title"
-        className="mx-4 flex max-h-[90vh] w-full max-w-2xl flex-col rounded-lg border border-border bg-background shadow-lg"
+        className="mx-4 flex max-h-[90vh] w-full max-w-2xl flex-col rounded-lg border border-basalt-border bg-basalt-background shadow-lg"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="border-b border-border px-6 py-4">
+        <div className="border-b border-basalt-border px-6 py-4">
           <h2
             id="profile-lookup-title"
-            className="text-lg font-semibold text-foreground"
+            className="text-lg font-semibold text-basalt-foreground"
           >
             公开资料查询
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm text-basalt-muted-foreground">
             用邮箱的 SHA-256 调用接口，换取公开姓名和头像。
           </p>
         </div>
@@ -119,19 +119,19 @@ export function AuthorProfileLookupDialog({
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
           <div>
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-muted-foreground">
+              <label className="text-xs font-medium text-basalt-muted-foreground">
                 说明
               </label>
               <CopyButton text={brief} />
             </div>
-            <pre className="mt-1 max-h-[240px] overflow-auto whitespace-pre-wrap rounded-md border border-border bg-secondary p-3 text-xs font-mono leading-relaxed text-foreground">
+            <pre className="mt-1 max-h-[240px] overflow-auto whitespace-pre-wrap rounded-md border border-basalt-border bg-basalt-secondary p-3 text-xs font-mono leading-relaxed text-basalt-foreground">
               {brief}
             </pre>
           </div>
 
           <div>
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">
+              <span className="text-xs font-medium text-basalt-muted-foreground">
                 测试调用
               </span>
               <Button
@@ -146,30 +146,30 @@ export function AuthorProfileLookupDialog({
                 {trying ? "请求中…" : trial ? "再试一次" : "尝试请求"}
               </Button>
               {!author.hash && (
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-basalt-muted-foreground">
                   先给这位作者填邮箱才能试。
                 </span>
               )}
               {author.hash && !author.profilePublic && (
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-basalt-muted-foreground">
                   未公开时会返回空结果。
                 </span>
               )}
             </div>
 
             {tryError && (
-              <p className="text-sm text-destructive">{tryError}</p>
+              <p className="text-sm text-basalt-destructive">{tryError}</p>
             )}
 
             {trial && (
-              <div className="rounded-md border border-border bg-secondary">
-                <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
-                  <span className="text-xs font-medium text-muted-foreground">
+              <div className="rounded-md border border-basalt-border bg-basalt-secondary">
+                <div className="flex items-center justify-between border-b border-basalt-border px-3 py-1.5">
+                  <span className="text-xs font-medium text-basalt-muted-foreground">
                     HTTP {trial.status}
                   </span>
                   <CopyButton text={JSON.stringify(trial.body, null, 2)} />
                 </div>
-                <pre className="max-h-[200px] overflow-auto p-3 text-xs font-mono leading-relaxed text-foreground whitespace-pre-wrap">
+                <pre className="max-h-[200px] overflow-auto p-3 text-xs font-mono leading-relaxed text-basalt-foreground whitespace-pre-wrap">
                   {JSON.stringify(trial.body, null, 2)}
                 </pre>
               </div>
@@ -177,7 +177,7 @@ export function AuthorProfileLookupDialog({
           </div>
         </div>
 
-        <div className="flex justify-end border-t border-border px-6 py-3">
+        <div className="flex justify-end border-t border-basalt-border px-6 py-3">
           <Button variant="default" onClick={onClose}>
             关闭
           </Button>
@@ -196,7 +196,7 @@ export function ProfileLookupButton({
     <button
       type="button"
       onClick={onClick}
-      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      className="rounded-md p-1.5 text-basalt-muted-foreground transition-colors hover:bg-basalt-accent hover:text-basalt-foreground"
       title="公开资料查询"
     >
       <Hash className="h-4 w-4" />

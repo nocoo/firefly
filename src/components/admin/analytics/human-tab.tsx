@@ -45,15 +45,15 @@ function DonutTooltip({
   const item = payload[0] as (typeof payload)[number];
 
   return (
-    <div className="rounded-widget border border-border bg-popover p-2.5 shadow-sm">
+    <div className="rounded-widget border border-basalt-border bg-basalt-popover p-2.5 shadow-sm">
       <div className="flex items-center gap-2">
         <div
           className="h-3 w-3 rounded-full"
           style={{ backgroundColor: item.payload.fill }}
         />
-        <span className="text-sm font-medium text-foreground">{item.name}</span>
+        <span className="text-sm font-medium text-basalt-foreground">{item.name}</span>
       </div>
-      <div className="text-sm text-muted-foreground">
+      <div className="text-sm text-basalt-muted-foreground">
         {formatNumber(item.value)} ({(item.payload.percent * 100).toFixed(1)}%)
       </div>
     </div>
@@ -72,14 +72,14 @@ function BarTooltip({
   const name = entry.payload?.name ?? "";
 
   return (
-    <div className="rounded-widget border border-border bg-popover p-2.5 shadow-sm">
+    <div className="rounded-widget border border-basalt-border bg-basalt-popover p-2.5 shadow-sm">
       <div className="flex items-center gap-2 text-xs">
         <div
           className="h-2 w-2 rounded-full"
           style={{ backgroundColor: entry.color }}
         />
-        <span className="text-muted-foreground">{name}</span>
-        <span className="ml-auto font-medium text-foreground">
+        <span className="text-basalt-muted-foreground">{name}</span>
+        <span className="ml-auto font-medium text-basalt-foreground">
           {formatNumber(entry.value)}
         </span>
       </div>
@@ -104,8 +104,8 @@ export function HumanTab({ data }: HumanTabProps) {
   return (
     <div className="space-y-4">
       {/* Recent 24h banner */}
-      <div className="rounded-widget bg-secondary p-3 text-center">
-        <span className="text-sm text-muted-foreground">
+      <div className="rounded-widget bg-basalt-secondary p-3 text-center">
+        <span className="text-sm text-basalt-muted-foreground">
           近 24 小时:
         </span>{" "}
         <span className="text-lg font-semibold font-display tabular-nums">
@@ -187,10 +187,10 @@ export function HumanTab({ data }: HumanTabProps) {
                       className="h-2 w-2 shrink-0 rounded-full"
                       style={{ background: item.fill }}
                     />
-                    <span className="text-xs text-muted-foreground truncate">
+                    <span className="text-xs text-basalt-muted-foreground truncate">
                       {item.name}
                     </span>
-                    <span className="ml-auto text-xs font-medium text-foreground">
+                    <span className="ml-auto text-xs font-medium text-basalt-foreground">
                       {formatNumber(item.value)}
                     </span>
                   </div>
@@ -258,15 +258,15 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-widget bg-secondary p-4">
-      <h3 className="text-sm font-medium text-foreground mb-3">{title}</h3>
+    <div className="rounded-widget bg-basalt-secondary p-4">
+      <h3 className="text-sm font-medium text-basalt-foreground mb-3">{title}</h3>
       {children}
     </div>
   );
 }
 
 function NoData({ text }: { text: string }) {
-  return <p className="text-sm text-muted-foreground py-4">{text}</p>;
+  return <p className="text-sm text-basalt-muted-foreground py-4">{text}</p>;
 }
 
 function RankedTable({
@@ -289,17 +289,17 @@ function RankedTable({
   return (
     <table className="w-full text-sm">
       <thead>
-        <tr className="text-left text-xs text-muted-foreground">
+        <tr className="text-left text-xs text-basalt-muted-foreground">
           <th className="pb-2 font-medium">{nameLabel}</th>
           <th className="pb-2 font-medium text-right">{valueLabel}</th>
         </tr>
       </thead>
       <tbody>
         {rows.map((row, i) => (
-          <tr key={i} className="border-t border-border/50">
+          <tr key={i} className="border-t border-basalt-border/50">
             <td
               className={`py-2 pr-4 truncate max-w-[200px] ${
-                row.muted ? "text-muted-foreground" : ""
+                row.muted ? "text-basalt-muted-foreground" : ""
               }`}
             >
               {row.href ? (

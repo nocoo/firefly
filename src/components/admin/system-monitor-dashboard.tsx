@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Clock, Cpu, HardDrive, RefreshCw, TrendingUp } from "lucide-react";
+import { Clock, Cpu, HardDrive, RefreshCw, TrendingUp } from "@nocoo/basalt/icons";
 import { AdminPageHeader } from "./page-header";
 import { AdminSystemMonitorBodySkeleton } from "./loading-skeleton";
 import { Button } from "@nocoo/basalt/components/button";
@@ -71,7 +71,7 @@ export function SystemMonitorDashboard() {
           backHref="/admin"
           backLabel="返回管理"
         />
-        <div className="flex items-center justify-center py-20 text-muted-foreground">
+        <div className="flex items-center justify-center py-20 text-basalt-muted-foreground">
           {error ?? "No data available"}
         </div>
       </div>

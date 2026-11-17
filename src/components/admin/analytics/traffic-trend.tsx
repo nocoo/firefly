@@ -40,13 +40,13 @@ function TrafficTooltip({
   const total = payload.reduce((sum, e) => sum + e.value, 0);
 
   return (
-    <div className="rounded-widget border border-border bg-popover p-2.5 shadow-sm">
-      <p className="mb-1 text-xs font-medium text-foreground">
+    <div className="rounded-widget border border-basalt-border bg-basalt-popover p-2.5 shadow-sm">
+      <p className="mb-1 text-xs font-medium text-basalt-foreground">
         {label ? formatDateLabel(label) : ""}
       </p>
-      <div className="mb-1 border-b border-border/50 pb-1 flex items-center gap-2 text-xs">
-        <span className="text-muted-foreground">Total</span>
-        <span className="ml-auto font-medium text-foreground">
+      <div className="mb-1 border-b border-basalt-border/50 pb-1 flex items-center gap-2 text-xs">
+        <span className="text-basalt-muted-foreground">Total</span>
+        <span className="ml-auto font-medium text-basalt-foreground">
           {formatNumber(total)}
         </span>
       </div>
@@ -56,8 +56,8 @@ function TrafficTooltip({
             className="h-2 w-2 rounded-full"
             style={{ backgroundColor: entry.color }}
           />
-          <span className="text-muted-foreground">{entry.name}</span>
-          <span className="ml-auto font-medium text-foreground">
+          <span className="text-basalt-muted-foreground">{entry.name}</span>
+          <span className="ml-auto font-medium text-basalt-foreground">
             {formatNumber(entry.value)}
           </span>
         </div>
@@ -85,7 +85,7 @@ export function TrafficTrend({ daily }: TrafficTrendProps) {
   if (daily.length === 0) {
     return (
       <DataCard title="流量趋势">
-        <p className="text-sm text-muted-foreground py-4">
+        <p className="text-sm text-basalt-muted-foreground py-4">
           暂无数据
         </p>
       </DataCard>
@@ -102,7 +102,7 @@ export function TrafficTrend({ daily }: TrafficTrendProps) {
               className="h-2 w-2 rounded-full"
               style={{ background: color }}
             />
-            <span className="text-xs text-muted-foreground">{label}</span>
+            <span className="text-xs text-basalt-muted-foreground">{label}</span>
           </div>
         ))}
       </div>
@@ -202,8 +202,8 @@ function DataCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-widget bg-secondary p-4">
-      <h3 className="text-sm font-medium text-foreground mb-3">{title}</h3>
+    <div className="rounded-widget bg-basalt-secondary p-4">
+      <h3 className="text-sm font-medium text-basalt-foreground mb-3">{title}</h3>
       {children}
     </div>
   );

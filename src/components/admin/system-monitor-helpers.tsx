@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, TrendingUp } from "lucide-react";
+import { Activity, TrendingUp } from "@nocoo/basalt/icons";
 
 // ---------------------------------------------------------------------------
 // Types — shared across system monitor components
@@ -73,7 +73,7 @@ export function formatTimeAgo(timestamp: number): string {
 // Chart palette
 // ---------------------------------------------------------------------------
 
-export const CHART_COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))"];
+export const CHART_COLORS = ["hsl(var(--basalt-chart-1))", "hsl(var(--basalt-chart-2))"];
 
 // ---------------------------------------------------------------------------
 // Stat card
@@ -96,25 +96,25 @@ export function StatCard({
 }) {
   return (
     <div
-      className="rounded-widget bg-secondary p-4 animate-fade-up"
+      className="rounded-widget bg-basalt-secondary p-4 animate-fade-up"
       style={{ animationDelay: `${index * 60}ms` }}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 text-xs text-basalt-muted-foreground">
           <Icon className="h-4 w-4" />
           {label}
         </div>
         {trend && (
           <TrendingUp
-            className={`h-4 w-4 ${trend === "up" ? "text-warning" : "text-success rotate-180"}`}
+            className={`h-4 w-4 ${trend === "up" ? "text-basalt-warning" : "text-basalt-success rotate-180"}`}
           />
         )}
       </div>
-      <div className="mt-2 text-2xl font-semibold font-display text-foreground tabular-nums">
+      <div className="mt-2 text-2xl font-semibold font-display text-basalt-foreground tabular-nums">
         {value}
       </div>
       {subtext && (
-        <div className="mt-1 text-xs text-muted-foreground">{subtext}</div>
+        <div className="mt-1 text-xs text-basalt-muted-foreground">{subtext}</div>
       )}
     </div>
   );

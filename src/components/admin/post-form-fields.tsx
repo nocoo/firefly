@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { Sparkles } from "@nocoo/basalt/icons";
+import { toast } from "@nocoo/basalt/components/toast";
 import type { AiAgent, Category, Human, PostStatus, Tag } from "@/models/types";
 import type { AuthorSelection } from "./post-form-helpers";
 import {
@@ -12,8 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@nocoo/basalt/components/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
+import { InputArea } from "@nocoo/basalt/components/input-area";
+import { Input } from "@nocoo/basalt/components/input";
 
 const EMPTY_CATEGORY = "__empty__";
 const UNSELECTED_AUTHOR = "__unselected__";
@@ -57,9 +57,9 @@ export function PostExcerptField({
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <label htmlFor="excerpt" className="text-sm font-medium text-foreground">
+        <label htmlFor="excerpt" className="text-sm font-medium text-basalt-foreground">
           {"摘要"}{" "}
-          <span className="text-muted-foreground font-normal">
+          <span className="text-basalt-muted-foreground font-normal">
             {"（可选，留空则自动生成）"}
           </span>
         </label>
@@ -68,14 +68,14 @@ export function PostExcerptField({
             type="button"
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-1 text-xs text-basalt-primary hover:text-basalt-primary/80 disabled:opacity-50 transition-colors"
           >
             <Sparkles className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
             {isGenerating ? "生成中..." : "AI 生成"}
           </button>
         )}
       </div>
-      <Textarea
+      <InputArea
         id="excerpt"
         value={excerpt}
         onChange={(e) => onExcerptChange(e.target.value)}
@@ -106,7 +106,7 @@ export function PostStatusCategoryRow({
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <div className="space-y-2">
-        <label htmlFor="status" className="text-sm font-medium text-foreground">
+        <label htmlFor="status" className="text-sm font-medium text-basalt-foreground">
           {"状态"}
         </label>
         <Select
@@ -126,7 +126,7 @@ export function PostStatusCategoryRow({
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="category" className="text-sm font-medium text-foreground">
+        <label htmlFor="category" className="text-sm font-medium text-basalt-foreground">
           {"分类"}
         </label>
         <Select
@@ -172,7 +172,7 @@ export function PostAuthorField({
 
   return (
     <div className="space-y-2">
-      <label htmlFor="author" className="text-sm font-medium text-foreground">
+      <label htmlFor="author" className="text-sm font-medium text-basalt-foreground">
         {"作者"}
       </label>
       <Select
@@ -220,10 +220,10 @@ export function PostPublishDateField({
     <div className="space-y-2">
       <label
         htmlFor="published_at"
-        className="text-sm font-medium text-foreground"
+        className="text-sm font-medium text-basalt-foreground"
       >
         {"发布日期"}{" "}
-        <span className="text-muted-foreground font-normal">
+        <span className="text-basalt-muted-foreground font-normal">
           {"（留空则首次发布时自动设置）"}
         </span>
       </label>
@@ -232,7 +232,7 @@ export function PostPublishDateField({
         type="datetime-local"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full sm:w-auto rounded-widget border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        className="w-full sm:w-auto rounded-widget border border-basalt-border bg-basalt-secondary px-3 py-2 text-sm text-basalt-foreground focus:outline-none focus:ring-2 focus:ring-basalt-ring"
       />
     </div>
   );
@@ -253,7 +253,7 @@ export function PostTagsField({
 }) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-foreground">{"标签"}</label>
+      <label className="text-sm font-medium text-basalt-foreground">{"标签"}</label>
       <div className="flex flex-wrap gap-2">
         {tags.map((tag) => (
           <button
@@ -262,15 +262,15 @@ export function PostTagsField({
             onClick={() => onToggleTag(tag.id)}
             className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               selectedTags.includes(tag.id)
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-muted-foreground hover:bg-accent hover:text-foreground"
+                ? "bg-basalt-primary text-basalt-primary-foreground"
+                : "bg-basalt-secondary text-basalt-muted-foreground hover:bg-basalt-accent hover:text-basalt-foreground"
             }`}
           >
             {tag.name}
           </button>
         ))}
         {tags.length === 0 && (
-          <p className="text-sm text-muted-foreground">{"暂无标签"}</p>
+          <p className="text-sm text-basalt-muted-foreground">{"暂无标签"}</p>
         )}
       </div>
     </div>
@@ -292,10 +292,10 @@ export function PostFeaturedImageField({
     <div className="space-y-2">
       <label
         htmlFor="featured_image"
-        className="text-sm font-medium text-foreground"
+        className="text-sm font-medium text-basalt-foreground"
       >
         {"封面图片 URL"}{" "}
-        <span className="text-muted-foreground font-normal">{"（可选）"}</span>
+        <span className="text-basalt-muted-foreground font-normal">{"（可选）"}</span>
       </label>
       <Input
         id="featured_image"

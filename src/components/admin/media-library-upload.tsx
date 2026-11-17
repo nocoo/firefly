@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@nocoo/basalt/components/toast";
 import type { MediaWithUrl } from "./media-library-helpers";
 
 export type UploadStatus = "pending" | "uploading" | "success" | "error";

@@ -19,7 +19,7 @@ import {
   Activity,
   Users,
   UserRound,
-} from "lucide-react";
+} from "@nocoo/basalt/icons";
 import {
   Sidebar,
   SidebarHeader,

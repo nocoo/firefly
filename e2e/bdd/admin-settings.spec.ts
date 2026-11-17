@@ -136,22 +136,11 @@ test.describe("Feature: Admin general settings page", () => {
     await expect(page.getByText("正文字体风格")).toBeVisible({
       timeout: 10_000,
     });
-    // SegmentedControl renders each option as a <button> with the localized
-    // label as its accessible name (src/components/ui/segmented-control.tsx:35).
-    // `exact: true` on 衬线 / 无衬线 — without it 衬线 matches both buttons
-    // (strict-mode violation).
-    await expect(
-      page.getByRole("button", { name: "苹方", exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "经典", exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "衬线", exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "无衬线", exact: true }),
-    ).toBeVisible();
+    for (const name of ["苹方", "经典", "衬线", "无衬线"]) {
+      await expect(
+        page.getByRole("radio", { name, exact: true }),
+      ).toBeVisible();
+    }
   });
 
   test("Given /admin/settings renders, When I view it, Then the 保存设置 button is visible", async ({

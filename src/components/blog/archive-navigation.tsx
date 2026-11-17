@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronsDown, ChevronsUp } from "lucide-react";
+import { ChevronsDown, ChevronsUp } from "@/components/icons/basalt";
 import type { MonthlyArchive } from "@/data/entities/post";
 
 interface ArchiveEntry {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity } from "lucide-react";
+import { Activity } from "@nocoo/basalt/icons";
 import {
   Area,
   AreaChart,
@@ -40,9 +40,9 @@ export function MemoryTrendChart({
   }));
 
   return (
-    <div className="rounded-widget bg-secondary">
-      <div className="border-b border-border/50 px-6 py-4">
-        <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
+    <div className="rounded-widget bg-basalt-secondary">
+      <div className="border-b border-basalt-border/50 px-6 py-4">
+        <h3 className="flex items-center gap-2 text-sm font-medium text-basalt-foreground">
           <Activity className="h-4 w-4" />
           内存使用趋势（48小时）
         </h3>
@@ -63,7 +63,7 @@ export function MemoryTrendChart({
                       <stop offset="95%" stopColor={CHART_COLORS[1]} stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-basalt-muted" />
                   <XAxis
                     dataKey="time"
                     tick={{ fontSize: 10 }}
@@ -80,8 +80,8 @@ export function MemoryTrendChart({
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
+                      backgroundColor: "hsl(var(--basalt-card))",
+                      border: "1px solid hsl(var(--basalt-border))",
                       borderRadius: "6px",
                       fontSize: "12px",
                     }}
@@ -110,7 +110,7 @@ export function MemoryTrendChart({
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-            <div className="mt-4 flex justify-center gap-6 text-xs text-muted-foreground">
+            <div className="mt-4 flex justify-center gap-6 text-xs text-basalt-muted-foreground">
               <span className="flex items-center gap-2">
                 <span
                   className="h-3 w-3 rounded-full"
@@ -128,7 +128,7 @@ export function MemoryTrendChart({
             </div>
           </>
         ) : (
-          <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-64 items-center justify-center text-sm text-basalt-muted-foreground">
             {`已采集 ${sampleCount} 个样本`}
           </div>
         )}

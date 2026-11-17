@@ -1,7 +1,5 @@
-@source "../../node_modules/@nocoo/basalt/dist/**/*.{js,jsx,ts,tsx}";
-@import "@nocoo/basalt/styles/tailwind";
+@import "@nocoo/basalt/styles";
 @import "tailwindcss";
-@import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -38,7 +36,7 @@
 }
 
 /* Modular partials — see ./styles/ for each section. */
-@import "./styles/tokens.css";
+@import "./styles/app-tokens.css";
 @import "./styles/utilities.css";
 @import "./styles/prose.css";
 @import "./styles/blog-shell.css";
@@ -59,19 +57,19 @@
    * during client navigations; CSS smooth lets layout shifts cancel the
    * animation mid-way so the page never actually reaches the top. */
   * {
-    @apply border-border;
+    @apply border-basalt-border;
   }
   *:focus-visible {
-    outline: 2px solid hsl(var(--ring));
+    outline: 2px solid hsl(var(--basalt-ring));
     outline-offset: 2px;
   }
-  /* On blog surfaces, the admin --ring (bright primary blue) clashes with
+  /* On blog surfaces, the admin focus ring (bright primary blue) clashes with
    * the cream palette. Match the focus ring to the blog accent instead. */
   .blog-shell *:focus-visible {
     outline-color: var(--blog-accent);
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-basalt-background text-basalt-foreground;
     font-family: var(--ff-sans);
     font-size: 16px;
   }

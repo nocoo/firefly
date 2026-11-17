@@ -1,4 +1,4 @@
-import { Link as LinkIcon } from "lucide-react";
+import { Link as LinkIcon } from "@/components/icons/basalt";
 import { getDomainBrand, getDisplayDomain } from "@/lib/domain-brand";
 
 interface ReferenceCardProps {

@@ -2,7 +2,7 @@
 
 import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X } from "@nocoo/basalt/icons";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -69,7 +69,7 @@ export function ImageLightbox({
         className={
           "relative flex max-h-[90vh] max-w-[90vw] overflow-hidden rounded-card shadow-2xl" +
           (hasPanel
-            ? " flex-col bg-card md:flex-row"
+            ? " flex-col bg-basalt-card md:flex-row"
             : " items-center justify-center")
         }
         onClick={(e) => e.stopPropagation()}
@@ -101,7 +101,7 @@ export function ImageLightbox({
 
         {/* Optional side panel */}
         {children && (
-          <div className="flex w-full flex-col gap-4 border-t border-border p-5 md:w-72 md:border-l md:border-t-0">
+          <div className="flex w-full flex-col gap-4 border-t border-basalt-border p-5 md:w-72 md:border-l md:border-t-0">
             {children}
           </div>
         )}

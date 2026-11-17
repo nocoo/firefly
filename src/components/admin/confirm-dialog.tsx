@@ -9,7 +9,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@nocoo/basalt/components/alert-dialog";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -62,7 +62,7 @@ export function ConfirmDialog({
             onClick={onConfirm}
             className={
               destructive
-                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                ? "bg-basalt-destructive text-basalt-destructive-foreground hover:bg-basalt-destructive/90"
                 : undefined
             }
           >

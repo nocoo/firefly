@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { FileX } from "lucide-react";
+import { FileX } from "@nocoo/basalt/icons";
 import type { PostWithCategory } from "@/models/types";
 import { PostGridCard } from "@/components/admin/post-grid-card";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@/components/empty-state";
 
 const GRID_PAGE_SIZE = 36;
 
@@ -103,13 +103,13 @@ export function AdminPostsGridView({
       <div ref={sentinelRef} className="h-1" />
 
       {loading && (
-        <div className="py-4 text-center text-sm text-muted-foreground">
+        <div className="py-4 text-center text-sm text-basalt-muted-foreground">
           加载中...
         </div>
       )}
 
       {!hasMore && posts.length > 0 && (
-        <div className="py-4 text-center text-sm text-muted-foreground">
+        <div className="py-4 text-center text-sm text-basalt-muted-foreground">
           没有更多文章
         </div>
       )}

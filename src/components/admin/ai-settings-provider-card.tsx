@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@nocoo/basalt/components/select";
-import { Input } from "@/components/ui/input";
+import { Input } from "@nocoo/basalt/components/input";
 
 const EMPTY = "__empty__";
 import type { AiProvider } from "@/services/ai";
@@ -35,12 +35,12 @@ export function AiSettingsProviderCard({
   const selectedProvider = providers.find((p) => p.id === provider);
 
   return (
-    <div className="rounded-card bg-secondary p-5 md:p-6 space-y-5">
-      <h2 className="text-base font-medium text-foreground">服务商 & 模型</h2>
+    <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-5">
+      <h2 className="text-base font-medium text-basalt-foreground">服务商 & 模型</h2>
 
       <div className="space-y-2">
-        <label htmlFor="ai-provider" className="text-sm font-medium text-foreground">AI 服务商</label>
-        <p className="text-xs text-muted-foreground">
+        <label htmlFor="ai-provider" className="text-sm font-medium text-basalt-foreground">AI 服务商</label>
+        <p className="text-xs text-basalt-muted-foreground">
           选择 AI 服务商。内置服务商会自动填充 URL 和协议。
         </p>
         <Select
@@ -65,8 +65,8 @@ export function AiSettingsProviderCard({
 
       {provider && (
         <div className="space-y-2">
-          <label htmlFor="ai-model" className="text-sm font-medium text-foreground">模型</label>
-          <p className="text-xs text-muted-foreground">
+          <label htmlFor="ai-model" className="text-sm font-medium text-basalt-foreground">模型</label>
+          <p className="text-xs text-basalt-muted-foreground">
             留空则使用服务商的默认模型。
             {selectedProvider?.defaultModel && (
               <> ({selectedProvider.defaultModel})</>

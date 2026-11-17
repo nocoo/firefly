@@ -9,7 +9,7 @@
 // ---------------------------------------------------------------------------
 
 import { useState, useEffect } from "react";
-import { ImageLightbox } from "@/components/ui/image-lightbox";
+import { ImageLightbox } from "@/components/image-lightbox";
 
 interface LightboxState {
   src: string;

@@ -2,13 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Upload, User, X } from "lucide-react";
-import { toast } from "sonner";
+import { Loader2, Upload, User, X } from "@nocoo/basalt/icons";
+import { toast } from "@nocoo/basalt/components/toast";
 import type { Human } from "@/models/types";
 import { Button } from "@nocoo/basalt/components/button";
 import { AdminPageHeader } from "./page-header";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@nocoo/basalt/components/input";
+import { InputArea } from "@nocoo/basalt/components/input-area";
 
 function slugify(name: string): string {
   return name
@@ -146,7 +146,7 @@ export function AuthorForm({
               className="h-16 w-16 rounded-full object-cover"
             />
           ) : (
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-basalt-secondary text-basalt-muted-foreground">
               <User className="h-6 w-6" />
             </span>
           )}
@@ -203,7 +203,7 @@ export function AuthorForm({
         </div>
         <div className="space-y-1">
           <label className="text-sm font-medium">描述</label>
-          <Textarea
+          <InputArea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}

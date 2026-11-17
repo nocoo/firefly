@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { FormField } from "@/components/ui/form-field";
+import { Input } from "@nocoo/basalt/components/input";
+import { Button } from "@nocoo/basalt/components/button";
+import { Field } from "@nocoo/basalt/components/field";
 import { validateSlug, formatSlugError } from "@/lib/slug-validation";
 
 export interface TaxonomyFormState {
@@ -50,26 +50,28 @@ export function TaxonomyForm({
   };
 
   return (
-    <div className="rounded-widget border border-border bg-secondary/50 p-4 space-y-3">
-      <h3 className="text-sm font-medium text-foreground">
+    <div className="rounded-widget border border-basalt-border bg-basalt-secondary/50 p-4 space-y-3">
+      <h3 className="text-sm font-medium text-basalt-foreground">
         {editing ? `编辑${label}` : `新建${label}`}
       </h3>
       <div className="grid gap-3 sm:grid-cols-2">
-        <FormField id="taxonomy-name" label="名称" className="space-y-1">
+        <Field htmlFor="taxonomy-name" label="名称" className="space-y-1">
           <Input
+            id="taxonomy-name"
             type="text"
             value={state.name}
             onChange={(e) => onChange({ ...state, name: e.target.value })}
             placeholder="名称"
           />
-        </FormField>
-        <FormField
-          id="taxonomy-slug"
+        </Field>
+        <Field
+          htmlFor="taxonomy-slug"
           label="别名"
           className="space-y-1"
           error={slugError}
         >
           <Input
+            id="taxonomy-slug"
             type="text"
             value={state.slug}
             onChange={(e) => {
@@ -81,20 +83,21 @@ export function TaxonomyForm({
             onBlur={checkSlug}
             placeholder="别名"
           />
-        </FormField>
+        </Field>
       </div>
-      <FormField
-        id="taxonomy-description"
+      <Field
+        htmlFor="taxonomy-description"
         label="描述（可选）"
         className="space-y-1"
       >
         <Input
+          id="taxonomy-description"
           type="text"
           value={state.description}
           onChange={(e) => onChange({ ...state, description: e.target.value })}
           placeholder="描述（可选）"
         />
-      </FormField>
+      </Field>
       <div className="flex gap-2">
         <Button onClick={onSave} disabled={saving || !!slugError} size="sm">
           {saving ? "保存中..." : "保存"}
