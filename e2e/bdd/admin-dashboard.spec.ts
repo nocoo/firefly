@@ -106,7 +106,7 @@ test("Given the desktop sidebar, When collapse and expansion settle, Then the br
   await expect.poll(async () => Math.abs(await logo.evaluate((node) => node.getBoundingClientRect().x) - expandedX)).toBeLessThan(1);
 
   await page.getByRole("button", { name: "展开侧边栏", exact: true }).click();
-  await expect.poll(() => sidebar.evaluate((node) => node.getBoundingClientRect().width)).toBe(260);
+  await expect.poll(() => sidebar.evaluate((node) => node.getBoundingClientRect().width)).toBe(240);
   await expect.poll(async () => Math.abs(await logo.evaluate((node) => node.getBoundingClientRect().x) - expandedX)).toBeLessThan(1);
 });
 
@@ -124,7 +124,7 @@ for (const width of [390, 700]) {
     await expect(drawer).toHaveCSS("padding", "0px");
     await expect(drawer.getByRole("button", { name: /搜索/ })).toBeVisible();
     await expect.poll(() => drawer.evaluate((node) => node.scrollWidth - node.clientWidth)).toBe(0);
-    await expect(drawer.getByRole("complementary")).toHaveCSS("width", "260px");
+    await expect(drawer.getByRole("complementary")).toHaveCSS("width", "240px");
 
     await page.keyboard.press("Escape");
     await expect(drawer).toBeHidden();
