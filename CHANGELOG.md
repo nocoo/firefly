@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.19.10 (2026-11-18)
+
+- chore: bump @nocoo/basalt to 3.5.1
+
 ## v2.19.8 (2026-11-01)
 
 - feat(cache): allow Cloudflare edge caching for anonymous public HTML and read APIs
