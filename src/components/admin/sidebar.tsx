@@ -57,13 +57,19 @@ interface NavGroup {
   items: NavItem[];
 }
 
+const VISIT_SITE_ITEM: NavItem = {
+  title: "访问站点",
+  href: "/",
+  icon: ExternalLink,
+  external: true,
+};
+
 const NAV_GROUPS: NavGroup[] = [
   {
     label: "概览",
     items: [
       { title: "仪表盘", href: "/admin", icon: LayoutDashboard },
       { title: "系统监控", href: "/admin/system", icon: Activity },
-      { title: "访问站点", href: "/", icon: ExternalLink, external: true },
     ],
   },
   {
@@ -120,6 +126,7 @@ function NavItemButton({
     <SidebarItem
       active={active}
       aria-label={item.title}
+      className={item.external ? "bg-basalt-primary text-basalt-primary-foreground" : ""}
       onClick={(event) => onNavigate(item, event)}
       onAuxClick={(event) => onNavigate(item, event)}
     >
@@ -127,7 +134,7 @@ function NavItemButton({
       <span className="flex-1 truncate text-left">{item.title}</span>
       {item.external ? (
         <ExternalLink
-          className="h-3 w-3 shrink-0 text-basalt-muted-foreground"
+          className="h-3 w-3 shrink-0 text-basalt-primary-foreground/80"
           strokeWidth={1.5}
           aria-hidden="true"
         />
@@ -174,6 +181,7 @@ function CollapsedNavItem({
         <SidebarIconItem
           active={active}
           aria-label={item.title}
+          className={item.external ? "bg-basalt-primary text-basalt-primary-foreground" : ""}
           onClick={(event) => onNavigate(item, event)}
           onAuxClick={(event) => onNavigate(item, event)}
         >
@@ -201,6 +209,11 @@ function AdminSidebarNav({
   if (railCollapsed) {
     return (
       <SidebarNav aria-label="管理导航">
+        <CollapsedNavItem
+          item={VISIT_SITE_ITEM}
+          active={false}
+          onNavigate={onNavigate}
+        />
         <SidebarSearch shortcut="⌘K" onClick={() => openSearch(true)} aria-label="搜索 (⌘K)">
           搜索
         </SidebarSearch>
@@ -218,6 +231,7 @@ function AdminSidebarNav({
 
   return (
     <SidebarNav aria-label="管理导航">
+      <NavItemButton item={VISIT_SITE_ITEM} active={false} onNavigate={onNavigate} />
       <SidebarSearch shortcut="⌘K" onClick={() => openSearch(true)}>
         搜索
       </SidebarSearch>
