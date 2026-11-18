@@ -46,7 +46,7 @@ export function CopyButton({
 
 function CodeBlock({ code, lang }: { code: string; lang?: string }) {
   return (
-    <div className="group relative rounded-widget bg-basalt-secondary border border-basalt-border">
+    <div className="group relative rounded-widget bg-basalt-secondary ring-1 ring-basalt-border/80 shadow-basalt-card">
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-basalt-border">
         <span className="text-2xs font-medium uppercase tracking-wider text-basalt-muted-foreground">
           {lang ?? "config"}

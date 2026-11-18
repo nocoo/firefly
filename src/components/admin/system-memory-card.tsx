@@ -109,7 +109,7 @@ export function SystemMemoryCard() {
 
   if (loading) {
     return (
-      <div className="rounded-widget bg-basalt-secondary p-6">
+      <div className="rounded-widget bg-basalt-secondary p-6 ring-1 ring-basalt-border/80 shadow-basalt-card">
         <div className="animate-pulse space-y-4">
           <div className="h-4 w-32 rounded bg-basalt-muted" />
           <div className="h-32 rounded bg-basalt-muted" />
@@ -120,7 +120,7 @@ export function SystemMemoryCard() {
 
   if (error || !stats) {
     return (
-      <div className="rounded-widget bg-basalt-secondary p-6">
+      <div className="rounded-widget bg-basalt-secondary p-6 ring-1 ring-basalt-border/80 shadow-basalt-card">
         <p className="text-sm text-basalt-muted-foreground">{error ?? "No data"}</p>
       </div>
     );
@@ -148,7 +148,7 @@ export function SystemMemoryCard() {
     : 0;
 
   return (
-    <div className="rounded-widget bg-basalt-secondary">
+    <div className="rounded-widget bg-basalt-secondary ring-1 ring-basalt-border/80 shadow-basalt-card">
       {/* Header */}
       <div className="border-b border-basalt-border/50 px-4 py-3">
         <h3 className="flex items-center gap-2 text-sm font-medium text-basalt-foreground">

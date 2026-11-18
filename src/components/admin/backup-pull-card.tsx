@@ -40,7 +40,7 @@ export function BackupPullCard({ initialPullKey }: { initialPullKey: string | nu
       : "/api/backup/pull";
 
   return (
-    <div className="rounded-card bg-basalt-secondary p-6 space-y-6">
+    <div className="rounded-card bg-basalt-secondary p-6 space-y-6 ring-1 ring-basalt-border/80 shadow-basalt-card">
       <div className="flex items-center gap-2">
         <KeyRound className="h-5 w-5 text-yellow-500" />
         <h2 className="text-lg font-medium text-basalt-foreground">拉取 Webhook</h2>

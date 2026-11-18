@@ -232,7 +232,7 @@ export function BackupPushCard({ initialConfig }: BackupPushCardProps) {
   };
 
   return (
-    <div className="rounded-card bg-basalt-secondary p-6 space-y-6">
+    <div className="rounded-card bg-basalt-secondary p-6 space-y-6 ring-1 ring-basalt-border/80 shadow-basalt-card">
       <div className="flex items-center gap-2">
         <CloudUpload className="h-5 w-5 text-purple-500" />
         <h2 className="text-lg font-medium text-basalt-foreground">远程备份</h2>

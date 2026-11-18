@@ -323,7 +323,7 @@ function ContentStatCard({
 }) {
   return (
     <div
-      className="flex items-center gap-3 rounded-widget bg-basalt-secondary p-4 animate-fade-up"
+      className="flex items-center gap-3 rounded-widget bg-basalt-secondary p-4 ring-1 ring-basalt-border/80 shadow-basalt-card animate-fade-up"
       style={{ animationDelay: `${index * 60}ms` }}
     >
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-basalt-background">

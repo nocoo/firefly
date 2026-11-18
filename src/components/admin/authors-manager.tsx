@@ -92,7 +92,7 @@ export function AuthorsManager({
         }
       />
 
-      <div className="overflow-x-auto rounded-card bg-basalt-secondary p-1">
+      <div className="overflow-x-auto rounded-card bg-basalt-secondary p-1 ring-1 ring-basalt-border/80 shadow-basalt-card">
         <table className="w-full">
           <thead>
             <tr className="border-b border-basalt-border">

@@ -96,7 +96,7 @@ export function StatCard({
 }) {
   return (
     <div
-      className="rounded-widget bg-basalt-secondary p-4 animate-fade-up"
+      className="rounded-widget bg-basalt-secondary p-4 ring-1 ring-basalt-border/80 shadow-basalt-card animate-fade-up"
       style={{ animationDelay: `${index * 60}ms` }}
     >
       <div className="flex items-center justify-between">

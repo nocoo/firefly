@@ -157,7 +157,7 @@ export function AiAgentForm({
         backLabel="返回 AI 代理"
       />
 
-      <div className="rounded-lg bg-basalt-secondary p-6">
+      <div className="rounded-lg bg-basalt-secondary p-6 ring-1 ring-basalt-border/80 shadow-basalt-card">
         <div className="grid gap-6 md:grid-cols-2">
           {/* Left column: Basic info */}
           <div className="space-y-4">

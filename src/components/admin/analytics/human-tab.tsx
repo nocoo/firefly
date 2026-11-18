@@ -104,7 +104,7 @@ export function HumanTab({ data }: HumanTabProps) {
   return (
     <div className="space-y-4">
       {/* Recent 24h banner */}
-      <div className="rounded-widget bg-basalt-secondary p-3 text-center">
+      <div className="rounded-widget bg-basalt-secondary p-3 text-center ring-1 ring-basalt-border/80 shadow-basalt-card">
         <span className="text-sm text-basalt-muted-foreground">
           近 24 小时:
         </span>{" "}
@@ -258,7 +258,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-widget bg-basalt-secondary p-4">
+    <div className="rounded-widget bg-basalt-secondary p-4 ring-1 ring-basalt-border/80 shadow-basalt-card">
       <h3 className="text-sm font-medium text-basalt-foreground mb-3">{title}</h3>
       {children}
     </div>

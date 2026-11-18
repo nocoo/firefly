@@ -101,7 +101,7 @@ export function AiAgentsTable({
   onDelete: (agent: AgentWithAvatarUrl) => void;
 }) {
   return (
-    <div className="rounded-card bg-basalt-secondary p-1 overflow-x-auto">
+    <div className="rounded-card bg-basalt-secondary p-1 overflow-x-auto ring-1 ring-basalt-border/80 shadow-basalt-card">
       <table className="w-full">
         <thead>
           <tr className="border-b border-basalt-border">

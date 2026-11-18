@@ -122,7 +122,7 @@ export function AiAgentsManager({
       />
 
       {agents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-card bg-basalt-secondary py-12">
+        <div className="flex flex-col items-center justify-center rounded-card bg-basalt-secondary py-12 ring-1 ring-basalt-border/80 shadow-basalt-card">
           <Users className="h-12 w-12 text-basalt-muted-foreground/50" />
           <p className="mt-4 text-sm text-basalt-muted-foreground">
             还没有 AI 代理。创建一个以允许 AI 发布内容。

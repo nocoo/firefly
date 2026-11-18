@@ -29,7 +29,7 @@ export function AiSettingsCustomCard({
   onAuthTypeChange: (next: AuthType | "") => void;
 }) {
   return (
-    <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-5">
+    <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-5 ring-1 ring-basalt-border/80 shadow-basalt-card">
       <h2 className="text-base font-medium text-basalt-foreground">自定义服务商</h2>
 
       <div className="space-y-2">

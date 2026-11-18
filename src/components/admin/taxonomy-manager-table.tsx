@@ -142,7 +142,7 @@ export function TaxonomyTable({
   const emptyMessage = type === "category" ? "暂无分类" : "暂无标签";
 
   return (
-    <div className="overflow-x-auto rounded-widget border border-basalt-border bg-basalt-secondary">
+    <div className="overflow-x-auto rounded-widget bg-basalt-secondary ring-1 ring-basalt-border/80 shadow-basalt-card">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-basalt-border bg-basalt-secondary/50">

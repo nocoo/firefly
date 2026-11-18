@@ -24,32 +24,32 @@ const v = (token: string) => `hsl(var(--${token}))`;
 // ---------------------------------------------------------------------------
 
 /** Semantic: neutral gray for axis text, grid lines, tick labels */
-export const chartAxis = v("chart-axis");
+export const chartAxis = v("basalt-chart-axis");
 
 export const SOURCE_COLORS: Record<SourceType, string> = {
-  human: v("chart-1"),
-  search: v("chart-2"),
-  ai: v("chart-5"),
-  other: v("chart-4"),
+  human: v("basalt-chart-1"),
+  search: v("basalt-chart-2"),
+  ai: v("basalt-chart-5"),
+  other: v("basalt-chart-4"),
 };
 
 export const CHART_COLORS = [
-  v("chart-1"),
-  v("chart-2"),
-  v("chart-3"),
-  v("chart-4"),
-  v("chart-5"),
-  v("chart-6"),
-  v("chart-7"),
-  v("chart-8"),
+  v("basalt-chart-1"),
+  v("basalt-chart-2"),
+  v("basalt-chart-3"),
+  v("basalt-chart-4"),
+  v("basalt-chart-5"),
+  v("basalt-chart-6"),
+  v("basalt-chart-7"),
+  v("basalt-chart-8"),
 ];
 
 export const PIE_COLORS = [
-  v("chart-1"),
-  v("chart-2"),
-  v("chart-3"),
-  v("chart-4"),
-  v("chart-5"),
+  v("basalt-chart-1"),
+  v("basalt-chart-2"),
+  v("basalt-chart-3"),
+  v("basalt-chart-4"),
+  v("basalt-chart-5"),
 ];
 
 // ---------------------------------------------------------------------------

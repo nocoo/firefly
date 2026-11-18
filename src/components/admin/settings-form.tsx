@@ -89,7 +89,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
         backLabel="返回管理"
       />
       {/* Card 1: Display Settings */}
-      <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-5">
+      <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-5 ring-1 ring-basalt-border/80 shadow-basalt-card">
         <h2 className="text-base font-medium text-basalt-foreground">
           显示设置
         </h2>
@@ -134,7 +134,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
       </div>
 
       {/* Card 2: Content Settings */}
-      <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-5">
+      <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-5 ring-1 ring-basalt-border/80 shadow-basalt-card">
         <h2 className="text-base font-medium text-basalt-foreground">
           内容设置
         </h2>
@@ -159,7 +159,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
       </div>
 
       {/* Card 3: Internal URLs */}
-      <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-4">
+      <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-4 ring-1 ring-basalt-border/80 shadow-basalt-card">
         <div>
           <h2 className="text-base font-medium text-basalt-foreground">
             内部功能链接
