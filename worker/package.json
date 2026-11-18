@@ -1,6 +1,6 @@
 {
   "name": "firefly-worker",
-  "version": "2.19.13",
+  "version": "2.19.14",
   "private": true,
   "scripts": {
     "dev": "wrangler dev",

@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.19.14 (2026-11-18)
+
+- fix(admin): refine sidebar visit-site placement and drop empty partition
+
+
 ## v2.19.13 (2026-11-18)
 
 - fix: restore sidebar visit site action
