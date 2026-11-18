@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.19.13 (2026-11-18)
+
+- fix: restore sidebar visit site action
+
+
 ## v2.19.12 (2026-11-18)
 
 - fix(ui): restore basalt chart tokens (`--basalt-chart-*`) and unify admin card shadows
