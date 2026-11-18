@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.19.12 (2026-11-18)
+
+- fix(ui): restore basalt chart tokens (`--basalt-chart-*`) and unify admin card shadows
+
 ## v2.19.11 (2026-11-17)
 
 - refactor: migrate ui to basalt 3.5
