@@ -28,7 +28,6 @@ import {
   SidebarItem,
   SidebarIconItem,
   SidebarNav,
-  SidebarPartition,
   SidebarGroup,
   SidebarFooter,
   SidebarUser,
@@ -126,7 +125,7 @@ function NavItemButton({
     <SidebarItem
       active={active}
       aria-label={item.title}
-      className={item.external ? "bg-basalt-primary text-basalt-primary-foreground" : ""}
+      className={item.external ? "my-basalt-space-lg bg-basalt-primary text-basalt-primary-foreground" : ""}
       onClick={(event) => onNavigate(item, event)}
       onAuxClick={(event) => onNavigate(item, event)}
     >
@@ -181,7 +180,7 @@ function CollapsedNavItem({
         <SidebarIconItem
           active={active}
           aria-label={item.title}
-          className={item.external ? "bg-basalt-primary text-basalt-primary-foreground" : ""}
+          className={item.external ? "my-basalt-space-lg bg-basalt-primary text-basalt-primary-foreground" : ""}
           onClick={(event) => onNavigate(item, event)}
           onAuxClick={(event) => onNavigate(item, event)}
         >
@@ -209,14 +208,14 @@ function AdminSidebarNav({
   if (railCollapsed) {
     return (
       <SidebarNav aria-label="管理导航">
+        <SidebarSearch shortcut="⌘K" onClick={() => openSearch(true)} aria-label="搜索 (⌘K)">
+          搜索
+        </SidebarSearch>
         <CollapsedNavItem
           item={VISIT_SITE_ITEM}
           active={false}
           onNavigate={onNavigate}
         />
-        <SidebarSearch shortcut="⌘K" onClick={() => openSearch(true)} aria-label="搜索 (⌘K)">
-          搜索
-        </SidebarSearch>
         {ALL_NAV_ITEMS.map((item) => (
           <CollapsedNavItem
             key={item.href}
@@ -231,11 +230,10 @@ function AdminSidebarNav({
 
   return (
     <SidebarNav aria-label="管理导航">
-      <NavItemButton item={VISIT_SITE_ITEM} active={false} onNavigate={onNavigate} />
       <SidebarSearch shortcut="⌘K" onClick={() => openSearch(true)}>
         搜索
       </SidebarSearch>
-      <SidebarPartition>管理</SidebarPartition>
+      <NavItemButton item={VISIT_SITE_ITEM} active={false} onNavigate={onNavigate} />
       {NAV_GROUPS.map((group) => (
         <NavGroupSection
           key={group.label}
