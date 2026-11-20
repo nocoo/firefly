@@ -274,8 +274,9 @@ needed. This bounded configuration inventory is not proof that no unknown
 external client ever used the public alias.
 
 Removed the duplicate hostname from Caddy, its proxied CNAME, and the obsolete
-`_railway-verify.origin.lizheng.blog` TXT. The candidate Caddy configuration passed
-validation, then `SIGUSR1` reloaded the file-backed configuration. The container's
+`_railway-verify.origin.lizheng.blog` TXT. For this file-backed Caddy (`caddy run`,
+no `--resume`, admin API disabled), validate the candidate configuration first,
+then use `SIGUSR1` to reload without restarting the shared proxy; the container's
 start time did not change. Loaded-config inspection confirmed the alias was gone;
 before DNS removal, its requests returned an empty unmatched-host response rather
 than Firefly content. All other DNS records compared unchanged. The shared Origin

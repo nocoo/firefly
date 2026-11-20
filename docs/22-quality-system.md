@@ -105,6 +105,11 @@ Native mode: `.github/workflows/ci.yml` is a single caller job (key `quality`, n
   job outside the slots (`Container image E2E`), and fails when an `impl` slot did
   not succeed, an `na`/`todo` slot actually ran, a job reports no `tested-sha`,
   the reported SHAs differ, or the declaration itself is malformed.
+- `Container image E2E` (`container-image-e2e` in `quality-slots.yml`) runs
+  `bun scripts/run-e2e.ts --api-only --container-image=<image>`. This Linux-only
+  lane uses host networking and the same per-run marked D1/R2 isolation; it never
+  pulls an unspecified image, carries no slot ID, is aggregated by `Z1: Gate`,
+  and must not run alongside another E2E lane or a development Worker.
 - L3 uploads `.wrangler/e2e-logs/`, L4 uploads `test-results/` and the logs with
   `if: always()` and `if-no-files-found: ignore`, retention 7 days.
 - Branch protection on `main` requires exactly `quality / Z1: Gate`. Admin bypass
