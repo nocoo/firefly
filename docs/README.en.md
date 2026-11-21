@@ -96,7 +96,7 @@ The first two commands run website and Worker unit tests. The API runner starts 
 
 ```bash
 bunx playwright install chromium
-bun run test:e2e:bdd
+bun run test:e2e:browser
 ```
 
 The browser runner uses ports 8787 and 27028. Both end-to-end runners share and recreate `worker/.wrangler/e2e-d1` and `.wrangler/e2e-r2`; run them sequentially, with port 8787 available before starting. The runner injects a test session. Real Google sign-in, external model calls, and production backup delivery are outside these suites' validation scope.
