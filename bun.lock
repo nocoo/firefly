@@ -15,7 +15,7 @@
         "cheerio": "1.2.0",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
-        "juice": "12.2.3",
+        "juice": "12.2.6",
         "marked": "18.2.0",
         "next": "16.4.6",
         "next-auth": "5.0.0-beta.32",
@@ -631,7 +631,7 @@
 
     "cmdk": ["cmdk@1.1.1", "", { "dependencies": { "@radix-ui/react-compose-refs": "^1.1.1", "@radix-ui/react-dialog": "^1.1.6", "@radix-ui/react-id": "^1.1.0", "@radix-ui/react-primitive": "^2.0.2" }, "peerDependencies": { "react": "^18 || ^19 || ^19.0.0-rc", "react-dom": "^18 || ^19 || ^19.0.0-rc" } }, "sha512-Vsv7kFaXm+ptHDMZ7izaRsP70GgrW9NBNGswt9OZaVBLlE0SNpDq8eu/VGXyF9r7M0azK3Wy7OlYXsuyYLFzHg=="],
 
-    "commander": ["commander@14.0.3", "", {}, "sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw=="],
+    "commander": ["commander@15.1.0", "", {}, "sha512-cgnQ88TRrWcC7pVq46RzJVRMktu3W2RcbnoidnfBsl1bmDCBwJS/udcIZpKoCrbAYYaCqsz1yZCVIgbIaU3ddQ=="],
 
     "content-disposition": ["content-disposition@1.1.0", "", {}, "sha512-5jRCH9Z/+DRP7rkvY83B+yGIGX96OYdJmzngqnw2SBSxqCFPd0w2km3s5iawpGX8krnwSGmF0FW5Nhr0Hfai3g=="],
 
@@ -803,7 +803,7 @@
 
     "json-schema-typed": ["json-schema-typed@8.0.2", "", {}, "sha512-fQhoXdcvc3V28x7C7BMs4P5+kNlgUURe2jmUT1T//oBRMDrqy1QPelJimwZGo7Hg9VPV3EQV5Bnq4hbFy2vetA=="],
 
-    "juice": ["juice@12.2.3", "", { "dependencies": { "cheerio": "1.2.0", "commander": "^14.0.3", "entities": "^9.0.0", "postcss": "^8.5.0", "postcss-nesting": "^14.0.0", "postcss-safe-parser": "^7.0.1", "postcss-selector-parser": "^7.1.0", "web-resource-inliner": "^8.0.0" }, "bin": { "juice": "bin/juice" } }, "sha512-2qsvEpZINCYmfd8hwcJZOpoZRnqfX8PAYrXkRcnb50ACI9fDKsA8MZrnN6DbYouQj861BhDyS9m+X5wQcT0z4A=="],
+    "juice": ["juice@12.2.6", "", { "dependencies": { "cheerio": "1.2.0", "commander": "^15.1.0", "entities": "^9.0.0", "postcss": "^8.5.0", "postcss-nesting": "^14.0.0", "postcss-safe-parser": "^7.0.1", "postcss-selector-parser": "^7.1.0", "web-resource-inliner": "^8.0.0" }, "bin": { "juice": "bin/juice" } }, "sha512-dajL5aaskzBPPmPIYMmhHjM+SZVnMlXQ82/hN4KaTygo9NZ6MyhbeenTu5+FuFC7ePxmJmRtB6mEHh8dq0QssQ=="],
 
     "lightningcss": ["lightningcss@1.33.0", "", { "dependencies": { "detect-libc": "^2.0.3" }, "optionalDependencies": { "lightningcss-android-arm64": "1.33.0", "lightningcss-darwin-arm64": "1.33.0", "lightningcss-darwin-x64": "1.33.0", "lightningcss-freebsd-x64": "1.33.0", "lightningcss-linux-arm-gnueabihf": "1.33.0", "lightningcss-linux-arm64-gnu": "1.33.0", "lightningcss-linux-arm64-musl": "1.33.0", "lightningcss-linux-x64-gnu": "1.33.0", "lightningcss-linux-x64-musl": "1.33.0", "lightningcss-win32-arm64-msvc": "1.33.0", "lightningcss-win32-x64-msvc": "1.33.0" } }, "sha512-WkUDrojuJs0xkgGf2udWxa3yGBRxPtxUkB79i6aCZLRgc7PM8fZe9TosfPDcvEpQZbuFASnHYmRLBLUbmLOIIA=="],
 
