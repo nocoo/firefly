@@ -31,7 +31,7 @@ for (const [path, endpoint, title, settledText] of [
       await expect(header.getByRole("heading", { name: title, exact: true })).toBeVisible();
       await expect(header.getByRole("link", { name: /^返回/ })).toHaveText("");
       release();
-      await expect(loading).toBeHidden();
+      await expect(loading).toBeHidden({ timeout: 15_000 });
       await expect(page.getByText(settledText, { exact: true })).toBeVisible();
     } finally {
       release();

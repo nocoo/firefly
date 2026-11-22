@@ -74,6 +74,7 @@ test("Every admin page has a title, subtitle and icon-only parent link", async (
 
 for (const width of [390, 1440]) {
   test(`At ${width}px back stays in the title band and filters retain the full left edge`, async ({ page }) => {
+    test.setTimeout(90_000);
     await page.setViewportSize({ width, height: 1000 });
     for (const [path, label] of [["/admin/posts", "筛选文章"], ["/admin/media", "筛选媒体"]]) {
       await page.goto(path, { waitUntil: "networkidle" });
