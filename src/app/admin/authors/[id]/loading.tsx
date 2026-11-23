@@ -1,4 +1,4 @@
-import { SkeletonLine } from "@nocoo/basalt/components/skeleton-line";
+import { Skeleton } from "@nocoo/basalt/components/skeleton";
 import {
 	AdminFormCardSkeleton,
 	AdminLoadingHeader,
@@ -17,11 +17,7 @@ export default function Loading() {
 			<AdminLoadingRegion label="正在加载作者表单">
 				<div className="space-y-4" aria-hidden="true">
 					<div className="h-16 w-16" aria-hidden="true">
-						<SkeletonLine
-							className="w-full rounded-full"
-							minWidth={100}
-							style={{ height: "100%" }}
-						/>
+						<Skeleton className="h-full w-full rounded-full" variant="circle" />
 					</div>
 					<AdminFormCardSkeleton title="作者资料" rows={4} />
 				</div>

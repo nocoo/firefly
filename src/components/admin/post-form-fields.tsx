@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@nocoo/basalt/components/select";
-import { InputArea } from "@nocoo/basalt/components/input-area";
+import { Textarea } from "@nocoo/basalt/components/textarea";
 import { Input } from "@nocoo/basalt/components/input";
 
 const EMPTY_CATEGORY = "__empty__";
@@ -42,13 +42,13 @@ export function PostExcerptField({
       });
       if (!res.ok) {
         const data = await res.json();
-        toast.error(data.error || "保存文章失败");
+        toast.danger(data.error || "保存文章失败");
         return;
       }
       const { excerpt: generated } = await res.json();
       onExcerptChange(generated ?? "");
     } catch {
-      toast.error("保存文章失败");
+      toast.danger("保存文章失败");
     } finally {
       setIsGenerating(false);
     }
@@ -75,7 +75,7 @@ export function PostExcerptField({
           </button>
         )}
       </div>
-      <InputArea
+      <Textarea
         id="excerpt"
         value={excerpt}
         onChange={(e) => onExcerptChange(e.target.value)}

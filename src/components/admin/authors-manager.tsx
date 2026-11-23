@@ -54,7 +54,7 @@ export function AuthorsManager({
       );
       toast.success("已设为默认作者");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "设为默认失败");
+      toast.danger(error instanceof Error ? error.message : "设为默认失败");
     }
   };
 
@@ -71,7 +71,7 @@ export function AuthorsManager({
       setAuthors((prev) => prev.filter((item) => item.id !== author.id));
       toast.success("作者已删除");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "删除失败");
+      toast.danger(error instanceof Error ? error.message : "删除失败");
     }
   };
 

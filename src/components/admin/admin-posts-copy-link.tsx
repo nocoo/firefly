@@ -28,7 +28,7 @@ export function CopyLinkButton({ post }: { post: PostWithCategory }) {
       await navigator.clipboard.writeText(url);
       toast.success("链接已复制到剪贴板");
     } catch {
-      toast.error("复制链接失败");
+      toast.danger("复制链接失败");
     }
   };
 

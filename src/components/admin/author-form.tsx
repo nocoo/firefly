@@ -8,7 +8,7 @@ import type { Human } from "@/models/types";
 import { Button } from "@nocoo/basalt/components/button";
 import { AdminPageHeader } from "./page-header";
 import { Input } from "@nocoo/basalt/components/input";
-import { InputArea } from "@nocoo/basalt/components/input-area";
+import { Textarea } from "@nocoo/basalt/components/textarea";
 
 function slugify(name: string): string {
   return name
@@ -46,8 +46,8 @@ export function AuthorForm({
   }, [name, slugManuallyEdited, author]);
 
   const handleSave = async () => {
-    if (!name.trim()) return toast.error("请输入名称");
-    if (!slug.trim()) return toast.error("请输入标识符");
+    if (!name.trim()) return toast.danger("请输入名称");
+    if (!slug.trim()) return toast.danger("请输入标识符");
 
     setSaving(true);
     try {
@@ -73,7 +73,7 @@ export function AuthorForm({
       router.push("/admin/authors");
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "保存失败");
+      toast.danger(error instanceof Error ? error.message : "保存失败");
       setSaving(false);
     }
   };
@@ -99,7 +99,7 @@ export function AuthorForm({
       toast.success("头像已更新");
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "上传失败");
+      toast.danger(error instanceof Error ? error.message : "上传失败");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -118,7 +118,7 @@ export function AuthorForm({
       toast.success("头像已删除");
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "删除头像失败");
+      toast.danger(error instanceof Error ? error.message : "删除头像失败");
     } finally {
       setUploading(false);
     }
@@ -203,7 +203,7 @@ export function AuthorForm({
         </div>
         <div className="space-y-1">
           <label className="text-sm font-medium">描述</label>
-          <InputArea
+          <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}

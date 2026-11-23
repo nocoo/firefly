@@ -39,7 +39,7 @@ export function DeleteCommentButton({
 
       router.refresh();
     } catch {
-      toast.error(failedMessage);
+      toast.danger(failedMessage);
     } finally {
       setDeleting(false);
     }

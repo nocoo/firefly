@@ -96,10 +96,10 @@ async function associateMedia(
       body: JSON.stringify({ mediaIds, postId }),
     });
     if (!res.ok) {
-      toast.error("文章已保存，但未能关联上传的图片。可从媒体库手动关联。");
+      toast.danger("文章已保存，但未能关联上传的图片。可从媒体库手动关联。");
     }
   } catch {
-    toast.error("文章已保存，但未能关联上传的图片。可从媒体库手动关联。");
+    toast.danger("文章已保存，但未能关联上传的图片。可从媒体库手动关联。");
   }
 }
 
@@ -254,7 +254,7 @@ export function PostForm({
         const field = inferErrorField(message);
         if (field) {
           setFieldError({ field, message });
-          toast.error(message);
+          toast.danger(message);
           // Defer to next tick so the field-level error renders first
           setTimeout(() => focusField(field), 0);
         } else {

@@ -119,7 +119,7 @@ export function MarkdownPreview({
       toast.success("已复制微信公众号格式到剪贴板，可直接在微信编辑器粘贴");
       setTimeout(() => setWechatCopied(false), 2000);
     } else {
-      toast.error("复制失败，请重试");
+      toast.danger("复制失败，请重试");
     }
   }, [
     content,
@@ -142,7 +142,7 @@ export function MarkdownPreview({
       toast.success("已复制正文内容（不含标题、摘要及图片）");
       setTimeout(() => setWebCopied(false), 2000);
     } else {
-      toast.error("复制失败，请重试");
+      toast.danger("复制失败，请重试");
     }
   }, [html]);
 

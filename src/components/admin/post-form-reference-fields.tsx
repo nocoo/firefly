@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Sparkles } from "@nocoo/basalt/icons";
 import { toast } from "@nocoo/basalt/components/toast";
-import { InputArea } from "@nocoo/basalt/components/input-area";
+import { Textarea } from "@nocoo/basalt/components/textarea";
 import { Input } from "@nocoo/basalt/components/input";
 
 export interface ReferenceState {
@@ -42,7 +42,7 @@ export function PostReferenceFields({
       });
       if (!res.ok) {
         const data = await res.json();
-        toast.error(data.error || "保存文章失败");
+        toast.danger(data.error || "保存文章失败");
         return;
       }
       const data = await res.json();
@@ -55,7 +55,7 @@ export function PostReferenceFields({
       setBodyText(data.bodyText ?? "");
       onHasFetchedChange(true);
     } catch {
-      toast.error("保存文章失败");
+      toast.danger("保存文章失败");
     } finally {
       setIsUnfurling(false);
     }
@@ -81,7 +81,7 @@ export function PostReferenceFields({
       });
       if (!res.ok) {
         const data = await res.json();
-        toast.error(data.error || "保存文章失败");
+        toast.danger(data.error || "保存文章失败");
         return;
       }
       const data = await res.json();
@@ -91,7 +91,7 @@ export function PostReferenceFields({
         description: data.description || state.description,
       });
     } catch {
-      toast.error("保存文章失败");
+      toast.danger("保存文章失败");
     } finally {
       setIsEnhancing(false);
     }
@@ -168,7 +168,7 @@ export function PostReferenceFields({
             >
               {"描述"}
             </label>
-            <InputArea
+            <Textarea
               id="reference-description"
               value={state.description}
               onChange={(e) =>

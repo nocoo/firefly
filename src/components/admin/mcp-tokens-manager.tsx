@@ -59,7 +59,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
       toast.success("令牌已撤销");
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to revoke token");
+      toast.danger(err instanceof Error ? err.message : "Failed to revoke token");
     }
   };
 
@@ -75,7 +75,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
       toast.success("令牌已删除");
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete token");
+      toast.danger(err instanceof Error ? err.message : "Failed to delete token");
     }
   };
 
@@ -91,7 +91,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
       toast.success(`已删除 ${data.deleted} 个已撤销令牌`);
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete revoked tokens");
+      toast.danger(err instanceof Error ? err.message : "Failed to delete revoked tokens");
     }
   };
 
@@ -133,7 +133,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
       toast.success("权限已更新");
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update scope");
+      toast.danger(err instanceof Error ? err.message : "Failed to update scope");
     }
   };
 

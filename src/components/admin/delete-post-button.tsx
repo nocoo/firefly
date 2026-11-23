@@ -38,7 +38,7 @@ export function DeletePostButton({ slug, title, iconOnly }: DeletePostButtonProp
       });
       router.refresh();
     } catch (err) {
-      toast.error(
+      toast.danger(
         err instanceof Error ? err.message : "删除失败",
       );
     } finally {

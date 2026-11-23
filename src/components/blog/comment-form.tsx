@@ -42,7 +42,7 @@ export function CommentForm({ postId, enabled }: CommentFormProps) {
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
-        toast.error(data.error ?? "发表评论失败");
+        toast.danger(data.error ?? "发表评论失败");
         return;
       }
       toast.success("评论已发表");
@@ -50,7 +50,7 @@ export function CommentForm({ postId, enabled }: CommentFormProps) {
       // Refresh server component to pick up the new comment thread.
       router.refresh();
     } catch {
-      toast.error("发表评论失败");
+      toast.danger("发表评论失败");
     } finally {
       setSubmitting(false);
     }

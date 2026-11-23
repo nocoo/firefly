@@ -12,7 +12,7 @@ import {
 import { renderMarkdown } from "@/models/markdown";
 import { ArticleBody } from "@/components/blog/article-body";
 import { SegmentControl } from "@nocoo/basalt/components/segment-control";
-import { InputArea } from "@nocoo/basalt/components/input-area";
+import { Textarea } from "@nocoo/basalt/components/textarea";
 import { ImageUploadZone, type UploadResult } from "./image-upload-zone";
 
 export interface PostContentEditorHandle {
@@ -168,7 +168,7 @@ export const PostContentEditor = forwardRef<
               onResultsChange={onUploadedMediaChange}
               {...uploadProps}
             />
-            <InputArea
+            <Textarea
               ref={mobileRef}
               id="content-mobile"
               value={content}
@@ -192,7 +192,7 @@ export const PostContentEditor = forwardRef<
           onResultsChange={onUploadedMediaChange}
           {...uploadProps}
         />
-        <InputArea
+        <Textarea
           ref={desktopRef}
           id="content-desktop"
           value={content}

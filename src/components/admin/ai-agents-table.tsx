@@ -54,7 +54,7 @@ function AgentRow({
         </div>
       </td>
       <td className="px-4 py-3">
-        <Badge variant="secondary">
+        <Badge tone="neutral">
           {agent.post_count} {agent.post_count === 1 ? "post" : "posts"}
         </Badge>
       </td>

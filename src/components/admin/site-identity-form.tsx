@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Input } from "@nocoo/basalt/components/input";
 import { Button } from "@nocoo/basalt/components/button";
-import { InputArea } from "@nocoo/basalt/components/input-area";
+import { Textarea } from "@nocoo/basalt/components/textarea";
 import type { SiteSettings, SocialLink } from "@/data/settings";
 import { SiteLogoCard } from "./site-logo-card";
 import { SocialLinksCard } from "./social-links-card";
@@ -123,7 +123,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
           <p className="text-xs text-basalt-muted-foreground">
             用于 Meta Description 和 llms.txt。建议不超过几句话。
           </p>
-          <InputArea
+          <Textarea
             className="max-w-lg"
             value={siteDescription}
             onChange={(e) => setSiteDescription(e.target.value)}

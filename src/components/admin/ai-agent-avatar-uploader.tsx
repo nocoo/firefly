@@ -29,7 +29,7 @@ export function AgentAvatarUploader({
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
+      toast.danger("Please select an image file");
       return;
     }
 
@@ -54,7 +54,7 @@ export function AgentAvatarUploader({
       toast.success("Avatar uploaded");
       router.refresh();
     } catch (error) {
-      toast.error(
+      toast.danger(
         error instanceof Error ? error.message : "Failed to upload avatar",
       );
     } finally {
@@ -74,7 +74,7 @@ export function AgentAvatarUploader({
       toast.success("Avatar removed");
       router.refresh();
     } catch (error) {
-      toast.error(
+      toast.danger(
         error instanceof Error ? error.message : "Failed to delete avatar",
       );
     } finally {

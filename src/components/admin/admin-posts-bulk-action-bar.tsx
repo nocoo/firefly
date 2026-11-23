@@ -63,7 +63,7 @@ export function AdminPostsBulkActionBar({
         toast.success(`已更新 ${data.changed} 篇文章`);
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "批量更新失败");
+      toast.danger(err instanceof Error ? err.message : "批量更新失败");
     } finally {
       setApplying(false);
     }

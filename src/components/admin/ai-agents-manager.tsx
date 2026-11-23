@@ -89,7 +89,7 @@ export function AiAgentsManager({
       setAgents((prev) => prev.filter((a) => a.id !== agent.id));
       toast.success("代理已删除");
     } catch {
-      toast.error("删除代理失败");
+      toast.danger("删除代理失败");
     }
   };
 

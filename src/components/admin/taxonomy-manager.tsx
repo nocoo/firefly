@@ -133,7 +133,7 @@ export function TaxonomyManager({
       toast.success("删除", { description: item.name });
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "未知错误");
+      toast.danger(err instanceof Error ? err.message : "未知错误");
     }
   };
 
@@ -160,7 +160,7 @@ export function TaxonomyManager({
         toast.success("排序已保存");
       } catch {
         setOrderedItems(previous);
-        toast.error("未知错误");
+        toast.danger("未知错误");
       }
     },
     [orderedItems, apiBase],

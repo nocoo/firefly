@@ -5,7 +5,7 @@ import { FileText, FolderOpen, Tags } from "@nocoo/basalt/icons";
 import { AdminPageHeader } from "./page-header";
 import { AdminAnalyticsBodySkeleton } from "./loading-skeleton";
 import { LayerCard } from "@nocoo/basalt/components/layer-card";
-import { SkeletonLine } from "@nocoo/basalt/components/skeleton-line";
+import { Skeleton } from "@nocoo/basalt/components/skeleton";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -295,9 +295,9 @@ function TabSkeleton() {
       <div className="grid gap-4 lg:grid-cols-2" aria-hidden="true">
         {Array.from({ length: 2 }).map((_, i) => (
           <LayerCard key={i} className="space-y-3">
-            <SkeletonLine height={16} maxWidth={60} />
+            <Skeleton height={16} width="60%" />
             {Array.from({ length: 5 }).map((_, j) => (
-              <SkeletonLine key={j} height={16} minWidth={100} />
+              <Skeleton key={j} height={16} />
             ))}
           </LayerCard>
         ))}

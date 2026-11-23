@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@nocoo/basalt/components/select";
-import { InputArea } from "@nocoo/basalt/components/input-area";
+import { Textarea } from "@nocoo/basalt/components/textarea";
 import { NewAgentModal } from "@/components/admin/ai-agents-manager";
 import { AgentAvatarUploader } from "./ai-agent-avatar-uploader";
 
@@ -89,9 +89,9 @@ export function AiAgentForm({
   };
 
   const handleSave = async () => {
-    if (!name.trim()) return toast.error("请输入名称");
-    if (!slug.trim()) return toast.error("请输入标识符");
-    if (!categoryId) return toast.error("请选择分类");
+    if (!name.trim()) return toast.danger("请输入名称");
+    if (!slug.trim()) return toast.danger("请输入标识符");
+    if (!categoryId) return toast.danger("请选择分类");
 
     setSaving(true);
     try {
@@ -132,7 +132,7 @@ export function AiAgentForm({
         router.refresh();
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to save agent");
+      toast.danger(error instanceof Error ? error.message : "Failed to save agent");
     } finally {
       setSaving(false);
     }
@@ -212,7 +212,7 @@ export function AiAgentForm({
 
             <div>
               <label className="text-sm font-medium text-basalt-foreground">描述</label>
-              <InputArea
+              <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="代理的可选描述"

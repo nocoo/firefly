@@ -86,7 +86,7 @@ export function useMediaUpload(
       if (files.length === 0) return;
 
       if (uploadingRef.current) {
-        toast.error("当前批次仍在上传，请等待完成后再试");
+        toast.danger("当前批次仍在上传，请等待完成后再试");
         return;
       }
 
@@ -132,7 +132,7 @@ export function useMediaUpload(
                     : it,
                 ),
               );
-              toast.error(`上传失败：${file.name}: ${msg}`);
+              toast.danger(`上传失败：${file.name}: ${msg}`);
               continue;
             }
 
@@ -153,7 +153,7 @@ export function useMediaUpload(
                   : it,
               ),
             );
-            toast.error(`上传失败：${file.name}`);
+            toast.danger(`上传失败：${file.name}`);
           }
         }
       } finally {

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { LayerCard } from "@nocoo/basalt/components/layer-card";
-import { SkeletonLine as Bone } from "@nocoo/basalt/components/skeleton-line";
+import { Skeleton as Bone } from "@nocoo/basalt/components/skeleton";
 import { AdminPageHeader } from "./page-header";
 
 function BoneStack({
@@ -15,7 +15,7 @@ function BoneStack({
 	return (
 		<>
 			{Array.from({ length: count }, (_, index) => (
-				<Bone key={index} className={className} minWidth={100} />
+				<Bone key={index} className={className} />
 			))}
 		</>
 	);
@@ -26,7 +26,7 @@ function FilterSkeleton() {
 		<div className="flex flex-wrap gap-basalt-space-lg" aria-hidden="true">
 			{Array.from({ length: 5 }, (_, i) => (
 				<div key={i} className="w-[8.5rem]">
-					<Bone className="h-7 rounded-md" minWidth={100} />
+					<Bone className="h-7 rounded-md" />
 				</div>
 			))}
 		</div>
@@ -83,8 +83,8 @@ export function AdminFormCardSkeleton({
 			<LayerCard.Body className="space-y-5" aria-hidden="true">
 				{Array.from({ length: rows }, (_, index) => (
 					<div key={index} className="space-y-2">
-						<Bone className="h-3" maxWidth={42} />
-						<Bone className="w-full rounded-md" minWidth={100} height={36} />
+						<Bone className="h-3" width="42%" />
+						<Bone className="w-full rounded-md" height={36} />
 					</div>
 				))}
 			</LayerCard.Body>
@@ -113,7 +113,7 @@ export function AdminTableSkeleton({
 					style={gridStyle}
 				>
 					{Array.from({ length: columns }, (_, i) => (
-						<Bone key={i} className="h-3" maxWidth={70} />
+						<Bone key={i} className="h-3" width="70%" />
 					))}
 				</div>
 				{Array.from({ length: 6 }, (_, row) => (
@@ -126,7 +126,7 @@ export function AdminTableSkeleton({
 							<Bone
 								key={column}
 								className="h-4"
-								maxWidth={column === 0 ? 75 : 55}
+								width={column === 0 ? "75%" : "55%"}
 							/>
 						))}
 					</div>
@@ -158,7 +158,6 @@ export function AdminMediaGridSkeleton({
 						<div key={i} className="aspect-square">
 							<Bone
 								className="w-full rounded-md"
-								minWidth={100}
 								style={{ height: "100%" }}
 							/>
 						</div>
@@ -176,16 +175,16 @@ export function AdminPostEditorSkeleton() {
 				<LayerCard>
 					<LayerCard.Body className="space-y-5" aria-hidden="true">
 						<BoneStack count={2} className="h-9 w-full rounded-md" />
-						<Bone className="h-56 w-full rounded-md" minWidth={100} />
+						<Bone className="h-56 w-full rounded-md" />
 						<BoneStack count={4} className="h-9 w-full rounded-md" />
 					</LayerCard.Body>
 				</LayerCard>
 				<LayerCard className="hidden min-h-[32rem] lg:block">
 					<LayerCard.Header>预览</LayerCard.Header>
 					<LayerCard.Body className="space-y-4" aria-hidden="true">
-						<Bone className="h-7" maxWidth={75} />
-						<Bone className="h-4" maxWidth={42} />
-						<Bone className="h-64 w-full" minWidth={100} />
+						<Bone className="h-7" width="75%" />
+						<Bone className="h-4" width="42%" />
+						<Bone className="h-64 w-full" />
 						<BoneStack count={3} />
 					</LayerCard.Body>
 				</LayerCard>
@@ -201,15 +200,15 @@ export function AdminAnalyticsBodySkeleton() {
 				<div className="space-y-6 lg:col-span-7">
 					<LayerCard>
 						<LayerCard.Body className="space-y-4">
-							<Bone className="h-4" maxWidth={32} />
-							<Bone className="h-64 w-full rounded-md" minWidth={100} />
+							<Bone className="h-4" width="32%" />
+							<Bone className="h-64 w-full rounded-md" />
 						</LayerCard.Body>
 					</LayerCard>
 					<div className="grid gap-4 lg:grid-cols-2">
 						{[0, 1].map((i) => (
 							<LayerCard key={i}>
 								<LayerCard.Body className="space-y-4">
-									<Bone className="h-4" maxWidth={45} />
+									<Bone className="h-4" width="45%" />
 									<BoneStack count={5} />
 								</LayerCard.Body>
 							</LayerCard>
@@ -220,9 +219,9 @@ export function AdminAnalyticsBodySkeleton() {
 					{Array.from({ length: 6 }, (_, i) => (
 						<LayerCard key={i}>
 							<LayerCard.Body className="space-y-3">
-								<Bone className="h-3" maxWidth={52} />
-								<Bone className="h-6" maxWidth={36} />
-								<Bone className="h-3" maxWidth={65} />
+								<Bone className="h-3" width="52%" />
+								<Bone className="h-6" width="36%" />
+								<Bone className="h-3" width="65%" />
 							</LayerCard.Body>
 						</LayerCard>
 					))}
@@ -240,23 +239,23 @@ export function AdminSystemMonitorBodySkeleton() {
 					{Array.from({ length: 4 }, (_, i) => (
 						<LayerCard key={i}>
 							<LayerCard.Body className="space-y-3">
-								<Bone className="h-4" maxWidth={58} />
-								<Bone className="h-8" maxWidth={42} />
-								<Bone className="h-3" maxWidth={68} />
+								<Bone className="h-4" width="58%" />
+								<Bone className="h-8" width="42%" />
+								<Bone className="h-3" width="68%" />
 							</LayerCard.Body>
 						</LayerCard>
 					))}
 				</div>
 				<LayerCard>
 					<LayerCard.Body className="space-y-4">
-						<Bone className="h-4" maxWidth={38} />
-						<Bone className="h-64 w-full rounded-md" minWidth={100} />
+						<Bone className="h-4" width="38%" />
+						<Bone className="h-64 w-full rounded-md" />
 					</LayerCard.Body>
 				</LayerCard>
 				<LayerCard>
 					<LayerCard.Body className="space-y-3">
-						<Bone className="h-4" maxWidth={34} />
-						<Bone className="h-4" maxWidth={86} />
+						<Bone className="h-4" width="34%" />
+						<Bone className="h-4" width="86%" />
 					</LayerCard.Body>
 				</LayerCard>
 			</div>

@@ -128,14 +128,14 @@ export function MediaLibrary({
         method: "DELETE",
       });
       if (!res.ok) {
-        toast.error("删除图片失败");
+        toast.danger("删除图片失败");
         return;
       }
       setMedia((prev) => prev.filter((m) => m.id !== deleteTarget.id));
       setTotal((prev) => prev - 1);
       toast.success("图片已删除");
     } catch {
-      toast.error("删除图片失败");
+      toast.danger("删除图片失败");
     } finally {
       setDeleting(false);
       setDeleteTarget(null);
