@@ -10,6 +10,7 @@ export function TraksAnalytics() {
   return (
     <>
       <script
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: static inline analytics bootstrap snippet
         dangerouslySetInnerHTML={{
           __html:
             "window.traks=window.traks||function(){(window.traks.q=window.traks.q||[]).push(arguments)}",

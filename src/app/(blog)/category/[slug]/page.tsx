@@ -58,6 +58,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       <ListOriginTracker />
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data serialized by jsonld helper
         dangerouslySetInnerHTML={{
           __html: collectionPageJsonLd(
             category.name,

@@ -359,7 +359,10 @@ export function MarkdownPreview({
                   previewDark ? "wechat-preview-dark" : "bg-white"
                 } ${deviceMode === "mobile" ? "!min-h-[640px] px-4 py-5" : ""}`}
               >
-                <div dangerouslySetInnerHTML={{ __html: wechatPreviewHtml }} />
+                <div
+                  // biome-ignore lint/security/noDangerouslySetInnerHtml: WeChat preview HTML rendered from local markdown source
+                  dangerouslySetInnerHTML={{ __html: wechatPreviewHtml }}
+                />
               </div>
             )}
           </div>

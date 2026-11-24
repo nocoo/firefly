@@ -438,6 +438,7 @@ export function CommandPalette() {
                       {snippets[post.id] ? (
                         <span
                           className="flex-1 truncate [&>mark]:bg-yellow-200 [&>mark]:text-yellow-900 dark:[&>mark]:bg-yellow-800/40 dark:[&>mark]:text-yellow-200"
+                          // biome-ignore lint/security/noDangerouslySetInnerHtml: search snippet sanitized via sanitizeSnippet()
                           dangerouslySetInnerHTML={{
                             __html: sanitizeSnippet(snippets[post.id]),
                           }}

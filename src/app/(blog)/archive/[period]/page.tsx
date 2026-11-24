@@ -69,6 +69,7 @@ export default async function ArchivePage({ params }: ArchivePageProps) {
       <ListOriginTracker />
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data serialized by jsonld helper
         dangerouslySetInnerHTML={{
           __html: collectionPageJsonLd(
             label,

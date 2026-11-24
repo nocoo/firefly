@@ -61,6 +61,7 @@ export default async function TagPaged({ params }: Props) {
       <ListOriginTracker />
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data serialized by jsonld helper
         dangerouslySetInnerHTML={{
           __html: collectionPageJsonLd(
             `#${tag.name} – Page ${page}`,

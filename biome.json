@@ -87,7 +87,7 @@
 				"noUnknownProperty": "off"
 			},
 			"security": {
-				"noDangerouslySetInnerHtml": "off"
+				"noDangerouslySetInnerHtml": "error"
 			},
 			"performance": {
 				"noImgElement": "off"

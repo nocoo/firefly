@@ -141,10 +141,12 @@ export default async function PostPage({ params }: PostPageProps) {
     <>
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data serialized by jsonld helper
         dangerouslySetInnerHTML={{ __html: blogPostingJsonLd(post, identity, tagNames, jsonLdAuthor) }}
       />
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data serialized by jsonld helper
         dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd(breadcrumbs) }}
       />
 

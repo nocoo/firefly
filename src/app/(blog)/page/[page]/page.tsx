@@ -52,6 +52,7 @@ export default async function HomePaged({ params }: PageProps) {
       <ListOriginTracker />
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data serialized by jsonld helper
         dangerouslySetInnerHTML={{
           __html: collectionPageJsonLd(
             `${settings.siteName} – Page ${page}`,

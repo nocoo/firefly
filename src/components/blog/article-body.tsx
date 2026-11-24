@@ -42,6 +42,7 @@ export function ArticleBody({
       {html ? (
         <div
           className="blog-content prose-firefly prose max-w-none"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: pre-rendered HTML from renderMarkdown()
           dangerouslySetInnerHTML={{ __html: html }}
         />
       ) : null}

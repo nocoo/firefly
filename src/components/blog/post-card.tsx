@@ -92,6 +92,7 @@ export function PostCard({ post, author, priority, snippet }: PostCardProps) {
         (snippet ? (
           <p
             className="blog-entry-excerpt mt-3 text-base leading-relaxed text-blog-text"
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: search snippet sanitized via sanitizeSnippet()
             dangerouslySetInnerHTML={{ __html: sanitizeSnippet(snippet) }}
           />
         ) : (
