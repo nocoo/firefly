@@ -6,7 +6,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // ---------------------------------------------------------------------------
 
 vi.mock("@/lib/db", () => ({
-  getDb: () => ({} as never),
+  getDb: () => ({}) as never,
 }));
 
 vi.mock("@/lib/seo", async (importOriginal) => {
@@ -87,12 +87,14 @@ vi.mock("@/models/markdown", () => ({
 }));
 
 vi.mock("@/lib/ai-agent/author", () => ({
-  getPostAuthor: vi.fn().mockImplementation((post: { ai_agent_id: string | null; agent_name: string | null }) => {
-    if (post.ai_agent_id && post.agent_name) {
-      return { type: "agent", name: post.agent_name, url: null, avatarUrl: null };
-    }
-    return { type: "human", name: "Test Author", url: null, avatarUrl: null };
-  }),
+  getPostAuthor: vi
+    .fn()
+    .mockImplementation((post: { ai_agent_id: string | null; agent_name: string | null }) => {
+      if (post.ai_agent_id && post.agent_name) {
+        return { type: "agent", name: post.agent_name, url: null, avatarUrl: null };
+      }
+      return { type: "human", name: "Test Author", url: null, avatarUrl: null };
+    }),
 }));
 
 // ---------------------------------------------------------------------------
@@ -110,16 +112,12 @@ describe("GET /feed.xml", () => {
   it("returns 200 with RSS content type", async () => {
     const response = await GET();
     expect(response.status).toBe(200);
-    expect(response.headers.get("Content-Type")).toBe(
-      "application/rss+xml; charset=utf-8",
-    );
+    expect(response.headers.get("Content-Type")).toBe("application/rss+xml; charset=utf-8");
   });
 
   it("includes Cache-Control header", async () => {
     const response = await GET();
-    expect(response.headers.get("Cache-Control")).toBe(
-      PUBLIC_CONTENT_CACHE_CONTROL,
-    );
+    expect(response.headers.get("Cache-Control")).toBe(PUBLIC_CONTENT_CACHE_CONTROL);
   });
 
   it("produces valid RSS 2.0 XML structure", async () => {
@@ -146,9 +144,7 @@ describe("GET /feed.xml", () => {
     const response = await GET();
     const xml = await response.text();
 
-    expect(xml).toContain(
-      "<managingEditor>test@example.com (Test Author)</managingEditor>",
-    );
+    expect(xml).toContain("<managingEditor>test@example.com (Test Author)</managingEditor>");
   });
 
   it("renders post items with correct fields", async () => {
@@ -187,9 +183,7 @@ describe("GET /feed.xml", () => {
     const response = await GET();
     const xml = await response.text();
 
-    expect(xml).toContain(
-      '<![CDATA[Second Post with <Special> & "Chars"]]>',
-    );
+    expect(xml).toContain('<![CDATA[Second Post with <Special> & "Chars"]]>');
   });
 
   it("omits category element when post has no category", async () => {

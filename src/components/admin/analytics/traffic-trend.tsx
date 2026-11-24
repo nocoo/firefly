@@ -1,14 +1,7 @@
 "use client";
 
 import type { AnalyticsDailyTrend } from "@/models/analytics-types";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import {
   SOURCE_COLORS,
   chartAxis,
@@ -46,16 +39,11 @@ function TrafficTooltip({
       </p>
       <div className="mb-1 border-b border-basalt-border/50 pb-1 flex items-center gap-2 text-xs">
         <span className="text-basalt-muted-foreground">Total</span>
-        <span className="ml-auto font-medium text-basalt-foreground">
-          {formatNumber(total)}
-        </span>
+        <span className="ml-auto font-medium text-basalt-foreground">{formatNumber(total)}</span>
       </div>
       {payload.map((entry) => (
         <div key={entry.dataKey} className="flex items-center gap-2 text-xs">
-          <div
-            className="h-2 w-2 rounded-full"
-            style={{ backgroundColor: entry.color }}
-          />
+          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
           <span className="text-basalt-muted-foreground">{entry.name}</span>
           <span className="ml-auto font-medium text-basalt-foreground">
             {formatNumber(entry.value)}
@@ -85,9 +73,7 @@ export function TrafficTrend({ daily }: TrafficTrendProps) {
   if (daily.length === 0) {
     return (
       <DataCard title="流量趋势">
-        <p className="text-sm text-basalt-muted-foreground py-4">
-          暂无数据
-        </p>
+        <p className="text-sm text-basalt-muted-foreground py-4">暂无数据</p>
       </DataCard>
     );
   }
@@ -98,10 +84,7 @@ export function TrafficTrend({ daily }: TrafficTrendProps) {
       <div className="mb-3 flex items-center gap-4">
         {LEGEND_ITEMS.map(({ key, label, color }) => (
           <div key={key} className="flex items-center gap-1.5">
-            <div
-              className="h-2 w-2 rounded-full"
-              style={{ background: color }}
-            />
+            <div className="h-2 w-2 rounded-full" style={{ background: color }} />
             <span className="text-xs text-basalt-muted-foreground">{label}</span>
           </div>
         ))}
@@ -147,10 +130,7 @@ export function TrafficTrend({ daily }: TrafficTrendProps) {
               tickLine={false}
               width={48}
             />
-            <Tooltip
-              content={<TrafficTooltip />}
-              isAnimationActive={false}
-            />
+            <Tooltip content={<TrafficTooltip />} isAnimationActive={false} />
             <Area
               type="monotone"
               dataKey="human"
@@ -194,13 +174,7 @@ export function TrafficTrend({ daily }: TrafficTrendProps) {
   );
 }
 
-function DataCard({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function DataCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-widget bg-basalt-secondary p-4 ring-1 ring-basalt-border/80 shadow-basalt-card">
       <h3 className="text-sm font-medium text-basalt-foreground mb-3">{title}</h3>

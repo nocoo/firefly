@@ -2,12 +2,7 @@ import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
-import {
-  createHuman,
-  getHumanByEmail,
-  getHumanBySlug,
-  listHumans,
-} from "@/data/entities/human";
+import { createHuman, getHumanByEmail, getHumanBySlug, listHumans } from "@/data/entities/human";
 
 export async function GET() {
   const session = await auth();
@@ -20,10 +15,7 @@ export async function GET() {
     const authors = await listHumans(db);
     return jsonResponse({ authors });
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }
 
@@ -57,11 +49,7 @@ export async function POST(request: NextRequest) {
     ) {
       return errorResponse("description must be a string or null", 400);
     }
-    if (
-      body.email !== undefined &&
-      body.email !== null &&
-      typeof body.email !== "string"
-    ) {
+    if (body.email !== undefined && body.email !== null && typeof body.email !== "string") {
       return errorResponse("email must be a string or null", 400);
     }
     if (
@@ -75,11 +63,9 @@ export async function POST(request: NextRequest) {
 
     const name = body.name.trim();
     const slug = body.slug.trim();
-    const description =
-      typeof body.description === "string" ? body.description.trim() : null;
+    const description = typeof body.description === "string" ? body.description.trim() : null;
     const email = typeof body.email === "string" ? body.email : null;
-    const profilePublic =
-      body.profile_public === true || body.profile_public === 1;
+    const profilePublic = body.profile_public === true || body.profile_public === 1;
 
     if (!name) return errorResponse("name is required", 400);
     if (!slug) return errorResponse("slug is required", 400);
@@ -106,9 +92,6 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && error.message.includes("UNIQUE constraint")) {
       return errorResponse("Author slug or email already in use", 400);
     }
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

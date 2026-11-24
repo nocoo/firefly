@@ -1,10 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parseHisFmCardPayload } from "./card-schema";
-import {
-  fixtureEp02Published,
-  fixtureEp03Published,
-  mockHisFmCardPayload,
-} from "./fixtures";
+import { fixtureEp02Published, fixtureEp03Published, mockHisFmCardPayload } from "./fixtures";
 
 describe("parseHisFmCardPayload", () => {
   it("parses live EP.02 fixture", () => {
@@ -22,20 +18,14 @@ describe("parseHisFmCardPayload", () => {
   });
 
   it("allows missing audio (link-only card)", () => {
-    const card = parseHisFmCardPayload(
-      mockHisFmCardPayload({ audio: undefined }),
-    );
+    const card = parseHisFmCardPayload(mockHisFmCardPayload({ audio: undefined }));
     expect(card).not.toBeNull();
     expect(card?.audio).toBeUndefined();
   });
 
   it("returns null for not_found or invalid payloads", () => {
-    expect(
-      parseHisFmCardPayload(mockHisFmCardPayload({ status: "not_found" })),
-    ).toBeNull();
-    expect(
-      parseHisFmCardPayload(mockHisFmCardPayload({ cover: undefined })),
-    ).toBeNull();
+    expect(parseHisFmCardPayload(mockHisFmCardPayload({ status: "not_found" }))).toBeNull();
+    expect(parseHisFmCardPayload(mockHisFmCardPayload({ cover: undefined }))).toBeNull();
     expect(parseHisFmCardPayload({ v: 2, status: "published" })).toBeNull();
   });
 

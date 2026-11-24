@@ -22,11 +22,18 @@ describe("GET /api/settings", () => {
 describe("PUT /api/settings", () => {
   it("round-trips WeChat settings and preserves unrelated fields on partial updates", async () => {
     const original = await (await fetch(`${BASE}/api/settings`)).json();
-    const update = (body: unknown) => fetch(`${BASE}/api/settings`, {
-      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
-    });
+    const update = (body: unknown) =>
+      fetch(`${BASE}/api/settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
     try {
-      const response = await update({ wechat_name: "Configured account", wechat_qr_image_url: "/journal-wechat-qr.svg", wechat_avatar_url: "https://example.com/avatar.png" });
+      const response = await update({
+        wechat_name: "Configured account",
+        wechat_qr_image_url: "/journal-wechat-qr.svg",
+        wechat_avatar_url: "https://example.com/avatar.png",
+      });
       expect(response.status).toBe(200);
       const settings = await response.json();
       expect(settings.wechatName).toBe("Configured account");
@@ -37,7 +44,15 @@ describe("PUT /api/settings", () => {
       expect(partial.status).toBe(200);
       expect((await partial.json()).wechatName).toBe("Configured account");
     } finally {
-      expect((await update({ wechat_name: original.wechatName, wechat_qr_image_url: original.wechatQrImageUrl, wechat_avatar_url: original.wechatAvatarUrl })).status).toBe(200);
+      expect(
+        (
+          await update({
+            wechat_name: original.wechatName,
+            wechat_qr_image_url: original.wechatQrImageUrl,
+            wechat_avatar_url: original.wechatAvatarUrl,
+          })
+        ).status,
+      ).toBe(200);
     }
   });
 
@@ -49,7 +64,9 @@ describe("PUT /api/settings", () => {
     { wechat_name: null },
   ])("rejects invalid WeChat settings", async (body) => {
     const response = await fetch(`${BASE}/api/settings`, {
-      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     });
     expect(response.status).toBe(400);
   });

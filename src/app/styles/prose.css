@@ -35,43 +35,109 @@
 
   /* `pretty` lets the browser look ahead a few lines and avoid orphan words
    * at paragraph ends. CJK long titles benefit from `balance` on headings. */
-  & p { margin-block: 1.25em; text-wrap: pretty; }
+  & p {
+    margin-block: 1.25em;
+    text-wrap: pretty;
+  }
 
   /* Headings */
   & :is(h1, h2, h3, h4, h5, h6) {
     font-family: var(--ff-heading);
     text-wrap: balance;
   }
-  & h1 { font-size: 1.75em; font-weight: 700; letter-spacing: 0.02em; }
-  & h2 { font-size: 1.375em; font-weight: 700; letter-spacing: 0.01em; }
-  & h3 { font-size: 1.1875em; font-weight: 600; }
-  & h4 { font-size: 1.0625em; font-weight: 600; }
-  & h5 { font-size: 1em; font-weight: 600; }
-  & h6 { font-size: 0.9375em; font-weight: 600; }
+  & h1 {
+    font-size: 1.75em;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  & h2 {
+    font-size: 1.375em;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+  & h3 {
+    font-size: 1.1875em;
+    font-weight: 600;
+  }
+  & h4 {
+    font-size: 1.0625em;
+    font-weight: 600;
+  }
+  & h5 {
+    font-size: 1em;
+    font-weight: 600;
+  }
+  & h6 {
+    font-size: 0.9375em;
+    font-weight: 600;
+  }
 
   /* Blockquote */
-  & blockquote    { font-family: var(--ff-quote); font-style: normal; border-left-color: var(--blog-separator); }
-  & blockquote p  { font-style: normal; }
+  & blockquote {
+    font-family: var(--ff-quote);
+    font-style: normal;
+    border-left-color: var(--blog-separator);
+  }
+  & blockquote p {
+    font-style: normal;
+  }
 
   /* Code */
-  & pre                 { font-family: var(--ff-mono); font-size: 0.8125em; border: 1px solid var(--blog-separator); background: var(--blog-code-bg); }
-  & :not(pre) > code    { font-family: var(--ff-mono); font-size: 0.875em; padding: 0.2em 0.4em; border: 1px solid var(--blog-separator); background: var(--blog-code-bg); border-radius: 3px; }
+  & pre {
+    font-family: var(--ff-mono);
+    font-size: 0.8125em;
+    border: 1px solid var(--blog-separator);
+    background: var(--blog-code-bg);
+  }
+  & :not(pre) > code {
+    font-family: var(--ff-mono);
+    font-size: 0.875em;
+    padding: 0.2em 0.4em;
+    border: 1px solid var(--blog-separator);
+    background: var(--blog-code-bg);
+    border-radius: 3px;
+  }
   & :not(pre) > code::before,
-  & :not(pre) > code::after { content: none; }
+  & :not(pre) > code::after {
+    content: none;
+  }
 
   /* Images */
-  & img { margin-inline: auto; }
+  & img {
+    margin-inline: auto;
+  }
 
   /* Tables */
-  & table       { font-size: 0.875em; border-collapse: collapse; width: 100%; }
-  & thead       { border-bottom: 2px solid var(--blog-separator); }
-  & th          { font-weight: 600; text-align: start; padding: 0.625em 0.75em; }
-  & td          { padding: 0.625em 0.75em; }
-  & :is(th, td) { border: 1px solid var(--blog-separator); }
+  & table {
+    font-size: 0.875em;
+    border-collapse: collapse;
+    width: 100%;
+  }
+  & thead {
+    border-bottom: 2px solid var(--blog-separator);
+  }
+  & th {
+    font-weight: 600;
+    text-align: start;
+    padding: 0.625em 0.75em;
+  }
+  & td {
+    padding: 0.625em 0.75em;
+  }
+  & :is(th, td) {
+    border: 1px solid var(--blog-separator);
+  }
 
   /* Links */
-  & a       { color: var(--blog-text); text-decoration-color: var(--blog-accent); text-underline-offset: 3px; transition: text-decoration-color 0.15s; }
-  & a:hover { text-decoration-color: var(--blog-text); }
+  & a {
+    color: var(--blog-text);
+    text-decoration-color: var(--blog-accent);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.15s;
+  }
+  & a:hover {
+    text-decoration-color: var(--blog-text);
+  }
 
   /* GFM footnotes */
   & .footnote-ref {
@@ -84,20 +150,29 @@
     text-decoration: none;
     color: var(--blog-accent);
   }
-  & .footnote-ref a:hover { text-decoration: underline; }
+  & .footnote-ref a:hover {
+    text-decoration: underline;
+  }
   & .footnotes {
     margin-top: 0;
     font-size: 0.875em;
     line-height: 1.7;
     color: var(--blog-muted);
   }
-  & .footnotes .blog-hr { margin-bottom: 1.25em; }
-  & .footnotes ol { margin: 0; padding-inline-start: 1.5em; }
+  & .footnotes .blog-hr {
+    margin-bottom: 1.25em;
+  }
+  & .footnotes ol {
+    margin: 0;
+    padding-inline-start: 1.5em;
+  }
   & .footnotes li {
     margin-block: 0.45em;
     scroll-margin-top: 1.5em;
   }
-  & .footnotes a { color: var(--blog-text); }
+  & .footnotes a {
+    color: var(--blog-text);
+  }
 }
 
 /*
@@ -139,7 +214,10 @@
   background: var(--blog-surface);
   color: var(--blog-muted);
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background-color 0.15s;
 }
 .blog-code-copy:hover {
   color: var(--blog-text);

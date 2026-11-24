@@ -36,8 +36,5 @@ export function isEmailAllowed(email: string): boolean {
  * appear in a real production deployment.
  */
 export function isE2EMode(): boolean {
-  return (
-    process.env.E2E_SKIP_AUTH === "true" &&
-    process.env.E2E_TEST_RUNNER === "true"
-  );
+  return process.env.E2E_SKIP_AUTH === "true" && process.env.E2E_TEST_RUNNER === "true";
 }

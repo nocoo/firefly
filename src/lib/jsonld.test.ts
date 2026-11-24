@@ -94,9 +94,17 @@ describe("blogPostingJsonLd", () => {
   });
 
   it("assigns owner profiles to the publisher without misidentifying an article's author", () => {
-    const result = JSON.parse(blogPostingJsonLd(post, {
-      ...testSite, sameAs: ["https://hexly.ai/"],
-    }, undefined, { name: "Claude Daily" }));
+    const result = JSON.parse(
+      blogPostingJsonLd(
+        post,
+        {
+          ...testSite,
+          sameAs: ["https://hexly.ai/"],
+        },
+        undefined,
+        { name: "Claude Daily" },
+      ),
+    );
     expect(result.publisher.sameAs).toEqual(["https://hexly.ai/"]);
     expect(result.author).toEqual({ "@type": "Person", name: "Claude Daily" });
     const empty = JSON.parse(blogPostingJsonLd(post, { ...testSite, sameAs: [] }));

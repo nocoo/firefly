@@ -69,40 +69,34 @@ function shouldSkipFootnote(href: string): boolean {
  * External links aren't clickable in WeChat MP except official domains,
  * so we convert [text](url) into text^[1] and add a reference section at the bottom.
  */
-export function convertLinksToFootnotes(
-  html: string,
-  referenceTitle = "参考链接",
-): string {
+export function convertLinksToFootnotes(html: string, referenceTitle = "参考链接"): string {
   const links: FootnoteLink[] = [];
   const hrefToId = new Map<string, number>();
   let counter = 1;
 
   // Regex matching <a ...href="..."...>...</a>
-  const transformed = html.replace(
-    /<a\b([^>]*)>([\s\S]*?)<\/a>/gi,
-    (match, attrs, content) => {
-      const hrefMatch = attrs.match(/href=(["'])(.*?)\1/i);
-      const rawHrefAttr = hrefMatch ? hrefMatch[2].trim() : "";
-      // Decode HTML entities from attribute value so that URLs like ?a=1&amp;b=2 become ?a=1&b=2
-      const decodedHref = decodeHtmlEntities(rawHrefAttr);
+  const transformed = html.replace(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi, (match, attrs, content) => {
+    const hrefMatch = attrs.match(/href=(["'])(.*?)\1/i);
+    const rawHrefAttr = hrefMatch ? hrefMatch[2].trim() : "";
+    // Decode HTML entities from attribute value so that URLs like ?a=1&amp;b=2 become ?a=1&b=2
+    const decodedHref = decodeHtmlEntities(rawHrefAttr);
 
-      if (!decodedHref || shouldSkipFootnote(decodedHref)) {
-        // Keep as-is or stripped for internal/empty
-        return match;
-      }
+    if (!decodedHref || shouldSkipFootnote(decodedHref)) {
+      // Keep as-is or stripped for internal/empty
+      return match;
+    }
 
-      let id = hrefToId.get(decodedHref);
-      if (!id) {
-        id = counter++;
-        hrefToId.set(decodedHref, id);
-        // Strip tags from content for clean text and decode entities
-        const plainText = decodeHtmlEntities(content.replace(/<[^>]+>/g, "").trim()) || decodedHref;
-        links.push({ id, href: decodedHref, text: plainText });
-      }
+    let id = hrefToId.get(decodedHref);
+    if (!id) {
+      id = counter++;
+      hrefToId.set(decodedHref, id);
+      // Strip tags from content for clean text and decode entities
+      const plainText = decodeHtmlEntities(content.replace(/<[^>]+>/g, "").trim()) || decodedHref;
+      links.push({ id, href: decodedHref, text: plainText });
+    }
 
-      return `<span>${content}</span><sup class="wechat-footnote-ref">[${id}]</sup>`;
-    },
-  );
+    return `<span>${content}</span><sup class="wechat-footnote-ref">[${id}]</sup>`;
+  });
 
   if (links.length === 0) {
     return transformed;
@@ -146,9 +140,7 @@ export function buildWeChatStructure(
   }
 
   if (includeHeader && meta?.excerpt) {
-    parts.push(
-      `<div class="wechat-post-excerpt">${escapeHtml(meta.excerpt)}</div>`,
-    );
+    parts.push(`<div class="wechat-post-excerpt">${escapeHtml(meta.excerpt)}</div>`);
   }
 
   if (meta?.referenceUrl) {
@@ -169,10 +161,7 @@ export function buildWeChatStructure(
     );
   }
 
-  const processedContent = convertLinksToFootnotes(
-    contentHtml,
-    options?.referenceTitle,
-  );
+  const processedContent = convertLinksToFootnotes(contentHtml, options?.referenceTitle);
   parts.push(processedContent);
 
   return parts.join("\n");

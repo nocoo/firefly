@@ -18,9 +18,7 @@ const target = targetIdx >= 0 ? args[targetIdx + 1] : "prod";
 const VALID_TARGETS = ["prod", "local"];
 
 if (!VALID_TARGETS.includes(target)) {
-  console.error(
-    `Invalid target: "${target}". Use one of: ${VALID_TARGETS.join(", ")}`,
-  );
+  console.error(`Invalid target: "${target}". Use one of: ${VALID_TARGETS.join(", ")}`);
   process.exit(1);
 }
 
@@ -38,9 +36,7 @@ if (command === "status") {
     }
   }
 
-  console.log(
-    `\n✓ ${result.applied.length} applied, ${result.skipped.length} skipped`,
-  );
+  console.log(`\n✓ ${result.applied.length} applied, ${result.skipped.length} skipped`);
 } else {
   console.error(`Unknown command: "${command}". Use "up" or "status".`);
   process.exit(1);

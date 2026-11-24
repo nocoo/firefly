@@ -2,7 +2,12 @@
 
 import type { ReactElement } from "react";
 import { LinkButton } from "@nocoo/basalt/components/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@nocoo/basalt/components/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@nocoo/basalt/components/tooltip";
 
 export function HeaderTooltip({ label, children }: { label: string; children: ReactElement }) {
   return (

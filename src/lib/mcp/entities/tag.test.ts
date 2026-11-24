@@ -142,11 +142,7 @@ describe("tag entity handlers", () => {
       dataLayer.delete.mockResolvedValue(true);
 
       const result = await handlers.handleDelete(ctx, { slug: "javascript" });
-      expect(dataLayer.delete).toHaveBeenCalledWith(
-        ctx.db,
-        "tag-1",
-        expect.anything(),
-      );
+      expect(dataLayer.delete).toHaveBeenCalledWith(ctx.db, "tag-1", expect.anything());
       const data = parseToolResult(result) as { deleted: boolean };
       expect(data.deleted).toBe(true);
     });
@@ -156,11 +152,7 @@ describe("tag entity handlers", () => {
       dataLayer.delete.mockResolvedValue(true);
 
       const result = await handlers.handleDelete(ctx, { id: "tag-1" });
-      expect(dataLayer.delete).toHaveBeenCalledWith(
-        ctx.db,
-        "tag-1",
-        expect.anything(),
-      );
+      expect(dataLayer.delete).toHaveBeenCalledWith(ctx.db, "tag-1", expect.anything());
       const data = parseToolResult(result) as { deleted: boolean };
       expect(data.deleted).toBe(true);
     });

@@ -65,9 +65,7 @@ describe.concurrent("GET /api/md/[year]/[month]/[slug]", () => {
   });
 
   it("returns markdown for a valid post", async () => {
-    const res = await fetch(
-      `${BASE}/api/md/${testYear}/${testMonth}/${testPostSlug}`,
-    );
+    const res = await fetch(`${BASE}/api/md/${testYear}/${testMonth}/${testPostSlug}`);
     expect(res.status).toBe(200);
 
     const contentType = res.headers.get("content-type");
@@ -86,26 +84,20 @@ describe.concurrent("GET /api/md/[year]/[month]/[slug]", () => {
   });
 
   it("returns 404 for non-existent post", async () => {
-    const res = await fetch(
-      `${BASE}/api/md/${testYear}/${testMonth}/nonexistent-post-xyz`,
-    );
+    const res = await fetch(`${BASE}/api/md/${testYear}/${testMonth}/nonexistent-post-xyz`);
     expect(res.status).toBe(404);
   });
 
   it("returns 404 for mismatched year", async () => {
     const wrongYear = String(Number(testYear) - 1);
-    const res = await fetch(
-      `${BASE}/api/md/${wrongYear}/${testMonth}/${testPostSlug}`,
-    );
+    const res = await fetch(`${BASE}/api/md/${wrongYear}/${testMonth}/${testPostSlug}`);
     expect(res.status).toBe(404);
   });
 
   it("returns 404 for mismatched month", async () => {
     // Use a wrong month
     const wrongMonth = testMonth === "01" ? "12" : "01";
-    const res = await fetch(
-      `${BASE}/api/md/${testYear}/${wrongMonth}/${testPostSlug}`,
-    );
+    const res = await fetch(`${BASE}/api/md/${testYear}/${wrongMonth}/${testPostSlug}`);
     expect(res.status).toBe(404);
   });
 });

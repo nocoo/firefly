@@ -195,9 +195,7 @@ async function main(): Promise<void> {
   for (const root of ROOTS) await walk(root);
 
   if (scannedCount === 0) {
-    console.error(
-      `FATAL: scanned 0 files under ${ROOTS.join(", ")} — misconfigured?`,
-    );
+    console.error(`FATAL: scanned 0 files under ${ROOTS.join(", ")} — misconfigured?`);
     process.exit(1);
   }
 
@@ -215,11 +213,12 @@ async function main(): Promise<void> {
     console.error(`  ${v.path}:${v.line}:${v.col}`);
     console.error(`    ${v.snippet}`);
   }
+  console.error("\n  Use a static property name, or refactor to a Map/Record helper.");
   console.error(
-    "\n  Use a static property name, or refactor to a Map/Record helper.",
-  );
-  console.error(
-    "  If truly necessary, add a `" + "$" + "{repoRelPath}:$" + "{line}` entry to ALLOWED_SITES with a reason.",
+    "  If truly necessary, add a `" +
+      "$" +
+      "{repoRelPath}:$" +
+      "{line}` entry to ALLOWED_SITES with a reason.",
   );
   process.exit(1);
 }

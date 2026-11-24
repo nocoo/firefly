@@ -28,7 +28,9 @@ export default async function NotFound() {
       <JournalThemeColor />
       <header className="blog-topbar">
         <div className="blog-topbar-inner">
-          <div className="journal-topbar-brand"><JournalBrand siteName={settings.siteName} /></div>
+          <div className="journal-topbar-brand">
+            <JournalBrand siteName={settings.siteName} />
+          </div>
           <JournalSurfaces />
           <div className="blog-topbar-end">
             <HexlyLink className="journal-hexly-link" />
@@ -40,15 +42,9 @@ export default async function NotFound() {
         <main id="main" className="blog-main">
           <div className="blog-main-inner blog-main-inner-post">
             <div className="py-16 text-center">
-              <p className="font-mono text-xs uppercase tracking-[0.2em] text-blog-muted">
-                404
-              </p>
-              <h1 className="mt-6 text-3xl font-bold text-blog-text md:text-4xl">
-                页面不存在
-              </h1>
-              <p className="mt-3 text-blog-muted">
-                您访问的页面已被移除或从未存在。
-              </p>
+              <p className="font-mono text-xs uppercase tracking-[0.2em] text-blog-muted">404</p>
+              <h1 className="mt-6 text-3xl font-bold text-blog-text md:text-4xl">页面不存在</h1>
+              <p className="mt-3 text-blog-muted">您访问的页面已被移除或从未存在。</p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3 font-mono text-sm">
                 <Link
@@ -60,10 +56,7 @@ export default async function NotFound() {
                 <span aria-hidden="true" className="text-blog-muted">
                   ·
                 </span>
-                <Link
-                  href="/search"
-                  className="text-blog-muted hover:text-blog-text"
-                >
+                <Link href="/search" className="text-blog-muted hover:text-blog-text">
                   搜索
                 </Link>
               </div>
@@ -78,10 +71,7 @@ export default async function NotFound() {
                 <ul className="blog-sidebar-list">
                   {recent.map((post) => (
                     <li key={post.id}>
-                      <Link
-                        href={postPath(post.slug, post.published_at)}
-                        prefetch={false}
-                      >
+                      <Link href={postPath(post.slug, post.published_at)} prefetch={false}>
                         <span>{post.title}</span>
                       </Link>
                     </li>

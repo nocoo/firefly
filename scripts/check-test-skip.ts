@@ -210,30 +210,22 @@ async function main(): Promise<void> {
   for (const root of ROOTS) await walk(root);
 
   if (scannedCount === 0) {
-    console.error(
-      `FATAL: scanned 0 test files under ${ROOTS.join(", ")} — misconfigured?`,
-    );
+    console.error(`FATAL: scanned 0 test files under ${ROOTS.join(", ")} — misconfigured?`);
     process.exit(1);
   }
 
   if (violations.length === 0) {
-    console.log(
-      `✓ no permanent .skip / .only in tests (${scannedCount} files scanned)`,
-    );
+    console.log(`✓ no permanent .skip / .only in tests (${scannedCount} files scanned)`);
     process.exit(0);
   }
 
-  console.error(
-    `✗ permanent test modifiers forbidden (${violations.length}):\n`,
-  );
+  console.error(`✗ permanent test modifiers forbidden (${violations.length}):\n`);
   for (const v of violations) {
     console.error(`  ${v.path}:${v.line}:${v.col}  [${v.kind}]`);
     console.error(`    ${v.snippet}`);
   }
-  console.error(
-    "\n  Use conditional test.skip(condition, reason) for empty-data L3 gates.",
-  );
-  console.error("  Do not commit test.skip(\"name\", fn) / test.only / bare .skip().");
+  console.error("\n  Use conditional test.skip(condition, reason) for empty-data L3 gates.");
+  console.error('  Do not commit test.skip("name", fn) / test.only / bare .skip().');
   process.exit(1);
 }
 

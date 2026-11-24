@@ -4,10 +4,10 @@ Adopted from `nocoo/hexly.ai`, study `firefly/2026-09-06-10`, finishing `02`.
 The owner selected the artwork and requested more room inside the rounded tile.
 All masters use the same centered 84% placement of the complete firefly/fire group.
 
-| File | Role |
-| --- | --- |
-| `../../logo.png` | Transparent foreground, 2048 × 2048; no external glow |
-| `icon.png` | Square night presentation for operating-system icons |
+| File               | Role                                                    |
+| ------------------ | ------------------------------------------------------- |
+| `../../logo.png`   | Transparent foreground, 2048 × 2048; no external glow   |
+| `icon.png`         | Square night presentation for operating-system icons    |
 | `icon-rounded.png` | Rounded presentation for large README and social images |
 
 The insect uses connected flat facets, champagne wings, and a golden abdomen.

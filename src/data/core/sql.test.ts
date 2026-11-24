@@ -20,10 +20,7 @@ describe("buildSetClauses", () => {
   });
 
   it("returns empty arrays when all values are undefined", () => {
-    const result = buildSetClauses(
-      { name: undefined, slug: undefined },
-      fieldMap,
-    );
+    const result = buildSetClauses({ name: undefined, slug: undefined }, fieldMap);
     expect(result).toEqual({ setClauses: [], params: [] });
   });
 
@@ -34,19 +31,13 @@ describe("buildSetClauses", () => {
   });
 
   it("builds multiple field SET clauses", () => {
-    const result = buildSetClauses(
-      { name: "Hello", slug: "hello" },
-      fieldMap,
-    );
+    const result = buildSetClauses({ name: "Hello", slug: "hello" }, fieldMap);
     expect(result.setClauses).toEqual(["name = ?", "slug = ?"]);
     expect(result.params).toEqual(["Hello", "hello"]);
   });
 
   it("passes null through as a param value", () => {
-    const result = buildSetClauses(
-      { description: null },
-      fieldMap,
-    );
+    const result = buildSetClauses({ description: null }, fieldMap);
     expect(result.setClauses).toEqual(["description = ?"]);
     expect(result.params).toEqual([null]);
   });
@@ -78,9 +69,7 @@ describe("buildSetClauses", () => {
 
   it("does not append updated_at", () => {
     const result = buildSetClauses({ name: "Test" }, fieldMap);
-    const hasUpdatedAt = result.setClauses.some((c) =>
-      c.includes("updated_at"),
-    );
+    const hasUpdatedAt = result.setClauses.some((c) => c.includes("updated_at"));
     expect(hasUpdatedAt).toBe(false);
   });
 });

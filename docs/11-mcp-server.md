@@ -4,10 +4,10 @@ Firefly MCP (Model Context Protocol) server — allows AI agents to authenticate
 
 ## Scope & Phasing
 
-| Phase | Scope | Status |
-|-------|-------|--------|
+| Phase       | Scope                                                                                                                                                   | Status           |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
 | **Phase 1** | OAuth metadata, register, authorize, callback, token exchange, stateless `POST /api/mcp` (JSON-only, no session), 16 tools, admin token management page | 📝 This document |
-| **Phase 2** | `GET /api/mcp` SSE stream, `DELETE /api/mcp` session termination, `Mcp-Session-Id` stateful sessions, server-initiated notifications | Future |
+| **Phase 2** | `GET /api/mcp` SSE stream, `DELETE /api/mcp` session termination, `Mcp-Session-Id` stateful sessions, server-initiated notifications                    | Future           |
 
 Phase 1 uses **stateless JSON-only** transport: each `POST /api/mcp` is independent, authenticated by Bearer token, and returns `application/json`. This avoids session stickiness issues on Railway (multiple instances, restarts). SSE and session management are deferred to Phase 2.
 
@@ -202,6 +202,7 @@ File: `src/app/api/mcp/register/route.ts`
 Dynamic Client Registration (RFC 7591). Any MCP client can register itself.
 
 Request:
+
 ```json
 {
   "client_name": "Claude Code",
@@ -213,6 +214,7 @@ Request:
 ```
 
 Response:
+
 ```json
 {
   "client_id": "firefly_mcp_01JQ...",
@@ -224,6 +226,7 @@ Response:
 ```
 
 Validation:
+
 - `client_name` required, max 255 chars
 - `redirect_uris` required, at least 1. **Restricted to loopback addresses only**: must start with `http://localhost`, `http://127.0.0.1`, or `http://[::1]`. This prevents open-redirect attacks — agents always redirect to their own local callback. Custom URI schemes (e.g. `vscode://`) may be allowed in Phase 2 via an explicit allowlist.
 - Store in `mcp_clients` table
@@ -235,17 +238,19 @@ File: `src/app/api/mcp/authorize/route.ts`
 OAuth authorization endpoint. Agent opens this URL in the user's browser.
 
 Query params:
-| Param | Required | Description |
-|-------|----------|-------------|
-| `response_type` | yes | Must be `code` |
-| `client_id` | yes | From registration |
-| `redirect_uri` | yes | Must match registered URI |
-| `code_challenge` | yes | PKCE S256 challenge |
-| `code_challenge_method` | yes | Must be `S256` |
-| `state` | yes | CSRF protection |
-| `scope` | no | Default `mcp:full` |
+
+| Param                   | Required | Description               |
+| ----------------------- | -------- | ------------------------- |
+| `response_type`         | yes      | Must be `code`            |
+| `client_id`             | yes      | From registration         |
+| `redirect_uri`          | yes      | Must match registered URI |
+| `code_challenge`        | yes      | PKCE S256 challenge       |
+| `code_challenge_method` | yes      | Must be `S256`            |
+| `state`                 | yes      | CSRF protection           |
+| `scope`                 | no       | Default `mcp:full`        |
 
 Flow:
+
 1. Validate `client_id` exists in `mcp_clients`
 2. Validate `redirect_uri` matches registered URIs
 3. Store all params in `mcp_auth_codes` table **keyed by `state`** (not in a cookie — avoids overwrite if multiple flows run concurrently). Columns stored: `state` (PK), `client_id`, `redirect_uri`, `code_challenge`, `code_challenge_method`, `scope`, `expires_at` (10 min)
@@ -258,6 +263,7 @@ File: `src/app/api/mcp/callback/route.ts`
 Internal callback — Google OAuth redirects here after login success.
 
 Flow:
+
 1. Verify user session via `auth()` (Auth.js)
 2. Verify email is in whitelist via `isEmailAllowed()`
 3. Read OAuth params from `mcp_auth_codes` table by `state` query param (verify not expired)
@@ -274,15 +280,17 @@ Token exchange endpoint. Supports two grant types:
 **Authorization Code Exchange:**
 
 Request (`application/x-www-form-urlencoded`):
-| Field | Required | Description |
-|-------|----------|-------------|
-| `grant_type` | yes | `authorization_code` |
-| `code` | yes | Authorization code |
-| `redirect_uri` | yes | Must match authorize request |
-| `client_id` | yes | Registered client ID |
-| `code_verifier` | yes | PKCE verifier (plaintext) |
+
+| Field           | Required | Description                  |
+| --------------- | -------- | ---------------------------- |
+| `grant_type`    | yes      | `authorization_code`         |
+| `code`          | yes      | Authorization code           |
+| `redirect_uri`  | yes      | Must match authorize request |
+| `client_id`     | yes      | Registered client ID         |
+| `code_verifier` | yes      | PKCE verifier (plaintext)    |
 
 Response:
+
 ```json
 {
   "access_token": "firefly_at_...",
@@ -293,20 +301,25 @@ Response:
 ```
 
 Validation (validate-then-consume — never burns a legitimate code on bad input):
+
 1. Look up by `code`:
+
    ```sql
    SELECT * FROM mcp_auth_codes
    WHERE code = ? AND consumed = 0 AND expires_at > unixepoch()
    ```
+
    If no row → reject (`invalid_grant`: code invalid, expired, or already consumed)
 2. Verify `client_id` matches the row's `client_id` → reject if mismatch (code is NOT consumed)
 3. Verify `redirect_uri` matches the row's `redirect_uri` → reject if mismatch (code is NOT consumed)
 4. Verify PKCE: `BASE64URL(SHA256(code_verifier))` equals stored `code_challenge` → reject if mismatch (code is NOT consumed)
 5. **Only after all checks pass**, atomically consume:
+
    ```sql
    UPDATE mcp_auth_codes SET consumed = 1
    WHERE code = ? AND consumed = 0
    ```
+
    If `changes === 0` → race condition, another request consumed it first → reject
 6. Generate `access_token` (prefix `firefly_at_`, 48-char random hex)
 7. Generate `refresh_token` (prefix `firefly_rt_`, 48-char random hex)
@@ -318,11 +331,12 @@ Validation (validate-then-consume — never burns a legitimate code on bad input
 **Refresh Token Exchange:**
 
 Request:
-| Field | Required | Description |
-|-------|----------|-------------|
-| `grant_type` | yes | `refresh_token` |
-| `refresh_token` | yes | Current refresh token |
-| `client_id` | yes | Registered client ID |
+
+| Field           | Required | Description           |
+| --------------- | -------- | --------------------- |
+| `grant_type`    | yes      | `refresh_token`       |
+| `refresh_token` | yes      | Current refresh token |
+| `client_id`     | yes      | Registered client ID  |
 
 Response: same as above (new token pair, old tokens revoked).
 
@@ -330,11 +344,11 @@ Token rotation: each refresh invalidates the previous pair and issues a new pair
 
 ### 1.4 Token Lifecycle
 
-| Token Type | TTL | Prefix | Rotation |
-|------------|-----|--------|----------|
-| Authorization Code | 10 min | (raw hex) | Single-use |
-| Access Token | none (until revoked) | `firefly_at_` | Rotated on refresh |
-| Refresh Token | none (until revoked) | `firefly_rt_` | Rotated on refresh |
+| Token Type         | TTL                  | Prefix        | Rotation           |
+| ------------------ | -------------------- | ------------- | ------------------ |
+| Authorization Code | 10 min               | (raw hex)     | Single-use         |
+| Access Token       | none (until revoked) | `firefly_at_` | Rotated on refresh |
+| Refresh Token      | none (until revoked) | `firefly_rt_` | Rotated on refresh |
 
 MCP tokens are issued to long-lived agent clients on a single-user blog. They do not expire on their own — admins revoke them from `/admin/mcp` when needed. Rotation on refresh remains the primary defense against leaked tokens.
 
@@ -354,6 +368,7 @@ File: `src/app/api/mcp/route.ts`
 - This is safe on Railway where instances can restart or scale without breaking sessions
 
 **Phase 2 additions** (future):
+
 - `GET /api/mcp` — SSE stream for server-initiated notifications
 - `DELETE /api/mcp` — session termination
 - `Mcp-Session-Id` header for stateful session management (requires sticky sessions or external session store)
@@ -365,7 +380,7 @@ Authentication: every request must include `Authorization: Bearer <access_token>
 ```typescript
 const server = new McpServer({
   name: "firefly",
-  version: "0.2.0",  // sync with package.json
+  version: "0.2.0", // sync with package.json
 });
 ```
 
@@ -1029,24 +1044,24 @@ Data layer: `getCategoryBySlug()` → `deleteCategory()` from `src/data/categori
 
 ### 3.4 Tool Summary
 
-| Tool | Entity | Operation | Destructive |
-|------|--------|-----------|-------------|
-| `list_posts` | Post | Read | No |
-| `get_post` | Post | Read | No |
-| `create_post` | Post | Create | No |
-| `update_post` | Post | Update | No |
-| `delete_post` | Post | Delete | **Yes** |
-| `generate_excerpt` | Post | Update (AI) | No |
-| `list_tags` | Tag | Read | No |
-| `get_tag` | Tag | Read | No |
-| `create_tag` | Tag | Create | No |
-| `update_tag` | Tag | Update | No |
-| `delete_tag` | Tag | Delete | **Yes** |
-| `list_categories` | Category | Read | No |
-| `get_category` | Category | Read | No |
-| `create_category` | Category | Create | No |
-| `update_category` | Category | Update | No |
-| `delete_category` | Category | Delete | **Yes** |
+| Tool               | Entity   | Operation   | Destructive |
+| ------------------ | -------- | ----------- | ----------- |
+| `list_posts`       | Post     | Read        | No          |
+| `get_post`         | Post     | Read        | No          |
+| `create_post`      | Post     | Create      | No          |
+| `update_post`      | Post     | Update      | No          |
+| `delete_post`      | Post     | Delete      | **Yes**     |
+| `generate_excerpt` | Post     | Update (AI) | No          |
+| `list_tags`        | Tag      | Read        | No          |
+| `get_tag`          | Tag      | Read        | No          |
+| `create_tag`       | Tag      | Create      | No          |
+| `update_tag`       | Tag      | Update      | No          |
+| `delete_tag`       | Tag      | Delete      | **Yes**     |
+| `list_categories`  | Category | Read        | No          |
+| `get_category`     | Category | Read        | No          |
+| `create_category`  | Category | Create      | No          |
+| `update_category`  | Category | Update      | No          |
+| `delete_category`  | Category | Delete      | **Yes**     |
 
 **16 tools total** — 6 read, 7 write, 3 delete.
 
@@ -1109,6 +1124,7 @@ File: `src/app/api/mcp/tokens/route.ts`
 Returns all tokens for the admin display (requires Auth.js session).
 
 Response:
+
 ```json
 {
   "tokens": [
@@ -1238,8 +1254,8 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 
 export async function POST(req: Request): Promise<Response> {
   const transport = new WebStandardStreamableHTTPServerTransport({
-    sessionIdGenerator: undefined,   // stateless Phase 1
-    enableJsonResponse: true,        // JSON-only, no SSE
+    sessionIdGenerator: undefined, // stateless Phase 1
+    enableJsonResponse: true, // JSON-only, no SSE
   });
   await server.connect(transport);
   return transport.handleRequest(req);
@@ -1278,25 +1294,25 @@ export async function POST(req: Request): Promise<Response> {
 
 ## 9. Atomic Commits Plan
 
-| # | Commit | Files |
-|---|--------|-------|
-| 1 | `feat: add mcp database tables migration` | `scripts/migrations/006-mcp.sql` |
-| 2 | `feat: add mcp type definitions` | `src/models/types.ts` |
-| 3 | `feat: add mcp data layer (clients, auth codes, tokens)` | `src/data/mcp-*.ts` |
-| 4 | `feat: add oauth metadata endpoint` | `src/app/.well-known/oauth-authorization-server/route.ts` |
-| 5 | `feat: add mcp client registration endpoint` | `src/app/api/mcp/register/route.ts` |
-| 6 | `feat: add mcp oauth authorize and callback` | `src/app/api/mcp/authorize/route.ts`, `callback/route.ts` |
-| 7 | `feat: add mcp token exchange endpoint` | `src/app/api/mcp/token/route.ts` |
-| 8 | `feat: add mcp token validation middleware` | `src/lib/mcp/auth.ts` |
-| 9 | `feat: add mcp post tools` | `src/lib/mcp/tools/posts.ts` |
-| 10 | `feat: add mcp tag tools` | `src/lib/mcp/tools/tags.ts` |
-| 11 | `feat: add mcp category tools` | `src/lib/mcp/tools/categories.ts` |
-| 12 | `feat: add mcp server and stateless http endpoint` | `src/lib/mcp/server.ts`, `src/app/api/mcp/route.ts` |
-| 13 | `feat: exempt mcp routes from auth.js middleware` | `src/proxy.ts` |
-| 14 | `feat: add admin mcp token management page` | `src/app/admin/mcp/page.tsx`, `src/components/admin/mcp-tokens.tsx` |
-| 15 | `feat: add admin mcp token api endpoints` | `src/app/api/mcp/tokens/route.ts`, `[id]/route.ts` |
-| 16 | `feat: add mcp nav to admin sidebar and i18n` | `src/components/admin/sidebar.tsx`, `shell.tsx`, `en.json`, `zh.json` |
-| 17 | `docs: add mcp server design document` | `docs/10-mcp-server.md`, `docs/README.md` |
+| #   | Commit                                                   | Files                                                                 |
+| --- | -------------------------------------------------------- | --------------------------------------------------------------------- |
+| 1   | `feat: add mcp database tables migration`                | `scripts/migrations/006-mcp.sql`                                      |
+| 2   | `feat: add mcp type definitions`                         | `src/models/types.ts`                                                 |
+| 3   | `feat: add mcp data layer (clients, auth codes, tokens)` | `src/data/mcp-*.ts`                                                   |
+| 4   | `feat: add oauth metadata endpoint`                      | `src/app/.well-known/oauth-authorization-server/route.ts`             |
+| 5   | `feat: add mcp client registration endpoint`             | `src/app/api/mcp/register/route.ts`                                   |
+| 6   | `feat: add mcp oauth authorize and callback`             | `src/app/api/mcp/authorize/route.ts`, `callback/route.ts`             |
+| 7   | `feat: add mcp token exchange endpoint`                  | `src/app/api/mcp/token/route.ts`                                      |
+| 8   | `feat: add mcp token validation middleware`              | `src/lib/mcp/auth.ts`                                                 |
+| 9   | `feat: add mcp post tools`                               | `src/lib/mcp/tools/posts.ts`                                          |
+| 10  | `feat: add mcp tag tools`                                | `src/lib/mcp/tools/tags.ts`                                           |
+| 11  | `feat: add mcp category tools`                           | `src/lib/mcp/tools/categories.ts`                                     |
+| 12  | `feat: add mcp server and stateless http endpoint`       | `src/lib/mcp/server.ts`, `src/app/api/mcp/route.ts`                   |
+| 13  | `feat: exempt mcp routes from auth.js middleware`        | `src/proxy.ts`                                                        |
+| 14  | `feat: add admin mcp token management page`              | `src/app/admin/mcp/page.tsx`, `src/components/admin/mcp-tokens.tsx`   |
+| 15  | `feat: add admin mcp token api endpoints`                | `src/app/api/mcp/tokens/route.ts`, `[id]/route.ts`                    |
+| 16  | `feat: add mcp nav to admin sidebar and i18n`            | `src/components/admin/sidebar.tsx`, `shell.tsx`, `en.json`, `zh.json` |
+| 17  | `docs: add mcp server design document`                   | `docs/10-mcp-server.md`, `docs/README.md`                             |
 
 ---
 
@@ -1304,19 +1320,19 @@ export async function POST(req: Request): Promise<Response> {
 
 ### Unit Tests (Vitest)
 
-| Layer | Coverage Target | Key Tests |
-|-------|----------------|-----------|
-| Data (`mcp-*.ts`) | Token CRUD, revocation logic | Token validation with revoked/valid states |
-| Auth (`lib/mcp/auth.ts`) | Bearer extraction, token lookup, `last_used_at` update | Missing header, invalid token, revoked token |
-| Tools (`lib/mcp/tools/*.ts`) | Input validation, data layer delegation | Each tool with valid/invalid inputs |
-| OAuth endpoints | Registration validation, PKCE verification, code exchange | Invalid client_id, expired code, wrong verifier |
+| Layer                        | Coverage Target                                           | Key Tests                                       |
+| ---------------------------- | --------------------------------------------------------- | ----------------------------------------------- |
+| Data (`mcp-*.ts`)            | Token CRUD, revocation logic                              | Token validation with revoked/valid states      |
+| Auth (`lib/mcp/auth.ts`)     | Bearer extraction, token lookup, `last_used_at` update    | Missing header, invalid token, revoked token    |
+| Tools (`lib/mcp/tools/*.ts`) | Input validation, data layer delegation                   | Each tool with valid/invalid inputs             |
+| OAuth endpoints              | Registration validation, PKCE verification, code exchange | Invalid client_id, expired code, wrong verifier |
 
 ### API E2E Tests (Playwright)
 
-| Flow | Description |
-|------|-------------|
-| Registration | `POST /api/mcp/register` → valid client_id returned |
-| Token exchange | Full code → token flow (mocked Google OAuth) |
-| Tool invocation | Authenticated MCP POST with `tools/list` and `tools/call` |
-| Token revocation | Admin revokes token → subsequent MCP calls return 401 |
+| Flow               | Description                                                          |
+| ------------------ | -------------------------------------------------------------------- |
+| Registration       | `POST /api/mcp/register` → valid client_id returned                  |
+| Token exchange     | Full code → token flow (mocked Google OAuth)                         |
+| Tool invocation    | Authenticated MCP POST with `tools/list` and `tools/call`            |
+| Token revocation   | Admin revokes token → subsequent MCP calls return 401                |
 | Metadata discovery | `GET /.well-known/oauth-authorization-server` returns valid metadata |

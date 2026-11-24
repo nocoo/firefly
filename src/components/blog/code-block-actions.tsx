@@ -23,9 +23,7 @@ export function CodeBlockActions() {
   useEffect(() => {
     const root = document.querySelector(".blog-content");
     if (!root) return;
-    const found = Array.from(
-      root.querySelectorAll<HTMLPreElement>("pre.blog-code-block"),
-    );
+    const found = Array.from(root.querySelectorAll<HTMLPreElement>("pre.blog-code-block"));
     // Each pre needs `position: relative` so the absolute portal anchor
     // positions against it. Done in JS so the static markdown stays clean.
     for (const el of found) {

@@ -15,37 +15,22 @@ interface ReferenceCardProps {
  * When image is null, falls through to a branded icon placeholder (GitHub,
  * Twitter, YouTube) or a neutral domain-initial placeholder.
  */
-export function ReferenceCard({
-  url,
-  title,
-  description,
-  image,
-}: ReferenceCardProps) {
+export function ReferenceCard({ url, title, description, image }: ReferenceCardProps) {
   const displayDomain = getDisplayDomain(url);
   const brand = getDomainBrand(displayDomain);
 
   const placeholder = brand ? (
-    <div
-      className="reference-card-placeholder"
-      style={{ backgroundColor: brand.color }}
-    >
+    <div className="reference-card-placeholder" style={{ backgroundColor: brand.color }}>
       <brand.Icon className="h-8 w-8 text-white" strokeWidth={1.5} aria-hidden="true" />
     </div>
   ) : (
     <div className="reference-card-placeholder reference-card-placeholder-neutral">
-      <span className="text-2xl font-bold uppercase text-white/80">
-        {displayDomain.charAt(0)}
-      </span>
+      <span className="text-2xl font-bold uppercase text-white/80">{displayDomain.charAt(0)}</span>
     </div>
   );
 
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer nofollow"
-      className="reference-card"
-    >
+    <a href={url} target="_blank" rel="noopener noreferrer nofollow" className="reference-card">
       <div className="reference-card-image">
         {image ? (
           <img
@@ -59,12 +44,8 @@ export function ReferenceCard({
         )}
       </div>
       <div className="reference-card-content">
-        {title && (
-          <div className="reference-card-title">{title}</div>
-        )}
-        {description && (
-          <div className="reference-card-description">{description}</div>
-        )}
+        {title && <div className="reference-card-title">{title}</div>}
+        {description && <div className="reference-card-description">{description}</div>}
         <div className="reference-card-domain">
           <LinkIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.5} />
           <span>{displayDomain}</span>

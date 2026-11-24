@@ -4,10 +4,7 @@ import { splitSqlStatements } from "./db-adapter";
 describe("splitSqlStatements", () => {
   it("splits simple statements on semicolons", () => {
     const sql = "CREATE TABLE a (id INT); CREATE TABLE b (id INT);";
-    expect(splitSqlStatements(sql)).toEqual([
-      "CREATE TABLE a (id INT)",
-      "CREATE TABLE b (id INT)",
-    ]);
+    expect(splitSqlStatements(sql)).toEqual(["CREATE TABLE a (id INT)", "CREATE TABLE b (id INT)"]);
   });
 
   it("handles trailing statement without semicolon", () => {
@@ -33,10 +30,7 @@ describe("splitSqlStatements", () => {
 
   it("ignores semicolons inside double-quoted identifiers", () => {
     const sql = 'SELECT "col;name" FROM t; SELECT 1;';
-    expect(splitSqlStatements(sql)).toEqual([
-      'SELECT "col;name" FROM t',
-      "SELECT 1",
-    ]);
+    expect(splitSqlStatements(sql)).toEqual(['SELECT "col;name" FROM t', "SELECT 1"]);
   });
 
   it("skips -- line comments", () => {
@@ -44,18 +38,12 @@ describe("splitSqlStatements", () => {
 CREATE TABLE a (id INT);
 -- another comment;
 SELECT 1;`;
-    expect(splitSqlStatements(sql)).toEqual([
-      "CREATE TABLE a (id INT)",
-      "SELECT 1",
-    ]);
+    expect(splitSqlStatements(sql)).toEqual(["CREATE TABLE a (id INT)", "SELECT 1"]);
   });
 
   it("skips /* block comments */", () => {
     const sql = `/* semi; in comment */ CREATE TABLE a (id INT); /* more; */ SELECT 1;`;
-    expect(splitSqlStatements(sql)).toEqual([
-      "CREATE TABLE a (id INT)",
-      "SELECT 1",
-    ]);
+    expect(splitSqlStatements(sql)).toEqual(["CREATE TABLE a (id INT)", "SELECT 1"]);
   });
 
   it("handles mixed quotes, comments, and statements", () => {
@@ -76,8 +64,6 @@ CREATE TABLE "test;table" (id TEXT);
   });
 
   it("returns empty array for comment-only input", () => {
-    expect(splitSqlStatements("-- just a comment\n/* and a block */")).toEqual(
-      [],
-    );
+    expect(splitSqlStatements("-- just a comment\n/* and a block */")).toEqual([]);
   });
 });

@@ -34,27 +34,20 @@ function buildListFilters(options: ListPostsOptions): {
     params.push(options.tagId);
   }
   if (options.query) {
-    conditions.push(
-      "(p.title LIKE ? OR p.slug LIKE ? OR p.content LIKE ? OR p.excerpt LIKE ?)",
-    );
+    conditions.push("(p.title LIKE ? OR p.slug LIKE ? OR p.content LIKE ? OR p.excerpt LIKE ?)");
     const like = `%${options.query}%`;
     params.push(like, like, like, like);
   }
   if (options.archiveYear != null) {
-    conditions.push(
-      "CAST(strftime('%Y', p.published_at, 'unixepoch') AS INTEGER) = ?",
-    );
+    conditions.push("CAST(strftime('%Y', p.published_at, 'unixepoch') AS INTEGER) = ?");
     params.push(options.archiveYear);
     if (options.archiveMonth != null) {
-      conditions.push(
-        "CAST(strftime('%m', p.published_at, 'unixepoch') AS INTEGER) = ?",
-      );
+      conditions.push("CAST(strftime('%m', p.published_at, 'unixepoch') AS INTEGER) = ?");
       params.push(options.archiveMonth);
     }
   }
 
-  const where =
-    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   return { where, params };
 }
 
@@ -97,11 +90,7 @@ export async function listPosts(
     LIMIT ? OFFSET ?
   `;
 
-  const result = await db.query<PostWithAgent>(sql, [
-    ...params,
-    pageSize,
-    offset,
-  ]);
+  const result = await db.query<PostWithAgent>(sql, [...params, pageSize, offset]);
 
   const countSql = `SELECT COUNT(*) AS count FROM posts p ${where}`;
   const cacheKey = countCacheKey(where, params);
@@ -111,10 +100,7 @@ export async function listPosts(
   if (cachedCount) {
     total = cachedCount.value;
   } else {
-    const countResult = await db.firstOrNull<{ count: number }>(
-      countSql,
-      params,
-    );
+    const countResult = await db.firstOrNull<{ count: number }>(countSql, params);
     total = countResult?.count ?? result.results.length;
     if (cacheCount) countCacheSet(cacheKey, { value: total, cachedAt: Date.now() });
   }
@@ -139,12 +125,6 @@ export async function getPostBySlug(
   return db.firstOrNull<PostWithAgent>(sql, params);
 }
 
-export async function getPostById(
-  db: Db,
-  id: string,
-): Promise<PostWithAgent | null> {
-  return db.firstOrNull<PostWithAgent>(
-    `${VIEW_QUERY} WHERE p.id = ?`,
-    [id],
-  );
+export async function getPostById(db: Db, id: string): Promise<PostWithAgent | null> {
+  return db.firstOrNull<PostWithAgent>(`${VIEW_QUERY} WHERE p.id = ?`, [id]);
 }

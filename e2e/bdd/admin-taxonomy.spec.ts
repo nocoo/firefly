@@ -61,9 +61,9 @@ test.describe("Feature: Admin categories page", () => {
 
     // Then: AdminShell h1 — i18n key "admin.page.categories" → "分类"
     // (src/lib/i18n/index.ts).
-    await expect(
-      page.getByRole("heading", { level: 1, name: "分类" }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 1, name: "分类" }).first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("Given /admin/categories renders, When I view the list, Then the table is visible and per-state surfaces 暂无分类 (empty) OR the first 编辑 row action (non-empty)", async ({
@@ -86,9 +86,7 @@ test.describe("Feature: Admin categories page", () => {
     const editButtons = table.getByRole("button", { name: "编辑" });
     const editCount = await editButtons.count();
     if (editCount === 0) {
-      await expect(
-        table.getByText("暂无分类", { exact: true }),
-      ).toBeVisible();
+      await expect(table.getByText("暂无分类", { exact: true })).toBeVisible();
     } else {
       await expect(editButtons.first()).toBeVisible();
     }
@@ -103,9 +101,7 @@ test.describe("Feature: Admin categories page", () => {
 
     // When: click 新建分类 — taxonomy-manager.tsx:177-184 button label is
     // exactly "新建分类".
-    await page
-      .getByRole("button", { name: "新建分类", exact: true })
-      .click();
+    await page.getByRole("button", { name: "新建分类", exact: true }).click();
 
     // Then: taxonomy-manager-form.tsx:54-56 → h3 "新建分类" (level 3).
     const formHeading = page.getByRole("heading", {
@@ -142,10 +138,7 @@ test.describe("Feature: Admin categories page", () => {
     const editCount = await editButtons.count();
     // Then: empty branch skips with explicit reason; non-empty branch
     // proceeds to assert the edit form.
-    test.skip(
-      editCount === 0,
-      "No categories available to edit in current seed.",
-    );
+    test.skip(editCount === 0, "No categories available to edit in current seed.");
 
     // When: click the first row 编辑 button.
     await editButtons.first().click();
@@ -161,10 +154,7 @@ test.describe("Feature: Admin categories page", () => {
     const nameInput = page.getByLabel("名称");
     await expect(nameInput).toBeVisible();
     const nameValue = await nameInput.inputValue();
-    expect(
-      nameValue.length,
-      "edit form populated 名称 input with empty value",
-    ).toBeGreaterThan(0);
+    expect(nameValue.length, "edit form populated 名称 input with empty value").toBeGreaterThan(0);
 
     // When: click 取消. Then: form heading collapses.
     await page.getByRole("button", { name: "取消", exact: true }).click();
@@ -180,9 +170,9 @@ test.describe("Feature: Admin categories page", () => {
 
     // Then: taxonomy-manager-table.tsx:151 — <th>文章数</th>. columnheader
     // role disambiguates from row-body cells that may render counts as text.
-    await expect(
-      page.getByRole("columnheader", { name: "文章数" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("columnheader", { name: "文章数" })).toBeVisible({
+      timeout: 10_000,
+    });
   });
 });
 
@@ -199,9 +189,9 @@ test.describe("Feature: Admin tags page", () => {
     await expectPathname(page, "/admin/tags");
 
     // Then: AdminShell h1 — i18n key "admin.page.tags" → "标签".
-    await expect(
-      page.getByRole("heading", { level: 1, name: "标签" }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 1, name: "标签" }).first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("Given /admin/tags renders, When I view the list, Then the table is visible and per-state surfaces 暂无标签 (empty) OR the first 编辑 row action (non-empty)", async ({
@@ -220,9 +210,7 @@ test.describe("Feature: Admin tags page", () => {
     const editButtons = table.getByRole("button", { name: "编辑" });
     const editCount = await editButtons.count();
     if (editCount === 0) {
-      await expect(
-        table.getByText("暂无标签", { exact: true }),
-      ).toBeVisible();
+      await expect(table.getByText("暂无标签", { exact: true })).toBeVisible();
     } else {
       await expect(editButtons.first()).toBeVisible();
     }
@@ -236,9 +224,7 @@ test.describe("Feature: Admin tags page", () => {
     await expectPathname(page, "/admin/tags");
 
     // When: click 新建标签.
-    await page
-      .getByRole("button", { name: "新建标签", exact: true })
-      .click();
+    await page.getByRole("button", { name: "新建标签", exact: true }).click();
 
     // Then: form heading appears in create mode.
     const formHeading = page.getByRole("heading", {
@@ -271,10 +257,7 @@ test.describe("Feature: Admin tags page", () => {
     const editCount = await editButtons.count();
     // Then: empty branch skips with explicit reason; non-empty branch
     // proceeds to assert the edit form.
-    test.skip(
-      editCount === 0,
-      "No tags available to edit in current seed.",
-    );
+    test.skip(editCount === 0, "No tags available to edit in current seed.");
 
     // When: click the first row 编辑 button.
     await editButtons.first().click();
@@ -290,10 +273,7 @@ test.describe("Feature: Admin tags page", () => {
     const nameInput = page.getByLabel("名称");
     await expect(nameInput).toBeVisible();
     const nameValue = await nameInput.inputValue();
-    expect(
-      nameValue.length,
-      "edit form populated 名称 input with empty value",
-    ).toBeGreaterThan(0);
+    expect(nameValue.length, "edit form populated 名称 input with empty value").toBeGreaterThan(0);
 
     // When: click 取消. Then: form heading collapses.
     await page.getByRole("button", { name: "取消", exact: true }).click();

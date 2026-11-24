@@ -126,7 +126,8 @@ export interface DbAdapter {
 export class CfRestAdapter implements DbAdapter {
   private readonly apiUrl: string;
 
-  constructor(accountId: string,
+  constructor(
+    accountId: string,
     private apiToken: string,
     databaseId: string,
     public readonly label: string,
@@ -159,8 +160,7 @@ export class CfRestAdapter implements DbAdapter {
     };
 
     if (!data.success) {
-      const msg =
-        data.errors?.map((e) => e.message).join(", ") ?? "Unknown error";
+      const msg = data.errors?.map((e) => e.message).join(", ") ?? "Unknown error";
       throw new Error(msg);
     }
 
@@ -243,10 +243,7 @@ function loadEnvFile(path: string): Record<string, string> {
 
 export function createAdapter(target: "prod" | "local"): DbAdapter {
   if (target === "local") {
-    return new WorkerHttpAdapter(
-      "http://localhost:8787",
-      "test-secret",
-    );
+    return new WorkerHttpAdapter("http://localhost:8787", "test-secret");
   }
 
   // Remote prod target needs CF credentials from .env
@@ -257,9 +254,7 @@ export function createAdapter(target: "prod" | "local"): DbAdapter {
   const apiToken = env.CF_API_TOKEN ?? process.env.CF_API_TOKEN;
 
   if (!accountId || !apiToken) {
-    throw new Error(
-      "Missing CF_ACCOUNT_ID or CF_API_TOKEN (check .env or environment)",
-    );
+    throw new Error("Missing CF_ACCOUNT_ID or CF_API_TOKEN (check .env or environment)");
   }
 
   const dbId = env.CF_D1_DATABASE_ID ?? process.env.CF_D1_DATABASE_ID;

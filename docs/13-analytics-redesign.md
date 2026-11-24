@@ -16,24 +16,24 @@
 
 ### 2.1 Dashboard 问题
 
-| 问题 | 现状 | 影响 |
-|------|------|------|
-| 混合视角 | 所有 views 混在一起，bot 只在底部小面板展示 | 无法判断真实读者量 |
-| 无来源分层 | 没有按 search / ai / human / other 分维度 | 无法理解流量结构 |
-| 文章粒度缺失 | `page_views.post_id` 始终为 null | Top Posts 只有 WP 迁移的历史数据 |
-| 聚合表停滞 | `daily_stats`、`site_daily_stats` 无增量更新 | Overview 和趋势图只展示 WP 迁移数据 |
-| 路径级分析 | 只有 path，不知道哪条 path 对应哪篇文章 | 无法做内容分析 |
-| GET API 无鉴权 | `GET /api/analytics` 不受 proxy auth 保护 | 分析数据对外公开暴露 |
+| 问题           | 现状                                         | 影响                                |
+| -------------- | -------------------------------------------- | ----------------------------------- |
+| 混合视角       | 所有 views 混在一起，bot 只在底部小面板展示  | 无法判断真实读者量                  |
+| 无来源分层     | 没有按 search / ai / human / other 分维度    | 无法理解流量结构                    |
+| 文章粒度缺失   | `page_views.post_id` 始终为 null             | Top Posts 只有 WP 迁移的历史数据    |
+| 聚合表停滞     | `daily_stats`、`site_daily_stats` 无增量更新 | Overview 和趋势图只展示 WP 迁移数据 |
+| 路径级分析     | 只有 path，不知道哪条 path 对应哪篇文章      | 无法做内容分析                      |
+| GET API 无鉴权 | `GET /api/analytics` 不受 proxy auth 保护    | 分析数据对外公开暴露                |
 
 ### 2.2 数据管道问题
 
-| 问题 | 文件 | 原因 |
-|------|------|------|
-| `post_id` 永远为 null | `src/proxy.ts:126` | Middleware 层不知道 path→post 映射 |
-| `city` 永远为 null | `src/proxy.ts:134` | 没有读取 `cf-ipcity` header |
-| `session_id` 未实现 | `src/lib/tracking.ts:35` | 没有 cookie/session 机制 |
-| `posts.view_count` 不更新 | `src/data/analytics.ts:30` | `recordPageView` 不触发 counter 更新 |
-| 聚合表无增量 | — | 缺少 cron job 或 Cloudflare Scheduled Worker |
+| 问题                      | 文件                       | 原因                                         |
+| ------------------------- | -------------------------- | -------------------------------------------- |
+| `post_id` 永远为 null     | `src/proxy.ts:126`         | Middleware 层不知道 path→post 映射           |
+| `city` 永远为 null        | `src/proxy.ts:134`         | 没有读取 `cf-ipcity` header                  |
+| `session_id` 未实现       | `src/lib/tracking.ts:35`   | 没有 cookie/session 机制                     |
+| `posts.view_count` 不更新 | `src/data/analytics.ts:30` | `recordPageView` 不触发 counter 更新         |
+| 聚合表无增量              | —                          | 缺少 cron job 或 Cloudflare Scheduled Worker |
 
 ## 3. Design: Four-Source Analytics
 
@@ -96,12 +96,12 @@ is_bot = 1 AND COALESCE(bot_category, 'other') NOT IN ('search', 'ai')
 
 ### 3.3 Overview 统计卡片（5 张）
 
-| 卡片 | SQL 条件 |
-|------|----------|
-| **Total Views** | `COUNT(*)` |
-| **Human Views** | `is_bot = 0` |
-| **Search Crawls** | `is_bot = 1 AND bot_category = 'search'` |
-| **AI Crawls** | `is_bot = 1 AND bot_category = 'ai'` |
+| 卡片               | SQL 条件                                                                 |
+| ------------------ | ------------------------------------------------------------------------ |
+| **Total Views**    | `COUNT(*)`                                                               |
+| **Human Views**    | `is_bot = 0`                                                             |
+| **Search Crawls**  | `is_bot = 1 AND bot_category = 'search'`                                 |
+| **AI Crawls**      | `is_bot = 1 AND bot_category = 'ai'`                                     |
 | **Other Bot Hits** | `is_bot = 1 AND COALESCE(bot_category, 'other') NOT IN ('search', 'ai')` |
 
 每张卡片包含：数字 + 与前一周期对比的 delta 百分比。
@@ -158,7 +158,7 @@ SQL GROUP BY date 只返回有数据的日期。**后端**在返回前负责补�
 ```ts
 // src/data/analytics.ts — backend utility
 function fillDailyGaps(rows: DailyRow[], startDate: string, endDate: string): DailyRow[] {
-  const map = new Map(rows.map(r => [r.date, r]));
+  const map = new Map(rows.map((r) => [r.date, r]));
   const result: DailyRow[] = [];
   for (let d = new Date(startDate); d <= new Date(endDate); d.setDate(d.getDate() + 1)) {
     const key = d.toISOString().slice(0, 10);
@@ -183,9 +183,9 @@ function fillDailyByBotGaps(
   endDate: string,
 ): { date: string; botName: string; count: number }[] {
   // 1. Collect all bot names that appeared
-  const botNames = [...new Set(rows.map(r => r.botName))];
+  const botNames = [...new Set(rows.map((r) => r.botName))];
   // 2. Build lookup: "date|botName" → count
-  const lookup = new Map(rows.map(r => [`${r.date}|${r.botName}`, r.count]));
+  const lookup = new Map(rows.map((r) => [`${r.date}|${r.botName}`, r.count]));
   // 3. Generate cartesian product: every bot × every date
   const result: { date: string; botName: string; count: number }[] = [];
   for (let d = new Date(startDate); d <= new Date(endDate); d.setDate(d.getDate() + 1)) {
@@ -206,42 +206,42 @@ function fillDailyByBotGaps(
 
 #### Tab 1: Human Visitors
 
-| 面板 | 内容 | 说明 |
-|------|------|------|
-| **Top Pages** | 按 path GROUP BY，LEFT JOIN posts 获取标题 | 人类真正在读什么 |
-| **Top Referrers** | referrer 来源 | 从哪来的（Google 搜索结果、社交分享、直接访问） |
-| **Device Split** | Desktop / Mobile / Tablet 饼图 | 设备分布 |
-| **Browser Split** | Chrome / Safari / Firefox 等 | 浏览器分布 |
-| **OS Split** | macOS / Windows / iOS / Android | 操作系统分布 |
-| **Country** | 国家分布（条形图） | 按 `country` 字段 |
-| **Recent 24h** | 最近 24 小时人类访问量 | 实时感知（滚动窗口，见 §3.4） |
+| 面板              | 内容                                       | 说明                                            |
+| ----------------- | ------------------------------------------ | ----------------------------------------------- |
+| **Top Pages**     | 按 path GROUP BY，LEFT JOIN posts 获取标题 | 人类真正在读什么                                |
+| **Top Referrers** | referrer 来源                              | 从哪来的（Google 搜索结果、社交分享、直接访问） |
+| **Device Split**  | Desktop / Mobile / Tablet 饼图             | 设备分布                                        |
+| **Browser Split** | Chrome / Safari / Firefox 等               | 浏览器分布                                      |
+| **OS Split**      | macOS / Windows / iOS / Android            | 操作系统分布                                    |
+| **Country**       | 国家分布（条形图）                         | 按 `country` 字段                               |
+| **Recent 24h**    | 最近 24 小时人类访问量                     | 实时感知（滚动窗口，见 §3.4）                   |
 
 #### Tab 2: Search Engine
 
-| 面板 | 内容 | 说明 |
-|------|------|------|
-| **Bot Breakdown** | Googlebot / Bingbot / YandexBot 等 | 哪些搜索引擎在爬 |
-| **Top Crawled Pages** | 搜索引擎爬过的页面排名 | 哪些内容被索引得最多 |
-| **Crawl Timeline** | 按天的爬取频率（按 bot 分线） | 搜索引擎的关注度趋势 |
-| **Crawler vs Page** | 交叉表：哪个 bot 爬了哪些页面 | 理解不同引擎的偏好 |
+| 面板                  | 内容                               | 说明                 |
+| --------------------- | ---------------------------------- | -------------------- |
+| **Bot Breakdown**     | Googlebot / Bingbot / YandexBot 等 | 哪些搜索引擎在爬     |
+| **Top Crawled Pages** | 搜索引擎爬过的页面排名             | 哪些内容被索引得最多 |
+| **Crawl Timeline**    | 按天的爬取频率（按 bot 分线）      | 搜索引擎的关注度趋势 |
+| **Crawler vs Page**   | 交叉表：哪个 bot 爬了哪些页面      | 理解不同引擎的偏好   |
 
 #### Tab 3: AI Bot
 
-| 面板 | 内容 | 说明 |
-|------|------|------|
-| **Bot Breakdown** | GPTBot / ClaudeBot / PerplexityBot 等 | 哪些 AI 在抓 |
-| **Top Crawled Pages** | AI 爬过的页面排名 | 哪些内容被 AI 训练/检索 |
-| **Crawl Timeline** | 按天的爬取频率（按 bot 分线） | AI 兴趣趋势 |
-| **AI Bot Comparison** | 多条线对比不同 AI bot 的活跃度 | GPTBot vs ClaudeBot vs Perplexity |
+| 面板                  | 内容                                  | 说明                              |
+| --------------------- | ------------------------------------- | --------------------------------- |
+| **Bot Breakdown**     | GPTBot / ClaudeBot / PerplexityBot 等 | 哪些 AI 在抓                      |
+| **Top Crawled Pages** | AI 爬过的页面排名                     | 哪些内容被 AI 训练/检索           |
+| **Crawl Timeline**    | 按天的爬取频率（按 bot 分线）         | AI 兴趣趋势                       |
+| **AI Bot Comparison** | 多条线对比不同 AI bot 的活跃度        | GPTBot vs ClaudeBot vs Perplexity |
 
 #### Tab 4: Other Bots
 
-| 面板 | 内容 | 说明 |
-|------|------|------|
-| **Bot Breakdown** | social / monitor / other 三类 | 分类概览 |
-| **Social Preview** | Facebook / Twitter / LinkedIn 等 | 社交平台的预览拉取 |
-| **Monitor Activity** | UptimeRobot / Pingdom 等 | 监控工具频率 |
-| **Unknown Bots** | 未分类的 bot UA 列表 | 发现新 bot 模式 |
+| 面板                 | 内容                             | 说明               |
+| -------------------- | -------------------------------- | ------------------ |
+| **Bot Breakdown**    | social / monitor / other 三类    | 分类概览           |
+| **Social Preview**   | Facebook / Twitter / LinkedIn 等 | 社交平台的预览拉取 |
+| **Monitor Activity** | UptimeRobot / Pingdom 等         | 监控工具频率       |
+| **Unknown Bots**     | 未分类的 bot UA 列表             | 发现新 bot 模式    |
 
 ### 3.8 Top Pages 标题回退规则
 
@@ -279,6 +279,7 @@ WHERE ...
 slug 提取在 TypeScript 层完成（见 §4.2），不在 SQL 中做字符串操作。SQL 的 `COALESCE(p.title, pv.path)` 保底返回 path，TypeScript 代码再对 path fallback 调用 `formatPathAsTitle()`。
 
 **前端渲染**：
+
 - 所有行都显示 `title`（后端已保证非空）
 - 文章路径的行可点击跳转（后端额外返回 `isPost: boolean` 标记）
 - 非文章路径的行不可点击，文字用 muted 颜色
@@ -287,11 +288,11 @@ slug 提取在 TypeScript 层完成（见 §4.2），不在 SQL 中做字符串�
 
 始终显示在页面底部，由 summary endpoint 返回，展示全部流量的聚合维度：
 
-| 面板 | 内容 | 数据条件 |
-|------|------|----------|
-| **Countries** | 国家分布条形图 | 全部 page_views，按 country GROUP BY |
-| **Platforms (OS)** | 操作系统分布 | 仅 is_bot=0（bot 的 OS 无意义） |
-| **Browsers** | 浏览器分布 | 仅 is_bot=0 |
+| 面板               | 内容           | 数据条件                             |
+| ------------------ | -------------- | ------------------------------------ |
+| **Countries**      | 国家分布条形图 | 全部 page_views，按 country GROUP BY |
+| **Platforms (OS)** | 操作系统分布   | 仅 is_bot=0（bot 的 OS 无意义）      |
+| **Browsers**       | 浏览器分布     | 仅 is_bot=0                          |
 
 ## 4. Data Pipeline Fixes
 
@@ -305,6 +306,7 @@ slug 提取在 TypeScript 层完成（见 §4.2），不在 SQL 中做字符串�
 **本轮策略：明确接受"统计非强一致"**
 
 理由：
+
 1. 个人博客的分析数据不需要金融级精度，丢失少量 page views 可接受
 2. 引入 `waitUntil`（Vercel Edge Runtime）或消息队列（如 Cloudflare Queue）增加架构复杂度，收益不大
 3. 当前 fire-and-forget 已经能记录绝大多数 page views
@@ -316,6 +318,7 @@ slug 提取在 TypeScript 层完成（见 §4.2），不在 SQL 中做字符串�
 - `view_count` 更新独立于 `recordPageView`：如果 UPDATE 失败，INSERT page_view 不受影响
 
 **未来优化路径**（Out of Scope）：
+
 - 迁移到 Vercel Edge Runtime 使用 `waitUntil()` 确保异步完成
 - 使用 Cloudflare Queue 解耦写入
 
@@ -341,6 +344,7 @@ src/lib/tracking.ts
 ```
 
 **路径规则**：
+
 - `/{year}/{month}/{slug}` → 正则提取 slug → 查 posts 表（**注意**：不是 `/posts/{slug}`）
 - `/` → null（首页）
 - `/category/*`、`/tag/*`、`/page/*` → null
@@ -349,6 +353,7 @@ src/lib/tracking.ts
 **缓存策略**：使用项目已有的 `createCache<T>(ttl)` 工具（`src/lib/cache.ts`），创建 `createCache<Map<string, string | null>>(5 * 60 * 1000)`，TTL 5 分钟，与 redirect cache 的实际 TTL 一致。整个 slug→postId 映射表作为一个 Map 缓存，缓存过期后重建。
 
 **文件改动**：
+
 - `src/lib/tracking.ts` — 增加 `resolvePostId()` 函数
 - `src/proxy.ts` — 无需改动（tracking.ts 内部处理）
 
@@ -412,11 +417,11 @@ function isProtectedApiRoute(pathname: string, method: string): boolean {
 
 **方案选择**：
 
-| 方案 | 优点 | 缺点 |
-|------|------|------|
-| A. Scheduled Worker（Cloudflare Cron Trigger） | 真正的定时任务，隔离 | 需要额外部署 Worker |
-| B. 弃用聚合表，改为实时查 page_views | 架构简单，数据永远准确 | 大量数据时查询慢 |
-| **C. API 端查询时 on-the-fly 聚合（推荐）** | 不需要额外基础设施，数据实时 | 查询稍慢但 D1 可接受 |
+| 方案                                           | 优点                         | 缺点                 |
+| ---------------------------------------------- | ---------------------------- | -------------------- |
+| A. Scheduled Worker（Cloudflare Cron Trigger） | 真正的定时任务，隔离         | 需要额外部署 Worker  |
+| B. 弃用聚合表，改为实时查 page_views           | 架构简单，数据永远准确       | 大量数据时查询慢     |
+| **C. API 端查询时 on-the-fly 聚合（推荐）**    | 不需要额外基础设施，数据实时 | 查询稍慢但 D1 可接受 |
 
 **采用方案 C**：
 
@@ -491,7 +496,7 @@ interface AnalyticsSummaryResponse {
 
   // Daily breakdown for trend chart (all dates in range, gaps filled with zeros by backend)
   daily: {
-    date: string;      // YYYY-MM-DD
+    date: string; // YYYY-MM-DD
     human: number;
     search: number;
     ai: number;
@@ -501,14 +506,14 @@ interface AnalyticsSummaryResponse {
   // Cross-source aggregates
   aggregates: {
     countries: { country: string; count: number }[];
-    platforms: { os: string; count: number }[];    // humans only
+    platforms: { os: string; count: number }[]; // humans only
     browsers: { browser: string; count: number }[]; // humans only
   };
 
   period: {
     days: number;
-    startDate: string;  // inclusive, YYYY-MM-DD
-    endDate: string;    // inclusive, YYYY-MM-DD (yesterday)
+    startDate: string; // inclusive, YYYY-MM-DD
+    endDate: string; // inclusive, YYYY-MM-DD (yesterday)
   };
 }
 ```
@@ -533,8 +538,8 @@ interface SearchDetailResponse {
   type: "search";
   bots: { botName: string; count: number }[];
   topPages: { path: string; title: string; isPost: boolean; views: number }[];
-  dailyByBot: { date: string; botName: string; count: number }[];  // for timeline chart, gaps filled
-  crawlerVsPage: { botName: string; path: string; title: string; count: number }[];  // cross-table
+  dailyByBot: { date: string; botName: string; count: number }[]; // for timeline chart, gaps filled
+  crawlerVsPage: { botName: string; path: string; title: string; count: number }[]; // cross-table
 }
 
 // --- AI Bot ---
@@ -542,7 +547,7 @@ interface AiBotDetailResponse {
   type: "ai";
   bots: { botName: string; count: number }[];
   topPages: { path: string; title: string; isPost: boolean; views: number }[];
-  dailyByBot: { date: string; botName: string; count: number }[];  // for comparison chart, gaps filled
+  dailyByBot: { date: string; botName: string; count: number }[]; // for comparison chart, gaps filled
 }
 
 // --- Other Bot ---
@@ -560,6 +565,7 @@ interface OtherBotDetailResponse {
 所有查询直接读 `page_views` 表。所有查询使用 §3.4 定义的标准时间窗口（完整 UTC 自然日，不含今天）。
 
 **Overview**：
+
 ```sql
 -- Current period
 SELECT
@@ -576,6 +582,7 @@ WHERE date(viewed_at, 'unixepoch') BETWEEN date('now', '-' || ? || ' days') AND 
 ```
 
 **Daily Trend**：
+
 ```sql
 SELECT
   date(viewed_at, 'unixepoch') AS date,
@@ -603,24 +610,26 @@ const rows = await db.query<{ path: string; views: number }>(
    GROUP BY path
    ORDER BY views DESC
    LIMIT 20`,
-  [days]
+  [days],
 );
 
 // 2. For each path, try to extract slug and resolve title
 const ARTICLE_PATH_RE = /^\/(\d{4})\/(\d{2})\/([^/]+)\/?$/;
 
-const result = await Promise.all(rows.results.map(async (row) => {
-  const match = row.path.match(ARTICLE_PATH_RE);
-  if (match) {
-    const slug = match[3];
-    const post = await db.firstOrNull<{ title: string }>(
-      `SELECT title FROM posts WHERE slug = ? AND status = 'published'`,
-      [slug]
-    );
-    if (post) return { path: row.path, title: post.title, isPost: true, views: row.views };
-  }
-  return { path: row.path, title: formatPathAsTitle(row.path), isPost: false, views: row.views };
-}));
+const result = await Promise.all(
+  rows.results.map(async (row) => {
+    const match = row.path.match(ARTICLE_PATH_RE);
+    if (match) {
+      const slug = match[3];
+      const post = await db.firstOrNull<{ title: string }>(
+        `SELECT title FROM posts WHERE slug = ? AND status = 'published'`,
+        [slug],
+      );
+      if (post) return { path: row.path, title: post.title, isPost: true, views: row.views };
+    }
+    return { path: row.path, title: formatPathAsTitle(row.path), isPost: false, views: row.views };
+  }),
+);
 ```
 
 > 注：Top Pages 最多 20 行，所以 N+1 查询可接受。如果后续需要优化，可以批量查 `WHERE slug IN (...)`.
@@ -676,14 +685,18 @@ const [activeTab, setActiveTab] = useState<SourceType>("human");
 // Initial load: summary + default tab
 useEffect(() => {
   fetchSummary(days).then(setSummary);
-  fetchSourceDetail("human", days).then(data => setSourceCache(prev => ({ ...prev, human: data })));
+  fetchSourceDetail("human", days).then((data) =>
+    setSourceCache((prev) => ({ ...prev, human: data })),
+  );
 }, [days]);
 
 // Tab switch: fetch only if not cached
 function handleTabChange(type: SourceType) {
   setActiveTab(type);
   if (!sourceCache[type]) {
-    fetchSourceDetail(type, days).then(data => setSourceCache(prev => ({ ...prev, [type]: data })));
+    fetchSourceDetail(type, days).then((data) =>
+      setSourceCache((prev) => ({ ...prev, [type]: data })),
+    );
   }
 }
 
@@ -716,68 +729,68 @@ function handlePeriodChange(newDays: number) {
 
 ### Backend
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/proxy.ts` | EDIT | 读取 `cf-ipcity` header + analytics auth fix |
-| `src/lib/tracking.ts` | EDIT | 增加 `resolvePostId()` + slug cache |
-| `src/data/analytics.ts` | EDIT | 增加 view_count 更新、新查询函数、`fillDailyGaps`、`formatPathAsTitle` |
-| `src/app/api/analytics/route.ts` | REWRITE | Summary endpoint（替换旧实现） |
-| `src/app/api/analytics/source/route.ts` | CREATE | Source detail endpoint |
-| `src/models/types.ts` | EDIT | 增加 response 类型定义 |
+| File                                    | Action  | Description                                                            |
+| --------------------------------------- | ------- | ---------------------------------------------------------------------- |
+| `src/proxy.ts`                          | EDIT    | 读取 `cf-ipcity` header + analytics auth fix                           |
+| `src/lib/tracking.ts`                   | EDIT    | 增加 `resolvePostId()` + slug cache                                    |
+| `src/data/analytics.ts`                 | EDIT    | 增加 view_count 更新、新查询函数、`fillDailyGaps`、`formatPathAsTitle` |
+| `src/app/api/analytics/route.ts`        | REWRITE | Summary endpoint（替换旧实现）                                         |
+| `src/app/api/analytics/source/route.ts` | CREATE  | Source detail endpoint                                                 |
+| `src/models/types.ts`                   | EDIT    | 增加 response 类型定义                                                 |
 
 ### Frontend
 
-| File | Action | Description |
-|------|--------|-------------|
+| File                                           | Action  | Description                       |
+| ---------------------------------------------- | ------- | --------------------------------- |
 | `src/components/admin/analytics-dashboard.tsx` | REWRITE | 新的 orchestrator（整体结构重组） |
-| `src/components/admin/analytics/*.tsx` | CREATE | 8 个新子组件（见 §6.1） |
-| `src/i18n/locales/en.json` | EDIT | 新增 analytics i18n keys |
-| `src/i18n/locales/zh.json` | EDIT | 新增 analytics i18n keys |
+| `src/components/admin/analytics/*.tsx`         | CREATE  | 8 个新子组件（见 §6.1）           |
+| `src/i18n/locales/en.json`                     | EDIT    | 新增 analytics i18n keys          |
+| `src/i18n/locales/zh.json`                     | EDIT    | 新增 analytics i18n keys          |
 
 ### Tests
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/data/analytics.test.ts` | EDIT | 新查询函数的 unit tests |
-| `src/lib/tracking.test.ts` | EDIT | resolvePostId + slug cache tests |
-| `e2e/api/analytics.test.ts` | EDIT | 两个 endpoint 的 E2E tests + auth tests |
+| File                         | Action | Description                             |
+| ---------------------------- | ------ | --------------------------------------- |
+| `src/data/analytics.test.ts` | EDIT   | 新查询函数的 unit tests                 |
+| `src/lib/tracking.test.ts`   | EDIT   | resolvePostId + slug cache tests        |
+| `e2e/api/analytics.test.ts`  | EDIT   | 两个 endpoint 的 E2E tests + auth tests |
 
 ## 8. Atomic Commits
 
-| # | Commit | Scope |
-|---|--------|-------|
-| 1 | fix: read cf-ipcity header in proxy | `src/proxy.ts` | ✅ |
-| 2 | fix: protect analytics GET endpoints with admin auth | `src/proxy.ts` | ✅ |
-| 3 | feat: resolve post_id from path in tracking | `src/lib/tracking.ts` | ✅ |
-| 4 | feat: increment posts.view_count on human page view | `src/data/analytics.ts` | ✅ |
-| 5 | feat: add analytics summary + source query functions | `src/data/analytics.ts`, `src/models/types.ts` | ✅ |
-| 6 | feat: rewrite /api/analytics as summary endpoint | `src/app/api/analytics/route.ts` | ✅ |
-| 7 | feat: add /api/analytics/source detail endpoint | `src/app/api/analytics/source/route.ts` | ✅ |
-| 8 | feat: chart helpers and shared constants | `src/components/admin/analytics/chart-helpers.ts` | ✅ |
-| 9 | feat: analytics overview cards with delta | `src/components/admin/analytics/overview-cards.tsx` | ✅ |
-| 10 | feat: stacked area traffic trend chart | `src/components/admin/analytics/traffic-trend.tsx` | ✅ |
-| 11 | feat: human visitor detail tab | `src/components/admin/analytics/human-tab.tsx` | ✅ |
-| 12 | feat: search engine detail tab | `src/components/admin/analytics/search-tab.tsx` | ✅ |
-| 13 | feat: AI bot detail tab | `src/components/admin/analytics/ai-bot-tab.tsx` | ✅ |
-| 14 | feat: other bot detail tab | `src/components/admin/analytics/other-bot-tab.tsx` | ✅ |
-| 15 | feat: aggregates panel (countries/platforms/browsers) | `src/components/admin/analytics/aggregates-panel.tsx` | ✅ |
-| 16 | feat: rewrite analytics dashboard orchestrator | `src/components/admin/analytics-dashboard.tsx` | ✅ |
-| 17 | feat: add i18n keys for analytics redesign | `src/i18n/locales/{en,zh}.json` | ✅ |
-| 18 | test: add unit + e2e tests for analytics redesign | tests | ✅ |
+| #   | Commit                                                | Scope                                                 |
+| --- | ----------------------------------------------------- | ----------------------------------------------------- |
+| 1   | fix: read cf-ipcity header in proxy                   | `src/proxy.ts`                                        | ✅  |
+| 2   | fix: protect analytics GET endpoints with admin auth  | `src/proxy.ts`                                        | ✅  |
+| 3   | feat: resolve post_id from path in tracking           | `src/lib/tracking.ts`                                 | ✅  |
+| 4   | feat: increment posts.view_count on human page view   | `src/data/analytics.ts`                               | ✅  |
+| 5   | feat: add analytics summary + source query functions  | `src/data/analytics.ts`, `src/models/types.ts`        | ✅  |
+| 6   | feat: rewrite /api/analytics as summary endpoint      | `src/app/api/analytics/route.ts`                      | ✅  |
+| 7   | feat: add /api/analytics/source detail endpoint       | `src/app/api/analytics/source/route.ts`               | ✅  |
+| 8   | feat: chart helpers and shared constants              | `src/components/admin/analytics/chart-helpers.ts`     | ✅  |
+| 9   | feat: analytics overview cards with delta             | `src/components/admin/analytics/overview-cards.tsx`   | ✅  |
+| 10  | feat: stacked area traffic trend chart                | `src/components/admin/analytics/traffic-trend.tsx`    | ✅  |
+| 11  | feat: human visitor detail tab                        | `src/components/admin/analytics/human-tab.tsx`        | ✅  |
+| 12  | feat: search engine detail tab                        | `src/components/admin/analytics/search-tab.tsx`       | ✅  |
+| 13  | feat: AI bot detail tab                               | `src/components/admin/analytics/ai-bot-tab.tsx`       | ✅  |
+| 14  | feat: other bot detail tab                            | `src/components/admin/analytics/other-bot-tab.tsx`    | ✅  |
+| 15  | feat: aggregates panel (countries/platforms/browsers) | `src/components/admin/analytics/aggregates-panel.tsx` | ✅  |
+| 16  | feat: rewrite analytics dashboard orchestrator        | `src/components/admin/analytics-dashboard.tsx`        | ✅  |
+| 17  | feat: add i18n keys for analytics redesign            | `src/i18n/locales/{en,zh}.json`                       | ✅  |
+| 18  | test: add unit + e2e tests for analytics redesign     | tests                                                 | ✅  |
 
 ## 9. Testing
 
-| Layer | Scope | What |
-|-------|-------|------|
-| **L1 Unit** | query functions | 每个新查询函数 mock Db，验证返回结构和 NULL 安全 |
-| **L1 Unit** | resolvePostId | `/{year}/{month}/{slug}` 格式解析、缓存命中/未命中、DB 查询失败降级 |
-| **L1 Unit** | fillDailyGaps | 补零逻辑：空范围、完整范围、中间缺日期 |
-| **L1 Unit** | fillDailyByBotGaps | bot×date 笛卡尔积补零：多 bot 交叉缺失、单 bot、空数据 |
-| **L1 Unit** | formatPathAsTitle | 首页、文章路径、分类页、边界情况 |
-| **L1 Unit** | bot detection | 已有 19 cases，无需新增 |
-| **L2 Integration** | API auth | GET /api/analytics 未登录返回 401 |
-| **L2 Integration** | API routes | 调用两个 endpoint，验证 response schema |
-| **L3 E2E** | Dashboard | Playwright 访问 /admin/analytics，验证 Tab 切换、图表渲染 |
+| Layer              | Scope              | What                                                                |
+| ------------------ | ------------------ | ------------------------------------------------------------------- |
+| **L1 Unit**        | query functions    | 每个新查询函数 mock Db，验证返回结构和 NULL 安全                    |
+| **L1 Unit**        | resolvePostId      | `/{year}/{month}/{slug}` 格式解析、缓存命中/未命中、DB 查询失败降级 |
+| **L1 Unit**        | fillDailyGaps      | 补零逻辑：空范围、完整范围、中间缺日期                              |
+| **L1 Unit**        | fillDailyByBotGaps | bot×date 笛卡尔积补零：多 bot 交叉缺失、单 bot、空数据              |
+| **L1 Unit**        | formatPathAsTitle  | 首页、文章路径、分类页、边界情况                                    |
+| **L1 Unit**        | bot detection      | 已有 19 cases，无需新增                                             |
+| **L2 Integration** | API auth           | GET /api/analytics 未登录返回 401                                   |
+| **L2 Integration** | API routes         | 调用两个 endpoint，验证 response schema                             |
+| **L3 E2E**         | Dashboard          | Playwright 访问 /admin/analytics，验证 Tab 切换、图表渲染           |
 
 ## 10. Out of Scope
 

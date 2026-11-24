@@ -3,12 +3,7 @@
 import Image from "next/image";
 import { Copy, FileCode2, Trash2 } from "@nocoo/basalt/icons";
 import { formatFileSize } from "@/models/backup";
-import {
-  FileTypeIcon,
-  formatDate,
-  isImageMime,
-  type MediaWithUrl,
-} from "./media-library-helpers";
+import { FileTypeIcon, formatDate, isImageMime, type MediaWithUrl } from "./media-library-helpers";
 
 function MediaGridCard({
   item,
@@ -47,9 +42,7 @@ function MediaGridCard({
       {/* Hover overlay */}
       <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
         <div className="p-1.5">
-          <p className="truncate text-2xs font-medium text-white leading-tight">
-            {item.filename}
-          </p>
+          <p className="truncate text-2xs font-medium text-white leading-tight">{item.filename}</p>
           <div className="mt-0.5 flex items-center gap-1.5 text-3xs text-white/70">
             {item.size != null && <span>{formatFileSize(item.size)}</span>}
             <span>{formatDate(item.created_at)}</span>

@@ -50,10 +50,7 @@ export async function getBackyPullKey(db: Db): Promise<string | null> {
 // ---------------------------------------------------------------------------
 
 /** Save Backy push configuration to site_settings. */
-export async function saveBackyConfig(
-  db: Db,
-  config: BackyConfig,
-): Promise<void> {
+export async function saveBackyConfig(db: Db, config: BackyConfig): Promise<void> {
   await db.execute(
     "UPDATE site_settings SET backy_webhook_url = ?, backy_api_key = ?, updated_at = unixepoch() WHERE id = 1",
     [config.webhookUrl, config.apiKey],
@@ -68,10 +65,7 @@ export async function clearBackyConfig(db: Db): Promise<void> {
 }
 
 /** Save a pull webhook key to site_settings. */
-export async function saveBackyPullKey(
-  db: Db,
-  key: string,
-): Promise<void> {
+export async function saveBackyPullKey(db: Db, key: string): Promise<void> {
   await db.execute(
     "UPDATE site_settings SET backy_pull_key = ?, updated_at = unixepoch() WHERE id = 1",
     [key],
@@ -93,10 +87,7 @@ export async function clearBackyPullKey(db: Db): Promise<void> {
  * Verify a pull webhook key against the stored value.
  * Returns true only if a non-empty key is stored AND matches.
  */
-export async function verifyBackyPullKey(
-  db: Db,
-  key: string,
-): Promise<boolean> {
+export async function verifyBackyPullKey(db: Db, key: string): Promise<boolean> {
   if (!key) return false;
 
   const stored = await getBackyPullKey(db);

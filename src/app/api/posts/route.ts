@@ -1,10 +1,7 @@
 import type { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
-import {
-  BodyFieldTypeError,
-  readOptionalBodyString,
-} from "@/lib/api/body-fields";
+import { BodyFieldTypeError, readOptionalBodyString } from "@/lib/api/body-fields";
 import { listPosts } from "@/data/public-content";
 import type { ListPostsOptions } from "@/data/entities/post";
 import type { PostStatus } from "@/models/types";
@@ -46,10 +43,7 @@ export async function GET(request: NextRequest) {
     response.headers.set("Cache-Control", PUBLIC_CONTENT_CACHE_CONTROL);
     return response;
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }
 
@@ -98,7 +92,9 @@ export async function POST(request: NextRequest) {
       publishedAt: (body.publishedAt ?? body.published_at) as number | undefined,
       referenceUrl: (body.referenceUrl ?? body.reference_url) as string | undefined,
       referenceTitle: (body.referenceTitle ?? body.reference_title) as string | undefined,
-      referenceDescription: (body.referenceDescription ?? body.reference_description) as string | undefined,
+      referenceDescription: (body.referenceDescription ?? body.reference_description) as
+        | string
+        | undefined,
       referenceImage: (body.referenceImage ?? body.reference_image) as string | undefined,
       podcastUrl,
       tagIds: (body.tagIds ?? body.tag_ids) as string[] | undefined,
@@ -106,15 +102,9 @@ export async function POST(request: NextRequest) {
 
     return jsonResponse(post, 201);
   } catch (error) {
-    if (
-      error instanceof PostAttributionError ||
-      error instanceof PostFieldValidationError
-    ) {
+    if (error instanceof PostAttributionError || error instanceof PostFieldValidationError) {
       return errorResponse(error.message, 400);
     }
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

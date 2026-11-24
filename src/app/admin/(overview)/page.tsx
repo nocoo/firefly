@@ -16,18 +16,12 @@ export default async function AdminDashboardPage() {
       )
       .then((r) => r?.count ?? 0),
     db
-      .firstOrNull<{ count: number }>(
-        "SELECT COUNT(*) as count FROM categories",
-      )
+      .firstOrNull<{ count: number }>("SELECT COUNT(*) as count FROM categories")
       .then((r) => r?.count ?? 0),
     db
       .firstOrNull<{ count: number }>("SELECT COUNT(*) as count FROM tags")
       .then((r) => r?.count ?? 0),
   ]);
 
-  return (
-    <AnalyticsDashboard
-      contentStats={{ postCount, categoryCount, tagCount }}
-    />
-  );
+  return <AnalyticsDashboard contentStats={{ postCount, categoryCount, tagCount }} />;
 }

@@ -28,10 +28,7 @@ export async function GET() {
       hasApiKey: !!settings.apiKey,
     });
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }
 
@@ -91,9 +88,6 @@ export async function PUT(request: NextRequest) {
       hasApiKey: !!settings.apiKey,
     });
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

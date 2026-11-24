@@ -45,12 +45,12 @@ cp .env.example .env
 
 编辑根目录 `.env`：
 
-| 配置 | 本地开发所需内容 |
-| --- | --- |
-| `WORKER_URL`、`WORKER_SECRET` | `http://localhost:8787`、`test-secret`，对应下方本地 Worker 与迁移器 |
-| `AUTH_SECRET`、`AUTH_URL` | 自己生成的会话密钥、`http://localhost:7028` |
+| 配置                                                          | 本地开发所需内容                                                                             |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `WORKER_URL`、`WORKER_SECRET`                                 | `http://localhost:8787`、`test-secret`，对应下方本地 Worker 与迁移器                         |
+| `AUTH_SECRET`、`AUTH_URL`                                     | 自己生成的会话密钥、`http://localhost:7028`                                                  |
 | `AUTH_GOOGLE_ID`、`AUTH_GOOGLE_SECRET`、`AUTH_ALLOWED_EMAILS` | Google OAuth 客户端与允许登录的邮箱；回调为 `http://localhost:7028/api/auth/callback/google` |
-| `CF_ACCOUNT_ID`、`R2_*` | 上传图片需要自己的 R2 存储桶、S3 凭据与公开访问地址；详见环境模板 |
+| `CF_ACCOUNT_ID`、`R2_*`                                       | 上传图片需要自己的 R2 存储桶、S3 凭据与公开访问地址；详见环境模板                            |
 
 `CF_API_TOKEN` 与 `CF_D1_DATABASE_ID` 供远程迁移使用，本地 D1 初始化不需要它们。普通开发中的 R2 上传仍访问所配置的远程存储桶；只有测试 runner 使用本地文件适配器。
 
@@ -71,14 +71,14 @@ bun run dev
 
 打开 `http://localhost:7028`。`migrate:local` 固定连接本地 8787 端口并使用 `test-secret`；这个值仅用于上述本地流程。`bun run migrate` 默认使用生产目标，自行部署前先配置自己的资源。
 
-| 命令 / 路径 | 用途 |
-| --- | --- |
-| `bun run build`、`bun run start` | 类型检查和网站构建；运行生产网站 |
+| 命令 / 路径                         | 用途                                                    |
+| ----------------------------------- | ------------------------------------------------------- |
+| `bun run build`、`bun run start`    | 类型检查和网站构建；运行生产网站                        |
 | `bun run typecheck`、`bun run lint` | 网站与 Worker 的类型检查（S1）、Biome 与 AST 门禁（S2） |
-| `src/app/` | 博客、后台、HTTP API 与 MCP 入口 |
-| `src/data/`、`src/services/` | 数据访问与内容操作流程 |
-| `worker/src/` | 原生 Fetch Worker、D1 SQL 代理和全文搜索 |
-| `scripts/migrations/` | 当前数据库迁移；`archive/` 保留 WordPress 迁移脚本 |
+| `src/app/`                          | 博客、后台、HTTP API 与 MCP 入口                        |
+| `src/data/`、`src/services/`        | 数据访问与内容操作流程                                  |
+| `worker/src/`                       | 原生 Fetch Worker、D1 SQL 代理和全文搜索                |
+| `scripts/migrations/`               | 当前数据库迁移；`archive/` 保留 WordPress 迁移脚本      |
 
 网站运行于 jp2 的独立 Node 容器，Cloudflare 与 Caddy 提供 HTTPS 入口。`main` 的 CI 成功后，GitHub Actions 自动构建并按镜像摘要部署，再验证公网源站与数据库健康。Worker 发布和远程数据库迁移仍独立执行，见[开发与部署指南](docs/31-development.md)与[迁移记录](docs/35-jp2-migration.md)。
 
@@ -103,17 +103,17 @@ bun run test:e2e:browser
 
 ## 技术栈
 
-| 技术 | 用途 |
-| --- | --- |
-| TypeScript、Bun | 应用代码、脚本与依赖管理 |
-| Next.js、React | 博客、管理后台与服务端 API |
-| Tailwind CSS | 页面样式与主题 |
+| 技术                                 | 用途                         |
+| ------------------------------------ | ---------------------------- |
+| TypeScript、Bun                      | 应用代码、脚本与依赖管理     |
+| Next.js、React                       | 博客、管理后台与服务端 API   |
+| Tailwind CSS                         | 页面样式与主题               |
 | Cloudflare Workers、D1 / SQLite FTS5 | 数据访问、中文分词与全文搜索 |
-| Cloudflare R2、AWS S3 SDK | 图片存储与上传 |
-| Auth.js | Google 登录与管理会话 |
-| MCP SDK、Zod | AI 客户端协议与输入校验 |
-| Vercel AI SDK、next-ai | 模型配置、摘要与链接文本生成 |
-| Vitest、Playwright | 单元、HTTP 和浏览器测试 |
+| Cloudflare R2、AWS S3 SDK            | 图片存储与上传               |
+| Auth.js                              | Google 登录与管理会话        |
+| MCP SDK、Zod                         | AI 客户端协议与输入校验      |
+| Vercel AI SDK、next-ai               | 模型配置、摘要与链接文本生成 |
+| Vitest、Playwright                   | 单元、HTTP 和浏览器测试      |
 
 ## 文档
 

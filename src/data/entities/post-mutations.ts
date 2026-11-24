@@ -7,18 +7,11 @@ import type { PostWithAgent } from "@/models/types";
 import { readingTime, excerptFromContent } from "@/models/post";
 import { renderMarkdown } from "@/models/markdown";
 import { nowEpoch, newId } from "@/data/core/timestamps";
-import type {
-  CreatePostInput,
-  UpdatePostInput,
-  BatchUpdateInput,
-} from "./post-types";
+import type { CreatePostInput, UpdatePostInput, BatchUpdateInput } from "./post-types";
 import { getPostById } from "./post-queries";
 import { invalidatePostCaches } from "./post-cache";
 
-export async function createPost(
-  db: Db,
-  input: CreatePostInput,
-): Promise<PostWithAgent> {
+export async function createPost(db: Db, input: CreatePostInput): Promise<PostWithAgent> {
   const id = newId();
   const now = nowEpoch();
 
@@ -26,8 +19,7 @@ export async function createPost(
   const computedExcerpt = input.excerpt ?? excerptFromContent(input.content);
   const contentHtml = renderMarkdown(input.content);
 
-  const publishedAt =
-    input.publishedAt ?? (input.status === "published" ? now : null);
+  const publishedAt = input.publishedAt ?? (input.status === "published" ? now : null);
 
   const sql = `
     INSERT INTO posts (
@@ -94,11 +86,7 @@ function applyContentUpdate(b: SetBuilder, input: UpdatePostInput): void {
 }
 
 /** Update excerpt explicitly; null = regenerate from content (input or existing). */
-function applyExcerptUpdate(
-  b: SetBuilder,
-  input: UpdatePostInput,
-  existing: PostWithAgent,
-): void {
+function applyExcerptUpdate(b: SetBuilder, input: UpdatePostInput, existing: PostWithAgent): void {
   if (input.excerpt === undefined) return;
   if (input.excerpt === null) {
     const contentForExcerpt = input.content ?? existing.content;
@@ -116,8 +104,7 @@ function applyReferenceUpdate(b: SetBuilder, input: UpdatePostInput): void {
   // Defense-in-depth: clear orphan reference metadata when referenceUrl is null
   if (input.referenceUrl === null) {
     if (input.referenceTitle === undefined) addSet(b, "reference_title", null);
-    if (input.referenceDescription === undefined)
-      addSet(b, "reference_description", null);
+    if (input.referenceDescription === undefined) addSet(b, "reference_description", null);
     if (input.referenceImage === undefined) addSet(b, "reference_image", null);
   }
   if (input.referenceTitle !== undefined) {
@@ -132,11 +119,7 @@ function applyReferenceUpdate(b: SetBuilder, input: UpdatePostInput): void {
 }
 
 /** Set published_at correctly. Auto-fills now() for published posts with null timestamp. */
-function applyPublishedAt(
-  b: SetBuilder,
-  input: UpdatePostInput,
-  existing: PostWithAgent,
-): void {
+function applyPublishedAt(b: SetBuilder, input: UpdatePostInput, existing: PostWithAgent): void {
   const finalPublishedAt =
     input.publishedAt !== undefined ? input.publishedAt : existing.published_at;
   const finalStatus = input.status ?? existing.status;
@@ -155,10 +138,8 @@ function applySimpleFields(b: SetBuilder, input: UpdatePostInput): void {
   if (input.slug !== undefined) addSet(b, "slug", input.slug);
   if (input.status !== undefined) addSet(b, "status", input.status);
   if (input.categoryId !== undefined) addSet(b, "category_id", input.categoryId);
-  if (input.featuredImage !== undefined)
-    addSet(b, "featured_image", input.featuredImage);
-  if (input.commentEnabled !== undefined)
-    addSet(b, "comment_enabled", input.commentEnabled);
+  if (input.featuredImage !== undefined) addSet(b, "featured_image", input.featuredImage);
+  if (input.commentEnabled !== undefined) addSet(b, "comment_enabled", input.commentEnabled);
   if (input.aiAgentId !== undefined) addSet(b, "ai_agent_id", input.aiAgentId);
   if (input.humanId !== undefined) addSet(b, "human_id", input.humanId);
   if (input.podcastUrl !== undefined) addSet(b, "podcast_url", input.podcastUrl);

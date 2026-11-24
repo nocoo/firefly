@@ -17,16 +17,12 @@ describe("filterCommandsByQuery", () => {
 
   it("matches case-insensitively against the label", () => {
     expect(filterCommandsByQuery(commands, "DASH")).toHaveLength(1);
-    expect(filterCommandsByQuery(commands, "media")[0].label).toBe(
-      "Media Library",
-    );
+    expect(filterCommandsByQuery(commands, "media")[0].label).toBe("Media Library");
   });
 
   it("matches against any keyword", () => {
     expect(filterCommandsByQuery(commands, "posts")[0].label).toBe("文章");
-    expect(filterCommandsByQuery(commands, "图片")[0].label).toBe(
-      "Media Library",
-    );
+    expect(filterCommandsByQuery(commands, "图片")[0].label).toBe("Media Library");
   });
 
   it("returns nothing when no command matches", () => {
@@ -38,10 +34,6 @@ describe("filterCommandsByQuery", () => {
     // would NOT match "ar" the same way — only 文章 matches via keyword;
     // verify result preserves source ordering when several hit.
     const fuzzy = filterCommandsByQuery(commands, "a");
-    expect(fuzzy.map((c) => c.label)).toEqual([
-      "Dashboard",
-      "文章",
-      "Media Library",
-    ]);
+    expect(fuzzy.map((c) => c.label)).toEqual(["Dashboard", "文章", "Media Library"]);
   });
 });

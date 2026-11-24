@@ -6,14 +6,8 @@ import { toast } from "@nocoo/basalt/components/toast";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { AdminPageHeader } from "./page-header";
 import { Button } from "@nocoo/basalt/components/button";
-import {
-  TaxonomyForm,
-  type TaxonomyFormState,
-} from "./taxonomy-manager-form";
-import {
-  TaxonomyTable,
-  type TaxonomyItem,
-} from "./taxonomy-manager-table";
+import { TaxonomyForm, type TaxonomyFormState } from "./taxonomy-manager-form";
+import { TaxonomyTable, type TaxonomyItem } from "./taxonomy-manager-table";
 
 export type { TaxonomyItem } from "./taxonomy-manager-table";
 
@@ -25,11 +19,7 @@ interface TaxonomyManagerProps {
 
 const EMPTY_FORM: TaxonomyFormState = { name: "", slug: "", description: "" };
 
-export function TaxonomyManager({
-  type,
-  items: initialItems,
-  apiBase,
-}: TaxonomyManagerProps) {
+export function TaxonomyManager({ type, items: initialItems, apiBase }: TaxonomyManagerProps) {
   const router = useRouter();
   const [editing, setEditing] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -40,18 +30,13 @@ export function TaxonomyManager({
   // Local item order (for optimistic reordering via up/down buttons)
   const [orderedItems, setOrderedItems] = useState(initialItems);
   // Sync when server data changes (e.g. after create/delete/edit)
-  if (
-    initialItems !== orderedItems &&
-    initialItems.length !== orderedItems.length
-  ) {
+  if (initialItems !== orderedItems && initialItems.length !== orderedItems.length) {
     setOrderedItems(initialItems);
   }
 
   const label = type === "category" ? "分类" : "标签";
   const totalText =
-    type === "category"
-      ? `共 ${initialItems.length} 个分类`
-      : `共 ${initialItems.length} 个标签`;
+    type === "category" ? `共 ${initialItems.length} 个分类` : `共 ${initialItems.length} 个标签`;
 
   const resetForm = useCallback(() => {
     setForm(EMPTY_FORM);
@@ -94,9 +79,7 @@ export function TaxonomyManager({
       };
       if (form.description.trim()) body.description = form.description.trim();
 
-      const editItem = editing
-        ? orderedItems.find((i) => i.id === editing)
-        : null;
+      const editItem = editing ? orderedItems.find((i) => i.id === editing) : null;
       const url = editItem ? `${apiBase}/${editItem.slug}` : apiBase;
       const method = editing ? "PUT" : "POST";
 
@@ -144,10 +127,7 @@ export function TaxonomyManager({
 
       const previous = orderedItems;
       const reordered = [...orderedItems];
-      [reordered[index], reordered[target]] = [
-        reordered[target],
-        reordered[index],
-      ];
+      [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
       setOrderedItems(reordered);
 
       try {
@@ -186,24 +166,25 @@ export function TaxonomyManager({
         </div>
       )}
 
-      {(creating || editing) && (() => {
-        const currentSlug = editing
-          ? orderedItems.find((it) => it.id === editing)?.slug
-          : undefined;
-        return (
-          <TaxonomyForm
-            label={label}
-            editing={!!editing}
-            state={form}
-            saving={saving}
-            existingSlugs={new Set(orderedItems.map((it) => it.slug))}
-            {...(currentSlug ? { currentSlug } : {})}
-            onChange={setForm}
-            onSave={handleSave}
-            onCancel={resetForm}
-          />
-        );
-      })()}
+      {(creating || editing) &&
+        (() => {
+          const currentSlug = editing
+            ? orderedItems.find((it) => it.id === editing)?.slug
+            : undefined;
+          return (
+            <TaxonomyForm
+              label={label}
+              editing={!!editing}
+              state={form}
+              saving={saving}
+              existingSlugs={new Set(orderedItems.map((it) => it.slug))}
+              {...(currentSlug ? { currentSlug } : {})}
+              onChange={setForm}
+              onSave={handleSave}
+              onCancel={resetForm}
+            />
+          );
+        })()}
 
       <TaxonomyTable
         type={type}
@@ -218,11 +199,7 @@ export function TaxonomyManager({
         onOpenChange={(open) => {
           if (!open) setDeleteTarget(null);
         }}
-        title={
-          deleteTarget
-            ? `确认删除${label}「${deleteTarget.name}」？此操作不可撤销。`
-            : ""
-        }
+        title={deleteTarget ? `确认删除${label}「${deleteTarget.name}」？此操作不可撤销。` : ""}
         description=""
         destructive
         confirmLabel="删除"

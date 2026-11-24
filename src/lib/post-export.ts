@@ -12,7 +12,8 @@ export interface PostExportContent {
   images?: WebsiteImage[];
 }
 
-export type ExportablePost = Pick<Post,
+export type ExportablePost = Pick<
+  Post,
   | "content"
   | "title"
   | "excerpt"
@@ -23,7 +24,10 @@ export type ExportablePost = Pick<Post,
   | "reference_image"
 >;
 
-const formatters: Record<PostExportFormat, (post: ExportablePost, baseUrl: string) => PostExportContent> = {
+const formatters: Record<
+  PostExportFormat,
+  (post: ExportablePost, baseUrl: string) => PostExportContent
+> = {
   wechat: (post) => ({
     html: inlineWeChatHtml(renderMarkdown(post.content), {
       title: post.title,

@@ -1,6 +1,11 @@
 import { connection } from "next/server";
 import { getDb } from "@/lib/db";
-import { listSitemapPosts, listMonthlyArchives, listSitemapCategories, listTags } from "@/data/public-content";
+import {
+  listSitemapPosts,
+  listMonthlyArchives,
+  listSitemapCategories,
+  listTags,
+} from "@/data/public-content";
 import { SITE_URL, postPath } from "@/lib/seo";
 import { escapeXml } from "@/lib/xml";
 import { PUBLIC_CONTENT_CACHE_CONTROL } from "@/lib/public-http-cache";
@@ -27,13 +32,8 @@ export async function GET() {
   const entries: SitemapEntry[] = [];
 
   // Home — lastmod = most recently updated post (not first by published_at)
-  const maxUpdatedAt = posts.reduce(
-    (max, p) => Math.max(max, p.updated_at),
-    0,
-  );
-  const latestPostDate = maxUpdatedAt > 0
-    ? new Date(maxUpdatedAt * 1000)
-    : new Date();
+  const maxUpdatedAt = posts.reduce((max, p) => Math.max(max, p.updated_at), 0);
+  const latestPostDate = maxUpdatedAt > 0 ? new Date(maxUpdatedAt * 1000) : new Date();
   entries.push({
     url: SITE_URL,
     lastModified: latestPostDate,
@@ -48,9 +48,7 @@ export async function GET() {
       lastModified: new Date(post.updated_at * 1000),
       changeFrequency: "monthly",
       priority: 0.8,
-      ...(post.featured_image
-        ? { image: { url: post.featured_image, title: post.title } }
-        : {}),
+      ...(post.featured_image ? { image: { url: post.featured_image, title: post.title } } : {}),
     });
   }
 
@@ -124,4 +122,3 @@ function buildSitemapXml(entries: SitemapEntry[]): string {
   lines.push("</urlset>");
   return lines.join("\n");
 }
-

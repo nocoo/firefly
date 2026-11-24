@@ -159,11 +159,7 @@ describe("category entity handlers", () => {
       dataLayer.getBySlug.mockResolvedValue(sampleCategory);
       dataLayer.delete.mockResolvedValue(true);
       const result = await handlers.handleDelete(ctx, { slug: "tech" });
-      expect(dataLayer.delete).toHaveBeenCalledWith(
-        ctx.db,
-        "cat-1",
-        expect.anything(),
-      );
+      expect(dataLayer.delete).toHaveBeenCalledWith(ctx.db, "cat-1", expect.anything());
       const data = parseToolResult(result) as { deleted: boolean };
       expect(data.deleted).toBe(true);
     });

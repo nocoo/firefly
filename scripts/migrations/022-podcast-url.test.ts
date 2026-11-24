@@ -5,10 +5,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { splitSqlStatements } from "./db-adapter";
 
-const SQL_PATH = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  "022-podcast-url.sql",
-);
+const SQL_PATH = resolve(dirname(fileURLToPath(import.meta.url)), "022-podcast-url.sql");
 const MIGRATION_SQL = readFileSync(SQL_PATH, "utf-8");
 
 function applyStatements(db: DatabaseSync, sql: string): void {
@@ -25,9 +22,7 @@ function seedPostsFixture(db: DatabaseSync): void {
       slug TEXT NOT NULL
     )
   `);
-  db.exec(
-    "INSERT INTO posts (id, title, slug) VALUES ('post-1', 'Hello', 'hello')",
-  );
+  db.exec("INSERT INTO posts (id, title, slug) VALUES ('post-1', 'Hello', 'hello')");
 }
 
 describe("022-podcast-url migration", () => {
@@ -36,20 +31,21 @@ describe("022-podcast-url migration", () => {
     seedPostsFixture(db);
     applyStatements(db, MIGRATION_SQL);
 
-    const columns = db
-      .prepare("PRAGMA table_info(posts)")
-      .all() as { name: string; notnull: number }[];
+    const columns = db.prepare("PRAGMA table_info(posts)").all() as {
+      name: string;
+      notnull: number;
+    }[];
     const podcast = columns.find((c) => c.name === "podcast_url");
     expect(podcast).toBeDefined();
     expect(podcast?.notnull).toBe(0);
 
-    db.prepare(
-      "UPDATE posts SET podcast_url = ? WHERE id = 'post-1'",
-    ).run("https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless");
+    db.prepare("UPDATE posts SET podcast_url = ? WHERE id = 'post-1'").run(
+      "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless",
+    );
 
-    const row = db
-      .prepare("SELECT podcast_url FROM posts WHERE id = 'post-1'")
-      .get() as { podcast_url: string | null };
+    const row = db.prepare("SELECT podcast_url FROM posts WHERE id = 'post-1'").get() as {
+      podcast_url: string | null;
+    };
     expect(row.podcast_url).toBe(
       "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless",
     );

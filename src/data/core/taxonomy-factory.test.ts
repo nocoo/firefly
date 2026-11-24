@@ -36,7 +36,13 @@ function makeEntity() {
     orderBy: "name ASC",
     cacheTtl: 5 * 60 * 1000,
     insertColumns: ["id", "name", "slug", "created_at", "updated_at"],
-    buildInsertParams: (id: string, input: CreateWidgetInput, now: number) => [id, input.name, input.slug, now, now],
+    buildInsertParams: (id: string, input: CreateWidgetInput, now: number) => [
+      id,
+      input.name,
+      input.slug,
+      now,
+      now,
+    ],
   });
 }
 
@@ -258,11 +264,9 @@ describe("taxonomy factory — update", () => {
   it("returns existing row without executing when no mapped fields are provided", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleWidget);
 
-    const result = await entity.update(
-      db,
-      "w-1",
-      { extraField: "ignored" } as unknown as UpdateWidgetInput,
-    );
+    const result = await entity.update(db, "w-1", {
+      extraField: "ignored",
+    } as unknown as UpdateWidgetInput);
 
     expect(db.execute).not.toHaveBeenCalled();
     expect(result).toEqual(sampleWidget);

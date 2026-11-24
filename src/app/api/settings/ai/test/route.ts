@@ -7,11 +7,7 @@
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
 import { getAiSettings } from "@/data/ai-settings";
-import {
-  resolveAiConfig,
-  type AiProvider,
-  type SdkType,
-} from "@/services/ai";
+import { resolveAiConfig, type AiProvider, type SdkType } from "@/services/ai";
 import { createAiModel } from "@nocoo/next-ai/server";
 import { generateText } from "ai";
 
@@ -21,10 +17,7 @@ export async function POST(): Promise<Response> {
     const settings = await getAiSettings(db);
 
     if (!settings.provider || !settings.apiKey) {
-      return errorResponse(
-        "AI provider and API key must be configured first",
-        400,
-      );
+      return errorResponse("AI provider and API key must be configured first", 400);
     }
 
     const config = resolveAiConfig({
@@ -72,15 +65,12 @@ export async function POST(): Promise<Response> {
         const inner =
           typeof parsed.error === "string"
             ? parsed.error
-            : parsed.error?.message ?? parsed.message;
+            : (parsed.error?.message ?? parsed.message);
         if (inner) detail = inner;
       } catch {
         // responseBody not JSON — keep baseMessage
       }
     }
-    return errorResponse(
-      e.url ? `${detail} (upstream: ${e.url})` : detail,
-      statusCode,
-    );
+    return errorResponse(e.url ? `${detail} (upstream: ${e.url})` : detail, statusCode);
   }
 }

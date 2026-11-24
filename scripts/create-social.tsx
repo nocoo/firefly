@@ -9,12 +9,16 @@ import social from "../src/lib/home-social.json";
 // Run from the repository root. Font refresh sends only the public card copy.
 if (process.argv.includes("--refresh-font")) {
   const characters = [...new Set(`${social.heading}${social.topics}${social.note}`)]
-    .sort().join("");
+    .sort()
+    .join("");
   const url = new URL("https://fonts.googleapis.com/css2");
   url.searchParams.set("family", "Noto Sans SC:wght@400..700");
   url.searchParams.set("text", characters);
   const response = await fetch(url, {
-    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36" },
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+    },
     signal: AbortSignal.timeout(20_000),
   });
   if (!response.ok) throw new Error(`Font metadata: ${response.status}`);
@@ -26,9 +30,12 @@ if (process.argv.includes("--refresh-font")) {
   if (!font.ok) throw new Error(`Font download: ${font.status}`);
   const data = Buffer.from(await font.arrayBuffer());
   if (data.subarray(0, 4).toString() !== "wOF2") throw new Error("Expected WOFF2");
-  const license = await fetch("https://raw.githubusercontent.com/notofonts/noto-cjk/main/Sans/LICENSE", {
-    signal: AbortSignal.timeout(20_000),
-  });
+  const license = await fetch(
+    "https://raw.githubusercontent.com/notofonts/noto-cjk/main/Sans/LICENSE",
+    {
+      signal: AbortSignal.timeout(20_000),
+    },
+  );
   if (!license.ok) throw new Error(`Font license: ${license.status}`);
   const licenseText = await license.text();
   if (!licenseText.includes("SIL OPEN FONT LICENSE")) throw new Error("Expected OFL");
@@ -50,8 +57,15 @@ const markup = renderToStaticMarkup(
   <main className="social-card">
     <header>
       <div className="brand">
-        <span className="brand-mark" aria-hidden="true"><i /><i /><i /><i /></span>
-        <span>zheng li<span className="brand-period">.</span></span>
+        <span className="brand-mark" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+          <i />
+        </span>
+        <span>
+          zheng li<span className="brand-period">.</span>
+        </span>
       </div>
       <span className="label">A PERSONAL JOURNAL</span>
     </header>
@@ -69,9 +83,14 @@ const markup = renderToStaticMarkup(
 );
 const browser = await chromium.launch();
 try {
-  const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 2 });
+  const page = await browser.newPage({
+    viewport: { width: 1200, height: 630 },
+    deviceScaleFactor: 2,
+  });
   await page.route("**/*", (route) => route.abort());
-  await page.setContent(`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><style>${css}</style></head><body>${markup}</body></html>`);
+  await page.setContent(
+    `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><style>${css}</style></head><body>${markup}</body></html>`,
+  );
   await page.evaluate(async () => {
     await document.fonts.ready;
     await Promise.all([...document.images].map((image) => image.decode()));

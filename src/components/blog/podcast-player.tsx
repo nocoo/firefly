@@ -68,7 +68,10 @@ function PlaybackControls({ audio }: { audio: PodcastAudioViewModel }) {
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
         onEnded={() => setPlaying(false)}
-        onError={() => { setFailed(true); setPlaying(false); }}
+        onError={() => {
+          setFailed(true);
+          setPlaying(false);
+        }}
         onTimeUpdate={(event) => setCurrent(event.currentTarget.currentTime)}
         onLoadedMetadata={(event) => {
           const value = event.currentTarget.duration;
@@ -100,7 +103,8 @@ function PlaybackControls({ audio }: { audio: PodcastAudioViewModel }) {
         aria-label="播放进度"
       />
       <span className="podcast-time">
-        {formatPlaybackTime(current)} / {duration > 0 ? formatPlaybackTime(duration) : audio.durationLabel}
+        {formatPlaybackTime(current)} /{" "}
+        {duration > 0 ? formatPlaybackTime(duration) : audio.durationLabel}
       </span>
       <Button
         variant="ghost"

@@ -6,10 +6,7 @@ import type { Db } from "@/lib/db";
 
 type TagRow = { id: string; name: string; slug: string };
 
-export async function getPostTags(
-  db: Db,
-  postId: string,
-): Promise<TagRow[]> {
+export async function getPostTags(db: Db, postId: string): Promise<TagRow[]> {
   const sql = `
     SELECT t.id, t.name, t.slug
     FROM tags t
@@ -21,10 +18,7 @@ export async function getPostTags(
   return result.results;
 }
 
-export async function getPostsTagsMap(
-  db: Db,
-  postIds: string[],
-): Promise<Map<string, TagRow[]>> {
+export async function getPostsTagsMap(db: Db, postIds: string[]): Promise<Map<string, TagRow[]>> {
   if (postIds.length === 0) return new Map();
 
   const placeholders = postIds.map(() => "?").join(", ");
@@ -46,11 +40,7 @@ export async function getPostsTagsMap(
   return map;
 }
 
-export async function setPostTags(
-  db: Db,
-  postId: string,
-  tagIds: string[],
-): Promise<void> {
+export async function setPostTags(db: Db, postId: string, tagIds: string[]): Promise<void> {
   const statements = [
     {
       sql: "DELETE FROM post_tags WHERE post_id = ?",

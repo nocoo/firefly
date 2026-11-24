@@ -11,11 +11,5 @@ export default async function AdminCategoriesPage() {
   const db = getDb();
   const categories = await listCategoriesWithPostStats(db);
 
-  return (
-    <TaxonomyManager
-      type="category"
-      items={categories}
-      apiBase="/api/categories"
-    />
-  );
+  return <TaxonomyManager type="category" items={categories} apiBase="/api/categories" />;
 }

@@ -79,18 +79,10 @@ describe.concurrent("GET /api/analytics", () => {
     const res = await fetch(`${BASE}/api/analytics`);
     const body = await res.json();
 
-    const deltaFields = [
-      "totalDelta",
-      "humanDelta",
-      "searchDelta",
-      "aiDelta",
-      "otherBotDelta",
-    ];
+    const deltaFields = ["totalDelta", "humanDelta", "searchDelta", "aiDelta", "otherBotDelta"];
     for (const field of deltaFields) {
       const val = body.overview[field];
-      expect(
-        val === null || typeof val === "number" || val === "new",
-      ).toBe(true);
+      expect(val === null || typeof val === "number" || val === "new").toBe(true);
     }
   });
 

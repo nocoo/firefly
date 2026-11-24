@@ -12,7 +12,13 @@
  *   bun scripts/quality/gate.ts --stage=pre-push --only=B1,L3
  */
 import { join, resolve } from "node:path";
-import { NOT_APPLICABLE, type SlotDefinition, type Stage, STAGE_TIMEOUT_MS, slotsForStage } from "./slots";
+import {
+  NOT_APPLICABLE,
+  type SlotDefinition,
+  type Stage,
+  STAGE_TIMEOUT_MS,
+  slotsForStage,
+} from "./slots";
 import { checkBun, checkTool } from "./tools";
 
 const args = process.argv.slice(2);
@@ -26,7 +32,11 @@ const listOnly = args.includes("--list");
 
 if (listOnly) {
   for (const slot of ["pre-commit", "pre-push"] as Stage[]) {
-    console.log(`${slot}: ${slotsForStage(slot).map((slot) => slot.id).join(", ")}`);
+    console.log(
+      `${slot}: ${slotsForStage(slot)
+        .map((slot) => slot.id)
+        .join(", ")}`,
+    );
   }
   process.exit(0);
 }
@@ -60,9 +70,13 @@ interface SlotResult {
   note: string;
 }
 
-const wantsG1 = slotsForStage(stage).some((slot) => slot.id === "G1") && (!only || only.split(",").includes("G1"));
+const wantsG1 =
+  slotsForStage(stage).some((slot) => slot.id === "G1") &&
+  (!only || only.split(",").includes("G1"));
 if (stage === "pre-push" && wantsG1 && !g1Range) {
-  console.error("gate: pre-push secret scanning requires --g1-range=<remote-sha>..<local-sha>; run .husky/pre-push");
+  console.error(
+    "gate: pre-push secret scanning requires --g1-range=<remote-sha>..<local-sha>; run .husky/pre-push",
+  );
   process.exit(2);
 }
 
@@ -116,13 +130,22 @@ async function runStep(
       tee(text, kind);
     }
   };
-  await Promise.all([pump(proc.stdout as ReadableStream<Uint8Array>, "out"), pump(proc.stderr as ReadableStream<Uint8Array>, "err")]);
+  await Promise.all([
+    pump(proc.stdout as ReadableStream<Uint8Array>, "out"),
+    pump(proc.stderr as ReadableStream<Uint8Array>, "err"),
+  ]);
   const code = await proc.exited;
   if (timer) clearTimeout(timer);
   const ms = performance.now() - started;
 
   if (code === 124 || code === 137) {
-    return { label, command, outcome: "timeout", ms, note: `exceeded ${timeoutMs < 1000 ? `${timeoutMs}ms` : `${Math.round(timeoutMs / 1000)}s`}` };
+    return {
+      label,
+      command,
+      outcome: "timeout",
+      ms,
+      note: `exceeded ${timeoutMs < 1000 ? `${timeoutMs}ms` : `${Math.round(timeoutMs / 1000)}s`}`,
+    };
   }
   if (code !== 0) {
     return { label, command, outcome: "fail", ms, note: `exit ${code}` };
@@ -172,7 +195,8 @@ async function preflight(): Promise<boolean> {
       checks.push({
         name: `lockfile ${dir || "root"}`,
         ok: false,
-        detail: "bun install --frozen-lockfile --dry-run failed; run bun install and commit the lockfile",
+        detail:
+          "bun install --frozen-lockfile --dry-run failed; run bun install and commit the lockfile",
       });
     } else {
       checks.push({ name: `lockfile ${dir || "root"}`, ok: true, detail: "frozen" });
@@ -212,7 +236,13 @@ if (!(await preflight())) {
 let abortAfter: string | undefined;
 for (const slot of selected) {
   if (abortAfter) {
-    results.push({ slot, outcome: "skip", ms: 0, steps: [], note: `not run after ${abortAfter} failed` });
+    results.push({
+      slot,
+      outcome: "skip",
+      ms: 0,
+      steps: [],
+      note: `not run after ${abortAfter} failed`,
+    });
     continue;
   }
   if (stageBudgetExceeded()) {
@@ -226,7 +256,13 @@ for (const slot of selected) {
     continue;
   }
   if (slot.stagedOnly && !stagedPaths.some((path) => slot.stagedOnly?.test(path))) {
-    results.push({ slot, outcome: "skip", ms: 0, steps: [], note: "no staged change for this slot" });
+    results.push({
+      slot,
+      outcome: "skip",
+      ms: 0,
+      steps: [],
+      note: "no staged change for this slot",
+    });
     console.log(`\n▸ ${slot.name} — skipped (no staged change for ${slot.stagedOnly})`);
     continue;
   }
@@ -239,10 +275,18 @@ for (const slot of selected) {
     console.log(`  $ ${step.command}`);
     const result = await runStep(step.command, step.timeoutMs, step.expect, step.label);
     stepResults.push(result);
-    console.log(`  ${result.outcome === "pass" ? "✓" : "✗"} ${result.label} ${formatMs(result.ms)}${result.note ? ` — ${result.note}` : ""}`);
+    console.log(
+      `  ${result.outcome === "pass" ? "✓" : "✗"} ${result.label} ${formatMs(result.ms)}${result.note ? ` — ${result.note}` : ""}`,
+    );
     if (result.outcome !== "pass") {
       for (const rest of steps.slice(stepResults.length)) {
-        stepResults.push({ label: rest.label, command: rest.command, outcome: "skip", ms: 0, note: "not run" });
+        stepResults.push({
+          label: rest.label,
+          command: rest.command,
+          outcome: "skip",
+          ms: 0,
+          note: "not run",
+        });
       }
       break;
     }
@@ -271,14 +315,18 @@ for (const result of results) {
   if (result.note) console.log(`  ${result.slot.id}: ${result.note}`);
 }
 for (const entry of NOT_APPLICABLE) {
-  console.log(`${entry.id.padEnd(4)}${entry.name.slice(4).padEnd(17)}${"N/A".padEnd(9)}${"-".padEnd(8)}${entry.reason}`);
+  console.log(
+    `${entry.id.padEnd(4)}${entry.name.slice(4).padEnd(17)}${"N/A".padEnd(9)}${"-".padEnd(8)}${entry.reason}`,
+  );
 }
 console.log(`${"─".repeat(78)}`);
 console.log(`total ${formatMs(totalMs)} (stage budget ${Math.round(stageBudgetMs / 1000)}s)`);
 
 const overBudget = totalMs > stageBudgetMs;
 const notStarted = results.filter((result) => result.note.startsWith("stage budget"));
-const failedSlots = results.filter((result) => result.outcome === "fail" || result.outcome === "timeout");
+const failedSlots = results.filter(
+  (result) => result.outcome === "fail" || result.outcome === "timeout",
+);
 if (overBudget) {
   if (notStarted.length > 0) {
     failedSlots.push({
@@ -295,7 +343,9 @@ if (overBudget) {
   }
 }
 if (failedSlots.length > 0) {
-  console.error(`\n❌ ${stage} gate failed: ${failedSlots.map((result) => `${result.slot.id} (${result.outcome}${result.note ? `: ${result.note}` : ""})`).join(", ")}`);
+  console.error(
+    `\n❌ ${stage} gate failed: ${failedSlots.map((result) => `${result.slot.id} (${result.outcome}${result.note ? `: ${result.note}` : ""})`).join(", ")}`,
+  );
   process.exit(1);
 }
 if (results.every((result) => result.outcome === "skip")) {

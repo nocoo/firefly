@@ -21,9 +21,7 @@ export async function GET() {
     "",
     "## Categories",
     "",
-    ...categories.map(
-      (cat) => `- [${cat.name}](${SITE_URL}/category/${cat.slug})`,
-    ),
+    ...categories.map((cat) => `- [${cat.name}](${SITE_URL}/category/${cat.slug})`),
     "",
     "## Recent Posts",
     "",

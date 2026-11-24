@@ -6,28 +6,12 @@ import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { Toaster } from "@nocoo/basalt/components/toast";
 import { t, type TranslationKey } from "@/lib/i18n";
-import {
-  CommandPaletteProvider,
-  CommandPalette,
-} from "@/components/admin/command-palette";
+import { CommandPaletteProvider, CommandPalette } from "@/components/admin/command-palette";
 import Link from "next/link";
 import { LinkProvider } from "@nocoo/basalt/providers/link";
-import {
-  AppShell,
-  AppMain,
-  AppSkipLink,
-} from "@nocoo/basalt/components/app-shell";
-import {
-  AppHeader,
-  AppHeaderMenuButton,
-  ProjectLinks,
-} from "@nocoo/basalt/components/app-header";
-import {
-  ContentIsland,
-  SidebarDrawer,
-  SidebarProvider,
-  ThemeToggle,
-} from "@nocoo/basalt";
+import { AppShell, AppMain, AppSkipLink } from "@nocoo/basalt/components/app-shell";
+import { AppHeader, AppHeaderMenuButton, ProjectLinks } from "@nocoo/basalt/components/app-header";
+import { ContentIsland, SidebarDrawer, SidebarProvider, ThemeToggle } from "@nocoo/basalt";
 
 const PAGE_TITLE_KEYS: Record<string, TranslationKey> = {
   "/admin": "admin.page.dashboard",
@@ -78,12 +62,13 @@ function getAdminPageTitle(pathname: string): string {
   if (pathname === "/admin/authors/new") return "创建作者";
   if (pathname.startsWith("/admin/authors/") && pathname !== "/admin/authors") return "编辑作者";
   if (pathname === "/admin/ai-agents/new") return "创建代理";
-  if (pathname.startsWith("/admin/ai-agents/") && pathname !== "/admin/ai-agents") return "编辑代理";
+  if (pathname.startsWith("/admin/ai-agents/") && pathname !== "/admin/ai-agents")
+    return "编辑代理";
 
   const titleKey =
     PAGE_TITLE_KEYS[pathname] ??
-    Object.entries(PAGE_TITLE_KEYS).find(([key]) =>
-      key !== "/admin" && pathname.startsWith(key),
+    Object.entries(PAGE_TITLE_KEYS).find(
+      ([key]) => key !== "/admin" && pathname.startsWith(key),
     )?.[1];
 
   return titleKey ? t(titleKey) : "管理";

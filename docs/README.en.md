@@ -45,12 +45,12 @@ cp .env.example .env
 
 Edit the root `.env`:
 
-| Configuration | Local development values |
-| --- | --- |
-| `WORKER_URL`, `WORKER_SECRET` | `http://localhost:8787`, `test-secret`, matching the local Worker and migration adapter below |
-| `AUTH_SECRET`, `AUTH_URL` | Your generated session secret, `http://localhost:7028` |
+| Configuration                                                 | Local development values                                                                                      |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `WORKER_URL`, `WORKER_SECRET`                                 | `http://localhost:8787`, `test-secret`, matching the local Worker and migration adapter below                 |
+| `AUTH_SECRET`, `AUTH_URL`                                     | Your generated session secret, `http://localhost:7028`                                                        |
 | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_ALLOWED_EMAILS` | A Google OAuth client and allowed email addresses; callback: `http://localhost:7028/api/auth/callback/google` |
-| `CF_ACCOUNT_ID`, `R2_*` | Your R2 bucket, S3 credentials, and public asset URL for image uploads; see the environment template |
+| `CF_ACCOUNT_ID`, `R2_*`                                       | Your R2 bucket, S3 credentials, and public asset URL for image uploads; see the environment template          |
 
 `CF_API_TOKEN` and `CF_D1_DATABASE_ID` are used for remote migrations and are unnecessary for local D1 initialization. R2 uploads during ordinary development still use the configured remote bucket. Only the test runner uses the local filesystem adapter.
 
@@ -71,14 +71,14 @@ bun run dev
 
 Open `http://localhost:7028`. `migrate:local` always connects to local port 8787 using `test-secret`; that value is only for this local workflow. `bun run migrate` defaults to production, so configure your own resources before self-hosting.
 
-| Command / path | Purpose |
-| --- | --- |
-| `bun run build`, `bun run start` | Type-check and build the website; run the production website |
-| `bun run typecheck`, `bun run lint` | Website and Worker type and code checks |
-| `src/app/` | Blog, admin console, HTTP APIs, and MCP endpoints |
-| `src/data/`, `src/services/` | Data access and content operations |
-| `worker/src/` | Native Fetch Worker, D1 SQL proxy, and full-text search |
-| `scripts/migrations/` | Current database migrations; `archive/` retains WordPress migration scripts |
+| Command / path                      | Purpose                                                                     |
+| ----------------------------------- | --------------------------------------------------------------------------- |
+| `bun run build`, `bun run start`    | Type-check and build the website; run the production website                |
+| `bun run typecheck`, `bun run lint` | Website and Worker type and code checks                                     |
+| `src/app/`                          | Blog, admin console, HTTP APIs, and MCP endpoints                           |
+| `src/data/`, `src/services/`        | Data access and content operations                                          |
+| `worker/src/`                       | Native Fetch Worker, D1 SQL proxy, and full-text search                     |
+| `scripts/migrations/`               | Current database migrations; `archive/` retains WordPress migration scripts |
 
 The website runs as a standalone Node container on jp2 behind Cloudflare and Caddy. Successful `main` CI triggers an image build, digest-pinned deployment and public origin/database verification. Worker publication and remote database migrations remain separate operations. See the [development and deployment guide](31-development.md) and [migration record](35-jp2-migration.md).
 
@@ -103,17 +103,17 @@ The browser runner uses ports 8787 and 27028. Both end-to-end runners share and 
 
 ## Stack
 
-| Technology | Purpose |
-| --- | --- |
-| TypeScript, Bun | Application code, scripts, and dependency management |
-| Next.js, React | Blog, admin console, and server APIs |
-| Tailwind CSS | Page styling and themes |
+| Technology                           | Purpose                                                      |
+| ------------------------------------ | ------------------------------------------------------------ |
+| TypeScript, Bun                      | Application code, scripts, and dependency management         |
+| Next.js, React                       | Blog, admin console, and server APIs                         |
+| Tailwind CSS                         | Page styling and themes                                      |
 | Cloudflare Workers, D1 / SQLite FTS5 | Data access, Chinese word segmentation, and full-text search |
-| Cloudflare R2, AWS S3 SDK | Image storage and uploads |
-| Auth.js | Google sign-in and administrative sessions |
-| MCP SDK, Zod | AI client protocol and input validation |
-| Vercel AI SDK, next-ai | Model configuration, excerpts, and link text generation |
-| Vitest, Playwright | Unit, HTTP, and browser tests |
+| Cloudflare R2, AWS S3 SDK            | Image storage and uploads                                    |
+| Auth.js                              | Google sign-in and administrative sessions                   |
+| MCP SDK, Zod                         | AI client protocol and input validation                      |
+| Vercel AI SDK, next-ai               | Model configuration, excerpts, and link text generation      |
+| Vitest, Playwright                   | Unit, HTTP, and browser tests                                |
 
 ## Documentation
 

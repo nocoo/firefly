@@ -24,11 +24,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const db = getDb();
   const { identity } = await loadSiteIdentity(db);
-  return buildPageMeta({
-    title: `Page ${page}`,
-    description: `${identity.siteDescription} — Page ${page}`,
-    path: `/page/${page}`,
-  }, identity);
+  return buildPageMeta(
+    {
+      title: `Page ${page}`,
+      description: `${identity.siteDescription} — Page ${page}`,
+      path: `/page/${page}`,
+    },
+    identity,
+  );
 }
 
 export default async function HomePaged({ params }: PageProps) {
@@ -81,11 +84,7 @@ export default async function HomePaged({ params }: PageProps) {
         )}
       </section>
 
-      <Pagination
-        currentPage={page}
-        totalPages={totalPages}
-        basePath="/"
-      />
+      <Pagination currentPage={page} totalPages={totalPages} basePath="/" />
     </>
   );
 }

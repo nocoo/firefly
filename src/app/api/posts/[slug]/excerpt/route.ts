@@ -33,10 +33,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     if (message === "AI not configured") {
-      return errorResponse(
-        "AI provider not configured. Go to Settings > AI to set it up.",
-        400,
-      );
+      return errorResponse("AI provider not configured. Go to Settings > AI to set it up.", 400);
     }
     return errorResponse(`Excerpt generation failed: ${message}`, 502);
   }

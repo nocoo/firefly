@@ -17,9 +17,7 @@ interface TagPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({
-  params,
-}: TagPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
   const { slug } = await params;
   const db = getDb();
   const tag = await getTagBySlug(db, slug);
@@ -27,11 +25,14 @@ export async function generateMetadata({
   if (!tag) return { title: "Not Found" };
 
   const { identity } = await loadSiteIdentity(db);
-  const meta = buildPageMeta({
-    title: `#${tag.name}`,
-    description: `标签为 ${tag.name} 的文章`,
-    path: `/tag/${tag.slug}`,
-  }, identity);
+  const meta = buildPageMeta(
+    {
+      title: `#${tag.name}`,
+      description: `标签为 ${tag.name} 的文章`,
+      path: `/tag/${tag.slug}`,
+    },
+    identity,
+  );
 
   // Thin-content tags: noindex to avoid low-quality pages in search index
   if (tag.post_count < 3) {
@@ -78,10 +79,7 @@ export default async function TagPage({ params }: TagPageProps) {
         }}
       />
 
-      <ListPageHeader
-        title={`#${tag.name}`}
-        description={`${tag.post_count} 篇文章`}
-      />
+      <ListPageHeader title={`#${tag.name}`} description={`${tag.post_count} 篇文章`} />
 
       <section>
         {posts.length === 0 ? (
@@ -102,11 +100,7 @@ export default async function TagPage({ params }: TagPageProps) {
         )}
       </section>
 
-      <Pagination
-        currentPage={1}
-        totalPages={totalPages}
-        basePath={`/tag/${slug}`}
-      />
+      <Pagination currentPage={1} totalPages={totalPages} basePath={`/tag/${slug}`} />
     </>
   );
 }

@@ -49,10 +49,7 @@ export function AdminPostsPagination({
             <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
           </Link>
         ) : (
-          <span
-            className={`${linkBase} ${disabledClass}`}
-            aria-hidden="true"
-          >
+          <span className={`${linkBase} ${disabledClass}`} aria-hidden="true">
             <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
           </span>
         )}
@@ -66,19 +63,11 @@ export function AdminPostsPagination({
               …
             </span>
           ) : slot === currentPage ? (
-            <span
-              key={slot}
-              className={`${linkBase} ${activeClass}`}
-              aria-current="page"
-            >
+            <span key={slot} className={`${linkBase} ${activeClass}`} aria-current="page">
               {slot}
             </span>
           ) : (
-            <Link
-              key={slot}
-              href={buildHref(slot)}
-              className={`${linkBase} ${inactiveClass}`}
-            >
+            <Link key={slot} href={buildHref(slot)} className={`${linkBase} ${inactiveClass}`}>
               {slot}
             </Link>
           ),
@@ -93,10 +82,7 @@ export function AdminPostsPagination({
             <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
           </Link>
         ) : (
-          <span
-            className={`${linkBase} ${disabledClass}`}
-            aria-hidden="true"
-          >
+          <span className={`${linkBase} ${disabledClass}`} aria-hidden="true">
             <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
           </span>
         )}

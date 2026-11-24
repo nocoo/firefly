@@ -63,9 +63,7 @@ export function twitterAccountMeta(handle: string) {
 }
 
 /** Homepage copy and artwork are curated together; articles use buildPageMeta. */
-export function buildHomeMeta(
-  site: Pick<SiteIdentity, "siteName" | "twitterHandle">,
-): Metadata {
+export function buildHomeMeta(site: Pick<SiteIdentity, "siteName" | "twitterHandle">): Metadata {
   const image = {
     ...homeSocial.image,
     url: new URL(homeSocial.image.url, SITE_URL).href,
@@ -110,10 +108,7 @@ export interface PageMetaInput {
   authorOverride?: { name: string; url: string } | undefined;
 }
 
-export function buildPageMeta(
-  input: PageMetaInput,
-  site: SiteIdentity,
-): Metadata {
+export function buildPageMeta(input: PageMetaInput, site: SiteIdentity): Metadata {
   const url = `${SITE_URL}${input.path}`;
   const ogType = input.type ?? "website";
 

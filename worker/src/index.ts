@@ -78,11 +78,7 @@ function isReadOnlySql(sql: string): boolean {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function jsonResponse(
-  data: unknown,
-  status = 200,
-  headers?: Record<string, string>,
-): Response {
+function jsonResponse(data: unknown, status = 200, headers?: Record<string, string>): Response {
   return Response.json(data, {
     status,
     headers: { ...headers },
@@ -184,16 +180,12 @@ async function handleQuery(body: unknown, env: Env): Promise<Response> {
   }
 
   if (!isReadOnlySql(sql)) {
-    return jsonResponse(
-      { error: "Write queries not allowed on /api/v1/query" },
-      403,
-    );
+    return jsonResponse({ error: "Write queries not allowed on /api/v1/query" }, 403);
   }
 
   try {
     const stmt = env.DB.prepare(sql);
-    const bound =
-      Array.isArray(params) && params.length > 0 ? stmt.bind(...params) : stmt;
+    const bound = Array.isArray(params) && params.length > 0 ? stmt.bind(...params) : stmt;
     const result = await bound.all();
 
     return jsonResponse({
@@ -227,9 +219,7 @@ async function handleExecute(body: unknown, env: Env): Promise<Response> {
     if (Array.isArray(statements) && statements.length > 0) {
       const stmts = statements.map((s) => {
         const stmt = env.DB.prepare(s.sql);
-        return Array.isArray(s.params) && s.params.length > 0
-          ? stmt.bind(...s.params)
-          : stmt;
+        return Array.isArray(s.params) && s.params.length > 0 ? stmt.bind(...s.params) : stmt;
       });
 
       const results = await env.DB.batch(stmts);
@@ -263,8 +253,7 @@ async function handleExecute(body: unknown, env: Env): Promise<Response> {
 
     // Single statement mode
     const stmt = env.DB.prepare(sql);
-    const bound =
-      Array.isArray(params) && params.length > 0 ? stmt.bind(...params) : stmt;
+    const bound = Array.isArray(params) && params.length > 0 ? stmt.bind(...params) : stmt;
     const result = await bound.all();
 
     return jsonResponse({
@@ -305,10 +294,7 @@ async function secureCompare(a: string, b: string): Promise<boolean> {
   return diff === 0;
 }
 
-async function authenticate(
-  request: Request,
-  env: Env,
-): Promise<Response | null> {
+async function authenticate(request: Request, env: Env): Promise<Response | null> {
   const authHeader = request.headers.get("Authorization");
   if (!authHeader) {
     return jsonResponse({ error: "Unauthorized" }, 401);

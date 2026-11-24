@@ -25,12 +25,7 @@ vi.mock("@/data/settings", () => ({
 
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import {
-  createHuman,
-  getHumanByEmail,
-  getHumanBySlug,
-  deleteHuman,
-} from "@/data/entities/human";
+import { createHuman, getHumanByEmail, getHumanBySlug, deleteHuman } from "@/data/entities/human";
 import { updateDefaultHumanId } from "@/data/settings";
 import { POST } from "./route";
 import { PATCH, DELETE } from "./[id]/route";

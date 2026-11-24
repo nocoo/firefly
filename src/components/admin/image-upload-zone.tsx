@@ -41,7 +41,12 @@ export function ImageUploadZone({
   const [dragOver, setDragOver] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => { if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current); }, []);
+  useEffect(
+    () => () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    },
+    [],
+  );
 
   const upload = useCallback(
     async (file: File) => {
@@ -114,25 +119,22 @@ export function ImageUploadZone({
     [onResultsChange],
   );
 
-  const copyToClipboard = useCallback(
-    async (text: string, key: string) => {
-      try {
-        await navigator.clipboard.writeText(text);
-        setCopiedField(key);
+  const copyToClipboard = useCallback(async (text: string, key: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(key);
 
-        if (copyTimeoutRef.current) {
-          clearTimeout(copyTimeoutRef.current);
-        }
-        copyTimeoutRef.current = setTimeout(() => {
-          setCopiedField(null);
-          copyTimeoutRef.current = null;
-        }, 800);
-      } catch {
-        // Clipboard API may fail in insecure contexts — silently ignore
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
       }
-    },
-    [],
-  );
+      copyTimeoutRef.current = setTimeout(() => {
+        setCopiedField(null);
+        copyTimeoutRef.current = null;
+      }, 800);
+    } catch {
+      // Clipboard API may fail in insecure contexts — silently ignore
+    }
+  }, []);
 
   return (
     <div className={className}>
@@ -160,15 +162,11 @@ export function ImageUploadZone({
             className="sr-only"
           />
         </label>
-        {!uploading && (
-          <span className="text-basalt-muted-foreground/60">或拖拽上传</span>
-        )}
+        {!uploading && <span className="text-basalt-muted-foreground/60">或拖拽上传</span>}
       </div>
 
       {/* Error */}
-      {error && (
-        <p className="mt-1 text-xs text-basalt-destructive">{error}</p>
-      )}
+      {error && <p className="mt-1 text-xs text-basalt-destructive">{error}</p>}
 
       {/* Results list — scrollable when >3 items */}
       {results.length > 0 && (
@@ -201,9 +199,7 @@ export function ImageUploadZone({
                   }
                   className="rounded px-2 py-1 text-xs text-basalt-muted-foreground hover:text-basalt-foreground hover:bg-basalt-accent transition-colors"
                 >
-                  {copiedField === `md-${result.id}`
-                    ? "已复制！"
-                    : "复制 Markdown"}
+                  {copiedField === `md-${result.id}` ? "已复制！" : "复制 Markdown"}
                 </button>
               </div>
 
@@ -215,7 +211,12 @@ export function ImageUploadZone({
                 aria-label="关闭"
               >
                 <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>

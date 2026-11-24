@@ -19,14 +19,10 @@ interface SiteIdentityFormProps {
 export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
   const [siteName, setSiteName] = useState(settings.siteName);
   const [siteTagline, setSiteTagline] = useState(settings.siteTagline);
-  const [siteDescription, setSiteDescription] = useState(
-    settings.siteDescription,
-  );
+  const [siteDescription, setSiteDescription] = useState(settings.siteDescription);
   const [authorEmail, setAuthorEmail] = useState(settings.authorEmail);
   const [twitterHandle, setTwitterHandle] = useState(settings.twitterHandle);
-  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(
-    settings.socialLinks,
-  );
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(settings.socialLinks);
   const [wechat, setWechat] = useState<WechatSettings>({
     wechatName: settings.wechatName,
     wechatQrImageUrl: settings.wechatQrImageUrl,
@@ -106,9 +102,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
 
         <div className="space-y-1">
           <label className="text-sm font-medium text-basalt-foreground">标语</label>
-          <p className="text-xs text-basalt-muted-foreground">
-            显示在侧边栏的简短座右铭或标语。
-          </p>
+          <p className="text-xs text-basalt-muted-foreground">显示在侧边栏的简短座右铭或标语。</p>
           <Input
             value={siteTagline}
             onChange={(e) => setSiteTagline(e.target.value)}
@@ -154,9 +148,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
         </div>
 
         <div className="space-y-1">
-          <label className="text-sm font-medium text-basalt-foreground">
-            Twitter/X 用户名
-          </label>
+          <label className="text-sm font-medium text-basalt-foreground">Twitter/X 用户名</label>
           <p className="text-xs text-basalt-muted-foreground">
             用于 Twitter Card Meta 标签。无需 @ 前缀。
           </p>
@@ -164,9 +156,7 @@ export function SiteIdentityForm({ settings, logoUrl }: SiteIdentityFormProps) {
             <span className="text-sm text-basalt-muted-foreground">@</span>
             <Input
               value={twitterHandle}
-              onChange={(e) =>
-                setTwitterHandle(e.target.value.replace(/^@/, ""))
-              }
+              onChange={(e) => setTwitterHandle(e.target.value.replace(/^@/, ""))}
               placeholder="username"
               maxLength={50}
             />

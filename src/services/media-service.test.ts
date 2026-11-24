@@ -12,11 +12,7 @@ vi.mock("@/data/entities/media", () => ({
   getMediaById: vi.fn(),
 }));
 
-import {
-  createMedia,
-  deleteMedia,
-  getMediaById,
-} from "@/data/entities/media";
+import { createMedia, deleteMedia, getMediaById } from "@/data/entities/media";
 
 // ---------------------------------------------------------------------------
 // Fixtures

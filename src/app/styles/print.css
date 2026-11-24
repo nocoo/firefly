@@ -21,34 +21,54 @@
   }
 
   /* ── Decoration ── */
-  .blog-shell::after { display: none; }                /* grain noise — already in globals */
-  .page-wrapper { border-left: none; border-right: none; }
+  .blog-shell::after {
+    display: none;
+  } /* grain noise — already in globals */
+  .page-wrapper {
+    border-left: none;
+    border-right: none;
+  }
   .page-wrapper::before,
-  .page-wrapper::after { display: none; }              /* edge ruler ticks */
-  .cross-divider { background: #ccc; }
+  .page-wrapper::after {
+    display: none;
+  } /* edge ruler ticks */
+  .cross-divider {
+    background: #ccc;
+  }
   .cross-divider::before,
-  .cross-divider::after { display: none; }             /* end-ring punches */
+  .cross-divider::after {
+    display: none;
+  } /* end-ring punches */
   hr.blog-hr::before,
   hr.blog-hr::after,
   .blog-content hr::before,
   .blog-content hr::after,
   .prose-firefly hr::before,
-  .prose-firefly hr::after { display: none; }            /* + end nodes */
+  .prose-firefly hr::after {
+    display: none;
+  } /* + end nodes */
 
   /* ── Layout ── */
-  html, body {
+  html,
+  body {
     background: white;
     color: black;
   }
-  .blog-shell { background: white; }
+  .blog-shell {
+    background: white;
+  }
   .blog-main {
     background: white;
     padding: 0;
     width: 100%;
     box-shadow: none;
   }
-  .blog-max-width { display: block; }
-  .blog-max-width::after { display: none; }            /* sidebar separator line */
+  .blog-max-width {
+    display: block;
+  }
+  .blog-max-width::after {
+    display: none;
+  } /* sidebar separator line */
 
   /* ── Prose ── */
   .prose-firefly {
@@ -60,11 +80,16 @@
     color: black;
     page-break-after: avoid;
   }
-  .prose-firefly :is(p, li, blockquote) { orphans: 3; widows: 3; }
+  .prose-firefly :is(p, li, blockquote) {
+    orphans: 3;
+    widows: 3;
+  }
   .prose-firefly pre,
   .prose-firefly img,
   .prose-firefly figure,
-  .prose-firefly table { page-break-inside: avoid; }
+  .prose-firefly table {
+    page-break-inside: avoid;
+  }
 
   /* Reveal link targets — readers can't click on paper */
   .prose-firefly a[href]::after {
@@ -74,12 +99,16 @@
     word-break: break-all;
   }
   .prose-firefly a[href^="#"]::after,
-  .prose-firefly a[href^="javascript:"]::after { content: ""; }
+  .prose-firefly a[href^="javascript:"]::after {
+    content: "";
+  }
 
   /* ── Reference card → simplified ── */
   .reference-card {
     border: 1px solid #999;
     page-break-inside: avoid;
   }
-  .reference-card-image { display: none; }
+  .reference-card-image {
+    display: none;
+  }
 }

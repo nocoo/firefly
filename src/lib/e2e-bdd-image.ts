@@ -5,9 +5,7 @@
  * must be requested under that path (same as production R2 keys). Older specs
  * used `${origin}/wp-content/...`, which 404s once `/_next/image` fetches it.
  */
-export function e2eBddTestImageUrl(
-  envR2Public = process.env.R2_PUBLIC_URL,
-): string {
+export function e2eBddTestImageUrl(envR2Public = process.env.R2_PUBLIC_URL): string {
   const fallback = "https://assets.example.com/wp-content/uploads/test-e2e.jpg";
   if (!envR2Public) return fallback;
   try {

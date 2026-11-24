@@ -53,12 +53,22 @@ function getMobileServerSnapshot(): boolean {
 }
 
 export function BlogLayoutClient({
-  categories, tags, archives, siteName, socialLinks, wechat, children,
+  categories,
+  tags,
+  archives,
+  siteName,
+  socialLinks,
+  wechat,
+  children,
 }: BlogLayoutClientProps) {
   const pathname = usePathname();
   const isPostDetail = isPostDetailRoute(pathname);
 
-  const isMobile = useSyncExternalStore(subscribeMobile, getMobileSnapshot, getMobileServerSnapshot);
+  const isMobile = useSyncExternalStore(
+    subscribeMobile,
+    getMobileSnapshot,
+    getMobileServerSnapshot,
+  );
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [trackedPath, setTrackedPath] = useState(pathname);
@@ -192,7 +202,11 @@ export function BlogLayoutClient({
               aria-controls="blog-sidebar"
               onClick={() => setDrawerOpen((v) => !v)}
             >
-              {drawerOpen ? <X className="h-5 w-5" strokeWidth={1.5} /> : <Menu className="h-5 w-5" strokeWidth={1.5} />}
+              {drawerOpen ? (
+                <X className="h-5 w-5" strokeWidth={1.5} />
+              ) : (
+                <Menu className="h-5 w-5" strokeWidth={1.5} />
+              )}
             </button>
           </HeaderTooltip>
           <div className="journal-topbar-brand" inert={mainInert || undefined}>

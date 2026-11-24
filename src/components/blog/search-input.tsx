@@ -27,8 +27,7 @@ export function SearchInput() {
       inputRef.current?.select();
     };
     window.addEventListener("keydown", handler, { capture: true });
-    return () =>
-      window.removeEventListener("keydown", handler, { capture: true });
+    return () => window.removeEventListener("keydown", handler, { capture: true });
   }, []);
 
   return (
@@ -53,9 +52,6 @@ function isTyping(e: KeyboardEvent): boolean {
   if (!target) return false;
   const tag = target.tagName;
   return (
-    tag === "INPUT" ||
-    tag === "TEXTAREA" ||
-    tag === "SELECT" ||
-    target.isContentEditable === true
+    tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target.isContentEditable === true
   );
 }

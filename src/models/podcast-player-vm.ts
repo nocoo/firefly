@@ -32,14 +32,15 @@ export function nextPlaybackSpeed(current: PlaybackSpeed): PlaybackSpeed {
 
 export function buildPodcastPlayerViewModel(card: HisFmPublishedCard) {
   const durationSeconds = card.duration ?? 0;
-  const audio: PodcastAudioViewModel | null = card.audio?.url && card.audio.mime
-    ? {
-        audioUrl: card.audio.url,
-        mime: card.audio.mime,
-        durationSeconds,
-        durationLabel: durationSeconds > 0 ? formatPlaybackTime(durationSeconds) : "--:--",
-      }
-    : null;
+  const audio: PodcastAudioViewModel | null =
+    card.audio?.url && card.audio.mime
+      ? {
+          audioUrl: card.audio.url,
+          mime: card.audio.mime,
+          durationSeconds,
+          durationLabel: durationSeconds > 0 ? formatPlaybackTime(durationSeconds) : "--:--",
+        }
+      : null;
 
   return { episodePageUrl: card.page_url, title: card.title, audio };
 }

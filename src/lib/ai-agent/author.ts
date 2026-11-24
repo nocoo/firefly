@@ -22,11 +22,7 @@ export function getPostAuthor(post: PostWithAgent): PostAuthor {
       id: post.ai_agent_id,
       name: post.agent_name,
       slug: post.agent_slug ?? "",
-      avatarUrl: getAgentAvatarUrl(
-        post.ai_agent_id,
-        post.agent_avatar_version,
-        128,
-      ),
+      avatarUrl: getAgentAvatarUrl(post.ai_agent_id, post.agent_avatar_version, 128),
     };
   }
   return {

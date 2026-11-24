@@ -15,8 +15,7 @@ import {
   loadHisFmPodcastCard,
 } from "./fetch-card.server";
 
-const EPISODE =
-  "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless";
+const EPISODE = "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless";
 
 describe("fetchHisFmCardForCache", () => {
   const fetchMock = vi.fn();
@@ -50,30 +49,22 @@ describe("fetchHisFmCardForCache", () => {
         throw new SyntaxError("bad json");
       },
     });
-    await expect(fetchHisFmCardForCache(EPISODE)).rejects.toBeInstanceOf(
-      HisFmCardCacheMissError,
-    );
+    await expect(fetchHisFmCardForCache(EPISODE)).rejects.toBeInstanceOf(HisFmCardCacheMissError);
 
     fetchMock.mockRejectedValueOnce(new DOMException("Aborted", "AbortError"));
-    await expect(fetchHisFmCardForCache(EPISODE)).rejects.toBeInstanceOf(
-      HisFmCardCacheMissError,
-    );
+    await expect(fetchHisFmCardForCache(EPISODE)).rejects.toBeInstanceOf(HisFmCardCacheMissError);
   });
 
   it("throws on 503 and invalid published payload", async () => {
     fetchMock.mockResolvedValueOnce({ ok: false, status: 503 });
-    await expect(fetchHisFmCardForCache(EPISODE)).rejects.toBeInstanceOf(
-      HisFmCardCacheMissError,
-    );
+    await expect(fetchHisFmCardForCache(EPISODE)).rejects.toBeInstanceOf(HisFmCardCacheMissError);
 
     fetchMock.mockResolvedValueOnce({
       ok: true,
       status: 200,
       json: async () => ({ v: 1, status: "published", title: "incomplete" }),
     });
-    await expect(fetchHisFmCardForCache(EPISODE)).rejects.toBeInstanceOf(
-      HisFmCardCacheMissError,
-    );
+    await expect(fetchHisFmCardForCache(EPISODE)).rejects.toBeInstanceOf(HisFmCardCacheMissError);
   });
 
   it("returns card on success", async () => {
@@ -146,9 +137,7 @@ describe("loadHisFmPodcastCard", () => {
   });
 
   it("returns null when unstable_cache throws", async () => {
-    cacheFn.mockImplementationOnce(
-      () => () => Promise.reject(new Error("cache down")),
-    );
+    cacheFn.mockImplementationOnce(() => () => Promise.reject(new Error("cache down")));
     expect(await loadHisFmPodcastCard(EPISODE)).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
   });

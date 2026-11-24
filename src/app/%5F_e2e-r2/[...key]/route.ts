@@ -25,10 +25,7 @@ const MIME_MAP: Record<string, string> = {
   ".avif": "image/avif",
 };
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ key: string[] }> },
-) {
+export async function GET(_request: Request, { params }: { params: Promise<{ key: string[] }> }) {
   // Gate: never serve in production
   if (!isLocalE2EMode()) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });

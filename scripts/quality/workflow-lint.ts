@@ -31,7 +31,9 @@ if (!tool.ok) {
   process.exit(2);
 }
 
-console.log(`S3: actionlint ${tool.detail.replace("actionlint ", "")} on ${files.length} workflow files`);
+console.log(
+  `S3: actionlint ${tool.detail.replace("actionlint ", "")} on ${files.length} workflow files`,
+);
 const lint = Bun.spawn(["actionlint", "-shellcheck=", "-pyflakes=", ...files], {
   cwd: root,
   stdout: "inherit",

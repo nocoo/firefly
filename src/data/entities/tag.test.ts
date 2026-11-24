@@ -73,7 +73,9 @@ describe("listTags", () => {
 
 describe("getTagBySlug", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns tag when found", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleTag);
@@ -99,7 +101,9 @@ describe("getTagBySlug", () => {
 
 describe("getTagById", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns tag when found", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleTag);
@@ -125,7 +129,9 @@ describe("getTagById", () => {
 
 describe("createTag", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("inserts tag and returns it", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
@@ -147,8 +153,8 @@ describe("createTag", () => {
 
     const params = vi.mocked(db.execute).mock.calls[0][1]!;
     expect(typeof params[0]).toBe("string"); // id (ULID)
-    expect(params[1]).toBe("React");         // name
-    expect(params[2]).toBe("react");         // slug
+    expect(params[1]).toBe("React"); // name
+    expect(params[2]).toBe("react"); // slug
     expect(typeof params[3]).toBe("number"); // created_at
     expect(typeof params[4]).toBe("number"); // updated_at
   });
@@ -184,7 +190,9 @@ describe("createTag", () => {
 
 describe("updateTag", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("updates specified fields", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue({ ...sampleTag, name: "React.js" });
@@ -246,7 +254,9 @@ describe("updateTag", () => {
 
 describe("deleteTag", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("deletes tag and returns true", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });

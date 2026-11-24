@@ -15,15 +15,15 @@ grep -cE '^\s*test\(' e2e/browser/*.spec.ts | awk -F: '{s+=$2} END {print s}'
 # => 178
 ```
 
-| 指标 | 数值 |
-|------|------|
-| Spec 文件数 | 19 |
-| 测试用例总数 | **178** |
-| 管理后台域 (admin-*) | 7 spec, 83 tests |
-| 认证域 (login-auth) | 1 spec, 13 tests |
-| 博客前台域 (blog-archive/category/navigation/pagination/post-detail/search-preview/tag) | 7 spec, 52 tests |
-| 内容/媒体域 (blog-taxonomy-pagination, content-images, rss-feed, seo-meta) | 4 spec, 30 tests |
-| **合计** | **19 spec, 178 tests** |
+| 指标                                                                                    | 数值                   |
+| --------------------------------------------------------------------------------------- | ---------------------- |
+| Spec 文件数                                                                             | 19                     |
+| 测试用例总数                                                                            | **178**                |
+| 管理后台域 (admin-*)                                                                    | 7 spec, 83 tests       |
+| 认证域 (login-auth)                                                                     | 1 spec, 13 tests       |
+| 博客前台域 (blog-archive/category/navigation/pagination/post-detail/search-preview/tag) | 7 spec, 52 tests       |
+| 内容/媒体域 (blog-taxonomy-pagination, content-images, rss-feed, seo-meta)              | 4 spec, 30 tests       |
+| **合计**                                                                                | **19 spec, 178 tests** |
 
 域加总核对：83 + 13 + 52 + 30 = 178 ✅（域分组与 §1.2 表"域"列完全一致）
 
@@ -32,61 +32,61 @@ grep -cE '^\s*test\(' e2e/browser/*.spec.ts | awk -F: '{s+=$2} END {print s}'
 Per-file counts (reproducible via
 `grep -cE '^\s*test\(' e2e/browser/*.spec.ts`, sorted by domain):
 
-| Spec 文件 | 测试数 | 域 | 覆盖范围 |
-|-----------|--------|-----|---------|
-| `admin-ai-agents` | 14 | Admin | AI Agent 列表、表单、新建 |
-| `admin-backup-mcp` | 14 | Admin | 备份页面、MCP 令牌页面 |
-| `admin-media` | 7 | Admin | 媒体库、灯箱 |
-| `admin-post-edit` | 7 | Admin | 文章编辑页面 |
-| `admin-posts` | 11 | Admin | 仪表盘、文章列表、新建文章、分析页 |
-| `admin-settings` | 21 | Admin | 通用设置、AI 设置、站点身份、系统监控 |
-| `admin-taxonomy` | 9 | Admin | 分类管理、标签管理 |
-| `login-auth` | 13 | Auth | 登录页面、认证守卫 |
-| `blog-archive` | 6 | Blog | 归档索引页 |
-| `blog-category` | 7 | Blog | 分类页面 |
-| `blog-navigation` | 7 | Blog | 首页导航、文章卡片 |
-| `blog-pagination` | 7 | Blog | 首页分页 |
-| `blog-post-detail` | 7 | Blog | 文章详情页 |
-| `blog-search-preview` | 11 | Blog | 搜索页面、预览页面 |
-| `blog-tag` | 7 | Blog | 标签页面 |
-| `blog-taxonomy-pagination` | 12 | Content | 分类/标签/归档分页 |
-| `content-images` | 9 | Content | 图片优化、灯箱、媒体库灯箱（详见 §1.2.1） |
-| `rss-feed` | 4 | Content | RSS 订阅源 |
-| `seo-meta` | 5 | Content | SEO meta 标签、JSON-LD 结构化数据 |
-| **合计** | **178** | | |
+| Spec 文件                  | 测试数  | 域      | 覆盖范围                                  |
+| -------------------------- | ------- | ------- | ----------------------------------------- |
+| `admin-ai-agents`          | 14      | Admin   | AI Agent 列表、表单、新建                 |
+| `admin-backup-mcp`         | 14      | Admin   | 备份页面、MCP 令牌页面                    |
+| `admin-media`              | 7       | Admin   | 媒体库、灯箱                              |
+| `admin-post-edit`          | 7       | Admin   | 文章编辑页面                              |
+| `admin-posts`              | 11      | Admin   | 仪表盘、文章列表、新建文章、分析页        |
+| `admin-settings`           | 21      | Admin   | 通用设置、AI 设置、站点身份、系统监控     |
+| `admin-taxonomy`           | 9       | Admin   | 分类管理、标签管理                        |
+| `login-auth`               | 13      | Auth    | 登录页面、认证守卫                        |
+| `blog-archive`             | 6       | Blog    | 归档索引页                                |
+| `blog-category`            | 7       | Blog    | 分类页面                                  |
+| `blog-navigation`          | 7       | Blog    | 首页导航、文章卡片                        |
+| `blog-pagination`          | 7       | Blog    | 首页分页                                  |
+| `blog-post-detail`         | 7       | Blog    | 文章详情页                                |
+| `blog-search-preview`      | 11      | Blog    | 搜索页面、预览页面                        |
+| `blog-tag`                 | 7       | Blog    | 标签页面                                  |
+| `blog-taxonomy-pagination` | 12      | Content | 分类/标签/归档分页                        |
+| `content-images`           | 9       | Content | 图片优化、灯箱、媒体库灯箱（详见 §1.2.1） |
+| `rss-feed`                 | 4       | Content | RSS 订阅源                                |
+| `seo-meta`                 | 5       | Content | SEO meta 标签、JSON-LD 结构化数据         |
+| **合计**                   | **178** |         |                                           |
 
 #### 1.2.1 `content-images.spec.ts` 测试归属（pre-split attribution）
 
 此 spec 跨域，必须在重构前显式归属，避免目标 spec 之间双计。归属决定见
 §3 合并计划：
 
-| 行号 | 测试名 | 主题 | 归属目标 spec |
-|------|--------|------|--------------|
-| L91 | `inline images have srcset attribute` | 前台图片渲染 | `seo-rss.spec.ts` |
-| L100 | `inline image src points to /_next/image` | 前台图片渲染 | `seo-rss.spec.ts` |
-| L109 | `click inline image opens lightbox` | 前台灯箱 | `blog-content.spec.ts` |
-| L129 | `lightbox shows correct image` | 前台灯箱 | `blog-content.spec.ts` |
-| L148 | `lightbox closes on X button, Escape, and backdrop` | 前台灯箱 | `blog-content.spec.ts` |
-| L180 | `linked image click navigates without lightbox` | 前台链接图片 | `blog-content.spec.ts` |
-| L209 | `RSS feed images do not use /_next/image proxy` | RSS 图片 | `seo-rss.spec.ts` |
-| L230 | `media library page loads` | 后台媒体库 | `admin-media.spec.ts` |
-| L235 | `clicking a media thumbnail opens lightbox with metadata` | 后台媒体库灯箱 | `admin-media.spec.ts` |
+| 行号 | 测试名                                                    | 主题           | 归属目标 spec          |
+| ---- | --------------------------------------------------------- | -------------- | ---------------------- |
+| L91  | `inline images have srcset attribute`                     | 前台图片渲染   | `seo-rss.spec.ts`      |
+| L100 | `inline image src points to /_next/image`                 | 前台图片渲染   | `seo-rss.spec.ts`      |
+| L109 | `click inline image opens lightbox`                       | 前台灯箱       | `blog-content.spec.ts` |
+| L129 | `lightbox shows correct image`                            | 前台灯箱       | `blog-content.spec.ts` |
+| L148 | `lightbox closes on X button, Escape, and backdrop`       | 前台灯箱       | `blog-content.spec.ts` |
+| L180 | `linked image click navigates without lightbox`           | 前台链接图片   | `blog-content.spec.ts` |
+| L209 | `RSS feed images do not use /_next/image proxy`           | RSS 图片       | `seo-rss.spec.ts`      |
+| L230 | `media library page loads`                                | 后台媒体库     | `admin-media.spec.ts`  |
+| L235 | `clicking a media thumbnail opens lightbox with metadata` | 后台媒体库灯箱 | `admin-media.spec.ts`  |
 
 `content-images.spec.ts` 删除时，9 个测试按上表分别迁移到 3 个新 spec，**不双计**。
 
 ### 1.3 技术栈现状
 
-| 维度 | 现状 |
-|------|------|
-| 框架 | Playwright (Chromium only) |
-| 配置 | `e2e/playwright.config.ts` |
-| 测试目录 | `e2e/browser/` |
-| 端口 | 27028 (dev=7028, L2=17028, L3=27028) |
-| 启动器 | `scripts/run-e2e.ts`（统一管理 Worker + Next.js + 迁移 + 测试） |
-| 并行度 | 10 workers |
-| CI 方式 | 自建 job（非 base-ci `enable-l3`） |
-| 共享 fixtures | 无 |
-| BDD 元素 | 零（无 Given/When/Then、无 .feature 文件、无 step definitions） |
+| 维度          | 现状                                                            |
+| ------------- | --------------------------------------------------------------- |
+| 框架          | Playwright (Chromium only)                                      |
+| 配置          | `e2e/playwright.config.ts`                                      |
+| 测试目录      | `e2e/browser/`                                                  |
+| 端口          | 27028 (dev=7028, L2=17028, L3=27028)                            |
+| 启动器        | `scripts/run-e2e.ts`（统一管理 Worker + Next.js + 迁移 + 测试） |
+| 并行度        | 10 workers                                                      |
+| CI 方式       | 自建 job（非 base-ci `enable-l3`）                              |
+| 共享 fixtures | 无                                                              |
+| BDD 元素      | 零（无 Given/When/Then、无 .feature 文件、无 step definitions） |
 
 ### 1.4 测试风格分析
 
@@ -94,31 +94,31 @@ Per-file counts (reproducible via
 
 **Locator 策略**：
 
-| 定位方式 | 使用次数 | 占比 |
-|----------|---------|------|
-| `page.locator()` (CSS/组合) | 174 | 73% |
-| `page.getByText()` | 45 | 19% |
-| `data-testid` | 10 | 4% |
-| `page.getByRole()` | 0 | 0% |
+| 定位方式                    | 使用次数 | 占比 |
+| --------------------------- | -------- | ---- |
+| `page.locator()` (CSS/组合) | 174      | 73%  |
+| `page.getByText()`          | 45       | 19%  |
+| `data-testid`               | 10       | 4%   |
+| `page.getByRole()`          | 0        | 0%   |
 
 **断言模式**：
 
-| 断言 | 使用次数 |
-|------|---------|
-| `toBeVisible()` | 148 |
-| `toMatch()` | 26 |
-| `toBe()` | 25 |
-| `toHaveURL()` | 25 |
-| `toHaveText()` | 2 |
+| 断言            | 使用次数 |
+| --------------- | -------- |
+| `toBeVisible()` | 148      |
+| `toMatch()`     | 26       |
+| `toBe()`        | 25       |
+| `toHaveURL()`   | 25       |
+| `toHaveText()`  | 2        |
 
 **操作复杂度**：
 
-| 操作 | 使用次数 | 说明 |
-|------|---------|------|
-| `page.goto()` | 187 | 每个 test 至少一次 |
-| `.click()` | 35 | 导航和交互 |
-| `.fill()` | 2 | 仅 admin-ai-agents 和 admin-posts |
-| `keyboard` | 3 | 仅 admin-media 和 content-images（灯箱 Escape） |
+| 操作          | 使用次数 | 说明                                            |
+| ------------- | -------- | ----------------------------------------------- |
+| `page.goto()` | 187      | 每个 test 至少一次                              |
+| `.click()`    | 35       | 导航和交互                                      |
+| `.fill()`     | 2        | 仅 admin-ai-agents 和 admin-posts               |
+| `keyboard`    | 3        | 仅 admin-media 和 content-images（灯箱 Escape） |
 
 **结论**：绝大多数测试是**只读验证**（加载页面 → 断言元素可见），极少数涉及写入操作。这使得 BDD 改写的风险很低。
 
@@ -144,6 +144,7 @@ Per-file counts (reproducible via
 - 独立的 step definitions 目录
 
 理由：
+
 - Firefly 的 178 个测试都是 Playwright 原生写法，引入 .feature 文件的改写成本过高
 - 其他已完成项目（dove/lyre/backy/gecko/neo/noheir/wooly/otter/pew-game）也使用的是 Playwright 原生 BDD 命名
 - 保持依赖最小化
@@ -214,6 +215,7 @@ test.describe("Feature: Blog Reading", () => { ... });
 3. **Admin 鉴权绕过封装**：复用 `E2E_SKIP_AUTH` 环境约定的入口
 
 **不放进 fixtures**：
+
 - 任何 spec 内部一次性使用的 helper
 - 任何与具体业务断言耦合的逻辑（如"检查文章卡片有标题"）
 - 不稳定的 fallback selector（`h1, h2` / `aside, nav` 等）
@@ -273,25 +275,26 @@ role 再迁移，**不要原样复制**。
 > **来源数核对原则**：本表"原测试数"列必须与 §1.2 完全一致；`content-images`
 > 的 9 个测试按 §1.2.1 拆分归属，不允许在两行同时累加 9。
 
-| 目标 BDD Spec | 合并来源 (旧 spec → 取用测试数) | 原测试数 | 预估 BDD 测试数 |
-|---------------|-----------------------------|---------|----------------|
-| `auth.spec.ts` | login-auth(13) | 13 | 10 |
-| `blog-reading.spec.ts` | blog-navigation(7) + blog-post-detail(7) | 14 | 10 |
-| `blog-taxonomy.spec.ts` | blog-category(7) + blog-tag(7) + blog-archive(6) | 20 | 12 |
-| `blog-content.spec.ts` | blog-pagination(7) + blog-taxonomy-pagination(12) + blog-search-preview(11) + content-images L109/L129/L148/L180(4) | 34 | 16 |
-| `admin-dashboard.spec.ts` | admin-posts(dashboard 子集 ~3) | 3 | 3 |
-| `admin-posts.spec.ts` | admin-posts(posts/editor 子集 ~8) + admin-post-edit(7) | 15 | 10 |
-| `admin-taxonomy.spec.ts` | admin-taxonomy(9) | 9 | 8 |
-| `admin-media.spec.ts` | admin-media(7) + content-images L230/L235(2) | 9 | 7 |
-| `admin-settings.spec.ts` | admin-settings(21) | 21 | 15 |
-| `admin-ai-agents.spec.ts` | admin-ai-agents(14) | 14 | 10 |
-| `admin-backup-mcp.spec.ts` | admin-backup-mcp(14) | 14 | 10 |
-| `seo-rss.spec.ts` | seo-meta(5) + rss-feed(4) + content-images L91/L100/L209(3) | 12 | 10 |
-| **合计** | **19 → 12** | **178** | **~121** |
+| 目标 BDD Spec              | 合并来源 (旧 spec → 取用测试数)                                                                                     | 原测试数 | 预估 BDD 测试数 |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------- | --------------- |
+| `auth.spec.ts`             | login-auth(13)                                                                                                      | 13       | 10              |
+| `blog-reading.spec.ts`     | blog-navigation(7) + blog-post-detail(7)                                                                            | 14       | 10              |
+| `blog-taxonomy.spec.ts`    | blog-category(7) + blog-tag(7) + blog-archive(6)                                                                    | 20       | 12              |
+| `blog-content.spec.ts`     | blog-pagination(7) + blog-taxonomy-pagination(12) + blog-search-preview(11) + content-images L109/L129/L148/L180(4) | 34       | 16              |
+| `admin-dashboard.spec.ts`  | admin-posts(dashboard 子集 ~3)                                                                                      | 3        | 3               |
+| `admin-posts.spec.ts`      | admin-posts(posts/editor 子集 ~8) + admin-post-edit(7)                                                              | 15       | 10              |
+| `admin-taxonomy.spec.ts`   | admin-taxonomy(9)                                                                                                   | 9        | 8               |
+| `admin-media.spec.ts`      | admin-media(7) + content-images L230/L235(2)                                                                        | 9        | 7               |
+| `admin-settings.spec.ts`   | admin-settings(21)                                                                                                  | 21       | 15              |
+| `admin-ai-agents.spec.ts`  | admin-ai-agents(14)                                                                                                 | 14       | 10              |
+| `admin-backup-mcp.spec.ts` | admin-backup-mcp(14)                                                                                                | 14       | 10              |
+| `seo-rss.spec.ts`          | seo-meta(5) + rss-feed(4) + content-images L91/L100/L209(3)                                                         | 12       | 10              |
+| **合计**                   | **19 → 12**                                                                                                         | **178**  | **~121**        |
 
 **合计来源核对**：13+14+20+34+3+15+9+9+21+14+14+12 = 178 ✅
 
 预估测试数减少原因：
+
 - 合并重复的页面加载断言（多个 spec 都测 "heading visible"）
 - 合并同一 feature 的微小验证（如 login 页面的 5 个独立元素断言可合并为 1 个 scenario）
 - 删除无断言价值的测试（如 "page has theme toggle" 作为独立测试价值低）
@@ -311,28 +314,31 @@ role 再迁移，**不要原样复制**。
 - 单个 commit 必须包含本目标 spec 的完整 traceability 映射表（在 commit body 或同 PR 关联文档中）。
 
 ### 4.2 Phase 1：只读博客前台（风险最低）
-| 批次 | Spec | 测试数 (旧→新) | 工作量 | 理由 |
-|------|------|--------|--------|------|
-| 1.1 | `seo-rss.spec.ts` | 12 → 10 | 小 | 纯断言，无交互 |
-| 1.2 | `blog-reading.spec.ts` | 14 → 10 | 小 | 只读导航 |
-| 1.3 | `blog-taxonomy.spec.ts` | 20 → 12 | 中 | 合并 3 个 spec |
-| 1.4 | `blog-content.spec.ts` | 34 → 16 | 中 | 合并 3 个 spec + content-images 4 个灯箱用例 |
+
+| 批次 | Spec                    | 测试数 (旧→新) | 工作量 | 理由                                         |
+| ---- | ----------------------- | -------------- | ------ | -------------------------------------------- |
+| 1.1  | `seo-rss.spec.ts`       | 12 → 10        | 小     | 纯断言，无交互                               |
+| 1.2  | `blog-reading.spec.ts`  | 14 → 10        | 小     | 只读导航                                     |
+| 1.3  | `blog-taxonomy.spec.ts` | 20 → 12        | 中     | 合并 3 个 spec                               |
+| 1.4  | `blog-content.spec.ts`  | 34 → 16        | 中     | 合并 3 个 spec + content-images 4 个灯箱用例 |
 
 ### 4.3 Phase 2：认证 + 管理后台只读
-| 批次 | Spec | 测试数 (旧→新) | 工作量 | 理由 |
-|------|------|--------|--------|------|
-| 2.1 | `auth.spec.ts` | 13 → 10 | 小 | 登录页+守卫 |
-| 2.2 | `admin-dashboard.spec.ts` | 3 → 3 | 极小 | 仪表盘加载 |
-| 2.3 | `admin-settings.spec.ts` | 21 → 15 | 中 | 4 个设置子页面 |
-| 2.4 | `admin-backup-mcp.spec.ts` | 14 → 10 | 小 | 两个只读页面 |
+
+| 批次 | Spec                       | 测试数 (旧→新) | 工作量 | 理由           |
+| ---- | -------------------------- | -------------- | ------ | -------------- |
+| 2.1  | `auth.spec.ts`             | 13 → 10        | 小     | 登录页+守卫    |
+| 2.2  | `admin-dashboard.spec.ts`  | 3 → 3          | 极小   | 仪表盘加载     |
+| 2.3  | `admin-settings.spec.ts`   | 21 → 15        | 中     | 4 个设置子页面 |
+| 2.4  | `admin-backup-mcp.spec.ts` | 14 → 10        | 小     | 两个只读页面   |
 
 ### 4.4 Phase 3：管理后台交互（有 click/fill）
-| 批次 | Spec | 测试数 (旧→新) | 工作量 | 理由 |
-|------|------|--------|--------|------|
-| 3.1 | `admin-taxonomy.spec.ts` | 9 → 8 | 中 | click 创建/编辑表单 |
-| 3.2 | `admin-media.spec.ts` | 9 → 7 | 中 | 灯箱交互+keyboard，含 content-images 媒体库 2 例 |
-| 3.3 | `admin-ai-agents.spec.ts` | 14 → 10 | 中 | fill 表单 |
-| 3.4 | `admin-posts.spec.ts` | 15 → 10 | 大 | 编辑器交互，fill+click |
+
+| 批次 | Spec                      | 测试数 (旧→新) | 工作量 | 理由                                             |
+| ---- | ------------------------- | -------------- | ------ | ------------------------------------------------ |
+| 3.1  | `admin-taxonomy.spec.ts`  | 9 → 8          | 中     | click 创建/编辑表单                              |
+| 3.2  | `admin-media.spec.ts`     | 9 → 7          | 中     | 灯箱交互+keyboard，含 content-images 媒体库 2 例 |
+| 3.3  | `admin-ai-agents.spec.ts` | 14 → 10        | 中     | fill 表单                                        |
+| 3.4  | `admin-posts.spec.ts`     | 15 → 10        | 大     | 编辑器交互，fill+click                           |
 
 ## 5. 迁移检查清单（每个批次 / 每个目标 spec）
 
@@ -361,6 +367,7 @@ role 再迁移，**不要原样复制**。
 ### 6.1 当前 CI 架构
 
 firefly CI 使用**自建 L3 job**，因为需要：
+
 - 启动 Cloudflare Worker（D1 本地模拟）
 - 启动 Next.js dev server
 - Apply 数据库迁移
@@ -413,39 +420,39 @@ Stage 2 完成后，在 `package.json` 添加别名：
 
 ## 7. 工作量估算
 
-| Phase | Spec 数 | 测试数 | 预估工时 | SDE Issue 数 |
-|-------|---------|--------|---------|-------------|
-| 准备工作 | 0 | 0 | 0.5h | 1（创建 fixtures.ts + Stage 1 config commit） |
-| Phase 1 | 4 | 48 | 2h | 4（每个目标 spec 一个 commit） |
-| Phase 2 | 4 | 38 | 1.5h | 4 |
-| Phase 3 | 4 | 38 | 2.5h | 4 |
-| 收尾 | 0 | 0 | 0.5h | 1（Stage 2 config + 删空目录 + 添加 alias） |
-| **合计** | **12** | **~121** | **~7h** | **14** |
+| Phase    | Spec 数 | 测试数   | 预估工时 | SDE Issue 数                                  |
+| -------- | ------- | -------- | -------- | --------------------------------------------- |
+| 准备工作 | 0       | 0        | 0.5h     | 1（创建 fixtures.ts + Stage 1 config commit） |
+| Phase 1  | 4       | 48       | 2h       | 4（每个目标 spec 一个 commit）                |
+| Phase 2  | 4       | 38       | 1.5h     | 4                                             |
+| Phase 3  | 4       | 38       | 2.5h     | 4                                             |
+| 收尾     | 0       | 0        | 0.5h     | 1（Stage 2 config + 删空目录 + 添加 alias）   |
+| **合计** | **12**  | **~121** | **~7h**  | **14**                                        |
 
 ## 8. 约束与风险
 
 ### 8.1 不变量（baseline 数字均可复跑验证）
 
-| 不变量 | Baseline | 验证命令 |
-|--------|----------|---------|
-| `scripts/run-e2e.ts` 启动器不改 | — | `git diff main -- scripts/run-e2e.ts` 必须为空 |
-| `e2e/playwright.config.ts` 位置不变 | — | 文件路径不变，只改 `testDir`/`testMatch` |
-| L2 API 测试数 | 24 spec files / 191 tests | `find e2e/api -name '*.test.ts' \| wc -l`；`find e2e/api -name '*.test.ts' -exec grep -hcE '^\s*(test\|it)\(' {} + \| awk '{s+=$1} END {print s}'` |
-| Worker 测试数 | 2 test files / 96 tests | `find worker/test -name '*.test.ts' \| wc -l`；`find worker/test -name '*.test.ts' -exec grep -hcE '^\s*(test\|it)\(' {} + \| awk '{s+=$1} END {print s}'` |
-| L3 browser baseline | 19 spec files / 178 tests | `grep -cE '^\s*test\(' e2e/browser/*.spec.ts \| awk -F: '{s+=$2} END {print s}'` |
-| CI 自建 job 结构 | — | `.github/workflows/` 中 L3 job 步骤数不变 |
+| 不变量                              | Baseline                  | 验证命令                                                                                                                                                   |
+| ----------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/run-e2e.ts` 启动器不改     | —                         | `git diff main -- scripts/run-e2e.ts` 必须为空                                                                                                             |
+| `e2e/playwright.config.ts` 位置不变 | —                         | 文件路径不变，只改 `testDir`/`testMatch`                                                                                                                   |
+| L2 API 测试数                       | 24 spec files / 191 tests | `find e2e/api -name '*.test.ts' \| wc -l`；`find e2e/api -name '*.test.ts' -exec grep -hcE '^\s*(test\|it)\(' {} + \| awk '{s+=$1} END {print s}'`         |
+| Worker 测试数                       | 2 test files / 96 tests   | `find worker/test -name '*.test.ts' \| wc -l`；`find worker/test -name '*.test.ts' -exec grep -hcE '^\s*(test\|it)\(' {} + \| awk '{s+=$1} END {print s}'` |
+| L3 browser baseline                 | 19 spec files / 178 tests | `grep -cE '^\s*test\(' e2e/browser/*.spec.ts \| awk -F: '{s+=$2} END {print s}'`                                                                           |
+| CI 自建 job 结构                    | —                         | `.github/workflows/` 中 L3 job 步骤数不变                                                                                                                  |
 
 ### 8.2 风险
 
-| 风险 | 影响 | 缓解措施 |
-|------|------|---------|
-| 合并 spec 时遗漏边界断言 | 覆盖率回退 | 每批次必须附 traceability 映射表，差值必须可解释 |
-| 条件跳过逻辑不一致 | 报告里看不到跳过原因 | 统一用 `emptyDataGate` + Playwright `test.skip()` |
-| Stage 1 期间旧/新并存导致重复执行 | CI 时长上涨、报告噪音 | 跨阶段命名不冲突；每删一个旧 spec 同 commit 落地新 spec，缩短并存窗口 |
-| 10 workers 并行下新 spec 的 flaky | CI 不稳定 | `retries: 1` 已配置；新 spec 先在 `workers: 1` 本地验证 |
-| `content-images` 拆分时遗漏归属 | 9 个测试少跑或重跑 | §1.2.1 显式归属表是源代码删除的前置条件 |
-| **数据污染 / 并行写入冲突** | Flaky 或 cross-test pollution | 有 `.fill()` / `.click()` 写入操作的 spec（admin-ai-agents、admin-posts、admin-taxonomy、admin-media、admin-post-edit）必须使用唯一前缀（如 `e2e-<spec>-${Date.now()}-`）避免命名冲突；优先以 read-after-write 在同一 test 内验证，不依赖跨 test 的数据状态 |
-| Locator 重写引入断言点漂移 | 行为覆盖偏移 | §2.5 列表为强制，CSS fallback 必须加注释；review 时对照旧 spec 的断言目标 |
+| 风险                              | 影响                          | 缓解措施                                                                                                                                                                                                                                                    |
+| --------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 合并 spec 时遗漏边界断言          | 覆盖率回退                    | 每批次必须附 traceability 映射表，差值必须可解释                                                                                                                                                                                                            |
+| 条件跳过逻辑不一致                | 报告里看不到跳过原因          | 统一用 `emptyDataGate` + Playwright `test.skip()`                                                                                                                                                                                                           |
+| Stage 1 期间旧/新并存导致重复执行 | CI 时长上涨、报告噪音         | 跨阶段命名不冲突；每删一个旧 spec 同 commit 落地新 spec，缩短并存窗口                                                                                                                                                                                       |
+| 10 workers 并行下新 spec 的 flaky | CI 不稳定                     | `retries: 1` 已配置；新 spec 先在 `workers: 1` 本地验证                                                                                                                                                                                                     |
+| `content-images` 拆分时遗漏归属   | 9 个测试少跑或重跑            | §1.2.1 显式归属表是源代码删除的前置条件                                                                                                                                                                                                                     |
+| **数据污染 / 并行写入冲突**       | Flaky 或 cross-test pollution | 有 `.fill()` / `.click()` 写入操作的 spec（admin-ai-agents、admin-posts、admin-taxonomy、admin-media、admin-post-edit）必须使用唯一前缀（如 `e2e-<spec>-${Date.now()}-`）避免命名冲突；优先以 read-after-write 在同一 test 内验证，不依赖跨 test 的数据状态 |
+| Locator 重写引入断言点漂移        | 行为覆盖偏移                  | §2.5 列表为强制，CSS fallback 必须加注释；review 时对照旧 spec 的断言目标                                                                                                                                                                                   |
 
 ## 9. 验收标准
 

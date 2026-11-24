@@ -21,9 +21,11 @@ export function JournalWechat({ wechatName, wechatQrImageUrl, wechatAvatarUrl }:
             height={180}
             alt={`微信公众号「${wechatName}」二维码`}
           />
-          {wechatAvatarUrl && isImageUrl(wechatAvatarUrl) && <span className="journal-wechat-seal" aria-hidden="true">
-            <img src={wechatAvatarUrl} width={72} height={72} alt="" />
-          </span>}
+          {wechatAvatarUrl && isImageUrl(wechatAvatarUrl) && (
+            <span className="journal-wechat-seal" aria-hidden="true">
+              <img src={wechatAvatarUrl} width={72} height={72} alt="" />
+            </span>
+          )}
         </div>
         <figcaption className="journal-wechat-name">
           <WechatIcon className="journal-wechat-icon" />

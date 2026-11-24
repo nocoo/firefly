@@ -1,12 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db } from "@/lib/db";
 import { createMockDb } from "@/data/core/test-utils";
-import {
-  listCommentsByPost,
-  buildCommentTree,
-  createComment,
-  deleteComment,
-} from "./comment";
+import { listCommentsByPost, buildCommentTree, createComment, deleteComment } from "./comment";
 import type { Comment } from "@/models/types";
 
 // ---------------------------------------------------------------------------
@@ -57,7 +52,9 @@ const grandchildComment: Comment = {
 
 describe("listCommentsByPost", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns comments for a post ordered by created_at", async () => {
     vi.mocked(db.query).mockResolvedValue({
@@ -154,9 +151,7 @@ describe("buildCommentTree", () => {
   });
 
   it("skips a comment when node lookup unexpectedly fails", () => {
-    const getSpy = vi
-      .spyOn(Map.prototype, "get")
-      .mockImplementationOnce(() => undefined);
+    const getSpy = vi.spyOn(Map.prototype, "get").mockImplementationOnce(() => undefined);
 
     expect(buildCommentTree([parentComment])).toEqual([]);
 
@@ -170,7 +165,9 @@ describe("buildCommentTree", () => {
 
 describe("deleteComment", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns false when comment not found", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(null);
@@ -214,7 +211,7 @@ describe("deleteComment", () => {
         { id: "c2", parent_id: "c1" },
         { id: "c3", parent_id: "c2" },
         { id: "c4", parent_id: "c1" }, // sibling → also deleted
-        { id: "c5", parent_id: null },  // unrelated root → NOT deleted
+        { id: "c5", parent_id: null }, // unrelated root → NOT deleted
       ],
       meta: { changes: 0, duration: 0 },
     });

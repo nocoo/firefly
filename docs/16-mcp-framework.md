@@ -7,6 +7,7 @@ Refactor the 17 hand-written MCP tool handlers into a declarative, entity-driven
 ### Current State
 
 Three sets of nearly identical CRUD handlers (`tags.ts` 117 LOC, `categories.ts` 129 LOC, `posts.ts` 389 LOC) with:
+
 - Same `getBySlug → not-found check → data layer call → JSON serialize` pattern copy-pasted 15 times
 - Same response format (`{ content: [{ type: "text", text }] }`) duplicated in every return
 - Same error format (`{ ..., isError: true }`) duplicated in every error path
@@ -20,7 +21,14 @@ Three sets of nearly identical CRUD handlers (`tags.ts` 117 LOC, `categories.ts`
 // This is all you write to get 5 CRUD tools + ID/slug resolution + field projection:
 const tagEntity = defineEntity("tag", {
   display: "tag",
-  dataLayer: { list: listTags, getById: getTagById, getBySlug: getTagBySlug, create: createTag, update: updateTag, delete: deleteTag },
+  dataLayer: {
+    list: listTags,
+    getById: getTagById,
+    getBySlug: getTagBySlug,
+    create: createTag,
+    update: updateTag,
+    delete: deleteTag,
+  },
   schemas: {
     create: { name: z.string(), slug: z.string() },
     update: { name: z.string().optional(), new_slug: z.string().optional() },
@@ -30,6 +38,7 @@ const tagEntity = defineEntity("tag", {
 ```
 
 Posts add hooks and extra tools on top of the same base:
+
 ```ts
 const postEntity = defineEntity("post", {
   ...baseConfig,
@@ -125,8 +134,12 @@ export interface ToolContext {
 
 // ---- Data layer contract ----
 
-export interface DataLayer<T, TCreate = Record<string, unknown>, TUpdate = Record<string, unknown>> {
-  list: ((db: Db, opts?: unknown) => Promise<T[] | { items: T[]; total: number }>);
+export interface DataLayer<
+  T,
+  TCreate = Record<string, unknown>,
+  TUpdate = Record<string, unknown>,
+> {
+  list: (db: Db, opts?: unknown) => Promise<T[] | { items: T[]; total: number }>;
   getById: (db: Db, id: string) => Promise<T | null>;
   getBySlug: (db: Db, slug: string) => Promise<T | null>;
   create: (db: Db, input: TCreate) => Promise<T>;
@@ -273,9 +286,7 @@ export function projectFields<T extends Record<string, unknown>>(
 ): Record<string, unknown> {
   if (include?.includes("full")) return { ...record };
 
-  const included = new Set(
-    (include ?? []).flatMap((key) => config.groups[key] ?? []),
-  );
+  const included = new Set((include ?? []).flatMap((key) => config.groups[key] ?? []));
 
   const result = { ...record };
   for (const key of config.omit) {
@@ -290,9 +301,7 @@ export function projectFields<T extends Record<string, unknown>>(
 The core of the framework. Given an `EntityConfig`, produces 5 typed handler functions:
 
 ```ts
-export function createCrudHandlers<T extends { id: string }>(
-  config: EntityConfig<T>,
-) {
+export function createCrudHandlers<T extends { id: string }>(config: EntityConfig<T>) {
   const { dataLayer, hooks, projection } = config;
   const displayName = config.display;
 
@@ -302,20 +311,36 @@ export function createCrudHandlers<T extends { id: string }>(
   }
 
   // ---- list ----
-  async function handleList(ctx: ToolContext, args: Record<string, unknown>): Promise<CallToolResult> {
+  async function handleList(
+    ctx: ToolContext,
+    args: Record<string, unknown>,
+  ): Promise<CallToolResult> {
     const result = await dataLayer.list(ctx.db, args);
     // If paginated result
     if (result && typeof result === "object" && "items" in result) {
       const items = projection
-        ? result.items.map((item) => projectFields(item as Record<string, unknown>, projection, args.include as string[] | undefined))
+        ? result.items.map((item) =>
+            projectFields(
+              item as Record<string, unknown>,
+              projection,
+              args.include as string[] | undefined,
+            ),
+          )
         : result.items;
       return ok({ [config.plural ?? config.name + "s"]: items, total: result.total });
     }
     // Simple array
     const items = result as T[];
-    return ok(projection
-      ? items.map((item) => projectFields(item as Record<string, unknown>, projection, args.include as string[] | undefined))
-      : items,
+    return ok(
+      projection
+        ? items.map((item) =>
+            projectFields(
+              item as Record<string, unknown>,
+              projection,
+              args.include as string[] | undefined,
+            ),
+          )
+        : items,
     );
   }
 
@@ -328,7 +353,10 @@ export function createCrudHandlers<T extends { id: string }>(
   }
 
   // ---- create ----
-  async function handleCreate(ctx: ToolContext, args: Record<string, unknown>): Promise<CallToolResult> {
+  async function handleCreate(
+    ctx: ToolContext,
+    args: Record<string, unknown>,
+  ): Promise<CallToolResult> {
     const input = hooks?.mapCreateInput ? hooks.mapCreateInput(args) : args;
     const entity = await dataLayer.create(ctx.db, input);
     if (hooks?.afterCreate) {
@@ -344,7 +372,10 @@ export function createCrudHandlers<T extends { id: string }>(
   }
 
   // ---- update ----
-  async function handleUpdate(ctx: ToolContext, args: IdOrSlug & Record<string, unknown>): Promise<CallToolResult> {
+  async function handleUpdate(
+    ctx: ToolContext,
+    args: IdOrSlug & Record<string, unknown>,
+  ): Promise<CallToolResult> {
     const resolved = await resolve(ctx.db, args);
     if ("error" in resolved) return error(resolved.error);
 
@@ -358,9 +389,7 @@ export function createCrudHandlers<T extends { id: string }>(
 
     try {
       // Map business fields for data layer (e.g., new_slug → slug).
-      const input = hooks?.mapUpdateInput
-        ? hooks.mapUpdateInput(businessFields)
-        : businessFields;
+      const input = hooks?.mapUpdateInput ? hooks.mapUpdateInput(businessFields) : businessFields;
 
       const updated = await dataLayer.update(ctx.db, resolved.id, input);
       return ok(updated);
@@ -401,7 +430,14 @@ export function registerEntityTools<T extends { id: string }>(
     config.descriptions?.list ?? `List all ${plural}.`,
     {
       ...config.schemas.list,
-      ...(config.projection ? { include: z.array(z.string()).optional().describe("Opt-in fields excluded by default. Use 'full' for all fields.") } : {}),
+      ...(config.projection
+        ? {
+            include: z
+              .array(z.string())
+              .optional()
+              .describe("Opt-in fields excluded by default. Use 'full' for all fields."),
+          }
+        : {}),
     },
     (args: any) => handlers.handleList(ctx, args),
   );
@@ -409,7 +445,8 @@ export function registerEntityTools<T extends { id: string }>(
   // ---- get ----
   server.tool(
     `get_${config.name}`,
-    config.descriptions?.get ?? `Get a single ${config.display} by id or slug (exactly one required).`,
+    config.descriptions?.get ??
+      `Get a single ${config.display} by id or slug (exactly one required).`,
     { id: z.string().optional(), slug: z.string().optional() },
     (args: any) => handlers.handleGet(ctx, args),
   );
@@ -425,7 +462,8 @@ export function registerEntityTools<T extends { id: string }>(
   // ---- update ----
   server.tool(
     `update_${config.name}`,
-    config.descriptions?.update ?? `Update an existing ${config.display} by id or slug (exactly one required).`,
+    config.descriptions?.update ??
+      `Update an existing ${config.display} by id or slug (exactly one required).`,
     { id: z.string().optional(), slug: z.string().optional(), ...config.schemas.update },
     (args: any) => handlers.handleUpdate(ctx, args),
   );
@@ -433,14 +471,17 @@ export function registerEntityTools<T extends { id: string }>(
   // ---- delete ----
   server.tool(
     `delete_${config.name}`,
-    config.descriptions?.delete ?? `Delete a ${config.display} by id or slug (exactly one required). Irreversible.`,
+    config.descriptions?.delete ??
+      `Delete a ${config.display} by id or slug (exactly one required). Irreversible.`,
     { id: z.string().optional(), slug: z.string().optional() },
     (args: any) => handlers.handleDelete(ctx, args),
   );
 
   // ---- extra tools ----
   for (const extra of config.extraTools ?? []) {
-    server.tool(extra.name, extra.description, extra.schema, (args: any) => extra.handler(ctx, args));
+    server.tool(extra.name, extra.description, extra.schema, (args: any) =>
+      extra.handler(ctx, args),
+    );
   }
 }
 ```
@@ -460,7 +501,14 @@ import type { EntityConfig } from "../framework/types";
 export const tagEntity: EntityConfig<Tag> = {
   name: "tag",
   display: "Tag",
-  dataLayer: { list: listTags, getById: getTagById, getBySlug: getTagBySlug, create: createTag, update: updateTag, delete: deleteTag },
+  dataLayer: {
+    list: listTags,
+    getById: getTagById,
+    getBySlug: getTagBySlug,
+    create: createTag,
+    update: updateTag,
+    delete: deleteTag,
+  },
   schemas: {
     create: { name: z.string(), slug: z.string() },
     update: { name: z.string().optional(), new_slug: z.string().optional() },
@@ -484,10 +532,27 @@ export const categoryEntity: EntityConfig<Category> = {
   name: "category",
   display: "Category",
   plural: "categories",
-  dataLayer: { list: listCategories, getById: getCategoryById, getBySlug: getCategoryBySlug, create: createCategory, update: updateCategory, delete: deleteCategory },
+  dataLayer: {
+    list: listCategories,
+    getById: getCategoryById,
+    getBySlug: getCategoryBySlug,
+    create: createCategory,
+    update: updateCategory,
+    delete: deleteCategory,
+  },
   schemas: {
-    create: { name: z.string(), slug: z.string(), description: z.string().optional(), sort_order: z.number().optional() },
-    update: { name: z.string().optional(), new_slug: z.string().optional(), description: z.string().nullable().optional(), sort_order: z.number().optional() },
+    create: {
+      name: z.string(),
+      slug: z.string(),
+      description: z.string().optional(),
+      sort_order: z.number().optional(),
+    },
+    update: {
+      name: z.string().optional(),
+      new_slug: z.string().optional(),
+      description: z.string().nullable().optional(),
+      sort_order: z.number().optional(),
+    },
   },
   hooks: {
     mapUpdateInput: (args) => {
@@ -511,7 +576,9 @@ export const postEntity: EntityConfig<PostWithCategory> = {
   display: "Post",
   dataLayer: {
     list: async (db, opts) => {
-      const result = await listPosts(db, { /* map opts */ });
+      const result = await listPosts(db, {
+        /* map opts */
+      });
       return { items: result.posts, total: result.total };
     },
     getById: getPostById,
@@ -530,14 +597,19 @@ export const postEntity: EntityConfig<PostWithCategory> = {
       page_size: z.number().min(1).max(100).optional(),
     },
     create: {
-      title: z.string(), slug: z.string(), content: z.string(),
+      title: z.string(),
+      slug: z.string(),
+      content: z.string(),
       status: z.enum(["draft", "published", "private", "archived"]).optional(),
-      excerpt: z.string().optional(), category_id: z.string().optional(),
-      tag_ids: z.array(z.string()).optional(), featured_image: z.string().optional(),
+      excerpt: z.string().optional(),
+      category_id: z.string().optional(),
+      tag_ids: z.array(z.string()).optional(),
+      featured_image: z.string().optional(),
       published_at: z.number().optional(),
     },
     update: {
-      title: z.string().optional(), new_slug: z.string().optional(),
+      title: z.string().optional(),
+      new_slug: z.string().optional(),
       content: z.string().optional(),
       status: z.enum(["draft", "published", "private", "archived"]).optional(),
       excerpt: z.string().nullable().optional(),
@@ -583,7 +655,15 @@ export const postEntity: EntityConfig<PostWithCategory> = {
     },
   },
   projection: {
-    omit: ["content", "content_html", "wp_id", "wp_permalink", "comment_enabled", "reference_description", "reference_image"],
+    omit: [
+      "content",
+      "content_html",
+      "wp_id",
+      "wp_permalink",
+      "comment_enabled",
+      "reference_description",
+      "reference_image",
+    ],
     groups: {
       content: ["content"],
       content_html: ["content_html"],
@@ -595,7 +675,8 @@ export const postEntity: EntityConfig<PostWithCategory> = {
   extraTools: [
     {
       name: "generate_excerpt",
-      description: "Generate an AI-powered excerpt for a post by id or slug (exactly one required).",
+      description:
+        "Generate an AI-powered excerpt for a post by id or slug (exactly one required).",
       schema: { id: z.string().optional(), slug: z.string().optional() },
       // NOTE: existing handleGenerateExcerpt only takes { slug }.
       // Extra tool handlers that need ID/slug resolution must be wrapped
@@ -617,8 +698,13 @@ export const postEntity: EntityConfig<PostWithCategory> = {
     },
     {
       name: "unfurl_reference",
-      description: "Unfurl a URL to extract metadata. Pass url alone to preview, or id/slug (with optional url) to unfurl and save to a post.",
-      schema: { id: z.string().optional(), slug: z.string().optional(), url: z.string().optional() },
+      description:
+        "Unfurl a URL to extract metadata. Pass url alone to preview, or id/slug (with optional url) to unfurl and save to a post.",
+      schema: {
+        id: z.string().optional(),
+        slug: z.string().optional(),
+        url: z.string().optional(),
+      },
       // NOTE: unfurl_reference has two modes:
       //   1. Preview (url only, no id/slug) — unfurl and return, don't save
       //   2. Save (id or slug ± url) — resolve post, unfurl, save to post
@@ -664,33 +750,33 @@ From 230 LOC → ~12 LOC. All entity logic lives in the entity definitions.
 
 These tests use mock `EntityConfig` objects — no real data layer, no domain knowledge.
 
-| File | Tests | Coverage Target |
-|------|-------|-----------------|
-| `framework/resolve.test.ts` | `validateIdOrSlug`: id only, slug only, both (conflict), neither (missing) | 100% branches |
-| `framework/response.test.ts` | `ok()`: serializes data; `error()`: sets `isError: true` | 100% |
-| `framework/projection.test.ts` | Default omit, single group include, multiple groups, `"full"` bypass, empty config | 100% |
-| `framework/handlers.test.ts` | Generic CRUD with mock config: list (array + paginated), get (found + missing + id + slug + conflict), create (simple + with afterCreate + with rollback), update (simple + with hooks + rollback), delete (found + missing + id + slug) | 95%+ |
+| File                           | Tests                                                                                                                                                                                                                                    | Coverage Target |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| `framework/resolve.test.ts`    | `validateIdOrSlug`: id only, slug only, both (conflict), neither (missing)                                                                                                                                                               | 100% branches   |
+| `framework/response.test.ts`   | `ok()`: serializes data; `error()`: sets `isError: true`                                                                                                                                                                                 | 100%            |
+| `framework/projection.test.ts` | Default omit, single group include, multiple groups, `"full"` bypass, empty config                                                                                                                                                       | 100%            |
+| `framework/handlers.test.ts`   | Generic CRUD with mock config: list (array + paginated), get (found + missing + id + slug + conflict), create (simple + with afterCreate + with rollback), update (simple + with hooks + rollback), delete (found + missing + id + slug) | 95%+            |
 
 ### Layer 2: Entity Definitions (Integration with Data Layer Mocks)
 
 Test that each entity's hooks, mappers, and projection work correctly when wired to the framework.
 
-| File | Tests |
-|------|-------|
-| `entities/tag.test.ts` | 5 CRUD handlers via mocked data layer; `mapUpdateInput` maps `new_slug` → `slug`; ID and slug resolution; conflict rejection |
-| `entities/category.test.ts` | Same as tag; plus `plural: "categories"` naming; `sort_order` and `description` nullable handling |
-| `entities/post.test.ts` | `afterGet` enriches with tags; `afterCreate` + `onCreateRollback` for tag failure; `beforeUpdate` + `onUpdateRollback` compensating write; `mapCreateInput` strips `tag_ids`; `mapUpdateInput` maps `new_slug`; projection default omit; projection with include groups; projection with `"full"`; `generate_excerpt` extra tool; `unfurl_reference` extra tool (preview + save modes) |
+| File                        | Tests                                                                                                                                                                                                                                                                                                                                                                                  |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entities/tag.test.ts`      | 5 CRUD handlers via mocked data layer; `mapUpdateInput` maps `new_slug` → `slug`; ID and slug resolution; conflict rejection                                                                                                                                                                                                                                                           |
+| `entities/category.test.ts` | Same as tag; plus `plural: "categories"` naming; `sort_order` and `description` nullable handling                                                                                                                                                                                                                                                                                      |
+| `entities/post.test.ts`     | `afterGet` enriches with tags; `afterCreate` + `onCreateRollback` for tag failure; `beforeUpdate` + `onUpdateRollback` compensating write; `mapCreateInput` strips `tag_ids`; `mapUpdateInput` maps `new_slug`; projection default omit; projection with include groups; projection with `"full"`; `generate_excerpt` extra tool; `unfurl_reference` extra tool (preview + save modes) |
 
 ### Layer 3: Server Integration
 
-| File | Tests |
-|------|-------|
+| File             | Tests                                                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `server.test.ts` | Tool count = 17; tool names match expected list; schema introspection (required fields); JSON-RPC round-trip calls |
 
 ### Layer 4: E2E
 
-| File | Tests |
-|------|-------|
+| File                  | Tests                                                                                               |
+| --------------------- | --------------------------------------------------------------------------------------------------- |
 | `e2e/api/mcp.test.ts` | Same existing tests + new: get by ID, conflict rejection, list_posts field projection, include full |
 
 ### Test Utilities (Shared)
@@ -709,19 +795,19 @@ export function expectError(result: CallToolResult, substring?: string): void { 
 
 ## Atomic Commits
 
-| # | Commit | Files | Verifiable | Status |
-|---|--------|-------|------------|--------|
-| 1 | Add framework core: types, resolve, response, projection | `framework/types.ts`, `resolve.ts`, `response.ts`, `projection.ts` | Type-check | ✅ |
-| 2 | Add framework core tests | `framework/resolve.test.ts`, `response.test.ts`, `projection.test.ts` | `pnpm test` | ✅ |
-| 3 | Add generic CRUD handler factory | `framework/handlers.ts`, `framework/test-utils.ts` | Type-check | ✅ |
-| 4 | Add handler factory tests | `framework/handlers.test.ts` | `pnpm test` | ✅ |
-| 5 | Add registration engine | `framework/register.ts` | Type-check | ✅ |
-| 6 | Add tag entity definition and migrate from tools/tags.ts | `entities/tag.ts`, `entities/tag.test.ts` | `pnpm test` | ✅ |
-| 7 | Add category entity definition and migrate from tools/categories.ts | `entities/category.ts`, `entities/category.test.ts` | `pnpm test` | ✅ |
-| 8 | Add post entity definition and migrate from tools/posts.ts | `entities/post.ts`, `entities/post.test.ts` | `pnpm test` | ✅ |
-| 9 | Refactor server.ts to use entity registration | `server.ts`, `server.test.ts` | `pnpm test` | ✅ |
-| 10 | Delete old tools/ directory | Remove `tools/` | `pnpm test` + `pnpm type-check` | ✅ |
-| 11 | Add E2E tests for ID lookup and field projection | `e2e/api/mcp.test.ts` | `pnpm e2e` | ✅ |
+| #   | Commit                                                              | Files                                                                 | Verifiable                      | Status |
+| --- | ------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------- | ------ |
+| 1   | Add framework core: types, resolve, response, projection            | `framework/types.ts`, `resolve.ts`, `response.ts`, `projection.ts`    | Type-check                      | ✅     |
+| 2   | Add framework core tests                                            | `framework/resolve.test.ts`, `response.test.ts`, `projection.test.ts` | `pnpm test`                     | ✅     |
+| 3   | Add generic CRUD handler factory                                    | `framework/handlers.ts`, `framework/test-utils.ts`                    | Type-check                      | ✅     |
+| 4   | Add handler factory tests                                           | `framework/handlers.test.ts`                                          | `pnpm test`                     | ✅     |
+| 5   | Add registration engine                                             | `framework/register.ts`                                               | Type-check                      | ✅     |
+| 6   | Add tag entity definition and migrate from tools/tags.ts            | `entities/tag.ts`, `entities/tag.test.ts`                             | `pnpm test`                     | ✅     |
+| 7   | Add category entity definition and migrate from tools/categories.ts | `entities/category.ts`, `entities/category.test.ts`                   | `pnpm test`                     | ✅     |
+| 8   | Add post entity definition and migrate from tools/posts.ts          | `entities/post.ts`, `entities/post.test.ts`                           | `pnpm test`                     | ✅     |
+| 9   | Refactor server.ts to use entity registration                       | `server.ts`, `server.test.ts`                                         | `pnpm test`                     | ✅     |
+| 10  | Delete old tools/ directory                                         | Remove `tools/`                                                       | `pnpm test` + `pnpm type-check` | ✅     |
+| 11  | Add E2E tests for ID lookup and field projection                    | `e2e/api/mcp.test.ts`                                                 | `pnpm e2e`                      | ✅     |
 
 ---
 
@@ -731,29 +817,29 @@ This refactor changes the public MCP tool schema. Since Firefly's MCP is consume
 
 ### What Changes
 
-| Tool | Before | After | Impact |
-|------|--------|-------|--------|
-| `get_post` | `{ slug: required }` | `{ id?: string, slug?: string }` | Breaking: `slug` is no longer required |
-| `update_post` | `{ slug: required, ... }` | `{ id?: string, slug?: string, ... }` | Breaking: same |
-| `delete_post` | `{ slug: required }` | `{ id?: string, slug?: string }` | Breaking: same |
-| `get_tag` | `{ slug: required }` | `{ id?: string, slug?: string }` | Breaking: same |
-| `update_tag` | `{ slug: required, ... }` | `{ id?: string, slug?: string, ... }` | Breaking: same |
-| `delete_tag` | `{ slug: required }` | `{ id?: string, slug?: string }` | Breaking: same |
-| `get_category` | `{ slug: required }` | `{ id?: string, slug?: string }` | Breaking: same |
-| `update_category` | `{ slug: required, ... }` | `{ id?: string, slug?: string, ... }` | Breaking: same |
-| `delete_category` | `{ slug: required }` | `{ id?: string, slug?: string }` | Breaking: same |
-| `generate_excerpt` | `{ slug: required }` | `{ id?: string, slug?: string }` | Breaking: same |
-| `unfurl_reference` | `{ slug?: string, url?: string }` | `{ id?: string, slug?: string, url?: string }` | Additive (slug was already optional) |
-| `list_posts` | no `include` param | `{ ..., include?: string[] }` | Additive |
+| Tool               | Before                            | After                                          | Impact                                 |
+| ------------------ | --------------------------------- | ---------------------------------------------- | -------------------------------------- |
+| `get_post`         | `{ slug: required }`              | `{ id?: string, slug?: string }`               | Breaking: `slug` is no longer required |
+| `update_post`      | `{ slug: required, ... }`         | `{ id?: string, slug?: string, ... }`          | Breaking: same                         |
+| `delete_post`      | `{ slug: required }`              | `{ id?: string, slug?: string }`               | Breaking: same                         |
+| `get_tag`          | `{ slug: required }`              | `{ id?: string, slug?: string }`               | Breaking: same                         |
+| `update_tag`       | `{ slug: required, ... }`         | `{ id?: string, slug?: string, ... }`          | Breaking: same                         |
+| `delete_tag`       | `{ slug: required }`              | `{ id?: string, slug?: string }`               | Breaking: same                         |
+| `get_category`     | `{ slug: required }`              | `{ id?: string, slug?: string }`               | Breaking: same                         |
+| `update_category`  | `{ slug: required, ... }`         | `{ id?: string, slug?: string, ... }`          | Breaking: same                         |
+| `delete_category`  | `{ slug: required }`              | `{ id?: string, slug?: string }`               | Breaking: same                         |
+| `generate_excerpt` | `{ slug: required }`              | `{ id?: string, slug?: string }`               | Breaking: same                         |
+| `unfurl_reference` | `{ slug?: string, url?: string }` | `{ id?: string, slug?: string, url?: string }` | Additive (slug was already optional)   |
+| `list_posts`       | no `include` param                | `{ ..., include?: string[] }`                  | Additive                               |
 
 **Backward compatibility:** All existing calls using `{ slug: "..." }` continue to work exactly as before. The only "breaking" aspect is that `slug` moves from `required` to `optional` in the Zod schema, which means AI clients may attempt to call without either identifier. The handler validates "at least one" and returns a clear error.
 
 ### Tests That Must Update
 
-| Test file | Change needed |
-|-----------|--------------|
+| Test file                    | Change needed                                                                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `src/lib/mcp/server.test.ts` | Schema introspection assertions: `get_tag.inputSchema.required` no longer contains `["slug"]` — it should be `undefined` or `[]`. Tool count stays 17. |
-| `e2e/api/mcp.test.ts` | Existing tests pass unchanged (they all provide `slug`). New tests added for ID paths. |
+| `e2e/api/mcp.test.ts`        | Existing tests pass unchanged (they all provide `slug`). New tests added for ID paths.                                                                 |
 
 ### Version Impact
 
@@ -783,6 +869,7 @@ This doc focuses on the **in-project refactor**. The framework is designed with 
 ```
 
 Injection points already identified in this design:
+
 - `Db` interface — the data layer boundary
 - `EntityConfig` — the entity declaration contract
 - Auth provider — pluggable via `{ getUser, loginUrl, isAuthorized }` interface

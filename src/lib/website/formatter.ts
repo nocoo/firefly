@@ -9,8 +9,20 @@ export interface WebsiteImage {
 }
 
 const SEMANTIC_TAGS = new Set([
-  "h2", "p", "ul", "ol", "li", "blockquote", "pre", "code",
-  "a", "strong", "em", "hr", "br", "img",
+  "h2",
+  "p",
+  "ul",
+  "ol",
+  "li",
+  "blockquote",
+  "pre",
+  "code",
+  "a",
+  "strong",
+  "em",
+  "hr",
+  "br",
+  "img",
 ]);
 const BLOCK_TAGS = new Set(["h2", "p", "ul", "ol", "blockquote", "pre", "hr"]);
 
@@ -23,7 +35,10 @@ export function absoluteWebsiteImageUrl(src: string, baseUrl: string): string {
   return url.href;
 }
 
-export function formatWebsiteHtml(contentHtml: string, baseUrl: string): {
+export function formatWebsiteHtml(
+  contentHtml: string,
+  baseUrl: string,
+): {
   html: string;
   images: WebsiteImage[];
 } {
@@ -48,7 +63,8 @@ export function formatWebsiteHtml(contentHtml: string, baseUrl: string): {
         node.attr("href", url.href);
       }
       for (const attribute of Object.keys(element.attribs)) {
-        const semantic = (element.name === "a" && attribute === "href") ||
+        const semantic =
+          (element.name === "a" && attribute === "href") ||
           (element.name === "ol" && attribute === "start") ||
           (element.name === "li" && attribute === "value");
         if (!semantic) node.removeAttr(attribute);
@@ -66,29 +82,31 @@ export function formatWebsiteHtml(contentHtml: string, baseUrl: string): {
 
   const blocks: string[] = [];
   const images: WebsiteImage[] = [];
-  $.root().children().each((position, element) => {
-    const block = $(element);
-    const placeholders: string[] = [];
-    block.find("img").each((_, image) => {
-      const index = images.length + 1;
-      const node = $(image);
-      images.push({
-        index,
-        url: absoluteWebsiteImageUrl(node.attr("src") ?? "", baseUrl),
-        alt: node.attr("alt") ?? "",
-        position,
+  $.root()
+    .children()
+    .each((position, element) => {
+      const block = $(element);
+      const placeholders: string[] = [];
+      block.find("img").each((_, image) => {
+        const index = images.length + 1;
+        const node = $(image);
+        images.push({
+          index,
+          url: absoluteWebsiteImageUrl(node.attr("src") ?? "", baseUrl),
+          alt: node.attr("alt") ?? "",
+          position,
+        });
+        placeholders.push(`<p>[图片 ${index}]</p>`);
+        node.remove();
       });
-      placeholders.push(`<p>[图片 ${index}]</p>`);
-      node.remove();
+      for (const descendant of block.find("a,strong,em,p,li").toArray().reverse()) {
+        const node = $(descendant);
+        if (!node.contents().length) node.remove();
+      }
+      if (!placeholders.length || block.text().trim() || block.find("hr,br").length) {
+        blocks.push($.html(element, { xml: { xmlMode: false, encodeEntities: "utf8" } }));
+      }
+      blocks.push(...placeholders);
     });
-    for (const descendant of block.find("a,strong,em,p,li").toArray().reverse()) {
-      const node = $(descendant);
-      if (!node.contents().length) node.remove();
-    }
-    if (!placeholders.length || block.text().trim() || block.find("hr,br").length) {
-      blocks.push($.html(element, { xml: { xmlMode: false, encodeEntities: "utf8" } }));
-    }
-    blocks.push(...placeholders);
-  });
   return { html: blocks.join("\n"), images };
 }

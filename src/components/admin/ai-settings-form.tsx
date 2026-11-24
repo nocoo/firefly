@@ -5,10 +5,7 @@ import { Input } from "@nocoo/basalt/components/input";
 import { Button } from "@nocoo/basalt/components/button";
 import type { AiProvider, SdkType } from "@/services/ai";
 import type { AuthType } from "@nocoo/next-ai";
-import {
-  AiSettingsProviderCard,
-  type ProviderOption,
-} from "./ai-settings-provider-card";
+import { AiSettingsProviderCard, type ProviderOption } from "./ai-settings-provider-card";
 import { AiSettingsCustomCard } from "./ai-settings-custom-card";
 import { AdminPageHeader } from "./page-header";
 
@@ -113,9 +110,7 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
         // Edge / gateway returned non-JSON (HTML error page). Fall through
         // with raw text — first 200 chars is plenty for diagnostics.
         if (!res.ok) {
-          throw new Error(
-            `服务器返回 HTTP ${res.status}：${raw.slice(0, 200).trim() || "无内容"}`,
-          );
+          throw new Error(`服务器返回 HTTP ${res.status}：${raw.slice(0, 200).trim() || "无内容"}`);
         }
       }
 
@@ -157,12 +152,8 @@ export function AiSettingsForm({ settings, providers }: AiSettingsFormProps) {
         <div className="rounded-card bg-basalt-secondary p-5 md:p-6 space-y-5 ring-1 ring-basalt-border/80 shadow-basalt-card">
           <h2 className="text-base font-medium text-basalt-foreground">认证</h2>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-basalt-foreground">
-              API Key
-            </label>
-            <p className="text-xs text-basalt-muted-foreground">
-              API 密钥将会安全存储。
-            </p>
+            <label className="text-sm font-medium text-basalt-foreground">API Key</label>
+            <p className="text-xs text-basalt-muted-foreground">API 密钥将会安全存储。</p>
             <Input
               type="password"
               value={apiKey}

@@ -52,11 +52,7 @@ function FilterSelect({
   children: ReactNode;
 }) {
   return (
-    <Select
-      value={value}
-      onValueChange={onValueChange}
-      {...(disabled ? { disabled: true } : {})}
-    >
+    <Select value={value} onValueChange={onValueChange} {...(disabled ? { disabled: true } : {})}>
       <SelectTrigger size="sm" className="w-[8.5rem]">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>

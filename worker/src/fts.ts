@@ -59,9 +59,7 @@ export function sanitizeFtsQuery(input: string): string {
     if (before) parts.push(...tokenizeUnquoted(before));
 
     // Segment the phrase content, then wrap as a single FTS5 phrase
-    const phraseTokens = segmentText(match[1])
-      .split(/\s+/)
-      .filter(Boolean);
+    const phraseTokens = segmentText(match[1]).split(/\s+/).filter(Boolean);
     if (phraseTokens.length > 0) {
       parts.push(`"${phraseTokens.join(" ")}"`);
     }
@@ -173,37 +171,24 @@ interface FtsSearchResult {
 // POST /api/v1/fts-sync
 // ---------------------------------------------------------------------------
 
-export async function handleFtsSync(
-  body: unknown,
-  db: D1Database,
-): Promise<Response> {
+export async function handleFtsSync(body: unknown, db: D1Database): Promise<Response> {
   if (typeof body !== "object" || body === null) {
     return Response.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { action, postId, title, content, excerpt, rowid } =
-    body as FtsSyncBody;
+  const { action, postId, title, content, excerpt, rowid } = body as FtsSyncBody;
 
   if (action === "delete") {
     if (rowid == null) {
-      return Response.json(
-        { error: "rowid is required for delete" },
-        { status: 400 },
-      );
+      return Response.json({ error: "rowid is required for delete" }, { status: 400 });
     }
-    await db
-      .prepare("DELETE FROM posts_fts WHERE rowid = ?")
-      .bind(rowid)
-      .run();
+    await db.prepare("DELETE FROM posts_fts WHERE rowid = ?").bind(rowid).run();
     return Response.json({ ok: true, action: "delete", rowid });
   }
 
   if (action === "upsert") {
     if (!postId) {
-      return Response.json(
-        { error: "postId is required for upsert" },
-        { status: 400 },
-      );
+      return Response.json({ error: "postId is required for upsert" }, { status: 400 });
     }
 
     // Segment text
@@ -218,19 +203,14 @@ export async function handleFtsSync(
       .first<{ rowid: number }>();
 
     if (!row) {
-      return Response.json(
-        { error: `Post ${postId} not found` },
-        { status: 404 },
-      );
+      return Response.json({ error: `Post ${postId} not found` }, { status: 404 });
     }
 
     // Delete existing entry (if any) then insert
     await db.batch([
       db.prepare("DELETE FROM posts_fts WHERE rowid = ?").bind(row.rowid),
       db
-        .prepare(
-          "INSERT INTO posts_fts(rowid, title, content, excerpt) VALUES (?, ?, ?, ?)",
-        )
+        .prepare("INSERT INTO posts_fts(rowid, title, content, excerpt) VALUES (?, ?, ?, ?)")
         .bind(row.rowid, segTitle, segContent, segExcerpt),
     ]);
 
@@ -244,20 +224,12 @@ export async function handleFtsSync(
 // POST /api/v1/fts-search
 // ---------------------------------------------------------------------------
 
-export async function handleFtsSearch(
-  body: unknown,
-  db: D1Database,
-): Promise<Response> {
+export async function handleFtsSearch(body: unknown, db: D1Database): Promise<Response> {
   if (typeof body !== "object" || body === null) {
     return Response.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const {
-    query,
-    status,
-    page: rawPage = 1,
-    pageSize: rawPageSize = 20,
-  } = body as FtsSearchBody;
+  const { query, status, page: rawPage = 1, pageSize: rawPageSize = 20 } = body as FtsSearchBody;
 
   // Clamp page/pageSize to safe positive integers
   const page = clampPositive(rawPage, 1);
@@ -347,9 +319,6 @@ export async function handleFtsSearch(
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return Response.json(
-      { error: `FTS search failed: ${message}` },
-      { status: 500 },
-    );
+    return Response.json({ error: `FTS search failed: ${message}` }, { status: 500 });
   }
 }

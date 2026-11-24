@@ -51,12 +51,12 @@ Follows `system1-quality`; CI slots and pinned `base-ci` live in `.github/workfl
 
 ## Resources & Isolation
 
-| Lane | Endpoint / State | Boundary |
-| --- | --- | --- |
-| Dev | Web `7028`, Worker `8787` (`.wrangler/state/dev`) | Daily local data; real configured R2 |
-| L3 | Web `17028`, Worker `8787`, `worker/.wrangler/e2e-<random>/` | Per-run D1 + local R2; post-mutation cache proofs |
-| L4 | Web `27028`, Worker `8787`, `worker/.wrangler/e2e-<random>/` | Shared `8787`; never run with dev Worker or another E2E/container lane |
-| Prod | `https://lizheng.blog` (jp4 CD; jp2 origin pre-cutover) | Read-only unless authorized; never deploy remote `-test` resources |
+| Lane | Endpoint / State                                             | Boundary                                                               |
+| ---- | ------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| Dev  | Web `7028`, Worker `8787` (`.wrangler/state/dev`)            | Daily local data; real configured R2                                   |
+| L3   | Web `17028`, Worker `8787`, `worker/.wrangler/e2e-<random>/` | Per-run D1 + local R2; post-mutation cache proofs                      |
+| L4   | Web `27028`, Worker `8787`, `worker/.wrangler/e2e-<random>/` | Shared `8787`; never run with dev Worker or another E2E/container lane |
+| Prod | `https://lizheng.blog` (jp4 CD; jp2 origin pre-cutover)      | Read-only unless authorized; never deploy remote `-test` resources     |
 
 E2E uses per-run local Wrangler/Miniflare SQLite and local R2 with credential/binding guards and `_test_marker` verified before seed/reset/cleanup; runners keep state for failure inspection and never reset shared dev state.
 

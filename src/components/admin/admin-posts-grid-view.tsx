@@ -57,7 +57,13 @@ export function AdminPostsGridView({
         loadingRef.current = false;
       }
     },
-    [currentParams.status, currentParams.category, currentParams.tag, currentParams.year, currentParams.month],
+    [
+      currentParams.status,
+      currentParams.category,
+      currentParams.tag,
+      currentParams.year,
+      currentParams.month,
+    ],
   );
 
   useEffect(() => {
@@ -103,15 +109,11 @@ export function AdminPostsGridView({
       <div ref={sentinelRef} className="h-1" />
 
       {loading && (
-        <div className="py-4 text-center text-sm text-basalt-muted-foreground">
-          加载中...
-        </div>
+        <div className="py-4 text-center text-sm text-basalt-muted-foreground">加载中...</div>
       )}
 
       {!hasMore && posts.length > 0 && (
-        <div className="py-4 text-center text-sm text-basalt-muted-foreground">
-          没有更多文章
-        </div>
+        <div className="py-4 text-center text-sm text-basalt-muted-foreground">没有更多文章</div>
       )}
 
       {!loading && posts.length === 0 && (

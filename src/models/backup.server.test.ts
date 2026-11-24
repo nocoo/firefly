@@ -6,9 +6,7 @@ describe("generatePullWebhookKey", () => {
     const key = generatePullWebhookKey();
     expect(typeof key).toBe("string");
     // 8-4-4-4-12 hex digits with version-4 nibble
-    expect(key).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
-    );
+    expect(key).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
   });
 
   it("generates unique keys across calls", () => {

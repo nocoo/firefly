@@ -2,10 +2,7 @@ import { notFound } from "next/navigation";
 import { ArticleBody } from "@/components/blog/article-body";
 import { PodcastPlayer } from "@/components/blog/podcast-player";
 import { FeaturedImage } from "@/components/blog/featured-image";
-import {
-  fixtureEp02Published,
-  fixtureEp03Published,
-} from "@/lib/hisfm/fixtures";
+import { fixtureEp02Published, fixtureEp03Published } from "@/lib/hisfm/fixtures";
 import { isPodcastPostPreviewAllowed } from "@/lib/preview-gate";
 
 interface PageProps {
@@ -42,7 +39,11 @@ export default async function PodcastPostPreviewPage({ searchParams }: PageProps
               </div>
             </header>
           }
-          featuredImage={cover === "none" ? undefined : <FeaturedImage src={fixture.cover.url} alt="播客文章封面" priority />}
+          featuredImage={
+            cover === "none" ? undefined : (
+              <FeaturedImage src={fixture.cover.url} alt="播客文章封面" priority />
+            )
+          }
           podcastPlayer={<PodcastPlayer card={card} />}
         />
       </div>

@@ -1,11 +1,7 @@
 import type { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
-import {
-  listCategories,
-  createCategory,
-  type CreateCategoryInput,
-} from "@/data/entities/category";
+import { listCategories, createCategory, type CreateCategoryInput } from "@/data/entities/category";
 
 // GET /api/categories
 export async function GET() {
@@ -14,10 +10,7 @@ export async function GET() {
     const categories = await listCategories(db);
     return jsonResponse(categories);
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }
 
@@ -45,9 +38,6 @@ export async function POST(request: NextRequest) {
 
     return jsonResponse(category, 201);
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

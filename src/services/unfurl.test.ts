@@ -130,37 +130,51 @@ describe("resolveAndValidateHostname", () => {
 
   it("rejects domain resolving to 127.0.0.1", async () => {
     mockedLookup.mockResolvedValue([{ address: "127.0.0.1", family: 4 }] as never);
-    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
+    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow(
+      "resolves to private network",
+    );
   });
 
   it("rejects domain resolving to 10.x.x.x", async () => {
     mockedLookup.mockResolvedValue([{ address: "10.0.0.1", family: 4 }] as never);
-    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
+    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow(
+      "resolves to private network",
+    );
   });
 
   it("rejects domain resolving to 192.168.x.x", async () => {
     mockedLookup.mockResolvedValue([{ address: "192.168.1.1", family: 4 }] as never);
-    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
+    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow(
+      "resolves to private network",
+    );
   });
 
   it("rejects domain resolving to 172.16.x.x", async () => {
     mockedLookup.mockResolvedValue([{ address: "172.16.0.1", family: 4 }] as never);
-    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
+    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow(
+      "resolves to private network",
+    );
   });
 
   it("rejects IPv4-mapped IPv6 resolving to private IP", async () => {
     mockedLookup.mockResolvedValue([{ address: "::ffff:192.168.1.1", family: 6 }] as never);
-    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
+    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow(
+      "resolves to private network",
+    );
   });
 
   it("rejects domain resolving to IPv6 loopback", async () => {
     mockedLookup.mockResolvedValue([{ address: "::1", family: 6 }] as never);
-    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
+    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow(
+      "resolves to private network",
+    );
   });
 
   it("rejects domain resolving to fc00::/7 range", async () => {
     mockedLookup.mockResolvedValue([{ address: "fd12::1", family: 6 }] as never);
-    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow("resolves to private network");
+    await expect(resolveAndValidateHostname("evil.com")).rejects.toThrow(
+      "resolves to private network",
+    );
   });
 
   it("rejects when any resolved address is private (mixed results)", async () => {
@@ -168,7 +182,9 @@ describe("resolveAndValidateHostname", () => {
       { address: "93.184.216.34", family: 4 },
       { address: "127.0.0.1", family: 4 },
     ] as never);
-    await expect(resolveAndValidateHostname("dual.example.com")).rejects.toThrow("resolves to private network");
+    await expect(resolveAndValidateHostname("dual.example.com")).rejects.toThrow(
+      "resolves to private network",
+    );
   });
 
   it("passes when all resolved addresses are public", async () => {
@@ -181,38 +197,40 @@ describe("resolveAndValidateHostname", () => {
 
   it("throws on DNS resolution failure", async () => {
     mockedLookup.mockRejectedValue(new Error("ENOTFOUND"));
-    await expect(resolveAndValidateHostname("nonexistent.invalid")).rejects.toThrow("DNS resolution failed");
+    await expect(resolveAndValidateHostname("nonexistent.invalid")).rejects.toThrow(
+      "DNS resolution failed",
+    );
   });
 
   it("handles non-Error DNS rejection (string thrown)", async () => {
     mockedLookup.mockRejectedValue("raw string failure");
-    await expect(
-      resolveAndValidateHostname("weird.example.com"),
-    ).rejects.toThrow("DNS resolution failed");
+    await expect(resolveAndValidateHostname("weird.example.com")).rejects.toThrow(
+      "DNS resolution failed",
+    );
   });
 
   it("throws on DNS timeout", async () => {
     // Use fake timers to test the actual timeout path in Promise.race
     vi.useFakeTimers();
-    
+
     // Mock DNS lookup to never resolve (simulates slow/hanging DNS)
     mockedLookup.mockImplementation(() => new Promise(() => {}));
-    
+
     // Start the promise and immediately attach error handler to prevent unhandled rejection
     let caughtError: unknown = null;
     const promise = resolveAndValidateHostname("slow.example.com").catch((err) => {
       caughtError = err;
     });
-    
+
     // Advance past DNS_TIMEOUT_MS (5000ms) to trigger the timeout branch
     await vi.runAllTimersAsync();
-    
+
     // Wait for the catch handler to run
     await promise;
-    
+
     // Restore real timers
     vi.useRealTimers();
-    
+
     // Verify the timeout error was thrown
     expect(caughtError).toBeInstanceOf(Error);
     expect((caughtError as Error).message).toContain("DNS timeout");
@@ -709,9 +727,7 @@ describe("fetchGitHubReadmeImage", () => {
         });
       }) as unknown as typeof fetch;
 
-      const promise = fetchGitHubReadmeImage(
-        "https://github.com/owner/repo",
-      );
+      const promise = fetchGitHubReadmeImage("https://github.com/owner/repo");
       // Advance past the 5s README fetch timeout (twice — main + master branch).
       await vi.advanceTimersByTimeAsync(15_000);
       expect(await promise).toBeNull();

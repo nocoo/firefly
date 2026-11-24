@@ -156,9 +156,7 @@ async function discoverFirstTagSlug(page: Page): Promise<string | null> {
  *  links on the list rely on href shape, not on a role/testid. */
 async function discoverAdminPostId(page: Page): Promise<string | null> {
   await page.goto("/admin/posts", { waitUntil: "networkidle" });
-  const link = page
-    .locator('a[href*="/admin/posts/"][href$="/edit"]')
-    .first();
+  const link = page.locator('a[href*="/admin/posts/"][href$="/edit"]').first();
   if ((await link.count()) === 0) return null;
   const href = await link.getAttribute("href");
   return href?.match(/\/admin\/posts\/([^/]+)\/edit/)?.[1] ?? null;
@@ -222,9 +220,7 @@ test.describe("Feature: Home pagination", () => {
     await page.goto("/", { waitUntil: "networkidle" });
     // CSS attribute selector: pagination next link has no role/testid; the
     // distinguishing structural trait is the href value.
-    const nextLink = page
-      .locator('a[href="/page/2"], a[href*="/page/2"]')
-      .first();
+    const nextLink = page.locator('a[href="/page/2"], a[href*="/page/2"]').first();
     const gate = emptyDataGate(await nextLink.count(), "home /page/2 link");
     test.skip(gate.skip, gate.reason);
 
@@ -245,10 +241,7 @@ test.describe("Feature: Home pagination", () => {
     // 200 / 404 are the only legitimate statuses; surface regressions instead
     // of silently skipping them.
     expect([200, 404]).toContain(status);
-    const gateStatus = emptyDataGate(
-      status === 200 ? 1 : 0,
-      "home page 2 content",
-    );
+    const gateStatus = emptyDataGate(status === 200 ? 1 : 0, "home page 2 content");
     test.skip(gateStatus.skip, gateStatus.reason);
 
     // CSS attribute selector: pagination is rendered as <nav aria-label="分页">;
@@ -269,10 +262,7 @@ test.describe("Feature: Home pagination", () => {
     const response = await page.goto("/page/2", { waitUntil: "networkidle" });
     const status = response?.status() ?? 0;
     expect([200, 404]).toContain(status);
-    const gateStatus = emptyDataGate(
-      status === 200 ? 1 : 0,
-      "home page 2 content",
-    );
+    const gateStatus = emptyDataGate(status === 200 ? 1 : 0, "home page 2 content");
     test.skip(gateStatus.skip, gateStatus.reason);
 
     const paginationNav = page.locator('nav[aria-label="分页"]');
@@ -320,10 +310,7 @@ test.describe("Feature: Category pagination", () => {
     // 200 / 404 are the only legitimate statuses; surface regressions instead
     // of silently skipping them.
     expect([200, 404]).toContain(status);
-    const gate = emptyDataGate(
-      status === 200 ? 1 : 0,
-      "category /page/2 with content",
-    );
+    const gate = emptyDataGate(status === 200 ? 1 : 0, "category /page/2 with content");
     test.skip(gate.skip, gate.reason);
 
     // CSS selector "header h1": the site sidebar also renders an h1 (site
@@ -331,9 +318,7 @@ test.describe("Feature: Category pagination", () => {
     await expect(page.locator("header h1")).toBeVisible();
   });
 
-  test("Given /category/<slug>/page/1, When I open it, Then it returns 404", async ({
-    page,
-  }) => {
+  test("Given /category/<slug>/page/1, When I open it, Then it returns 404", async ({ page }) => {
     const response = await page.goto("/category/anything/page/1", {
       waitUntil: "networkidle",
     });
@@ -343,10 +328,9 @@ test.describe("Feature: Category pagination", () => {
   test("Given /category/<missing>/page/2, When I open it, Then it returns 404", async ({
     page,
   }) => {
-    const response = await page.goto(
-      "/category/non-existent-slug-12345/page/2",
-      { waitUntil: "networkidle" },
-    );
+    const response = await page.goto("/category/non-existent-slug-12345/page/2", {
+      waitUntil: "networkidle",
+    });
     expect(response?.status()).toBe(404);
   });
 });
@@ -381,10 +365,7 @@ test.describe("Feature: Tag pagination", () => {
     });
     const status = response?.status() ?? 0;
     expect([200, 404]).toContain(status);
-    const gate = emptyDataGate(
-      status === 200 ? 1 : 0,
-      "tag /page/2 with content",
-    );
+    const gate = emptyDataGate(status === 200 ? 1 : 0, "tag /page/2 with content");
     test.skip(gate.skip, gate.reason);
 
     // CSS selector "header h1": same sidebar-h1 disambiguation as Category.
@@ -394,22 +375,17 @@ test.describe("Feature: Tag pagination", () => {
     expect(text).toMatch(/^#/);
   });
 
-  test("Given /tag/<slug>/page/1, When I open it, Then it returns 404", async ({
-    page,
-  }) => {
+  test("Given /tag/<slug>/page/1, When I open it, Then it returns 404", async ({ page }) => {
     const response = await page.goto("/tag/anything/page/1", {
       waitUntil: "networkidle",
     });
     expect(response?.status()).toBe(404);
   });
 
-  test("Given /tag/<missing>/page/2, When I open it, Then it returns 404", async ({
-    page,
-  }) => {
-    const response = await page.goto(
-      "/tag/non-existent-slug-12345/page/2",
-      { waitUntil: "networkidle" },
-    );
+  test("Given /tag/<missing>/page/2, When I open it, Then it returns 404", async ({ page }) => {
+    const response = await page.goto("/tag/non-existent-slug-12345/page/2", {
+      waitUntil: "networkidle",
+    });
     expect(response?.status()).toBe(404);
   });
 });
@@ -438,10 +414,7 @@ test.describe("Feature: Archive pagination", () => {
     });
     const status = response?.status() ?? 0;
     expect([200, 404]).toContain(status);
-    const gate = emptyDataGate(
-      status === 200 ? 1 : 0,
-      "archive /page/2 with content",
-    );
+    const gate = emptyDataGate(status === 200 ? 1 : 0, "archive /page/2 with content");
     test.skip(gate.skip, gate.reason);
 
     // CSS selector "header h1": same sidebar-h1 disambiguation as Category.
@@ -451,9 +424,7 @@ test.describe("Feature: Archive pagination", () => {
     expect(text).toContain(String(year));
   });
 
-  test("Given /archive/YYYY/page/1, When I open it, Then it returns 404", async ({
-    page,
-  }) => {
+  test("Given /archive/YYYY/page/1, When I open it, Then it returns 404", async ({ page }) => {
     const year = new Date().getFullYear();
     const response = await page.goto(`/archive/${year}/page/1`, {
       waitUntil: "networkidle",
@@ -461,9 +432,7 @@ test.describe("Feature: Archive pagination", () => {
     expect(response?.status()).toBe(404);
   });
 
-  test("Given /archive/9999/page/2, When I open it, Then it returns 404", async ({
-    page,
-  }) => {
+  test("Given /archive/9999/page/2, When I open it, Then it returns 404", async ({ page }) => {
     const response = await page.goto("/archive/9999/page/2", {
       waitUntil: "networkidle",
     });
@@ -565,25 +534,17 @@ test.describe("Feature: Blog preview", () => {
 
     // Then: preview banner "Preview Mode" is visible. getByText regex: the
     // banner copy is locale text and not exposed as a labelled role.
-    await expect(
-      page.getByText(/Preview Mode/i).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/Preview Mode/i).first()).toBeVisible({ timeout: 10_000 });
 
     // Then: the article (h1) is visible
-    await expect(
-      page.getByRole("heading", { level: 1 }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible({ timeout: 10_000 });
 
     // Then: an Edit link is visible. getByText regex matches the visible
     // copy; no dedicated role exists for this link.
-    await expect(
-      page.getByText(/Edit/i).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/Edit/i).first()).toBeVisible({ timeout: 10_000 });
   });
 
-  test("Given /preview/<missing>, When I open it, Then status is 200 or 404", async ({
-    page,
-  }) => {
+  test("Given /preview/<missing>, When I open it, Then status is 200 or 404", async ({ page }) => {
     const response = await page.goto("/preview/non-existent-post-id-12345", {
       waitUntil: "networkidle",
     });

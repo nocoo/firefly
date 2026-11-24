@@ -26,7 +26,6 @@ import {
 // Mock DB
 // ---------------------------------------------------------------------------
 
-
 const now = Math.floor(Date.now() / 1000);
 
 const sampleToken: McpToken = {
@@ -96,7 +95,9 @@ describe("generateRefreshToken", () => {
 
 describe("createMcpToken", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("inserts token and returns it", async () => {
     const input: CreateMcpTokenInput = {
@@ -146,7 +147,9 @@ describe("createMcpToken", () => {
 
 describe("getMcpTokenById", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns token when found", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleToken);
@@ -172,7 +175,9 @@ describe("getMcpTokenById", () => {
 
 describe("getValidTokenByHash", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns token when valid", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleToken);
@@ -200,7 +205,9 @@ describe("getValidTokenByHash", () => {
 
 describe("getValidTokenByRefreshHash", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns token when refresh is valid", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleToken);
@@ -228,7 +235,9 @@ describe("getValidTokenByRefreshHash", () => {
 
 describe("updateLastUsed", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("updates last_used_at timestamp", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });
@@ -247,7 +256,9 @@ describe("updateLastUsed", () => {
 
 describe("revokeToken", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("revokes active token and returns true", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });
@@ -274,7 +285,9 @@ describe("revokeToken", () => {
 
 describe("revokeTokensByClientId", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("revokes all active tokens for client and returns count", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 3, duration: 2 });
@@ -303,7 +316,9 @@ describe("revokeTokensByClientId", () => {
 
 describe("listMcpTokens", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns all tokens ordered by created_at DESC", async () => {
     vi.mocked(db.query).mockResolvedValue({
@@ -327,7 +342,9 @@ describe("listMcpTokens", () => {
 
 describe("deleteMcpToken", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("deletes revoked token and returns true", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });
@@ -356,7 +373,9 @@ describe("deleteMcpToken", () => {
 
 describe("deleteRevokedTokens", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("deletes all revoked tokens and returns count", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 5, duration: 2 });
@@ -384,7 +403,9 @@ describe("deleteRevokedTokens", () => {
 
 describe("countRevokedTokens", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns count of revoked tokens", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue({ count: 3 });
@@ -420,7 +441,9 @@ describe("countRevokedTokens", () => {
 
 describe("updateTokenScope", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("updates scope of active token and returns true", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });

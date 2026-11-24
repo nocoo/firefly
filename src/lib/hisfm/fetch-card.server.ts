@@ -1,10 +1,7 @@
 import "server-only";
 
 import { unstable_cache } from "next/cache";
-import {
-  parseHisFmCardPayload,
-  type HisFmPublishedCard,
-} from "@/lib/hisfm/card-schema";
+import { parseHisFmCardPayload, type HisFmPublishedCard } from "@/lib/hisfm/card-schema";
 import { isValidPodcastEpisodeUrl } from "@/lib/hisfm/podcast-url";
 
 const HISFM_CARD_API = "https://his.fm/api/card";
@@ -49,9 +46,7 @@ export async function fetchHisFmCardForCache(
     });
     if (response.status === 404) return null;
     if (!response.ok) {
-      throw new HisFmCardCacheMissError(
-        `hisfm card HTTP ${response.status}`,
-      );
+      throw new HisFmCardCacheMissError(`hisfm card HTTP ${response.status}`);
     }
     let json: unknown;
     try {
@@ -70,20 +65,17 @@ export async function fetchHisFmCardForCache(
     if (err instanceof DOMException && err.name === "AbortError") {
       throw new HisFmCardCacheMissError("hisfm card fetch timeout");
     }
-    throw new HisFmCardCacheMissError(
-      err instanceof Error ? err.message : String(err),
-    );
+    throw new HisFmCardCacheMissError(err instanceof Error ? err.message : String(err));
   } finally {
     clearTimeout(timeout);
   }
 }
 
 function cachedFetch(podcastUrl: string): Promise<HisFmPublishedCard | null> {
-  return unstable_cache(
-    () => fetchHisFmCardForCache(podcastUrl),
-    ["hisfm-card-v1", podcastUrl],
-    { revalidate: REVALIDATE_SECONDS, tags: [CACHE_TAG] },
-  )();
+  return unstable_cache(() => fetchHisFmCardForCache(podcastUrl), ["hisfm-card-v1", podcastUrl], {
+    revalidate: REVALIDATE_SECONDS,
+    tags: [CACHE_TAG],
+  })();
 }
 
 /**

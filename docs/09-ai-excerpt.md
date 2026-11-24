@@ -51,6 +51,7 @@ Add `generateExcerpt(title, content)` function:
 - Throws `"AI not configured"` if provider/apiKey missing
 
 Prompt:
+
 ```
 You are a blog excerpt writer. Write a summary for the following blog post.
 
@@ -102,24 +103,24 @@ Excerpt (optional, auto-generated if empty)  [✨ AI Generate]
 
 ### Step 4: i18n
 
-| Key | en | zh |
-|-----|----|----|
-| `admin.postForm.excerptGenerate` | `✨ AI Generate` | `✨ AI 生成` |
-| `admin.postForm.excerptGenerating` | `Generating...` | `生成中...` |
+| Key                                | en               | zh           |
+| ---------------------------------- | ---------------- | ------------ |
+| `admin.postForm.excerptGenerate`   | `✨ AI Generate` | `✨ AI 生成` |
+| `admin.postForm.excerptGenerating` | `Generating...`  | `生成中...`  |
 
 ## Files Changed
 
-| File | Action |
-|------|--------|
-| `docs/09-ai-excerpt.md` | Create (this file) |
-| `docs/README.md` | Edit — add row 09 |
-| `src/services/ai.ts` | Edit — add `generateExcerpt()` |
-| `src/app/api/posts/[slug]/excerpt/route.ts` | Create |
-| `src/components/admin/post-form.tsx` | Edit — add button + handler |
-| `src/i18n/locales/en.json` | Edit — 2 keys |
-| `src/i18n/locales/zh.json` | Edit — 2 keys |
-| `src/services/ai.test.ts` | Edit — add generateExcerpt tests |
-| `e2e/api/posts-excerpt.test.ts` | Create |
+| File                                        | Action                           |
+| ------------------------------------------- | -------------------------------- |
+| `docs/09-ai-excerpt.md`                     | Create (this file)               |
+| `docs/README.md`                            | Edit — add row 09                |
+| `src/services/ai.ts`                        | Edit — add `generateExcerpt()`   |
+| `src/app/api/posts/[slug]/excerpt/route.ts` | Create                           |
+| `src/components/admin/post-form.tsx`        | Edit — add button + handler      |
+| `src/i18n/locales/en.json`                  | Edit — 2 keys                    |
+| `src/i18n/locales/zh.json`                  | Edit — 2 keys                    |
+| `src/services/ai.test.ts`                   | Edit — add generateExcerpt tests |
+| `e2e/api/posts-excerpt.test.ts`             | Create                           |
 
 ## Atomic Commits
 

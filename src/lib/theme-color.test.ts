@@ -48,12 +48,28 @@ describe("syncThemeColorMeta", () => {
   });
 
   it("updates every existing theme-color meta", () => {
-    const a = { content: "#aaa", setAttribute(name: string, value: string) { if (name === "content") this.content = value; } };
-    const b = { content: "#bbb", setAttribute(name: string, value: string) { if (name === "content") this.content = value; } };
+    const a = {
+      content: "#aaa",
+      setAttribute(name: string, value: string) {
+        if (name === "content") this.content = value;
+      },
+    };
+    const b = {
+      content: "#bbb",
+      setAttribute(name: string, value: string) {
+        if (name === "content") this.content = value;
+      },
+    };
     const doc = {
       querySelectorAll: () => [a, b],
-      createElement: () => { throw new Error("should not create"); },
-      head: { appendChild: () => { throw new Error("should not append"); } },
+      createElement: () => {
+        throw new Error("should not create");
+      },
+      head: {
+        appendChild: () => {
+          throw new Error("should not append");
+        },
+      },
     };
     syncThemeColorMeta("#6f98f0", doc as unknown as Document);
     expect(a.content).toBe("#6f98f0");

@@ -125,9 +125,7 @@ test.describe("Feature: Admin AI agents list page", () => {
     await expect(
       page.getByRole("heading", { level: 1, name: "AI 代理", exact: true }).nth(1),
     ).toBeVisible({ timeout: 10_000 });
-    await expect(
-      page.getByText("管理可发布内容的 AI 代理", { exact: true }),
-    ).toBeVisible();
+    await expect(page.getByText("管理可发布内容的 AI 代理", { exact: true })).toBeVisible();
 
     // Then: ai-agents-manager.tsx:124 — empty branch renders the exact copy;
     // non-empty branch renders <AiAgentsTable> with at least the 名称
@@ -136,16 +134,11 @@ test.describe("Feature: Admin AI agents list page", () => {
     const tableCount = await page.getByRole("table").count();
     if (tableCount === 0) {
       await expect(
-        page.getByText(
-          "还没有 AI 代理。创建一个以允许 AI 发布内容。",
-          { exact: true },
-        ),
+        page.getByText("还没有 AI 代理。创建一个以允许 AI 发布内容。", { exact: true }),
       ).toBeVisible();
     } else {
       await expect(page.getByRole("table")).toBeVisible();
-      await expect(
-        page.getByRole("columnheader", { name: "名称" }),
-      ).toBeVisible();
+      await expect(page.getByRole("columnheader", { name: "名称" })).toBeVisible();
     }
   });
 
@@ -159,9 +152,9 @@ test.describe("Feature: Admin AI agents list page", () => {
     // Then: ai-agents-manager.tsx:118 (header) + L130 (empty-state card) both
     // render "创建代理" — .first() picks the header instance regardless of
     // state. Source spec lived with this duplicate; here we declare it.
-    await expect(
-      page.getByRole("button", { name: "创建代理" }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("button", { name: "创建代理" }).first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("Given /admin/ai-agents renders with at least one agent, When I view the table, Then all four columnheaders and the first row 编辑 action are visible", async ({
@@ -180,31 +173,18 @@ test.describe("Feature: Admin AI agents list page", () => {
     const tableCount = await table.count();
     // Then: empty branch skips with explicit reason; non-empty branch
     // proceeds to assert all four columnheaders + first row action.
-    test.skip(
-      tableCount === 0,
-      "No AI agents available to populate the table in current seed.",
-    );
+    test.skip(tableCount === 0, "No AI agents available to populate the table in current seed.");
 
     // Then: ai-agents-table.tsx:108-120 — four <th>s in this exact order.
     await expect(table).toBeVisible();
-    await expect(
-      page.getByRole("columnheader", { name: "名称" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("columnheader", { name: "绑定分类" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("columnheader", { name: "Author ID" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("columnheader", { name: "文章数" }),
-    ).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "名称" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "绑定分类" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Author ID" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "文章数" })).toBeVisible();
 
     // Then: ai-agents-table.tsx:62-69 — each row has an 编辑 icon-button
     // (title attr provides accessible name).
-    await expect(
-      table.getByRole("button", { name: "编辑" }).first(),
-    ).toBeVisible();
+    await expect(table.getByRole("button", { name: "编辑" }).first()).toBeVisible();
   });
 
   test("Given /admin/ai-agents renders, When I click the 创建代理 button, Then I am navigated to /admin/ai-agents/new", async ({
@@ -259,9 +239,7 @@ test.describe("Feature: Admin AI agent new form", () => {
     await expectPathname(page, "/admin/ai-agents/new");
 
     // Then: ai-agent-form.tsx:160 — placeholder is exactly "如：科技写手".
-    await expect(
-      page.getByPlaceholder("如：科技写手"),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByPlaceholder("如：科技写手")).toBeVisible({ timeout: 10_000 });
   });
 
   test("Given /admin/ai-agents/new renders, When I view the form, Then the 标识符 input (placeholder 如：tech-writer) is visible", async ({
@@ -272,9 +250,7 @@ test.describe("Feature: Admin AI agent new form", () => {
     await expectPathname(page, "/admin/ai-agents/new");
 
     // Then: ai-agent-form.tsx:170 — placeholder is exactly "如：tech-writer".
-    await expect(
-      page.getByPlaceholder("如：tech-writer"),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByPlaceholder("如：tech-writer")).toBeVisible({ timeout: 10_000 });
   });
 
   test("Given /admin/ai-agents/new renders, When I view the form, Then the 分类 <select> with 选择分类... option is visible", async ({
@@ -285,9 +261,7 @@ test.describe("Feature: Admin AI agent new form", () => {
     await expectPathname(page, "/admin/ai-agents/new");
 
     // Then: category trigger shows the empty choice "选择分类...".
-    const categorySelect = page
-      .getByRole("combobox")
-      .filter({ hasText: "选择分类..." });
+    const categorySelect = page.getByRole("combobox").filter({ hasText: "选择分类..." });
     await expect(categorySelect).toBeVisible({ timeout: 10_000 });
   });
 
@@ -299,9 +273,7 @@ test.describe("Feature: Admin AI agent new form", () => {
     await expectPathname(page, "/admin/ai-agents/new");
 
     // Then: ai-agent-form.tsx:203 — placeholder text "代理的可选描述".
-    await expect(
-      page.getByPlaceholder("代理的可选描述"),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByPlaceholder("代理的可选描述")).toBeVisible({ timeout: 10_000 });
   });
 
   test("Given /admin/ai-agents/new renders in new mode, When I view the form, Then the AgentAvatarUploader is NOT rendered (uploader gates on !isNew && agent)", async ({
@@ -318,13 +290,9 @@ test.describe("Feature: Admin AI agent new form", () => {
     //   - input[type=file] (ai-agent-avatar-uploader.tsx:121)
     //   - "上传头像" button (ai-agent-avatar-uploader.tsx:133)
     // Narrow reverse-assert (NOT "no img on page"): only these three anchors.
-    await expect(
-      page.getByText("头像", { exact: true }),
-    ).toHaveCount(0);
+    await expect(page.getByText("头像", { exact: true })).toHaveCount(0);
     await expect(page.locator('input[type="file"]')).toHaveCount(0);
-    await expect(
-      page.getByRole("button", { name: "上传头像" }),
-    ).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "上传头像" })).toHaveCount(0);
   });
 
   test("Given /admin/ai-agents/new renders, When I view the form footer, Then the 创建代理 save button is visible", async ({
@@ -337,9 +305,7 @@ test.describe("Feature: Admin AI agent new form", () => {
     // Then: ai-agent-form.tsx:240 — footer button label is "创建代理" in new
     // mode. It is the only "创建代理" button on this page (no header dup),
     // so .first() is not strictly required, but the role+name lookup is exact.
-    await expect(
-      page.getByRole("button", { name: "创建代理" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("button", { name: "创建代理" })).toBeVisible({ timeout: 10_000 });
   });
 
   test("Given /admin/ai-agents/new renders, When I view the form, Then the 取消 button and AI 代理 breadcrumb are visible", async ({
@@ -351,12 +317,8 @@ test.describe("Feature: Admin AI agent new form", () => {
 
     // Then: PageHeader dropped the inline 返回 button. Leave-form is the
     // footer 取消 control plus the AppHeader breadcrumb back to the list.
-    await expect(
-      page.getByRole("button", { name: "取消" }),
-    ).toBeVisible({ timeout: 10_000 });
-    await expect(
-      page.locator("header").getByRole("link", { name: "AI 代理" }),
-    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "取消" })).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("header").getByRole("link", { name: "AI 代理" })).toBeVisible();
   });
 
   test("Given /admin/ai-agents/new renders, When I fill the name with a unique prefix, Then the slug input auto-fills to the slugified value", async ({

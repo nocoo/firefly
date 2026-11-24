@@ -31,7 +31,9 @@ export function SortableHeader({
   const isActive = currentSortBy === column;
   const nextOrder = isActive && currentSortOrder === "desc" ? "asc" : "desc";
   const ariaSort: "ascending" | "descending" | "none" = isActive
-    ? currentSortOrder === "asc" ? "ascending" : "descending"
+    ? currentSortOrder === "asc"
+      ? "ascending"
+      : "descending"
     : "none";
 
   const sp = new URLSearchParams();
@@ -44,9 +46,7 @@ export function SortableHeader({
   sp.set("sort_order", nextOrder);
   const href = `/admin/posts?${sp.toString()}`;
 
-  const Icon = isActive
-    ? currentSortOrder === "asc" ? ArrowUp : ArrowDown
-    : ArrowUpDown;
+  const Icon = isActive ? (currentSortOrder === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
 
   return (
     <th

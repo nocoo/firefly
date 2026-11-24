@@ -47,18 +47,14 @@ export function resolveLocalR2Path(key: string): string {
 
   // Reject obvious path traversal patterns
   if (key.includes("..") || key.startsWith("/") || key.includes("\\")) {
-    throw new Error(
-      `Invalid R2 key: path traversal or absolute path rejected: ${key}`,
-    );
+    throw new Error(`Invalid R2 key: path traversal or absolute path rejected: ${key}`);
   }
 
   // Normalize and verify the resolved path stays within the root
   const root = resolve(localDir);
   const target = resolve(root, normalize(key));
   if (!target.startsWith(`${root}/`) && target !== root) {
-    throw new Error(
-      `Invalid R2 key: resolved path escapes local R2 root: ${key}`,
-    );
+    throw new Error(`Invalid R2 key: resolved path escapes local R2 root: ${key}`);
   }
 
   return target;

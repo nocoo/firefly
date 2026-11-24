@@ -19,9 +19,10 @@ export function getPreviewUrl(post: {
 }
 
 export function CopyLinkButton({ post }: { post: PostWithCategory }) {
-  const url = typeof window !== "undefined"
-    ? `${window.location.origin}${getPreviewUrl(post)}`
-    : getPreviewUrl(post);
+  const url =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${getPreviewUrl(post)}`
+      : getPreviewUrl(post);
 
   const handleCopy = async () => {
     try {

@@ -14,10 +14,7 @@ export function sanitizeSnippet(html: string): string {
   let prev = "";
   while (prev !== s) {
     prev = s;
-    s = s.replace(
-      /([\u4e00-\u9fff])(<\/mark>)?\s+(<mark>)?([\u4e00-\u9fff])/g,
-      "$1$2$3$4",
-    );
+    s = s.replace(/([\u4e00-\u9fff])(<\/mark>)?\s+(<mark>)?([\u4e00-\u9fff])/g, "$1$2$3$4");
   }
   return s;
 }

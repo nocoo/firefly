@@ -14,11 +14,7 @@ const EPISODE = process.env.SCREENSHOT_EPISODE ?? "ep03";
 
 mkdirSync(OUT, { recursive: true });
 
-async function shot(
-  page: import("playwright").Page,
-  dark: boolean,
-  mobile: boolean,
-) {
+async function shot(page: import("playwright").Page, dark: boolean, mobile: boolean) {
   const width = mobile ? 390 : 1280;
   await page.setViewportSize({ width, height: mobile ? 844 : 900 });
   await page.emulateMedia({ colorScheme: dark ? "dark" : "light" });
@@ -37,9 +33,7 @@ async function shot(
   });
   await page.waitForSelector(".podcast-player", { timeout: 30_000 });
   await page.waitForFunction(() => {
-    const img = document.querySelector(
-      ".blog-featured-image img",
-    ) as HTMLImageElement | null;
+    const img = document.querySelector(".blog-featured-image img") as HTMLImageElement | null;
     return img?.complete && img.naturalWidth > 0;
   });
   await page.waitForTimeout(400);

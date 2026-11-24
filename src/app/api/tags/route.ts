@@ -1,11 +1,7 @@
 import type { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
-import {
-  listTags,
-  createTag,
-  type CreateTagInput,
-} from "@/data/entities/tag";
+import { listTags, createTag, type CreateTagInput } from "@/data/entities/tag";
 
 // GET /api/tags
 export async function GET() {
@@ -14,10 +10,7 @@ export async function GET() {
     const tags = await listTags(db);
     return jsonResponse(tags);
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }
 
@@ -41,9 +34,6 @@ export async function POST(request: NextRequest) {
 
     return jsonResponse(tag, 201);
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

@@ -6,8 +6,7 @@ import Image from "next/image";
  * 900px). Keep all featured-image call sites pointed at this constant so the
  * `srcset` cannot drift across pages.
  */
-export const FEATURED_IMAGE_SIZES =
-  "(max-width: 900px) 100vw, min(75vw, 1000px)";
+export const FEATURED_IMAGE_SIZES = "(max-width: 900px) 100vw, min(75vw, 1000px)";
 
 interface FeaturedImageProps {
   src: string;
@@ -24,12 +23,7 @@ interface FeaturedImageProps {
  * in lockstep. Caller is responsible for adding a `<Link>` overlay if the image
  * should be clickable.
  */
-export function FeaturedImage({
-  src,
-  alt,
-  priority = false,
-  className,
-}: FeaturedImageProps) {
+export function FeaturedImage({ src, alt, priority = false, className }: FeaturedImageProps) {
   return (
     <div className={`blog-featured-image${className ? ` ${className}` : ""}`}>
       <Image

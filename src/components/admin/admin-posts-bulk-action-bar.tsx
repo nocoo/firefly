@@ -90,7 +90,10 @@ export function AdminPostsBulkActionBar({
       <div className="h-5 w-px bg-basalt-border" />
 
       <div className="flex items-center gap-1.5">
-        <label htmlFor="bulk-status" className="text-xs text-basalt-muted-foreground whitespace-nowrap">
+        <label
+          htmlFor="bulk-status"
+          className="text-xs text-basalt-muted-foreground whitespace-nowrap"
+        >
           设置状态
         </label>
         <Select
@@ -111,7 +114,10 @@ export function AdminPostsBulkActionBar({
       </div>
 
       <div className="flex items-center gap-1.5">
-        <label htmlFor="bulk-category" className="text-xs text-basalt-muted-foreground whitespace-nowrap">
+        <label
+          htmlFor="bulk-category"
+          className="text-xs text-basalt-muted-foreground whitespace-nowrap"
+        >
           设置分类
         </label>
         <Select

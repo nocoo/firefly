@@ -102,10 +102,7 @@ export interface RenderMarkdownOptions {
   optimizeImages?: boolean;
 }
 
-export function renderMarkdown(
-  markdown: string,
-  options?: RenderMarkdownOptions,
-): string;
+export function renderMarkdown(markdown: string, options?: RenderMarkdownOptions): string;
 ```
 
 When `optimizeImages` is true, the `image()` renderer outputs:
@@ -128,6 +125,7 @@ When `optimizeImages` is true, the `image()` renderer outputs:
 ```
 
 **Details**:
+
 - `src` falls back to the 1080w variant (reasonable default for blog content width)
 - `srcset` uses Next.js default `deviceSizes` breakpoints (subset: 640, 828, 1080, 1920)
 - `sizes` matches the blog content column width pattern (already used by featured images)
@@ -142,15 +140,15 @@ re-creating the renderer on every call.
 
 ### 2. Call site changes
 
-| Call site | File | Change |
-|-----------|------|--------|
-| DB storage (create) | `src/data/posts.ts:253` | No change — continues using `renderMarkdown(content)` |
-| DB storage (update) | `src/data/posts.ts:343` | No change |
-| Blog post page | `src/app/(blog)/[year]/[month]/[slug]/page.tsx:103` | Change to `renderMarkdown(post.content, { optimizeImages: true })` |
-| Preview page | `src/app/(blog)/preview/[id]/page.tsx:38` | Change to `renderMarkdown(post.content, { optimizeImages: true })` |
-| RSS feed | `src/app/feed.xml/route.ts:25` | No change — uses `content_html` fallback, then raw `renderMarkdown` |
-| Admin preview (desktop) | `src/components/admin/markdown-preview.tsx:33` | No change — admin preview doesn't need optimization |
-| Admin preview (mobile) | `src/components/admin/post-form.tsx:181` | No change |
+| Call site               | File                                                | Change                                                              |
+| ----------------------- | --------------------------------------------------- | ------------------------------------------------------------------- |
+| DB storage (create)     | `src/data/posts.ts:253`                             | No change — continues using `renderMarkdown(content)`               |
+| DB storage (update)     | `src/data/posts.ts:343`                             | No change                                                           |
+| Blog post page          | `src/app/(blog)/[year]/[month]/[slug]/page.tsx:103` | Change to `renderMarkdown(post.content, { optimizeImages: true })`  |
+| Preview page            | `src/app/(blog)/preview/[id]/page.tsx:38`           | Change to `renderMarkdown(post.content, { optimizeImages: true })`  |
+| RSS feed                | `src/app/feed.xml/route.ts:25`                      | No change — uses `content_html` fallback, then raw `renderMarkdown` |
+| Admin preview (desktop) | `src/components/admin/markdown-preview.tsx:33`      | No change — admin preview doesn't need optimization                 |
+| Admin preview (mobile)  | `src/components/admin/post-form.tsx:181`            | No change                                                           |
 
 **Note on content_html fallback**: The blog post page currently uses
 `post.content_html || renderMarkdown(post.content)`. With this change, it always calls
@@ -186,25 +184,28 @@ open === true:
 ```
 
 **Behavior**:
+
 - Escape key closes
 - Backdrop click closes
 - Content click stops propagation
 - Body scroll locked while open
 
 **Blog frontend usage** (minimal mode):
+
 ```tsx
-<ImageLightbox src={url} alt={alt} open={open} onClose={close} />
+<ImageLightbox src={url} alt={alt} open={open} onClose={close} />;
 ```
 No children → no side panel → image only with close button.
 
 **Admin media library usage** (full mode):
+
 ```tsx
 <ImageLightbox src={url} alt={alt} open={open} onClose={close}>
   <div className="...">
     {/* filename, mime_type, size, dimensions, date */}
     {/* copy URL, copy MD, delete buttons */}
   </div>
-</ImageLightbox>
+</ImageLightbox>;
 ```
 Children slot renders as the metadata/action side panel.
 
@@ -255,17 +256,13 @@ export function ContentImageLightbox() {
   if (!lightbox) return null;
 
   return (
-    <ImageLightbox
-      src={lightbox.src}
-      alt={lightbox.alt}
-      open
-      onClose={() => setLightbox(null)}
-    />
+    <ImageLightbox src={lightbox.src} alt={lightbox.alt} open onClose={() => setLightbox(null)} />
   );
 }
 ```
 
 **Key design decisions**:
+
 - **Zero client boundary payload**: The component has no props — no HTML string, no
   data passes through the RSC/client boundary. The `blog-content` DOM is rendered
   server-side by `ArticleBody`, and this component finds it via DOM query.
@@ -277,6 +274,7 @@ export function ContentImageLightbox() {
   completely unchanged.
 
 **Usage in blog post page** (`[slug]/page.tsx`):
+
 ```tsx
 <ArticleBody html={html} header={...} featuredImage={...} footer={...} />
 <ContentImageLightbox />
@@ -290,6 +288,7 @@ indicate clickability, excluding linked images.
 **File**: `src/components/admin/media-library.tsx`
 
 - Replace the inline lightbox JSX (lines 454-551) with `<ImageLightbox>`:
+
   ```tsx
   <ImageLightbox src={preview.url} alt={preview.filename} open={!!preview} onClose={() => setPreview(null)}>
     {/* existing meta panel + action buttons, moved into children */}
@@ -312,7 +311,7 @@ import Image from "next/image";
   fill
   sizes="(max-width: 640px) 33vw, (max-width: 768px) 20vw, (max-width: 1024px) 10vw, 6vw"
   className="object-cover transition-transform group-hover:scale-105"
-/>
+/>;
 ```
 
 This routes through `/_next/image` and serves appropriately sized thumbnails instead
@@ -326,18 +325,18 @@ of full originals. The `sizes` hint matches the responsive grid (3→5→8→10�
 
 New tests for the `optimizeImages` option:
 
-| # | Test case | Assertion |
-|---|-----------|-----------|
-| 1 | Default mode: image renders raw `<img>` | `src` is original URL, no `srcset` |
-| 2 | Optimized mode: internal image gets `/_next/image` src | `src` contains `/_next/image?url=` |
-| 3 | Optimized mode: internal image gets srcset | `srcset` contains 640w, 828w, 1080w, 1920w |
-| 4 | Optimized mode: internal image gets sizes | `sizes` attribute present |
-| 5 | Optimized mode: `data-original-src` preserved | attribute contains original URL |
-| 6 | Optimized mode: `decoding="async"` added | attribute present |
-| 7 | Optimized mode: external image URL unchanged | Non-matching domain keeps raw `<img>` |
-| 8 | Optimized mode: relative image URL unchanged | `/path/to/img.jpg` not rewritten |
-| 9 | Optimized mode: XSS in image src still blocked | `javascript:` URL returns empty |
-| 10 | Mixed content: only images are affected | headings, links, code unchanged |
+| #   | Test case                                              | Assertion                                  |
+| --- | ------------------------------------------------------ | ------------------------------------------ |
+| 1   | Default mode: image renders raw `<img>`                | `src` is original URL, no `srcset`         |
+| 2   | Optimized mode: internal image gets `/_next/image` src | `src` contains `/_next/image?url=`         |
+| 3   | Optimized mode: internal image gets srcset             | `srcset` contains 640w, 828w, 1080w, 1920w |
+| 4   | Optimized mode: internal image gets sizes              | `sizes` attribute present                  |
+| 5   | Optimized mode: `data-original-src` preserved          | attribute contains original URL            |
+| 6   | Optimized mode: `decoding="async"` added               | attribute present                          |
+| 7   | Optimized mode: external image URL unchanged           | Non-matching domain keeps raw `<img>`      |
+| 8   | Optimized mode: relative image URL unchanged           | `/path/to/img.jpg` not rewritten           |
+| 9   | Optimized mode: XSS in image src still blocked         | `javascript:` URL returns empty            |
+| 10  | Mixed content: only images are affected                | headings, links, code unchanged            |
 
 ### Unit tests — `src/components/ui/image-lightbox.test.tsx` (new)
 
@@ -346,41 +345,42 @@ has no component tests, and `vitest.config.ts` excludes `src/components/**` from
 coverage, these tests would be **optional** for V1. The lightbox is covered by E2E.
 
 If added:
-| # | Test case |
-|---|-----------|
-| 1 | Renders nothing when `open` is false |
-| 2 | Renders overlay + image when `open` is true |
-| 3 | Calls `onClose` on backdrop click |
-| 4 | Calls `onClose` on Escape key |
-| 5 | Renders children in side panel when provided |
-| 6 | Does not render side panel when no children |
+
+| #   | Test case                                    |
+| --- | -------------------------------------------- |
+| 1   | Renders nothing when `open` is false         |
+| 2   | Renders overlay + image when `open` is true  |
+| 3   | Calls `onClose` on backdrop click            |
+| 4   | Calls `onClose` on Escape key                |
+| 5   | Renders children in side panel when provided |
+| 6   | Does not render side panel when no children  |
 
 ### E2E tests
 
-| # | Test case | Type |
-|---|-----------|------|
-| 1 | Blog post page: inline images have `srcset` attribute | Playwright browser |
-| 2 | Blog post page: inline image `src` points to `/_next/image` | Playwright browser |
-| 3 | Blog post page: click inline image opens lightbox overlay | Playwright browser |
-| 4 | Blog post page: lightbox shows correct image | Playwright browser |
-| 5 | Blog post page: lightbox closes on X button / Escape / backdrop | Playwright browser |
-| 6 | Blog post page: click linked image (`<a><img>`) navigates, no lightbox | Playwright browser |
-| 7 | RSS feed: inline images still have raw `<img>` src (no `/_next/image`) | API test |
-| 8 | Admin media library: lightbox still works with metadata panel | Playwright browser |
+| #   | Test case                                                              | Type               |
+| --- | ---------------------------------------------------------------------- | ------------------ |
+| 1   | Blog post page: inline images have `srcset` attribute                  | Playwright browser |
+| 2   | Blog post page: inline image `src` points to `/_next/image`            | Playwright browser |
+| 3   | Blog post page: click inline image opens lightbox overlay              | Playwright browser |
+| 4   | Blog post page: lightbox shows correct image                           | Playwright browser |
+| 5   | Blog post page: lightbox closes on X button / Escape / backdrop        | Playwright browser |
+| 6   | Blog post page: click linked image (`<a><img>`) navigates, no lightbox | Playwright browser |
+| 7   | RSS feed: inline images still have raw `<img>` src (no `/_next/image`) | API test           |
+| 8   | Admin media library: lightbox still works with metadata panel          | Playwright browser |
 
 ---
 
 ## Atomic Commits
 
-| # | Message | Scope | Tests |
-|---|---------|-------|-------|
-| 1 | `feat: add optimizeImages option to renderMarkdown for next/image proxy` | `src/models/markdown.ts` | Unit tests 1-10 |
-| 2 | `feat: add shared ImageLightbox component` | `src/components/ui/image-lightbox.tsx` | — |
-| 3 | `feat: add click-to-preview lightbox for blog content images` | `src/components/blog/content-image-lightbox.tsx`, `[slug]/page.tsx`, `preview/[id]/page.tsx`, `globals.css` | — |
-| 4 | `refactor: use ImageLightbox in admin media library` | `src/components/admin/media-library.tsx` | — |
-| 5 | `feat: enable optimized image rendering on blog post and preview pages` | `[slug]/page.tsx`, `preview/[id]/page.tsx` | — |
-| 6 | `perf: use next/image for admin media grid thumbnails` | `src/components/admin/media-library.tsx` | — |
-| 7 | `test: add E2E tests for image optimization and content lightbox` | `e2e/` | E2E tests 1-8 |
+| #   | Message                                                                  | Scope                                                                                                       | Tests           |
+| --- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | --------------- |
+| 1   | `feat: add optimizeImages option to renderMarkdown for next/image proxy` | `src/models/markdown.ts`                                                                                    | Unit tests 1-10 |
+| 2   | `feat: add shared ImageLightbox component`                               | `src/components/ui/image-lightbox.tsx`                                                                      | —               |
+| 3   | `feat: add click-to-preview lightbox for blog content images`            | `src/components/blog/content-image-lightbox.tsx`, `[slug]/page.tsx`, `preview/[id]/page.tsx`, `globals.css` | —               |
+| 4   | `refactor: use ImageLightbox in admin media library`                     | `src/components/admin/media-library.tsx`                                                                    | —               |
+| 5   | `feat: enable optimized image rendering on blog post and preview pages`  | `[slug]/page.tsx`, `preview/[id]/page.tsx`                                                                  | —               |
+| 6   | `perf: use next/image for admin media grid thumbnails`                   | `src/components/admin/media-library.tsx`                                                                    | —               |
+| 7   | `test: add E2E tests for image optimization and content lightbox`        | `e2e/`                                                                                                      | E2E tests 1-8   |
 
 ---
 

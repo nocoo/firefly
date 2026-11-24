@@ -22,7 +22,5 @@ export default async function AuthorsPage() {
     };
   });
 
-  return (
-    <AuthorsManager authors={authorsWithAvatarUrls} siteUrl={SITE_URL} />
-  );
+  return <AuthorsManager authors={authorsWithAvatarUrls} siteUrl={SITE_URL} />;
 }

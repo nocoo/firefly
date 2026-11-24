@@ -33,16 +33,10 @@ export interface DbBatchStatement {
 
 export interface Db {
   /** Execute a read-only query and return typed results. */
-  query<T = Record<string, unknown>>(
-    sql: string,
-    params?: unknown[],
-  ): Promise<DbQueryResult<T>>;
+  query<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<DbQueryResult<T>>;
 
   /** Convenience: return the first row or null. */
-  firstOrNull<T = Record<string, unknown>>(
-    sql: string,
-    params?: unknown[],
-  ): Promise<T | null>;
+  firstOrNull<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T | null>;
 
   /** Execute a write query (INSERT/UPDATE/DELETE) and return meta. */
   execute(sql: string, params?: unknown[]): Promise<DbMeta>;
@@ -147,11 +141,7 @@ function isTransportBodyFailure(err: unknown): boolean {
   if (!(err instanceof TypeError)) return false;
   const msg = err.message ?? "";
   const causeMsg =
-    err.cause instanceof Error
-      ? err.cause.message
-      : typeof err.cause === "string"
-        ? err.cause
-        : "";
+    err.cause instanceof Error ? err.cause.message : typeof err.cause === "string" ? err.cause : "";
   const haystack = `${msg} ${causeMsg}`;
   return TRANSPORT_MESSAGE_MARKERS.some((needle) => haystack.includes(needle));
 }
@@ -277,8 +267,7 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
 
   // Shared queue lookup by localhost origin — see `_localQueues` above.
   const queue = localhostQueueFor(workerUrl);
-  const gated = <T>(fn: () => Promise<T>): Promise<T> =>
-    queue ? queue.run(fn) : fn();
+  const gated = <T>(fn: () => Promise<T>): Promise<T> => (queue ? queue.run(fn) : fn());
 
   // Keep-alive is retained on localhost too: STU-2495 tried `Connection:
   // close` but the CI evidence (all requests 200 server-side, client fetch
@@ -311,10 +300,7 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new DbError(
-          (data as { error?: string }).error ?? `HTTP ${res.status}`,
-          res.status,
-        );
+        throw new DbError((data as { error?: string }).error ?? `HTTP ${res.status}`, res.status);
       }
 
       // Body read must live inside its own try (STU-2497 R1). If the
@@ -363,11 +349,7 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
       } catch (err) {
         // Retry only on kind === "network"; HTTP responses (including 5xx
         // whose body happens to start with "Network error:") pass through.
-        if (
-          !(err instanceof DbError) ||
-          err.kind !== "network" ||
-          i === attempts - 1
-        ) {
+        if (!(err instanceof DbError) || err.kind !== "network" || i === attempts - 1) {
           throw err;
         }
         lastErr = err;
@@ -387,21 +369,14 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
   // `postQueryWithRetry`; caller signals it is safe to re-execute
   // (read-only endpoints like `/api/v1/fts-search`). Writes MUST NOT
   // opt in — a dropped connection may have already committed.
-  async function postCallWithRetry<T>(
-    path: string,
-    body: unknown,
-  ): Promise<T> {
+  async function postCallWithRetry<T>(path: string, body: unknown): Promise<T> {
     const attempts = retryDelays.length + 1;
     let lastErr: DbError | undefined;
     for (let i = 0; i < attempts; i++) {
       try {
         return await postOnce<T>(path, body);
       } catch (err) {
-        if (
-          !(err instanceof DbError) ||
-          err.kind !== "network" ||
-          i === attempts - 1
-        ) {
+        if (!(err instanceof DbError) || err.kind !== "network" || i === attempts - 1) {
           throw err;
         }
         lastErr = err;
@@ -417,20 +392,14 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
   }
 
   const db: Db = {
-    async query<T>(
-      sql: string,
-      params?: unknown[],
-    ): Promise<DbQueryResult<T>> {
+    async query<T>(sql: string, params?: unknown[]): Promise<DbQueryResult<T>> {
       return postQueryWithRetry<DbQueryResult<T>>(sql, {
         sql,
         params: params ?? [],
       });
     },
 
-    async firstOrNull<T>(
-      sql: string,
-      params?: unknown[],
-    ): Promise<T | null> {
+    async firstOrNull<T>(sql: string, params?: unknown[]): Promise<T | null> {
       const result = await db.query<T>(sql, params);
       return result.results[0] ?? null;
     },
@@ -444,10 +413,9 @@ export function createDb(workerUrl: string, workerSecret: string): Db {
     },
 
     async batch(statements: DbBatchStatement[]): Promise<DbQueryResult[]> {
-      const result = await postOnce<{ results: DbQueryResult[] }>(
-        "/api/v1/execute",
-        { statements },
-      );
+      const result = await postOnce<{ results: DbQueryResult[] }>("/api/v1/execute", {
+        statements,
+      });
       return result.results;
     },
 

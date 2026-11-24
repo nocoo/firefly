@@ -47,7 +47,9 @@ interface CommandPaletteContextValue {
 
 const CommandPaletteContext = createContext<CommandPaletteContextValue>({
   open: false,
-  setOpen: () => { /* default no-op until provider mounts */ },
+  setOpen: () => {
+    /* default no-op until provider mounts */
+  },
 });
 
 export function useCommandPalette() {
@@ -58,11 +60,7 @@ export function useCommandPalette() {
 // Provider — registers global Cmd+K listener
 // ---------------------------------------------------------------------------
 
-export function CommandPaletteProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function CommandPaletteProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -109,20 +107,98 @@ interface NavCommand {
 }
 
 const NAV_COMMANDS: NavCommand[] = [
-  { id: "nav-dashboard", label: "Dashboard", href: "/admin", icon: BarChart3, keywords: ["dashboard", "analytics", "概览", "仪表盘"] },
-  { id: "nav-posts", label: "文章", href: "/admin/posts", icon: FileText, keywords: ["posts", "articles", "文章"] },
-  { id: "nav-new-post", label: "新建文章", href: "/admin/posts/new", icon: FileText, keywords: ["new", "create", "新建", "撰写"] },
-  { id: "nav-media", label: "媒体库", href: "/admin/media", icon: Image, keywords: ["media", "images", "媒体", "图片"] },
-  { id: "nav-categories", label: "分类", href: "/admin/categories", icon: Folder, keywords: ["categories", "分类"] },
+  {
+    id: "nav-dashboard",
+    label: "Dashboard",
+    href: "/admin",
+    icon: BarChart3,
+    keywords: ["dashboard", "analytics", "概览", "仪表盘"],
+  },
+  {
+    id: "nav-posts",
+    label: "文章",
+    href: "/admin/posts",
+    icon: FileText,
+    keywords: ["posts", "articles", "文章"],
+  },
+  {
+    id: "nav-new-post",
+    label: "新建文章",
+    href: "/admin/posts/new",
+    icon: FileText,
+    keywords: ["new", "create", "新建", "撰写"],
+  },
+  {
+    id: "nav-media",
+    label: "媒体库",
+    href: "/admin/media",
+    icon: Image,
+    keywords: ["media", "images", "媒体", "图片"],
+  },
+  {
+    id: "nav-categories",
+    label: "分类",
+    href: "/admin/categories",
+    icon: Folder,
+    keywords: ["categories", "分类"],
+  },
   { id: "nav-tags", label: "标签", href: "/admin/tags", icon: Tag, keywords: ["tags", "标签"] },
-  { id: "nav-authors", label: "作者", href: "/admin/authors", icon: UserRound, keywords: ["authors", "humans", "作者"] },
-  { id: "nav-ai-agents", label: "AI 代理", href: "/admin/ai-agents", icon: Users, keywords: ["ai", "agents", "代理"] },
-  { id: "nav-site-identity", label: "站点身份", href: "/admin/site-identity", icon: Building2, keywords: ["site", "identity", "branding", "站点", "身份", "品牌"] },
-  { id: "nav-settings", label: "设置", href: "/admin/settings", icon: Settings, keywords: ["settings", "preferences", "设置", "偏好"] },
-  { id: "nav-ai-settings", label: "AI 设置", href: "/admin/ai-settings", icon: Sparkles, keywords: ["ai", "settings", "provider", "ai 设置"] },
-  { id: "nav-mcp", label: "MCP 令牌", href: "/admin/mcp", icon: KeyRound, keywords: ["mcp", "tokens", "api keys", "令牌"] },
-  { id: "nav-backup", label: "备份", href: "/admin/backup", icon: Database, keywords: ["backup", "restore", "备份"] },
-  { id: "nav-system", label: "系统监控", href: "/admin/system", icon: Activity, keywords: ["system", "memory", "monitor", "系统", "监控"] },
+  {
+    id: "nav-authors",
+    label: "作者",
+    href: "/admin/authors",
+    icon: UserRound,
+    keywords: ["authors", "humans", "作者"],
+  },
+  {
+    id: "nav-ai-agents",
+    label: "AI 代理",
+    href: "/admin/ai-agents",
+    icon: Users,
+    keywords: ["ai", "agents", "代理"],
+  },
+  {
+    id: "nav-site-identity",
+    label: "站点身份",
+    href: "/admin/site-identity",
+    icon: Building2,
+    keywords: ["site", "identity", "branding", "站点", "身份", "品牌"],
+  },
+  {
+    id: "nav-settings",
+    label: "设置",
+    href: "/admin/settings",
+    icon: Settings,
+    keywords: ["settings", "preferences", "设置", "偏好"],
+  },
+  {
+    id: "nav-ai-settings",
+    label: "AI 设置",
+    href: "/admin/ai-settings",
+    icon: Sparkles,
+    keywords: ["ai", "settings", "provider", "ai 设置"],
+  },
+  {
+    id: "nav-mcp",
+    label: "MCP 令牌",
+    href: "/admin/mcp",
+    icon: KeyRound,
+    keywords: ["mcp", "tokens", "api keys", "令牌"],
+  },
+  {
+    id: "nav-backup",
+    label: "备份",
+    href: "/admin/backup",
+    icon: Database,
+    keywords: ["backup", "restore", "备份"],
+  },
+  {
+    id: "nav-system",
+    label: "系统监控",
+    href: "/admin/system",
+    icon: Activity,
+    keywords: ["system", "memory", "monitor", "系统", "监控"],
+  },
 ];
 
 /**
@@ -200,10 +276,9 @@ export function CommandPalette() {
 
     setLoading(true);
     try {
-      const res = await fetch(
-        `/api/admin/search?q=${encodeURIComponent(q.trim())}`,
-        { signal: controller.signal },
-      );
+      const res = await fetch(`/api/admin/search?q=${encodeURIComponent(q.trim())}`, {
+        signal: controller.signal,
+      });
       if (!res.ok) throw new Error("Search failed");
       const data = (await res.json()) as SearchResult;
       setResults(data);
@@ -277,9 +352,7 @@ export function CommandPalette() {
         break;
       case "ArrowUp":
         e.preventDefault();
-        setActiveIndex((prev) =>
-          prev <= 0 ? Math.max(totalItems - 1, 0) : prev - 1,
-        );
+        setActiveIndex((prev) => (prev <= 0 ? Math.max(totalItems - 1, 0) : prev - 1));
         break;
       case "Enter":
         e.preventDefault();
@@ -308,8 +381,7 @@ export function CommandPalette() {
   if (!open) return null;
 
   const hasQuery = query.trim().length > 0;
-  const showNoResults =
-    hasQuery && !loading && navCommands.length === 0 && posts.length === 0;
+  const showNoResults = hasQuery && !loading && navCommands.length === 0 && posts.length === 0;
 
   return createPortal(
     <div className="fixed inset-0 z-50" onKeyDown={handleKeyDown}>
@@ -329,10 +401,7 @@ export function CommandPalette() {
               strokeWidth={1.5}
             />
           ) : (
-            <Search
-              className="h-4 w-4 shrink-0 text-basalt-muted-foreground"
-              strokeWidth={1.5}
-            />
+            <Search className="h-4 w-4 shrink-0 text-basalt-muted-foreground" strokeWidth={1.5} />
           )}
           <input
             ref={inputRef}
@@ -348,10 +417,7 @@ export function CommandPalette() {
         </div>
 
         {/* Results */}
-        <div
-          ref={listRef}
-          className="max-h-[min(400px,50vh)] overflow-y-auto overscroll-contain"
-        >
+        <div ref={listRef} className="max-h-[min(400px,50vh)] overflow-y-auto overscroll-contain">
           {showNoResults && (
             <div className="px-4 py-8 text-center text-sm text-basalt-muted-foreground">
               没有找到结果
@@ -368,7 +434,8 @@ export function CommandPalette() {
                 const index = navIndex;
                 const Icon = cmd.icon;
                 return (
-                  <button type="button"
+                  <button
+                    type="button"
                     key={cmd.id}
                     data-active={index === activeIndex}
                     onClick={() => handleSelect(index)}
@@ -403,7 +470,8 @@ export function CommandPalette() {
               {posts.map((post, postIndex) => {
                 const index = navCommands.length + postIndex;
                 return (
-                  <button type="button"
+                  <button
+                    type="button"
                     key={post.id}
                     data-active={index === activeIndex}
                     onClick={() => handleSelect(index)}
@@ -429,12 +497,8 @@ export function CommandPalette() {
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-basalt-muted-foreground">
-                      {post.category_name && (
-                        <span className="truncate">{post.category_name}</span>
-                      )}
-                      {post.category_name && snippets[post.id] && (
-                        <span aria-hidden="true">·</span>
-                      )}
+                      {post.category_name && <span className="truncate">{post.category_name}</span>}
+                      {post.category_name && snippets[post.id] && <span aria-hidden="true">·</span>}
                       {snippets[post.id] ? (
                         <span
                           className="flex-1 truncate [&>mark]:bg-yellow-200 [&>mark]:text-yellow-900 dark:[&>mark]:bg-yellow-800/40 dark:[&>mark]:text-yellow-200"

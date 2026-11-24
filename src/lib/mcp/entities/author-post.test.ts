@@ -105,23 +105,21 @@ describe("createAuthorPostEntity", () => {
 
   describe("list", () => {
     it("requires author_id", async () => {
-      await expect(
-        entity.dataLayer.list(db, {}),
-      ).rejects.toThrow("author_id is required");
+      await expect(entity.dataLayer.list(db, {})).rejects.toThrow("author_id is required");
     });
 
     it("requires author_id even when called with no opts (undefined)", async () => {
-      await expect(
-        (entity.dataLayer.list as any)(db, undefined),
-      ).rejects.toThrow("author_id is required");
+      await expect((entity.dataLayer.list as any)(db, undefined)).rejects.toThrow(
+        "author_id is required",
+      );
     });
 
     it("validates author exists", async () => {
       vi.mocked(getAiAgentById).mockResolvedValue(null);
 
-      await expect(
-        entity.dataLayer.list(db, { author_id: "invalid-author" }),
-      ).rejects.toThrow("Author not found: invalid-author");
+      await expect(entity.dataLayer.list(db, { author_id: "invalid-author" })).rejects.toThrow(
+        "Author not found: invalid-author",
+      );
     });
 
     it("filters by author_id when valid", async () => {
@@ -130,23 +128,26 @@ describe("createAuthorPostEntity", () => {
 
       await entity.dataLayer.list(db, { author_id: "agent-1" });
 
-      expect(listPosts).toHaveBeenCalledWith(db, expect.objectContaining({
-        aiAgentId: "agent-1",
-      }));
+      expect(listPosts).toHaveBeenCalledWith(
+        db,
+        expect.objectContaining({
+          aiAgentId: "agent-1",
+        }),
+      );
     });
   });
 
   describe("getById", () => {
     it("requires author_id", async () => {
-      await expect(
-        entity.dataLayer.getById(db, "post-1", {}),
-      ).rejects.toThrow("author_id is required");
+      await expect(entity.dataLayer.getById(db, "post-1", {})).rejects.toThrow(
+        "author_id is required",
+      );
     });
 
     it("requires author_id when args is undefined", async () => {
-      await expect(
-        (entity.dataLayer.getById as any)(db, "post-1", undefined),
-      ).rejects.toThrow("author_id is required");
+      await expect((entity.dataLayer.getById as any)(db, "post-1", undefined)).rejects.toThrow(
+        "author_id is required",
+      );
     });
 
     it("returns post if owned by author", async () => {
@@ -170,15 +171,15 @@ describe("createAuthorPostEntity", () => {
 
   describe("getBySlug", () => {
     it("requires author_id", async () => {
-      await expect(
-        entity.dataLayer.getBySlug(db, "test-post", {}),
-      ).rejects.toThrow("author_id is required");
+      await expect(entity.dataLayer.getBySlug(db, "test-post", {})).rejects.toThrow(
+        "author_id is required",
+      );
     });
 
     it("requires author_id when args is undefined", async () => {
-      await expect(
-        (entity.dataLayer.getBySlug as any)(db, "test-post", undefined),
-      ).rejects.toThrow("author_id is required");
+      await expect((entity.dataLayer.getBySlug as any)(db, "test-post", undefined)).rejects.toThrow(
+        "author_id is required",
+      );
     });
 
     it("returns post if owned by author", async () => {
@@ -218,11 +219,14 @@ describe("createAuthorPostEntity", () => {
         content: "Content",
       });
 
-      expect(PostService.create).toHaveBeenCalledWith(db, expect.objectContaining({
-        categoryId: "cat-agent",
-        status: "private",
-        aiAgentId: "agent-1",
-      }));
+      expect(PostService.create).toHaveBeenCalledWith(
+        db,
+        expect.objectContaining({
+          categoryId: "cat-agent",
+          status: "private",
+          aiAgentId: "agent-1",
+        }),
+      );
     });
 
     it("ignores client-provided category, status, and aiAgentId", async () => {
@@ -240,19 +244,22 @@ describe("createAuthorPostEntity", () => {
       });
 
       // All should be overwritten
-      expect(PostService.create).toHaveBeenCalledWith(db, expect.objectContaining({
-        categoryId: "cat-agent",
-        status: "private",
-        aiAgentId: "agent-1",
-      }));
+      expect(PostService.create).toHaveBeenCalledWith(
+        db,
+        expect.objectContaining({
+          categoryId: "cat-agent",
+          status: "private",
+          aiAgentId: "agent-1",
+        }),
+      );
     });
   });
 
   describe("update", () => {
     it("requires author_id", async () => {
-      await expect(
-        entity.dataLayer.update(db, "post-1", { title: "Updated" }),
-      ).rejects.toThrow("author_id is required");
+      await expect(entity.dataLayer.update(db, "post-1", { title: "Updated" })).rejects.toThrow(
+        "author_id is required",
+      );
     });
 
     it("verifies ownership before update", async () => {
@@ -306,15 +313,15 @@ describe("createAuthorPostEntity", () => {
 
   describe("delete", () => {
     it("requires author_id", async () => {
-      await expect(
-        entity.dataLayer.delete(db, "post-1", {}),
-      ).rejects.toThrow("author_id is required");
+      await expect(entity.dataLayer.delete(db, "post-1", {})).rejects.toThrow(
+        "author_id is required",
+      );
     });
 
     it("requires author_id when args is undefined", async () => {
-      await expect(
-        (entity.dataLayer.delete as any)(db, "post-1", undefined),
-      ).rejects.toThrow("author_id is required");
+      await expect((entity.dataLayer.delete as any)(db, "post-1", undefined)).rejects.toThrow(
+        "author_id is required",
+      );
     });
 
     it("verifies ownership before delete", async () => {

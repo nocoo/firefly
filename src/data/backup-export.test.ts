@@ -22,7 +22,6 @@ const {
 // Mock DB
 // ---------------------------------------------------------------------------
 
-
 const samplePost: Post = {
   id: "01HX1234",
   title: "Test Post",
@@ -272,12 +271,12 @@ describe("collectBackupData", () => {
       mockResult([sampleSettingsRow]),
     ] as never);
     vi.mocked(db.query)
-      .mockResolvedValueOnce(mockResult([sampleCategory]))    // categories
-      .mockResolvedValueOnce(mockResult([sampleTag]))         // tags
+      .mockResolvedValueOnce(mockResult([sampleCategory])) // categories
+      .mockResolvedValueOnce(mockResult([sampleTag])) // tags
       .mockResolvedValueOnce(mockResult([{ post_id: "01HX1234", tag_id: "tag1" }])) // postTags
-      .mockResolvedValueOnce(mockResult([sampleComment]))     // comments
-      .mockResolvedValueOnce(mockResult([sampleAttachment]))  // attachments
-      .mockResolvedValueOnce(mockResult([sampleRedirect]));   // redirects
+      .mockResolvedValueOnce(mockResult([sampleComment])) // comments
+      .mockResolvedValueOnce(mockResult([sampleAttachment])) // attachments
+      .mockResolvedValueOnce(mockResult([sampleRedirect])); // redirects
   });
 
   it("returns envelope with correct schema version", async () => {
@@ -293,17 +292,19 @@ describe("collectBackupData", () => {
   it("includes all entity arrays", async () => {
     const envelope = await collectBackupData(db);
     expect(envelope.posts).toHaveLength(1);
-    expect(envelope.humans).toEqual([{
-      id: "human-1",
-      name: "Blog Author",
-      slug: "blog-author",
-      description: "Author biography",
-      email: "author@example.com",
-      profile_public: 1,
-      avatar_version: "avatar-1",
-      created_at: "2026-03-26T00:00:00.000Z",
-      updated_at: "2026-03-27T00:00:00.000Z",
-    }]);
+    expect(envelope.humans).toEqual([
+      {
+        id: "human-1",
+        name: "Blog Author",
+        slug: "blog-author",
+        description: "Author biography",
+        email: "author@example.com",
+        profile_public: 1,
+        avatar_version: "avatar-1",
+        created_at: "2026-03-26T00:00:00.000Z",
+        updated_at: "2026-03-27T00:00:00.000Z",
+      },
+    ]);
     expect(envelope.categories).toHaveLength(1);
     expect(envelope.tags).toHaveLength(1);
     expect(envelope.postTags).toHaveLength(1);
@@ -321,12 +322,12 @@ describe("collectBackupData", () => {
     await collectBackupData(db);
     const queryCalls = vi.mocked(db.query).mock.calls;
     expect(queryCalls).toHaveLength(6);
-    expect(queryCalls[0][0]).toContain("ORDER BY id");     // categories
-    expect(queryCalls[1][0]).toContain("ORDER BY id");     // tags
+    expect(queryCalls[0][0]).toContain("ORDER BY id"); // categories
+    expect(queryCalls[1][0]).toContain("ORDER BY id"); // tags
     expect(queryCalls[2][0]).toContain("ORDER BY post_id, tag_id"); // postTags
-    expect(queryCalls[3][0]).toContain("ORDER BY id");     // comments
-    expect(queryCalls[4][0]).toContain("ORDER BY id");     // attachments
-    expect(queryCalls[5][0]).toContain("ORDER BY id");     // redirects
+    expect(queryCalls[3][0]).toContain("ORDER BY id"); // comments
+    expect(queryCalls[4][0]).toContain("ORDER BY id"); // attachments
+    expect(queryCalls[5][0]).toContain("ORDER BY id"); // redirects
 
     const batchSql = vi.mocked(db.batch).mock.calls[0][0].map((s) => s.sql);
     expect(batchSql[0]).toContain("FROM humans");

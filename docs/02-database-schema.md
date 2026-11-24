@@ -3,6 +3,7 @@
 ## Platform: Cloudflare D1 (SQLite)
 
 D1 constraints:
+
 - No native UUID type — use TEXT with application-generated UUIDs or ULID
 - No ENUM — use TEXT with CHECK constraints
 - No stored procedures — all logic in application layer
@@ -258,5 +259,6 @@ is needed. No upsert or dedup logic required.
 
 `post_count` on categories/tags and `comment_count`/`view_count` on posts are
 denormalized for read performance. Updated via:
+
 - Application-level increment/decrement on write operations
 - Periodic reconciliation job (admin endpoint)

@@ -24,10 +24,7 @@ export function inferErrorField(message: string): PostFormField | null {
   return null;
 }
 
-
-export type AuthorSelection =
-  | { kind: "human"; id: string }
-  | { kind: "agent"; id: string };
+export type AuthorSelection = { kind: "human"; id: string } | { kind: "agent"; id: string };
 
 export interface BuildSubmitBodyArgs {
   isEditing: boolean;

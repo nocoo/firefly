@@ -5,21 +5,30 @@ import { JournalBrand } from "./journal-brand";
 import { journalSurfaceUrls } from "./journal-surfaces";
 
 const COLUMNS = [
-  { heading: "THE JOURNAL", links: [
-    { label: "最近文章", href: "/" },
-    { label: "文章归档", href: "/archive" },
-    { label: "搜索", href: "/search" },
-  ] },
-  { heading: "ELSEWHERE", links: [
-    { label: "Play", href: journalSurfaceUrls.play },
-    { label: "Résumé", href: journalSurfaceUrls.resume },
-    { label: "Portfolio", href: journalSurfaceUrls.portfolio },
-  ] },
-  { heading: "KEEP IN TOUCH", links: [
-    { label: "RSS", href: "/feed.xml" },
-    { label: "站点地图", href: "/sitemap.xml" },
-    { label: "llms.txt", href: "/llms.txt" },
-  ] },
+  {
+    heading: "THE JOURNAL",
+    links: [
+      { label: "最近文章", href: "/" },
+      { label: "文章归档", href: "/archive" },
+      { label: "搜索", href: "/search" },
+    ],
+  },
+  {
+    heading: "ELSEWHERE",
+    links: [
+      { label: "Play", href: journalSurfaceUrls.play },
+      { label: "Résumé", href: journalSurfaceUrls.resume },
+      { label: "Portfolio", href: journalSurfaceUrls.portfolio },
+    ],
+  },
+  {
+    heading: "KEEP IN TOUCH",
+    links: [
+      { label: "RSS", href: "/feed.xml" },
+      { label: "站点地图", href: "/sitemap.xml" },
+      { label: "llms.txt", href: "/llms.txt" },
+    ],
+  },
 ];
 
 export function BlogFooter({ siteName }: { siteName: string }) {
@@ -27,8 +36,12 @@ export function BlogFooter({ siteName }: { siteName: string }) {
     <footer className="journal-footer" aria-label="Site footer">
       <div className="journal-footer-top">
         <div lang="en">
-          <p className="journal-eyebrow"><span /> THE STORY CONTINUES</p>
-          <h2>Always another chapter<span>.</span></h2>
+          <p className="journal-eyebrow">
+            <span /> THE STORY CONTINUES
+          </p>
+          <h2>
+            Always another chapter<span>.</span>
+          </h2>
         </div>
         <a className="journal-footer-play" href={journalSurfaceUrls.play} lang="en">
           <img src="/journal-capsule.svg" width={24} height={27} alt="" aria-hidden="true" />
@@ -38,19 +51,27 @@ export function BlogFooter({ siteName }: { siteName: string }) {
       <div className="journal-footer-body">
         <div className="journal-footer-identity">
           <JournalBrand siteName={siteName} />
-          <p lang="en">© {new Date().getFullYear()} {siteName}</p>
+          <p lang="en">
+            © {new Date().getFullYear()} {siteName}
+          </p>
           <small className="journal-footer-version">v{process.env.NEXT_PUBLIC_APP_VERSION}</small>
         </div>
         {COLUMNS.map((column) => (
           <div key={column.heading}>
-            <p className="journal-footer-heading" lang="en">{column.heading}</p>
+            <p className="journal-footer-heading" lang="en">
+              {column.heading}
+            </p>
             <ul className="journal-footer-list">
               {column.links.map((link) => (
                 <li key={link.href}>
                   {link.href.startsWith("https:") || /\.(xml|txt)$/.test(link.href) ? (
-                    <a href={link.href} lang={link.href.startsWith("https:") ? "en" : undefined}>{link.label}</a>
+                    <a href={link.href} lang={link.href.startsWith("https:") ? "en" : undefined}>
+                      {link.label}
+                    </a>
                   ) : (
-                    <Link href={link.href} prefetch={false}>{link.label}</Link>
+                    <Link href={link.href} prefetch={false}>
+                      {link.label}
+                    </Link>
                   )}
                 </li>
               ))}
@@ -59,15 +80,21 @@ export function BlogFooter({ siteName }: { siteName: string }) {
         ))}
       </div>
       <div className="journal-footer-bottom">
-        <span className="journal-location" lang="en"><i aria-hidden="true" /> MADE IN BEIJING</span>
+        <span className="journal-location" lang="en">
+          <i aria-hidden="true" /> MADE IN BEIJING
+        </span>
         <span lang="en">BUILT WITH CURIOSITY.</span>
         <button
           type="button"
           className="journal-back-top"
-          onClick={() => window.scrollTo({
-            top: 0,
-            behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-          })}
+          onClick={() =>
+            window.scrollTo({
+              top: 0,
+              behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+                ? "auto"
+                : "smooth",
+            })
+          }
         >
           返回顶部 <span aria-hidden="true">↑</span>
         </button>

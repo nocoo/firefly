@@ -7,9 +7,7 @@ export class PostFieldValidationError extends Error {
   }
 }
 
-export function assertValidPodcastUrlInput(
-  podcastUrl: string | null | undefined,
-): void {
+export function assertValidPodcastUrlInput(podcastUrl: string | null | undefined): void {
   if (podcastUrl === undefined || podcastUrl === null) return;
   const message = validatePodcastEpisodeUrl(podcastUrl);
   if (message) throw new PostFieldValidationError(message);

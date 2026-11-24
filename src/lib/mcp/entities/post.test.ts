@@ -6,11 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Post, PostWithAgent, Tag } from "@/models/types";
 import { createCrudHandlers } from "../framework/handlers";
-import {
-  createMockContext,
-  parseToolResult,
-  expectError,
-} from "../framework/test-utils";
+import { createMockContext, parseToolResult, expectError } from "../framework/test-utils";
 import { createMockPostWithAgent } from "@/data/core/test-utils";
 import { postEntity } from "./post";
 import type { ToolContext } from "../framework/types";
@@ -52,12 +48,7 @@ vi.mock("@/services/unfurl", () => ({
   },
 }));
 
-import {
-  listPosts,
-  getPostById,
-  getPostBySlug,
-  getPostTags,
-} from "@/data/entities/post";
+import { listPosts, getPostById, getPostBySlug, getPostTags } from "@/data/entities/post";
 import { PostService } from "@/services/post-service";
 import { generateExcerpt, summarizeUnfurl } from "@/services/ai";
 import { unfurlUrl, UnfurlError } from "@/services/unfurl";
@@ -288,8 +279,7 @@ describe("post entity handlers", () => {
 
     it("maps human_id and podcast_url on create", async () => {
       vi.mocked(PostService.create).mockResolvedValue(samplePostWithAgent);
-      const episode =
-        "https://his.fm/episodes/manager-notes/what-the-reorg-did-not-write";
+      const episode = "https://his.fm/episodes/manager-notes/what-the-reorg-did-not-write";
 
       await handlers.handleCreate(ctx, {
         title: "New",
@@ -487,60 +477,92 @@ describe("export_post extra tool", () => {
   });
 
   it("describes the supported formats from the shared registry", () => {
-    expect(exportTool.description).toContain(`Supported formats: ${POST_EXPORT_FORMATS.join(", ")}.`);
+    expect(exportTool.description).toContain(
+      `Supported formats: ${POST_EXPORT_FORMATS.join(", ")}.`,
+    );
   });
 
-  it.each([{ id: "post-1" }, { slug: "test-post" }])("exports by %o without writes", async (identifier) => {
-    vi.mocked(getPostById).mockResolvedValue(samplePostWithAgent);
-    vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
-    const result = await exportTool.handler(ctx, { ...identifier, format: "wechat" });
-    expect(parseToolResult(result)).toEqual({
-      id: "post-1", slug: "test-post", format: "wechat",
-      html: renderPostExport(samplePostWithAgent, "wechat").html,
-    });
-    expect(PostService.update).not.toHaveBeenCalled();
-  });
+  it.each([{ id: "post-1" }, { slug: "test-post" }])(
+    "exports by %o without writes",
+    async (identifier) => {
+      vi.mocked(getPostById).mockResolvedValue(samplePostWithAgent);
+      vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
+      const result = await exportTool.handler(ctx, { ...identifier, format: "wechat" });
+      expect(parseToolResult(result)).toEqual({
+        id: "post-1",
+        slug: "test-post",
+        format: "wechat",
+        html: renderPostExport(samplePostWithAgent, "wechat").html,
+      });
+      expect(PostService.update).not.toHaveBeenCalled();
+    },
+  );
 
-  it.each([{ id: "post-1" }, { slug: "example-post" }])("exports website metadata and image positions by %o without writes", async (identifier) => {
-    const post = {
-      ...samplePostWithAgent,
-      slug: "example-post",
-      title: "Example post",
-      published_at: Date.parse("2026-10-15T23:30:00Z") / 1000,
-      featured_image: "/cover.png",
-      content: "# Intro\n\nRead [source](https://example.com).\n\n![Diagram](/images/diagram.png)",
-      content_html: '<div style="color:red">Stale website cache</div>',
-    };
-    vi.mocked(getPostById).mockResolvedValue(post);
-    vi.mocked(getPostBySlug).mockResolvedValue(post);
-    const result = await exportTool.handler(ctx, { ...identifier, format: "website" });
-    expect(parseToolResult(result)).toEqual({
-      id: "post-1",
-      slug: "example-post",
-      format: "website",
-      title: "Example post",
-      url: "https://lizheng.blog/2026/10/example-post",
-      cover: "https://lizheng.blog/cover.png",
-      html: '<h2>Intro</h2>\n<p>Read <a href="https://example.com/">source</a>.</p>\n<p>[图片 1]</p>',
-      images: [{ index: 1, url: "https://lizheng.blog/images/diagram.png", alt: "Diagram", position: 2 }],
-    });
-    expect(post.content_html).toContain("Stale website cache");
-    expect(PostService.update).not.toHaveBeenCalled();
-  });
+  it.each([{ id: "post-1" }, { slug: "example-post" }])(
+    "exports website metadata and image positions by %o without writes",
+    async (identifier) => {
+      const post = {
+        ...samplePostWithAgent,
+        slug: "example-post",
+        title: "Example post",
+        published_at: Date.parse("2026-10-15T23:30:00Z") / 1000,
+        featured_image: "/cover.png",
+        content:
+          "# Intro\n\nRead [source](https://example.com).\n\n![Diagram](/images/diagram.png)",
+        content_html: '<div style="color:red">Stale website cache</div>',
+      };
+      vi.mocked(getPostById).mockResolvedValue(post);
+      vi.mocked(getPostBySlug).mockResolvedValue(post);
+      const result = await exportTool.handler(ctx, { ...identifier, format: "website" });
+      expect(parseToolResult(result)).toEqual({
+        id: "post-1",
+        slug: "example-post",
+        format: "website",
+        title: "Example post",
+        url: "https://lizheng.blog/2026/10/example-post",
+        cover: "https://lizheng.blog/cover.png",
+        html: '<h2>Intro</h2>\n<p>Read <a href="https://example.com/">source</a>.</p>\n<p>[图片 1]</p>',
+        images: [
+          { index: 1, url: "https://lizheng.blog/images/diagram.png", alt: "Diagram", position: 2 },
+        ],
+      });
+      expect(post.content_html).toContain("Stale website cache");
+      expect(PostService.update).not.toHaveBeenCalled();
+    },
+  );
 
-  it.each([null, "https://assets.example.com/cover.png"])("returns website cover %s and the existing undated URL convention", async (cover) => {
-    vi.mocked(getPostById).mockResolvedValue({ ...samplePostWithAgent, published_at: null, featured_image: cover, content: "" });
-    const result = await exportTool.handler(ctx, { id: "post-1", format: "website" });
-    expect(parseToolResult(result)).toEqual({
-      id: "post-1", slug: "test-post", format: "website", title: "Test Post",
-      url: "https://lizheng.blog/test-post", cover, html: "", images: [],
-    });
-  });
+  it.each([null, "https://assets.example.com/cover.png"])(
+    "returns website cover %s and the existing undated URL convention",
+    async (cover) => {
+      vi.mocked(getPostById).mockResolvedValue({
+        ...samplePostWithAgent,
+        published_at: null,
+        featured_image: cover,
+        content: "",
+      });
+      const result = await exportTool.handler(ctx, { id: "post-1", format: "website" });
+      expect(parseToolResult(result)).toEqual({
+        id: "post-1",
+        slug: "test-post",
+        format: "website",
+        title: "Test Post",
+        url: "https://lizheng.blog/test-post",
+        cover,
+        html: "",
+        images: [],
+      });
+    },
+  );
 
   it("uses the canonical UTC publication month at a local month boundary", async () => {
-    vi.mocked(getPostById).mockResolvedValue({ ...samplePostWithAgent, published_at: Date.parse("2026-03-31T23:30:00Z") / 1000 });
+    vi.mocked(getPostById).mockResolvedValue({
+      ...samplePostWithAgent,
+      published_at: Date.parse("2026-03-31T23:30:00Z") / 1000,
+    });
     const result = await exportTool.handler(ctx, { id: "post-1", format: "website" });
-    expect(parseToolResult(result)).toMatchObject({ url: "https://lizheng.blog/2026/03/test-post" });
+    expect(parseToolResult(result)).toMatchObject({
+      url: "https://lizheng.blog/2026/03/test-post",
+    });
   });
 
   it.each([
@@ -553,8 +575,10 @@ describe("export_post extra tool", () => {
   });
 
   it.each(["html", undefined])("rejects unsupported format %s", async (format) => {
-    expectError(await exportTool.handler(ctx, { id: "post-1", format }),
-      `Unsupported export format. Supported formats: ${POST_EXPORT_FORMATS.join(", ")}.`);
+    expectError(
+      await exportTool.handler(ctx, { id: "post-1", format }),
+      `Unsupported export format. Supported formats: ${POST_EXPORT_FORMATS.join(", ")}.`,
+    );
     expect(getPostById).not.toHaveBeenCalled();
   });
 });
@@ -570,9 +594,7 @@ describe("generate_excerpt extra tool", () => {
     vi.mocked(PostService.update).mockReset();
   });
 
-  const excerptTool = postEntity.extraTools!.find(
-    (t) => t.name === "generate_excerpt",
-  )!;
+  const excerptTool = postEntity.extraTools!.find((t) => t.name === "generate_excerpt")!;
 
   it("generates excerpt by slug and saves to DB", async () => {
     vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
@@ -605,9 +627,7 @@ describe("generate_excerpt extra tool", () => {
 
   it("returns error when AI not configured", async () => {
     vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
-    vi.mocked(generateExcerpt).mockRejectedValue(
-      new Error("AI not configured"),
-    );
+    vi.mocked(generateExcerpt).mockRejectedValue(new Error("AI not configured"));
 
     const result = await excerptTool.handler(ctx, { slug: "test-post" });
     expectError(result, "AI provider not configured");
@@ -642,9 +662,7 @@ describe("unfurl_reference extra tool", () => {
     vi.mocked(summarizeUnfurl).mockReset();
   });
 
-  const unfurlTool = postEntity.extraTools!.find(
-    (t) => t.name === "unfurl_reference",
-  )!;
+  const unfurlTool = postEntity.extraTools!.find((t) => t.name === "unfurl_reference")!;
 
   it("preview mode: unfurls url without saving", async () => {
     vi.mocked(unfurlUrl).mockResolvedValue({
@@ -768,9 +786,7 @@ describe("unfurl_reference extra tool", () => {
 
   it("returns UnfurlError message directly", async () => {
     vi.mocked(getPostBySlug).mockResolvedValue(samplePostWithAgent);
-    vi.mocked(unfurlUrl).mockRejectedValue(
-      new UnfurlError("403 Forbidden", 403),
-    );
+    vi.mocked(unfurlUrl).mockRejectedValue(new UnfurlError("403 Forbidden", 403));
 
     const result = await unfurlTool.handler(ctx, {
       slug: "test-post",
@@ -798,9 +814,7 @@ describe("unfurl_reference extra tool", () => {
   });
 
   it("preview mode: returns UnfurlError message directly", async () => {
-    vi.mocked(unfurlUrl).mockRejectedValue(
-      new UnfurlError("404 Not Found", 404),
-    );
+    vi.mocked(unfurlUrl).mockRejectedValue(new UnfurlError("404 Not Found", 404));
 
     const result = await unfurlTool.handler(ctx, {
       url: "https://missing.com",

@@ -153,10 +153,7 @@ describe("createTaxonomySlugHandlers", () => {
       parseUpdateBody.mockReturnValue({ name: "Mapped" });
       update.mockResolvedValue({ ...sampleEntity, name: "Mapped" });
 
-      const res = await handlers.PUT(
-        makeRequest("PUT", { name: "Mapped" }),
-        makeParams(),
-      );
+      const res = await handlers.PUT(makeRequest("PUT", { name: "Mapped" }), makeParams());
       expect(res.status).toBe(200);
       expect(parseUpdateBody).toHaveBeenCalledWith({ name: "Mapped" });
       expect(update).toHaveBeenCalledWith(mockDb, "id-1", { name: "Mapped" });
@@ -164,10 +161,7 @@ describe("createTaxonomySlugHandlers", () => {
 
     it("returns 404 when entity not found for update", async () => {
       getBySlug.mockResolvedValue(null);
-      const res = await handlers.PUT(
-        makeRequest("PUT", { name: "X" }),
-        makeParams(),
-      );
+      const res = await handlers.PUT(makeRequest("PUT", { name: "X" }), makeParams());
       expect(res.status).toBe(404);
     });
 
@@ -189,10 +183,7 @@ describe("createTaxonomySlugHandlers", () => {
       parseUpdateBody.mockReturnValue({ name: "X" });
       update.mockResolvedValue(null);
 
-      const res = await handlers.PUT(
-        makeRequest("PUT", { name: "X" }),
-        makeParams(),
-      );
+      const res = await handlers.PUT(makeRequest("PUT", { name: "X" }), makeParams());
       expect(res.status).toBe(404);
     });
 
@@ -201,10 +192,7 @@ describe("createTaxonomySlugHandlers", () => {
       parseUpdateBody.mockReturnValue({ name: "X" });
       update.mockRejectedValue(new DbError("Slug already exists", 409));
 
-      const res = await handlers.PUT(
-        makeRequest("PUT", { name: "X" }),
-        makeParams(),
-      );
+      const res = await handlers.PUT(makeRequest("PUT", { name: "X" }), makeParams());
       expect(res.status).toBe(409);
     });
 
@@ -214,10 +202,7 @@ describe("createTaxonomySlugHandlers", () => {
       update.mockRejectedValue(new Error("oops"));
       const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-      const res = await handlers.PUT(
-        makeRequest("PUT", { name: "X" }),
-        makeParams(),
-      );
+      const res = await handlers.PUT(makeRequest("PUT", { name: "X" }), makeParams());
       expect(res.status).toBe(500);
       expect(errSpy).toHaveBeenCalled();
     });
@@ -238,10 +223,7 @@ describe("createTaxonomySlugHandlers", () => {
       getBySlug.mockResolvedValue(sampleEntity);
       update.mockResolvedValue({ ...sampleEntity, name: "Raw" });
 
-      const res = await handlersNoParser.PUT(
-        makeRequest("PUT", { name: "Raw" }),
-        makeParams(),
-      );
+      const res = await handlersNoParser.PUT(makeRequest("PUT", { name: "Raw" }), makeParams());
       expect(res.status).toBe(200);
       expect(update).toHaveBeenCalledWith(mockDb, "id-1", { name: "Raw" });
     });

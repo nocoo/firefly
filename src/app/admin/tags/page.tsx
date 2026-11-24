@@ -11,11 +11,5 @@ export default async function AdminTagsPage() {
   const db = getDb();
   const tags = await listTags(db);
 
-  return (
-    <TaxonomyManager
-      type="tag"
-      items={tags}
-      apiBase="/api/tags"
-    />
-  );
+  return <TaxonomyManager type="tag" items={tags} apiBase="/api/tags" />;
 }

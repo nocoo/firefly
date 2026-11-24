@@ -7,7 +7,7 @@ afterEach(() => vi.restoreAllMocks());
 it("chooses all six device families across new documents", () => {
   const random = vi.spyOn(Math, "random");
   for (const [index, id] of keepsakeIds.entries()) {
-    random.mockReturnValue((index + .5) / keepsakeIds.length);
+    random.mockReturnValue((index + 0.5) / keepsakeIds.length);
     expect(randomKeepsake()).toBe(id);
   }
   expect(new Set(keepsakeIds).size).toBe(6);

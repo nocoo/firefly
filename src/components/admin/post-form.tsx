@@ -3,14 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "@nocoo/basalt/components/toast";
-import type {
-  AiAgent,
-  Category,
-  Human,
-  PostStatus,
-  PostWithAgent,
-  Tag,
-} from "@/models/types";
+import type { AiAgent, Category, Human, PostStatus, PostWithAgent, Tag } from "@/models/types";
 import { slugify } from "@/models/post";
 import type { UploadResult } from "./image-upload-zone";
 import { MarkdownPreview } from "./markdown-preview";
@@ -24,10 +17,7 @@ import {
   PostStatusCategoryRow,
   PostTagsField,
 } from "./post-form-fields";
-import {
-  PostReferenceFields,
-  type ReferenceState,
-} from "./post-form-reference-fields";
+import { PostReferenceFields, type ReferenceState } from "./post-form-reference-fields";
 import {
   buildSubmitBody,
   epochToDatetimeLocal,
@@ -85,10 +75,7 @@ function useMediaPreload(
 }
 
 /** Associate uploaded media with a freshly created post (best-effort). */
-async function associateMedia(
-  mediaIds: string[],
-  postId: string,
-): Promise<void> {
+async function associateMedia(mediaIds: string[], postId: string): Promise<void> {
   try {
     const res = await fetch("/api/media/associate", {
       method: "PATCH",
@@ -192,9 +179,7 @@ export function PostForm({
 
   const toggleTag = (tagId: string) => {
     setSelectedTags((prev) =>
-      prev.includes(tagId)
-        ? prev.filter((id) => id !== tagId)
-        : [...prev, tagId],
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId],
     );
   };
 
@@ -350,28 +335,13 @@ export function PostForm({
         categories={categories}
       />
 
-      <PostAuthorField
-        author={author}
-        onAuthorChange={setAuthor}
-        humans={humans}
-        agents={agents}
-      />
+      <PostAuthorField author={author} onAuthorChange={setAuthor} humans={humans} agents={agents} />
 
-      <PostPublishDateField
-        value={publishedAtLocal}
-        onChange={setPublishedAtLocal}
-      />
+      <PostPublishDateField value={publishedAtLocal} onChange={setPublishedAtLocal} />
 
-      <PostTagsField
-        tags={tags}
-        selectedTags={selectedTags}
-        onToggleTag={toggleTag}
-      />
+      <PostTagsField tags={tags} selectedTags={selectedTags} onToggleTag={toggleTag} />
 
-      <PostFeaturedImageField
-        value={featuredImage}
-        onChange={setFeaturedImage}
-      />
+      <PostFeaturedImageField value={featuredImage} onChange={setFeaturedImage} />
 
       <PostReferenceFields
         state={reference}
@@ -385,11 +355,7 @@ export function PostForm({
         <Button type="submit" disabled={saving} loading={saving}>
           {saving ? "保存中..." : isEditing ? "更新文章" : "创建文章"}
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.push("/admin/posts")}
-        >
+        <Button type="button" variant="outline" onClick={() => router.push("/admin/posts")}>
           取消
         </Button>
         {isEditing && (
@@ -432,28 +398,25 @@ export function PostForm({
         backHref="/admin/posts"
         backLabel="返回文章"
       />
-    <div className="flex gap-6">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full space-y-6 lg:w-1/2 lg:min-w-0"
-      >
-        {editorFields}
-      </form>
+      <div className="flex gap-6">
+        <form onSubmit={handleSubmit} className="w-full space-y-6 lg:w-1/2 lg:min-w-0">
+          {editorFields}
+        </form>
 
-      {/* Right: Live preview — visible only on lg+ */}
-      <div className="sticky top-0 hidden h-[calc(100vh-var(--header-height)-12px-40px)] w-1/2 min-w-0 overflow-y-auto rounded-widget border border-basalt-border lg:block">
-        <MarkdownPreview
-          title={title}
-          excerpt={excerpt}
-          content={content}
-          featuredImage={featuredImage}
-          referenceUrl={reference.url}
-          referenceTitle={reference.title}
-          referenceDescription={reference.description}
-          referenceImage={reference.image}
-        />
+        {/* Right: Live preview — visible only on lg+ */}
+        <div className="sticky top-0 hidden h-[calc(100vh-var(--header-height)-12px-40px)] w-1/2 min-w-0 overflow-y-auto rounded-widget border border-basalt-border lg:block">
+          <MarkdownPreview
+            title={title}
+            excerpt={excerpt}
+            content={content}
+            featuredImage={featuredImage}
+            referenceUrl={reference.url}
+            referenceTitle={reference.title}
+            referenceDescription={reference.description}
+            referenceImage={reference.image}
+          />
+        </div>
       </div>
-    </div>
     </div>
   );
 }

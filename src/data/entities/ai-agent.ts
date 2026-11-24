@@ -29,10 +29,7 @@ export interface UpdateAiAgentInput {
 // createAiAgent
 // ---------------------------------------------------------------------------
 
-export async function createAiAgent(
-  db: Db,
-  input: CreateAiAgentInput,
-): Promise<AiAgent> {
+export async function createAiAgent(db: Db, input: CreateAiAgentInput): Promise<AiAgent> {
   const id = newId();
   const now = nowEpoch();
 
@@ -62,28 +59,16 @@ export async function createAiAgent(
 // getAiAgentById
 // ---------------------------------------------------------------------------
 
-export async function getAiAgentById(
-  db: Db,
-  id: string,
-): Promise<AiAgent | null> {
-  return db.firstOrNull<AiAgent>(
-    "SELECT * FROM ai_agents WHERE id = ?",
-    [id],
-  );
+export async function getAiAgentById(db: Db, id: string): Promise<AiAgent | null> {
+  return db.firstOrNull<AiAgent>("SELECT * FROM ai_agents WHERE id = ?", [id]);
 }
 
 // ---------------------------------------------------------------------------
 // getAiAgentBySlug
 // ---------------------------------------------------------------------------
 
-export async function getAiAgentBySlug(
-  db: Db,
-  slug: string,
-): Promise<AiAgent | null> {
-  return db.firstOrNull<AiAgent>(
-    "SELECT * FROM ai_agents WHERE slug = ?",
-    [slug],
-  );
+export async function getAiAgentBySlug(db: Db, slug: string): Promise<AiAgent | null> {
+  return db.firstOrNull<AiAgent>("SELECT * FROM ai_agents WHERE slug = ?", [slug]);
 }
 
 // ---------------------------------------------------------------------------
@@ -93,9 +78,7 @@ export async function getAiAgentBySlug(
 /**
  * List all agents with category info and post count.
  */
-export async function listAiAgents(
-  db: Db,
-): Promise<AiAgentWithCategory[]> {
+export async function listAiAgents(db: Db): Promise<AiAgentWithCategory[]> {
   const sql = `
     SELECT
       a.*,
@@ -145,10 +128,7 @@ export async function updateAiAgent(
   params.push(nowEpoch());
   params.push(id);
 
-  await db.execute(
-    `UPDATE ai_agents SET ${sets.join(", ")} WHERE id = ?`,
-    params,
-  );
+  await db.execute(`UPDATE ai_agents SET ${sets.join(", ")} WHERE id = ?`, params);
 
   invalidatePublicContent();
 
@@ -168,10 +148,11 @@ export async function updateAvatarVersion(
   version: string | null,
 ): Promise<void> {
   const now = nowEpoch();
-  await db.execute(
-    "UPDATE ai_agents SET avatar_version = ?, updated_at = ? WHERE id = ?",
-    [version, now, id],
-  );
+  await db.execute("UPDATE ai_agents SET avatar_version = ?, updated_at = ? WHERE id = ?", [
+    version,
+    now,
+    id,
+  ]);
   invalidatePublicContent();
 }
 
@@ -183,10 +164,7 @@ export async function updateAvatarVersion(
  * Get the number of posts authored by an agent.
  * Used to determine if an agent can be deleted (must have 0 posts).
  */
-export async function getAiAgentPostCount(
-  db: Db,
-  agentId: string,
-): Promise<number> {
+export async function getAiAgentPostCount(db: Db, agentId: string): Promise<number> {
   const result = await db.firstOrNull<{ count: number }>(
     "SELECT COUNT(*) AS count FROM posts WHERE ai_agent_id = ?",
     [agentId],
@@ -213,10 +191,7 @@ export interface DeleteAiAgentResult {
  *
  * @returns success=true if deleted, success=false with postCount if blocked
  */
-export async function deleteAiAgent(
-  db: Db,
-  id: string,
-): Promise<DeleteAiAgentResult> {
+export async function deleteAiAgent(db: Db, id: string): Promise<DeleteAiAgentResult> {
   // Check if any posts reference this agent
   const countResult = await db.firstOrNull<{ count: number }>(
     "SELECT COUNT(*) AS count FROM posts WHERE ai_agent_id = ?",
@@ -228,10 +203,7 @@ export async function deleteAiAgent(
     return { success: false, postCount };
   }
 
-  const meta = await db.execute(
-    "DELETE FROM ai_agents WHERE id = ?",
-    [id],
-  );
+  const meta = await db.execute("DELETE FROM ai_agents WHERE id = ?", [id]);
   if (meta.changes > 0) invalidatePublicContent();
   return { success: meta.changes > 0 };
 }

@@ -40,7 +40,8 @@ export function BackupCopyButton({ text }: { text: string }) {
   }, [text]);
 
   return (
-    <button type="button"
+    <button
+      type="button"
       onClick={handleCopy}
       className="inline-flex items-center gap-1 text-xs text-basalt-muted-foreground hover:text-basalt-foreground transition-colors"
       title="Copy"
@@ -64,9 +65,7 @@ export function HistoryRow({ entry }: { entry: BackyBackupEntry }) {
         >
           {entry.environment}
         </span>
-        <span className="truncate text-basalt-muted-foreground font-mono text-xs">
-          {entry.tag}
-        </span>
+        <span className="truncate text-basalt-muted-foreground font-mono text-xs">{entry.tag}</span>
       </div>
       <div className="flex items-center gap-4 shrink-0 text-basalt-muted-foreground text-xs">
         <span>{formatFileSize(entry.file_size)}</span>

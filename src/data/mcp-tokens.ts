@@ -56,10 +56,7 @@ export function generateRefreshToken(): string {
 // createMcpToken
 // ---------------------------------------------------------------------------
 
-export async function createMcpToken(
-  db: Db,
-  input: CreateMcpTokenInput,
-): Promise<McpToken> {
+export async function createMcpToken(db: Db, input: CreateMcpTokenInput): Promise<McpToken> {
   const id = newId();
   const now = nowEpoch();
 
@@ -91,14 +88,8 @@ export async function createMcpToken(
 // getMcpTokenById
 // ---------------------------------------------------------------------------
 
-export async function getMcpTokenById(
-  db: Db,
-  id: string,
-): Promise<McpToken | null> {
-  return db.firstOrNull<McpToken>(
-    "SELECT * FROM mcp_tokens WHERE id = ?",
-    [id],
-  );
+export async function getMcpTokenById(db: Db, id: string): Promise<McpToken | null> {
+  return db.firstOrNull<McpToken>("SELECT * FROM mcp_tokens WHERE id = ?", [id]);
 }
 
 // ---------------------------------------------------------------------------
@@ -138,15 +129,9 @@ export async function getValidTokenByRefreshHash(
 // ---------------------------------------------------------------------------
 
 /** Update last_used_at timestamp for a token. */
-export async function updateLastUsed(
-  db: Db,
-  id: string,
-): Promise<void> {
+export async function updateLastUsed(db: Db, id: string): Promise<void> {
   const now = nowEpoch();
-  await db.execute(
-    "UPDATE mcp_tokens SET last_used_at = ? WHERE id = ?",
-    [now, id],
-  );
+  await db.execute("UPDATE mcp_tokens SET last_used_at = ? WHERE id = ?", [now, id]);
 }
 
 // ---------------------------------------------------------------------------
@@ -154,10 +139,7 @@ export async function updateLastUsed(
 // ---------------------------------------------------------------------------
 
 /** Revoke a token by ID. */
-export async function revokeToken(
-  db: Db,
-  id: string,
-): Promise<boolean> {
+export async function revokeToken(db: Db, id: string): Promise<boolean> {
   const now = nowEpoch();
   const meta = await db.execute(
     "UPDATE mcp_tokens SET revoked = 1, revoked_at = ? WHERE id = ? AND revoked = 0",
@@ -189,12 +171,8 @@ export async function revokeTokensByClientId(
 // ---------------------------------------------------------------------------
 
 /** List all tokens (for admin display). */
-export async function listMcpTokens(
-  db: Db,
-): Promise<McpToken[]> {
-  const result = await db.query<McpToken>(
-    "SELECT * FROM mcp_tokens ORDER BY created_at DESC",
-  );
+export async function listMcpTokens(db: Db): Promise<McpToken[]> {
+  const result = await db.query<McpToken>("SELECT * FROM mcp_tokens ORDER BY created_at DESC");
   return result.results;
 }
 
@@ -203,15 +181,11 @@ export async function listMcpTokens(
 // ---------------------------------------------------------------------------
 
 /** Update the scope of an active (non-revoked) token. Returns true if updated. */
-export async function updateTokenScope(
-  db: Db,
-  id: string,
-  scope: McpTokenScope,
-): Promise<boolean> {
-  const meta = await db.execute(
-    "UPDATE mcp_tokens SET scope = ? WHERE id = ? AND revoked = 0",
-    [scope, id],
-  );
+export async function updateTokenScope(db: Db, id: string, scope: McpTokenScope): Promise<boolean> {
+  const meta = await db.execute("UPDATE mcp_tokens SET scope = ? WHERE id = ? AND revoked = 0", [
+    scope,
+    id,
+  ]);
   return meta.changes > 0;
 }
 
@@ -220,14 +194,8 @@ export async function updateTokenScope(
 // ---------------------------------------------------------------------------
 
 /** Permanently delete a token by ID (only allowed for revoked tokens). */
-export async function deleteMcpToken(
-  db: Db,
-  id: string,
-): Promise<boolean> {
-  const meta = await db.execute(
-    "DELETE FROM mcp_tokens WHERE id = ? AND revoked = 1",
-    [id],
-  );
+export async function deleteMcpToken(db: Db, id: string): Promise<boolean> {
+  const meta = await db.execute("DELETE FROM mcp_tokens WHERE id = ? AND revoked = 1", [id]);
   return meta.changes > 0;
 }
 
@@ -236,12 +204,8 @@ export async function deleteMcpToken(
 // ---------------------------------------------------------------------------
 
 /** Permanently delete all revoked tokens. Returns number of deleted tokens. */
-export async function deleteRevokedTokens(
-  db: Db,
-): Promise<number> {
-  const meta = await db.execute(
-    "DELETE FROM mcp_tokens WHERE revoked = 1",
-  );
+export async function deleteRevokedTokens(db: Db): Promise<number> {
+  const meta = await db.execute("DELETE FROM mcp_tokens WHERE revoked = 1");
   return meta.changes;
 }
 
@@ -250,9 +214,7 @@ export async function deleteRevokedTokens(
 // ---------------------------------------------------------------------------
 
 /** Count revoked tokens. */
-export async function countRevokedTokens(
-  db: Db,
-): Promise<number> {
+export async function countRevokedTokens(db: Db): Promise<number> {
   const row = await db.firstOrNull<{ count: number }>(
     "SELECT COUNT(*) as count FROM mcp_tokens WHERE revoked = 1",
   );

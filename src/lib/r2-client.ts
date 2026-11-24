@@ -10,20 +10,12 @@
 // remote R2 bucket. The runner cleans the directory before each E2E run.
 // ---------------------------------------------------------------------------
 
-import {
-  S3Client,
-  PutObjectCommand,
-  DeleteObjectCommand,
-} from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 import { writeFile, mkdir, unlink } from "node:fs/promises";
 import { dirname } from "node:path";
 
-import {
-  validateUpload,
-  generateR2Key,
-  type UploadResult,
-} from "./r2";
+import { validateUpload, generateR2Key, type UploadResult } from "./r2";
 
 import { isLocalE2EMode, resolveLocalR2Path } from "./e2e-local";
 

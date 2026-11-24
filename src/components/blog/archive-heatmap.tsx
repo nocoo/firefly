@@ -36,19 +36,12 @@ export function ArchiveHeatmap({ archives, year }: ArchiveHeatmapProps) {
   const years = Array.from(byYear.keys()).sort((a, b) => b - a);
 
   return (
-    <div
-      className="archive-heatmap"
-      role="figure"
-      aria-label="文章发布频次"
-    >
+    <div className="archive-heatmap" role="figure" aria-label="文章发布频次">
       {years.map((y) => {
         const months = byYear.get(y) ?? new Map<number, number>();
         return (
           <div key={y} className="archive-heatmap-row">
-            <Link
-              href={`/archive/${y}`}
-              className="archive-heatmap-year"
-            >
+            <Link href={`/archive/${y}`} className="archive-heatmap-year">
               {y}
             </Link>
             <div className="archive-heatmap-cells">

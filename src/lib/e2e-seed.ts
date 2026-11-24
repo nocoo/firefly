@@ -53,10 +53,7 @@ export interface SeedPostBody {
 export interface SeedDeps {
   /** fetch stand-in. MUST honour AbortSignal — seedPostIdempotent uses it
    *  to hard-cancel in-flight requests at deadline. */
-  fetch: (
-    input: string,
-    init: RequestInit & { signal: AbortSignal },
-  ) => Promise<Response>;
+  fetch: (input: string, init: RequestInit & { signal: AbortSignal }) => Promise<Response>;
   /** Sleep that is cancelled when signal aborts (returns early). */
   sleep: (ms: number, signal: AbortSignal) => Promise<void>;
   /** Fires `onFire()` after `ms` real time; returns a cancel handle. Used
@@ -105,10 +102,10 @@ async function slugExists(
   signal: AbortSignal,
 ): Promise<boolean> {
   try {
-    const res = await deps.fetch(
-      `${baseUrl}/api/posts/${encodeURIComponent(slug)}`,
-      { method: "GET", signal },
-    );
+    const res = await deps.fetch(`${baseUrl}/api/posts/${encodeURIComponent(slug)}`, {
+      method: "GET",
+      signal,
+    });
     return res.ok;
   } catch (err) {
     // Do NOT swallow a deadline abort — propagate so the loop stops
@@ -119,9 +116,7 @@ async function slugExists(
   }
 }
 
-type AttemptResult =
-  | { ok: true }
-  | { ok: false; kind: "throw" | "5xx" | "4xx"; detail: string };
+type AttemptResult = { ok: true } | { ok: false; kind: "throw" | "5xx" | "4xx"; detail: string };
 
 async function attemptSeed(
   deps: SeedDeps,
@@ -187,9 +182,7 @@ export async function seedPostIdempotent(
       await deps.sleep(wait, signal);
       if (signal.aborted) break;
     }
-    throw new Error(
-      `Failed to seed post after ${attempts} attempts: ${lastDetail}`,
-    );
+    throw new Error(`Failed to seed post after ${attempts} attempts: ${lastDetail}`);
   } catch (err) {
     if (signal.aborted && signal.reason instanceof DeadlineAbortError) {
       throw new Error(

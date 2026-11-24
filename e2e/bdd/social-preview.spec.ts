@@ -45,7 +45,9 @@ async function readHead(page: Page, html: string) {
       title: doc.title,
       meta,
       canonical: doc.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href,
-      apple: doc.head.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]')?.getAttribute("href"),
+      apple: doc.head
+        .querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]')
+        ?.getAttribute("href"),
     };
   }, html);
 }
@@ -66,7 +68,10 @@ test.describe("Feature: social previews without JavaScript", () => {
   });
 
   for (const [platform, userAgent] of crawlers) {
-    test(`${platform} sees the Journal homepage card in the initial HTML head`, async ({ request, page }) => {
+    test(`${platform} sees the Journal homepage card in the initial HTML head`, async ({
+      request,
+      page,
+    }) => {
       const response = await request.get("/", { headers: { "user-agent": userAgent } });
       expect(response.status()).toBe(200);
       expect(response.headers()["x-robots-tag"] ?? "").not.toMatch(/noindex|nofollow/);
@@ -79,7 +84,9 @@ test.describe("Feature: social previews without JavaScript", () => {
       expect(meta["og:type"]).toEqual(["website"]);
       expect(meta["twitter:card"]).toEqual(["summary_large_image"]);
       expect(meta["og:image"]).toHaveLength(1);
-      expect(meta["og:image"]?.[0]).toMatch(/^https?:\/\/[^/]+\/social\/journal-zh\.[a-f0-9]{12}\.jpg$/);
+      expect(meta["og:image"]?.[0]).toMatch(
+        /^https?:\/\/[^/]+\/social\/journal-zh\.[a-f0-9]{12}\.jpg$/,
+      );
       expect(meta["twitter:image"]).toEqual(meta["og:image"]);
       expect(meta["og:image:width"]).toEqual(["1200"]);
       expect(meta["og:image:height"]).toEqual(["630"]);
@@ -92,7 +99,10 @@ test.describe("Feature: social previews without JavaScript", () => {
       expect(apple).toBe("/apple-touch-icon.png");
     });
 
-    test(`${platform} keeps article titles and covers separate from the homepage`, async ({ request, page }) => {
+    test(`${platform} keeps article titles and covers separate from the homepage`, async ({
+      request,
+      page,
+    }) => {
       for (const article of articles) {
         const path = `${prefix}/${article.slug}`;
         const response = await request.get(path, { headers: { "user-agent": userAgent } });
@@ -116,8 +126,13 @@ test.describe("Feature: social previews without JavaScript", () => {
     });
   }
 
-  test("share images and conventional browser icons are public raster files", async ({ request, page }) => {
-    const response = await request.get("/", { headers: { "user-agent": "facebookexternalhit/1.1" } });
+  test("share images and conventional browser icons are public raster files", async ({
+    request,
+    page,
+  }) => {
+    const response = await request.get("/", {
+      headers: { "user-agent": "facebookexternalhit/1.1" },
+    });
     const { meta } = await readHead(page, await response.text());
     // Fetch only through the isolated local server, even if AUTH_URL supplies
     // a public canonical origin while building the test artifact.
@@ -133,7 +148,11 @@ test.describe("Feature: social previews without JavaScript", () => {
     expect(head.status()).toBe(200);
     expect(head.headers()["content-type"]).toContain("image/jpeg");
     expect(await head.body()).toHaveLength(0);
-    for (const path of ["/apple-touch-icon.png", "/apple-touch-icon", "/apple-touch-icon-precomposed.png"]) {
+    for (const path of [
+      "/apple-touch-icon.png",
+      "/apple-touch-icon",
+      "/apple-touch-icon-precomposed.png",
+    ]) {
       const icon = await request.get(path);
       expect(icon.status(), path).toBe(200);
       expect(icon.headers()["content-type"]).toContain("image/png");
@@ -145,6 +164,9 @@ test.describe("Feature: social previews without JavaScript", () => {
     const fallback = await request.get(`/api/og?title=${encodeURIComponent(articles[1]!.title)}`);
     expect(fallback.status()).toBe(200);
     expect(fallback.headers()["content-type"]).toContain("image/png");
-    expect(await sharp(await fallback.body()).metadata()).toMatchObject({ width: 1200, height: 630 });
+    expect(await sharp(await fallback.body()).metadata()).toMatchObject({
+      width: 1200,
+      height: 630,
+    });
   });
 });

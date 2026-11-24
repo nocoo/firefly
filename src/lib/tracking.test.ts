@@ -95,8 +95,12 @@ describe("trackPageView", () => {
     "drops %s before obtaining a database, hashing IP or resolving a post",
     async (userAgent) => {
       await trackPageView({
-        path: "/2026/09/article", userAgent, ip: "127.0.0.1",
-        referrer: null, country: null, city: null,
+        path: "/2026/09/article",
+        userAgent,
+        ip: "127.0.0.1",
+        referrer: null,
+        country: null,
+        city: null,
       });
       expect(createDb).not.toHaveBeenCalled();
       expect(hashIp).not.toHaveBeenCalled();

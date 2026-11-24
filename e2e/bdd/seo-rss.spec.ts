@@ -93,14 +93,8 @@ test.describe("Feature: SEO meta tags & JSON-LD", () => {
     // Then: og:title + og:type are populated
     // CSS attribute selector: meta tags have no role/label/testid; this is the
     // documented Playwright pattern for asserting on <meta> attributes.
-    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
-      "content",
-      /.+/,
-    );
-    await expect(page.locator('meta[property="og:type"]')).toHaveAttribute(
-      "content",
-      /.+/,
-    );
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", /.+/);
+    await expect(page.locator('meta[property="og:type"]')).toHaveAttribute("content", /.+/);
 
     // Then: at least one JSON-LD block is embedded with a valid schema shape
     const ldJson = page.locator('script[type="application/ld+json"]');
@@ -181,9 +175,7 @@ test.describe("Feature: RSS feed", () => {
     // Then: each item contains title/link/pubDate
     expect(body).toMatch(/<item>[\s\S]*<title>[\s\S]*<\/title>[\s\S]*<\/item>/);
     expect(body).toMatch(/<item>[\s\S]*<link>[\s\S]*<\/link>[\s\S]*<\/item>/);
-    expect(body).toMatch(
-      /<item>[\s\S]*<pubDate>[\s\S]*<\/pubDate>[\s\S]*<\/item>/,
-    );
+    expect(body).toMatch(/<item>[\s\S]*<pubDate>[\s\S]*<\/pubDate>[\s\S]*<\/item>/);
   });
 
   test("Given feed items exist, When I inspect their links, Then each matches the /YYYY/MM/ post URL pattern", async ({

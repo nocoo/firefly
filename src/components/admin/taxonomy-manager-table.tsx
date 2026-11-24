@@ -52,13 +52,7 @@ function ReorderCell({
   );
 }
 
-function PostCountCell({
-  item,
-  hasStats,
-}: {
-  item: TaxonomyItem;
-  hasStats: boolean;
-}) {
+function PostCountCell({ item, hasStats }: { item: TaxonomyItem; hasStats: boolean }) {
   if (hasStats) {
     return (
       <td className="px-4 py-3 text-center text-basalt-muted-foreground">
@@ -71,11 +65,7 @@ function PostCountCell({
       </td>
     );
   }
-  return (
-    <td className="px-4 py-3 text-center text-basalt-muted-foreground">
-      {item.post_count}
-    </td>
-  );
+  return <td className="px-4 py-3 text-center text-basalt-muted-foreground">{item.post_count}</td>;
 }
 
 function ActionsCell({
@@ -148,9 +138,15 @@ export function TaxonomyTable({
           <tr className="border-b border-basalt-border bg-basalt-secondary/50">
             {sortable && <th className="w-16 pl-2 pr-0 py-3" />}
             <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground">名称</th>
-            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground hidden sm:table-cell">别名</th>
-            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground hidden md:table-cell">描述</th>
-            <th className="px-4 py-3 text-center font-medium text-basalt-muted-foreground">文章数</th>
+            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground hidden sm:table-cell">
+              别名
+            </th>
+            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground hidden md:table-cell">
+              描述
+            </th>
+            <th className="px-4 py-3 text-center font-medium text-basalt-muted-foreground">
+              文章数
+            </th>
             <th className="px-4 py-3 text-right font-medium text-basalt-muted-foreground">操作</th>
           </tr>
         </thead>

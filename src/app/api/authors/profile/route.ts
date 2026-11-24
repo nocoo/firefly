@@ -7,10 +7,7 @@ import { findPublicProfile, parseProfileQuery } from "@/lib/human-profile";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const lookup = parseProfileQuery(
-      searchParams.get("email"),
-      searchParams.get("hash"),
-    );
+    const lookup = parseProfileQuery(searchParams.get("email"), searchParams.get("hash"));
 
     if (lookup.kind === "none") {
       return jsonResponse({ name: null, avatar: null });
@@ -20,9 +17,6 @@ export async function GET(request: NextRequest) {
     const humans = await listPublicHumans(db);
     return jsonResponse(findPublicProfile(humans, lookup));
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

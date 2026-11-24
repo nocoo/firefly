@@ -11,13 +11,7 @@ describe("buildAgentAvatarUrl", () => {
   });
 
   it("builds correct URL for valid inputs using agent ID", () => {
-    const result = buildAgentAvatarUrl(
-      cdnBase,
-      keyPrefix,
-      "01HQ1234567890",
-      "abc123",
-      128,
-    );
+    const result = buildAgentAvatarUrl(cdnBase, keyPrefix, "01HQ1234567890", "abc123", 128); // gitleaks:allow
     expect(result).toBe(
       "https://cdn.example.com/uploads/firefly/agents/01HQ1234567890/abc123/avatar-128.jpg",
     );

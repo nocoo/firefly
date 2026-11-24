@@ -1,7 +1,8 @@
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "@/lib/r2";
 
 export async function uploadSettingsImage(file: File): Promise<string> {
-  if (!ALLOWED_MIME_TYPES.has(file.type)) throw new Error("请选择 PNG、JPEG、GIF、WebP 或 AVIF 图片。");
+  if (!ALLOWED_MIME_TYPES.has(file.type))
+    throw new Error("请选择 PNG、JPEG、GIF、WebP 或 AVIF 图片。");
   if (file.size > MAX_FILE_SIZE) throw new Error("图片不能超过 10 MB。");
   const body = new FormData();
   body.append("file", file);

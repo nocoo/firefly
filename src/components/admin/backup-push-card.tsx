@@ -3,19 +3,9 @@
 import { useState } from "react";
 import { Input } from "@nocoo/basalt/components/input";
 import { Button } from "@nocoo/basalt/components/button";
-import {
-  CloudUpload,
-  Pencil,
-  Plug,
-  RefreshCw,
-  Trash2,
-  X,
-} from "@nocoo/basalt/icons";
+import { CloudUpload, Pencil, Plug, RefreshCw, Trash2, X } from "@nocoo/basalt/icons";
 import { cn } from "@/lib/utils";
-import type {
-  BackyHistoryResponse,
-  BackyPushDetail,
-} from "@/models/backup";
+import type { BackyHistoryResponse, BackyPushDetail } from "@/models/backup";
 import { HistoryRow, StatusMessage } from "./backup-page-helpers";
 
 type Message = { type: "success" | "error" | "info"; text: string };
@@ -38,9 +28,7 @@ function PushDetailBox({ detail }: { detail: BackyPushDetail }) {
       <div>File: {fileName}</div>
       <div>
         Size:{" "}
-        {fileSizeBytes < 1024
-          ? `${fileSizeBytes} B`
-          : `${(fileSizeBytes / 1024).toFixed(1)} KB`}
+        {fileSizeBytes < 1024 ? `${fileSizeBytes} B` : `${(fileSizeBytes / 1024).toFixed(1)} KB`}
       </div>
       {detail.durationMs && <div>Duration: {detail.durationMs}ms</div>}
       <div className="text-basalt-muted-foreground">
@@ -82,9 +70,7 @@ function HistorySection({
           <p className="text-sm text-basalt-muted-foreground">暂无备份记录</p>
         )
       ) : (
-        <p className="text-sm text-basalt-muted-foreground">
-          推送备份后将显示远程备份记录。
-        </p>
+        <p className="text-sm text-basalt-muted-foreground">推送备份后将显示远程备份记录。</p>
       )}
     </div>
   );
@@ -94,9 +80,7 @@ export function BackupPushCard({ initialConfig }: BackupPushCardProps) {
   // Configured / editing state
   const [configured, setConfigured] = useState(!!initialConfig);
   const [webhookUrl, setWebhookUrl] = useState(initialConfig?.webhookUrl ?? "");
-  const [maskedApiKey, setMaskedApiKey] = useState(
-    initialConfig?.maskedApiKey ?? "",
-  );
+  const [maskedApiKey, setMaskedApiKey] = useState(initialConfig?.maskedApiKey ?? "");
   const [editMode, setEditMode] = useState(!initialConfig);
   const [editUrl, setEditUrl] = useState("");
   const [editKey, setEditKey] = useState("");
@@ -237,16 +221,12 @@ export function BackupPushCard({ initialConfig }: BackupPushCardProps) {
         <CloudUpload className="h-5 w-5 text-purple-500" />
         <h2 className="text-lg font-medium text-basalt-foreground">远程备份</h2>
       </div>
-      <p className="text-sm text-basalt-muted-foreground">
-        将博客数据推送至 Backy 远程备份服务。
-      </p>
+      <p className="text-sm text-basalt-muted-foreground">将博客数据推送至 Backy 远程备份服务。</p>
 
       {editMode ? (
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-basalt-foreground">
-              Webhook URL
-            </label>
+            <label className="text-sm font-medium text-basalt-foreground">Webhook URL</label>
             <Input
               value={editUrl}
               onChange={(e) => setEditUrl(e.target.value)}
@@ -263,10 +243,7 @@ export function BackupPushCard({ initialConfig }: BackupPushCardProps) {
             />
           </div>
           <div className="flex gap-2">
-            <Button
-              onClick={handleSave}
-              disabled={saving || !editUrl || (!configured && !editKey)}
-            >
+            <Button onClick={handleSave} disabled={saving || !editUrl || (!configured && !editKey)}>
               {saving ? "保存中..." : "保存"}
             </Button>
             {configured && (
@@ -286,9 +263,7 @@ export function BackupPushCard({ initialConfig }: BackupPushCardProps) {
                   {webhookUrl}
                 </code>
               </div>
-              <div className="text-xs text-basalt-muted-foreground">
-                Key: {maskedApiKey}
-              </div>
+              <div className="text-xs text-basalt-muted-foreground">Key: {maskedApiKey}</div>
             </div>
             <div className="flex gap-1 shrink-0">
               <Button variant="ghost" size="sm" onClick={enterEdit}>

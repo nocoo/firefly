@@ -1,6 +1,5 @@
 # 14 — Reference URL (Link Bookmark)
 
-
 ## Problem
 
 Blog posts often reference external resources — a GitHub project that inspired the article, a thread being discussed, or a tool being reviewed. Currently there is no structured way to attach a source link. Authors either embed raw URLs in the body text (easy to miss, no visual emphasis) or skip the reference entirely.
@@ -26,14 +25,15 @@ Unlike excerpt generation which reads content from DB by slug, unfurl needs to w
 
 ### Image priority chain
 
-| Priority | Condition | Source | Storage |
-|----------|-----------|--------|---------|
-| 1 | Page has `og:image` | OG image URL | Saved to `reference_image` |
-| 2 | GitHub repo, README has image | First image in README.md (best-effort) | Saved to `reference_image` |
-| 3 | Known brand (GitHub, Twitter, YouTube, etc.) | CSS: brand color bg + matching Lucide icon | `reference_image` = NULL |
-| 4 | Unknown site, no image | CSS: neutral bg + domain initial or generic link icon | `reference_image` = NULL |
+| Priority | Condition                                    | Source                                                | Storage                    |
+| -------- | -------------------------------------------- | ----------------------------------------------------- | -------------------------- |
+| 1        | Page has `og:image`                          | OG image URL                                          | Saved to `reference_image` |
+| 2        | GitHub repo, README has image                | First image in README.md (best-effort)                | Saved to `reference_image` |
+| 3        | Known brand (GitHub, Twitter, YouTube, etc.) | CSS: brand color bg + matching Lucide icon            | `reference_image` = NULL   |
+| 4        | Unknown site, no image                       | CSS: neutral bg + domain initial or generic link icon | `reference_image` = NULL   |
 
 **Notes on image strategy:**
+
 - `og:image` is the primary source — most sites provide it and it's the most reliable.
 - GitHub README image extraction is **best-effort enhancement only**: README may be `.rst`, may have no images, may use complex relative paths, or the branch may not be `main`/`master`. Failure here silently falls through to priority 3.
 - Priorities 3–4 are pure CSS/SVG — no external requests when `reference_image` is NULL.
@@ -52,13 +52,13 @@ fetch HTML → extract OG metadata         translate + summarize via LLM
                                          fall through to raw OG data
 ```
 
-| Scenario | Behavior |
-|----------|----------|
-| Fetch succeeds, AI succeeds | Return AI-enhanced title + description |
-| Fetch succeeds, AI fails or not configured | Return raw OG title/description (possibly English, possibly long) |
-| Fetch succeeds, no OG metadata, AI succeeds | AI extracts from page body |
-| Fetch succeeds, no OG metadata, AI fails | Return `<title>` tag or hostname as title, empty description — user can edit |
-| Fetch fails (timeout, 4xx/5xx, SSRF blocked) | Return error immediately |
+| Scenario                                     | Behavior                                                                     |
+| -------------------------------------------- | ---------------------------------------------------------------------------- |
+| Fetch succeeds, AI succeeds                  | Return AI-enhanced title + description                                       |
+| Fetch succeeds, AI fails or not configured   | Return raw OG title/description (possibly English, possibly long)            |
+| Fetch succeeds, no OG metadata, AI succeeds  | AI extracts from page body                                                   |
+| Fetch succeeds, no OG metadata, AI fails     | Return `<title>` tag or hostname as title, empty description — user can edit |
+| Fetch fails (timeout, 4xx/5xx, SSRF blocked) | Return error immediately                                                     |
 
 ### Security constraints (SSRF protection)
 
@@ -74,11 +74,11 @@ fetch HTML → extract OG metadata         translate + summarize via LLM
 
 ### Error semantics
 
-| HTTP Status | Meaning | When |
-|-------------|---------|------|
-| 200 | Success | Unfurl completed (with or without AI enhancement) |
-| 400 | Client error | Missing/invalid URL, SSRF blocked (protocol or private IP) |
-| 502 | Upstream error | Target URL returned non-2xx, timeout, or connection refused |
+| HTTP Status | Meaning        | When                                                        |
+| ----------- | -------------- | ----------------------------------------------------------- |
+| 200         | Success        | Unfurl completed (with or without AI enhancement)           |
+| 400         | Client error   | Missing/invalid URL, SSRF blocked (protocol or private IP)  |
+| 502         | Upstream error | Target URL returned non-2xx, timeout, or connection refused |
 
 Note: AI failure is **not** an error status — the response degrades gracefully to raw metadata with `"ai_enhanced": false` in the response body. When no OG metadata is found and AI is unavailable, the response still succeeds (200) with the `<title>` tag or hostname as title and empty description — the user can always edit the fields manually.
 
@@ -140,21 +140,23 @@ interface UnfurlRawResult {
   ogTitle: string | null;
   ogDescription: string | null;
   ogImage: string | null;
-  pageTitle: string | null;       // <title> tag fallback
-  bodyText: string;               // cleaned, truncated page text for AI input
-  readmeImage: string | null;     // GitHub-only enhancement
+  pageTitle: string | null; // <title> tag fallback
+  bodyText: string; // cleaned, truncated page text for AI input
+  readmeImage: string | null; // GitHub-only enhancement
 }
 ```
 
 No heavy dependencies — regex-based OG extraction, no cheerio/jsdom.
 
 `extractOgMetadata` handles both attribute orders:
+
 - `<meta property="og:title" content="...">`
 - `<meta content="..." property="og:title">`
 
 `extractBodyText` strips all HTML tags, collapses whitespace, and truncates to `MAX_UNFURL_BODY_CHARS = 3000`. This becomes the AI input alongside OG metadata.
 
 `fetchGitHubReadmeImage` is best-effort:
+
 - Only runs for `github.com/{owner}/{repo}` URLs (not gists, not org pages)
 - Tries `main` branch then `master` via raw.githubusercontent.com
 - Extracts first markdown image `![...](url)`, resolves relative paths
@@ -178,12 +180,13 @@ export async function summarizeUnfurl(
   ogTitle: string | null,
   ogDescription: string | null,
   bodyText: string,
-): Promise<{ title: string; description: string } | null>
+): Promise<{ title: string; description: string } | null>;
 ```
 
 Returns `null` when AI is unavailable or fails for any reason, allowing the caller to use raw OG data. This is the key difference from `generateExcerpt()` which throws on failure — unfurl treats AI as best-effort enhancement.
 
 Prompt:
+
 ```
 You are a bookmark metadata writer. Given a web page's metadata, write a clean title and description.
 
@@ -282,11 +285,11 @@ Reference URL (optional)
 
 Seed mapping of domain → `{ Icon: LucideIcon, color: string }`. Initial set:
 
-| Domain | Icon | Color |
-|--------|------|-------|
-| `github.com` | `Github` | `#24292f` |
+| Domain                  | Icon      | Color                 |
+| ----------------------- | --------- | --------------------- |
+| `github.com`            | `Github`  | `#24292f`             |
 | `x.com` / `twitter.com` | `Twitter` | `#000000` / `#1da1f2` |
-| `youtube.com` | `Youtube` | `#ff0000` |
+| `youtube.com`           | `Youtube` | `#ff0000`             |
 
 This is a **seed mapping**, not a complete solution. New domains can be added incrementally. Unrecognized domains fall through to a neutral placeholder (domain initial letter on muted background).
 
@@ -303,6 +306,7 @@ Add `referenceCard?: ReactNode` prop. Renders between `{featuredImage}` and `{ht
 ```
 
 This is a prop interface change — all call sites of `<ArticleBody>` must be checked:
+
 - `src/app/(blog)/[year]/[month]/[slug]/page.tsx` — pass referenceCard when data present
 - `src/app/(blog)/preview/[id]/page.tsx` — same treatment
 - `src/components/admin/markdown-preview.tsx` — accepts new reference props from PostForm, conditionally renders `<ReferenceCard>` and passes it as `referenceCard` to `<ArticleBody>`. Interface change: add `referenceUrl?`, `referenceTitle?`, `referenceDescription?`, `referenceImage?` to `MarkdownPreviewProps`.
@@ -332,47 +336,47 @@ Register `unfurl_reference` tool. Extend `update_post` schema with 4 reference f
 
 **Files**: `src/i18n/locales/en.json`, `src/i18n/locales/zh.json`
 
-| Key | EN | ZH |
-|-----|----|----|
-| `admin.postForm.referenceUrl` | Reference URL | 引用链接 |
-| `admin.postForm.referenceUrlHint` | (optional) | （可选） |
-| `admin.postForm.referenceTitle` | Title | 标题 |
-| `admin.postForm.referenceDescription` | Description | 描述 |
-| `admin.postForm.referenceImage` | Image | 图片 |
-| `admin.postForm.fetch` | Fetch | 获取 |
-| `admin.postForm.refetch` | Re-fetch | 重新获取 |
-| `admin.postForm.fetching` | Fetching... | 获取中... |
-| `admin.postForm.clear` | Clear | 清除 |
+| Key                                   | EN            | ZH        |
+| ------------------------------------- | ------------- | --------- |
+| `admin.postForm.referenceUrl`         | Reference URL | 引用链接  |
+| `admin.postForm.referenceUrlHint`     | (optional)    | （可选）  |
+| `admin.postForm.referenceTitle`       | Title         | 标题      |
+| `admin.postForm.referenceDescription` | Description   | 描述      |
+| `admin.postForm.referenceImage`       | Image         | 图片      |
+| `admin.postForm.fetch`                | Fetch         | 获取      |
+| `admin.postForm.refetch`              | Re-fetch      | 重新获取  |
+| `admin.postForm.fetching`             | Fetching...   | 获取中... |
+| `admin.postForm.clear`                | Clear         | 清除      |
 
 ## Files Changed
 
-| File | Action |
-|------|--------|
-| `docs/14-reference-url.md` | Create (this file) |
-| `docs/README.md` | Edit — add row 14 |
-| `scripts/migrations/009-reference-url.sql` | Create |
-| `src/models/types.ts` | Edit — add 4 fields to Post |
-| `src/data/posts.ts` | Edit — extend input types + create/update SQL |
-| `src/services/unfurl.ts` | Create |
-| `src/services/ai.ts` | Edit — add `summarizeUnfurl()` |
-| `src/app/api/unfurl/route.ts` | Create |
-| `src/app/api/posts/route.ts` | Edit — add 4 reference fields to POST whitelist |
-| `src/components/admin/post-form.tsx` | Edit — add reference URL section |
-| `src/components/admin/markdown-preview.tsx` | Edit — add reference props + pass referenceCard to ArticleBody |
-| `src/components/blog/reference-card.tsx` | Create |
-| `src/lib/domain-brand.ts` | Create |
-| `src/components/blog/article-body.tsx` | Edit — add `referenceCard` slot |
-| `src/app/(blog)/[year]/[month]/[slug]/page.tsx` | Edit — pass referenceCard prop |
-| `src/app/(blog)/preview/[id]/page.tsx` | Edit — pass referenceCard prop |
-| `src/app/globals.css` | Edit — add `.reference-card` styles |
-| `src/lib/mcp/tools/posts.ts` | Edit — add `handleUnfurlReference` |
-| `src/lib/mcp/server.ts` | Edit — register tool + extend update_post |
-| `src/i18n/locales/en.json` | Edit — 9 keys |
-| `src/i18n/locales/zh.json` | Edit — 9 keys |
-| `src/services/unfurl.test.ts` | Create |
-| `src/services/ai.test.ts` | Edit — add summarizeUnfurl tests |
-| `src/lib/mcp/tools/posts.test.ts` | Edit — add unfurl handler tests |
-| `e2e/api/unfurl.test.ts` | Create |
+| File                                            | Action                                                         |
+| ----------------------------------------------- | -------------------------------------------------------------- |
+| `docs/14-reference-url.md`                      | Create (this file)                                             |
+| `docs/README.md`                                | Edit — add row 14                                              |
+| `scripts/migrations/009-reference-url.sql`      | Create                                                         |
+| `src/models/types.ts`                           | Edit — add 4 fields to Post                                    |
+| `src/data/posts.ts`                             | Edit — extend input types + create/update SQL                  |
+| `src/services/unfurl.ts`                        | Create                                                         |
+| `src/services/ai.ts`                            | Edit — add `summarizeUnfurl()`                                 |
+| `src/app/api/unfurl/route.ts`                   | Create                                                         |
+| `src/app/api/posts/route.ts`                    | Edit — add 4 reference fields to POST whitelist                |
+| `src/components/admin/post-form.tsx`            | Edit — add reference URL section                               |
+| `src/components/admin/markdown-preview.tsx`     | Edit — add reference props + pass referenceCard to ArticleBody |
+| `src/components/blog/reference-card.tsx`        | Create                                                         |
+| `src/lib/domain-brand.ts`                       | Create                                                         |
+| `src/components/blog/article-body.tsx`          | Edit — add `referenceCard` slot                                |
+| `src/app/(blog)/[year]/[month]/[slug]/page.tsx` | Edit — pass referenceCard prop                                 |
+| `src/app/(blog)/preview/[id]/page.tsx`          | Edit — pass referenceCard prop                                 |
+| `src/app/globals.css`                           | Edit — add `.reference-card` styles                            |
+| `src/lib/mcp/tools/posts.ts`                    | Edit — add `handleUnfurlReference`                             |
+| `src/lib/mcp/server.ts`                         | Edit — register tool + extend update_post                      |
+| `src/i18n/locales/en.json`                      | Edit — 9 keys                                                  |
+| `src/i18n/locales/zh.json`                      | Edit — 9 keys                                                  |
+| `src/services/unfurl.test.ts`                   | Create                                                         |
+| `src/services/ai.test.ts`                       | Edit — add summarizeUnfurl tests                               |
+| `src/lib/mcp/tools/posts.test.ts`               | Edit — add unfurl handler tests                                |
+| `e2e/api/unfurl.test.ts`                        | Create                                                         |
 
 ## Atomic Commits
 

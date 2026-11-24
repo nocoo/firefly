@@ -78,12 +78,10 @@ export function ArticleToc({ entries }: ArticleTocProps) {
         />
         <ul ref={listRef} className="article-toc-list">
           {entries.map((e) => (
-            <li
-              key={e.id}
-              data-depth={e.depth}
-              data-active={e.id === activeId || undefined}
-            >
-              <a href={`#${e.id}`} aria-current={e.id === activeId ? "location" : undefined}>{e.text}</a>
+            <li key={e.id} data-depth={e.depth} data-active={e.id === activeId || undefined}>
+              <a href={`#${e.id}`} aria-current={e.id === activeId ? "location" : undefined}>
+                {e.text}
+              </a>
             </li>
           ))}
         </ul>

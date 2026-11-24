@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  assertValidPodcastUrlInput,
-  PostFieldValidationError,
-} from "./post-field-validation";
+import { assertValidPodcastUrlInput, PostFieldValidationError } from "./post-field-validation";
 
 describe("assertValidPodcastUrlInput", () => {
   it("allows null and undefined", () => {

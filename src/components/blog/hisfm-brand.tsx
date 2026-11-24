@@ -1,8 +1,13 @@
 // SVG paths copied from his.fm apps/web/src/brand/Brand.tsx (cfbefd2).
 
-export function Wordmark({ className = '' }: { className?: string }) {
+export function Wordmark({ className = "" }: { className?: string }) {
   return (
-    <svg className={`podcast-brand-wordmark ${className}`} viewBox="0 0 600 170" aria-hidden="true" focusable="false">
+    <svg
+      className={`podcast-brand-wordmark ${className}`}
+      viewBox="0 0 600 170"
+      aria-hidden="true"
+      focusable="false"
+    >
       <g
         fill="none"
         stroke="currentColor"
@@ -19,9 +24,14 @@ export function Wordmark({ className = '' }: { className?: string }) {
   );
 }
 
-export function BrandSymbol({ className = '' }: { className?: string }) {
+export function BrandSymbol({ className = "" }: { className?: string }) {
   return (
-    <svg className={`podcast-brand-symbol ${className}`} viewBox="0 0 128 128" aria-hidden="true" focusable="false">
+    <svg
+      className={`podcast-brand-symbol ${className}`}
+      viewBox="0 0 128 128"
+      aria-hidden="true"
+      focusable="false"
+    >
       <g fill="none" stroke="currentColor" strokeWidth="17" strokeLinecap="round">
         <path d="M48 16C7 27 7 101 48 112M80 16C121 27 121 101 80 112" />
       </g>

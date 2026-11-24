@@ -49,7 +49,9 @@ function resolveBackLink(): BackLink {
 // and the server snapshot ensures SSR ↔ hydration parity.
 // ---------------------------------------------------------------------------
 
-const noop = () => () => { /* no-op unsubscribe */ };
+const noop = () => () => {
+  /* no-op unsubscribe */
+};
 
 let _prevOrigin: string | null | undefined;
 let _cachedBack: BackLink = BACK_DEFAULT;
@@ -75,28 +77,15 @@ function getBackLinkServerSnapshot(): BackLink {
  * → or K = next (newer) post
  * H = back to list (context-aware)
  */
-export function ArticleNav({
-  prevHref,
-  prevTitle,
-  nextHref,
-  nextTitle,
-}: ArticleNavProps) {
+export function ArticleNav({ prevHref, prevTitle, nextHref, nextTitle }: ArticleNavProps) {
   const router = useRouter();
-  const back = useSyncExternalStore(
-    noop,
-    getBackLinkSnapshot,
-    getBackLinkServerSnapshot,
-  );
+  const back = useSyncExternalStore(noop, getBackLinkSnapshot, getBackLinkServerSnapshot);
 
   // Keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const target = e.target as HTMLElement;
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable
-      ) {
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
         return;
       }
       if (e.metaKey || e.ctrlKey || e.altKey) return;

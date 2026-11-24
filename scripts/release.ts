@@ -263,6 +263,4 @@ success(`GitHub Release ${tag} created`);
 // Done
 // ---------------------------------------------------------------------------
 
-console.log(
-  `\n\x1b[32m🎉 Release ${tag} ${dryRun ? "(dry-run)" : "complete"}!\x1b[0m\n`,
-);
+console.log(`\n\x1b[32m🎉 Release ${tag} ${dryRun ? "(dry-run)" : "complete"}!\x1b[0m\n`);

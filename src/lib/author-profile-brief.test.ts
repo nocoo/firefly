@@ -43,9 +43,7 @@ describe("buildAuthorProfileBrief", () => {
     });
     expect(brief).toContain("未填写，无法计算 hash");
     expect(brief).toContain("未公开时返回空结果");
-    expect(brief).toContain(
-      "https://lizheng.me/api/authors/profile?hash=<64-char-hex>",
-    );
+    expect(brief).toContain("https://lizheng.me/api/authors/profile?hash=<64-char-hex>");
     expect(brief).not.toMatch(/agent/i);
   });
 });

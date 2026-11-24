@@ -17,11 +17,7 @@ interface MediaUploadQueueProps {
  *   - Spot exactly which uploads failed (the toast disappears; this stays)
  *   - Dismiss the list once the batch is done
  */
-export function MediaUploadQueue({
-  items,
-  uploading,
-  onDismiss,
-}: MediaUploadQueueProps) {
+export function MediaUploadQueue({ items, uploading, onDismiss }: MediaUploadQueueProps) {
   if (items.length === 0) return null;
 
   const errorCount = items.filter((it) => it.status === "error").length;
@@ -32,11 +28,7 @@ export function MediaUploadQueue({
       <div className="flex items-center justify-between gap-3 px-4 py-2 text-sm">
         <div className="flex items-center gap-2 text-basalt-muted-foreground">
           {uploading ? (
-            <Loader2
-              className="h-4 w-4 animate-spin"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
+            <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.5} aria-hidden="true" />
           ) : (
             <Upload className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
           )}
@@ -61,15 +53,10 @@ export function MediaUploadQueue({
       </div>
       <ul className="max-h-48 divide-y divide-basalt-border overflow-y-auto">
         {items.map((item) => (
-          <li
-            key={item.id}
-            className="flex items-center gap-2 px-4 py-2 text-xs"
-          >
+          <li key={item.id} className="flex items-center gap-2 px-4 py-2 text-xs">
             {renderStatusIcon(item.status)}
             <span className="flex-1 truncate text-basalt-foreground">{item.name}</span>
-            <span className="shrink-0 text-basalt-muted-foreground">
-              {formatBytes(item.size)}
-            </span>
+            <span className="shrink-0 text-basalt-muted-foreground">{formatBytes(item.size)}</span>
             {item.status === "error" && item.errorMessage && (
               <span
                 className="ml-2 shrink-0 max-w-[12rem] truncate text-basalt-destructive"

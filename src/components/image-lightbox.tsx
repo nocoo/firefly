@@ -68,9 +68,7 @@ export function ImageLightbox({
       <div
         className={
           "relative flex max-h-[90vh] max-w-[90vw] overflow-hidden rounded-card shadow-2xl" +
-          (hasPanel
-            ? " flex-col bg-basalt-card md:flex-row"
-            : " items-center justify-center")
+          (hasPanel ? " flex-col bg-basalt-card md:flex-row" : " items-center justify-center")
         }
         onClick={(e) => e.stopPropagation()}
       >

@@ -20,13 +20,7 @@ export function getHumanAvatarUrl(
   avatarVersion: string | null,
   size: HumanAvatarSize,
 ): string | null {
-  return buildHumanAvatarUrl(
-    getR2PublicUrl(),
-    getR2KeyPrefix(),
-    humanId,
-    avatarVersion,
-    size,
-  );
+  return buildHumanAvatarUrl(getR2PublicUrl(), getR2KeyPrefix(), humanId, avatarVersion, size);
 }
 
 export function getHumanAvatarR2Key(
@@ -37,11 +31,6 @@ export function getHumanAvatarR2Key(
   return `${getR2KeyPrefix()}humans/${humanId}/${version}/avatar-${size}.jpg`;
 }
 
-export function getAllHumanAvatarR2Keys(
-  humanId: string,
-  version: string,
-): string[] {
-  return HUMAN_AVATAR_SIZES.map((size) =>
-    getHumanAvatarR2Key(humanId, version, size),
-  );
+export function getAllHumanAvatarR2Keys(humanId: string, version: string): string[] {
+  return HUMAN_AVATAR_SIZES.map((size) => getHumanAvatarR2Key(humanId, version, size));
 }

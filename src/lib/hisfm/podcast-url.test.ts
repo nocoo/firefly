@@ -6,8 +6,7 @@ import {
   HISFM_EPISODE_URL_RE,
 } from "./podcast-url";
 
-const VALID =
-  "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless";
+const VALID = "https://his.fm/episodes/manager-notes/same-mindset-makes-expansion-pointless";
 
 describe("HISFM_EPISODE_URL_RE", () => {
   it("accepts canonical his.fm episode URLs", () => {

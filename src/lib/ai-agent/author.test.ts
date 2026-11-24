@@ -1,20 +1,18 @@
 import { describe, it, expect, vi } from "vitest";
 
 vi.mock("./avatar", () => ({
-  getAgentAvatarUrl: vi.fn(
-    (agentId: string, version: string | null, size: number) =>
-      version
-        ? `https://test-cdn.example.com/uploads/firefly/agents/${agentId}/${version}/avatar-${size}.png`
-        : null,
+  getAgentAvatarUrl: vi.fn((agentId: string, version: string | null, size: number) =>
+    version
+      ? `https://test-cdn.example.com/uploads/firefly/agents/${agentId}/${version}/avatar-${size}.png`
+      : null,
   ),
 }));
 
 vi.mock("../human-avatar", () => ({
-  getHumanAvatarUrl: vi.fn(
-    (humanId: string, version: string | null, size: number) =>
-      version
-        ? `https://test-cdn.example.com/uploads/firefly/humans/${humanId}/${version}/avatar-${size}.jpg`
-        : null,
+  getHumanAvatarUrl: vi.fn((humanId: string, version: string | null, size: number) =>
+    version
+      ? `https://test-cdn.example.com/uploads/firefly/humans/${humanId}/${version}/avatar-${size}.jpg`
+      : null,
   ),
 }));
 
@@ -37,8 +35,7 @@ describe("getPostAuthor", () => {
       id: "human-1",
       name: "Li Zheng",
       slug: "li-zheng",
-      avatarUrl:
-        "https://test-cdn.example.com/uploads/firefly/humans/human-1/v9/avatar-80.jpg",
+      avatarUrl: "https://test-cdn.example.com/uploads/firefly/humans/human-1/v9/avatar-80.jpg",
     });
     expect(result.avatarUrl).not.toContain("/logo/");
   });
@@ -70,8 +67,7 @@ describe("getPostAuthor", () => {
       id: "agent-1",
       name: "Claude Daily",
       slug: "claude-daily",
-      avatarUrl:
-        "https://test-cdn.example.com/uploads/firefly/agents/agent-1/v1/avatar-128.png",
+      avatarUrl: "https://test-cdn.example.com/uploads/firefly/agents/agent-1/v1/avatar-128.png",
     });
   });
 

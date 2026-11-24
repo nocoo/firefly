@@ -10,8 +10,16 @@ function XIcon({ className }: { className?: string }) {
   );
 }
 
-const BRAND_ICONS: Record<string, React.ComponentType<{ className?: string; strokeWidth?: number }>> = {
-  x: XIcon, facebook: Facebook, linkedin: Linkedin, email: Mail, github: Github, resume: FileUser,
+const BRAND_ICONS: Record<
+  string,
+  React.ComponentType<{ className?: string; strokeWidth?: number }>
+> = {
+  x: XIcon,
+  facebook: Facebook,
+  linkedin: Linkedin,
+  email: Mail,
+  github: Github,
+  resume: FileUser,
 };
 
 function SocialLink({ name, url, brand }: SocialLinkData) {
@@ -46,7 +54,11 @@ export function JournalSocialLinks({ links }: { links: SocialLinkData[] }) {
         社交媒体
       </h3>
       <ul className="journal-social-list">
-        {links.map((link) => <li key={link.url}><SocialLink {...link} /></li>)}
+        {links.map((link) => (
+          <li key={link.url}>
+            <SocialLink {...link} />
+          </li>
+        ))}
       </ul>
     </nav>
   );

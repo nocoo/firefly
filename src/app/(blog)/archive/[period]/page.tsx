@@ -19,7 +19,6 @@ interface ArchivePageProps {
   params: Promise<{ period: string }>;
 }
 
-
 export async function generateMetadata({ params }: ArchivePageProps): Promise<Metadata> {
   const { period } = await params;
   const parsed = parseArchivePeriod(period);
@@ -27,15 +26,16 @@ export async function generateMetadata({ params }: ArchivePageProps): Promise<Me
 
   const db = getDb();
   const { identity } = await loadSiteIdentity(db);
-  const label = parsed.month
-    ? `${parsed.year} 年 ${parsed.month} 月`
-    : `${parsed.year} 年`;
+  const label = parsed.month ? `${parsed.year} 年 ${parsed.month} 月` : `${parsed.year} 年`;
 
-  return buildPageMeta({
-    title: label,
-    description: label,
-    path: `/archive/${period}`,
-  }, identity);
+  return buildPageMeta(
+    {
+      title: label,
+      description: label,
+      path: `/archive/${period}`,
+    },
+    identity,
+  );
 }
 
 export default async function ArchivePage({ params }: ArchivePageProps) {
@@ -60,9 +60,7 @@ export default async function ArchivePage({ params }: ArchivePageProps) {
 
   const totalPages = Math.ceil(total / postsPerPage);
 
-  const label = parsed.month
-    ? `${parsed.year} 年 ${parsed.month} 月`
-    : `${parsed.year} 年`;
+  const label = parsed.month ? `${parsed.year} 年 ${parsed.month} 月` : `${parsed.year} 年`;
 
   return (
     <>
@@ -109,11 +107,7 @@ export default async function ArchivePage({ params }: ArchivePageProps) {
         )}
       </section>
 
-      <Pagination
-        currentPage={1}
-        totalPages={totalPages}
-        basePath={`/archive/${period}`}
-      />
+      <Pagination currentPage={1} totalPages={totalPages} basePath={`/archive/${period}`} />
     </>
   );
 }

@@ -27,8 +27,7 @@ let collectionStarted = false;
 let lastHighMemoryWarnTime = 0; // Throttle high memory warnings
 
 // Shorter interval in dev mode for faster feedback
-const COLLECTION_INTERVAL_MS =
-  process.env.NODE_ENV === "development" ? 10_000 : 60_000;
+const COLLECTION_INTERVAL_MS = process.env.NODE_ENV === "development" ? 10_000 : 60_000;
 
 /**
  * Collect a memory snapshot using Node.js process.memoryUsage().
@@ -37,11 +36,11 @@ function collectMemorySnapshot(): MemorySnapshot {
   const usage = process.memoryUsage();
   return {
     timestamp: Date.now(),
-    heapUsedMB: Math.round(usage.heapUsed / 1024 / 1024 * 100) / 100,
-    heapTotalMB: Math.round(usage.heapTotal / 1024 / 1024 * 100) / 100,
-    rssMB: Math.round(usage.rss / 1024 / 1024 * 100) / 100,
-    externalMB: Math.round(usage.external / 1024 / 1024 * 100) / 100,
-    arrayBuffersMB: Math.round((usage.arrayBuffers ?? 0) / 1024 / 1024 * 100) / 100,
+    heapUsedMB: Math.round((usage.heapUsed / 1024 / 1024) * 100) / 100,
+    heapTotalMB: Math.round((usage.heapTotal / 1024 / 1024) * 100) / 100,
+    rssMB: Math.round((usage.rss / 1024 / 1024) * 100) / 100,
+    externalMB: Math.round((usage.external / 1024 / 1024) * 100) / 100,
+    arrayBuffersMB: Math.round(((usage.arrayBuffers ?? 0) / 1024 / 1024) * 100) / 100,
   };
 }
 
@@ -120,13 +119,13 @@ export function getMemoryStats(): {
   const current = collectMemorySnapshot();
   const history = getMemoryHistory();
 
-  const peakHeapMB = history.length > 0
-    ? Math.max(...history.map((s) => s.heapUsedMB))
-    : current.heapUsedMB;
+  const peakHeapMB =
+    history.length > 0 ? Math.max(...history.map((s) => s.heapUsedMB)) : current.heapUsedMB;
 
-  const avgHeapMB = history.length > 0
-    ? Math.round(history.reduce((sum, s) => sum + s.heapUsedMB, 0) / history.length * 100) / 100
-    : current.heapUsedMB;
+  const avgHeapMB =
+    history.length > 0
+      ? Math.round((history.reduce((sum, s) => sum + s.heapUsedMB, 0) / history.length) * 100) / 100
+      : current.heapUsedMB;
 
   return {
     current,

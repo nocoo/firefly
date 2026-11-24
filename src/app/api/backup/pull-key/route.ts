@@ -1,11 +1,7 @@
 import { getDb, DbError } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
 import { generatePullWebhookKey } from "@/models/backup.server";
-import {
-  getBackyPullKey,
-  saveBackyPullKey,
-  clearBackyPullKey,
-} from "@/data/backup";
+import { getBackyPullKey, saveBackyPullKey, clearBackyPullKey } from "@/data/backup";
 
 function handleError(error: unknown) {
   if (error instanceof DbError) {

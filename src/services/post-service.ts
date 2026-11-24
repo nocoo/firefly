@@ -20,11 +20,7 @@ import {
   getPostRowid,
   ftsSync,
 } from "@/data/entities/post";
-import type {
-  CreatePostInput,
-  UpdatePostInput,
-  BatchUpdateInput,
-} from "@/data/entities/post";
+import type { CreatePostInput, UpdatePostInput, BatchUpdateInput } from "@/data/entities/post";
 import { invalidateCategoryCache } from "@/data/entities/category";
 import { invalidateTagCache } from "@/data/entities/tag";
 import { getDefaultHumanIdUncached } from "@/data/entities/human";
@@ -86,7 +82,7 @@ export async function resolveUpdateAttribution(
     aiAgentId = null;
   } else if (humanSpecified && input.humanId === null) {
     humanId = await requireDefaultHumanId(db);
-    aiAgentId = agentSpecified ? input.aiAgentId ?? null : null;
+    aiAgentId = agentSpecified ? (input.aiAgentId ?? null) : null;
   }
 
   if (!humanId && !aiAgentId) {
@@ -112,10 +108,7 @@ export interface UpdatePostServiceInput extends UpdatePostInput {
 // Best-effort helper — catches & logs secondary effect errors (D6)
 // ---------------------------------------------------------------------------
 
-async function bestEffort(
-  label: string,
-  fn: () => Promise<unknown>,
-): Promise<void> {
+async function bestEffort(label: string, fn: () => Promise<unknown>): Promise<void> {
   try {
     await fn();
   } catch (err) {
@@ -132,10 +125,7 @@ export const PostService = {
   // create — primary: createPost; secondary: tags, counts, caches
   // -------------------------------------------------------------------------
 
-  async create(
-    db: Db,
-    input: CreatePostServiceInput,
-  ): Promise<PostWithCategory> {
+  async create(db: Db, input: CreatePostServiceInput): Promise<PostWithCategory> {
     const { tagIds, ...postInput } = input;
     assertValidPodcastUrlInput(postInput.podcastUrl);
     const attribution = await resolveCreateAttribution(db, postInput);
@@ -158,9 +148,7 @@ export const PostService = {
       );
     }
 
-    await bestEffort("refreshAllTagPostCounts", () =>
-      refreshAllTagPostCounts(db),
-    );
+    await bestEffort("refreshAllTagPostCounts", () => refreshAllTagPostCounts(db));
 
     invalidateCategoryCache();
     invalidateTagCache();
@@ -208,16 +196,13 @@ export const PostService = {
     // Tags
     if (tagIds) {
       await bestEffort("setPostTags", () => setPostTags(db, id, tagIds));
-      await bestEffort("refreshAllTagPostCounts", () =>
-        refreshAllTagPostCounts(db),
-      );
+      await bestEffort("refreshAllTagPostCounts", () => refreshAllTagPostCounts(db));
       invalidateTagCache();
     }
 
     // Category change → refresh old + new
     const categoryChanged =
-      input.categoryId !== undefined &&
-      input.categoryId !== existing.category_id;
+      input.categoryId !== undefined && input.categoryId !== existing.category_id;
 
     if (categoryChanged) {
       await bestEffort("refreshOldCategory", () =>
@@ -230,15 +215,12 @@ export const PostService = {
     }
 
     // Status change → refresh tag counts + archives
-    const statusChanged =
-      input.status !== undefined && input.status !== existing.status;
+    const statusChanged = input.status !== undefined && input.status !== existing.status;
 
     if (statusChanged) {
       if (!tagIds) {
         // Only refresh if not already done above
-        await bestEffort("refreshAllTagPostCounts", () =>
-          refreshAllTagPostCounts(db),
-        );
+        await bestEffort("refreshAllTagPostCounts", () => refreshAllTagPostCounts(db));
         invalidateTagCache();
       }
       // Category counts change when status changes (published counts)
@@ -249,7 +231,6 @@ export const PostService = {
         invalidateCategoryCache();
       }
     }
-
 
     // Best-effort FTS index sync (re-index with latest content)
     if (updated) {
@@ -289,18 +270,14 @@ export const PostService = {
       );
     }
 
-    await bestEffort("refreshAllTagPostCounts", () =>
-      refreshAllTagPostCounts(db),
-    );
+    await bestEffort("refreshAllTagPostCounts", () => refreshAllTagPostCounts(db));
 
     invalidateCategoryCache();
     invalidateTagCache();
 
     // Best-effort FTS cleanup — rowid captured before deletion
     if (rowid != null) {
-      await bestEffort("ftsSync:delete", () =>
-        ftsSync(db, { action: "delete", rowid }),
-      );
+      await bestEffort("ftsSync:delete", () => ftsSync(db, { action: "delete", rowid }));
     }
 
     invalidatePostCaches();
@@ -311,20 +288,12 @@ export const PostService = {
   // batchUpdate — primary: batchUpdatePosts; secondary: broad refresh
   // -------------------------------------------------------------------------
 
-  async batchUpdate(
-    db: Db,
-    ids: string[],
-    input: BatchUpdateInput,
-  ): Promise<number> {
+  async batchUpdate(db: Db, ids: string[], input: BatchUpdateInput): Promise<number> {
     const count = await batchUpdatePosts(db, ids, input);
 
     // Broad refresh since multiple posts may span categories/tags
-    await bestEffort("refreshAllCategoryPostCounts", () =>
-      refreshAllCategoryPostCounts(db),
-    );
-    await bestEffort("refreshAllTagPostCounts", () =>
-      refreshAllTagPostCounts(db),
-    );
+    await bestEffort("refreshAllCategoryPostCounts", () => refreshAllCategoryPostCounts(db));
+    await bestEffort("refreshAllTagPostCounts", () => refreshAllTagPostCounts(db));
 
     invalidateCategoryCache();
     invalidateTagCache();
@@ -332,5 +301,4 @@ export const PostService = {
 
     return count;
   },
-
 };

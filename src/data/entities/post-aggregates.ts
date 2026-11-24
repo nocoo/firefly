@@ -3,12 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import type { Db } from "@/lib/db";
-import type {
-  AdjacentPost,
-  AdjacentPosts,
-  MonthlyArchive,
-  PostYearCount,
-} from "./post-types";
+import type { AdjacentPost, AdjacentPosts, MonthlyArchive, PostYearCount } from "./post-types";
 import { archivesCache } from "./post-cache";
 
 /**
@@ -112,13 +107,7 @@ export async function getAdjacentPosts(
 }
 
 /** Get SQLite rowid for a post (needed before FTS delete). */
-export async function getPostRowid(
-  db: Db,
-  id: string,
-): Promise<number | null> {
-  const row = await db.firstOrNull<{ rowid: number }>(
-    "SELECT rowid FROM posts WHERE id = ?",
-    [id],
-  );
+export async function getPostRowid(db: Db, id: string): Promise<number | null> {
+  const row = await db.firstOrNull<{ rowid: number }>("SELECT rowid FROM posts WHERE id = ?", [id]);
   return row?.rowid ?? null;
 }

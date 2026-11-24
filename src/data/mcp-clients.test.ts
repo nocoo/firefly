@@ -13,7 +13,6 @@ import {
 // Mock DB
 // ---------------------------------------------------------------------------
 
-
 const now = Math.floor(Date.now() / 1000);
 
 const sampleClient: McpClient = {
@@ -32,7 +31,9 @@ const sampleClient: McpClient = {
 
 describe("createMcpClient", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("inserts client and returns it", async () => {
     const input: CreateMcpClientInput = {
@@ -91,7 +92,9 @@ describe("createMcpClient", () => {
 
 describe("getMcpClientById", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns client when found", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleClient);
@@ -117,7 +120,9 @@ describe("getMcpClientById", () => {
 
 describe("getMcpClientByClientId", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns client when found by client_id", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleClient);

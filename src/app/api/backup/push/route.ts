@@ -32,10 +32,7 @@ export async function POST() {
 
     // Build tag and filename
     const rand = randomBytes(3).toString("base64url").slice(0, 4);
-    const datetime = new Date()
-      .toISOString()
-      .slice(0, 19)
-      .replaceAll(":", "-");
+    const datetime = new Date().toISOString().slice(0, 19).replaceAll(":", "-");
     const tag = buildBackyTag(
       APP_VERSION,
       {

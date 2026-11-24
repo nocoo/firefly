@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  verifyPkceS256,
-  isLoopbackRedirectUri,
-  getOAuthMetadata,
-} from "./oauth";
+import { verifyPkceS256, isLoopbackRedirectUri, getOAuthMetadata } from "./oauth";
 
 // ---------------------------------------------------------------------------
 // verifyPkceS256

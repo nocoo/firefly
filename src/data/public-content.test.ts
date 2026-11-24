@@ -4,11 +4,16 @@ import { invalidatePublicContent } from "./core/public-cache";
 
 // The suite shares workers with route tests that import this facade using
 // different entity mocks. Load it against this suite's own dependencies.
-vi.hoisted(() => { vi.resetModules(); });
+vi.hoisted(() => {
+  vi.resetModules();
+});
 
 vi.mock("./entities/post", () => ({
-  listPosts: vi.fn(), getPostBySlug: vi.fn(), getPostTags: vi.fn(),
-  getAdjacentPosts: vi.fn(), listMonthlyArchives: vi.fn(),
+  listPosts: vi.fn(),
+  getPostBySlug: vi.fn(),
+  getPostTags: vi.fn(),
+  getAdjacentPosts: vi.fn(),
+  listMonthlyArchives: vi.fn(),
 }));
 vi.mock("./entities/category", () => ({ listCategories: vi.fn() }));
 vi.mock("./entities/tag", () => ({ listTags: vi.fn() }));
@@ -24,46 +29,95 @@ import * as rawComments from "./entities/comment";
 import * as rawSettings from "./settings";
 import * as content from "./public-content";
 
-beforeEach(() => { invalidatePublicContent(); vi.resetAllMocks(); });
+beforeEach(() => {
+  invalidatePublicContent();
+  vi.resetAllMocks();
+});
 
 describe("public content reads", () => {
   it("forces published status and normalizes paging without an inner count cache", async () => {
     const db = createMockDb();
     const result = { posts: [createMockPostWithAgent()], total: 1 };
     vi.mocked(rawPosts.listPosts).mockResolvedValue(result);
-    expect(await content.listPosts(db, { status: "private", page: -1, pageSize: 999 })).toBe(result);
-    expect(rawPosts.listPosts).toHaveBeenCalledWith(db, expect.objectContaining({
-      status: "published", page: 1, pageSize: 100, sortBy: "published_at", sortOrder: "desc",
-    }), false);
+    expect(await content.listPosts(db, { status: "private", page: -1, pageSize: 999 })).toBe(
+      result,
+    );
+    expect(rawPosts.listPosts).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({
+        status: "published",
+        page: 1,
+        pageSize: 100,
+        sortBy: "published_at",
+        sortOrder: "desc",
+      }),
+      false,
+    );
     await content.listPosts(db);
-    expect(rawPosts.listPosts).toHaveBeenLastCalledWith(db, expect.objectContaining({ page: 1, pageSize: 20 }), false);
-    await content.listPosts(db, { page: 2, pageSize: 5.5, categoryId: "category", tagId: "tag", archiveYear: 2026, archiveMonth: 9 });
-    expect(rawPosts.listPosts).toHaveBeenLastCalledWith(db, expect.objectContaining({
-      page: 2, pageSize: 5, categoryId: "category", tagId: "tag", archiveYear: 2026, archiveMonth: 9,
-    }), false);
+    expect(rawPosts.listPosts).toHaveBeenLastCalledWith(
+      db,
+      expect.objectContaining({ page: 1, pageSize: 20 }),
+      false,
+    );
+    await content.listPosts(db, {
+      page: 2,
+      pageSize: 5.5,
+      categoryId: "category",
+      tagId: "tag",
+      archiveYear: 2026,
+      archiveMonth: 9,
+    });
+    expect(rawPosts.listPosts).toHaveBeenLastCalledWith(
+      db,
+      expect.objectContaining({
+        page: 2,
+        pageSize: 5,
+        categoryId: "category",
+        tagId: "tag",
+        archiveYear: 2026,
+        archiveMonth: 9,
+      }),
+      false,
+    );
   });
 
-  it.each([{ query: "hello" }, { sortBy: "view_count" as const }])("keeps %j uncached", async (options) => {
-    const db = createMockDb();
-    vi.mocked(rawPosts.listPosts).mockResolvedValue({ posts: [], total: 0 });
-    await Promise.all([content.listPosts(db, options), content.listPosts(db, options)]);
-    expect(rawPosts.listPosts).toHaveBeenCalledTimes(2);
-  });
+  it.each([{ query: "hello" }, { sortBy: "view_count" as const }])(
+    "keeps %j uncached",
+    async (options) => {
+      const db = createMockDb();
+      vi.mocked(rawPosts.listPosts).mockResolvedValue({ posts: [], total: 0 });
+      await Promise.all([content.listPosts(db, options), content.listPosts(db, options)]);
+      expect(rawPosts.listPosts).toHaveBeenCalledTimes(2);
+    },
+  );
 
   it.each([NaN, Infinity, 0, -1])("normalizes invalid paging values %s", async (value) => {
     const db = createMockDb();
     vi.mocked(rawPosts.listPosts).mockResolvedValue({ posts: [], total: 0 });
     await content.listPosts(db, { page: value, pageSize: value });
-    expect(rawPosts.listPosts).toHaveBeenCalledWith(db, expect.objectContaining({ page: 1, pageSize: 20 }), false);
+    expect(rawPosts.listPosts).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({ page: 1, pageSize: 20 }),
+      false,
+    );
   });
 
   it("loads settings without the old TTL and caches only public author fields", async () => {
     const db = createMockDb();
     vi.mocked(rawSettings.getSiteSettings).mockResolvedValue({ defaultHumanId: "owner" } as never);
     vi.mocked(rawHumans.getDefaultHuman).mockResolvedValue({
-      id: "owner", name: "Owner", slug: "owner", avatar_version: "1", email: "private@example.com",
+      id: "owner",
+      name: "Owner",
+      slug: "owner",
+      avatar_version: "1",
+      email: "private@example.com",
     } as never);
-    expect(await content.getDefaultHuman(db)).toEqual({ id: "owner", name: "Owner", slug: "owner", avatar_version: "1" });
+    expect(await content.getDefaultHuman(db)).toEqual({
+      id: "owner",
+      name: "Owner",
+      slug: "owner",
+      avatar_version: "1",
+    });
     expect(rawSettings.getSiteSettings).toHaveBeenCalledWith(db, false);
     expect(rawHumans.getDefaultHuman).toHaveBeenCalledWith(db, "owner");
     vi.clearAllMocks();
@@ -103,9 +157,16 @@ describe("public content reads", () => {
 
   it("omits private email from comments and body content from the sitemap query", async () => {
     const db = createMockDb();
-    vi.mocked(rawComments.listCommentsByPost).mockResolvedValue([{ id: "comment", content: "Hello", author_email: "private@example.com" }] as never);
-    expect(await content.listCommentsByPost(db, "post")).toEqual([{ id: "comment", content: "Hello", author_email: null }]);
-    vi.mocked(db.query).mockResolvedValue({ results: [{ slug: "post" }], meta: { changes: 0, duration: 0 } });
+    vi.mocked(rawComments.listCommentsByPost).mockResolvedValue([
+      { id: "comment", content: "Hello", author_email: "private@example.com" },
+    ] as never);
+    expect(await content.listCommentsByPost(db, "post")).toEqual([
+      { id: "comment", content: "Hello", author_email: null },
+    ]);
+    vi.mocked(db.query).mockResolvedValue({
+      results: [{ slug: "post" }],
+      meta: { changes: 0, duration: 0 },
+    });
     expect(await content.listSitemapPosts(db)).toEqual({ posts: [{ slug: "post" }] });
     const sql = vi.mocked(db.query).mock.calls[0][0];
     expect(sql).toContain("status = 'published'");

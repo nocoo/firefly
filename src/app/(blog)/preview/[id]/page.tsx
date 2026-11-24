@@ -37,20 +37,14 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
     optimizeImages: process.env.NODE_ENV === "production",
     postTitle: post.title,
   });
-  const date = post.published_at
-    ? formatDateDisplay(post.published_at)
-    : "草稿";
+  const date = post.published_at ? formatDateDisplay(post.published_at) : "草稿";
 
   return (
     <>
       {/* Preview banner */}
       <div className="mb-6 rounded-widget border border-yellow-300 bg-yellow-50 px-4 py-2 text-sm text-yellow-800 dark:border-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300">
-        Preview Mode — This post is <strong>{post.status}</strong>.
-        {" "}
-        <Link
-          href={`/admin/posts/${post.id}/edit`}
-          className="underline hover:no-underline"
-        >
+        Preview Mode — This post is <strong>{post.status}</strong>.{" "}
+        <Link href={`/admin/posts/${post.id}/edit`} className="underline hover:no-underline">
           Edit
         </Link>
       </div>
@@ -65,29 +59,19 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
             <div className="blog-byline">
               <time
                 dateTime={
-                  post.published_at
-                    ? new Date(post.published_at * 1000).toISOString()
-                    : undefined
+                  post.published_at ? new Date(post.published_at * 1000).toISOString() : undefined
                 }
               >
                 {date}
               </time>
-              {post.category_name && (
-                <> · {post.category_name}</>
-              )}
-              {post.reading_time && (
-                <> · {`${post.reading_time} 分钟阅读`}</>
-              )}
+              {post.category_name && <> · {post.category_name}</>}
+              {post.reading_time && <> · {`${post.reading_time} 分钟阅读`}</>}
             </div>
           </header>
         }
         featuredImage={
           post.featured_image ? (
-            <FeaturedImage
-              src={post.featured_image}
-              alt={post.title}
-              priority
-            />
+            <FeaturedImage src={post.featured_image} alt={post.title} priority />
           ) : undefined
         }
         referenceCard={

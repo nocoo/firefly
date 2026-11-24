@@ -78,10 +78,7 @@ interface RateLimitConfig {
  * which budget. Returns null when the route is exempt (auth, mcp other than
  * /register, or non-API paths).
  */
-function getRateLimitConfig(
-  pathname: string,
-  method: string,
-): RateLimitConfig | null {
+function getRateLimitConfig(pathname: string, method: string): RateLimitConfig | null {
   if (!pathname.startsWith("/api/")) return null;
   if (pathname.startsWith("/api/auth/")) return null;
 
@@ -170,14 +167,8 @@ function httpsRedirect(request: NextRequest): NextResponse | null {
   // - E2E mode explicitly enabled
   const proto = request.headers.get("x-forwarded-proto");
   const host = request.headers.get("host") ?? "";
-  const isLocalhost =
-    host.startsWith("localhost") || host.startsWith("127.0.0.1");
-  if (
-    proto === "http" &&
-    process.env.NODE_ENV === "production" &&
-    !isLocalhost &&
-    !isE2EMode()
-  ) {
+  const isLocalhost = host.startsWith("localhost") || host.startsWith("127.0.0.1");
+  if (proto === "http" && process.env.NODE_ENV === "production" && !isLocalhost && !isE2EMode()) {
     const url = request.nextUrl.clone();
     url.protocol = "https";
     return NextResponse.redirect(url, 301);
@@ -236,10 +227,7 @@ function markdownNegotiation(request: NextRequest): NextResponse | null {
   return null;
 }
 
-function rewriteWithVary(
-  request: NextRequest,
-  newPath: string,
-): NextResponse {
+function rewriteWithVary(request: NextRequest, newPath: string): NextResponse {
   const url = request.nextUrl.clone();
   url.pathname = newPath;
   const response = NextResponse.rewrite(url);
@@ -251,9 +239,7 @@ function rewriteWithVary(
 // Stage 4: Auth guard — protect admin routes and write API endpoints
 // ---------------------------------------------------------------------------
 
-async function authGuard(
-  request: NextRequest,
-): Promise<NextResponse | null> {
+async function authGuard(request: NextRequest): Promise<NextResponse | null> {
   const { pathname } = request.nextUrl;
   const method = request.method;
 
@@ -290,11 +276,7 @@ function rateLimitGuard(request: NextRequest): NextResponse | null {
   if (!rlConfig) return null;
 
   const ip = extractClientIp(request);
-  const result = rateLimit(
-    `${pathname}:${ip}`,
-    rlConfig.limit,
-    rlConfig.windowMs,
-  );
+  const result = rateLimit(`${pathname}:${ip}`, rlConfig.limit, rlConfig.windowMs);
   if (result.allowed) return null;
 
   const retryAfterSec = Math.max(1, Math.ceil(result.resetMs / 1000));
@@ -316,9 +298,7 @@ function rateLimitGuard(request: NextRequest): NextResponse | null {
 // Stage 6: WordPress legacy redirect lookup (public routes only)
 // ---------------------------------------------------------------------------
 
-async function wordpressRedirect(
-  request: NextRequest,
-): Promise<NextResponse | null> {
+async function wordpressRedirect(request: NextRequest): Promise<NextResponse | null> {
   const { pathname } = request.nextUrl;
   if (pathname.startsWith("/api/") || pathname.startsWith("/login")) {
     return null;
@@ -358,10 +338,9 @@ async function wordpressRedirect(
     // Fire-and-forget: increment hit counter
     if (shouldTrackNavigation(request)) {
       const db = createDb(workerUrl, workerSecret);
-      db.execute(
-        "UPDATE redirects SET hit_count = hit_count + 1 WHERE id = ?",
-        [redirect.id],
-      ).catch(() => {
+      db.execute("UPDATE redirects SET hit_count = hit_count + 1 WHERE id = ?", [
+        redirect.id,
+      ]).catch(() => {
         // Ignore errors on hit counter update
       });
     }
@@ -380,23 +359,20 @@ async function wordpressRedirect(
 // ---------------------------------------------------------------------------
 
 function shouldTrackNavigation(request: NextRequest): boolean {
-  return request.method === "GET"
-    && request.headers.get("next-router-prefetch") === null
-    && request.headers.get("next-router-segment-prefetch") === null
-    && !/prefetch/i.test(request.headers.get("purpose") ?? "")
-    && !/prefetch/i.test(request.headers.get("sec-purpose") ?? "")
-    && detectBot(request.headers.get("user-agent")).botCategory !== "monitor";
+  return (
+    request.method === "GET" &&
+    request.headers.get("next-router-prefetch") === null &&
+    request.headers.get("next-router-segment-prefetch") === null &&
+    !/prefetch/i.test(request.headers.get("purpose") ?? "") &&
+    !/prefetch/i.test(request.headers.get("sec-purpose") ?? "") &&
+    detectBot(request.headers.get("user-agent")).botCategory !== "monitor"
+  );
 }
 
-function applyPublicCacheControl(
-  request: NextRequest,
-  response: NextResponse,
-): NextResponse {
+function applyPublicCacheControl(request: NextRequest, response: NextResponse): NextResponse {
   const { pathname } = request.nextUrl;
   const cookieHeader = request.headers.get("cookie");
-  if (
-    shouldCachePublicHtmlRequest(pathname, request.method, cookieHeader)
-  ) {
+  if (shouldCachePublicHtmlRequest(pathname, request.method, cookieHeader)) {
     response.headers.set("Cache-Control", PUBLIC_CONTENT_CACHE_CONTROL);
     return response;
   }
@@ -419,8 +395,7 @@ function trackAnalyticsAndContinue(request: NextRequest): NextResponse {
     trackPageView({
       path: pathname,
       userAgent: request.headers.get("user-agent"),
-      ip:
-        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+      ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
       referrer: request.headers.get("referer"),
       country: request.headers.get("cf-ipcountry") ?? null,
       city: request.headers.get("cf-ipcity") ?? null,

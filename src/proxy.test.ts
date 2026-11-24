@@ -376,10 +376,7 @@ describe("proxy — markdown negotiation", () => {
   });
 
   it("does NOT rewrite when Accept: text/markdown;q=0;profile=llm", async () => {
-    const req = makeRequest(
-      "/2025/03/hello-world",
-      "text/markdown;q=0;profile=llm",
-    );
+    const req = makeRequest("/2025/03/hello-world", "text/markdown;q=0;profile=llm");
     await proxy(req);
     expect(NextResponse.rewrite).not.toHaveBeenCalled();
   });
@@ -418,21 +415,15 @@ describe("extractClientIp", () => {
   }
 
   it("returns the first IP from x-forwarded-for", () => {
-    expect(
-      extractClientIp(reqWith({ "x-forwarded-for": "1.2.3.4, 5.6.7.8" })),
-    ).toBe("1.2.3.4");
+    expect(extractClientIp(reqWith({ "x-forwarded-for": "1.2.3.4, 5.6.7.8" }))).toBe("1.2.3.4");
   });
 
   it("trims whitespace from x-forwarded-for entries", () => {
-    expect(
-      extractClientIp(reqWith({ "x-forwarded-for": "  9.9.9.9 , 5.5.5.5" })),
-    ).toBe("9.9.9.9");
+    expect(extractClientIp(reqWith({ "x-forwarded-for": "  9.9.9.9 , 5.5.5.5" }))).toBe("9.9.9.9");
   });
 
   it("falls back to x-real-ip when x-forwarded-for is absent", () => {
-    expect(extractClientIp(reqWith({ "x-real-ip": "10.0.0.1" }))).toBe(
-      "10.0.0.1",
-    );
+    expect(extractClientIp(reqWith({ "x-real-ip": "10.0.0.1" }))).toBe("10.0.0.1");
   });
 
   it("returns 'unknown' when no IP headers are present", () => {
@@ -599,10 +590,13 @@ describe("proxy — rate limiting", () => {
 // ---------------------------------------------------------------------------
 
 describe("skipStaticAssets — does not short-circuit /api paths", () => {
-  it.each(["/admin.rsc", "/admin/posts/example.json", "/_next/data/build/admin/posts.json"])("keeps auth active for raw Next data URL %s", (path) => {
-    expect(_testHelpers.isProtectedRoute(path)).toBe(true);
-    expect(skipStaticAssets(makeRequest(path))).toBeNull();
-  });
+  it.each(["/admin.rsc", "/admin/posts/example.json", "/_next/data/build/admin/posts.json"])(
+    "keeps auth active for raw Next data URL %s",
+    (path) => {
+      expect(_testHelpers.isProtectedRoute(path)).toBe(true);
+      expect(skipStaticAssets(makeRequest(path))).toBeNull();
+    },
+  );
 
   it("does NOT skip /api/media/<uuid>.png (was the bypass)", () => {
     const req = makeRequest("/api/media/abc-123.png", undefined, "DELETE");
@@ -720,13 +714,10 @@ describe("proxy — protected /api routes with dot in pathname reach authGuard",
   });
 });
 
-
 describe("public cache headers", () => {
   it("sets cache-control on anonymous public HTML", async () => {
     const response = await proxy(makeRequest("/"));
-    expect(response.headers.get("cache-control")).toBe(
-      PUBLIC_CONTENT_CACHE_CONTROL,
-    );
+    expect(response.headers.get("cache-control")).toBe(PUBLIC_CONTENT_CACHE_CONTROL);
   });
 
   it("skips cache-control override when a session cookie is present", async () => {
@@ -740,9 +731,7 @@ describe("public cache headers", () => {
 
   it("sets cache-control on public read APIs", async () => {
     const response = await proxy(makeRequest("/api/posts/demo", undefined, "GET"));
-    expect(response.headers.get("cache-control")).toBe(
-      PUBLIC_CONTENT_CACHE_CONTROL,
-    );
+    expect(response.headers.get("cache-control")).toBe(PUBLIC_CONTENT_CACHE_CONTROL);
   });
 });
 
@@ -756,12 +745,16 @@ describe("analytics navigation filtering", () => {
     ["GET", { purpose: "prefetch" }],
     ["GET", { "sec-purpose": "prefetch;prerender" }],
   ])("does not count %s with %j", (method, headers) => {
-    expect(_testHelpers.shouldTrackNavigation(makeRequest("/", undefined, method, headers))).toBe(false);
+    expect(_testHelpers.shouldTrackNavigation(makeRequest("/", undefined, method, headers))).toBe(
+      false,
+    );
   });
 
   it("retains real navigation, including RSC navigation and search crawlers", () => {
     for (const headers of [{}, { rsc: "1" }, { "user-agent": "Googlebot/2.1" }]) {
-      expect(_testHelpers.shouldTrackNavigation(makeRequest("/", undefined, "GET", headers))).toBe(true);
+      expect(_testHelpers.shouldTrackNavigation(makeRequest("/", undefined, "GET", headers))).toBe(
+        true,
+      );
     }
   });
 });

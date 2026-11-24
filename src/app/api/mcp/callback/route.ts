@@ -48,9 +48,6 @@ export async function GET(request: Request) {
 
     return NextResponse.redirect(redirectUrl.toString());
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

@@ -71,12 +71,8 @@ export function blogPostingJsonLd(
       "@type": "WebPage",
       "@id": url,
     },
-    ...(post.reading_time
-      ? { timeRequired: `PT${post.reading_time}M` }
-      : {}),
-    ...(post.category_name
-      ? { articleSection: post.category_name }
-      : {}),
+    ...(post.reading_time ? { timeRequired: `PT${post.reading_time}M` } : {}),
+    ...(post.category_name ? { articleSection: post.category_name } : {}),
     ...(tagNames?.length ? { keywords: tagNames.join(", ") } : {}),
   });
 }
@@ -112,11 +108,7 @@ export interface CollectionItem {
   name: string;
 }
 
-export function collectionPageJsonLd(
-  name: string,
-  path: string,
-  items: CollectionItem[],
-): string {
+export function collectionPageJsonLd(name: string, path: string, items: CollectionItem[]): string {
   return JSON.stringify({
     "@context": "https://schema.org",
     "@type": "CollectionPage",

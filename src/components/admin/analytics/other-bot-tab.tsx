@@ -30,10 +30,7 @@ function DonutTooltip({
   return (
     <div className="rounded-widget border border-basalt-border bg-basalt-popover p-2.5 shadow-sm">
       <div className="flex items-center gap-2">
-        <div
-          className="h-3 w-3 rounded-full"
-          style={{ backgroundColor: item.payload.fill }}
-        />
+        <div className="h-3 w-3 rounded-full" style={{ backgroundColor: item.payload.fill }} />
         <span className="text-sm font-medium text-basalt-foreground">{item.name}</span>
       </div>
       <div className="text-sm text-basalt-muted-foreground">
@@ -80,13 +77,8 @@ function DonutWithLegend({
       <div className="mt-2 grid w-full grid-cols-2 gap-x-4 gap-y-1.5">
         {data.map((item) => (
           <div key={item.name} className="flex items-center gap-2">
-            <div
-              className="h-2 w-2 shrink-0 rounded-full"
-              style={{ background: item.fill }}
-            />
-            <span className="text-xs text-basalt-muted-foreground truncate">
-              {item.name}
-            </span>
+            <div className="h-2 w-2 shrink-0 rounded-full" style={{ background: item.fill }} />
+            <span className="text-xs text-basalt-muted-foreground truncate">{item.name}</span>
             <span className="ml-auto text-xs font-medium text-basalt-foreground">
               {formatNumber(item.value)}
             </span>
@@ -166,15 +158,9 @@ export function OtherBotTab({ data }: OtherBotTabProps) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-basalt-muted-foreground">
-                  <th className="pb-2 font-medium">
-                    爬虫
-                  </th>
-                  <th className="pb-2 font-medium">
-                    User Agent
-                  </th>
-                  <th className="pb-2 font-medium text-right">
-                    浏览量
-                  </th>
+                  <th className="pb-2 font-medium">爬虫</th>
+                  <th className="pb-2 font-medium">User Agent</th>
+                  <th className="pb-2 font-medium text-right">浏览量</th>
                 </tr>
               </thead>
               <tbody>
@@ -202,13 +188,7 @@ export function OtherBotTab({ data }: OtherBotTabProps) {
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function Panel({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-widget bg-basalt-secondary p-4 ring-1 ring-basalt-border/80 shadow-basalt-card">
       <h3 className="text-sm font-medium text-basalt-foreground mb-3">{title}</h3>

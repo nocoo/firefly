@@ -27,11 +27,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!category) return { title: "Not Found" };
 
   const { identity } = await loadSiteIdentity(db);
-  return buildPageMeta({
-    title: `${category.name} – Page ${page}`,
-    description: category.description || category.name,
-    path: `/category/${slug}/page/${page}`,
-  }, identity);
+  return buildPageMeta(
+    {
+      title: `${category.name} – Page ${page}`,
+      description: category.description || category.name,
+      path: `/category/${slug}/page/${page}`,
+    },
+    identity,
+  );
 }
 
 export default async function CategoryPaged({ params }: Props) {
@@ -104,11 +107,7 @@ export default async function CategoryPaged({ params }: Props) {
         )}
       </section>
 
-      <Pagination
-        currentPage={page}
-        totalPages={totalPages}
-        basePath={`/category/${slug}`}
-      />
+      <Pagination currentPage={page} totalPages={totalPages} basePath={`/category/${slug}`} />
     </>
   );
 }

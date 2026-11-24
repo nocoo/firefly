@@ -30,7 +30,7 @@ describe("CSP policy (next.config.ts)", () => {
 
   it("gates localhost image optimization for E2E only", () => {
     expect(configSource).toContain(
-      "dangerouslyAllowLocalIP: process.env.E2E_TEST_RUNNER === \"true\"",
+      'dangerouslyAllowLocalIP: process.env.E2E_TEST_RUNNER === "true"',
     );
   });
 });

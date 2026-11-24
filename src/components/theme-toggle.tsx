@@ -14,7 +14,9 @@ const ICON_PROPS = {
   "aria-hidden": true as const,
 };
 
-const noop = () => () => { /* no-op unsubscribe */ };
+const noop = () => () => {
+  /* no-op unsubscribe */
+};
 const getTrue = () => true;
 const getFalse = () => false;
 
@@ -30,7 +32,7 @@ export function ThemeToggle() {
   const cycleTheme = () => {
     const order = ["system", "light", "dark"] as const;
     const current = theme ?? "system";
-    const next = order[(order.indexOf(current as typeof order[number]) + 1) % order.length];
+    const next = order[(order.indexOf(current as (typeof order)[number]) + 1) % order.length];
     setTheme(next);
   };
 

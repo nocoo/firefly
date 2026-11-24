@@ -24,9 +24,6 @@ export async function POST(request: NextRequest) {
     if (error instanceof UnfurlError) {
       return errorResponse(error.message, error.statusCode);
     }
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

@@ -22,9 +22,7 @@ interface MockEntity {
 
 const mockEntity: MockEntity = { id: "m-1", name: "Test", slug: "test" };
 
-function createTestConfig(
-  overrides?: Partial<EntityConfig<MockEntity>>,
-): EntityConfig<MockEntity> {
+function createTestConfig(overrides?: Partial<EntityConfig<MockEntity>>): EntityConfig<MockEntity> {
   return {
     name: "widget",
     display: "Widget",
@@ -198,11 +196,7 @@ describe("registerEntityTools", () => {
 
     expect(toolSpy).toHaveBeenCalledTimes(3); // list, get, create only
     const toolNames = toolSpy.mock.calls.map((call) => call[0]);
-    expect(toolNames).toEqual([
-      "list_widgets",
-      "get_widget",
-      "create_widget",
-    ]);
+    expect(toolNames).toEqual(["list_widgets", "get_widget", "create_widget"]);
     expect(toolNames).not.toContain("update_widget");
     expect(toolNames).not.toContain("delete_widget");
   });

@@ -40,7 +40,9 @@ export default async function Home() {
       <script
         type="application/ld+json"
         // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data serialized by jsonld helper
-        dangerouslySetInnerHTML={{ __html: websiteJsonLd({ ...identity, siteDescription: homeSocial.description }) }}
+        dangerouslySetInnerHTML={{
+          __html: websiteJsonLd({ ...identity, siteDescription: homeSocial.description }),
+        }}
       />
       <script
         type="application/ld+json"
@@ -73,11 +75,7 @@ export default async function Home() {
         )}
       </section>
 
-      <Pagination
-        currentPage={1}
-        totalPages={totalPages}
-        basePath="/"
-      />
+      <Pagination currentPage={1} totalPages={totalPages} basePath="/" />
     </>
   );
 }

@@ -54,9 +54,16 @@ const SYSTEM_ENV = Object.fromEntries(
 const args = process.argv.slice(2);
 const apiOnly = args.includes("--api-only");
 const browserOnly = args.includes("--browser-only");
-const containerImage = args.find((arg) => arg.startsWith("--container-image="))?.slice("--container-image=".length);
-if (containerImage !== undefined && (process.platform !== "linux" || !/^[a-zA-Z0-9][a-zA-Z0-9_./:@-]*$/.test(containerImage))) {
-  throw new Error("Container E2E requires Linux host networking and an explicit local image reference");
+const containerImage = args
+  .find((arg) => arg.startsWith("--container-image="))
+  ?.slice("--container-image=".length);
+if (
+  containerImage !== undefined &&
+  (process.platform !== "linux" || !/^[a-zA-Z0-9][a-zA-Z0-9_./:@-]*$/.test(containerImage))
+) {
+  throw new Error(
+    "Container E2E requires Linux host networking and an explicit local image reference",
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -80,12 +87,21 @@ function seedLocalR2TestAsset(): void {
   writeFileSync(dest, readFileSync(sampleJpeg));
 }
 const WORKER_CONFIG = join(RUN_DIR, "wrangler.json");
-writeFileSync(WORKER_CONFIG, JSON.stringify({
-  name: "firefly-e2e-local",
-  main: resolve("worker/src/index.ts"),
-  compatibility_date: "2026-03-01",
-  d1_databases: [{ binding: "DB", database_name: "firefly-e2e-local", database_id: "00000000-0000-0000-0000-000000000000" }],
-}));
+writeFileSync(
+  WORKER_CONFIG,
+  JSON.stringify({
+    name: "firefly-e2e-local",
+    main: resolve("worker/src/index.ts"),
+    compatibility_date: "2026-03-01",
+    d1_databases: [
+      {
+        binding: "DB",
+        database_name: "firefly-e2e-local",
+        database_id: "00000000-0000-0000-0000-000000000000",
+      },
+    ],
+  }),
+);
 
 // ---------------------------------------------------------------------------
 // Log capture — worker/next stdout+stderr land here so CI failures leave
@@ -211,7 +227,8 @@ function startWorkerProcess(): Subprocess {
       WRANGLER,
       "dev",
       "--local",
-      "--config", WORKER_CONFIG,
+      "--config",
+      WORKER_CONFIG,
       `--persist-to=${PERSIST_D1}`,
       "--port",
       String(WORKER_PORT),
@@ -244,18 +261,12 @@ function createWorkerSupervisor(): SidecarSupervisor<Subprocess> {
     maxRestarts: 2,
     startProcess: startWorkerProcess,
     waitUntilReady: () =>
-      waitForServer(
-        `http://localhost:${WORKER_PORT}/api/v1/health`,
-        15_000,
-        true,
-      ),
+      waitForServer(`http://localhost:${WORKER_PORT}/api/v1/health`, 15_000, true),
     onUnexpectedExit: (code) => {
       console.error(`❌ Sidecar 'wrangler (code ${code})' exited unexpectedly mid-run`);
     },
     onRestart: (attempt, maxRestarts) => {
-      console.warn(
-        `↻ Restarting wrangler after transient exit (${attempt}/${maxRestarts})...`,
-      );
+      console.warn(`↻ Restarting wrangler after transient exit (${attempt}/${maxRestarts})...`);
     },
     onRecovered: (attempt) => {
       console.log(`✓ Wrangler recovered after restart ${attempt}`);
@@ -276,14 +287,15 @@ function sourcesNewestMtime(): number {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const p = join(dir, entry.name);
       if (entry.isDirectory()) {
-        if (entry.name === "node_modules" || entry.name.startsWith("."))
-          continue;
+        if (entry.name === "node_modules" || entry.name.startsWith(".")) continue;
         walk(p);
       } else if (entry.isFile()) {
         try {
           const m = statSync(p).mtimeMs;
           if (m > newest) newest = m;
-        } catch { /* ignore missing path */ }
+        } catch {
+          /* ignore missing path */
+        }
       }
     }
   }
@@ -299,7 +311,9 @@ function sourcesNewestMtime(): number {
       try {
         const m = statSync(f).mtimeMs;
         if (m > newest) newest = m;
-      } catch { /* ignore missing path */ }
+      } catch {
+        /* ignore missing path */
+      }
     }
   }
   return newest;
@@ -331,19 +345,14 @@ function buildNextOnce(env: Record<string, string | undefined>): void {
     stderr: "pipe",
   });
   if (build.exitCode !== 0) {
-    console.error(
-      `❌ Next.js build failed:\n${build.stderr.toString().slice(-500)}`,
-    );
+    console.error(`❌ Next.js build failed:\n${build.stderr.toString().slice(-500)}`);
     cleanup();
     process.exit(1);
   }
   didBuild = true;
 }
 
-function startNextServer(
-  env: Record<string, string | undefined>,
-  port: number,
-): Subprocess {
+function startNextServer(env: Record<string, string | undefined>, port: number): Subprocess {
   if (!containerImage) buildNextOnce(env);
   console.log(`▸ Starting Next.js (production) on port ${port}...`);
   const logFd = openLogFd(NEXT_LOG(port));
@@ -361,22 +370,28 @@ function startNextServer(
     chmodSync(PERSIST_R2, 0o777);
     containers.push(name);
     command = [
-      "docker", "run", "--rm", "--pull=never", "--name", name,
-      "--network", "host",
-      "--volume", `${PERSIST_R2}:${PERSIST_R2}`,
-      ...Object.entries(containerEnv).flatMap(([key, value]) => value === undefined ? [] : ["--env", `${key}=${value}`]),
+      "docker",
+      "run",
+      "--rm",
+      "--pull=never",
+      "--name",
+      name,
+      "--network",
+      "host",
+      "--volume",
+      `${PERSIST_R2}:${PERSIST_R2}`,
+      ...Object.entries(containerEnv).flatMap(([key, value]) =>
+        value === undefined ? [] : ["--env", `${key}=${value}`],
+      ),
       containerImage,
     ];
   }
-  const proc = spawn(
-    command,
-    {
-      cwd: process.cwd(),
-      env: { ...env, PORT: String(port), R2_PUBLIC_URL: `http://localhost:${port}/__e2e-r2` },
-      stdout: logFd,
-      stderr: logFd,
-    },
-  );
+  const proc = spawn(command, {
+    cwd: process.cwd(),
+    env: { ...env, PORT: String(port), R2_PUBLIC_URL: `http://localhost:${port}/__e2e-r2` },
+    stdout: logFd,
+    stderr: logFd,
+  });
   closeSync(logFd);
   procs.push(proc);
   watchPrematureExit(`next-${port}`, proc);
@@ -385,7 +400,11 @@ function startNextServer(
 
 async function main() {
   // Fail before touching a database if a dev server or another run owns a port.
-  for (const port of [WORKER_PORT, ...(!browserOnly ? [API_E2E_PORT] : []), ...(!apiOnly ? [BROWSER_E2E_PORT] : [])]) {
+  for (const port of [
+    WORKER_PORT,
+    ...(!browserOnly ? [API_E2E_PORT] : []),
+    ...(!apiOnly ? [BROWSER_E2E_PORT] : []),
+  ]) {
     await new Promise<void>((accept, reject) => {
       const server = createServer();
       server.once("error", reject);
@@ -439,12 +458,15 @@ async function main() {
   await waitForWorkerReady();
 
   const testDb = new WorkerHttpAdapter(`http://localhost:${WORKER_PORT}`, "test-secret");
-  const tables = await testDb.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'sqlite_%'");
+  const tables = await testDb.query(
+    "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'sqlite_%'",
+  );
   if (tables.length !== 0) throw new Error("Refusing to seed a non-empty test database");
   await testDb.execute("CREATE TABLE _test_marker (run_id TEXT NOT NULL)");
   await testDb.execute(`INSERT INTO _test_marker (run_id) VALUES ('${RUN_ID}')`);
   const marker = await testDb.query<{ run_id: string }>("SELECT run_id FROM _test_marker");
-  if (marker.length !== 1 || marker[0].run_id !== RUN_ID) throw new Error("Test database marker mismatch");
+  if (marker.length !== 1 || marker[0].run_id !== RUN_ID)
+    throw new Error("Test database marker mismatch");
 
   // --- Apply DB migrations to local D1 ---
   console.log("▸ Applying DB migrations to local D1...");
@@ -487,25 +509,24 @@ async function main() {
   // tests because L2 deletes posts that L3 is about to read. Keep sequential.
   if (!browserOnly) {
     console.log("\n▸ Running API E2E tests (L2)...\n");
-    const apiTest = spawn(
-      [BUN, "run", "vitest", "run", "--config", "e2e/vitest.config.ts"],
-      {
-        cwd: process.cwd(),
-        env: { ...env, E2E_BASE_URL: `http://localhost:${apiPort}` },
-        stdout: "inherit",
-        stderr: "inherit",
-      },
-    );
+    const apiTest = spawn([BUN, "run", "vitest", "run", "--config", "e2e/vitest.config.ts"], {
+      cwd: process.cwd(),
+      env: { ...env, E2E_BASE_URL: `http://localhost:${apiPort}` },
+      stdout: "inherit",
+      stderr: "inherit",
+    });
     const apiResult = await apiTest.exited;
     if (apiResult !== 0) exitCode = 1;
 
     // Cache proofs mutate the DB outside app hooks. Run after other mutations
     // so an unrelated suite cannot invalidate a deliberately warmed entry.
-    const cacheTest = spawn(
-      [BUN, "run", "vitest", "run", "--config", "e2e/cache.config.ts"],
-      { cwd: process.cwd(), env: { ...env, E2E_BASE_URL: `http://localhost:${apiPort}` }, stdout: "inherit", stderr: "inherit" },
-    );
-    if (await cacheTest.exited !== 0) exitCode = 1;
+    const cacheTest = spawn([BUN, "run", "vitest", "run", "--config", "e2e/cache.config.ts"], {
+      cwd: process.cwd(),
+      env: { ...env, E2E_BASE_URL: `http://localhost:${apiPort}` },
+      stdout: "inherit",
+      stderr: "inherit",
+    });
+    if ((await cacheTest.exited) !== 0) exitCode = 1;
   }
 
   if (!apiOnly) {

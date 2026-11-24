@@ -58,9 +58,7 @@ export const PostGridCard = memo(function PostGridCard({
               onToggleSelect(post.id);
             }}
             className={`h-4 w-4 cursor-pointer rounded border-basalt-border text-basalt-primary focus:ring-basalt-ring ${
-              selected
-                ? "opacity-100"
-                : "opacity-0 group-hover:opacity-100"
+              selected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
             } transition-opacity`}
           />
         </div>

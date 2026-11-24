@@ -34,9 +34,7 @@ describe("POST /api/posts — optional string fields", () => {
 
   it("returns 400 for wrong-type humanId (camelCase) and does not create", async () => {
     for (const bad of wrongTypes) {
-      const response = await POST(
-        fakeRequestWithBody(minimalCreateBody({ humanId: bad })),
-      );
+      const response = await POST(fakeRequestWithBody(minimalCreateBody({ humanId: bad })));
       expect(response.status).toBe(400);
     }
     expect(PostService.create).not.toHaveBeenCalled();
@@ -44,9 +42,7 @@ describe("POST /api/posts — optional string fields", () => {
 
   it("returns 400 for wrong-type human_id (snake_case) and does not create", async () => {
     for (const bad of wrongTypes) {
-      const response = await POST(
-        fakeRequestWithBody(minimalCreateBody({ human_id: bad })),
-      );
+      const response = await POST(fakeRequestWithBody(minimalCreateBody({ human_id: bad })));
       expect(response.status).toBe(400);
     }
     expect(PostService.create).not.toHaveBeenCalled();
@@ -54,9 +50,7 @@ describe("POST /api/posts — optional string fields", () => {
 
   it("returns 400 for wrong-type podcast_url and does not create", async () => {
     for (const bad of wrongTypes) {
-      const response = await POST(
-        fakeRequestWithBody(minimalCreateBody({ podcast_url: bad })),
-      );
+      const response = await POST(fakeRequestWithBody(minimalCreateBody({ podcast_url: bad })));
       expect(response.status).toBe(400);
     }
     expect(PostService.create).not.toHaveBeenCalled();
@@ -64,9 +58,7 @@ describe("POST /api/posts — optional string fields", () => {
 
   it("returns 400 for wrong-type podcastUrl (camelCase) and does not create", async () => {
     for (const bad of wrongTypes) {
-      const response = await POST(
-        fakeRequestWithBody(minimalCreateBody({ podcastUrl: bad })),
-      );
+      const response = await POST(fakeRequestWithBody(minimalCreateBody({ podcastUrl: bad })));
       expect(response.status).toBe(400);
     }
     expect(PostService.create).not.toHaveBeenCalled();
@@ -80,9 +72,7 @@ describe("POST /api/posts — optional string fields", () => {
     ];
     for (const extra of cases) {
       vi.mocked(PostService.create).mockClear();
-      const response = await POST(
-        fakeRequestWithBody(minimalCreateBody(extra)),
-      );
+      const response = await POST(fakeRequestWithBody(minimalCreateBody(extra)));
       expect(response.status).toBe(201);
       expect(PostService.create).toHaveBeenCalledOnce();
     }

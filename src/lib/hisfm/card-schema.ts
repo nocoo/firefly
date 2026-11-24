@@ -7,11 +7,9 @@ import { parseHisFmCardMediaUrl } from "@/lib/hisfm/media-url";
 
 export const HISFM_CARD_API_VERSION = 1;
 
-const zEpisodePageUrl = z
-  .string()
-  .refine((s) => HISFM_EPISODE_URL_RE.test(s), {
-    message: "invalid his.fm episode page_url",
-  });
+const zEpisodePageUrl = z.string().refine((s) => HISFM_EPISODE_URL_RE.test(s), {
+  message: "invalid his.fm episode page_url",
+});
 
 function normalizeMediaUrl(raw: string): string {
   const href = parseHisFmCardMediaUrl(raw);
@@ -96,9 +94,7 @@ export const hisFmPublishedCardSchema = z.object({
 
 export type HisFmPublishedCard = z.infer<typeof hisFmPublishedCardSchema>;
 
-export function parseHisFmCardPayload(
-  json: unknown,
-): HisFmPublishedCard | null {
+export function parseHisFmCardPayload(json: unknown): HisFmPublishedCard | null {
   const outer = hisFmCardResponseSchema.safeParse(json);
   if (!outer.success) return null;
   if (outer.data.status !== "published") return null;

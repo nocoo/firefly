@@ -15,13 +15,17 @@ export function getSiteSettings(db: Db) {
 }
 
 export async function getDefaultHuman(db: Db, defaultId?: string | null) {
-  const defaultHumanId = defaultId === undefined ? (await getSiteSettings(db)).defaultHumanId : defaultId;
+  const defaultHumanId =
+    defaultId === undefined ? (await getSiteSettings(db)).defaultHumanId : defaultId;
   if (!defaultHumanId) return null;
   return readPublicContent(["default-human", defaultHumanId], async () => {
     const human = await loadDefaultHuman(db, defaultHumanId);
     if (!human) return null;
     const { id, name, slug, avatar_version } = human;
-    return { id, name, slug, avatar_version } satisfies Pick<Human, "id" | "name" | "slug" | "avatar_version">;
+    return { id, name, slug, avatar_version } satisfies Pick<
+      Human,
+      "id" | "name" | "slug" | "avatar_version"
+    >;
   });
 }
 
@@ -66,8 +70,7 @@ export function listPosts(db: Db, options: posts.ListPostsOptions = {}) {
   const normalized: posts.ListPostsOptions = {
     status: "published",
     page: Number.isSafeInteger(page) && page > 0 ? page : 1,
-    pageSize: Number.isFinite(pageSize) && pageSize >= 1
-      ? Math.min(100, Math.floor(pageSize)) : 20,
+    pageSize: Number.isFinite(pageSize) && pageSize >= 1 ? Math.min(100, Math.floor(pageSize)) : 20,
     sortBy: options.sortBy ?? "published_at",
     sortOrder: options.sortOrder ?? "desc",
     categoryId: options.categoryId,
@@ -92,15 +95,21 @@ export function getPostTags(db: Db, id: string) {
 }
 
 export function getAdjacentPosts(db: Db, publishedAt: number, id: string) {
-  return readPublicContent(["adjacent", publishedAt, id], () => posts.getAdjacentPosts(db, publishedAt, id));
+  return readPublicContent(["adjacent", publishedAt, id], () =>
+    posts.getAdjacentPosts(db, publishedAt, id),
+  );
 }
 
 export function listCommentsByPost(db: Db, id: string) {
   return readPublicContent(["comments", id], async () =>
-    (await loadComments(db, id)).map((comment) => ({ ...comment, author_email: null })));
+    (await loadComments(db, id)).map((comment) => ({ ...comment, author_email: null })),
+  );
 }
 
-type SitemapPost = Pick<PostWithAgent, "slug" | "title" | "published_at" | "updated_at" | "featured_image">;
+type SitemapPost = Pick<
+  PostWithAgent,
+  "slug" | "title" | "published_at" | "updated_at" | "featured_image"
+>;
 
 export function listSitemapPosts(db: Db) {
   return readPublicContent(["sitemap-posts"], async () => {

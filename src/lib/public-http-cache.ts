@@ -7,8 +7,7 @@
 export const PUBLIC_CONTENT_CACHE_CONTROL =
   "public, max-age=0, must-revalidate, s-maxage=300, stale-while-revalidate=3600";
 
-export const PRIVATE_NOCACHE =
-  "private, no-store, max-age=0, must-revalidate";
+export const PRIVATE_NOCACHE = "private, no-store, max-age=0, must-revalidate";
 
 const AUTH_SESSION_COOKIES = [
   "authjs.session-token",
@@ -44,13 +43,9 @@ const NOCACHE_API_PREFIXES = [
   "/api/comments",
 ] as const;
 
-export function hasAuthSessionCookie(
-  cookieHeader: string | null | undefined,
-): boolean {
+export function hasAuthSessionCookie(cookieHeader: string | null | undefined): boolean {
   if (!cookieHeader) return false;
-  return AUTH_SESSION_COOKIES.some((name) =>
-    cookieHeader.includes(`${name}=`),
-  );
+  return AUTH_SESSION_COOKIES.some((name) => cookieHeader.includes(`${name}=`));
 }
 
 function isStaticAssetPath(pathname: string): boolean {
@@ -59,10 +54,10 @@ function isStaticAssetPath(pathname: string): boolean {
 
 function isProtectedHtmlPath(pathname: string): boolean {
   return (
-    pathname.startsWith("/admin")
-    || pathname.startsWith("/login")
-    || pathname.startsWith("/preview")
-    || pathname.startsWith("/podcast-post-preview")
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/preview") ||
+    pathname.startsWith("/podcast-post-preview")
   );
 }
 
@@ -79,10 +74,7 @@ export function shouldCachePublicHtmlRequest(
   return true;
 }
 
-export function shouldCachePublicApiGet(
-  pathname: string,
-  method: string,
-): boolean {
+export function shouldCachePublicApiGet(pathname: string, method: string): boolean {
   if (method !== "GET" && method !== "HEAD") return false;
   if (PUBLIC_API_GET_EXACT.has(pathname)) return true;
   if (NOCACHE_API_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
@@ -93,11 +85,6 @@ export function shouldCachePublicApiGet(
   );
 }
 
-export function cacheControlForPublicApiGet(
-  pathname: string,
-  method: string,
-): string | null {
-  return shouldCachePublicApiGet(pathname, method)
-    ? PUBLIC_CONTENT_CACHE_CONTROL
-    : null;
+export function cacheControlForPublicApiGet(pathname: string, method: string): string | null {
+  return shouldCachePublicApiGet(pathname, method) ? PUBLIC_CONTENT_CACHE_CONTROL : null;
 }

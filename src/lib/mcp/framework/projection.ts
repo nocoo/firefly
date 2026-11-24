@@ -20,14 +20,10 @@ export function projectFields<T extends Record<string, unknown>>(
   if (include?.includes("full")) return { ...record };
 
   // Resolve which fields should be restored from omit list
-  const included = new Set(
-    (include ?? []).flatMap((key) => config.groups[key] ?? []),
-  );
+  const included = new Set((include ?? []).flatMap((key) => config.groups[key] ?? []));
 
   // Build omit set (fields to drop minus included overrides)
   const omitSet = new Set(config.omit.filter((k) => !included.has(k)));
 
-  return Object.fromEntries(
-    Object.entries(record).filter(([key]) => !omitSet.has(key)),
-  );
+  return Object.fromEntries(Object.entries(record).filter(([key]) => !omitSet.has(key)));
 }

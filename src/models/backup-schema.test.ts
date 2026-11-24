@@ -1,13 +1,6 @@
 import { describe, it, expect } from "vitest";
-import {
-  BACKUP_SCHEMA_VERSION,
-  epochToIso,
-  nullableEpochToIso,
-} from "./backup-schema";
-import type {
-  FireflyBackupEnvelope,
-  ExportedSiteSettings,
-} from "./backup-schema";
+import { BACKUP_SCHEMA_VERSION, epochToIso, nullableEpochToIso } from "./backup-schema";
+import type { FireflyBackupEnvelope, ExportedSiteSettings } from "./backup-schema";
 
 // ---------------------------------------------------------------------------
 // BACKUP_SCHEMA_VERSION
@@ -75,9 +68,9 @@ describe("FireflyBackupEnvelope shape", () => {
     author_email: "test@example.com",
     twitter_handle: "@test",
     social_links: "[]",
-  wechat_name: "Test account",
-  wechat_qr_image_url: "/qr.png",
-  wechat_avatar_url: "/avatar.png",
+    wechat_name: "Test account",
+    wechat_qr_image_url: "/qr.png",
+    wechat_avatar_url: "/avatar.png",
     ai_provider: "openai",
     ai_model: "gpt-4",
     ai_base_url: "",
@@ -153,8 +146,6 @@ describe("FireflyBackupEnvelope shape", () => {
   });
 
   it("includes updated_at in ExportedSiteSettings as ISO string", () => {
-    expect(sampleSettings.updated_at).toMatch(
-      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/,
-    );
+    expect(sampleSettings.updated_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
   });
 });

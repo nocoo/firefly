@@ -27,10 +27,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
     if (!author) return notFoundResponse("Author");
     return jsonResponse({ author });
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }
 
@@ -70,11 +67,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     ) {
       return errorResponse("description must be a string or null", 400);
     }
-    if (
-      body.email !== undefined &&
-      body.email !== null &&
-      typeof body.email !== "string"
-    ) {
+    if (body.email !== undefined && body.email !== null && typeof body.email !== "string") {
       return errorResponse("email must be a string or null", 400);
     }
     if (
@@ -97,12 +90,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
         : body.description === null
           ? null
           : body.description.trim();
-    const email =
-      body.email === undefined
-        ? undefined
-        : body.email === null
-          ? null
-          : body.email;
+    const email = body.email === undefined ? undefined : body.email === null ? null : body.email;
 
     if (name !== undefined && name === "") {
       return errorResponse("name cannot be empty", 400);
@@ -130,8 +118,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     if (description !== undefined) updateInput.description = description;
     if (email !== undefined) updateInput.email = email;
     if (body.profile_public !== undefined) {
-      updateInput.profilePublic =
-        body.profile_public === true || body.profile_public === 1;
+      updateInput.profilePublic = body.profile_public === true || body.profile_public === 1;
     }
 
     const updated = await updateHuman(db, id, updateInput);
@@ -149,10 +136,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     if (error instanceof Error && error.message === "Default human not found") {
       return errorResponse(error.message, 400);
     }
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }
 
@@ -186,9 +170,6 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
 
     return jsonResponse({ success: true });
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

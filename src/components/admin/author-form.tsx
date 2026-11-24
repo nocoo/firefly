@@ -129,9 +129,7 @@ export function AuthorForm({
       <AdminPageHeader
         title={isNew ? "创建作者" : "编辑作者"}
         description={
-          isNew
-            ? "创建作者资料并配置公开信息与头像。"
-            : "更新作者资料、公开信息与头像。"
+          isNew ? "创建作者资料并配置公开信息与头像。" : "更新作者资料、公开信息与头像。"
         }
         backHref="/admin/authors"
         backLabel="返回作者"
@@ -140,11 +138,7 @@ export function AuthorForm({
       {!isNew && (
         <div className="flex items-center gap-4">
           {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt=""
-              className="h-16 w-16 rounded-full object-cover"
-            />
+            <img src={avatarUrl} alt="" className="h-16 w-16 rounded-full object-cover" />
           ) : (
             <span className="flex h-16 w-16 items-center justify-center rounded-full bg-basalt-secondary text-basalt-muted-foreground">
               <User className="h-6 w-6" />
@@ -203,19 +197,11 @@ export function AuthorForm({
         </div>
         <div className="space-y-1">
           <label className="text-sm font-medium">描述</label>
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-          />
+          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
         </div>
         <div className="space-y-1">
           <label className="text-sm font-medium">邮箱</label>
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <label className="flex items-center gap-2 text-sm">
           <input
@@ -232,11 +218,7 @@ export function AuthorForm({
           {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isNew ? "创建" : "保存"}
         </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => router.push("/admin/authors")}
-        >
+        <Button type="button" variant="secondary" onClick={() => router.push("/admin/authors")}>
           取消
         </Button>
       </div>

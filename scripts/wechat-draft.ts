@@ -68,7 +68,12 @@ async function request(fetcher: typeof fetch, url: string, init: RequestInit, op
   return response;
 }
 
-async function requestJson(fetcher: typeof fetch, url: string, init: RequestInit, operation: string) {
+async function requestJson(
+  fetcher: typeof fetch,
+  url: string,
+  init: RequestInit,
+  operation: string,
+) {
   const response = await request(fetcher, url, init, operation);
   try {
     return validated(z.record(z.string(), z.unknown()), await response.json(), operation);
@@ -78,7 +83,10 @@ async function requestJson(fetcher: typeof fetch, url: string, init: RequestInit
   }
 }
 
-async function loadCredentials(env: Readonly<Record<string, string | undefined>>, credentialsPath: string) {
+async function loadCredentials(
+  env: Readonly<Record<string, string | undefined>>,
+  credentialsPath: string,
+) {
   let file: Record<string, string> = {};
   if (!env.WECHAT_APPID || !env.WECHAT_APPSECRET) {
     try {
@@ -111,20 +119,32 @@ function imageUrl(src: string, sourceUrl: string): string {
 function validatedSourceUrl(value: string): string {
   try {
     const url = new URL(value);
-    if (["http:", "https:"].includes(url.protocol) && !url.username && !url.password) return url.href;
+    if (["http:", "https:"].includes(url.protocol) && !url.username && !url.password)
+      return url.href;
   } catch {
     // Do not echo a potentially credential-bearing URL.
   }
   throw new DraftError("Source URL must be an absolute HTTP(S) URL without credentials");
 }
 
-function validateDraft(article: { title: string; author: string; digest: string; content: string }) {
-  for (const [field, limit] of [["title", 32], ["author", 16], ["digest", 120]] as const) {
+function validateDraft(article: {
+  title: string;
+  author: string;
+  digest: string;
+  content: string;
+}) {
+  for (const [field, limit] of [
+    ["title", 32],
+    ["author", 16],
+    ["digest", 120],
+  ] as const) {
     const length = [...article[field]].length;
-    if (length > limit) throw new DraftError(`WeChat draft ${field} exceeds ${limit} characters (${length})`);
+    if (length > limit)
+      throw new DraftError(`WeChat draft ${field} exceeds ${limit} characters (${length})`);
   }
   const length = [...article.content].length;
-  if (length >= 20_000) throw new DraftError(`WeChat draft content must be fewer than 20000 characters (${length})`);
+  if (length >= 20_000)
+    throw new DraftError(`WeChat draft content must be fewer than 20000 characters (${length})`);
 }
 
 async function downloadImage(fetcher: typeof fetch, url: string): Promise<ImageAsset> {
@@ -163,30 +183,49 @@ async function downloadImage(fetcher: typeof fetch, url: string): Promise<ImageA
   try {
     const image = sharp(bytes, { limitInputPixels: 40_000_000, failOn: "warning" });
     const metadata = await image.metadata();
-    if (["jpeg", "png"].includes(metadata.format ?? "") && bytes.byteLength < MAX_BODY_IMAGE_BYTES) {
+    if (
+      ["jpeg", "png"].includes(metadata.format ?? "") &&
+      bytes.byteLength < MAX_BODY_IMAGE_BYTES
+    ) {
       await image.stats();
       const png = metadata.format === "png";
-      return { bytes, type: png ? "image/png" : "image/jpeg", filename: png ? "image.png" : "image.jpg" };
+      return {
+        bytes,
+        type: png ? "image/png" : "image/jpeg",
+        filename: png ? "image.png" : "image.jpg",
+      };
     }
-    bytes = new Uint8Array(await image.rotate()
-      .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
-      .flatten({ background: "#ffffff" }).jpeg({ quality: 80 }).toBuffer());
+    bytes = new Uint8Array(
+      await image
+        .rotate()
+        .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
+        .flatten({ background: "#ffffff" })
+        .jpeg({ quality: 80 })
+        .toBuffer(),
+    );
   } catch {
     throw new DraftError("Image could not be decoded or converted for WeChat");
   }
-  if (bytes.byteLength >= MAX_BODY_IMAGE_BYTES) throw new DraftError("Converted image exceeds the 1 MiB WeChat body-image limit");
+  if (bytes.byteLength >= MAX_BODY_IMAGE_BYTES)
+    throw new DraftError("Converted image exceeds the 1 MiB WeChat body-image limit");
   return { bytes, type: "image/jpeg", filename: "image.jpg" };
 }
 
 export async function runWeChatDraft(args: string[], options: RunOptions = {}) {
-  const usage = "Usage: bun scripts/wechat-draft.ts <post id or slug> [--dry-run] [--source-url <url>]";
+  const usage =
+    "Usage: bun scripts/wechat-draft.ts <post id or slug> [--dry-run] [--source-url <url>]";
   let identifier: string | undefined;
   let dryRun = false;
   let sourceOverride: string | undefined;
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === "--dry-run" && !dryRun) dryRun = true;
-    else if (arg === "--source-url" && sourceOverride === undefined && args[i + 1] && !args[i + 1].startsWith("--")) {
+    else if (
+      arg === "--source-url" &&
+      sourceOverride === undefined &&
+      args[i + 1] &&
+      !args[i + 1].startsWith("--")
+    ) {
       sourceOverride = validatedSourceUrl(args[++i]);
     } else if (!arg.startsWith("--") && identifier === undefined && arg.trim()) identifier = arg;
     else throw new DraftError(usage);
@@ -197,29 +236,41 @@ export async function runWeChatDraft(args: string[], options: RunOptions = {}) {
   const log = options.log ?? console.log;
   const key = env.MCP_FIREFLY_API_KEY;
   if (!key) throw new DraftError("MCP_FIREFLY_API_KEY is required");
-  const credentials = await loadCredentials(env, options.credentialsPath ?? join(homedir(), ".config/wechat/credentials.env"));
+  const credentials = await loadCredentials(
+    env,
+    options.credentialsPath ?? join(homedir(), ".config/wechat/credentials.env"),
+  );
   let requestId = 0;
 
   async function rpc(method: string, params: Record<string, unknown>) {
-    const data = await requestJson(fetcher, `${SITE_URL}/api/mcp`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${key}`,
-        Accept: "application/json, text/event-stream",
-        Origin: SITE_URL,
+    const data = await requestJson(
+      fetcher,
+      `${SITE_URL}/api/mcp`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${key}`,
+          Accept: "application/json, text/event-stream",
+          Origin: SITE_URL,
+        },
+        body: JSON.stringify({ jsonrpc: "2.0", id: ++requestId, method, params }),
       },
-      body: JSON.stringify({ jsonrpc: "2.0", id: ++requestId, method, params }),
-    }, "Firefly MCP");
+      "Firefly MCP",
+    );
     if (data.error) throw new DraftError("Firefly MCP: JSON-RPC request failed");
     return data.result;
   }
 
   async function callTool(name: string, toolArgs: Record<string, unknown>) {
-    const result = validated(z.object({
-      isError: z.boolean().optional(),
-      content: z.array(z.object({ type: z.string(), text: z.string().optional() })),
-    }), await rpc("tools/call", { name, arguments: toolArgs }), "Firefly MCP tool");
+    const result = validated(
+      z.object({
+        isError: z.boolean().optional(),
+        content: z.array(z.object({ type: z.string(), text: z.string().optional() })),
+      }),
+      await rpc("tools/call", { name, arguments: toolArgs }),
+      "Firefly MCP tool",
+    );
     if (result.isError) throw new DraftError(`Firefly MCP: ${name} failed`);
     const text = result.content.find((item) => item.type === "text")?.text;
     if (!text) throw new DraftError("Firefly MCP: missing tool result");
@@ -230,18 +281,38 @@ export async function runWeChatDraft(args: string[], options: RunOptions = {}) {
     }
   }
 
-  const tools = validated(z.object({ tools: z.array(z.object({ name: z.string() })) }),
-    await rpc("tools/list", {}), "Firefly MCP tool list");
+  const tools = validated(
+    z.object({ tools: z.array(z.object({ name: z.string() })) }),
+    await rpc("tools/list", {}),
+    "Firefly MCP tool list",
+  );
   const byId = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(identifier);
-  const post = validated(postSchema, await callTool("get_post", byId ? { id: identifier } : { slug: identifier }), "Firefly post");
+  const post = validated(
+    postSchema,
+    await callTool("get_post", byId ? { id: identifier } : { slug: identifier }),
+    "Firefly post",
+  );
   const renderedLocally = !tools.tools.some((tool) => tool.name === "export_post");
-  const html = renderedLocally ? renderPostExport(post, "wechat").html : validated(z.object({
-    id: z.literal(post.id), slug: z.literal(post.slug), format: z.literal("wechat"), html: z.string().min(1),
-  }), await callTool("export_post", { id: post.id, format: "wechat" }), "Firefly export").html;
-  if (!post.featured_image) throw new DraftError("Post needs a featured image for the WeChat draft cover");
-  const publicSourceUrl = post.status === "published" && post.published_at
-    ? validatedSourceUrl(post.canonical_url ?? `${SITE_URL}${postPath(post.slug, post.published_at)}`)
-    : undefined;
+  const html = renderedLocally
+    ? renderPostExport(post, "wechat").html
+    : validated(
+        z.object({
+          id: z.literal(post.id),
+          slug: z.literal(post.slug),
+          format: z.literal("wechat"),
+          html: z.string().min(1),
+        }),
+        await callTool("export_post", { id: post.id, format: "wechat" }),
+        "Firefly export",
+      ).html;
+  if (!post.featured_image)
+    throw new DraftError("Post needs a featured image for the WeChat draft cover");
+  const publicSourceUrl =
+    post.status === "published" && post.published_at
+      ? validatedSourceUrl(
+          post.canonical_url ?? `${SITE_URL}${postPath(post.slug, post.published_at)}`,
+        )
+      : undefined;
   const sourceUrl = sourceOverride ?? publicSourceUrl;
   const imageBaseUrl = publicSourceUrl ?? `${SITE_URL}/`;
   const $ = load(html, null, false);
@@ -265,23 +336,38 @@ export async function runWeChatDraft(args: string[], options: RunOptions = {}) {
   for (const url of imageSources) images.set(url, await downloadImage(fetcher, url));
 
   async function wechat(path: string, init: RequestInit, operation: string) {
-    const data = await requestJson(fetcher, `${WECHAT_URL}${path}`, { method: "POST", ...init }, operation);
+    const data = await requestJson(
+      fetcher,
+      `${WECHAT_URL}${path}`,
+      { method: "POST", ...init },
+      operation,
+    );
     const status = validated(z.object({ errcode: z.number().int().optional() }), data, operation);
     if (status.errcode) throw new DraftError(`${operation}: WeChat error ${status.errcode}`);
     return data;
   }
 
-  const tokenData = await wechat("/cgi-bin/stable_token", {
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ grant_type: "client_credential", ...credentials, force_refresh: false }),
-  }, "WeChat authentication");
+  const tokenData = await wechat(
+    "/cgi-bin/stable_token",
+    {
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        grant_type: "client_credential",
+        ...credentials,
+        force_refresh: false,
+      }),
+    },
+    "WeChat authentication",
+  );
   const token = validated(z.string().min(1), tokenData.access_token, "WeChat authentication");
 
   if (dryRun) {
     const directory = await mkdtemp(join(tmpdir(), "firefly-wechat-"));
     const htmlPath = join(directory, "article.html");
     await writeFile(htmlPath, html, { mode: 0o600 });
-    log(`Dry run: ${renderedLocally ? "local shared formatter" : "MCP export_post"}; ${images.size} image(s) validated; no WeChat uploads or draft writes`);
+    log(
+      `Dry run: ${renderedLocally ? "local shared formatter" : "MCP export_post"}; ${images.size} image(s) validated; no WeChat uploads or draft writes`,
+    );
     log(`HTML: ${htmlPath}`);
     return { dryRun: true as const, htmlPath, renderedLocally };
   }
@@ -291,8 +377,11 @@ export async function runWeChatDraft(args: string[], options: RunOptions = {}) {
     if (!image) throw new DraftError("Image was not validated before upload");
     const form = new FormData();
     form.append("media", new Blob([image.bytes], { type: image.type }), image.filename);
-    const data = await wechat(`${path}${path.includes("?") ? "&" : "?"}access_token=${encodeURIComponent(token)}`,
-      { body: form }, "WeChat image upload");
+    const data = await wechat(
+      `${path}${path.includes("?") ? "&" : "?"}access_token=${encodeURIComponent(token)}`,
+      { body: form },
+      "WeChat image upload",
+    );
     return validated(z.string().min(1), data[field], "WeChat image upload");
   }
 
@@ -309,22 +398,39 @@ export async function runWeChatDraft(args: string[], options: RunOptions = {}) {
       } catch {
         throw new DraftError("WeChat image upload: invalid image URL");
       }
-      if (!["http:", "https:"].includes(uploadedUrl.protocol)) throw new DraftError("WeChat image upload: invalid image URL");
+      if (!["http:", "https:"].includes(uploadedUrl.protocol))
+        throw new DraftError("WeChat image upload: invalid image URL");
       uploaded = uploadedUrl.href;
       replacements.set(url, uploaded);
     }
-    image.attr("src", uploaded).removeAttr("srcset").removeAttr("sizes").removeAttr("data-original-src");
+    image
+      .attr("src", uploaded)
+      .removeAttr("srcset")
+      .removeAttr("sizes")
+      .removeAttr("data-original-src");
   }
   article.content = $.html();
   validateDraft(article);
-  const thumbMediaId = await upload("/cgi-bin/material/add_material?type=image", coverUrl, "media_id");
-  const draft = await wechat(`/cgi-bin/draft/add?access_token=${encodeURIComponent(token)}`, {
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ articles: [{
-      ...article,
-      thumb_media_id: thumbMediaId,
-    }] }),
-  }, "WeChat draft creation");
+  const thumbMediaId = await upload(
+    "/cgi-bin/material/add_material?type=image",
+    coverUrl,
+    "media_id",
+  );
+  const draft = await wechat(
+    `/cgi-bin/draft/add?access_token=${encodeURIComponent(token)}`,
+    {
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        articles: [
+          {
+            ...article,
+            thumb_media_id: thumbMediaId,
+          },
+        ],
+      }),
+    },
+    "WeChat draft creation",
+  );
   const mediaId = validated(z.string().min(1), draft.media_id, "WeChat draft creation");
   log(`media_id: ${mediaId}`);
   return { dryRun: false as const, mediaId, renderedLocally };

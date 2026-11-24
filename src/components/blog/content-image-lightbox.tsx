@@ -45,11 +45,6 @@ export function ContentImageLightbox() {
   if (!lightbox) return null;
 
   return (
-    <ImageLightbox
-      src={lightbox.src}
-      alt={lightbox.alt}
-      open
-      onClose={() => setLightbox(null)}
-    />
+    <ImageLightbox src={lightbox.src} alt={lightbox.alt} open onClose={() => setLightbox(null)} />
   );
 }

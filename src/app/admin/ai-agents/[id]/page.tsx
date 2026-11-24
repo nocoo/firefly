@@ -10,9 +10,7 @@ interface AiAgentEditPageProps {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({
-  params,
-}: AiAgentEditPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: AiAgentEditPageProps): Promise<Metadata> {
   const { id } = await params;
   if (id === "new") {
     return { title: "创建代理" };
@@ -24,9 +22,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function AiAgentEditPage({
-  params,
-}: AiAgentEditPageProps) {
+export default async function AiAgentEditPage({ params }: AiAgentEditPageProps) {
   const { id } = await params;
   const db = getDb();
   const isNew = id === "new";
@@ -40,15 +36,7 @@ export default async function AiAgentEditPage({
 
   // Pre-compute avatar URL on server (getAgentAvatarUrl is server-only)
   // Use agent.id (not slug) for stable paths that survive slug changes
-  const avatarUrl = agent
-    ? getAgentAvatarUrl(agent.id, agent.avatar_version, 128)
-    : null;
+  const avatarUrl = agent ? getAgentAvatarUrl(agent.id, agent.avatar_version, 128) : null;
 
-  return (
-    <AiAgentForm
-      agent={agent}
-      categories={categories}
-      initialAvatarUrl={avatarUrl}
-    />
-  );
+  return <AiAgentForm agent={agent} categories={categories} initialAvatarUrl={avatarUrl} />;
 }

@@ -109,12 +109,7 @@ describe("renderMarkdown", () => {
   it("falls back safely when filename extraction returns undefined", () => {
     const originalPop = Array.prototype.pop as (this: unknown[]) => unknown;
     vi.spyOn(Array.prototype, "pop").mockImplementation(function (this: unknown[]) {
-      if (
-        this.length === 3 &&
-        this[0] === "" &&
-        this[1] === "uploads" &&
-        this[2] === "photo.jpg"
-      ) {
+      if (this.length === 3 && this[0] === "" && this[1] === "uploads" && this[2] === "photo.jpg") {
         return undefined;
       }
 
@@ -340,22 +335,34 @@ const x = 1;
     expect(html).not.toContain('target="_blank"');
   });
 
-  it.each(["java\tscript:alert(1)", "jav\u0000ascript:alert(1)", "java script:alert(1)", "\u0001javascript:alert(1)", "ftp://example.com/file"])("rejects obfuscated or disallowed link schemes: %j", (href) => {
+  it.each([
+    "java\tscript:alert(1)",
+    "jav\u0000ascript:alert(1)",
+    "java script:alert(1)",
+    "\u0001javascript:alert(1)",
+    "ftp://example.com/file",
+  ])("rejects obfuscated or disallowed link schemes: %j", (href) => {
     const html = renderMarkdown(`[**click**](<${href}>)`);
     expect(html).not.toContain("href=");
     expect(html).toContain("<strong>click</strong>");
   });
 
-  it.each(["java\tscript:alert(1)", "jav\u0000ascript:alert(1)"])("rejects control-character image scheme bypasses: %j", (href) => {
-    expect(renderMarkdown(`![Image](<${href}>)`)).not.toContain("<img");
-  });
+  it.each(["java\tscript:alert(1)", "jav\u0000ascript:alert(1)"])(
+    "rejects control-character image scheme bypasses: %j",
+    (href) => {
+      expect(renderMarkdown(`![Image](<${href}>)`)).not.toContain("<img");
+    },
+  );
 
-  it.each(["HTTPS://example.com/path", "ht\ttps://example.com/path"])("allows safe HTTP schemes after normalization: %j", (href) => {
-    const html = renderMarkdown(`[click](<${href}>)`);
-    expect(html).toContain('href="');
-    expect(html).not.toContain("\t");
-    expect(html).toContain('rel="noopener noreferrer"');
-  });
+  it.each(["HTTPS://example.com/path", "ht\ttps://example.com/path"])(
+    "allows safe HTTP schemes after normalization: %j",
+    (href) => {
+      const html = renderMarkdown(`[click](<${href}>)`);
+      expect(html).toContain('href="');
+      expect(html).not.toContain("\t");
+      expect(html).toContain('rel="noopener noreferrer"');
+    },
+  );
 
   it("rejects malformed absolute URLs rather than emitting an unchecked href", () => {
     const html = renderMarkdown("[click](https://[invalid)");
@@ -452,7 +459,7 @@ const x = 1;
     expect(html).toContain('<li id="fn-1" value="1">');
     expect(html).toContain('<li id="fn-2" value="2">');
     expect((html.match(/<li /g) ?? []).length).toBe(2);
-    expect(html.indexOf("id=\"fn-1\"")).toBeLessThan(html.indexOf("id=\"fn-2\""));
+    expect(html.indexOf('id="fn-1"')).toBeLessThan(html.indexOf('id="fn-2"'));
   });
 
   it("keeps original numeric labels so [^4] stays 4, not 3", () => {
@@ -531,16 +538,33 @@ describe("sanitizeUrl", () => {
     expect(new URL(result ?? "").protocol).toBe("tel:");
   });
 
-  it.each(["", " \t\n", "java\nscript:alert(1)", "java\rscript:alert(1)", "java\u007fscript:alert(1)", "java\u009fscript:alert(1)", "java\u00a0script:alert(1)", "java\u2003script:alert(1)"])("rejects empty or control/whitespace-obfuscated URLs %j", (url) => {
+  it.each([
+    "",
+    " \t\n",
+    "java\nscript:alert(1)",
+    "java\rscript:alert(1)",
+    "java\u007fscript:alert(1)",
+    "java\u009fscript:alert(1)",
+    "java\u00a0script:alert(1)",
+    "java\u2003script:alert(1)",
+  ])("rejects empty or control/whitespace-obfuscated URLs %j", (url) => {
     expect(sanitizeUrl(url)).toBeNull();
   });
 
-  it.each(["https://example.com/a b?q=two words", "/a b", "../a b", "#heading", "//example.com/path"])("preserves significant path/query spaces and relative URL syntax: %s", (url) => {
+  it.each([
+    "https://example.com/a b?q=two words",
+    "/a b",
+    "../a b",
+    "#heading",
+    "//example.com/path",
+  ])("preserves significant path/query spaces and relative URL syntax: %s", (url) => {
     expect(sanitizeUrl(url)).toBe(url);
   });
 
   it("strips embedded controls from safe URLs before returning them", () => {
-    expect(sanitizeUrl(" \u0000ht\ttps://exa\rmple.com/a\n b \u001f")).toBe("https://example.com/a b");
+    expect(sanitizeUrl(" \u0000ht\ttps://exa\rmple.com/a\n b \u001f")).toBe(
+      "https://example.com/a b",
+    );
   });
 });
 
@@ -669,9 +693,7 @@ describe("renderMarkdown with optimizeImages", () => {
     vi.resetModules();
 
     try {
-      const { renderMarkdown: renderWithMalformed } = await import(
-        "./markdown"
-      );
+      const { renderMarkdown: renderWithMalformed } = await import("./markdown");
       const html = renderWithMalformed(`![Alt](${internalUrl})`, opts);
       // No optimization — the catch path produced an empty OPTIMIZABLE_HOSTS.
       expect(html).not.toContain("/_next/image");

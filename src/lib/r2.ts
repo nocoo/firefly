@@ -43,15 +43,26 @@ const MAGIC_SIGNATURES: { mime: string; check: (buf: Uint8Array) => boolean }[] 
     mime: "image/webp",
     // RIFF....WEBP
     check: (b) =>
-      b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
-      b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50,
+      b[0] === 0x52 &&
+      b[1] === 0x49 &&
+      b[2] === 0x46 &&
+      b[3] === 0x46 &&
+      b[8] === 0x57 &&
+      b[9] === 0x45 &&
+      b[10] === 0x42 &&
+      b[11] === 0x50,
   },
   {
     mime: "image/avif",
     // ....ftypavif  or  ....ftypavis
     check: (b) =>
-      b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70 &&
-      b[8] === 0x61 && b[9] === 0x76 && b[10] === 0x69,
+      b[4] === 0x66 &&
+      b[5] === 0x74 &&
+      b[6] === 0x79 &&
+      b[7] === 0x70 &&
+      b[8] === 0x61 &&
+      b[9] === 0x76 &&
+      b[10] === 0x69,
   },
 ];
 
@@ -137,10 +148,7 @@ export function generateFireflyR2Key(filename: string): string {
  * actual content via magic-byte detection to prevent spoofed types.
  * Returns error message if invalid, null if valid.
  */
-export function validateUpload(
-  data: Uint8Array,
-  declaredMime: string,
-): string | null {
+export function validateUpload(data: Uint8Array, declaredMime: string): string | null {
   if (data.length > MAX_FILE_SIZE) {
     return `File too large: ${(data.length / 1024 / 1024).toFixed(1)}MB exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit`;
   }

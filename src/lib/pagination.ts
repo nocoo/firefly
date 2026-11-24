@@ -9,10 +9,7 @@
  *          (current=6, total=20): [1, "...", 4, 5, 6, 7, 8, "...", 20]
  *          (current=1, total=5):  [1, 2, 3, 4, 5]
  */
-export function buildPageSlots(
-  current: number,
-  total: number,
-): (number | "...")[] {
+export function buildPageSlots(current: number, total: number): (number | "...")[] {
   if (total <= 7) {
     return Array.from({ length: total }, (_, i) => i + 1);
   }

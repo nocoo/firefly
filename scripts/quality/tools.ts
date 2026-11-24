@@ -45,7 +45,10 @@ export function compareVersions(a: string, b: string): number {
   return 0;
 }
 
-async function run(bin: string, args: string[]): Promise<{ code: number; text: string } | undefined> {
+async function run(
+  bin: string,
+  args: string[],
+): Promise<{ code: number; text: string } | undefined> {
   const which = Bun.which(bin);
   if (!which) return undefined;
   const proc = Bun.spawn([which, ...args], { stdout: "pipe", stderr: "pipe" });
@@ -61,11 +64,19 @@ export async function checkTool(key: keyof typeof TOOLS): Promise<ToolCheck> {
   const spec = TOOLS[key];
   const result = await run(spec.bin, spec.args);
   if (!result) {
-    return { name: key, ok: false, detail: `${spec.bin} not found on PATH (need >= ${spec.minimum})` };
+    return {
+      name: key,
+      ok: false,
+      detail: `${spec.bin} not found on PATH (need >= ${spec.minimum})`,
+    };
   }
   const match = spec.pattern.exec(result.text);
   if (!match) {
-    return { name: key, ok: false, detail: `${spec.bin} ${spec.args.join(" ")} printed no version` };
+    return {
+      name: key,
+      ok: false,
+      detail: `${spec.bin} ${spec.args.join(" ")} printed no version`,
+    };
   }
   const version = match[1];
   if (compareVersions(version, spec.minimum) < 0) {

@@ -4,11 +4,9 @@
 
 - fix(admin): refine sidebar visit-site placement and drop empty partition
 
-
 ## v2.19.13 (2026-11-18)
 
 - fix: restore sidebar visit site action
-
 
 ## v2.19.12 (2026-11-18)
 
@@ -19,7 +17,6 @@
 - refactor: migrate ui to basalt 3.5
 - docs: use spelled-out system skill names
 - docs: point skill references to system1 names
-
 
 ## v2.19.10 (2026-11-18)
 
@@ -42,7 +39,6 @@
 ## v2.19.4 (2026-10-26)
 
 - ci: Tailscale WIF deploy to jp2
-
 
 ## v2.19.1 (2026-10-22)
 
@@ -93,13 +89,11 @@
 - feat(data): persist and validate podcast_url
 - feat(db): add podcast_url to posts
 
-
 ## v2.19.0 (2026-10-22)
 
 - feat: link posts to his.fm episodes with native podcast card
 - feat(mcp): podcast_url and human_id on create_post/update_post
 - feat(db): add posts.podcast_url migration (run `bun run migrate` before deploy)
-
 
 ## v2.18.1 (2026-10-21)
 
@@ -111,7 +105,6 @@
 - docs: record approved jp2 production cutover
 - docs: record private origin acceptance
 
-
 ## v2.18.0 (2026-10-21)
 
 - test: detect weakened origin redirect checks
@@ -119,11 +112,9 @@
 - feat: package a database-independent container
 - docs: plan jp2 migration approval boundary
 
-
 ## v2.17.1 (2026-10-16)
 
 - fix: preserve unicode in website html exports (#838)
-
 
 ## v2.17.0 (2026-10-16)
 
@@ -141,7 +132,6 @@
 - deps: bump lucide-react 1.55.0 → 1.57.0
 - deps: bump ai 7.0.138 → 7.0.142
 - deps: bump @aws-sdk/client-s3 3.1150.0 → 3.1152.0
-
 
 ## v2.16.0 (2026-10-16)
 
@@ -162,7 +152,6 @@
 - chore(deps): bump lucide-react 1.52.0 -> 1.55.0
 - chore(deps): bump ai 7.0.133 -> 7.0.138
 - chore(deps): bump @aws-sdk/client-s3 3.1147.0 -> 3.1150.0
-
 
 ## v2.15.0 (2026-10-08)
 
@@ -209,7 +198,6 @@
 - chore: upgrade dotenv to 18.0.6
 - chore: upgrade basalt to 2.2.0
 
-
 ## v2.14.2 (2026-10-01)
 
 - docs: record caddy lookup scope miss
@@ -251,7 +239,6 @@
 - fix: use basalt select in admin
 - fix: disable worker default and preview urls
 
-
 ## v2.14.1 (2026-09-19)
 
 - fix(rss): prepend article cover images to feed content
@@ -268,7 +255,6 @@
 - chore(deps): update workers-types
 - chore(deps): update biome
 - chore(deps): update client-s3
-
 
 ## v2.14.0 (2026-09-18)
 
@@ -348,17 +334,14 @@
 - chore(deps): bump lucide-react to 1.42.0 (#663)
 - chore(deps): bump @types/node to 26.5.0 (#662)
 
-
 ## v2.13.3 (2026-09-08)
 
 - fix: use settings site name for home title
-
 
 ## v2.13.2 (2026-09-08)
 
 - feat: justify journal body paragraphs
 - fix: hide theme divider when header wraps
-
 
 ## v2.13.1 (2026-09-08)
 
@@ -366,7 +349,6 @@
 - fix: wrap archive focus from last expanded link
 - fix: replace removed ai-agent back button
 - fix: assert media filters as comboboxes
-
 
 ## v2.13.0 (2026-09-08)
 
@@ -394,18 +376,15 @@
 - fix: use transparent firefly app marks
 - fix: improve Journal social previews and browser identity
 
-
 ## v2.12.3 (2026-09-06)
 
 - fix: publish release notes without shell parsing
 - docs: distinguish firefly and site identities
 - feat: adopt the firefly family logo
 
-
 ## v2.12.2 (2026-09-06)
 
 - fix(navigation): add portfolio header link to hexly.ai
-
 
 ## v2.12.1 (2026-09-06)
 
@@ -425,14 +404,12 @@
 - chore(deps): bump @types/node to 26.4.1 (#628)
 - test(e2e): validate canonical against configured site URL
 
-
 ## v2.12.0 (2026-09-05)
 
 - style(blog): simplify social links to a themed icon row
 - style(blog): unify sidebar section decorations
 - feat(blog): refine artwork and sidebar navigation
 - feat(blog): align the public journal with the play-side theme
-
 
 ## v2.11.0 (2026-09-04)
 
@@ -448,7 +425,6 @@
 - refactor(admin): migrate AppShell, AppHeader, Sidebar and Island to basalt chrome
 - refactor(auth): migrate login badge card to basalt surface and tokens
 - build(deps): install @nocoo/basalt 2.0.3 and configure tailwind
-
 
 ## v2.10.2 (2026-09-04)
 
@@ -484,13 +460,11 @@
 - chore(deps): bump hono to 4.13.5
 - chore(deps): bump next to 16.3.3
 
-
 ## v2.10.1 (2026-08-25)
 
 - fix: tighten homepage card spacing
 - fix: clean citation list and blog hr
 - fix: portal lightbox above sticky topbar
-
 
 ## v2.10.0 (2026-08-25)
 
@@ -567,19 +541,16 @@
 - chore(deps): bump workers-types to 5.20260817.1
 - fix(test): isolate mcp category and tag mocks
 
-
 ## v2.9.2 (2026-08-16)
 
 - fix(ui): clarify author profile lookup dialog
 - feat(ui): add author profile lookup dialog
-
 
 ## v2.9.1 (2026-08-16)
 
 - fix(ui): use icon table row actions
 - feat(ui): group authors above system
 - test: cover human identity branches
-
 
 ## v2.9.0 (2026-08-15)
 
@@ -805,7 +776,6 @@
 - deps: bump @biomejs/biome 2.5.3 → 2.5.4 (#298)
 - deps: bump @aws-sdk/client-s3 3.1088.0 → 3.1089.0 (#297)
 
-
 ## v2.8.0 (2026-07-16)
 
 - Merge remote-tracking branch 'origin/main'
@@ -856,11 +826,9 @@
 - chore(deps): upgrade dependencies (batch 2026-07-01)
 - chore(deps): upgrade dependencies (batch 2026-06-30) (#219)
 
-
 ## v2.7.2 (2026-06-29)
 
 - feat(ai): add authType (apiKey | bearer) for custom provider
-
 
 ## v2.7.1 (2026-06-29)
 
@@ -989,7 +957,6 @@
 - chore(deps): bump worker @cloudflare/workers-types 4.20260608.1 → 4.20260609.1
 - chore(deps): bump @aws-sdk/client-s3 3.1064.0 → 3.1065.0
 
-
 ## v2.7.0 (2026-06-10)
 
 - fix(layout): wrap next-themes ThemeProvider in client boundary
@@ -1063,13 +1030,11 @@
 - fix(b-01): replace brand hover gradients with flat fills
 - fix(s-04): add color-scheme for native form controls in dark mode
 
-
 ## v2.6.5 (2026-06-08)
 
 - chore(deps): bump 4 major versions (lucide-react, marked, lint-staged, typescript)
 - chore(deps): bump worker @cloudflare/workers-types 4.20260605.1 → 4.20260608.1
 - chore(deps): bump 13 minor/patch dependencies
-
 
 ## v2.6.4 (2026-06-05)
 
@@ -1083,7 +1048,6 @@
 - chore(deps): upgrade next to 16.2.7
 - Merge pull request #71 from nocoo/fix/cve-deps
 - fix: update brace-expansion and ws to fix CVEs
-
 
 ## v2.6.3 (2026-05-18)
 
@@ -1146,7 +1110,6 @@
 - docs: update test references from bun test to vitest
 - fix(ci): restore e2e and worker vitest configs removed in error
 
-
 ## v2.6.2 (2026-05-05)
 
 - fix: address review feedback — config cleanup, env visibility, SQL splitter
@@ -1161,7 +1124,6 @@
 - refactor: rewrite E2E runner for fully local test infrastructure
 - feat: add local filesystem R2 adapter for E2E testing
 - test: raise coverage gate to 95%
-
 
 ## v2.6.1 (2026-05-03)
 
@@ -1200,7 +1162,6 @@
 - fix(ui): anchor collapsed sidebar logo to prevent jitter
 - Merge pull request #62 from nocoo/fix/issue-61
 - fix(ui): use rounded-card/rounded-widget utilities from theme tokens
-
 
 ## v2.6.0 (2026-04-23)
 
@@ -1247,7 +1208,6 @@
 - Build Next.js once for both API+browser servers
 - Baseline: L1=1.03s, L2+L3=107.9s (build 2x + tests sequential)
 
-
 ## v2.5.17 (2026-04-20)
 
 - fix(test): fix AI agents empty state detection in L3 test
@@ -1272,7 +1232,6 @@
 - test(e2e): add admin AI agents API tests
 - test(worker): add FTS module tests
 
-
 ## v2.5.16 (2026-04-20)
 
 - fix: address issues from dependency cleanup commits
@@ -1281,12 +1240,10 @@
 - chore: remove custom LRU cache handler
 - chore: remove unused hono and @hono/node-server dependencies
 
-
 ## v2.5.15 (2026-04-20)
 
 - test(e2e): drop locale assertions and fix navigation race
 - refactor(i18n): remove i18n framework, hardcode Chinese throughout
-
 
 ## v2.5.14 (2026-04-19)
 
@@ -1307,7 +1264,6 @@
 - fix(build): set NODE_OPTIONS via nixpacks.toml
 - fix(build): use node directly with max-old-space-size flag
 - fix(build): increase Node.js heap memory for next build
-
 
 ## v2.5.13 (2026-04-19)
 
@@ -1337,7 +1293,6 @@
 - Baseline: RSS memory after warmup + 20 request cycles
 - fix(e2e): add x-forwarded-proto header to bypass HTTPS redirect
 
-
 ## v2.5.12 (2026-04-19)
 
 - fix(instrumentation): throttle high memory warnings to once per 5 min
@@ -1364,7 +1319,6 @@
 - fix(proxy): skip HTTPS redirect for localhost in production
 - Baseline: RSS memory after warmup + 20 request cycles
 - fix(e2e): add x-forwarded-proto header to bypass HTTPS redirect
-
 
 ## v2.5.11 (2026-04-18)
 
@@ -1420,7 +1374,6 @@
 - Merge pull request #34 from nocoo/feat/live-33
 - feat(api): add /api/live liveness endpoint (#33)
 
-
 ## v2.5.10 (2026-04-16)
 
 - deps: update hono 4.12.12→4.12.14, @modelcontextprotocol/sdk 1.27.1→1.29.0
@@ -1445,13 +1398,11 @@
 - Merge pull request #17 from nocoo/fix/issue-16
 - fix(ui): migrate L3 controls from bg-input to bg-secondary + border-border
 
-
 ## v2.5.9 (2026-04-14)
 
 - fix(ui): replace raw select tags with Select component in MCP token manager
 - fix(mcp): reject invalid scope on token creation instead of fail-open
 - feat(mcp): add token scope management to admin UI
-
 
 ## v2.5.8 (2026-04-13)
 
@@ -1476,23 +1427,19 @@
 - fix(design): replace bg-black with design tokens
 - fix(design): extract sidebar width magic numbers to CSS variables
 
-
 ## v2.5.7 (2026-04-13)
 
 - fix(ai-agent): clarify author_id requirement scope in prompt
 - fix(mcp): restrict author tag access to list/get/create only
 - feat(mcp): add tag CRUD tools to author scope
 
-
 ## v2.5.6 (2026-04-13)
 
 - fix(post): auto-set published_at when status becomes published
 
-
 ## v2.5.5 (2026-04-13)
 
 - fix(i18n): add missing translations for AI agent modal
-
 
 ## v2.5.4 (2026-04-13)
 
@@ -1500,11 +1447,9 @@
 - docs: add retrospective for PRAGMA foreign_keys migration issue
 - fix(migrations): add @batch mode for connection-level PRAGMA statements
 
-
 ## v2.5.3 (2026-04-13)
 
 - fix(mcp): unify auth error messages for security
-
 
 ## v2.5.2 (2026-04-13)
 
@@ -1518,7 +1463,6 @@
 - docs: fix agent permission descriptions to reflect ai_agent_id model
 - feat(ci): add pre-push test DB schema check
 - docs: add retrospective for DB migration before release
-
 
 ## v2.5.1 (2026-04-13)
 
@@ -1536,11 +1480,9 @@
 - fix(ui): use semantic color tokens in AI Agent components
 - feat(design): add warning semantic color token
 
-
 ## v2.4.4 (2026-04-08)
 
 - feat(admin): enhance posts list with tags, published date, and quick actions
-
 
 ## v2.4.3 (2026-04-08)
 
@@ -1555,7 +1497,6 @@
 - feat: add system monitor page with 48h memory/cache visualization
 - feat: add system memory monitoring to admin dashboard
 
-
 ## v2.4.1 (2026-04-07)
 
 - chore: move system monitor to overview section in sidebar
@@ -1565,17 +1506,14 @@
 - feat: add system monitor page with 48h memory/cache visualization
 - feat: add system memory monitoring to admin dashboard
 
-
 ## v2.4.0 (2026-04-06)
 
 - refactor: consolidate domain env vars into R2_PUBLIC_URL
-
 
 ## v2.3.2 (2026-04-06)
 
 - chore(deps): upgrade next 16.2.2, vitest 4.1.2, vite 8.0.5 (security)
 - feat(admin): add delete functionality for revoked MCP tokens
-
 
 ## v2.3.1 (2026-04-03)
 
@@ -1589,7 +1527,6 @@
 - fix(admin): add bg-secondary to table containers per B-4 spec
 - fix(ui): align interactive controls with B-5 color spec
 
-
 ## v2.3.0 (2026-03-31)
 
 - fix: suppress Recharts width/height -1 warnings on initial render
@@ -1601,7 +1538,6 @@
 - fix: upgrade CI security tools (osv-scanner v2.3.5, gitleaks v8.30.1)
 - chore: migrate ports 7043/17043/27043 → 7028/17028/27028
 
-
 ## v2.2.0 (2026-03-30)
 
 - chore: update next-env.d.ts auto-generated type reference path
@@ -1612,7 +1548,6 @@
 - fix: move search input back to above categories section
 - fix: adjust search input position, width alignment, and clear button color
 - chore: decommission fts-rebuild endpoint after production index built
-
 
 ## v2.1.0 (2026-03-30)
 
@@ -1630,7 +1565,6 @@
 - feat(lib): add Db.call() for custom Worker endpoints
 - feat(worker): add FTS segmentation and search endpoints
 - feat(db): add FTS5 search migration
-
 
 ## v2.0.4 (2026-03-29)
 
@@ -1678,12 +1612,10 @@
 - docs: add full-text search design doc (21-full-text-search.md)
 - fix: osv-scanner lockfile path (bun.lock → pnpm-lock.yaml)
 
-
 ## v2.0.1 (2026-03-28)
 
 - Disable Next.js Link prefetch on all blog frontend routes
 - refactor: consolidate worker-v2 into worker, deploy as firefly
-
 
 ## v2.0.0 (2026-03-28)
 
@@ -1730,7 +1662,6 @@
 - docs: add entity data layer refactoring design (doc 20)
 - feat(admin): dynamic year filter with counts for posts list
 
-
 ## v1.7.7 (2026-03-27)
 
 - feat(media): dynamic year filter with counts and file type icons
@@ -1738,16 +1669,13 @@
 - docs: replace lizheng.blog references with generic placeholders
 - refactor: replace lizheng.blog hardcoded instances with env vars
 
-
 ## v1.7.6 (2026-03-27)
 
 - style: add icons to continue reading button and post byline
 
-
 ## v1.7.5 (2026-03-27)
 
 - fix: auto-save AI excerpt to post in generate_excerpt MCP tool
-
 
 ## v1.7.4 (2026-03-27)
 
@@ -1755,19 +1683,16 @@
 - fix: balance EXCERPT_PROMPT between SEO and reader engagement
 - fix: rewrite EXCERPT_PROMPT for teaser-style summaries
 
-
 ## v1.7.3 (2026-03-27)
 
 - chore: add tsbuildinfo to gitignore
 - refactor: unify AI excerpt prompts with author-first-person style
-
 
 ## v1.7.2 (2026-03-27)
 
 - chore: update auto-generated type files
 - fix: use postTitle + filename as image alt fallback
 - fix: ensure all images have alt attribute, add title support
-
 
 ## v1.7.1 (2026-03-27)
 
@@ -1777,7 +1702,6 @@
 - feat: add drag-and-drop category reordering in admin
 - feat: add batch reorder API for categories
 - feat: change category sort order to DESC and set default ranking
-
 
 ## v1.7.0 (2026-03-27)
 
@@ -1803,7 +1727,6 @@
 - feat: add icons to sidebar section headings
 - feat: add lucide icons to post byline and fix edit button alignment
 - feat: replace GitHub link with admin dashboard button in global bar
-
 
 ## v1.6.1 (2026-03-27)
 
@@ -1845,7 +1768,6 @@
 - perf: add lint-staged for incremental pre-commit linting
 - perf: move coverage enforcement from pre-commit to pre-push
 
-
 ## v1.5.0 (2026-03-26)
 
 - feat(backup): add Backy remote backup integration — admin page, push/pull webhooks, config & test API, history, data export
@@ -1860,7 +1782,6 @@
 - fix: classify Sogou and Yisou spiders as search engine bots
 - refactor: remove duplicate AggregatesPanel from analytics dashboard
 
-
 ## v1.4.0 (2026-03-26)
 
 - chore: update tsbuildinfo
@@ -1873,25 +1794,21 @@
 - fix: resolve picomatch CVE, E2E next build+start, skip HTTPS in test
 - fix: E2E uses next build+start, skip HTTPS redirect in test mode
 
-
 ## v1.3.0 (2026-03-25)
 
 - chore: update tsbuildinfo
 - feat: blog UX improvements — localization, navigation, theming
-
 
 ## v1.2.2 (2026-03-25)
 
 - chore: update tsbuildinfo
 - fix: redirect HTTP to HTTPS via x-forwarded-proto in proxy
 
-
 ## v1.2.1 (2026-03-25)
 
 - fix: sync preview theme with global dark mode on mount
 - fix: use fixed dark foreground on grid card hover buttons for dark mode visibility
 - refactor: merge analytics into dashboard page
-
 
 ## v1.2.0 (2026-03-25)
 
@@ -1914,7 +1831,6 @@
 - feat: add URL unfurl service with SSRF protection
 - feat: add reference URL columns migration and data layer
 - docs: add 14-reference-url feature spec
-
 
 ## v1.1.0 (2026-03-25)
 
@@ -1958,7 +1874,6 @@
 - refactor: rename /admin/mcp-tokens to /admin/mcp
 - feat: add MCP setup guide to admin tokens page
 - fix: add revalidate=300 to root layout and description fallback
-
 
 ## v1.0.0 (2026-03-25)
 

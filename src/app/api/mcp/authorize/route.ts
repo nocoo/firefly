@@ -24,8 +24,17 @@ export async function GET(request: Request) {
     }
 
     // Validate required params
-    if (!responseType || !clientId || !redirectUri || !codeChallenge || !codeChallengeMethod || !state) {
-      return errorResponse("Missing required parameters: response_type, client_id, redirect_uri, code_challenge, code_challenge_method, state");
+    if (
+      !responseType ||
+      !clientId ||
+      !redirectUri ||
+      !codeChallenge ||
+      !codeChallengeMethod ||
+      !state
+    ) {
+      return errorResponse(
+        "Missing required parameters: response_type, client_id, redirect_uri, code_challenge, code_challenge_method, state",
+      );
     }
 
     if (responseType !== "code") {
@@ -76,9 +85,6 @@ export async function GET(request: Request) {
     const loginUrl = `${siteUrl}/login?callbackUrl=${encodeURIComponent(callbackUrl)}`;
     return NextResponse.redirect(loginUrl);
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

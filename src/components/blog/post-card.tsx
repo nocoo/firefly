@@ -23,9 +23,7 @@ interface PostCardProps {
 
 export function PostCard({ post, author, priority, snippet }: PostCardProps) {
   const href = postPath(post.slug, post.published_at);
-  const date = post.published_at
-    ? formatDateDisplay(post.published_at)
-    : "草稿";
+  const date = post.published_at ? formatDateDisplay(post.published_at) : "草稿";
 
   return (
     <article className="blog-entry">
@@ -46,9 +44,7 @@ export function PostCard({ post, author, priority, snippet }: PostCardProps) {
           <Calendar className="blog-byline-icon" />
           <span>发布于</span>{" "}
           {post.published_at ? (
-            <time dateTime={new Date(post.published_at * 1000).toISOString()}>
-              {date}
-            </time>
+            <time dateTime={new Date(post.published_at * 1000).toISOString()}>{date}</time>
           ) : (
             <span>{date}</span>
           )}

@@ -69,9 +69,15 @@ describe("listCategories", () => {
   });
 
   it("lets the public cache reload without reusing the inner taxonomy TTL", async () => {
-    vi.mocked(db.query).mockResolvedValue({ results: [sampleCategory], meta: { changes: 0, duration: 0 } });
+    vi.mocked(db.query).mockResolvedValue({
+      results: [sampleCategory],
+      meta: { changes: 0, duration: 0 },
+    });
     await listCategories(db);
-    vi.mocked(db.query).mockResolvedValue({ results: [{ ...sampleCategory, name: "Renamed" }], meta: { changes: 0, duration: 0 } });
+    vi.mocked(db.query).mockResolvedValue({
+      results: [{ ...sampleCategory, name: "Renamed" }],
+      meta: { changes: 0, duration: 0 },
+    });
     expect((await listCategories(db, false))[0].name).toBe("Renamed");
     expect(db.query).toHaveBeenCalledTimes(2);
   });
@@ -83,7 +89,9 @@ describe("listCategories", () => {
 
 describe("getCategoryBySlug", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns category when found", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleCategory);
@@ -107,7 +115,9 @@ describe("getCategoryBySlug", () => {
 
 describe("getCategoryById", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns category when found", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleCategory);
@@ -126,7 +136,9 @@ describe("getCategoryById", () => {
 
 describe("createCategory", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("inserts category and returns it", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
@@ -178,7 +190,9 @@ describe("createCategory", () => {
 
 describe("updateCategory", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("updates specified fields", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue({ ...sampleCategory, name: "Updated" });
@@ -228,7 +242,9 @@ describe("updateCategory", () => {
 
 describe("deleteCategory", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("deletes and returns true", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
@@ -251,7 +267,9 @@ describe("deleteCategory", () => {
 
 describe("reorderCategories", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("updates sort_order for all ids in batch", async () => {
     vi.mocked(db.batch).mockResolvedValue([
@@ -283,7 +301,9 @@ describe("reorderCategories", () => {
 
 describe("listCategoriesWithPostStats", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns categories enriched with post counts", async () => {
     const enriched = {

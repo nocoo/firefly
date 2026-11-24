@@ -39,10 +39,7 @@ export function parseToolResult(result: CallToolResult): unknown {
 }
 
 /** Assert that a CallToolResult is an error, optionally matching a substring. */
-export function expectError(
-  result: CallToolResult,
-  substring?: string,
-): void {
+export function expectError(result: CallToolResult, substring?: string): void {
   expect(result.isError).toBe(true);
   if (substring) {
     const item = result.content[0];

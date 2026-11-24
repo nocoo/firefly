@@ -17,9 +17,8 @@ vi.mock("@/data/entities/human", () => ({
 }));
 
 vi.mock("@/lib/human-avatar", () => ({
-  getHumanAvatarUrl: vi.fn(
-    (id: string, version: string | null) =>
-      version ? `https://cdn.test/humans/${id}/${version}/avatar-80.jpg` : null,
+  getHumanAvatarUrl: vi.fn((id: string, version: string | null) =>
+    version ? `https://cdn.test/humans/${id}/${version}/avatar-80.jpg` : null,
   ),
 }));
 
@@ -70,9 +69,7 @@ describe("GET /api/authors/profile", () => {
 
   it("matches by sha256 hash and ignores email when both are present", async () => {
     const hash = hashNormalizedEmail("li@example.com");
-    const res = await GET(
-      request(`?email=other@example.com&hash=${hash}`),
-    );
+    const res = await GET(request(`?email=other@example.com&hash=${hash}`));
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toEqual({
       name: "Li Zheng",

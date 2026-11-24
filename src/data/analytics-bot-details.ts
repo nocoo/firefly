@@ -3,10 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import type { Db } from "@/lib/db";
-import type {
-  AiBotDetailResponse,
-  SearchDetailResponse,
-} from "@/models/analytics-types";
+import type { AiBotDetailResponse, SearchDetailResponse } from "@/models/analytics-types";
 import {
   ARTICLE_PATH_RE,
   TIME_WINDOW_WHERE,
@@ -29,11 +26,7 @@ interface BotDetailResult {
  * Shared loader for "bot-style" source details (search, AI). Both fetch the
  * same three series: bots breakdown, top pages, daily-by-bot trend.
  */
-async function loadBotDetail(
-  db: Db,
-  days: number,
-  source: SourceType,
-): Promise<BotDetailResult> {
+async function loadBotDetail(db: Db, days: number, source: SourceType): Promise<BotDetailResult> {
   const cond = sourceCondition(source);
   const { startDate, endDate } = computePeriodDates(days);
 
@@ -86,10 +79,7 @@ async function loadBotDetail(
   };
 }
 
-export async function getSearchDetail(
-  db: Db,
-  days: number,
-): Promise<SearchDetailResponse> {
+export async function getSearchDetail(db: Db, days: number): Promise<SearchDetailResponse> {
   const cond = sourceCondition("search");
   const [base, crawlerVsPageRaw] = await Promise.all([
     loadBotDetail(db, days, "search"),
@@ -125,10 +115,7 @@ export async function getSearchDetail(
   return { type: "search", ...base, crawlerVsPage };
 }
 
-export async function getAiBotDetail(
-  db: Db,
-  days: number,
-): Promise<AiBotDetailResponse> {
+export async function getAiBotDetail(db: Db, days: number): Promise<AiBotDetailResponse> {
   const base = await loadBotDetail(db, days, "ai");
   return { type: "ai", ...base };
 }

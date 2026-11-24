@@ -5,33 +5,35 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // (hoisted above variable declarations).
 // ---------------------------------------------------------------------------
 
-const { sitemapRows } = vi.hoisted(() => ({ sitemapRows: [
-      {
-        id: "p1",
-        title: "First Post",
-        slug: "first-post",
-        status: "published",
-        featured_image: "https://cdn.example.com/img.jpg",
-        published_at: 1700000000,
-        updated_at: 1710000000,
-        category_name: "General",
-        category_slug: "general",
-      },
-      {
-        id: "p2",
-        title: "Second Post",
-        slug: "second-post",
-        status: "published",
-        featured_image: null,
-        published_at: 1700100000,
-        updated_at: 1700100000,
-        category_name: null,
-        category_slug: null,
-      },
-    ] }));
+const { sitemapRows } = vi.hoisted(() => ({
+  sitemapRows: [
+    {
+      id: "p1",
+      title: "First Post",
+      slug: "first-post",
+      status: "published",
+      featured_image: "https://cdn.example.com/img.jpg",
+      published_at: 1700000000,
+      updated_at: 1710000000,
+      category_name: "General",
+      category_slug: "general",
+    },
+    {
+      id: "p2",
+      title: "Second Post",
+      slug: "second-post",
+      status: "published",
+      featured_image: null,
+      published_at: 1700100000,
+      updated_at: 1700100000,
+      category_name: null,
+      category_slug: null,
+    },
+  ],
+}));
 
 vi.mock("next/server", async (importOriginal) => ({
-  ...await importOriginal<typeof import("next/server")>(),
+  ...(await importOriginal<typeof import("next/server")>()),
   connection: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -46,13 +48,8 @@ vi.mock("@/lib/seo", async (importOriginal) => {
 
 vi.mock("@/data/public-content", () => ({
   listSitemapPosts: vi.fn().mockResolvedValue({ posts: sitemapRows }),
-  listSitemapCategories: vi.fn().mockResolvedValue([
-    { slug: "general" },
-    { slug: "reading" },
-  ]),
-  listMonthlyArchives: vi.fn().mockResolvedValue([
-    { year: 2023, month: 11, count: 2 },
-  ]),
+  listSitemapCategories: vi.fn().mockResolvedValue([{ slug: "general" }, { slug: "reading" }]),
+  listMonthlyArchives: vi.fn().mockResolvedValue([{ year: 2023, month: 11, count: 2 }]),
 
   listTags: vi.fn().mockResolvedValue([
     { id: "t1", name: "JavaScript", slug: "javascript", post_count: 5 },
@@ -76,16 +73,12 @@ describe("GET /sitemap.xml", () => {
   it("returns 200 with XML content type", async () => {
     const response = await GET();
     expect(response.status).toBe(200);
-    expect(response.headers.get("Content-Type")).toBe(
-      "application/xml; charset=utf-8",
-    );
+    expect(response.headers.get("Content-Type")).toBe("application/xml; charset=utf-8");
   });
 
   it("includes Cache-Control header", async () => {
     const response = await GET();
-    expect(response.headers.get("Cache-Control")).toBe(
-      PUBLIC_CONTENT_CACHE_CONTROL,
-    );
+    expect(response.headers.get("Cache-Control")).toBe(PUBLIC_CONTENT_CACHE_CONTROL);
   });
 
   it("produces valid sitemap XML structure", async () => {
@@ -93,9 +86,7 @@ describe("GET /sitemap.xml", () => {
     const xml = await response.text();
 
     expect(xml).toContain('<?xml version="1.0" encoding="UTF-8"?>');
-    expect(xml).toContain(
-      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"',
-    );
+    expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"');
     expect(xml).toContain("</urlset>");
   });
 
@@ -113,12 +104,8 @@ describe("GET /sitemap.xml", () => {
     const xml = await response.text();
 
     // Nov 14, 2023 → /2023/11/first-post
-    expect(xml).toContain(
-      "<loc>http://localhost:3000/2023/11/first-post</loc>",
-    );
-    expect(xml).toContain(
-      "<loc>http://localhost:3000/2023/11/second-post</loc>",
-    );
+    expect(xml).toContain("<loc>http://localhost:3000/2023/11/first-post</loc>");
+    expect(xml).toContain("<loc>http://localhost:3000/2023/11/second-post</loc>");
     const postPriorityMatches = xml.match(/<priority>0\.8<\/priority>/g);
     expect(postPriorityMatches?.length).toBe(2);
   });
@@ -128,9 +115,7 @@ describe("GET /sitemap.xml", () => {
     const xml = await response.text();
 
     expect(xml).toContain("<image:image>");
-    expect(xml).toContain(
-      "<image:loc>https://cdn.example.com/img.jpg</image:loc>",
-    );
+    expect(xml).toContain("<image:loc>https://cdn.example.com/img.jpg</image:loc>");
     expect(xml).toContain("<image:title>First Post</image:title>");
   });
 
@@ -138,48 +123,32 @@ describe("GET /sitemap.xml", () => {
     const response = await GET();
     const xml = await response.text();
 
-    expect(xml).toContain(
-      "<loc>http://localhost:3000/category/general</loc>",
-    );
-    expect(xml).toContain(
-      "<loc>http://localhost:3000/category/reading</loc>",
-    );
-    expect(xml).not.toContain(
-      "<loc>http://localhost:3000/category/empty</loc>",
-    );
+    expect(xml).toContain("<loc>http://localhost:3000/category/general</loc>");
+    expect(xml).toContain("<loc>http://localhost:3000/category/reading</loc>");
+    expect(xml).not.toContain("<loc>http://localhost:3000/category/empty</loc>");
   });
 
   it("includes tags with >= 3 posts (excludes thin-content tags)", async () => {
     const response = await GET();
     const xml = await response.text();
 
-    expect(xml).toContain(
-      "<loc>http://localhost:3000/tag/javascript</loc>",
-    );
-    expect(xml).toContain(
-      "<loc>http://localhost:3000/tag/react</loc>",
-    );
+    expect(xml).toContain("<loc>http://localhost:3000/tag/javascript</loc>");
+    expect(xml).toContain("<loc>http://localhost:3000/tag/react</loc>");
     // CSS has only 2 posts → excluded
-    expect(xml).not.toContain(
-      "<loc>http://localhost:3000/tag/css</loc>",
-    );
+    expect(xml).not.toContain("<loc>http://localhost:3000/tag/css</loc>");
   });
 
   it("includes archive entries", async () => {
     const response = await GET();
     const xml = await response.text();
 
-    expect(xml).toContain(
-      "<loc>http://localhost:3000/archive/2023-11</loc>",
-    );
+    expect(xml).toContain("<loc>http://localhost:3000/archive/2023-11</loc>");
   });
 
   it("includes XSL stylesheet processing instruction", async () => {
     const response = await GET();
     const xml = await response.text();
 
-    expect(xml).toContain(
-      '<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>',
-    );
+    expect(xml).toContain('<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>');
   });
 });

@@ -92,10 +92,8 @@ export function buildQuery(filters: Filters, page: number): string {
   if (filters.mimeType) sp.set("mime_type", filters.mimeType);
   if (filters.year) sp.set("year", filters.year);
   if (filters.year && filters.month) sp.set("month", filters.month);
-  if (filters.sortBy && filters.sortBy !== "created_at")
-    sp.set("sort_by", filters.sortBy);
-  if (filters.sortOrder && filters.sortOrder !== "desc")
-    sp.set("sort_order", filters.sortOrder);
+  if (filters.sortBy && filters.sortBy !== "created_at") sp.set("sort_by", filters.sortBy);
+  if (filters.sortOrder && filters.sortOrder !== "desc") sp.set("sort_order", filters.sortOrder);
   return sp.toString();
 }
 

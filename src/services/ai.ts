@@ -75,10 +75,7 @@ export const EXCERPT_PROMPT = `你是这篇文章的作者，用中文写一段�
  *
  * @throws Error("AI not configured") when provider or API key is missing
  */
-export async function generateExcerpt(
-  title: string,
-  content: string,
-): Promise<string> {
+export async function generateExcerpt(title: string, content: string): Promise<string> {
   const db = getDb();
   const settings = await getAiSettings(db);
 

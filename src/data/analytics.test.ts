@@ -16,7 +16,6 @@ import {
   getOtherBotDetail,
 } from "./analytics";
 
-
 describe("recordPageView", () => {
   let db: Db;
   beforeEach(() => {
@@ -182,7 +181,9 @@ describe("fillDailyByBotGaps", () => {
     // 2 bots × 2 days = 4 rows
     expect(result).toHaveLength(4);
     // Googlebot on 2026-03-20 = 10, on 2026-03-21 = 0
-    expect(result.find((r) => r.date === "2026-03-20" && r.botName === "Googlebot")?.count).toBe(10);
+    expect(result.find((r) => r.date === "2026-03-20" && r.botName === "Googlebot")?.count).toBe(
+      10,
+    );
     expect(result.find((r) => r.date === "2026-03-21" && r.botName === "Googlebot")?.count).toBe(0);
     // Bingbot on 2026-03-20 = 0, on 2026-03-21 = 5
     expect(result.find((r) => r.date === "2026-03-20" && r.botName === "Bingbot")?.count).toBe(0);
@@ -337,13 +338,9 @@ describe("getAnalyticsDailyTrend", () => {
   });
 
   it("maps DB rows through the row-shaping callback (other_bot → otherBot)", async () => {
-    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
-      .toISOString()
-      .slice(0, 10);
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     vi.mocked(db.query).mockResolvedValue({
-      results: [
-        { date: yesterday, human: 5, search: 2, ai: 1, other_bot: 3 },
-      ],
+      results: [{ date: yesterday, human: 5, search: 2, ai: 1, other_bot: 3 }],
       meta: { changes: 0, duration: 1 },
     });
 
@@ -639,11 +636,9 @@ describe("getAiBotDetail", () => {
     vi.mocked(db.query).mockImplementation(async () => {
       callIndex++;
       // Call 1: bots
-      if (callIndex === 1)
-        return { results: [{ bot_name: "GPTBot", count: 10 }], meta };
+      if (callIndex === 1) return { results: [{ bot_name: "GPTBot", count: 10 }], meta };
       // Call 2: topPagesRaw
-      if (callIndex === 2)
-        return { results: [{ path: "/blog/test", views: 5 }], meta };
+      if (callIndex === 2) return { results: [{ path: "/blog/test", views: 5 }], meta };
       // Call 3: dailyByBotRaw
       return { results: [{ date: "2026-03-20", bot_name: "GPTBot", count: 10 }], meta };
     });
@@ -681,12 +676,9 @@ describe("getOtherBotDetail", () => {
     let callIndex = 0;
     vi.mocked(db.query).mockImplementation(async () => {
       callIndex++;
-      if (callIndex === 1)
-        return { results: [{ category: "social", count: 5 }], meta };
-      if (callIndex === 2)
-        return { results: [{ bot_name: "Twitterbot", count: 3 }], meta };
-      if (callIndex === 3)
-        return { results: [{ bot_name: "UptimeRobot", count: 2 }], meta };
+      if (callIndex === 1) return { results: [{ category: "social", count: 5 }], meta };
+      if (callIndex === 2) return { results: [{ bot_name: "Twitterbot", count: 3 }], meta };
+      if (callIndex === 3) return { results: [{ bot_name: "UptimeRobot", count: 2 }], meta };
       return {
         results: [{ bot_name: "Mystery", user_agent: "Mozilla/5.0", count: 1 }],
         meta,

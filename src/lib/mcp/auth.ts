@@ -39,10 +39,7 @@ export function extractBearerToken(authHeader: string | null): string | null {
 // ---------------------------------------------------------------------------
 
 /** Validate a bearer token from a request. Updates last_used_at on success. */
-export async function validateMcpToken(
-  db: Db,
-  authHeader: string | null,
-): Promise<McpAuthOutcome> {
+export async function validateMcpToken(db: Db, authHeader: string | null): Promise<McpAuthOutcome> {
   const bearerToken = extractBearerToken(authHeader);
 
   if (!bearerToken) {
@@ -83,10 +80,7 @@ export async function validateMcpToken(
  * Non-web protocols (e.g. vscode-file://, electron://, tauri://) are
  * sent by desktop clients and are not susceptible — allow them through.
  */
-export function validateOrigin(
-  origin: string | null,
-  siteUrl: string,
-): McpAuthError | null {
+export function validateOrigin(origin: string | null, siteUrl: string): McpAuthError | null {
   if (!origin) return null; // CLI clients don't send Origin — allow
 
   // Allow site origin

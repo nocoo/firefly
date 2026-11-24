@@ -61,4 +61,6 @@ if (findings.length > 0) {
   process.exit(1);
 }
 
-console.log(`\n[G2] lockfiles scanned: ${LOCKFILES.length} (${LOCKFILES.join(", ")}), 0 vulnerabilities`);
+console.log(
+  `\n[G2] lockfiles scanned: ${LOCKFILES.length} (${LOCKFILES.join(", ")}), 0 vulnerabilities`,
+);

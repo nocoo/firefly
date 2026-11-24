@@ -8,7 +8,7 @@
 
 @utility text-2xs {
   font-size: 0.625rem; /* 10px */
-  line-height: 1rem;   /* 16px */
+  line-height: 1rem; /* 16px */
 }
 
 @utility text-3xs {
@@ -32,6 +32,12 @@
 }
 
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

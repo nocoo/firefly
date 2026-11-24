@@ -54,8 +54,7 @@ const nextConfig: NextConfig = {
   // The default proxy adapter strips these before calling our handler.
   skipProxyUrlNormalize: true,
   allowedDevOrigins: (process.env.ALLOWED_DEV_ORIGINS ?? "").split(",").filter(Boolean),
-  devIndicators:
-    process.env.SCREENSHOT_CAPTURE === "true" ? false : undefined,
+  devIndicators: process.env.SCREENSHOT_CAPTURE === "true" ? false : undefined,
   env: {
     NEXT_PUBLIC_APP_VERSION: pkg.version,
   },

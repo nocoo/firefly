@@ -11,13 +11,7 @@ export interface AgentWithAvatarUrl extends AiAgentWithCategory {
   avatarUrl: string | null;
 }
 
-export function CopyButton({
-  text,
-  className,
-}: {
-  text: string;
-  className?: string;
-}) {
+export function CopyButton({ text, className }: { text: string; className?: string }) {
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(timerRef.current), []);
@@ -30,7 +24,8 @@ export function CopyButton({
   };
 
   return (
-    <button type="button"
+    <button
+      type="button"
       onClick={handleCopy}
       className={`shrink-0 rounded-md p-1.5 text-basalt-muted-foreground hover:bg-basalt-accent hover:text-basalt-foreground transition-colors ${className ?? ""}`}
       title="Copy"
@@ -90,9 +85,7 @@ export function NewAgentModal({
         </div>
         <div className="space-y-4 px-6 py-4">
           <div>
-            <label className="text-xs font-medium text-basalt-muted-foreground">
-              作者 ID
-            </label>
+            <label className="text-xs font-medium text-basalt-muted-foreground">作者 ID</label>
             <div className="mt-1 flex items-center gap-2 rounded-md border border-basalt-border bg-basalt-secondary px-3 py-2">
               <code className="flex-1 text-xs font-mono text-basalt-foreground break-all select-all">
                 {agentId}
@@ -102,9 +95,7 @@ export function NewAgentModal({
           </div>
 
           <div>
-            <label className="text-xs font-medium text-basalt-muted-foreground">
-              连接提示
-            </label>
+            <label className="text-xs font-medium text-basalt-muted-foreground">连接提示</label>
             <div className="mt-1 rounded-md border border-basalt-border bg-basalt-secondary">
               <div className="flex items-center justify-end px-3 py-1.5 border-b border-basalt-border">
                 <CopyButton text={prompt} />

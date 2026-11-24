@@ -42,10 +42,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
       },
     });
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }
 
@@ -83,16 +80,23 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     if (body.slug !== undefined && typeof body.slug !== "string") {
       return errorResponse("slug must be a string", 400);
     }
-    if (body.description !== undefined && body.description !== null && typeof body.description !== "string") {
+    if (
+      body.description !== undefined &&
+      body.description !== null &&
+      typeof body.description !== "string"
+    ) {
       return errorResponse("description must be a string or null", 400);
     }
 
     // Normalize inputs (trim before any validation)
     const normalizedName = body.name !== undefined ? body.name.trim() : undefined;
     const normalizedSlug = body.slug !== undefined ? body.slug.trim() : undefined;
-    const normalizedDescription = body.description !== undefined
-      ? (body.description === null ? null : body.description.trim())
-      : undefined;
+    const normalizedDescription =
+      body.description !== undefined
+        ? body.description === null
+          ? null
+          : body.description.trim()
+        : undefined;
 
     // Validate: reject empty strings after trim
     if (normalizedName !== undefined && normalizedName === "") {
@@ -133,10 +137,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       },
     });
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }
 
@@ -168,9 +169,6 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
 
     return jsonResponse({ success: true });
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

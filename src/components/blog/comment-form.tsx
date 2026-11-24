@@ -24,9 +24,7 @@ export function CommentForm({ postId, enabled }: CommentFormProps) {
 
   if (!enabled) {
     return (
-      <p className="mt-6 text-sm text-blog-muted">
-        留言功能仅站长开启 — 通过邮件或社交链接联系。
-      </p>
+      <p className="mt-6 text-sm text-blog-muted">留言功能仅站长开启 — 通过邮件或社交链接联系。</p>
     );
   }
 
@@ -72,9 +70,7 @@ export function CommentForm({ postId, enabled }: CommentFormProps) {
         required
       />
       <div className="flex items-center justify-between">
-        <span className="text-xs text-blog-muted">
-          {content.length} / 4000
-        </span>
+        <span className="text-xs text-blog-muted">{content.length} / 4000</span>
         <button
           type="submit"
           disabled={submitting || !content.trim()}

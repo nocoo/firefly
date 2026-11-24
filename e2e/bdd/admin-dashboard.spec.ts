@@ -40,7 +40,9 @@ test("Sidebar user row wires basalt sign-out control", async ({ page }) => {
   await expect(sidebar.getByRole("button", { name: "退出登录", exact: true })).toBeVisible();
 });
 
-test("Native sidebar groups, current state, collapsed tooltips and search remain interactive", async ({ page }) => {
+test("Native sidebar groups, current state, collapsed tooltips and search remain interactive", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/admin/posts/new", { waitUntil: "networkidle" });
   const sidebar = page.getByRole("complementary");
@@ -75,14 +77,19 @@ test("Native sidebar preserves external and modified-click new tabs", async ({ p
   const sidebar = page.getByRole("complementary");
   for (const modifiers of [["ControlOrMeta"], ["Shift"]] as const) {
     const popupPromise = context.waitForEvent("page");
-    await sidebar.getByRole("button", { name: "分类", exact: true }).click({ modifiers: [...modifiers] });
+    await sidebar
+      .getByRole("button", { name: "分类", exact: true })
+      .click({ modifiers: [...modifiers] });
     const popup = await popupPromise;
     await expect(popup).toHaveURL(/\/admin\/categories$/);
     expect(await popup.evaluate(() => window.opener)).toBeNull();
     await popup.close();
     await expect(page).toHaveURL(/\/admin\/posts$/);
   }
-  for (const [name, button, path] of [["分类", "middle", "/admin/categories"], ["访问站点", "left", "/"]] as const) {
+  for (const [name, button, path] of [
+    ["分类", "middle", "/admin/categories"],
+    ["访问站点", "left", "/"],
+  ] as const) {
     const popupPromise = context.waitForEvent("page");
     await sidebar.getByRole("button", { name, exact: true }).click({ button });
     const popup = await popupPromise;
@@ -93,7 +100,9 @@ test("Native sidebar preserves external and modified-click new tabs", async ({ p
   }
 });
 
-test("Given the desktop sidebar, When collapse and expansion settle, Then the brand mark has the same horizontal position", async ({ page }) => {
+test("Given the desktop sidebar, When collapse and expansion settle, Then the brand mark has the same horizontal position", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/admin/posts", { waitUntil: "networkidle" });
   const sidebar = page.getByRole("complementary");
@@ -103,15 +112,25 @@ test("Given the desktop sidebar, When collapse and expansion settle, Then the br
 
   await page.getByRole("button", { name: "收起侧边栏", exact: true }).click();
   await expect.poll(() => sidebar.evaluate((node) => node.getBoundingClientRect().width)).toBe(68);
-  await expect.poll(async () => Math.abs(await logo.evaluate((node) => node.getBoundingClientRect().x) - expandedX)).toBeLessThan(1);
+  await expect
+    .poll(async () =>
+      Math.abs((await logo.evaluate((node) => node.getBoundingClientRect().x)) - expandedX),
+    )
+    .toBeLessThan(1);
 
   await page.getByRole("button", { name: "展开侧边栏", exact: true }).click();
   await expect.poll(() => sidebar.evaluate((node) => node.getBoundingClientRect().width)).toBe(240);
-  await expect.poll(async () => Math.abs(await logo.evaluate((node) => node.getBoundingClientRect().x) - expandedX)).toBeLessThan(1);
+  await expect
+    .poll(async () =>
+      Math.abs((await logo.evaluate((node) => node.getBoundingClientRect().x)) - expandedX),
+    )
+    .toBeLessThan(1);
 });
 
 for (const width of [390, 700]) {
-  test(`Given a ${width}px viewport, When I open navigation, Then it fits the drawer and closes accessibly`, async ({ page }) => {
+  test(`Given a ${width}px viewport, When I open navigation, Then it fits the drawer and closes accessibly`, async ({
+    page,
+  }) => {
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await page.setViewportSize({ width, height: 900 });
@@ -167,7 +186,10 @@ test.describe("Feature: Admin dashboard shell + content stats", () => {
 
     await sidebarNav.getByRole("button", { name: "文章", exact: true }).click();
     await expect(page).toHaveURL(/\/admin\/posts$/);
-    await expect(sidebarNav.getByRole("button", { name: "文章", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(sidebarNav.getByRole("button", { name: "文章", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   });
 
   test("Given /admin renders, When I view it, Then the 概览 h1 and the content-stat cards (已发布文章 / 分类 / 标签) are visible", async ({
@@ -180,24 +202,20 @@ test.describe("Feature: Admin dashboard shell + content stats", () => {
 
     // Then: the AdminShell top-bar <h1> renders the dashboard title from
     // i18n key "admin.page.dashboard" → "概览" (src/lib/i18n/index.ts:34).
-    await expect(
-      page.getByRole("heading", { level: 1, name: "概览" }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 1, name: "概览" }).first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Then: the three ContentStatCard labels are visible. The labels are
     // rendered as <p> elements inside ContentStatCard
     // (src/components/admin/analytics-dashboard.tsx:343); scoping to the
     // paragraph role disambiguates from sidebar nav links that share the
     // same text ("分类" / "标签" also appear in the sidebar AdminSidebar nav).
-    await expect(
-      page.getByRole("paragraph").filter({ hasText: "已发布文章" }),
-    ).toBeVisible({ timeout: 10_000 });
-    await expect(
-      page.getByRole("paragraph").filter({ hasText: /^分类$/ }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("paragraph").filter({ hasText: /^标签$/ }),
-    ).toBeVisible();
+    await expect(page.getByRole("paragraph").filter({ hasText: "已发布文章" })).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByRole("paragraph").filter({ hasText: /^分类$/ })).toBeVisible();
+    await expect(page.getByRole("paragraph").filter({ hasText: /^标签$/ })).toBeVisible();
   });
 
   test("Given /admin renders, When I view it, Then the dashboard readiness smoke (pathname + h1) passes", async ({
@@ -215,8 +233,6 @@ test.describe("Feature: Admin dashboard shell + content stats", () => {
 
     // Then: the dashboard h1 is visible (same readiness signal AdminShell
     // exposes via the top-bar title).
-    await expect(
-      page.getByRole("heading", { level: 1 }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible({ timeout: 10_000 });
   });
 });

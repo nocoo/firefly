@@ -9,7 +9,6 @@
  */
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:17028";
 
-
 // ---------------------------------------------------------------------------
 // POST /api/upload/logo
 // ---------------------------------------------------------------------------
@@ -60,9 +59,7 @@ describe("DELETE /api/upload/logo", () => {
 
   it("returns 404 when no logo exists", async () => {
     // First ensure no logo exists
-    await fetch(`${BASE}/api/upload/logo`, { method: "DELETE" }).catch(
-      () => {},
-    );
+    await fetch(`${BASE}/api/upload/logo`, { method: "DELETE" }).catch(() => {});
 
     // Try to delete again
     const res = await fetch(`${BASE}/api/upload/logo`, {

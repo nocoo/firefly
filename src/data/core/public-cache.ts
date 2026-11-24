@@ -27,13 +27,15 @@ function state(): CacheState {
 }
 
 /** Public data only. Auth, private posts and health probes must bypass this. */
-export function readPublicContent<T>(
-  key: readonly unknown[],
-  load: () => Promise<T>,
-): Promise<T> {
+export function readPublicContent<T>(key: readonly unknown[], load: () => Promise<T>): Promise<T> {
   const cache = state();
   const epoch = cache.epoch;
-  const keyParts = ["firefly-public-v1", process.env.WORKER_URL ?? "local", epoch, JSON.stringify(key)];
+  const keyParts = [
+    "firefly-public-v1",
+    process.env.WORKER_URL ?? "local",
+    epoch,
+    JSON.stringify(key),
+  ];
   const id = JSON.stringify(keyParts);
   const missingUntil = cache.missing.get(id);
   if (missingUntil !== undefined) {
@@ -44,13 +46,17 @@ export function readPublicContent<T>(
   if (pending) return pending as Promise<T>;
   if (!cache.keys.has(id) && cache.keys.size >= MAX_CONTENT_KEYS) return load();
 
-  const result = unstable_cache(async () => {
-    const value = await load();
-    // Keep arbitrary scanner URLs out of Next's persistent cache.
-    if (value === null) throw absent;
-    if (cache.epoch === epoch) cache.keys.add(id);
-    return value;
-  }, keyParts, { tags: [TAG], revalidate: REVALIDATE_SECONDS })()
+  const result = unstable_cache(
+    async () => {
+      const value = await load();
+      // Keep arbitrary scanner URLs out of Next's persistent cache.
+      if (value === null) throw absent;
+      if (cache.epoch === epoch) cache.keys.add(id);
+      return value;
+    },
+    keyParts,
+    { tags: [TAG], revalidate: REVALIDATE_SECONDS },
+  )()
     .catch((error: unknown) => {
       if (error !== absent) throw error;
       if (cache.epoch === epoch) {

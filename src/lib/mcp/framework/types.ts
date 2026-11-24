@@ -16,10 +16,7 @@ export interface ToolContext {
 // ---- Data layer contract ----
 
 export interface DataLayer<T> {
-  list: (
-    db: Db,
-    opts?: unknown,
-  ) => Promise<T[] | { items: T[]; total: number }>;
+  list: (db: Db, opts?: unknown) => Promise<T[] | { items: T[]; total: number }>;
   getById: (db: Db, id: string, args?: unknown) => Promise<T | null>;
   getBySlug: (db: Db, slug: string, args?: unknown) => Promise<T | null>;
   // Entity implementations use concrete input types; DataLayer is intentionally
@@ -37,17 +34,9 @@ export interface EntityHooks<T> {
   /** Transform entity after get (e.g., enrich with relations). */
   afterGet?: (ctx: ToolContext, entity: T) => Promise<unknown>;
   /** Run after create (e.g., set relations). Best-effort — failure is logged, not rolled back. */
-  afterCreate?: (
-    ctx: ToolContext,
-    entity: T,
-    args: Record<string, unknown>,
-  ) => Promise<void>;
+  afterCreate?: (ctx: ToolContext, entity: T, args: Record<string, unknown>) => Promise<void>;
   /** Run after update (e.g., set relations). Best-effort — failure is logged, not rolled back. */
-  afterUpdate?: (
-    ctx: ToolContext,
-    entity: T,
-    args: Record<string, unknown>,
-  ) => Promise<void>;
+  afterUpdate?: (ctx: ToolContext, entity: T, args: Record<string, unknown>) => Promise<void>;
   /** Transform create args before passing to data layer. */
   mapCreateInput?: (args: Record<string, unknown>) => Record<string, unknown>;
   /** Transform update args before passing to data layer. */
@@ -69,10 +58,7 @@ export interface ExtraToolDef {
   name: string;
   description: string;
   schema: Record<string, z.ZodType>;
-  handler: (
-    ctx: ToolContext,
-    args: Record<string, unknown>,
-  ) => Promise<CallToolResult>;
+  handler: (ctx: ToolContext, args: Record<string, unknown>) => Promise<CallToolResult>;
 }
 
 // ---- CRUD operation names ----

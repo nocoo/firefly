@@ -15,26 +15,26 @@
 
 All six dimensions are green. The system was rated S-tier in the 2026-03-24 global audit.
 
-| Dimension | Status | Key Metric |
-|-----------|--------|------------|
-| L1 Unit | ✅ S | 32 test files, ~590 cases, ≥90% coverage gate, pre-commit |
-| L2 API E2E | ✅ S | 7 test files, ~49 cases, 13/14 endpoints, pre-push |
-| L3 Browser E2E | ✅ A | 4 spec files, ~20 tests, Playwright, manual trigger |
-| G1 Static | ✅ S | `tseslint.configs.strict`, `--max-warnings=0`, `tsc --noEmit` |
-| G2 Security | ✅ A | osv-scanner + gitleaks, pre-push, no custom config |
-| D1 Isolation | ✅ S | `firefly-db-test`, `[env.test]`, auto-migration |
+| Dimension      | Status | Key Metric                                                    |
+| -------------- | ------ | ------------------------------------------------------------- |
+| L1 Unit        | ✅ S   | 32 test files, ~590 cases, ≥90% coverage gate, pre-commit     |
+| L2 API E2E     | ✅ S   | 7 test files, ~49 cases, 13/14 endpoints, pre-push            |
+| L3 Browser E2E | ✅ A   | 4 spec files, ~20 tests, Playwright, manual trigger           |
+| G1 Static      | ✅ S   | `tseslint.configs.strict`, `--max-warnings=0`, `tsc --noEmit` |
+| G2 Security    | ✅ A   | osv-scanner + gitleaks, pre-push, no custom config            |
+| D1 Isolation   | ✅ S   | `firefly-db-test`, `[env.test]`, auto-migration               |
 
 ---
 
 ## Identified Gaps
 
-| # | Gap | Risk | Impact |
-|---|-----|------|--------|
-| GAP-1 | **No lint-staged** — pre-commit runs typecheck + lint + test:coverage on entire project | Performance degrades as project grows; currently ~25s acceptable but will worsen | pre-commit slowdown |
-| GAP-2 | **No `.gitleaks.toml`** — gitleaks uses default rules, no project-specific allowlist | False positives on test fixtures or known non-secret patterns cannot be suppressed | Developer friction |
-| GAP-3 | **No CI pipeline** — all quality gates rely solely on local git hooks | `--no-verify` bypasses everything; no PR-level enforcement; no status checks | Single point of failure |
-| GAP-4 | **No R2 test bucket** — `/api/upload` excluded from L2 scope | Upload flow only tested manually; regression risk on image pipeline | Incomplete L2 coverage |
-| GAP-5 | **pre-commit runs `test:coverage`** instead of `test` — coverage enforcement on every commit is slow | ~15s overhead per commit for coverage instrumentation vs plain test run | Developer velocity |
+| #     | Gap                                                                                                  | Risk                                                                               | Impact                  |
+| ----- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ----------------------- |
+| GAP-1 | **No lint-staged** — pre-commit runs typecheck + lint + test:coverage on entire project              | Performance degrades as project grows; currently ~25s acceptable but will worsen   | pre-commit slowdown     |
+| GAP-2 | **No `.gitleaks.toml`** — gitleaks uses default rules, no project-specific allowlist                 | False positives on test fixtures or known non-secret patterns cannot be suppressed | Developer friction      |
+| GAP-3 | **No CI pipeline** — all quality gates rely solely on local git hooks                                | `--no-verify` bypasses everything; no PR-level enforcement; no status checks       | Single point of failure |
+| GAP-4 | **No R2 test bucket** — `/api/upload` excluded from L2 scope                                         | Upload flow only tested manually; regression risk on image pipeline                | Incomplete L2 coverage  |
+| GAP-5 | **pre-commit runs `test:coverage`** instead of `test` — coverage enforcement on every commit is slow | ~15s overhead per commit for coverage instrumentation vs plain test run            | Developer velocity      |
 
 ---
 
@@ -53,9 +53,7 @@ bun add -d lint-staged
 ```json
 {
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --max-warnings=0"
-    ]
+    "*.{ts,tsx}": ["eslint --max-warnings=0"]
   }
 }
 ```
@@ -81,16 +79,16 @@ bun run test:coverage
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
-| `package.json` | Add `lint-staged` devDependency + `lint-staged` config |
-| `.husky/pre-commit` | Replace `bun run lint` with `bunx lint-staged` |
+| File                | Change                                                 |
+| ------------------- | ------------------------------------------------------ |
+| `package.json`      | Add `lint-staged` devDependency + `lint-staged` config |
+| `.husky/pre-commit` | Replace `bun run lint` with `bunx lint-staged`         |
 
 ### Atomic Commits
 
-| # | Message |
-|---|---------|
-| 1 | `chore: add lint-staged for incremental pre-commit linting` |
+| #   | Message                                                     |
+| --- | ----------------------------------------------------------- |
+| 1   | `chore: add lint-staged for incremental pre-commit linting` |
 
 ---
 
@@ -122,15 +120,15 @@ title = "Firefly gitleaks config"
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
+| File             | Change                              |
+| ---------------- | ----------------------------------- |
 | `.gitleaks.toml` | New — project-level gitleaks config |
 
 ### Atomic Commits
 
-| # | Message |
-|---|---------|
-| 2 | `chore: add .gitleaks.toml with project-specific allowlist` |
+| #   | Message                                                     |
+| --- | ----------------------------------------------------------- |
+| 2   | `chore: add .gitleaks.toml with project-specific allowlist` |
 
 ---
 
@@ -202,15 +200,15 @@ jobs:
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
+| File                            | Change                             |
+| ------------------------------- | ---------------------------------- |
 | `.github/workflows/quality.yml` | New — CI pipeline for G1 + L1 + G2 |
 
 ### Atomic Commits
 
-| # | Message |
-|---|---------|
-| 3 | `feat: add GitHub Actions CI for G1+L1+G2 quality gates` |
+| #   | Message                                                  |
+| --- | -------------------------------------------------------- |
+| 3   | `feat: add GitHub Actions CI for G1+L1+G2 quality gates` |
 
 ---
 
@@ -245,6 +243,7 @@ bucket_name = "firefly-test"
 **File**: `e2e/api/upload.test.ts` (new)
 
 Test the upload endpoint with a minimal test image (1x1 PNG). Verify:
+
 - POST `/api/upload` with multipart form data → 200 + URL in response
 - Uploaded file is accessible via returned URL
 - Error cases: no file, invalid type, oversized
@@ -255,18 +254,18 @@ With test R2 bucket, update coverage target from 13/14 to **14/14** endpoints.
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
-| `worker/wrangler.toml` | Add `[[env.test.r2_buckets]]` binding |
-| `e2e/api/upload.test.ts` | New — upload endpoint L2 test |
-| `docs/07-quality-system-upgrade.md` | Update scope from 13/14 to 14/14 |
+| File                                | Change                                |
+| ----------------------------------- | ------------------------------------- |
+| `worker/wrangler.toml`              | Add `[[env.test.r2_buckets]]` binding |
+| `e2e/api/upload.test.ts`            | New — upload endpoint L2 test         |
+| `docs/07-quality-system-upgrade.md` | Update scope from 13/14 to 14/14      |
 
 ### Atomic Commits
 
-| # | Message |
-|---|---------|
-| 4 | `feat: add R2 test bucket binding for upload isolation` |
-| 5 | `feat: add L2 E2E test for upload endpoint` |
+| #   | Message                                                 |
+| --- | ------------------------------------------------------- |
+| 4   | `feat: add R2 test bucket binding for upload isolation` |
+| 5   | `feat: add L2 E2E test for upload endpoint`             |
 
 ---
 
@@ -308,16 +307,16 @@ bun run security
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
+| File                | Change                   |
+| ------------------- | ------------------------ |
 | `.husky/pre-commit` | `test:coverage` → `test` |
-| `.husky/pre-push` | `test` → `test:coverage` |
+| `.husky/pre-push`   | `test` → `test:coverage` |
 
 ### Atomic Commits
 
-| # | Message |
-|---|---------|
-| 6 | `chore: move coverage enforcement from pre-commit to pre-push` |
+| #   | Message                                                        |
+| --- | -------------------------------------------------------------- |
+| 6   | `chore: move coverage enforcement from pre-commit to pre-push` |
 
 ---
 
@@ -336,43 +335,43 @@ bun run security
 
 ### 6.3 Verification Checklist
 
-| Dimension | Command | Pass Criteria |
-|-----------|---------|---------------|
-| L1 | `bun run test:coverage` | ≥90% all metrics, 0 failures |
-| G1 | `bun run typecheck && bun run lint` | 0 errors, 0 warnings |
-| L2 | `bun run test:e2e:api` | **14/14** endpoints, 0 failures |
-| G2 | `bun run security` | 0 vulns, 0 leaks |
-| L3 | `bun run test:e2e:browser` | Core journeys pass |
-| D1 | wrangler.toml `[env.test]` | D1-test + R2-test both bound |
-| CI | Push to main / open PR | GitHub Actions green |
+| Dimension | Command                             | Pass Criteria                   |
+| --------- | ----------------------------------- | ------------------------------- |
+| L1        | `bun run test:coverage`             | ≥90% all metrics, 0 failures    |
+| G1        | `bun run typecheck && bun run lint` | 0 errors, 0 warnings            |
+| L2        | `bun run test:e2e:api`              | **14/14** endpoints, 0 failures |
+| G2        | `bun run security`                  | 0 vulns, 0 leaks                |
+| L3        | `bun run test:e2e:browser`          | Core journeys pass              |
+| D1        | wrangler.toml `[env.test]`          | D1-test + R2-test both bound    |
+| CI        | Push to main / open PR              | GitHub Actions green            |
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
+| File                                | Change                                   |
+| ----------------------------------- | ---------------------------------------- |
 | `docs/07-quality-system-upgrade.md` | Update L2 scope, add hardening reference |
-| `docs/13-quality-hardening.md` | Mark verification results |
-| `docs/README.md` | Add doc 13 entry |
+| `docs/13-quality-hardening.md`      | Mark verification results                |
+| `docs/README.md`                    | Add doc 13 entry                         |
 
 ### Atomic Commits
 
-| # | Message |
-|---|---------|
-| 7 | `docs: update quality docs with hardening results` |
+| #   | Message                                            |
+| --- | -------------------------------------------------- |
+| 7   | `docs: update quality docs with hardening results` |
 
 ---
 
 ## Complete Atomic Commit Sequence
 
-| # | Type | Message | Gap |
-|---|------|---------|-----|
-| 1 | chore | `chore: add lint-staged for incremental pre-commit linting` | GAP-1 |
-| 2 | chore | `chore: add .gitleaks.toml with project-specific allowlist` | GAP-2 |
-| 3 | feat | `feat: add GitHub Actions CI for G1+L1+G2 quality gates` | GAP-3 |
-| 4 | feat | `feat: add R2 test bucket binding for upload isolation` | GAP-4 |
-| 5 | feat | `feat: add L2 E2E test for upload endpoint` | GAP-4 |
-| 6 | chore | `chore: move coverage enforcement from pre-commit to pre-push` | GAP-5 |
-| 7 | docs | `docs: update quality docs with hardening results` | All |
+| #   | Type  | Message                                                        | Gap   |
+| --- | ----- | -------------------------------------------------------------- | ----- |
+| 1   | chore | `chore: add lint-staged for incremental pre-commit linting`    | GAP-1 |
+| 2   | chore | `chore: add .gitleaks.toml with project-specific allowlist`    | GAP-2 |
+| 3   | feat  | `feat: add GitHub Actions CI for G1+L1+G2 quality gates`       | GAP-3 |
+| 4   | feat  | `feat: add R2 test bucket binding for upload isolation`        | GAP-4 |
+| 5   | feat  | `feat: add L2 E2E test for upload endpoint`                    | GAP-4 |
+| 6   | chore | `chore: move coverage enforcement from pre-commit to pre-push` | GAP-5 |
+| 7   | docs  | `docs: update quality docs with hardening results`             | All   |
 
 ---
 

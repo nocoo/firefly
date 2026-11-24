@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.hoisted(() => { vi.resetModules(); });
+vi.hoisted(() => {
+  vi.resetModules();
+});
 
 vi.mock("next/cache", () => ({
   unstable_cache: vi.fn((load: () => Promise<unknown>) => load),
@@ -12,7 +14,9 @@ import { invalidatePublicContent, readPublicContent } from "./public-cache";
 
 function deferred<T>() {
   let resolve: (value: T) => void = () => {};
-  const promise = new Promise<T>((complete) => { resolve = complete; });
+  const promise = new Promise<T>((complete) => {
+    resolve = complete;
+  });
   return { promise, resolve };
 }
 
@@ -21,7 +25,10 @@ beforeEach(() => {
   invalidatePublicContent();
   vi.clearAllMocks();
 });
-afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
 
 describe("public content cache coordination", () => {
   it("coalesces concurrent loads and assigns the native cache tag and lifetime", async () => {
@@ -34,7 +41,8 @@ describe("public content cache coordination", () => {
     completion.resolve("article");
     await expect(first).resolves.toBe("article");
     expect(unstable_cache).toHaveBeenCalledWith(expect.any(Function), expect.any(Array), {
-      tags: ["public-content"], revalidate: 3600,
+      tags: ["public-content"],
+      revalidate: 3600,
     });
   });
 
@@ -56,7 +64,9 @@ describe("public content cache coordination", () => {
     invalidatePublicContent();
     old.resolve(null);
     await expect(first).resolves.toBeNull();
-    await expect(readPublicContent(["post", "a"], async () => "published")).resolves.toBe("published");
+    await expect(readPublicContent(["post", "a"], async () => "published")).resolves.toBe(
+      "published",
+    );
   });
 
   it("bounds and expires negative entries without persisting scanner URLs", async () => {
@@ -72,11 +82,16 @@ describe("public content cache coordination", () => {
     await readPublicContent(["missing", 0], load);
     expect(load).toHaveBeenCalledTimes(259);
     invalidatePublicContent();
-    await expect(readPublicContent(["missing", 0], async () => "now exists")).resolves.toBe("now exists");
+    await expect(readPublicContent(["missing", 0], async () => "now exists")).resolves.toBe(
+      "now exists",
+    );
   });
 
   it("does not retain database failures", async () => {
-    const load = vi.fn().mockRejectedValueOnce(new Error("D1 unavailable")).mockResolvedValueOnce("ok");
+    const load = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("D1 unavailable"))
+      .mockResolvedValueOnce("ok");
     await expect(readPublicContent(["post", "a"], load)).rejects.toThrow("D1 unavailable");
     await expect(readPublicContent(["post", "a"], load)).resolves.toBe("ok");
     expect(load).toHaveBeenCalledTimes(2);
@@ -93,7 +108,9 @@ describe("public content cache coordination", () => {
 
   it("keeps committed writes successful if framework invalidation fails", () => {
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
-    vi.mocked(revalidateTag).mockImplementationOnce(() => { throw new Error("no request context"); });
+    vi.mocked(revalidateTag).mockImplementationOnce(() => {
+      throw new Error("no request context");
+    });
     expect(invalidatePublicContent).not.toThrow();
     expect(log).toHaveBeenCalledOnce();
   });

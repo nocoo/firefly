@@ -3,9 +3,7 @@ import { getDb } from "../src/lib/db";
 const db = getDb();
 
 // 1. 删除 post_count = 1 的标签
-const singlePostTags = await db.query<{ id: string }>(
-  "SELECT id FROM tags WHERE post_count = 1"
-);
+const singlePostTags = await db.query<{ id: string }>("SELECT id FROM tags WHERE post_count = 1");
 console.log(`删除 ${singlePostTags.results.length} 个只有1篇文章的标签...`);
 
 for (const tag of singlePostTags.results) {
@@ -25,10 +23,11 @@ const translations = [
 
 console.log("\n翻译并修复 slug...");
 for (const { oldName, newName, newSlug } of translations) {
-  await db.execute(
-    "UPDATE tags SET name = ?, slug = ? WHERE name = ?",
-    [newName, newSlug, oldName]
-  );
+  await db.execute("UPDATE tags SET name = ?, slug = ? WHERE name = ?", [
+    newName,
+    newSlug,
+    oldName,
+  ]);
   console.log(`  ${oldName} → ${newName} (${newSlug})`);
 }
 

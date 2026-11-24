@@ -12,12 +12,7 @@ interface PaginationProps {
   searchParams?: Record<string, string>;
 }
 
-export function Pagination({
-  currentPage,
-  totalPages,
-  basePath,
-  searchParams,
-}: PaginationProps) {
+export function Pagination({ currentPage, totalPages, basePath, searchParams }: PaginationProps) {
   if (totalPages <= 1) return null;
 
   const href = (page: number) => {
@@ -45,17 +40,21 @@ export function Pagination({
   const disabledClass = "text-blog-muted/40 pointer-events-none";
 
   return (
-    <nav
-      className="flex items-center justify-center gap-1 py-8"
-      aria-label="分页"
-    >
+    <nav className="flex items-center justify-center gap-1 py-8" aria-label="分页">
       {/* Previous */}
       {currentPage > 1 ? (
-        <Link href={href(currentPage - 1)} prefetch={false} className={`${linkClass} ${inactiveClass}`} aria-label="上一页">
+        <Link
+          href={href(currentPage - 1)}
+          prefetch={false}
+          className={`${linkClass} ${inactiveClass}`}
+          aria-label="上一页"
+        >
           <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
         </Link>
       ) : (
-        <span className={`${linkClass} ${disabledClass}`} aria-hidden="true"><ChevronLeft className="h-4 w-4" strokeWidth={1.5} /></span>
+        <span className={`${linkClass} ${disabledClass}`} aria-hidden="true">
+          <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
+        </span>
       )}
 
       {/* Page numbers */}
@@ -65,15 +64,16 @@ export function Pagination({
             …
           </span>
         ) : slot === currentPage ? (
-          <span
-            key={slot}
-            className={`${linkClass} ${activeClass}`}
-            aria-current="page"
-          >
+          <span key={slot} className={`${linkClass} ${activeClass}`} aria-current="page">
             {slot}
           </span>
         ) : (
-          <Link key={slot} href={href(slot)} prefetch={false} className={`${linkClass} ${inactiveClass}`}>
+          <Link
+            key={slot}
+            href={href(slot)}
+            prefetch={false}
+            className={`${linkClass} ${inactiveClass}`}
+          >
             {slot}
           </Link>
         ),
@@ -81,11 +81,18 @@ export function Pagination({
 
       {/* Next */}
       {currentPage < totalPages ? (
-        <Link href={href(currentPage + 1)} prefetch={false} className={`${linkClass} ${inactiveClass}`} aria-label="下一页">
+        <Link
+          href={href(currentPage + 1)}
+          prefetch={false}
+          className={`${linkClass} ${inactiveClass}`}
+          aria-label="下一页"
+        >
           <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
         </Link>
       ) : (
-        <span className={`${linkClass} ${disabledClass}`} aria-hidden="true"><ChevronRight className="h-4 w-4" strokeWidth={1.5} /></span>
+        <span className={`${linkClass} ${disabledClass}`} aria-hidden="true">
+          <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
+        </span>
       )}
     </nav>
   );

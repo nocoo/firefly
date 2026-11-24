@@ -27,9 +27,6 @@ export async function DELETE(
     invalidatePostCaches();
     return jsonResponse({ success: true });
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

@@ -18,7 +18,7 @@ vi.mock("ai", () => ({
 // ---------------------------------------------------------------------------
 
 describe("getProviderConfig", () => {
-  it("returns undefined for the special \"custom\" id", async () => {
+  it('returns undefined for the special "custom" id', async () => {
     const { getProviderConfig } = await import("./ai");
     expect(getProviderConfig("custom")).toBeUndefined();
   });
@@ -51,12 +51,7 @@ vi.mock("@nocoo/next-ai/server", () => ({
 const { generateText } = await import("ai");
 const { getAiSettings } = await import("@/data/ai-settings");
 const { createAiModel } = await import("@nocoo/next-ai/server");
-const {
-  generateExcerpt,
-  summarizeUnfurl,
-  EXCERPT_PROMPT,
-  UNFURL_PROMPT,
-} = await import("./ai");
+const { generateExcerpt, summarizeUnfurl, EXCERPT_PROMPT, UNFURL_PROMPT } = await import("./ai");
 
 const mockedGenerateText = vi.mocked(generateText);
 const mockedGetAiSettings = vi.mocked(getAiSettings);
@@ -170,9 +165,7 @@ describe("generateExcerpt", () => {
       provider: "" as const,
     });
 
-    await expect(generateExcerpt("Title", "Content")).rejects.toThrow(
-      "AI not configured",
-    );
+    await expect(generateExcerpt("Title", "Content")).rejects.toThrow("AI not configured");
   });
 
   it("throws 'AI not configured' when apiKey is empty", async () => {
@@ -181,9 +174,7 @@ describe("generateExcerpt", () => {
       apiKey: "",
     });
 
-    await expect(generateExcerpt("Title", "Content")).rejects.toThrow(
-      "AI not configured",
-    );
+    await expect(generateExcerpt("Title", "Content")).rejects.toThrow("AI not configured");
   });
 
   it("returns empty string when result.text is empty", async () => {

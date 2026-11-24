@@ -48,8 +48,7 @@ export async function POST(request: NextRequest) {
     return errorResponse("content exceeds 4000 characters");
   }
 
-  const parentId =
-    typeof body.parent_id === "string" && body.parent_id ? body.parent_id : null;
+  const parentId = typeof body.parent_id === "string" && body.parent_id ? body.parent_id : null;
   const authorName =
     typeof body.author_name === "string" && body.author_name.trim()
       ? body.author_name.trim()
@@ -61,10 +60,7 @@ export async function POST(request: NextRequest) {
     // Verify the target post exists, is published, and has comments enabled
     // both globally and per-post. This must match the visibility rule on the
     // detail page so an admin can't create a comment that nobody can see.
-    const [post, settings] = await Promise.all([
-      getPostById(db, postId),
-      getSiteSettings(db),
-    ]);
+    const [post, settings] = await Promise.all([getPostById(db, postId), getSiteSettings(db)]);
     if (!post) {
       return errorResponse("Post not found", 404);
     }
@@ -97,9 +93,6 @@ export async function POST(request: NextRequest) {
     invalidatePostCaches();
     return jsonResponse(comment, 201);
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

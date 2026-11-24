@@ -16,7 +16,6 @@ import {
 // Mock DB
 // ---------------------------------------------------------------------------
 
-
 const now = Math.floor(Date.now() / 1000);
 
 const sampleSession: McpAuthCode = {
@@ -45,7 +44,9 @@ const sampleCodeRow: McpAuthCode = {
 
 describe("createAuthSession", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("inserts session with all fields", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
@@ -95,7 +96,9 @@ describe("createAuthSession", () => {
 
 describe("upgradeAuthSession", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns true when session is upgraded", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });
@@ -126,7 +129,9 @@ describe("upgradeAuthSession", () => {
 
 describe("getAuthCodeByCode", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns auth code when found and valid", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleCodeRow);
@@ -154,7 +159,9 @@ describe("getAuthCodeByCode", () => {
 
 describe("getAuthSessionByState", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns session when found and not expired", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleSession);
@@ -181,7 +188,9 @@ describe("getAuthSessionByState", () => {
 
 describe("consumeAuthCode", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns true when code consumed successfully", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });

@@ -66,19 +66,14 @@ interface LoginBranch {
  * would slip through a substring guard and silently classify as the wrong
  * branch.
  */
-async function visitLogin(
-  page: import("@playwright/test").Page,
-  query = "",
-): Promise<LoginBranch> {
+async function visitLogin(page: import("@playwright/test").Page, query = ""): Promise<LoginBranch> {
   await page.goto(`/login${query}`, { waitUntil: "networkidle" });
   const { pathname } = new URL(page.url());
   // Strict path guard: /login (page rendered) or /admin* (bypass redirect).
   // Anything else (500, foreign route, oauth callback fragment) should fail.
   const isLogin = pathname === "/login";
   const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
-  expect(isLogin || isAdmin, `unexpected landing pathname: ${pathname}`).toBe(
-    true,
-  );
+  expect(isLogin || isAdmin, `unexpected landing pathname: ${pathname}`).toBe(true);
   return { landed: isLogin ? "login" : "admin", url: page.url() };
 }
 
@@ -159,9 +154,7 @@ test.describe("Feature: Login page rendering", () => {
     // Then: a button containing the literal "Google 登录" label is visible.
     // getByRole("button") narrows to <button>; name regex matches the
     // localized copy LoginCard renders ("使用 Google 登录").
-    await expect(
-      page.getByRole("button", { name: /Google/ }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("button", { name: /Google/ })).toBeVisible({ timeout: 10_000 });
   });
 
   test("Given the login page renders, When I view it, Then the theme toggle is visible", async ({
@@ -179,9 +172,7 @@ test.describe("Feature: Login page rendering", () => {
     // Then: ThemeToggle renders as a <button>. Its aria-label is localized
     // (Chinese: "切换主题（…）"), so use a role-based locator that matches
     // either the localized copy or any future English fallback.
-    await expect(
-      page.getByRole("button", { name: /切换主题|theme/i }),
-    ).toBeVisible();
+    await expect(page.getByRole("button", { name: /切换主题|theme/i })).toBeVisible();
   });
 
   test("Given the login page renders, When I view it, Then the GitHub repo link is visible", async ({
@@ -198,9 +189,9 @@ test.describe("Feature: Login page rendering", () => {
 
     // Then: the GitHub link is exposed via aria-label="GitHub repository"
     // (per LoginCard); use getByRole("link", { name }) for the semantic match.
-    await expect(
-      page.getByRole("link", { name: /GitHub repository/i }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("link", { name: /GitHub repository/i })).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("Given the login page renders, When I view it, Then the page footer is visible", async ({
@@ -217,9 +208,7 @@ test.describe("Feature: Login page rendering", () => {
 
     // Then: the <footer> landmark is visible. getByRole("contentinfo") is
     // the ARIA role for <footer>.
-    await expect(
-      page.getByRole("contentinfo").first(),
-    ).toBeVisible();
+    await expect(page.getByRole("contentinfo").first()).toBeVisible();
   });
 
   test("Given the login page renders, When I view it, Then the 安全认证 security indicator is visible", async ({
@@ -252,9 +241,9 @@ test.describe("Feature: Login page rendering", () => {
     test.skip(gate.skip, gate.reason);
 
     // Then: the localized AccessDenied copy from LoginCard is visible.
-    await expect(
-      page.getByText("您的账户未被授权访问此应用程序。"),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("您的账户未被授权访问此应用程序。")).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("Given /login?callbackUrl=/admin/posts, When I open it, Then the callbackUrl is honored in URL or redirect target", async ({
@@ -268,9 +257,7 @@ test.describe("Feature: Login page rendering", () => {
     if (branch.landed === "login") {
       // Login page actually rendered: the callbackUrl must round-trip in the
       // current URL (LoginCard reads it via useSearchParams).
-      expect(branch.url).toMatch(
-        /[?&]callbackUrl=(\/admin\/posts|%2Fadmin%2Fposts)/,
-      );
+      expect(branch.url).toMatch(/[?&]callbackUrl=(\/admin\/posts|%2Fadmin%2Fposts)/);
     } else {
       // Auth-bypass redirect: page.tsx must have redirected to the callback
       // target itself, not to the default /admin.
@@ -295,9 +282,7 @@ test.describe("Feature: Admin auth guard with E2E bypass", () => {
     await expectPathname(page, "/admin");
 
     // Then: the AdminShell page-title <h1> is visible (semantic landmark).
-    await expect(
-      page.getByRole("heading", { level: 1 }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test("Given E2E auth bypass is active, When I open /admin/posts, Then it renders without redirecting to login", async ({

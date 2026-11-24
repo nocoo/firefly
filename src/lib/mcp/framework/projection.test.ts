@@ -39,10 +39,7 @@ describe("projectFields", () => {
   });
 
   it("restores fields for multiple include groups", () => {
-    const result = projectFields(sampleRecord, sampleConfig, [
-      "content",
-      "wp",
-    ]);
+    const result = projectFields(sampleRecord, sampleConfig, ["content", "wp"]);
     expect(result).toHaveProperty("content");
     expect(result).toHaveProperty("wp_id");
     expect(result).toHaveProperty("wp_permalink");

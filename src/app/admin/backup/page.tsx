@@ -10,10 +10,7 @@ export const metadata: Metadata = {
 
 export default async function AdminBackupPage() {
   const db = getDb();
-  const [config, pullKey] = await Promise.all([
-    getBackyConfig(db),
-    getBackyPullKey(db),
-  ]);
+  const [config, pullKey] = await Promise.all([getBackyConfig(db), getBackyPullKey(db)]);
 
   return (
     <BackupPage

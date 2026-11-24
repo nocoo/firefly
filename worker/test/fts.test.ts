@@ -8,8 +8,8 @@
  * - handleFtsSearch(): full-text search with pagination
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { segmentText, sanitizeFtsQuery, handleFtsSync, handleFtsSearch } from '../src/fts.js';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { segmentText, sanitizeFtsQuery, handleFtsSync, handleFtsSearch } from "../src/fts.js";
 
 // ─── Mock Types ─────────────────────────────────────────────────────────────
 
@@ -44,127 +44,127 @@ function makeDb(overrides?: Partial<MockD1Database>): MockD1Database {
 
 // ─── segmentText Tests ──────────────────────────────────────────────────────
 
-describe('segmentText', () => {
-  it('returns empty string for empty input', () => {
-    expect(segmentText('')).toBe('');
+describe("segmentText", () => {
+  it("returns empty string for empty input", () => {
+    expect(segmentText("")).toBe("");
   });
 
-  it('returns empty string for null/undefined', () => {
-    expect(segmentText(null as unknown as string)).toBe('');
-    expect(segmentText(undefined as unknown as string)).toBe('');
+  it("returns empty string for null/undefined", () => {
+    expect(segmentText(null as unknown as string)).toBe("");
+    expect(segmentText(undefined as unknown as string)).toBe("");
   });
 
-  it('segments English words correctly', () => {
-    const result = segmentText('Hello World');
-    expect(result).toBe('hello world');
+  it("segments English words correctly", () => {
+    const result = segmentText("Hello World");
+    expect(result).toBe("hello world");
   });
 
-  it('segments Chinese characters correctly', () => {
-    const result = segmentText('你好世界');
+  it("segments Chinese characters correctly", () => {
+    const result = segmentText("你好世界");
     // Intl.Segmenter should split CJK into words
-    expect(result).toContain('你好');
-    expect(result).toContain('世界');
+    expect(result).toContain("你好");
+    expect(result).toContain("世界");
   });
 
-  it('handles mixed CJK and Latin text', () => {
-    const result = segmentText('Hello 世界 Test');
-    expect(result.toLowerCase()).toContain('hello');
-    expect(result).toContain('世界');
-    expect(result.toLowerCase()).toContain('test');
+  it("handles mixed CJK and Latin text", () => {
+    const result = segmentText("Hello 世界 Test");
+    expect(result.toLowerCase()).toContain("hello");
+    expect(result).toContain("世界");
+    expect(result.toLowerCase()).toContain("test");
   });
 
-  it('converts to lowercase', () => {
-    const result = segmentText('UPPERCASE');
-    expect(result).toBe('uppercase');
+  it("converts to lowercase", () => {
+    const result = segmentText("UPPERCASE");
+    expect(result).toBe("uppercase");
   });
 
-  it('filters out non-word characters', () => {
-    const result = segmentText('hello, world!');
-    expect(result).toBe('hello world');
+  it("filters out non-word characters", () => {
+    const result = segmentText("hello, world!");
+    expect(result).toBe("hello world");
   });
 });
 
 // ─── sanitizeFtsQuery Tests ─────────────────────────────────────────────────
 
-describe('sanitizeFtsQuery', () => {
-  it('returns empty string for empty input', () => {
-    expect(sanitizeFtsQuery('')).toBe('');
-    expect(sanitizeFtsQuery('   ')).toBe('');
+describe("sanitizeFtsQuery", () => {
+  it("returns empty string for empty input", () => {
+    expect(sanitizeFtsQuery("")).toBe("");
+    expect(sanitizeFtsQuery("   ")).toBe("");
   });
 
-  it('quotes plain terms', () => {
-    const result = sanitizeFtsQuery('hello world');
+  it("quotes plain terms", () => {
+    const result = sanitizeFtsQuery("hello world");
     expect(result).toBe('"hello" "world"');
   });
 
-  it('preserves quoted phrases', () => {
+  it("preserves quoted phrases", () => {
     const result = sanitizeFtsQuery('"exact phrase"');
     expect(result).toContain('"exact phrase"');
   });
 
-  it('handles prefix search with trailing *', () => {
-    const result = sanitizeFtsQuery('cloud*');
+  it("handles prefix search with trailing *", () => {
+    const result = sanitizeFtsQuery("cloud*");
     expect(result).toContain('"cloud"*');
   });
 
-  it('handles mixed quoted and unquoted text', () => {
+  it("handles mixed quoted and unquoted text", () => {
     const result = sanitizeFtsQuery('hello "exact phrase" world');
     expect(result).toContain('"hello"');
     expect(result).toContain('"exact phrase"');
     expect(result).toContain('"world"');
   });
 
-  it('escapes FTS5 special characters', () => {
+  it("escapes FTS5 special characters", () => {
     // Special chars like :, ^, +, -, etc. should be removed
-    const result = sanitizeFtsQuery('hello:world');
-    expect(result).not.toContain(':');
+    const result = sanitizeFtsQuery("hello:world");
+    expect(result).not.toContain(":");
   });
 
-  it('handles CJK text', () => {
-    const result = sanitizeFtsQuery('你好世界');
+  it("handles CJK text", () => {
+    const result = sanitizeFtsQuery("你好世界");
     // Should segment and quote CJK words
     expect(result.length).toBeGreaterThan(0);
   });
 
-  it('handles prefix search on CJK', () => {
-    const result = sanitizeFtsQuery('你好*');
-    expect(result).toContain('*');
+  it("handles prefix search on CJK", () => {
+    const result = sanitizeFtsQuery("你好*");
+    expect(result).toContain("*");
   });
 
-  it('handles multiple prefix terms', () => {
-    const result = sanitizeFtsQuery('hello* world*');
+  it("handles multiple prefix terms", () => {
+    const result = sanitizeFtsQuery("hello* world*");
     expect((result.match(/\*/g) || []).length).toBe(2);
   });
 
-  it('handles empty quoted phrase', () => {
+  it("handles empty quoted phrase", () => {
     const result = sanitizeFtsQuery('""');
     // Empty quotes should result in empty or minimal output
-    expect(result).toBe('');
+    expect(result).toBe("");
   });
 
-  it('handles nested quotes gracefully', () => {
+  it("handles nested quotes gracefully", () => {
     const result = sanitizeFtsQuery('"hello "world""');
     // Should handle malformed quotes gracefully
-    expect(typeof result).toBe('string');
+    expect(typeof result).toBe("string");
   });
 
-  it('skips tokens that become empty after cleaning special chars', () => {
+  it("skips tokens that become empty after cleaning special chars", () => {
     // A word that is entirely special characters
-    const result = sanitizeFtsQuery(':+^');
+    const result = sanitizeFtsQuery(":+^");
     // All chars are FTS5 special and get removed
-    expect(result).toBe('');
+    expect(result).toBe("");
   });
 
-  it('handles word with only special chars before *', () => {
+  it("handles word with only special chars before *", () => {
     // A prefix word where the base is only special characters
-    const result = sanitizeFtsQuery(':*');
-    expect(result).toBe('');
+    const result = sanitizeFtsQuery(":*");
+    expect(result).toBe("");
   });
 
-  it('handles multi-token word where one token becomes empty', () => {
+  it("handles multi-token word where one token becomes empty", () => {
     // hello:world is treated as a single word by Intl.Segmenter,
     // and : is removed by FTS5_SPECIAL replacement
-    const result = sanitizeFtsQuery('hello:world test');
+    const result = sanitizeFtsQuery("hello:world test");
     expect(result).toContain('"helloworld"');
     expect(result).toContain('"test"');
   });
@@ -172,65 +172,62 @@ describe('sanitizeFtsQuery', () => {
 
 // ─── handleFtsSync Tests ────────────────────────────────────────────────────
 
-describe('handleFtsSync', () => {
+describe("handleFtsSync", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('returns 400 for invalid body', async () => {
+  it("returns 400 for invalid body", async () => {
     const db = makeDb();
     const res = await handleFtsSync(null, db as unknown as D1Database);
     expect(res.status).toBe(400);
     const json = await res.json();
-    expect(json.error).toBe('Invalid request body');
+    expect(json.error).toBe("Invalid request body");
   });
 
-  it('returns 400 for non-object body', async () => {
+  it("returns 400 for non-object body", async () => {
     const db = makeDb();
-    const res = await handleFtsSync('string', db as unknown as D1Database);
+    const res = await handleFtsSync("string", db as unknown as D1Database);
     expect(res.status).toBe(400);
   });
 
-  describe('delete action', () => {
-    it('returns 400 if rowid is missing', async () => {
+  describe("delete action", () => {
+    it("returns 400 if rowid is missing", async () => {
       const db = makeDb();
-      const res = await handleFtsSync({ action: 'delete' }, db as unknown as D1Database);
+      const res = await handleFtsSync({ action: "delete" }, db as unknown as D1Database);
       expect(res.status).toBe(400);
       const json = await res.json();
-      expect(json.error).toBe('rowid is required for delete');
+      expect(json.error).toBe("rowid is required for delete");
     });
 
-    it('deletes FTS entry by rowid', async () => {
+    it("deletes FTS entry by rowid", async () => {
       const mockRun = vi.fn().mockResolvedValue({ meta: { changes: 1 } });
       const mockBind = vi.fn().mockReturnValue({ run: mockRun });
       const db = makeDb({
         prepare: vi.fn().mockReturnValue({ bind: mockBind }),
       });
 
-      const res = await handleFtsSync(
-        { action: 'delete', rowid: 42 },
-        db as unknown as D1Database,
-      );
+      const res = await handleFtsSync({ action: "delete", rowid: 42 }, db as unknown as D1Database);
 
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json.ok).toBe(true);
-      expect(json.action).toBe('delete');
+      expect(json.action).toBe("delete");
       expect(json.rowid).toBe(42);
       expect(mockBind).toHaveBeenCalledWith(42);
     });
   });
 
-  describe('upsert action', () => {
-    it('returns 400 if postId is missing', async () => {
+  describe("upsert action", () => {
+    it("returns 400 if postId is missing", async () => {
       const db = makeDb();
-      const res = await handleFtsSync({ action: 'upsert' }, db as unknown as D1Database);
+      const res = await handleFtsSync({ action: "upsert" }, db as unknown as D1Database);
       expect(res.status).toBe(400);
       const json = await res.json();
-      expect(json.error).toBe('postId is required for upsert');
+      expect(json.error).toBe("postId is required for upsert");
     });
 
-    it('returns 404 if post not found', async () => {
+    it("returns 404 if post not found", async () => {
       const mockFirst = vi.fn().mockResolvedValue(null);
       const mockBind = vi.fn().mockReturnValue({ first: mockFirst });
       const db = makeDb({
@@ -238,16 +235,16 @@ describe('handleFtsSync', () => {
       });
 
       const res = await handleFtsSync(
-        { action: 'upsert', postId: 'nonexistent' },
+        { action: "upsert", postId: "nonexistent" },
         db as unknown as D1Database,
       );
 
       expect(res.status).toBe(404);
       const json = await res.json();
-      expect(json.error).toContain('not found');
+      expect(json.error).toContain("not found");
     });
 
-    it('upserts FTS entry successfully', async () => {
+    it("upserts FTS entry successfully", async () => {
       const mockFirst = vi.fn().mockResolvedValue({ rowid: 123 });
       const mockBind = vi.fn().mockReturnValue({
         first: mockFirst,
@@ -261,11 +258,11 @@ describe('handleFtsSync', () => {
 
       const res = await handleFtsSync(
         {
-          action: 'upsert',
-          postId: 'post-123',
-          title: 'Test Title',
-          content: 'Test content here',
-          excerpt: 'Test excerpt',
+          action: "upsert",
+          postId: "post-123",
+          title: "Test Title",
+          content: "Test content here",
+          excerpt: "Test excerpt",
         },
         db as unknown as D1Database,
       );
@@ -273,12 +270,12 @@ describe('handleFtsSync', () => {
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json.ok).toBe(true);
-      expect(json.action).toBe('upsert');
-      expect(json.postId).toBe('post-123');
+      expect(json.action).toBe("upsert");
+      expect(json.postId).toBe("post-123");
       expect(mockBatch).toHaveBeenCalled();
     });
 
-    it('handles empty title/content/excerpt', async () => {
+    it("handles empty title/content/excerpt", async () => {
       const mockFirst = vi.fn().mockResolvedValue({ rowid: 123 });
       const mockBind = vi.fn().mockReturnValue({
         first: mockFirst,
@@ -291,7 +288,7 @@ describe('handleFtsSync', () => {
       });
 
       const res = await handleFtsSync(
-        { action: 'upsert', postId: 'post-123' },
+        { action: "upsert", postId: "post-123" },
         db as unknown as D1Database,
       );
 
@@ -299,46 +296,43 @@ describe('handleFtsSync', () => {
     });
   });
 
-  it('returns 400 for unknown action', async () => {
+  it("returns 400 for unknown action", async () => {
     const db = makeDb();
-    const res = await handleFtsSync(
-      { action: 'invalid' as 'upsert' },
-      db as unknown as D1Database,
-    );
+    const res = await handleFtsSync({ action: "invalid" as "upsert" }, db as unknown as D1Database);
     expect(res.status).toBe(400);
     const json = await res.json();
-    expect(json.error).toContain('Unknown action');
+    expect(json.error).toContain("Unknown action");
   });
 });
 
 // ─── handleFtsSearch Tests ──────────────────────────────────────────────────
 
-describe('handleFtsSearch', () => {
+describe("handleFtsSearch", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('returns 400 for invalid body', async () => {
+  it("returns 400 for invalid body", async () => {
     const db = makeDb();
     const res = await handleFtsSearch(null, db as unknown as D1Database);
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 for missing query', async () => {
+  it("returns 400 for missing query", async () => {
     const db = makeDb();
     const res = await handleFtsSearch({}, db as unknown as D1Database);
     expect(res.status).toBe(400);
     const json = await res.json();
-    expect(json.error).toBe('query is required');
+    expect(json.error).toBe("query is required");
   });
 
-  it('returns 400 for empty query string', async () => {
+  it("returns 400 for empty query string", async () => {
     const db = makeDb();
-    const res = await handleFtsSearch({ query: '   ' }, db as unknown as D1Database);
+    const res = await handleFtsSearch({ query: "   " }, db as unknown as D1Database);
     expect(res.status).toBe(400);
   });
 
-  it('returns empty results for query that produces no MATCH expression', async () => {
+  it("returns empty results for query that produces no MATCH expression", async () => {
     const db = makeDb();
     // Query with only special chars that get stripped
     const res = await handleFtsSearch({ query: '""' }, db as unknown as D1Database);
@@ -348,17 +342,17 @@ describe('handleFtsSearch', () => {
     expect(json.total).toBe(0);
   });
 
-  it('executes search with default pagination', async () => {
+  it("executes search with default pagination", async () => {
     const mockAll = vi.fn().mockResolvedValue({
       results: [
         {
-          id: 'post-1',
-          title: 'Test Post',
-          slug: 'test-post',
+          id: "post-1",
+          title: "Test Post",
+          slug: "test-post",
           excerpt: null,
-          content: 'content',
-          content_html: '<p>content</p>',
-          status: 'published',
+          content: "content",
+          content_html: "<p>content</p>",
+          status: "published",
           category_id: null,
           category_name: null,
           category_slug: null,
@@ -375,7 +369,7 @@ describe('handleFtsSearch', () => {
           reference_title: null,
           reference_description: null,
           reference_image: null,
-          search_snippet: 'test <mark>hello</mark> world',
+          search_snippet: "test <mark>hello</mark> world",
         },
       ],
     });
@@ -389,19 +383,19 @@ describe('handleFtsSearch', () => {
       prepare: vi.fn().mockReturnValue({ bind: mockBind }),
     });
 
-    const res = await handleFtsSearch({ query: 'hello' }, db as unknown as D1Database);
+    const res = await handleFtsSearch({ query: "hello" }, db as unknown as D1Database);
     expect(res.status).toBe(200);
 
     const json = await res.json();
     expect(json.posts).toHaveLength(1);
-    expect(json.posts[0].id).toBe('post-1');
-    expect(json.snippets['post-1']).toBe('test <mark>hello</mark> world');
+    expect(json.posts[0].id).toBe("post-1");
+    expect(json.snippets["post-1"]).toBe("test <mark>hello</mark> world");
     expect(json.total).toBe(1);
     expect(json.page).toBe(1);
     expect(json.pageSize).toBe(20);
   });
 
-  it('joins humans and ai_agents for author projection', async () => {
+  it("joins humans and ai_agents for author projection", async () => {
     const mockAll = vi.fn().mockResolvedValue({ results: [] });
     const mockFirst = vi.fn().mockResolvedValue({ count: 0 });
     const mockBind = vi.fn().mockReturnValue({
@@ -412,16 +406,16 @@ describe('handleFtsSearch', () => {
     const prepareMock = vi.fn().mockReturnValue({ bind: mockBind });
     const db = makeDb({ prepare: prepareMock });
 
-    await handleFtsSearch({ query: 'hello' }, db as unknown as D1Database);
+    await handleFtsSearch({ query: "hello" }, db as unknown as D1Database);
 
     const searchSql = String(prepareMock.mock.calls[0][0]);
-    expect(searchSql).toContain('LEFT JOIN ai_agents a ON p.ai_agent_id = a.id');
-    expect(searchSql).toContain('LEFT JOIN humans h ON p.human_id = h.id');
-    expect(searchSql).toContain('a.name AS agent_name');
-    expect(searchSql).toContain('h.name AS human_name');
+    expect(searchSql).toContain("LEFT JOIN ai_agents a ON p.ai_agent_id = a.id");
+    expect(searchSql).toContain("LEFT JOIN humans h ON p.human_id = h.id");
+    expect(searchSql).toContain("a.name AS agent_name");
+    expect(searchSql).toContain("h.name AS human_name");
   });
 
-  it('applies status filter when provided', async () => {
+  it("applies status filter when provided", async () => {
     const mockAll = vi.fn().mockResolvedValue({ results: [] });
     const mockFirst = vi.fn().mockResolvedValue({ count: 0 });
     const mockBind = vi.fn().mockReturnValue({
@@ -433,7 +427,7 @@ describe('handleFtsSearch', () => {
     const db = makeDb({ prepare: prepareMock });
 
     const res = await handleFtsSearch(
-      { query: 'test', status: 'published' },
+      { query: "test", status: "published" },
       db as unknown as D1Database,
     );
 
@@ -442,7 +436,7 @@ describe('handleFtsSearch', () => {
     expect(mockBind).toHaveBeenCalled();
   });
 
-  it('handles custom pagination', async () => {
+  it("handles custom pagination", async () => {
     const mockAll = vi.fn().mockResolvedValue({ results: [] });
     const mockFirst = vi.fn().mockResolvedValue({ count: 100 });
     const mockBind = vi.fn().mockReturnValue({
@@ -455,7 +449,7 @@ describe('handleFtsSearch', () => {
     });
 
     const res = await handleFtsSearch(
-      { query: 'test', page: 3, pageSize: 10 },
+      { query: "test", page: 3, pageSize: 10 },
       db as unknown as D1Database,
     );
 
@@ -465,7 +459,7 @@ describe('handleFtsSearch', () => {
     expect(json.pageSize).toBe(10);
   });
 
-  it('clamps invalid page to 1', async () => {
+  it("clamps invalid page to 1", async () => {
     const mockAll = vi.fn().mockResolvedValue({ results: [] });
     const mockFirst = vi.fn().mockResolvedValue({ count: 0 });
     const mockBind = vi.fn().mockReturnValue({
@@ -477,17 +471,14 @@ describe('handleFtsSearch', () => {
       prepare: vi.fn().mockReturnValue({ bind: mockBind }),
     });
 
-    const res = await handleFtsSearch(
-      { query: 'test', page: -5 },
-      db as unknown as D1Database,
-    );
+    const res = await handleFtsSearch({ query: "test", page: -5 }, db as unknown as D1Database);
 
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.page).toBe(1);
   });
 
-  it('clamps invalid pageSize to default', async () => {
+  it("clamps invalid pageSize to default", async () => {
     const mockAll = vi.fn().mockResolvedValue({ results: [] });
     const mockFirst = vi.fn().mockResolvedValue({ count: 0 });
     const mockBind = vi.fn().mockReturnValue({
@@ -499,17 +490,14 @@ describe('handleFtsSearch', () => {
       prepare: vi.fn().mockReturnValue({ bind: mockBind }),
     });
 
-    const res = await handleFtsSearch(
-      { query: 'test', pageSize: 0 },
-      db as unknown as D1Database,
-    );
+    const res = await handleFtsSearch({ query: "test", pageSize: 0 }, db as unknown as D1Database);
 
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.pageSize).toBe(20);
   });
 
-  it('clamps pageSize to max 100', async () => {
+  it("clamps pageSize to max 100", async () => {
     const mockAll = vi.fn().mockResolvedValue({ results: [] });
     const mockFirst = vi.fn().mockResolvedValue({ count: 0 });
     const mockBind = vi.fn().mockReturnValue({
@@ -522,7 +510,7 @@ describe('handleFtsSearch', () => {
     });
 
     const res = await handleFtsSearch(
-      { query: 'test', pageSize: 500 },
+      { query: "test", pageSize: 500 },
       db as unknown as D1Database,
     );
 
@@ -531,8 +519,8 @@ describe('handleFtsSearch', () => {
     expect(json.pageSize).toBe(100);
   });
 
-  it('returns 500 on database error', async () => {
-    const mockAll = vi.fn().mockRejectedValue(new Error('DB connection failed'));
+  it("returns 500 on database error", async () => {
+    const mockAll = vi.fn().mockRejectedValue(new Error("DB connection failed"));
     const mockBind = vi.fn().mockReturnValue({
       all: mockAll,
       first: mockAll,
@@ -542,14 +530,14 @@ describe('handleFtsSearch', () => {
       prepare: vi.fn().mockReturnValue({ bind: mockBind }),
     });
 
-    const res = await handleFtsSearch({ query: 'test' }, db as unknown as D1Database);
+    const res = await handleFtsSearch({ query: "test" }, db as unknown as D1Database);
     expect(res.status).toBe(500);
     const json = await res.json();
-    expect(json.error).toContain('FTS search failed');
+    expect(json.error).toContain("FTS search failed");
   });
 
-  it('handles non-Error exceptions', async () => {
-    const mockAll = vi.fn().mockRejectedValue('string error');
+  it("handles non-Error exceptions", async () => {
+    const mockAll = vi.fn().mockRejectedValue("string error");
     const mockBind = vi.fn().mockReturnValue({
       all: mockAll,
       first: mockAll,
@@ -559,18 +547,18 @@ describe('handleFtsSearch', () => {
       prepare: vi.fn().mockReturnValue({ bind: mockBind }),
     });
 
-    const res = await handleFtsSearch({ query: 'test' }, db as unknown as D1Database);
+    const res = await handleFtsSearch({ query: "test" }, db as unknown as D1Database);
     expect(res.status).toBe(500);
   });
 
-  it('handles missing count result', async () => {
+  it("handles missing count result", async () => {
     const mockAll = vi.fn().mockResolvedValue({
       results: [
         {
-          id: 'post-1',
-          title: 'Test',
-          slug: 'test',
-          search_snippet: 'snippet',
+          id: "post-1",
+          title: "Test",
+          slug: "test",
+          search_snippet: "snippet",
         },
       ],
     });
@@ -584,14 +572,14 @@ describe('handleFtsSearch', () => {
       prepare: vi.fn().mockReturnValue({ bind: mockBind }),
     });
 
-    const res = await handleFtsSearch({ query: 'test' }, db as unknown as D1Database);
+    const res = await handleFtsSearch({ query: "test" }, db as unknown as D1Database);
     expect(res.status).toBe(200);
     const json = await res.json();
     // Falls back to posts.length
     expect(json.total).toBe(1);
   });
 
-  it('handles NaN page value', async () => {
+  it("handles NaN page value", async () => {
     const mockAll = vi.fn().mockResolvedValue({ results: [] });
     const mockFirst = vi.fn().mockResolvedValue({ count: 0 });
     const mockBind = vi.fn().mockReturnValue({
@@ -603,23 +591,20 @@ describe('handleFtsSearch', () => {
       prepare: vi.fn().mockReturnValue({ bind: mockBind }),
     });
 
-    const res = await handleFtsSearch(
-      { query: 'test', page: NaN },
-      db as unknown as D1Database,
-    );
+    const res = await handleFtsSearch({ query: "test", page: NaN }, db as unknown as D1Database);
 
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.page).toBe(1);
   });
 
-  it('handles missing search_snippet in results', async () => {
+  it("handles missing search_snippet in results", async () => {
     const mockAll = vi.fn().mockResolvedValue({
       results: [
         {
-          id: 'post-1',
-          title: 'Test',
-          slug: 'test',
+          id: "post-1",
+          title: "Test",
+          slug: "test",
           // No search_snippet field
         },
       ],
@@ -634,15 +619,15 @@ describe('handleFtsSearch', () => {
       prepare: vi.fn().mockReturnValue({ bind: mockBind }),
     });
 
-    const res = await handleFtsSearch({ query: 'test' }, db as unknown as D1Database);
+    const res = await handleFtsSearch({ query: "test" }, db as unknown as D1Database);
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.posts).toHaveLength(1);
     expect(json.snippets).toEqual({});
   });
 
-  it('handles undefined searchResult.results', async () => {
-    const mockAll = vi.fn().mockResolvedValue({});  // No results field
+  it("handles undefined searchResult.results", async () => {
+    const mockAll = vi.fn().mockResolvedValue({}); // No results field
     const mockFirst = vi.fn().mockResolvedValue({ count: 0 });
     const mockBind = vi.fn().mockReturnValue({
       all: mockAll,
@@ -653,7 +638,7 @@ describe('handleFtsSearch', () => {
       prepare: vi.fn().mockReturnValue({ bind: mockBind }),
     });
 
-    const res = await handleFtsSearch({ query: 'test' }, db as unknown as D1Database);
+    const res = await handleFtsSearch({ query: "test" }, db as unknown as D1Database);
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.posts).toEqual([]);

@@ -72,9 +72,7 @@ export function createMockPostWithCategory(
 /**
  * Create a mock PostWithAgent with default values.
  */
-export function createMockPostWithAgent(
-  overrides: Partial<PostWithAgent> = {},
-): PostWithAgent {
+export function createMockPostWithAgent(overrides: Partial<PostWithAgent> = {}): PostWithAgent {
   return {
     ...createMockPostWithCategory(),
     agent_name: null,

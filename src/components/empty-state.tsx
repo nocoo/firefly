@@ -33,8 +33,7 @@ export function EmptyState({
   secondaryAction,
   variant = "blog",
 }: EmptyStateProps) {
-  const colorClass =
-    variant === "admin" ? "text-basalt-muted-foreground" : "text-blog-muted";
+  const colorClass = variant === "admin" ? "text-basalt-muted-foreground" : "text-blog-muted";
   const linkClass =
     variant === "admin"
       ? "text-basalt-primary hover:underline"
@@ -56,10 +55,7 @@ export function EmptyState({
           {secondaryAction && (
             <>
               <span aria-hidden="true">·</span>
-              <Link
-                href={secondaryAction.href}
-                className={secondaryLinkClass}
-              >
+              <Link href={secondaryAction.href} className={secondaryLinkClass}>
                 {secondaryAction.label}
               </Link>
             </>

@@ -72,10 +72,7 @@ describe("PUT /api/posts/[slug] — in-route auth", () => {
       slug: "hello-world",
     } as never);
 
-    const response = await PUT(
-      fakeRequestWithBody({ humanId: { bad: true } }),
-      fakeParams,
-    );
+    const response = await PUT(fakeRequestWithBody({ humanId: { bad: true } }), fakeParams);
 
     expect(response.status).toBe(400);
     expect(PostService.update).not.toHaveBeenCalled();
@@ -108,10 +105,7 @@ describe("PUT /api/posts/[slug] — in-route auth", () => {
       podcastUrl: null,
     } as never);
 
-    const response = await PUT(
-      fakeRequestWithBody({ podcastUrl: null }),
-      fakeParams,
-    );
+    const response = await PUT(fakeRequestWithBody({ podcastUrl: null }), fakeParams);
 
     expect(response.status).toBe(200);
     expect(PostService.update).toHaveBeenCalledWith(

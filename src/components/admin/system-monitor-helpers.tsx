@@ -113,9 +113,7 @@ export function StatCard({
       <div className="mt-2 text-2xl font-semibold font-display text-basalt-foreground tabular-nums">
         {value}
       </div>
-      {subtext && (
-        <div className="mt-1 text-xs text-basalt-muted-foreground">{subtext}</div>
-      )}
+      {subtext && <div className="mt-1 text-xs text-basalt-muted-foreground">{subtext}</div>}
     </div>
   );
 }
@@ -130,8 +128,7 @@ function buildRecommendations(memory: SystemStats["memory"]): {
   status: RecommendationStatus;
   messages: string[];
 } {
-  const heapPercent =
-    (memory.current.heapUsedMB / memory.current.heapTotalMB) * 100;
+  const heapPercent = (memory.current.heapUsedMB / memory.current.heapTotalMB) * 100;
   const rssGB = memory.current.rssMB / 1024;
   const containerLimitGB = 4;
 
@@ -177,18 +174,12 @@ const STATUS_TEXT: Record<RecommendationStatus, string> = {
   critical: "text-red-600 dark:text-red-400",
 };
 
-export function MemoryRecommendation({
-  memory,
-}: {
-  memory: SystemStats["memory"];
-}) {
+export function MemoryRecommendation({ memory }: { memory: SystemStats["memory"] }) {
   const { status, messages } = buildRecommendations(memory);
 
   return (
     <div className={`rounded-widget p-6 ${STATUS_BG[status]}`}>
-      <h3
-        className={`flex items-center gap-2 text-sm font-medium ${STATUS_TEXT[status]}`}
-      >
+      <h3 className={`flex items-center gap-2 text-sm font-medium ${STATUS_TEXT[status]}`}>
         <Activity className="h-4 w-4" />
         内存评估
       </h3>

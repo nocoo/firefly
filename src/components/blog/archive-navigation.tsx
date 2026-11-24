@@ -32,7 +32,8 @@ export function ArchiveNavigation({ archives }: { archives: MonthlyArchive[] }) 
     if (archive.year >= cutoffYear) {
       entries.push({
         slug: `${archive.year}-${String(archive.month).padStart(2, "0")}`,
-        label: `${archive.year} 年 ${archive.month} 月`, count: archive.count,
+        label: `${archive.year} 年 ${archive.month} 月`,
+        count: archive.count,
       });
     } else {
       olderByYear.set(archive.year, (olderByYear.get(archive.year) ?? 0) + archive.count);

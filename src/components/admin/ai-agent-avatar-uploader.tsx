@@ -54,9 +54,7 @@ export function AgentAvatarUploader({
       toast.success("Avatar uploaded");
       router.refresh();
     } catch (error) {
-      toast.danger(
-        error instanceof Error ? error.message : "Failed to upload avatar",
-      );
+      toast.danger(error instanceof Error ? error.message : "Failed to upload avatar");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -74,9 +72,7 @@ export function AgentAvatarUploader({
       toast.success("Avatar removed");
       router.refresh();
     } catch (error) {
-      toast.danger(
-        error instanceof Error ? error.message : "Failed to delete avatar",
-      );
+      toast.danger(error instanceof Error ? error.message : "Failed to delete avatar");
     } finally {
       setUploading(false);
     }
@@ -89,13 +85,9 @@ export function AgentAvatarUploader({
         <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-lg border border-basalt-border bg-basalt-secondary">
           {avatarUrl ? (
             <>
-              <Image
-                src={avatarUrl}
-                alt={agentName}
-                fill
-                className="object-cover"
-              />
-              <button type="button"
+              <Image src={avatarUrl} alt={agentName} fill className="object-cover" />
+              <button
+                type="button"
                 onClick={handleDelete}
                 disabled={uploading}
                 className="absolute right-1 top-1 rounded-full bg-zinc-950/50 p-1 text-white hover:bg-zinc-950/70 transition-colors"
@@ -132,9 +124,7 @@ export function AgentAvatarUploader({
             <Upload className="mr-2 h-4 w-4" />
             {avatarUrl ? "更换头像" : "上传头像"}
           </Button>
-          <p className="text-xs text-basalt-muted-foreground">
-            正方形图片，至少 256×256 像素
-          </p>
+          <p className="text-xs text-basalt-muted-foreground">正方形图片，至少 256×256 像素</p>
         </div>
       </div>
     </div>

@@ -49,10 +49,9 @@ describe.concurrent("POST /api/posts/[slug]/excerpt", () => {
   });
 
   it("returns 404 for non-existent slug", async () => {
-    const res = await fetch(
-      `${BASE}/api/posts/non-existent-slug-xyz-${Date.now()}/excerpt`,
-      { method: "POST" },
-    );
+    const res = await fetch(`${BASE}/api/posts/non-existent-slug-xyz-${Date.now()}/excerpt`, {
+      method: "POST",
+    });
     expect(res.status).toBe(404);
   });
 });

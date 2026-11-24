@@ -29,16 +29,11 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get("type") as SourceType | null;
 
     if (!type || !VALID_TYPES.includes(type)) {
-      return errorResponse(
-        `Invalid type. Must be one of: ${VALID_TYPES.join(", ")}`,
-        400,
-      );
+      return errorResponse(`Invalid type. Must be one of: ${VALID_TYPES.join(", ")}`, 400);
     }
 
     const raw = parseInt(searchParams.get("days") ?? "", 10);
-    const days = Number.isNaN(raw)
-      ? DEFAULT_DAYS
-      : Math.min(Math.max(raw, MIN_DAYS), MAX_DAYS);
+    const days = Number.isNaN(raw) ? DEFAULT_DAYS : Math.min(Math.max(raw, MIN_DAYS), MAX_DAYS);
 
     const db = getDb();
 

@@ -48,10 +48,7 @@ export async function POST(request: NextRequest) {
     // Resize to all sizes
     const resized = await Promise.all(
       LOGO_SIZES.map(async (size: LogoSize) => {
-        const png = await sharp(buffer)
-          .resize(size, size, { fit: "cover" })
-          .png()
-          .toBuffer();
+        const png = await sharp(buffer).resize(size, size, { fit: "cover" }).png().toBuffer();
         return { size, data: new Uint8Array(png) };
       }),
     );

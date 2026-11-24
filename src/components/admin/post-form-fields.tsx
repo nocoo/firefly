@@ -109,10 +109,7 @@ export function PostStatusCategoryRow({
         <label htmlFor="status" className="text-sm font-medium text-basalt-foreground">
           {"状态"}
         </label>
-        <Select
-          value={status}
-          onValueChange={(next) => onStatusChange(next as PostStatus)}
-        >
+        <Select value={status} onValueChange={(next) => onStatusChange(next as PostStatus)}>
           <SelectTrigger id="status">
             <SelectValue />
           </SelectTrigger>
@@ -131,9 +128,7 @@ export function PostStatusCategoryRow({
         </label>
         <Select
           value={categoryId === "" ? EMPTY_CATEGORY : categoryId}
-          onValueChange={(next) =>
-            onCategoryChange(next === EMPTY_CATEGORY ? "" : next)
-          }
+          onValueChange={(next) => onCategoryChange(next === EMPTY_CATEGORY ? "" : next)}
         >
           <SelectTrigger id="category">
             <SelectValue />
@@ -218,10 +213,7 @@ export function PostPublishDateField({
 }) {
   return (
     <div className="space-y-2">
-      <label
-        htmlFor="published_at"
-        className="text-sm font-medium text-basalt-foreground"
-      >
+      <label htmlFor="published_at" className="text-sm font-medium text-basalt-foreground">
         {"发布日期"}{" "}
         <span className="text-basalt-muted-foreground font-normal">
           {"（留空则首次发布时自动设置）"}
@@ -269,9 +261,7 @@ export function PostTagsField({
             {tag.name}
           </button>
         ))}
-        {tags.length === 0 && (
-          <p className="text-sm text-basalt-muted-foreground">{"暂无标签"}</p>
-        )}
+        {tags.length === 0 && <p className="text-sm text-basalt-muted-foreground">{"暂无标签"}</p>}
       </div>
     </div>
   );
@@ -290,10 +280,7 @@ export function PostFeaturedImageField({
 }) {
   return (
     <div className="space-y-2">
-      <label
-        htmlFor="featured_image"
-        className="text-sm font-medium text-basalt-foreground"
-      >
+      <label htmlFor="featured_image" className="text-sm font-medium text-basalt-foreground">
         {"封面图片 URL"}{" "}
         <span className="text-basalt-muted-foreground font-normal">{"（可选）"}</span>
       </label>

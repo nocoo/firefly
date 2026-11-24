@@ -10,10 +10,7 @@ interface Params {
   slug: string;
 }
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<Params> },
-) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<Params> }) {
   const { year, month, slug } = await params;
   const db = getDb();
   const post = await getPostBySlug(db, slug);

@@ -154,9 +154,9 @@ test.describe("Feature: Admin posts list", () => {
 
     // Then: AdminShell h1 — i18n key "admin.page.posts" → "文章"
     // (src/lib/i18n/index.ts:35).
-    await expect(
-      page.getByRole("heading", { level: 1, name: "文章" }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 1, name: "文章" }).first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("Given /admin/posts renders in list mode, When I view the list, Then the <table> is visible and per-state surfaces 未找到文章 (empty) OR the first 编辑 row link (non-empty)", async ({
@@ -179,9 +179,7 @@ test.describe("Feature: Admin posts list", () => {
     const editLinks = table.getByRole("link", { name: /编辑/ });
     const editCount = await editLinks.count();
     if (editCount === 0) {
-      await expect(
-        table.getByText("未找到文章", { exact: true }),
-      ).toBeVisible();
+      await expect(table.getByText("未找到文章", { exact: true })).toBeVisible();
     } else {
       await expect(editLinks.first()).toBeVisible();
     }
@@ -208,9 +206,7 @@ test.describe("Feature: Admin posts list", () => {
     await gotoAdminPostsList(page);
 
     // When: click the 新建文章 link.
-    await page
-      .getByRole("link", { name: "新建文章", exact: true })
-      .click();
+    await page.getByRole("link", { name: "新建文章", exact: true }).click();
     // Then: pathname is exactly /admin/posts/new.
     await page.waitForURL("**/admin/posts/new", { timeout: 10_000 });
     await expectPathname(page, "/admin/posts/new");
@@ -230,14 +226,12 @@ test.describe("Feature: Admin post new editor", () => {
     await expectPathname(page, "/admin/posts/new");
 
     // Then: /admin/posts/new is wrapped by the admin layout with breadcrumbs / subpage title.
-    await expect(
-      page.getByRole("heading", { level: 1, name: "新建文章" }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 1, name: "新建文章" }).first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Then: post-form.tsx:273 — title <Input> placeholder is exactly "文章标题".
-    await expect(
-      page.getByPlaceholder("文章标题"),
-    ).toBeVisible();
+    await expect(page.getByPlaceholder("文章标题")).toBeVisible();
   });
 
   test("Given /admin/posts/new renders, When I view the editor, Then at least one content textarea (#content-mobile or #content-desktop) is attached", async ({
@@ -251,9 +245,7 @@ test.describe("Feature: Admin post new editor", () => {
     // — L171-181 mobile (#content-mobile) and L194-205 desktop
     // (#content-desktop); Tailwind responsive utilities hide one via
     // display:none. isAttached (not isVisible) is the correct check.
-    const contentArea = page.locator(
-      "textarea#content-mobile, textarea#content-desktop",
-    );
+    const contentArea = page.locator("textarea#content-mobile, textarea#content-desktop");
     await expect(contentArea.first()).toBeAttached();
   });
 
@@ -267,20 +259,16 @@ test.describe("Feature: Admin post new editor", () => {
     // Then: post-form.tsx:386-391 wraps editorFields (including action area)
     // in <form>. Scope to it so unrelated page-level buttons cannot satisfy.
     const form = page.locator("form");
-    await expect(
-      form.getByRole("button", { name: "创建文章", exact: true }),
-    ).toBeVisible({ timeout: 10_000 });
-    await expect(
-      form.getByRole("button", { name: "取消", exact: true }),
-    ).toBeVisible();
+    await expect(form.getByRole("button", { name: "创建文章", exact: true })).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(form.getByRole("button", { name: "取消", exact: true })).toBeVisible();
 
     // Then: post-form.tsx:357-367 — the {isEditing && ...} branch renders
     // 删除文章. In new mode (post=undefined) that button must never appear
     // inside the form. Reverse-assert count to guard against a future
     // regression that accidentally surfaces delete in new mode.
-    await expect(
-      form.getByRole("button", { name: "删除文章" }),
-    ).toHaveCount(0);
+    await expect(form.getByRole("button", { name: "删除文章" })).toHaveCount(0);
   });
 
   test("Given /admin/posts/new renders, When I fill a unique-prefixed title, Then the title input has that value AND the slug input is auto-synced to the slugified value", async ({
@@ -308,9 +296,7 @@ test.describe("Feature: Admin post new editor", () => {
     // new mode, post-form.tsx:152-158 auto-syncs slug from slugify(title) as
     // long as the slug field has not been manually edited. toHaveValue polls
     // until the React state propagates — no fixed timeout fallback.
-    await expect(
-      page.getByPlaceholder("url-slug"),
-    ).toHaveValue(expectedSlug);
+    await expect(page.getByPlaceholder("url-slug")).toHaveValue(expectedSlug);
   });
 
   test("Given /admin/posts/new renders, When I choose status and the empty category, Then the triggers show 私密 and 无分类", async ({
@@ -349,10 +335,7 @@ test.describe("Feature: Admin post edit page", () => {
     const postId = await gotoFirstPostEdit(page);
     // Then: empty branch skips with explicit reason; non-empty branch
     // proceeds to assert the structural pathname.
-    test.skip(
-      postId === null,
-      "No posts available in seed to drive edit-page entry scenario.",
-    );
+    test.skip(postId === null, "No posts available in seed to drive edit-page entry scenario.");
 
     // Then: structural assertion — pathname cannot be a single literal here,
     // so pin the prefix + suffix + non-empty uuid segment instead of a regex
@@ -374,10 +357,7 @@ test.describe("Feature: Admin post edit page", () => {
     const postId = await gotoFirstPostEdit(page);
     // Then: empty branch skips with explicit reason; non-empty branch
     // proceeds to assert the title pre-fill.
-    test.skip(
-      postId === null,
-      "No posts available in seed to drive edit-form prefill scenario.",
-    );
+    test.skip(postId === null, "No posts available in seed to drive edit-form prefill scenario.");
 
     // When/Then: read the 文章标题 input and assert it hydrated to a
     // non-empty existing value.
@@ -404,9 +384,7 @@ test.describe("Feature: Admin post edit page", () => {
 
     // Then: same responsive dual-mount pattern as the new editor —
     // isAttached, not isVisible. post-form-content-editor.tsx:171-205.
-    const contentArea = page.locator(
-      "textarea#content-mobile, textarea#content-desktop",
-    );
+    const contentArea = page.locator("textarea#content-mobile, textarea#content-desktop");
     await expect(contentArea.first()).toBeAttached();
   });
 
@@ -430,9 +408,7 @@ test.describe("Feature: Admin post edit page", () => {
     // Then: PostTagsField renders <label>标签</label> at L183. The admin
     // sidebar also surfaces "标签" as a <span> nav item; scoping to <label>
     // avoids that collision.
-    await expect(
-      page.locator("label", { hasText: "标签" }).first(),
-    ).toBeVisible();
+    await expect(page.locator("label", { hasText: "标签" }).first()).toBeVisible();
   });
 
   test("Given an existing post edit page renders, When I view the form action area, Then 更新文章 (submit) and 删除文章 are visible inside the form", async ({
@@ -442,20 +418,15 @@ test.describe("Feature: Admin post edit page", () => {
     const postId = await gotoFirstPostEdit(page);
     // Then: empty branch skips with explicit reason; non-empty branch
     // proceeds to assert the edit-mode action buttons.
-    test.skip(
-      postId === null,
-      "No posts available in seed to drive edit-form actions scenario.",
-    );
+    test.skip(postId === null, "No posts available in seed to drive edit-form actions scenario.");
 
     // Then: scope to <form>; in edit mode the {isEditing && ...} branch
     // (post-form.tsx:357-367) renders 删除文章 with `ml-auto`.
     const form = page.locator("form");
-    await expect(
-      form.getByRole("button", { name: "更新文章", exact: true }),
-    ).toBeVisible({ timeout: 10_000 });
-    await expect(
-      form.getByRole("button", { name: "删除文章", exact: true }),
-    ).toBeVisible();
+    await expect(form.getByRole("button", { name: "更新文章", exact: true })).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(form.getByRole("button", { name: "删除文章", exact: true })).toBeVisible();
   });
 
   test("Given an existing post edit page renders, When I click 取消, Then pathname is exactly /admin/posts", async ({
@@ -465,10 +436,7 @@ test.describe("Feature: Admin post edit page", () => {
     const postId = await gotoFirstPostEdit(page);
     // Then: empty branch skips with explicit reason; non-empty branch
     // proceeds to drive the 取消 navigation.
-    test.skip(
-      postId === null,
-      "No posts available in seed to drive edit-form cancel scenario.",
-    );
+    test.skip(postId === null, "No posts available in seed to drive edit-form cancel scenario.");
 
     // When: click 取消 inside the form — post-form.tsx:350-356 is a
     // <button type="button"> that calls router.push("/admin/posts"). Scope
@@ -485,10 +453,9 @@ test.describe("Feature: Admin post edit page", () => {
     page,
   }) => {
     // The resource layout rejects this ID before its loading boundary streams.
-    const response = await page.goto(
-      "/admin/posts/00000000-0000-0000-0000-000000000000/edit",
-      { waitUntil: "networkidle" },
-    );
+    const response = await page.goto("/admin/posts/00000000-0000-0000-0000-000000000000/edit", {
+      waitUntil: "networkidle",
+    });
     // Then: response status is exactly 404.
     expect(response?.status()).toBe(404);
   });

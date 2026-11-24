@@ -22,7 +22,14 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 // ---------------------------------------------------------------------------
 
 vi.mock("@/data/entities/tag", () => {
-  const tag = { id: "t-1", name: "TypeScript", slug: "typescript", post_count: 5, created_at: 0, updated_at: 0 };
+  const tag = {
+    id: "t-1",
+    name: "TypeScript",
+    slug: "typescript",
+    post_count: 5,
+    created_at: 0,
+    updated_at: 0,
+  };
   return {
     listTags: vi.fn(async () => [tag]),
     getTagById: vi.fn(async (_: unknown, id: string) => (id === "t-1" ? tag : null)),
@@ -34,7 +41,16 @@ vi.mock("@/data/entities/tag", () => {
 });
 
 vi.mock("@/data/entities/category", () => {
-  const cat = { id: "c-1", name: "Tech", slug: "tech", description: "Technology", sort_order: 0, post_count: 10, created_at: 0, updated_at: 0 };
+  const cat = {
+    id: "c-1",
+    name: "Tech",
+    slug: "tech",
+    description: "Technology",
+    sort_order: 0,
+    post_count: 10,
+    created_at: 0,
+    updated_at: 0,
+  };
   return {
     listCategories: vi.fn(async () => [cat]),
     getCategoryById: vi.fn(async (_: unknown, id: string) => (id === "c-1" ? cat : null)),
@@ -47,20 +63,41 @@ vi.mock("@/data/entities/category", () => {
 
 vi.mock("@/data/entities/post", () => {
   const post = {
-    id: "p-1", title: "Hello World", slug: "hello-world",
-    content: "Body text", content_html: "<p>Body text</p>",
-    status: "published", excerpt: "Intro",
-    category_id: "c-1", featured_image: null,
-    published_at: 0, created_at: 0, updated_at: 0,
-    wp_id: null, wp_permalink: null, comment_enabled: true,
-    reference_url: null, reference_title: null,
-    reference_description: null, reference_image: null, podcast_url: null,
+    id: "p-1",
+    title: "Hello World",
+    slug: "hello-world",
+    content: "Body text",
+    content_html: "<p>Body text</p>",
+    status: "published",
+    excerpt: "Intro",
+    category_id: "c-1",
+    featured_image: null,
+    published_at: 0,
+    created_at: 0,
+    updated_at: 0,
+    wp_id: null,
+    wp_permalink: null,
+    comment_enabled: true,
+    reference_url: null,
+    reference_title: null,
+    reference_description: null,
+    reference_image: null,
+    podcast_url: null,
   };
-  const tag = { id: "t-1", name: "TypeScript", slug: "typescript", post_count: 5, created_at: 0, updated_at: 0 };
+  const tag = {
+    id: "t-1",
+    name: "TypeScript",
+    slug: "typescript",
+    post_count: 5,
+    created_at: 0,
+    updated_at: 0,
+  };
   return {
     listPosts: vi.fn(async () => ({ posts: [post], total: 1 })),
     getPostById: vi.fn(async (_: unknown, id: string) => (id === "p-1" ? post : null)),
-    getPostBySlug: vi.fn(async (_: unknown, slug: string) => (slug === "hello-world" ? post : null)),
+    getPostBySlug: vi.fn(async (_: unknown, slug: string) =>
+      slug === "hello-world" ? post : null,
+    ),
     updatePost: vi.fn(async () => ({ ...post, title: "Updated" })),
     getPostTags: vi.fn(async () => [tag]),
   };
@@ -68,14 +105,26 @@ vi.mock("@/data/entities/post", () => {
 
 vi.mock("@/services/post-service", () => {
   const post = {
-    id: "p-1", title: "Hello World", slug: "hello-world",
-    content: "Body text", content_html: "<p>Body text</p>",
-    status: "published", excerpt: "Intro",
-    category_id: "c-1", featured_image: null,
-    published_at: 0, created_at: 0, updated_at: 0,
-    wp_id: null, wp_permalink: null, comment_enabled: true,
-    reference_url: null, reference_title: null,
-    reference_description: null, reference_image: null, podcast_url: null,
+    id: "p-1",
+    title: "Hello World",
+    slug: "hello-world",
+    content: "Body text",
+    content_html: "<p>Body text</p>",
+    status: "published",
+    excerpt: "Intro",
+    category_id: "c-1",
+    featured_image: null,
+    published_at: 0,
+    created_at: 0,
+    updated_at: 0,
+    wp_id: null,
+    wp_permalink: null,
+    comment_enabled: true,
+    reference_url: null,
+    reference_title: null,
+    reference_description: null,
+    reference_image: null,
+    podcast_url: null,
   };
   return {
     PostService: {
@@ -108,11 +157,10 @@ vi.mock("@/services/unfurl", () => ({
 // Helpers
 // ---------------------------------------------------------------------------
 
-
 /** Common headers for MCP JSON-RPC requests. */
 const MCP_HEADERS = {
   "Content-Type": "application/json",
-  "Accept": "application/json, text/event-stream",
+  Accept: "application/json, text/event-stream",
 };
 
 /** Send a stateless JSON-RPC request to a fresh server+transport pair. */
@@ -277,9 +325,7 @@ describe("createMcpServer", () => {
     const body = await listTools();
     expect(body.result.tools).toHaveLength(18);
 
-    const names = body.result.tools
-      .map((t: { name: string }) => t.name)
-      .sort();
+    const names = body.result.tools.map((t: { name: string }) => t.name).sort();
     expect(names).toEqual([
       "create_category",
       "create_post",
@@ -325,9 +371,7 @@ describe("createMcpServer", () => {
     expect(listPosts?.inputSchema.required ?? []).toEqual([]);
 
     // list_posts has include param (projection configured)
-    const listPostsProps = listPosts?.inputSchema.properties as
-      | Record<string, unknown>
-      | undefined;
+    const listPostsProps = listPosts?.inputSchema.properties as Record<string, unknown> | undefined;
     expect(listPostsProps).toHaveProperty("include");
 
     // get_tag: id and slug are both optional (no required fields)
@@ -341,7 +385,8 @@ describe("createMcpServer", () => {
     const exportPost = tools.find((t) => t.name === "export_post");
     expect(exportPost?.inputSchema.required).toEqual(["format"]);
     expect(exportPost?.inputSchema.properties).toMatchObject({
-      id: { type: "string" }, slug: { type: "string" },
+      id: { type: "string" },
+      slug: { type: "string" },
       format: { type: "string", enum: ["wechat", "website"] },
     });
 
@@ -365,14 +410,20 @@ describe("createMcpServer", () => {
 
   it("exports inline-styled HTML through JSON-RPC and rejects unsupported formats", async () => {
     const { server, transport, callTool } = await createSession(db);
-    const data = expectSuccess(await callTool("export_post", {
-      slug: "hello-world", format: "wechat",
-    })) as Record<string, unknown>;
+    const data = expectSuccess(
+      await callTool("export_post", {
+        slug: "hello-world",
+        format: "wechat",
+      }),
+    ) as Record<string, unknown>;
     expect(data).toMatchObject({ id: "p-1", slug: "hello-world", format: "wechat" });
     expect(data.html).toContain('id="bm-md"');
     expect(data.html).toContain('style="');
     expect(data.html).toContain("Body text");
-    expectToolError(await callTool("export_post", { id: "missing", format: "wechat" }), "not found");
+    expectToolError(
+      await callTool("export_post", { id: "missing", format: "wechat" }),
+      "not found",
+    );
     const unsupported = await callTool("export_post", { id: "p-1", format: "html" });
     expect(unsupported.result?.isError || unsupported.error).toBeTruthy();
     await transport.close();
@@ -382,14 +433,28 @@ describe("createMcpServer", () => {
   it("exports clean website HTML and metadata through the existing JSON-RPC success envelope", async () => {
     const { server, transport, callTool } = await createSession(db);
     for (const identifier of [{ id: "p-1" }, { slug: "hello-world" }]) {
-      expect(expectSuccess(await callTool("export_post", { ...identifier, format: "website" }))).toEqual({
-        id: "p-1", slug: "hello-world", format: "website", html: "<p>Body text</p>",
-        images: [], title: "Hello World", url: "https://lizheng.blog/hello-world", cover: null,
+      expect(
+        expectSuccess(await callTool("export_post", { ...identifier, format: "website" })),
+      ).toEqual({
+        id: "p-1",
+        slug: "hello-world",
+        format: "website",
+        html: "<p>Body text</p>",
+        images: [],
+        title: "Hello World",
+        url: "https://lizheng.blog/hello-world",
+        cover: null,
       });
     }
-    expectToolError(await callTool("export_post", { id: "missing", format: "website" }), "not found");
+    expectToolError(
+      await callTool("export_post", { id: "missing", format: "website" }),
+      "not found",
+    );
     expectToolError(await callTool("export_post", { format: "website" }), "required");
-    expectToolError(await callTool("export_post", { id: "p-1", slug: "hello-world", format: "website" }), "not both");
+    expectToolError(
+      await callTool("export_post", { id: "p-1", slug: "hello-world", format: "website" }),
+      "not both",
+    );
     await transport.close();
     await server.close();
   });
@@ -403,26 +468,42 @@ describe("createMcpServer", () => {
     expect(listData).toHaveProperty("total");
 
     // get_post by slug → success with post data
-    const getBySlug = expectSuccess(await callTool("get_post", { slug: "hello-world" })) as Record<string, unknown>;
+    const getBySlug = expectSuccess(await callTool("get_post", { slug: "hello-world" })) as Record<
+      string,
+      unknown
+    >;
     expect(getBySlug.slug).toBe("hello-world");
     expect(getBySlug.title).toBe("Hello World");
 
     // get_post by id → success
-    const getById = expectSuccess(await callTool("get_post", { id: "p-1" })) as Record<string, unknown>;
+    const getById = expectSuccess(await callTool("get_post", { id: "p-1" })) as Record<
+      string,
+      unknown
+    >;
     expect(getById.id).toBe("p-1");
 
     // create_post → success
-    const created = expectSuccess(await callTool("create_post", {
-      title: "T", slug: "s", content: "C",
-    })) as Record<string, unknown>;
+    const created = expectSuccess(
+      await callTool("create_post", {
+        title: "T",
+        slug: "s",
+        content: "C",
+      }),
+    ) as Record<string, unknown>;
     expect(created.slug).toBe("hello-world");
 
     // update_post by slug → success
-    const updated = expectSuccess(await callTool("update_post", { slug: "hello-world" })) as Record<string, unknown>;
+    const updated = expectSuccess(await callTool("update_post", { slug: "hello-world" })) as Record<
+      string,
+      unknown
+    >;
     expect(updated.title).toBe("Updated");
 
     // delete_post by slug → success
-    const deleted = expectSuccess(await callTool("delete_post", { slug: "hello-world" })) as Record<string, unknown>;
+    const deleted = expectSuccess(await callTool("delete_post", { slug: "hello-world" })) as Record<
+      string,
+      unknown
+    >;
     expect(deleted.deleted).toBe(true);
 
     await transport.close();
@@ -462,19 +543,31 @@ describe("createMcpServer", () => {
     expect(tags).toHaveLength(1);
 
     // get_tag by slug → success
-    const tag = expectSuccess(await callTool("get_tag", { slug: "typescript" })) as Record<string, unknown>;
+    const tag = expectSuccess(await callTool("get_tag", { slug: "typescript" })) as Record<
+      string,
+      unknown
+    >;
     expect(tag.name).toBe("TypeScript");
 
     // create_tag → success
-    const created = expectSuccess(await callTool("create_tag", { name: "N", slug: "n" })) as Record<string, unknown>;
+    const created = expectSuccess(await callTool("create_tag", { name: "N", slug: "n" })) as Record<
+      string,
+      unknown
+    >;
     expect(created.id).toBe("t-1");
 
     // update_tag by slug → success
-    const updated = expectSuccess(await callTool("update_tag", { slug: "typescript" })) as Record<string, unknown>;
+    const updated = expectSuccess(await callTool("update_tag", { slug: "typescript" })) as Record<
+      string,
+      unknown
+    >;
     expect(updated.name).toBe("TS");
 
     // delete_tag → success
-    const deleted = expectSuccess(await callTool("delete_tag", { slug: "typescript" })) as Record<string, unknown>;
+    const deleted = expectSuccess(await callTool("delete_tag", { slug: "typescript" })) as Record<
+      string,
+      unknown
+    >;
     expect(deleted.deleted).toBe(true);
 
     await transport.close();
@@ -503,19 +596,30 @@ describe("createMcpServer", () => {
     expect(cats).toHaveLength(1);
 
     // get_category by slug → success
-    const cat = expectSuccess(await callTool("get_category", { slug: "tech" })) as Record<string, unknown>;
+    const cat = expectSuccess(await callTool("get_category", { slug: "tech" })) as Record<
+      string,
+      unknown
+    >;
     expect(cat.name).toBe("Tech");
 
     // create_category → success
-    const created = expectSuccess(await callTool("create_category", { name: "N", slug: "n" })) as Record<string, unknown>;
+    const created = expectSuccess(
+      await callTool("create_category", { name: "N", slug: "n" }),
+    ) as Record<string, unknown>;
     expect(created.id).toBe("c-1");
 
     // update_category → success
-    const updated = expectSuccess(await callTool("update_category", { slug: "tech" })) as Record<string, unknown>;
+    const updated = expectSuccess(await callTool("update_category", { slug: "tech" })) as Record<
+      string,
+      unknown
+    >;
     expect(updated.name).toBe("Technology");
 
     // delete_category → success
-    const deleted = expectSuccess(await callTool("delete_category", { slug: "tech" })) as Record<string, unknown>;
+    const deleted = expectSuccess(await callTool("delete_category", { slug: "tech" })) as Record<
+      string,
+      unknown
+    >;
     expect(deleted.deleted).toBe(true);
 
     await transport.close();
@@ -553,9 +657,7 @@ describe("createMcpServer with author context", () => {
     const body = await listTools();
     expect(body.result.tools).toHaveLength(8);
 
-    const names = body.result.tools
-      .map((t: { name: string }) => t.name)
-      .sort();
+    const names = body.result.tools.map((t: { name: string }) => t.name).sort();
     expect(names).toEqual([
       "create_post",
       "create_tag",

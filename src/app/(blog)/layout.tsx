@@ -1,6 +1,11 @@
 import { connection } from "next/server";
 import { getDb } from "@/lib/db";
-import { listCategories, listTags, listMonthlyArchives, getSiteSettings } from "@/data/public-content";
+import {
+  listCategories,
+  listTags,
+  listMonthlyArchives,
+  getSiteSettings,
+} from "@/data/public-content";
 import { BlogLayoutClient } from "@/components/blog/blog-layout-client";
 import { BlogFooter } from "@/components/blog/blog-footer";
 import { JournalThemeColor } from "@/components/blog/journal-theme-color";
@@ -21,11 +26,7 @@ export const viewport: Viewport = {
   ],
 };
 
-export default async function BlogLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function BlogLayout({ children }: { children: React.ReactNode }) {
   await connection();
   const db = getDb();
   const [categories, tags, archives, settings] = await Promise.all([
@@ -43,10 +44,7 @@ export default async function BlogLayout({
     <div className="blog-shell journal-theme">
       <TraksAnalytics />
       <JournalThemeColor />
-      <a
-        href="#main"
-        className="journal-skip-link"
-      >
+      <a href="#main" className="journal-skip-link">
         跳到正文
       </a>
       <BlogLayoutClient
@@ -55,7 +53,11 @@ export default async function BlogLayout({
         archives={archives}
         siteName={settings.siteName}
         socialLinks={settings.socialLinks}
-        wechat={{ wechatName: settings.wechatName, wechatQrImageUrl: settings.wechatQrImageUrl, wechatAvatarUrl: settings.wechatAvatarUrl }}
+        wechat={{
+          wechatName: settings.wechatName,
+          wechatQrImageUrl: settings.wechatQrImageUrl,
+          wechatAvatarUrl: settings.wechatAvatarUrl,
+        }}
       >
         {children}
       </BlogLayoutClient>

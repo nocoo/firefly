@@ -3,12 +3,7 @@ import { STATUS_COLORS } from "./status-colors";
 
 describe("STATUS_COLORS", () => {
   it("maps all four PostStatus values to Tailwind classes", () => {
-    expect(Object.keys(STATUS_COLORS)).toEqual([
-      "draft",
-      "published",
-      "private",
-      "archived",
-    ]);
+    expect(Object.keys(STATUS_COLORS)).toEqual(["draft", "published", "private", "archived"]);
   });
 
   it("each value contains Tailwind class strings", () => {

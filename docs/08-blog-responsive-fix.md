@@ -12,11 +12,11 @@ Blog sidebar layout breaks at viewport widths below ~1340px. Three structural is
 
 `globals.css:319` `.blog-sidebar-desktop` uses `position: fixed; left: 50%; transform: translateX(-670px)` — anchored to a virtual 1340px canvas. When viewport < 1340px, sidebar left edge = `viewport/2 - 670`, going off-screen:
 
-| Viewport | Sidebar left edge | Result |
-|----------|-------------------|--------|
-| 1340px | 0px | Correct |
-| 1000px | -170px | Partially hidden |
-| 768px | -286px | Invisible |
+| Viewport | Sidebar left edge | Result           |
+| -------- | ----------------- | ---------------- |
+| 1340px   | 0px               | Correct          |
+| 1000px   | -170px            | Partially hidden |
+| 768px    | -286px            | Invisible        |
 
 ### 3. Rigid main area
 
@@ -70,7 +70,7 @@ Replace `.blog-sidebar-desktop` entirely:
 ```css
 /* Desktop sidebar — visible only >= 1200px via media query */
 .blog-sidebar-desktop {
-  display: none;  /* hidden by default (drawer mode) */
+  display: none; /* hidden by default (drawer mode) */
 }
 
 @media (min-width: 1200px) {
@@ -115,12 +115,12 @@ Removed classes: `.blog-main-desktop` (with its `margin-left: 25% !important`, `
   top: 0.75em;
   left: 0.75em;
   z-index: 21;
-  display: block;  /* visible by default (drawer mode) */
+  display: block; /* visible by default (drawer mode) */
 }
 
 @media (min-width: 1200px) {
   .blog-mobile-bar {
-    display: none;  /* hidden in desktop mode */
+    display: none; /* hidden in desktop mode */
   }
 }
 ```
@@ -158,7 +158,13 @@ After: always renders both; CSS controls visibility. JS handles drawer interacti
 ```tsx
 const DESKTOP_QUERY = "(min-width: 1200px)";
 
-export function BlogLayoutClient({ categories, tags, archives, locale, children }: BlogLayoutClientProps) {
+export function BlogLayoutClient({
+  categories,
+  tags,
+  archives,
+  locale,
+  children,
+}: BlogLayoutClientProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // State convergence: auto-close drawer when entering desktop layout.
@@ -178,7 +184,9 @@ export function BlogLayoutClient({ categories, tags, archives, locale, children 
   // Scroll lock — single owner
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [drawerOpen]);
 
   return (
@@ -194,9 +202,7 @@ export function BlogLayoutClient({ categories, tags, archives, locale, children 
       </div>
 
       {/* Drawer overlay — rendered when open */}
-      {drawerOpen && (
-        <div className="blog-sidebar-backdrop" onClick={() => setDrawerOpen(false)} />
-      )}
+      {drawerOpen && <div className="blog-sidebar-backdrop" onClick={() => setDrawerOpen(false)} />}
       <BlogSidebar
         variant="drawer"
         open={drawerOpen}
@@ -216,6 +222,7 @@ export function BlogLayoutClient({ categories, tags, archives, locale, children 
 ```
 
 Key changes:
+
 - Remove `useIsMobile()` import — no JS breakpoint hook for layout
 - `matchMedia` listener auto-closes drawer on desktop transition (state convergence, not layout decision)
 - Always render desktop sidebar + hamburger + drawer sidebar in DOM
@@ -231,7 +238,7 @@ Simplify props — replace `isMobile`/`isMobileOpen` with `variant` + `open`:
 ```tsx
 interface BlogSidebarProps {
   variant: "desktop" | "drawer";
-  open?: boolean;       // only meaningful for drawer
+  open?: boolean; // only meaningful for drawer
   onClose?: () => void; // only meaningful for drawer
   categories: Category[];
   tags: Tag[];
@@ -252,6 +259,7 @@ The `<aside>` element uses the `inert` attribute to ensure inactive sidebars are
 ```
 
 For the desktop variant, CSS `display: none` below 1200px already removes it from accessibility tree and tab order — no extra attribute needed. For the drawer variant, `inert` + `aria-hidden` when closed ensures:
+
 - No tab focus into off-screen drawer links
 - Screen readers skip the closed drawer entirely
 - No pointer events leak through the transform-hidden element
@@ -259,6 +267,7 @@ For the desktop variant, CSS `display: none` below 1200px already removes it fro
 Note: `inert` is natively supported in all modern browsers. React 19+ / `@types/react` 19+ includes `inert` in JSX typings. If the project's React or type version doesn't recognize `inert` as a valid prop, suppress with `// @ts-expect-error inert not yet in typings` or extend `HTMLAttributes` locally.
 
 Changes:
+
 - Remove `isMobile` / `isMobileOpen` props
 - Remove duplicate `useEffect` for `body.style.overflow` (moved to parent)
 - Remove duplicate backdrop rendering (moved to parent)
@@ -274,21 +283,21 @@ Changes:
 
 ### Step 4: Rename CSS classes for clarity ✅
 
-| Old class | New class | Reason |
-|-----------|-----------|--------|
-| `blog-sidebar-mobile` | `blog-sidebar-drawer` | Not tied to "mobile" — it's the drawer variant |
-| `blog-sidebar-mobile-open` | `blog-sidebar-drawer-open` | Consistency |
-| `blog-main-mobile` | _(deleted)_ | Merged into single `.blog-main` + media query |
-| `blog-main-desktop` | _(deleted)_ | Merged into single `.blog-main`, grid handles layout |
+| Old class                  | New class                  | Reason                                               |
+| -------------------------- | -------------------------- | ---------------------------------------------------- |
+| `blog-sidebar-mobile`      | `blog-sidebar-drawer`      | Not tied to "mobile" — it's the drawer variant       |
+| `blog-sidebar-mobile-open` | `blog-sidebar-drawer-open` | Consistency                                          |
+| `blog-main-mobile`         | _(deleted)_                | Merged into single `.blog-main` + media query        |
+| `blog-main-desktop`        | _(deleted)_                | Merged into single `.blog-main`, grid handles layout |
 
 ## Files changed
 
-| File | Change |
-|------|--------|
-| `src/app/globals.css` | Sidebar: fixed → grid+sticky. Media queries at 1200px. Remove `-mobile`/`-desktop` class split for main. Rename drawer classes. |
-| `src/components/blog/blog-layout-client.tsx` | Remove `useIsMobile()`. Always render both sidebar variants. Consolidate scroll lock + backdrop here. |
-| `src/components/blog/blog-sidebar.tsx` | Simplify props to `variant`/`open`/`onClose`. Remove duplicate scroll lock + backdrop. |
-| `src/app/(blog)/layout.tsx` | No changes. |
+| File                                         | Change                                                                                                                          |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app/globals.css`                        | Sidebar: fixed → grid+sticky. Media queries at 1200px. Remove `-mobile`/`-desktop` class split for main. Rename drawer classes. |
+| `src/components/blog/blog-layout-client.tsx` | Remove `useIsMobile()`. Always render both sidebar variants. Consolidate scroll lock + backdrop here.                           |
+| `src/components/blog/blog-sidebar.tsx`       | Simplify props to `variant`/`open`/`onClose`. Remove duplicate scroll lock + backdrop.                                          |
+| `src/app/(blog)/layout.tsx`                  | No changes.                                                                                                                     |
 
 ## Atomic commits
 

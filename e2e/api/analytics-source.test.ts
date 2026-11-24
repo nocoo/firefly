@@ -69,17 +69,13 @@ describe.concurrent("GET /api/analytics/source", () => {
 
   it("clamps days to valid range", async () => {
     // Days too high should be clamped to MAX_DAYS (365)
-    const res = await fetch(
-      `${BASE}/api/analytics/source?type=human&days=9999`,
-    );
+    const res = await fetch(`${BASE}/api/analytics/source?type=human&days=9999`);
     expect(res.status).toBe(200);
   });
 
   it("handles invalid days gracefully", async () => {
     // Non-numeric days should use default (30)
-    const res = await fetch(
-      `${BASE}/api/analytics/source?type=human&days=invalid`,
-    );
+    const res = await fetch(`${BASE}/api/analytics/source?type=human&days=invalid`);
     expect(res.status).toBe(200);
   });
 });

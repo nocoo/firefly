@@ -81,21 +81,11 @@ export function BackupPullCard({ initialPullKey }: { initialPullKey: string | nu
           </div>
 
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleGenerate}
-              disabled={loading}
-            >
+            <Button variant="outline" size="sm" onClick={handleGenerate} disabled={loading}>
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
               重新生成
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRevoke}
-              disabled={loading}
-            >
+            <Button variant="ghost" size="sm" onClick={handleRevoke} disabled={loading}>
               <Trash2 className="h-3.5 w-3.5 mr-1.5 text-red-500" />
               撤销
             </Button>

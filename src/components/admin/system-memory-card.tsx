@@ -143,9 +143,8 @@ export function SystemMemoryCard() {
   }));
 
   // Calculate heap usage percentage
-  const heapPercent = current.heapTotalMB > 0
-    ? Math.round((current.heapUsedMB / current.heapTotalMB) * 100)
-    : 0;
+  const heapPercent =
+    current.heapTotalMB > 0 ? Math.round((current.heapUsedMB / current.heapTotalMB) * 100) : 0;
 
   return (
     <div className="rounded-widget bg-basalt-secondary ring-1 ring-basalt-border/80 shadow-basalt-card">
@@ -178,7 +177,11 @@ export function SystemMemoryCard() {
           })()}
           <div className="text-[11px] sm:text-xs text-basalt-muted-foreground truncate">
             {heapPercent}%
-            <span className="hidden sm:inline"> of {formatMemoryMB(current.heapTotalMB).value} {formatMemoryMB(current.heapTotalMB).unit}</span>
+            <span className="hidden sm:inline">
+              {" "}
+              of {formatMemoryMB(current.heapTotalMB).value}{" "}
+              {formatMemoryMB(current.heapTotalMB).unit}
+            </span>
           </div>
         </div>
 
@@ -270,10 +273,7 @@ export function SystemMemoryCard() {
                     borderRadius: "6px",
                     fontSize: "12px",
                   }}
-                  formatter={(value, name) => [
-                    `${value} MB`,
-                    name === "heap" ? "Heap" : "RSS",
-                  ]}
+                  formatter={(value, name) => [`${value} MB`, name === "heap" ? "Heap" : "RSS"]}
                 />
                 <Line
                   type="monotone"

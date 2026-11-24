@@ -10,40 +10,41 @@ admin experience using the basalt design system.
 
 ### Content Inventory
 
-| Data | Count | Migrate? | Notes |
-|------|-------|----------|-------|
-| Published posts | 72 | ✅ | 2007-05 ~ 2026-02, mix of diary + AI essays |
-| Draft posts | 674 | ✅ | Mostly "北京这几天" diary series |
-| Private posts | 1 | ✅ | Claude封号 article |
-| Categories | 2 active | ✅ | 随笔(47), 流水账(25) |
-| Categories (empty) | 3 | ❌ | 参考, 存档, 博物馆 — discard |
-| Tags (with posts) | 36 | ✅ | AI(46), GPT-4o(25), Gemini(16), etc. |
-| Tags (orphaned) | ~170 | ❌ | Nokia, jQuery, etc. — discard |
-| Comments | 595 | ✅ | All approved, all ≤2012, threaded. Discard spam/pending during migration |
-| Attachments (R2) | 2,035 files | ✅ | 529MB in `firefly` R2 bucket |
-| Revisions | 2,429 | ❌ | WordPress revision history — discard |
-| Analytics | 3,178 views | ✅ | Independent Analytics, 2025-05 ~ present |
-| Users | 1 | ✅ | admin / admin@your-domain.com |
+| Data               | Count       | Migrate? | Notes                                                                    |
+| ------------------ | ----------- | -------- | ------------------------------------------------------------------------ |
+| Published posts    | 72          | ✅       | 2007-05 ~ 2026-02, mix of diary + AI essays                              |
+| Draft posts        | 674         | ✅       | Mostly "北京这几天" diary series                                         |
+| Private posts      | 1           | ✅       | Claude封号 article                                                       |
+| Categories         | 2 active    | ✅       | 随笔(47), 流水账(25)                                                     |
+| Categories (empty) | 3           | ❌       | 参考, 存档, 博物馆 — discard                                             |
+| Tags (with posts)  | 36          | ✅       | AI(46), GPT-4o(25), Gemini(16), etc.                                     |
+| Tags (orphaned)    | ~170        | ❌       | Nokia, jQuery, etc. — discard                                            |
+| Comments           | 595         | ✅       | All approved, all ≤2012, threaded. Discard spam/pending during migration |
+| Attachments (R2)   | 2,035 files | ✅       | 529MB in `firefly` R2 bucket                                             |
+| Revisions          | 2,429       | ❌       | WordPress revision history — discard                                     |
+| Analytics          | 3,178 views | ✅       | Independent Analytics, 2025-05 ~ present                                 |
+| Users              | 1           | ✅       | admin / admin@your-domain.com                                            |
 
 ### WordPress Plugins — Disposition
 
-| Plugin | Decision |
-|--------|----------|
-| Independent Analytics | Migrate view/visitor/session data as seed |
-| WP Dark Mode | Rebuild natively (OS-preference based) |
-| Offload Media (R2) | Files already in R2; replace URLs during migration |
-| Featured Images RSS | Not needed |
-| Disable Comments | Not needed (new comments not supported) |
-| Enable Media Replace | Not needed |
-| Loco Translate | Not needed |
-| Redis Cache | Not needed (edge caching via CF/Railway) |
-| BWG Photo Gallery | Empty data — discard |
-| StatPress | Empty data — discard |
-| Yoast SEO | Empty data — build SEO natively |
+| Plugin                | Decision                                           |
+| --------------------- | -------------------------------------------------- |
+| Independent Analytics | Migrate view/visitor/session data as seed          |
+| WP Dark Mode          | Rebuild natively (OS-preference based)             |
+| Offload Media (R2)    | Files already in R2; replace URLs during migration |
+| Featured Images RSS   | Not needed                                         |
+| Disable Comments      | Not needed (new comments not supported)            |
+| Enable Media Replace  | Not needed                                         |
+| Loco Translate        | Not needed                                         |
+| Redis Cache           | Not needed (edge caching via CF/Railway)           |
+| BWG Photo Gallery     | Empty data — discard                               |
+| StatPress             | Empty data — discard                               |
+| Yoast SEO             | Empty data — build SEO natively                    |
 
 ### WordPress Tables — Table Prefix `wp_`
 
 Core tables to extract from:
+
 - `wp_posts` — posts, pages, attachments, revisions
 - `wp_postmeta` — thumbnail_id, view_count, etc.
 - `wp_terms` + `wp_term_taxonomy` + `wp_term_relationships` — categories & tags
@@ -54,6 +55,7 @@ Core tables to extract from:
 ### URL Structure Migration
 
 **WordPress (current):**
+
 ```
 https://your-domain.com/index.php/YYYY/MM/slug/
 https://your-domain.com/index.php/category/diary/
@@ -61,6 +63,7 @@ https://your-domain.com/index.php/tag/ai/
 ```
 
 **Firefly (target):**
+
 ```
 https://your-domain.com/YYYY/MM/slug        ← posts (date-prefixed for SEO continuity)
 https://your-domain.com/category/diary
@@ -72,16 +75,19 @@ https://your-domain.com/tag/ai
 ### Image URL Migration
 
 **Current in post_content:**
+
 ```
 https://your-domain.com/wp-content/uploads/YYYY/MM/filename.ext
 ```
 
 **R2 bucket key:**
+
 ```
 wp-content/uploads/YYYY/MM/filename.ext
 ```
 
 **Target (R2 custom domain):**
+
 ```
 https://assets.your-domain.com/wp-content/uploads/YYYY/MM/filename.ext
 ```

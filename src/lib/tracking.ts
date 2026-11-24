@@ -28,10 +28,7 @@ export function _resetSlugCache(): void {
  * Returns null for non-article paths or if the post is not found.
  * Never throws — failures degrade gracefully to null.
  */
-export async function resolvePostId(
-  db: Db,
-  path: string,
-): Promise<string | null> {
+export async function resolvePostId(db: Db, path: string): Promise<string | null> {
   const match = path.match(ARTICLE_PATH_RE);
   if (!match) return null;
 

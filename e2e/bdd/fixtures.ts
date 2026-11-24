@@ -35,10 +35,7 @@ export async function gotoFirstPost(page: Page): Promise<string | null> {
  * search, and hash. Admin specs use this to lock down navigation outcomes
  * so a substring URL check cannot pass on a redirected route.
  */
-export async function expectPathname(
-  page: Page,
-  expected: string,
-): Promise<void> {
+export async function expectPathname(page: Page, expected: string): Promise<void> {
   const { pathname } = new URL(page.url());
   expect(pathname).toBe(expected);
 }

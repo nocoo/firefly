@@ -25,9 +25,7 @@ export default async function LoginPage({
 
   const db = getDb();
   const settings = await getSiteSettings(db);
-  const logoUrl = settings.siteLogoVersion
-    ? getLogoUrl(settings.siteLogoVersion, 80)
-    : null;
+  const logoUrl = settings.siteLogoVersion ? getLogoUrl(settings.siteLogoVersion, 80) : null;
 
   return <LoginCard logoUrl={logoUrl} />;
 }

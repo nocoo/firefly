@@ -3,7 +3,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { JournalWechat } from "./journal-wechat";
 
-const settings = { wechatName: "Configured account", wechatQrImageUrl: "/qr.png", wechatAvatarUrl: "/avatar.png" };
+const settings = {
+  wechatName: "Configured account",
+  wechatQrImageUrl: "/qr.png",
+  wechatAvatarUrl: "/avatar.png",
+};
 
 describe("JournalWechat", () => {
   it("renders the configured name, QR image and avatar", () => {
@@ -23,7 +27,9 @@ describe("JournalWechat", () => {
   });
 
   it.each(["", "data:bad"])("omits a missing or invalid avatar", (wechatAvatarUrl) => {
-    const html = renderToStaticMarkup(createElement(JournalWechat, { ...settings, wechatAvatarUrl }));
+    const html = renderToStaticMarkup(
+      createElement(JournalWechat, { ...settings, wechatAvatarUrl }),
+    );
     expect(html).toContain('src="/qr.png"');
     expect(html).not.toContain("journal-wechat-seal");
   });

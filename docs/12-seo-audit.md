@@ -40,13 +40,13 @@ already covered by `*`).
 `<html lang>` switches between `zh-CN` and `en` based on DB settings, but
 every other language declaration is hardcoded Chinese:
 
-| Signal | Current value | Should be |
-|--------|--------------|-----------|
-| `<html lang>` | dynamic ✅ | — |
-| `og:locale` | `zh_CN` hardcoded ❌ | dynamic |
-| `hreflang` | `zh-CN` hardcoded ❌ | dynamic |
-| JSON-LD `inLanguage` | `zh-CN` hardcoded ❌ | dynamic |
-| RSS `<language>` | `zh-CN` hardcoded ❌ | dynamic |
+| Signal               | Current value        | Should be |
+| -------------------- | -------------------- | --------- |
+| `<html lang>`        | dynamic ✅           | —         |
+| `og:locale`          | `zh_CN` hardcoded ❌ | dynamic   |
+| `hreflang`           | `zh-CN` hardcoded ❌ | dynamic   |
+| JSON-LD `inLanguage` | `zh-CN` hardcoded ❌ | dynamic   |
+| RSS `<language>`     | `zh-CN` hardcoded ❌ | dynamic   |
 
 When the site is switched to English, Google sees contradictory signals:
 `<html lang="en">` vs `og:locale="zh_CN"` vs `inLanguage: "zh-CN"`.
@@ -67,13 +67,13 @@ When the site is switched to English, Google sees contradictory signals:
 
 ### P0 — Missing `generateMetadata` on paginated/archive routes
 
-| Route | Issue |
-|-------|-------|
-| `/page/[page]` | No `generateMetadata` — falls back to root default |
-| `/archive/[period]` | No `generateMetadata` |
-| `/archive/[period]/page/[page]` | Same |
-| `/category/[slug]/page/[page]` | Same |
-| `/tag/[slug]/page/[page]` | Same |
+| Route                           | Issue                                              |
+| ------------------------------- | -------------------------------------------------- |
+| `/page/[page]`                  | No `generateMetadata` — falls back to root default |
+| `/archive/[period]`             | No `generateMetadata`                              |
+| `/archive/[period]/page/[page]` | Same                                               |
+| `/category/[slug]/page/[page]`  | Same                                               |
+| `/tag/[slug]/page/[page]`       | Same                                               |
 
 **Impact**: Google sees duplicate title + description across all these pages.
 Wastes crawl budget and dilutes ranking.
@@ -150,7 +150,7 @@ back to valid pages.
 
 ```tsx
 // feed.xml/route.ts:30
-<enclosure url="..." type="image/jpeg" length="0"/>
+<enclosure url="..." type="image/jpeg" length="0" />;
 ```
 
 `length` is a **required** attribute per the RSS 2.0 spec and must contain the
@@ -160,6 +160,7 @@ is hardcoded to `image/jpeg` but images may be PNG or WebP.
 **Evidence**: `src/app/feed.xml/route.ts` (L29-31).
 
 **Fix**: Two valid approaches:
+
 1. **Provide real values**: HEAD-request the R2 URL at feed build time to get
    `Content-Length` and `Content-Type`, then populate both attributes
    accurately.
@@ -192,9 +193,7 @@ pages. Example:
   "mainEntity": {
     "@type": "ItemList",
     "numberOfItems": 15,
-    "itemListElement": [
-      { "@type": "ListItem", "position": 1, "url": "..." }
-    ]
+    "itemListElement": [{ "@type": "ListItem", "position": 1, "url": "..." }]
   }
 }
 ```
@@ -248,12 +247,12 @@ Identical implementations in `sitemap.xml/route.ts` and `feed.xml/route.ts`.
 
 ### P2 — Blog color palette repeated 3–4x in `globals.css`
 
-| Location | Purpose |
-|----------|---------|
-| `:root` | Light mode (L144-162) |
-| `.dark` | Dark mode (L197-214) |
+| Location                                      | Purpose                        |
+| --------------------------------------------- | ------------------------------ |
+| `:root`                                       | Light mode (L144-162)          |
+| `.dark`                                       | Dark mode (L197-214)           |
 | `.blog-preview-theme:not(.blog-preview-dark)` | Admin preview light (L548-563) |
-| `.blog-preview-dark` | Admin preview dark (L567-583) |
+| `.blog-preview-dark`                          | Admin preview dark (L567-583)  |
 
 Preview light values are identical to `:root`. Preview dark values are
 identical to `.dark`. Changing a color requires syncing 4 places.
@@ -302,6 +301,7 @@ actually re-executes the full render tree per request depends on deployment
 platform behavior that the source code alone cannot confirm.
 
 **Evidence**:
+
 - `grep -r "export const revalidate\|export const dynamic\|generateStaticParams" src/app/` → no results
 - `src/data/settings.ts` (L42-47): process-level cache exists but only for data, not page output
 - No `revalidate` segment config in any route file
@@ -385,70 +385,70 @@ posts with `featured_image`.
 
 ### SEO Impact (directly affects indexing, ranking, or crawl quality)
 
-| Priority | Task | Impact |
-|----------|------|--------|
-| P0 | Fix `robots.txt` — merge disallow into bot-specific groups | Prevent crawling private paths |
-| P0 | Fix language signals — convert root layout to `generateMetadata()`, thread locale everywhere | Eliminate contradictory signals |
-| P0 | Add `generateMetadata` + canonical to all paginated routes | Fix duplicate content |
-| P1 | Tighten archive URL validation (reject `2026-99`) | Eliminate duplicate URLs |
-| P1 | Tag thin content — threshold or noindex low-count tags | Reduce low-value pages |
-| P1 | Add `alt` text to featured images | Image SEO |
-| P1 | RSS: fix `<enclosure>` (provide real length or omit element) | RSS spec compliance |
-| P1 | Custom 404 page | UX + crawl quality |
-| P2 | Add `CollectionPage`/`ItemList` JSON-LD to listing pages | Richer search understanding |
-| P2 | Remove `WebSite` JSON-LD from paginated subpages | Correct schema semantics |
-| P2 | Sitemap homepage `lastmod` → latest post date | Honest freshness signal |
-| P2 | Sitemap `<image:image>` extension | Image search exposure |
+| Priority | Task                                                                                         | Impact                          |
+| -------- | -------------------------------------------------------------------------------------------- | ------------------------------- |
+| P0       | Fix `robots.txt` — merge disallow into bot-specific groups                                   | Prevent crawling private paths  |
+| P0       | Fix language signals — convert root layout to `generateMetadata()`, thread locale everywhere | Eliminate contradictory signals |
+| P0       | Add `generateMetadata` + canonical to all paginated routes                                   | Fix duplicate content           |
+| P1       | Tighten archive URL validation (reject `2026-99`)                                            | Eliminate duplicate URLs        |
+| P1       | Tag thin content — threshold or noindex low-count tags                                       | Reduce low-value pages          |
+| P1       | Add `alt` text to featured images                                                            | Image SEO                       |
+| P1       | RSS: fix `<enclosure>` (provide real length or omit element)                                 | RSS spec compliance             |
+| P1       | Custom 404 page                                                                              | UX + crawl quality              |
+| P2       | Add `CollectionPage`/`ItemList` JSON-LD to listing pages                                     | Richer search understanding     |
+| P2       | Remove `WebSite` JSON-LD from paginated subpages                                             | Correct schema semantics        |
+| P2       | Sitemap homepage `lastmod` → latest post date                                                | Honest freshness signal         |
+| P2       | Sitemap `<image:image>` extension                                                            | Image search exposure           |
 
 ### Speed (affects user experience and Core Web Vitals)
 
-| Priority | Task | Impact |
-|----------|------|--------|
-| P1 | Add ISR / `revalidate` — source has no static generation config; verify production behavior via `next build` output or response headers | TTFB reduction |
-| P1 | RSS: use `content_html` instead of re-rendering Markdown | Reduce computation |
-| P1 | Cache redirect map in proxy | Reduce per-request latency |
-| P2 | Split `BlogLayoutClient` into smaller client islands | Reduce serialization |
+| Priority | Task                                                                                                                                    | Impact                     |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| P1       | Add ISR / `revalidate` — source has no static generation config; verify production behavior via `next build` output or response headers | TTFB reduction             |
+| P1       | RSS: use `content_html` instead of re-rendering Markdown                                                                                | Reduce computation         |
+| P1       | Cache redirect map in proxy                                                                                                             | Reduce per-request latency |
+| P2       | Split `BlogLayoutClient` into smaller client islands                                                                                    | Reduce serialization       |
 
 ### Code Quality (non-SEO, maintenance improvements)
 
-| Priority | Task | Impact |
-|----------|------|--------|
-| P2 | Extract shared `escapeXml` to `src/lib/xml.ts` | DRY |
-| P2 | `SocialLink` hover → pure CSS | Less client JS |
-| P2 | Deduplicate GitHub link (sidebar vs global bar) | UI cleanliness |
-| P2 | CSS palette deduplication | Maintainability |
-| P2 | Extract shared `PostListPage` component | DRY |
+| Priority | Task                                            | Impact          |
+| -------- | ----------------------------------------------- | --------------- |
+| P2       | Extract shared `escapeXml` to `src/lib/xml.ts`  | DRY             |
+| P2       | `SocialLink` hover → pure CSS                   | Less client JS  |
+| P2       | Deduplicate GitHub link (sidebar vs global bar) | UI cleanliness  |
+| P2       | CSS palette deduplication                       | Maintainability |
+| P2       | Extract shared `PostListPage` component         | DRY             |
 
 ---
 
 ## Implementation Status (2026-03-24)
 
 All P0 and P1 SEO/Speed items are resolved. P2 items completed where
-applicable. Items marked *deferred* require design decisions or are
+applicable. Items marked _deferred_ require design decisions or are
 non-impactful enough to address later.
 
-| # | Priority | Task | Status |
-|---|----------|------|--------|
-| 1 | P0 | Fix `robots.txt` — single wildcard rule | ✅ Done |
-| 2 | P0 | Fix language signals — dynamic locale everywhere | ✅ Done (11 files, 20 tests) |
-| 3 | P0 | Add `generateMetadata` + canonical to all paginated routes | ✅ Done (5 routes) |
-| 4 | P1 | Tighten archive URL validation | ✅ Done (12 tests) |
-| 5 | P1 | Tag thin content — sitemap threshold ≥3 + noindex | ✅ Done |
-| 6 | P1 | Add `alt` text to featured images | ✅ Done (3 files) |
-| 7 | P1 | RSS: remove non-compliant `<enclosure>` | ✅ Done |
-| 8 | P1 | Custom 404 page | ✅ Done (i18n zh/en) |
-| 9 | P1 | RSS: use `content_html` with markdown fallback | ✅ Done (`content_html \|\| renderMarkdown`) |
-| 10 | P1 | Cache redirect map in proxy (5-min TTL) | ✅ Done |
-| 11 | P2 | Add `CollectionPage`/`ItemList` JSON-LD | ✅ Done (all 8 listing routes: 4 page-1 + 4 paginated) |
-| 12 | P2 | Remove `WebSite` JSON-LD from paginated subpages | ✅ Done |
-| 13 | P2 | Sitemap homepage `lastmod` → latest post date | ✅ Done (MAX `updated_at` via reduce) |
-| 14 | P2 | Sitemap `<image:image>` extension | ✅ Done |
-| 15 | P2 | Extract shared `escapeXml` to `src/lib/xml.ts` | ✅ Done (7 tests) |
-| 16 | P1 | Add ISR / `revalidate` | Deferred — requires prod behavior verification |
-| 17 | P2 | Split `BlogLayoutClient` into smaller client islands | Deferred — requires design refactor |
-| 18 | P2 | `SocialLink` hover → pure CSS | Deferred — non-SEO |
-| 19 | P2 | Deduplicate GitHub link | Deferred — non-SEO |
-| 20 | P2 | CSS palette deduplication | Deferred — non-SEO |
-| 21 | P2 | Extract shared `PostListPage` component | Deferred — non-SEO |
+| #   | Priority | Task                                                       | Status                                                 |
+| --- | -------- | ---------------------------------------------------------- | ------------------------------------------------------ |
+| 1   | P0       | Fix `robots.txt` — single wildcard rule                    | ✅ Done                                                |
+| 2   | P0       | Fix language signals — dynamic locale everywhere           | ✅ Done (11 files, 20 tests)                           |
+| 3   | P0       | Add `generateMetadata` + canonical to all paginated routes | ✅ Done (5 routes)                                     |
+| 4   | P1       | Tighten archive URL validation                             | ✅ Done (12 tests)                                     |
+| 5   | P1       | Tag thin content — sitemap threshold ≥3 + noindex          | ✅ Done                                                |
+| 6   | P1       | Add `alt` text to featured images                          | ✅ Done (3 files)                                      |
+| 7   | P1       | RSS: remove non-compliant `<enclosure>`                    | ✅ Done                                                |
+| 8   | P1       | Custom 404 page                                            | ✅ Done (i18n zh/en)                                   |
+| 9   | P1       | RSS: use `content_html` with markdown fallback             | ✅ Done (`content_html \|\| renderMarkdown`)           |
+| 10  | P1       | Cache redirect map in proxy (5-min TTL)                    | ✅ Done                                                |
+| 11  | P2       | Add `CollectionPage`/`ItemList` JSON-LD                    | ✅ Done (all 8 listing routes: 4 page-1 + 4 paginated) |
+| 12  | P2       | Remove `WebSite` JSON-LD from paginated subpages           | ✅ Done                                                |
+| 13  | P2       | Sitemap homepage `lastmod` → latest post date              | ✅ Done (MAX `updated_at` via reduce)                  |
+| 14  | P2       | Sitemap `<image:image>` extension                          | ✅ Done                                                |
+| 15  | P2       | Extract shared `escapeXml` to `src/lib/xml.ts`             | ✅ Done (7 tests)                                      |
+| 16  | P1       | Add ISR / `revalidate`                                     | Deferred — requires prod behavior verification         |
+| 17  | P2       | Split `BlogLayoutClient` into smaller client islands       | Deferred — requires design refactor                    |
+| 18  | P2       | `SocialLink` hover → pure CSS                              | Deferred — non-SEO                                     |
+| 19  | P2       | Deduplicate GitHub link                                    | Deferred — non-SEO                                     |
+| 20  | P2       | CSS palette deduplication                                  | Deferred — non-SEO                                     |
+| 21  | P2       | Extract shared `PostListPage` component                    | Deferred — non-SEO                                     |
 
 **Test status**: 351 tests passing, 94.66% statement coverage.

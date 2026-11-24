@@ -353,9 +353,7 @@ describe("PostService.update", () => {
       ...samplePost,
       category_id: "cat-2",
     });
-    vi.mocked(refreshCategoryPostCount).mockRejectedValue(
-      new Error("refresh failed"),
-    );
+    vi.mocked(refreshCategoryPostCount).mockRejectedValue(new Error("refresh failed"));
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const result = await PostService.update(db, "post-1", {
@@ -437,28 +435,28 @@ describe("PostService.update", () => {
     });
   });
 
-  it.each([
-    { aiAgentId: null },
-    { humanId: null },
-  ])("restores default human when clearing attribution with %j", async (input) => {
-    vi.mocked(getPostById).mockResolvedValue({
-      ...samplePost,
-      ai_agent_id: "agent-1",
-      human_id: null,
-    });
-    vi.mocked(updatePost).mockResolvedValue(samplePost);
+  it.each([{ aiAgentId: null }, { humanId: null }])(
+    "restores default human when clearing attribution with %j",
+    async (input) => {
+      vi.mocked(getPostById).mockResolvedValue({
+        ...samplePost,
+        ai_agent_id: "agent-1",
+        human_id: null,
+      });
+      vi.mocked(updatePost).mockResolvedValue(samplePost);
 
-    await PostService.update(db, "post-1", input);
+      await PostService.update(db, "post-1", input);
 
-    expect(updatePost).toHaveBeenCalledWith(
-      db,
-      "post-1",
-      expect.objectContaining({
-        humanId: "human-default",
-        aiAgentId: null,
-      }),
-    );
-  });
+      expect(updatePost).toHaveBeenCalledWith(
+        db,
+        "post-1",
+        expect.objectContaining({
+          humanId: "human-default",
+          aiAgentId: null,
+        }),
+      );
+    },
+  );
 
   it("clears humanId when assigning an agent", async () => {
     vi.mocked(getPostById).mockResolvedValue({
@@ -573,17 +571,9 @@ describe("PostService.batchUpdate", () => {
     vi.mocked(refreshAllCategoryPostCounts).mockResolvedValue();
     vi.mocked(refreshAllTagPostCounts).mockResolvedValue();
 
-    const count = await PostService.batchUpdate(
-      db,
-      ["p1", "p2", "p3"],
-      { status: "published" },
-    );
+    const count = await PostService.batchUpdate(db, ["p1", "p2", "p3"], { status: "published" });
 
-    expect(batchUpdatePosts).toHaveBeenCalledWith(
-      db,
-      ["p1", "p2", "p3"],
-      { status: "published" },
-    );
+    expect(batchUpdatePosts).toHaveBeenCalledWith(db, ["p1", "p2", "p3"], { status: "published" });
     expect(refreshAllCategoryPostCounts).toHaveBeenCalledWith(db);
     expect(refreshAllTagPostCounts).toHaveBeenCalledWith(db);
     expect(invalidateCategoryCache).toHaveBeenCalled();

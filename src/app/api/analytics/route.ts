@@ -25,9 +25,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
     const raw = parseInt(searchParams.get("days") ?? "", 10);
-    const days = Number.isNaN(raw)
-      ? DEFAULT_DAYS
-      : Math.min(Math.max(raw, MIN_DAYS), MAX_DAYS);
+    const days = Number.isNaN(raw) ? DEFAULT_DAYS : Math.min(Math.max(raw, MIN_DAYS), MAX_DAYS);
 
     const db = getDb();
 

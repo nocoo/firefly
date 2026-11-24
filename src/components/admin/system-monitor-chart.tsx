@@ -85,9 +85,7 @@ export function MemoryTrendChart({
                       borderRadius: "6px",
                       fontSize: "12px",
                     }}
-                    labelFormatter={(_, payload) =>
-                      payload[0]?.payload?.fullTime ?? ""
-                    }
+                    labelFormatter={(_, payload) => payload[0]?.payload?.fullTime ?? ""}
                     formatter={(value, name) => [
                       `${value} MB`,
                       name === "heap" ? "堆内存" : "RSS（总内存）",

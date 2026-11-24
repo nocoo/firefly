@@ -34,18 +34,17 @@ const entity2: MockEntity = {
 };
 
 type MockDataLayer = {
-  [K in keyof DataLayer<MockEntity>]: ReturnType<typeof vi.fn> &
-    DataLayer<MockEntity>[K];
+  [K in keyof DataLayer<MockEntity>]: ReturnType<typeof vi.fn> & DataLayer<MockEntity>[K];
 };
 
 function createMockDataLayer(): MockDataLayer {
   return {
     list: vi.fn(async (_db: Db) => [entity1, entity2]),
-    getById: vi.fn(async (_db: Db, id: string) =>
-      [entity1, entity2].find((e) => e.id === id) ?? null,
+    getById: vi.fn(
+      async (_db: Db, id: string) => [entity1, entity2].find((e) => e.id === id) ?? null,
     ),
-    getBySlug: vi.fn(async (_db: Db, slug: string) =>
-      [entity1, entity2].find((e) => e.slug === slug) ?? null,
+    getBySlug: vi.fn(
+      async (_db: Db, slug: string) => [entity1, entity2].find((e) => e.slug === slug) ?? null,
     ),
     create: vi.fn(async (_db: Db, _input: unknown) => entity1),
     update: vi.fn(
@@ -56,9 +55,7 @@ function createMockDataLayer(): MockDataLayer {
   } as MockDataLayer;
 }
 
-function createMockConfig(
-  overrides?: Partial<EntityConfig<MockEntity>>,
-): EntityConfig<MockEntity> {
+function createMockConfig(overrides?: Partial<EntityConfig<MockEntity>>): EntityConfig<MockEntity> {
   return {
     name: "mock",
     display: "Mock",

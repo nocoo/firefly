@@ -24,17 +24,13 @@ async function readBodyWithCap(response: Response): Promise<string> {
     totalBytes += value.byteLength;
     if (totalBytes > MAX_RESPONSE_BYTES) {
       reader.cancel();
-      chunks.push(
-        value.slice(0, value.byteLength - (totalBytes - MAX_RESPONSE_BYTES)),
-      );
+      chunks.push(value.slice(0, value.byteLength - (totalBytes - MAX_RESPONSE_BYTES)));
       break;
     }
     chunks.push(value);
   }
 
-  const combined = new Uint8Array(
-    chunks.reduce((acc, c) => acc + c.byteLength, 0),
-  );
+  const combined = new Uint8Array(chunks.reduce((acc, c) => acc + c.byteLength, 0));
   let offset = 0;
   for (const chunk of chunks) {
     combined.set(chunk, offset);
@@ -83,18 +79,12 @@ export async function fetchHtml(url: string): Promise<string> {
     }
 
     if (!response.ok) {
-      throw new UnfurlError(
-        `Failed to fetch URL: HTTP ${response.status}`,
-        502,
-      );
+      throw new UnfurlError(`Failed to fetch URL: HTTP ${response.status}`, 502);
     }
 
     const contentType = response.headers.get("content-type") ?? "";
     if (!contentType.includes("text/html")) {
-      throw new UnfurlError(
-        `Unsupported content type: ${contentType || "none"}`,
-        502,
-      );
+      throw new UnfurlError(`Unsupported content type: ${contentType || "none"}`, 502);
     }
 
     return readBodyWithCap(response);

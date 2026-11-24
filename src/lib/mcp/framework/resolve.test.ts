@@ -57,43 +57,22 @@ describe("resolveEntity", () => {
   });
 
   it("resolves entity by slug", async () => {
-    const result = await resolveEntity(
-      mockDb,
-      { slug: "found-slug" },
-      getById,
-      getBySlug,
-    );
+    const result = await resolveEntity(mockDb, { slug: "found-slug" }, getById, getBySlug);
     expect(result).toEqual({ id: "id-1", name: "Found" });
   });
 
   it("returns error when entity not found by id", async () => {
-    const result = await resolveEntity(
-      mockDb,
-      { id: "missing" },
-      getById,
-      getBySlug,
-    );
+    const result = await resolveEntity(mockDb, { id: "missing" }, getById, getBySlug);
     expect(result).toEqual({ error: "Entity not found: missing" });
   });
 
   it("returns error when entity not found by slug", async () => {
-    const result = await resolveEntity(
-      mockDb,
-      { slug: "missing" },
-      getById,
-      getBySlug,
-    );
+    const result = await resolveEntity(mockDb, { slug: "missing" }, getById, getBySlug);
     expect(result).toEqual({ error: "Entity not found: missing" });
   });
 
   it("uses displayName in not-found error", async () => {
-    const result = await resolveEntity(
-      mockDb,
-      { id: "missing" },
-      getById,
-      getBySlug,
-      "Tag",
-    );
+    const result = await resolveEntity(mockDb, { id: "missing" }, getById, getBySlug, "Tag");
     expect(result).toEqual({ error: "Tag not found: missing" });
   });
 

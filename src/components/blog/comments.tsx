@@ -18,9 +18,7 @@ function CommentItem({ comment, depth = 0, isAdmin }: CommentItemProps) {
   return (
     <div
       id={anchorId}
-      className={
-        effectiveDepth > 0 ? "ml-6 border-l-2 border-blog-separator pl-4" : ""
-      }
+      className={effectiveDepth > 0 ? "ml-6 border-l-2 border-blog-separator pl-4" : ""}
     >
       <div className="py-4 scroll-mt-12">
         <div className="mb-2 flex items-center gap-2 text-sm text-blog-text">
@@ -44,9 +42,7 @@ function CommentItem({ comment, depth = 0, isAdmin }: CommentItemProps) {
             className="text-blog-muted hover:text-blog-accent transition-colors"
             aria-label="评论链接"
           >
-            <time dateTime={isoDate}>
-              {formatDateDisplay(comment.created_at)}
-            </time>
+            <time dateTime={isoDate}>{formatDateDisplay(comment.created_at)}</time>
           </a>
           {isAdmin && (
             <DeleteCommentButton
@@ -58,9 +54,7 @@ function CommentItem({ comment, depth = 0, isAdmin }: CommentItemProps) {
             />
           )}
         </div>
-        <div className="text-sm leading-relaxed text-blog-text">
-          {comment.content}
-        </div>
+        <div className="text-sm leading-relaxed text-blog-text">{comment.content}</div>
       </div>
 
       {comment.children.length > 0 && (
@@ -97,11 +91,7 @@ export function Comments({ comments, postId, isAdmin }: CommentsProps) {
       ) : (
         <div className="divide-y divide-blog-separator">
           {comments.map((comment) => (
-            <CommentItem
-              key={comment.id}
-              comment={comment}
-              {...(isAdmin ? { isAdmin } : {})}
-            />
+            <CommentItem key={comment.id} comment={comment} {...(isAdmin ? { isAdmin } : {})} />
           ))}
         </div>
       )}

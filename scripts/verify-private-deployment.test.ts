@@ -5,7 +5,10 @@ import { describe, expect, it } from "vitest";
 const workflow = readFileSync(new URL("../.github/workflows/release.yml", import.meta.url), "utf8");
 const block = workflow.match(/ {8}python3 - <<'PY'\n([\s\S]*?)\n {8}PY/);
 if (!block?.[1]) throw new Error("Private deployment verifier not found");
-const verifier = block[1].split("\n").map((line) => line.slice(8)).join("\n");
+const verifier = block[1]
+  .split("\n")
+  .map((line) => line.slice(8))
+  .join("\n");
 
 const fixture = `
 import io, json, os, subprocess, sys, time, urllib.error, urllib.request
@@ -60,24 +63,41 @@ describe("private deployment verifier behavior", () => {
   it("follows a permitted redirect so the rejection fixture detects a weakened policy", () => {
     const weakened = verifier.replace("return None", "return req");
     expect(weakened).not.toBe(verifier);
-    const result = spawnSync("python3", ["-c", fixture, "redirect"], { input: weakened, encoding: "utf8", timeout: 10_000 });
+    const result = spawnSync("python3", ["-c", fixture, "redirect"], {
+      input: weakened,
+      encoding: "utf8",
+      timeout: 10_000,
+    });
     expect(result.error).toBeUndefined();
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("Private Firefly acceptance passed");
   });
 
-  it.each(["valid", "digest", "revision", "redirect", "json", "timeout", "version", "database", "cache", "admin", "write"])(
-    "fails closed for %s unless all private-origin checks pass",
-    (scenario) => {
-      const result = spawnSync("python3", ["-c", fixture, scenario], { input: verifier, encoding: "utf8", timeout: 10_000 });
-      expect(result.error).toBeUndefined();
-      if (scenario === "valid") {
-        expect(result.status).toBe(0);
-        expect(result.stdout).toContain("Private Firefly acceptance passed");
-      } else {
-        expect(result.status).not.toBe(0);
-        expect(result.stdout).not.toContain("Private Firefly acceptance passed");
-      }
-    },
-  );
+  it.each([
+    "valid",
+    "digest",
+    "revision",
+    "redirect",
+    "json",
+    "timeout",
+    "version",
+    "database",
+    "cache",
+    "admin",
+    "write",
+  ])("fails closed for %s unless all private-origin checks pass", (scenario) => {
+    const result = spawnSync("python3", ["-c", fixture, scenario], {
+      input: verifier,
+      encoding: "utf8",
+      timeout: 10_000,
+    });
+    expect(result.error).toBeUndefined();
+    if (scenario === "valid") {
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("Private Firefly acceptance passed");
+    } else {
+      expect(result.status).not.toBe(0);
+      expect(result.stdout).not.toContain("Private Firefly acceptance passed");
+    }
+  });
 });

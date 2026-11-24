@@ -11,9 +11,7 @@ export interface BackyConfig {
 }
 
 /** Validation result from validateBackyConfig */
-export type ValidationResult =
-  | { valid: true }
-  | { valid: false; error: string };
+export type ValidationResult = { valid: true } | { valid: false; error: string };
 
 /** Backy backup history response from the remote API */
 export interface BackyHistoryResponse {
@@ -107,9 +105,7 @@ export function validateBackyConfig(
  */
 export function maskApiKey(key: string): string {
   if (key.length < 10) return "\u2022".repeat(key.length);
-  return (
-    key.slice(0, 4) + "\u2022".repeat(key.length - 8) + key.slice(-4)
-  );
+  return key.slice(0, 4) + "\u2022".repeat(key.length - 8) + key.slice(-4);
 }
 
 // ---------------------------------------------------------------------------

@@ -5,12 +5,7 @@ import { jsonResponse, errorResponse } from "@/lib/api";
 import { PostService } from "@/services/post-service";
 import type { PostStatus } from "@/models/types";
 
-const VALID_STATUSES = new Set<PostStatus>([
-  "draft",
-  "published",
-  "private",
-  "archived",
-]);
+const VALID_STATUSES = new Set<PostStatus>(["draft", "published", "private", "archived"]);
 
 // PATCH /api/admin/posts/batch — bulk update status and/or category
 export async function PATCH(request: NextRequest) {
@@ -34,10 +29,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Validate status if provided
-    if (
-      updates.status !== undefined &&
-      !VALID_STATUSES.has(updates.status as PostStatus)
-    ) {
+    if (updates.status !== undefined && !VALID_STATUSES.has(updates.status as PostStatus)) {
       return errorResponse(`Invalid status: ${updates.status}`, 400);
     }
 
@@ -48,10 +40,7 @@ export async function PATCH(request: NextRequest) {
     if (catId !== undefined) sanitized.categoryId = catId as string | null;
 
     if (Object.keys(sanitized).length === 0) {
-      return errorResponse(
-        "updates must contain at least one of: status, category_id",
-        400,
-      );
+      return errorResponse("updates must contain at least one of: status, category_id", 400);
     }
 
     const db = getDb();
@@ -60,9 +49,6 @@ export async function PATCH(request: NextRequest) {
 
     return jsonResponse({ changed });
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

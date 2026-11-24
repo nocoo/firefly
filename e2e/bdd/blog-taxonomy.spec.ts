@@ -146,10 +146,7 @@ test.describe("Feature: Category page", () => {
 
     // Then: og:title is populated.
     // CSS attribute selector: meta tags have no role/label/testid.
-    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
-      "content",
-      /.+/,
-    );
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", /.+/);
   });
 
   test("Given a category page with post cards, When I click a card, Then I land on /YYYY/MM/", async ({
@@ -176,9 +173,7 @@ test.describe("Feature: Category page", () => {
     await page.waitForURL(/\/\d{4}\/\d{2}\//, { timeout: 10_000 });
 
     // Then: detail page renders an h1
-    await expect(
-      page.getByRole("heading", { level: 1 }).first(),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
   });
 
   test("Given a category page with post cards, When I view a card, Then it shows a title and a date", async ({
@@ -302,9 +297,7 @@ test.describe("Feature: Tag page", () => {
     await page.waitForURL(/\/\d{4}\/\d{2}\//, { timeout: 10_000 });
 
     // Then: detail page renders an h1
-    await expect(
-      page.getByRole("heading", { level: 1 }).first(),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
   });
 
   test("Given a tag with fewer than 3 posts, When I view it, Then it emits a noindex robots directive", async ({
@@ -335,9 +328,7 @@ test.describe("Feature: Tag page", () => {
     }
   });
 
-  test("Given a non-existent tag slug, When I visit it, Then it returns 404", async ({
-    page,
-  }) => {
+  test("Given a non-existent tag slug, When I visit it, Then it returns 404", async ({ page }) => {
     // Given/When: visit a deliberately impossible tag slug
     const response = await page.goto("/tag/non-existent-slug-12345", {
       waitUntil: "networkidle",
@@ -472,15 +463,9 @@ test.describe("Feature: Archive index page", () => {
 
     // Then: og:title is populated.
     // CSS attribute selector: meta tags have no role/label/testid.
-    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
-      "content",
-      /.+/,
-    );
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", /.+/);
 
     // Then: <link rel="canonical"> points to /archive
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
-      "href",
-      /\/archive$/,
-    );
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/archive$/);
   });
 });

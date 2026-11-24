@@ -21,10 +21,24 @@ export default async function SearchPage({
 }) {
   const { q, page } = await searchParams;
   const searchForm = (
-    <form action="/search" method="get" className="journal-search-form" role="search" aria-label="站内文章">
+    <form
+      action="/search"
+      method="get"
+      className="journal-search-form"
+      role="search"
+      aria-label="站内文章"
+    >
       <Search aria-hidden="true" strokeWidth={1.5} />
-      <input name="q" type="search" defaultValue={q ?? ""} aria-label="关键词" placeholder="想读点什么？" />
-      <button type="submit">搜索 <span aria-hidden="true">↗</span></button>
+      <input
+        name="q"
+        type="search"
+        defaultValue={q ?? ""}
+        aria-label="关键词"
+        placeholder="想读点什么？"
+      />
+      <button type="submit">
+        搜索 <span aria-hidden="true">↗</span>
+      </button>
     </form>
   );
 

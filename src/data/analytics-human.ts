@@ -11,10 +11,7 @@ import {
   sourceCondition,
 } from "./analytics-helpers";
 
-export async function getHumanDetail(
-  db: Db,
-  days: number,
-): Promise<HumanDetailResponse> {
+export async function getHumanDetail(db: Db, days: number): Promise<HumanDetailResponse> {
   const human = sourceCondition("human");
   const [topPagesRaw, topReferrers, devices, browsers, os, countries, cities, recent24h] =
     await Promise.all([

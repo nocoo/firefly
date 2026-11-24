@@ -35,9 +35,7 @@ export function SiteLogoCard({ initialLogoUrl }: SiteLogoCardProps) {
         }
 
         const data = await res.json();
-        const size80 = data.sizes?.find(
-          (s: { size: number; url: string }) => s.size === 80,
-        );
+        const size80 = data.sizes?.find((s: { size: number; url: string }) => s.size === 80);
         if (size80) {
           setCurrentLogoUrl(size80.url);
         }
@@ -105,11 +103,7 @@ export function SiteLogoCard({ initialLogoUrl }: SiteLogoCardProps) {
         {/* Logo preview */}
         <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-basalt-border bg-basalt-muted">
           {currentLogoUrl ? (
-            <img
-              src={currentLogoUrl}
-              alt="Site logo"
-              className="h-full w-full object-cover"
-            />
+            <img src={currentLogoUrl} alt="Site logo" className="h-full w-full object-cover" />
           ) : (
             <svg
               className="h-8 w-8 text-basalt-muted-foreground/40"
@@ -149,14 +143,10 @@ export function SiteLogoCard({ initialLogoUrl }: SiteLogoCardProps) {
                 className="sr-only"
               />
             </label>
-            {!logoUploading && (
-              <span className="text-basalt-muted-foreground/60">或拖拽上传</span>
-            )}
+            {!logoUploading && <span className="text-basalt-muted-foreground/60">或拖拽上传</span>}
           </div>
 
-          <p className="text-xs text-basalt-muted-foreground">
-            图片必须为正方形（宽高相等）。
-          </p>
+          <p className="text-xs text-basalt-muted-foreground">图片必须为正方形（宽高相等）。</p>
 
           {currentLogoUrl && (
             <button

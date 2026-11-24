@@ -30,10 +30,7 @@ function SocialLinkRow({
 }) {
   return (
     <div className="flex items-start gap-2">
-      <Select
-        value={link.brand}
-        onValueChange={(brand) => onChange({ ...link, brand })}
-      >
+      <Select value={link.brand} onValueChange={(brand) => onChange({ ...link, brand })}>
         <SelectTrigger aria-label={link.name.trim() || "社交平台"} className="w-32 shrink-0">
           <SelectValue />
         </SelectTrigger>
@@ -63,12 +60,7 @@ function SocialLinkRow({
         className="shrink-0 rounded px-2 py-2 text-xs text-basalt-destructive hover:text-basalt-destructive/80 transition-colors"
         title="移除"
       >
-        <svg
-          className="h-4 w-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"

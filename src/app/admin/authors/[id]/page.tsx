@@ -9,9 +9,7 @@ interface AuthorEditPageProps {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({
-  params,
-}: AuthorEditPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: AuthorEditPageProps): Promise<Metadata> {
   const { id } = await params;
   if (id === "new") {
     return { title: "创建作者" };
@@ -31,9 +29,7 @@ export default async function AuthorEditPage({ params }: AuthorEditPageProps) {
 
   if (!isNew && !author) notFound();
 
-  const avatarUrl = author
-    ? getHumanAvatarUrl(author.id, author.avatar_version, 80)
-    : null;
+  const avatarUrl = author ? getHumanAvatarUrl(author.id, author.avatar_version, 80) : null;
 
   return <AuthorForm author={author} initialAvatarUrl={avatarUrl} />;
 }

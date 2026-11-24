@@ -16,7 +16,6 @@ const { parseRow, parseSocialLinks, DEFAULTS } = _testHelpers;
 // Mock DB
 // ---------------------------------------------------------------------------
 
-
 const sampleRow = {
   id: 1,
   posts_per_page: 10,
@@ -62,9 +61,7 @@ describe("parseRow", () => {
   });
 
   it("parses comments enabled", () => {
-    expect(
-      parseRow({ ...sampleRow, comments_enabled: 1 }),
-    ).toEqual({
+    expect(parseRow({ ...sampleRow, comments_enabled: 1 })).toEqual({
       postsPerPage: 10,
       commentsEnabled: true,
       fontStyle: "pingfang",
@@ -100,7 +97,9 @@ describe("parseRow", () => {
   });
 
   it("parses site_logo_version when set", () => {
-    expect(parseRow({ ...sampleRow, site_logo_version: "a1b2c3d4" }).siteLogoVersion).toBe("a1b2c3d4");
+    expect(parseRow({ ...sampleRow, site_logo_version: "a1b2c3d4" }).siteLogoVersion).toBe(
+      "a1b2c3d4",
+    );
   });
 
   it("parses site_logo_version as null when absent", () => {
@@ -141,9 +140,7 @@ describe("parseRow", () => {
   });
 
   it("parses default_human_id as null when absent", () => {
-    expect(
-      parseRow({ ...sampleRow, default_human_id: null as any }).defaultHumanId,
-    ).toBeNull();
+    expect(parseRow({ ...sampleRow, default_human_id: null as any }).defaultHumanId).toBeNull();
   });
 
   it("falls back to empty string when author_email is null/undefined", () => {
@@ -281,9 +278,14 @@ describe("updateSiteSettings", () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleRow);
     await getSiteSettings(db);
     const result = await updateSiteSettings(db, {
-      wechatName: "Test account", wechatQrImageUrl: "/qr.png", wechatAvatarUrl: "/avatar.png",
+      wechatName: "Test account",
+      wechatQrImageUrl: "/qr.png",
+      wechatAvatarUrl: "/avatar.png",
     });
-    expect(db.execute).toHaveBeenCalledWith(expect.stringContaining("wechat_name = ?, wechat_qr_image_url = ?, wechat_avatar_url = ?"), ["Test account", "/qr.png", "/avatar.png"]);
+    expect(db.execute).toHaveBeenCalledWith(
+      expect.stringContaining("wechat_name = ?, wechat_qr_image_url = ?, wechat_avatar_url = ?"),
+      ["Test account", "/qr.png", "/avatar.png"],
+    );
     expect(db.firstOrNull).toHaveBeenCalledTimes(2);
     expect(result.wechatQrImageUrl).toBe("/qr.png");
   });
@@ -486,9 +488,7 @@ describe("updateDefaultHumanId", () => {
 
   it("throws when the human does not exist", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(null);
-    await expect(updateDefaultHumanId(db, "missing")).rejects.toThrow(
-      "Default human not found",
-    );
+    await expect(updateDefaultHumanId(db, "missing")).rejects.toThrow("Default human not found");
     expect(db.execute).not.toHaveBeenCalled();
   });
 });

@@ -33,10 +33,7 @@ export async function POST(request: Request) {
 
     return oauthError("unsupported_grant_type", `Unsupported grant_type: ${grantType}`);
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }
 
@@ -51,7 +48,10 @@ async function handleAuthorizationCode(body: FormData) {
   const codeVerifier = body.get("code_verifier") as string | null;
 
   if (!code || !redirectUri || !clientId || !codeVerifier) {
-    return oauthError("invalid_request", "Missing required fields: code, redirect_uri, client_id, code_verifier");
+    return oauthError(
+      "invalid_request",
+      "Missing required fields: code, redirect_uri, client_id, code_verifier",
+    );
   }
 
   const db = getDb();
@@ -59,7 +59,10 @@ async function handleAuthorizationCode(body: FormData) {
   // Step 1: Look up the auth code (valid, unconsumed, not expired)
   const authCode = await getAuthCodeByCode(db, code);
   if (!authCode) {
-    return oauthError("invalid_grant", "Authorization code is invalid, expired, or already consumed");
+    return oauthError(
+      "invalid_grant",
+      "Authorization code is invalid, expired, or already consumed",
+    );
   }
 
   // Step 2: Validate client_id matches (validate before consuming)
@@ -129,7 +132,13 @@ async function handleRefreshToken(body: FormData) {
   await revokeTokensByClientId(db, clientId, existingToken.user_email);
 
   // Issue new token pair
-  return issueTokenPair(db, clientId, existingToken.user_email, existingToken.scope, existingToken.client_name);
+  return issueTokenPair(
+    db,
+    clientId,
+    existingToken.user_email,
+    existingToken.scope,
+    existingToken.client_name,
+  );
 }
 
 // ---------------------------------------------------------------------------

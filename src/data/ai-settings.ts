@@ -56,8 +56,7 @@ const fields: Record<string, FieldDef> = {
 
 function parseRow(row: AiSettingsRow): AiSettings {
   const rawAuth = row.ai_auth_type || "";
-  const authType: AuthType | "" =
-    rawAuth === "bearer" || rawAuth === "apiKey" ? rawAuth : "";
+  const authType: AuthType | "" = rawAuth === "bearer" || rawAuth === "apiKey" ? rawAuth : "";
   return {
     provider: (row.ai_provider || "") as AiProvider | "",
     apiKey: row.ai_api_key || "",
@@ -92,10 +91,7 @@ export interface UpdateAiSettingsInput {
   authType?: string;
 }
 
-export async function updateAiSettings(
-  db: Db,
-  input: UpdateAiSettingsInput,
-): Promise<AiSettings> {
+export async function updateAiSettings(db: Db, input: UpdateAiSettingsInput): Promise<AiSettings> {
   const { setClauses, params } = buildSetClauses(input, fields);
 
   if (setClauses.length === 0) {
@@ -104,10 +100,7 @@ export async function updateAiSettings(
 
   setClauses.push("updated_at = unixepoch()");
 
-  await db.execute(
-    `UPDATE site_settings SET ${setClauses.join(", ")} WHERE id = 1`,
-    params,
-  );
+  await db.execute(`UPDATE site_settings SET ${setClauses.join(", ")} WHERE id = 1`, params);
 
   return getAiSettings(db);
 }

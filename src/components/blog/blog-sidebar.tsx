@@ -19,16 +19,15 @@ interface BlogSidebarProps {
   isMobile?: boolean;
 }
 
-export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function BlogSidebar({
-  categories, tags, archives, socialLinks, wechat,
-  drawerOpen = false, isMobile = false,
-}, ref) {
+export const BlogSidebar = forwardRef<HTMLElement, BlogSidebarProps>(function BlogSidebar(
+  { categories, tags, archives, socialLinks, wechat, drawerOpen = false, isMobile = false },
+  ref,
+) {
   // On mobile when closed, hide from a11y tree + disable keyboard focus
   const inert = isMobile && !drawerOpen;
   // Modal semantics only meaningful while the drawer is actually displayed
-  const modalProps = isMobile && drawerOpen
-    ? { role: "dialog" as const, "aria-modal": true as const }
-    : {};
+  const modalProps =
+    isMobile && drawerOpen ? { role: "dialog" as const, "aria-modal": true as const } : {};
 
   return (
     <aside

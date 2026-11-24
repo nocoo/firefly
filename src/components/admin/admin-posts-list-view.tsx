@@ -6,13 +6,8 @@ import type { PostWithCategory, PostStatus } from "@/models/types";
 import { formatDateDisplay } from "@/lib/seo";
 import { STATUS_COLORS } from "@/lib/status-colors";
 import { DeletePostButton } from "@/components/admin/delete-post-button";
-import {
-  SortableHeader,
-} from "@/components/admin/admin-posts-sortable-header";
-import {
-  CopyLinkButton,
-  getPreviewUrl,
-} from "@/components/admin/admin-posts-copy-link";
+import { SortableHeader } from "@/components/admin/admin-posts-sortable-header";
+import { CopyLinkButton, getPreviewUrl } from "@/components/admin/admin-posts-copy-link";
 import { AdminPostsPagination } from "@/components/admin/admin-posts-pagination";
 
 interface PostWithTags extends PostWithCategory {
@@ -34,7 +29,8 @@ function PostTableHeader(props: {
   someSelected: boolean;
   onToggleAll: () => void;
 }) {
-  const { currentSortBy, currentSortOrder, currentParams, allSelected, someSelected, onToggleAll } = props;
+  const { currentSortBy, currentSortOrder, currentParams, allSelected, someSelected, onToggleAll } =
+    props;
   const sortableProps = { currentSortBy, currentSortOrder, currentParams };
   return (
     <thead>
@@ -52,12 +48,45 @@ function PostTableHeader(props: {
           />
         </th>
         <SortableHeader column="title" label="标题" {...sortableProps} />
-        <SortableHeader column="status" label="状态" {...sortableProps} className="hidden sm:table-cell" sortable={false} />
-        <SortableHeader column="category" label="分类" {...sortableProps} className="hidden md:table-cell" sortable={false} />
-        <SortableHeader column="comment_count" label="评论" {...sortableProps} className="hidden md:table-cell" />
-        <SortableHeader column="tags" label="标签" {...sortableProps} className="hidden lg:table-cell" sortable={false} />
-        <SortableHeader column="published_at" label="发布时间" {...sortableProps} className="hidden xl:table-cell" />
-        <SortableHeader column="created_at" label="创建时间" {...sortableProps} className="hidden xl:table-cell" />
+        <SortableHeader
+          column="status"
+          label="状态"
+          {...sortableProps}
+          className="hidden sm:table-cell"
+          sortable={false}
+        />
+        <SortableHeader
+          column="category"
+          label="分类"
+          {...sortableProps}
+          className="hidden md:table-cell"
+          sortable={false}
+        />
+        <SortableHeader
+          column="comment_count"
+          label="评论"
+          {...sortableProps}
+          className="hidden md:table-cell"
+        />
+        <SortableHeader
+          column="tags"
+          label="标签"
+          {...sortableProps}
+          className="hidden lg:table-cell"
+          sortable={false}
+        />
+        <SortableHeader
+          column="published_at"
+          label="发布时间"
+          {...sortableProps}
+          className="hidden xl:table-cell"
+        />
+        <SortableHeader
+          column="created_at"
+          label="创建时间"
+          {...sortableProps}
+          className="hidden xl:table-cell"
+        />
         <th className="px-4 py-3 text-right font-medium text-basalt-muted-foreground">操作</th>
       </tr>
     </thead>
@@ -69,7 +98,10 @@ function PostRowTags({ tags }: { tags: PostWithTags["tags"] }) {
   return (
     <div className="flex flex-wrap gap-1 max-w-[200px]">
       {tags.slice(0, 3).map((tag) => (
-        <span key={tag.id} className="inline-block rounded-md bg-basalt-accent px-1.5 py-0.5 text-xs">
+        <span
+          key={tag.id}
+          className="inline-block rounded-md bg-basalt-accent px-1.5 py-0.5 text-xs"
+        >
           {tag.name}
         </span>
       ))}
@@ -137,7 +169,9 @@ function PostRow({
         </Link>
       </td>
       <td className="px-4 py-3 hidden sm:table-cell">
-        <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[post.status as PostStatus] ?? ""}`}>
+        <span
+          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[post.status as PostStatus] ?? ""}`}
+        >
           {STATUS_LABELS[post.status as PostStatus] ?? post.status}
         </span>
       </td>

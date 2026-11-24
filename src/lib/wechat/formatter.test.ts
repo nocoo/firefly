@@ -1,10 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import juice from "juice";
-import {
-  convertLinksToFootnotes,
-  buildWeChatStructure,
-  inlineWeChatHtml,
-} from "./formatter";
+import { convertLinksToFootnotes, buildWeChatStructure, inlineWeChatHtml } from "./formatter";
 import { extractPlainText, stripImagesFromHtml } from "./clipboard";
 
 describe("WeChat Formatter", () => {
@@ -12,10 +8,12 @@ describe("WeChat Formatter", () => {
     it("converts external links to footnotes", () => {
       const input = '<p>Check <a href="https://example.com">Example</a> now.</p>';
       const result = convertLinksToFootnotes(input);
-      expect(result).toContain("<span>Example</span><sup class=\"wechat-footnote-ref\">[1]</sup>");
+      expect(result).toContain('<span>Example</span><sup class="wechat-footnote-ref">[1]</sup>');
       expect(result).toContain('<section class="wechat-footnotes">');
       expect(result).toContain("<h4>参考链接</h4>");
-      expect(result).toContain("Example: </span><span style=\"word-break: break-all;\">https://example.com");
+      expect(result).toContain(
+        'Example: </span><span style="word-break: break-all;">https://example.com',
+      );
     });
 
     it("correctly decodes HTML entities in link href without double escaping", () => {
@@ -28,7 +26,8 @@ describe("WeChat Formatter", () => {
     });
 
     it("skips internal and anchor links", () => {
-      const input = '<p><a href="#heading">Jump</a> and <a href="/blog/hello">Internal</a> and <a href="./rel">Rel</a> and <a href="../parent">Parent</a>.</p>';
+      const input =
+        '<p><a href="#heading">Jump</a> and <a href="/blog/hello">Internal</a> and <a href="./rel">Rel</a> and <a href="../parent">Parent</a>.</p>';
       const result = convertLinksToFootnotes(input);
       expect(result).not.toContain("wechat-footnote-ref");
       expect(result).not.toContain("wechat-footnotes");
@@ -48,10 +47,11 @@ describe("WeChat Formatter", () => {
     });
 
     it("deduplicates multiple identical URLs with the same reference number", () => {
-      const input = '<p><a href="https://example.com">First</a> and <a href="https://example.com">Second</a></p>';
+      const input =
+        '<p><a href="https://example.com">First</a> and <a href="https://example.com">Second</a></p>';
       const result = convertLinksToFootnotes(input);
-      expect(result).toContain("<span>First</span><sup class=\"wechat-footnote-ref\">[1]</sup>");
-      expect(result).toContain("<span>Second</span><sup class=\"wechat-footnote-ref\">[1]</sup>");
+      expect(result).toContain('<span>First</span><sup class="wechat-footnote-ref">[1]</sup>');
+      expect(result).toContain('<span>Second</span><sup class="wechat-footnote-ref">[1]</sup>');
       // The body replaced the <a> tags with <span> so only 1 remains in the footnotes list
       const matches = result.match(/https:\/\/example\.com/g) || [];
       expect(matches.length).toBe(1);
@@ -97,7 +97,9 @@ describe("WeChat Formatter", () => {
       };
       const result = buildWeChatStructure(content, meta, { includeHeaderMeta: true });
       expect(result).toContain('<h1 class="wechat-post-title">Test Title</h1>');
-      expect(result).toContain('<div class="wechat-post-excerpt">Brief summary of the article</div>');
+      expect(result).toContain(
+        '<div class="wechat-post-excerpt">Brief summary of the article</div>',
+      );
       expect(result).toContain("wechat-featured-image");
     });
 
@@ -108,7 +110,9 @@ describe("WeChat Formatter", () => {
       };
       const result = buildWeChatStructure(content, meta);
       expect(result).toContain('<div class="wechat-reference-card">');
-      expect(result).toContain('<div class="wechat-reference-title">https://example.com/source</div>');
+      expect(result).toContain(
+        '<div class="wechat-reference-title">https://example.com/source</div>',
+      );
       expect(result).not.toContain("wechat-reference-img");
       expect(result).not.toContain("wechat-reference-desc");
     });
@@ -118,23 +122,27 @@ describe("WeChat Formatter", () => {
       const maliciousMeta = {
         title: '<img src=x onerror="alert(1)">',
         excerpt: '<script>alert("xss")</script>',
-        referenceTitle: 'Title with <b>bold</b> and <script>',
+        referenceTitle: "Title with <b>bold</b> and <script>",
         referenceDescription: 'Desc with <iframe src="">',
       };
 
       const result = buildWeChatStructure(content, maliciousMeta, { includeHeaderMeta: true });
-      expect(result).not.toContain('<img src=x');
-      expect(result).toContain('&lt;img src=x onerror=&quot;alert(1)&quot;&gt;');
-      expect(result).not.toContain('<script>');
-      expect(result).toContain('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
-      expect(result).not.toContain('<iframe');
+      expect(result).not.toContain("<img src=x");
+      expect(result).toContain("&lt;img src=x onerror=&quot;alert(1)&quot;&gt;");
+      expect(result).not.toContain("<script>");
+      expect(result).toContain("&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;");
+      expect(result).not.toContain("<iframe");
     });
   });
 
   describe("inlineWeChatHtml", () => {
     it("inlines styles directly on HTML elements using juice", () => {
       const rawHtml = "<h2>Section Title</h2><p>Paragraph with <strong>bold</strong> text.</p>";
-      const inlined = inlineWeChatHtml(rawHtml, { title: "My Article" }, { includeHeaderMeta: true });
+      const inlined = inlineWeChatHtml(
+        rawHtml,
+        { title: "My Article" },
+        { includeHeaderMeta: true },
+      );
 
       expect(inlined).toContain('style="');
       // Should have applied styles inline to headers and paragraphs
@@ -156,7 +164,8 @@ describe("WeChat Formatter", () => {
 
   describe("extractPlainText", () => {
     it("preserves paragraph and list item boundaries without sticking together", () => {
-      const html = "<h1>Title</h1><p>First paragraph.</p><p>Second.</p><ul><li>One</li><li>Two</li></ul>";
+      const html =
+        "<h1>Title</h1><p>First paragraph.</p><p>Second.</p><ul><li>One</li><li>Two</li></ul>";
       const plain = extractPlainText(html);
       expect(plain).toContain("Title\n\nFirst paragraph.\n\nSecond.");
       expect(plain).toContain("One");
@@ -167,7 +176,8 @@ describe("WeChat Formatter", () => {
 
   describe("stripImagesFromHtml", () => {
     it("removes img, picture, and figure elements from HTML", () => {
-      const html = "<p>Intro</p><figure><img src='pic.jpg' /><figcaption>Cap</figcaption></figure><p>Text <img src='icon.png'/> more</p>";
+      const html =
+        "<p>Intro</p><figure><img src='pic.jpg' /><figcaption>Cap</figcaption></figure><p>Text <img src='icon.png'/> more</p>";
       const stripped = stripImagesFromHtml(html);
       expect(stripped).not.toContain("pic.jpg");
       expect(stripped).not.toContain("icon.png");

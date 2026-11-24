@@ -34,9 +34,7 @@ export function AiSettingsCustomCard({
 
       <div className="space-y-2">
         <label className="text-sm font-medium text-basalt-foreground">Base URL</label>
-        <p className="text-xs text-basalt-muted-foreground">
-          自定义服务商的 API 端点。
-        </p>
+        <p className="text-xs text-basalt-muted-foreground">自定义服务商的 API 端点。</p>
         <Input
           type="url"
           value={baseURL}
@@ -47,13 +45,13 @@ export function AiSettingsCustomCard({
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="ai-sdk-type" className="text-sm font-medium text-basalt-foreground">SDK 协议</label>
+        <label htmlFor="ai-sdk-type" className="text-sm font-medium text-basalt-foreground">
+          SDK 协议
+        </label>
         <p className="text-xs text-basalt-muted-foreground">API 使用的协议类型。</p>
         <Select
           value={sdkType === "" ? EMPTY : sdkType}
-          onValueChange={(next) =>
-            onSdkTypeChange(next === EMPTY ? "" : (next as SdkType))
-          }
+          onValueChange={(next) => onSdkTypeChange(next === EMPTY ? "" : (next as SdkType))}
         >
           <SelectTrigger id="ai-sdk-type" className="max-w-xs">
             <SelectValue />
@@ -71,14 +69,12 @@ export function AiSettingsCustomCard({
           认证头
         </label>
         <p className="text-xs text-basalt-muted-foreground">
-          默认 Anthropic 协议使用 x-api-key；如果上游网关（如 manifest）只接受
-          Authorization: Bearer，请选择 Force Bearer。
+          默认 Anthropic 协议使用 x-api-key；如果上游网关（如 manifest）只接受 Authorization:
+          Bearer，请选择 Force Bearer。
         </p>
         <Select
           value={authType === "" ? EMPTY : authType}
-          onValueChange={(next) =>
-            onAuthTypeChange(next === EMPTY ? "" : (next as AuthType))
-          }
+          onValueChange={(next) => onAuthTypeChange(next === EMPTY ? "" : (next as AuthType))}
         >
           <SelectTrigger id="ai-auth-type" className="max-w-xs">
             <SelectValue />

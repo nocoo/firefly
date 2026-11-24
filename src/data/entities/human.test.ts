@@ -17,7 +17,9 @@ import {
 import type { Human, HumanWithMeta } from "@/models/types";
 import { invalidatePublicContent, readPublicContent } from "@/data/core/public-cache";
 
-vi.hoisted(() => { vi.resetModules(); });
+vi.hoisted(() => {
+  vi.resetModules();
+});
 
 const now = Math.floor(Date.now() / 1000);
 
@@ -85,17 +87,42 @@ describe("listHumans", () => {
 });
 
 describe("updateHuman", () => {
-  it.each([true, false])("refreshes public author details when profile visibility becomes %s", async (profilePublic) => {
-    const db = createMockDb();
-    invalidatePublicContent();
-    await expect(readPublicContent(["human-update-proof"], async () => null)).resolves.toBeNull();
-    const updated = { ...sampleHuman, name: "New name", slug: "new-slug", description: null, profile_public: profilePublic ? 1 : 0 };
-    vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });
-    vi.mocked(db.firstOrNull).mockResolvedValue(updated);
-    expect(await updateHuman(db, sampleHuman.id, { name: updated.name, slug: updated.slug, description: null, profilePublic })).toEqual(updated);
-    expect(vi.mocked(db.execute).mock.calls[0][1]).toEqual(["New name", "new-slug", null, profilePublic ? 1 : 0, expect.any(Number), sampleHuman.id]);
-    await expect(readPublicContent(["human-update-proof"], async () => "visible new details")).resolves.toBe("visible new details");
-  });
+  it.each([true, false])(
+    "refreshes public author details when profile visibility becomes %s",
+    async (profilePublic) => {
+      const db = createMockDb();
+      invalidatePublicContent();
+      await expect(readPublicContent(["human-update-proof"], async () => null)).resolves.toBeNull();
+      const updated = {
+        ...sampleHuman,
+        name: "New name",
+        slug: "new-slug",
+        description: null,
+        profile_public: profilePublic ? 1 : 0,
+      };
+      vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });
+      vi.mocked(db.firstOrNull).mockResolvedValue(updated);
+      expect(
+        await updateHuman(db, sampleHuman.id, {
+          name: updated.name,
+          slug: updated.slug,
+          description: null,
+          profilePublic,
+        }),
+      ).toEqual(updated);
+      expect(vi.mocked(db.execute).mock.calls[0][1]).toEqual([
+        "New name",
+        "new-slug",
+        null,
+        profilePublic ? 1 : 0,
+        expect.any(Number),
+        sampleHuman.id,
+      ]);
+      await expect(
+        readPublicContent(["human-update-proof"], async () => "visible new details"),
+      ).resolves.toBe("visible new details");
+    },
+  );
 
   it("normalizes email on update", async () => {
     const db = createMockDb();

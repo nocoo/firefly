@@ -32,9 +32,7 @@ describe("getLogoUrl", () => {
 
 describe("getLogoR2Key", () => {
   it("builds R2 key without CDN prefix", () => {
-    expect(getLogoR2Key("a1b2c3d4", 32)).toBe(
-      "uploads/firefly/site/a1b2c3d4/logo-32.png",
-    );
+    expect(getLogoR2Key("a1b2c3d4", 32)).toBe("uploads/firefly/site/a1b2c3d4/logo-32.png");
   });
 
   it("does not include protocol or domain", () => {

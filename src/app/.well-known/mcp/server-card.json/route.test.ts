@@ -13,9 +13,7 @@ describe("GET /.well-known/mcp/server-card.json", () => {
 
   it("sets Cache-Control header for 1 hour", () => {
     const response = GET();
-    expect(response.headers.get("Cache-Control")).toBe(
-      "public, max-age=3600",
-    );
+    expect(response.headers.get("Cache-Control")).toBe("public, max-age=3600");
   });
 
   it("advertises serverInfo with name and dynamic package version", async () => {

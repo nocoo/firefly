@@ -25,10 +25,7 @@ export function normalizeHumanEmail(email: string | null | undefined): string | 
   return trimmed.length === 0 ? null : trimmed;
 }
 
-export async function createHuman(
-  db: Db,
-  input: CreateHumanInput,
-): Promise<Human> {
+export async function createHuman(db: Db, input: CreateHumanInput): Promise<Human> {
   const id = newId();
   const now = nowEpoch();
   const email = normalizeHumanEmail(input.email ?? null);
@@ -59,22 +56,14 @@ export async function getHumanById(db: Db, id: string): Promise<Human | null> {
   return db.firstOrNull<Human>("SELECT * FROM humans WHERE id = ?", [id]);
 }
 
-export async function getHumanBySlug(
-  db: Db,
-  slug: string,
-): Promise<Human | null> {
+export async function getHumanBySlug(db: Db, slug: string): Promise<Human | null> {
   return db.firstOrNull<Human>("SELECT * FROM humans WHERE slug = ?", [slug]);
 }
 
-export async function getHumanByEmail(
-  db: Db,
-  email: string,
-): Promise<Human | null> {
+export async function getHumanByEmail(db: Db, email: string): Promise<Human | null> {
   const normalized = normalizeHumanEmail(email);
   if (!normalized) return null;
-  return db.firstOrNull<Human>("SELECT * FROM humans WHERE email = ?", [
-    normalized,
-  ]);
+  return db.firstOrNull<Human>("SELECT * FROM humans WHERE email = ?", [normalized]);
 }
 
 export async function listHumans(db: Db): Promise<HumanWithMeta[]> {
@@ -128,10 +117,7 @@ export async function updateHuman(
   params.push(nowEpoch());
   params.push(id);
 
-  await db.execute(
-    `UPDATE humans SET ${sets.join(", ")} WHERE id = ?`,
-    params,
-  );
+  await db.execute(`UPDATE humans SET ${sets.join(", ")} WHERE id = ?`, params);
   invalidatePublicContent();
   return getHumanById(db, id);
 }
@@ -141,10 +127,11 @@ export async function updateHumanAvatarVersion(
   id: string,
   version: string | null,
 ): Promise<void> {
-  await db.execute(
-    "UPDATE humans SET avatar_version = ?, updated_at = ? WHERE id = ?",
-    [version, nowEpoch(), id],
-  );
+  await db.execute("UPDATE humans SET avatar_version = ?, updated_at = ? WHERE id = ?", [
+    version,
+    nowEpoch(),
+    id,
+  ]);
   invalidatePublicContent();
 }
 
@@ -157,9 +144,7 @@ export async function getHumanPostCount(db: Db, humanId: string): Promise<number
 }
 
 export async function countHumans(db: Db): Promise<number> {
-  const result = await db.firstOrNull<{ count: number }>(
-    "SELECT COUNT(*) AS count FROM humans",
-  );
+  const result = await db.firstOrNull<{ count: number }>("SELECT COUNT(*) AS count FROM humans");
   return result?.count ?? 0;
 }
 
@@ -169,10 +154,7 @@ export interface DeleteHumanResult {
   postCount?: number;
 }
 
-export async function deleteHuman(
-  db: Db,
-  id: string,
-): Promise<DeleteHumanResult> {
+export async function deleteHuman(db: Db, id: string): Promise<DeleteHumanResult> {
   const existing = await getHumanById(db, id);
   if (!existing) return { success: false, reason: "not_found" };
 

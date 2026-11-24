@@ -14,13 +14,17 @@ export async function loadSiteIdentity(
     identity: {
       ...toSiteIdentity(resolved, human?.name ?? resolved.siteName),
       // Public owner profiles, also linked by the Journal's site navigation.
-      sameAs: [...new Set([
-        "https://lizheng.me/",
-        "https://lizheng.dev/",
-        "https://lizheng.blog/",
-        "https://hexly.ai/",
-        ...resolved.socialLinks.map((link) => link.url).filter((url) => /^https?:\/\//i.test(url)),
-      ])],
+      sameAs: [
+        ...new Set([
+          "https://lizheng.me/",
+          "https://lizheng.dev/",
+          "https://lizheng.blog/",
+          "https://hexly.ai/",
+          ...resolved.socialLinks
+            .map((link) => link.url)
+            .filter((url) => /^https?:\/\//i.test(url)),
+        ]),
+      ],
     },
   };
 }

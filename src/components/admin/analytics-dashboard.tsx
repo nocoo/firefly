@@ -6,14 +6,8 @@ import { AdminPageHeader } from "./page-header";
 import { AdminAnalyticsBodySkeleton } from "./loading-skeleton";
 import { LayerCard } from "@nocoo/basalt/components/layer-card";
 import { Skeleton } from "@nocoo/basalt/components/skeleton";
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@nocoo/basalt/components/toggle-group";
-import type {
-  AnalyticsSummaryResponse,
-  SourceDetailResponse,
-} from "@/models/analytics-types";
+import { ToggleGroup, ToggleGroupItem } from "@nocoo/basalt/components/toggle-group";
+import type { AnalyticsSummaryResponse, SourceDetailResponse } from "@/models/analytics-types";
 import {
   type SourceType,
   SOURCE_TYPES,
@@ -49,61 +43,47 @@ export interface ContentStats {
   tagCount: number;
 }
 
-export function AnalyticsDashboard({
-  contentStats,
-}: {
-  contentStats?: ContentStats;
-} = {}) {
+export function AnalyticsDashboard({ contentStats }: { contentStats?: ContentStats } = {}) {
   const [days, setDays] = useState(30);
   const [summary, setSummary] = useState<AnalyticsSummaryResponse | null>(null);
-  const [sourceCache, setSourceCache] = useState<
-    Partial<Record<SourceType, SourceDetailResponse>>
-  >({});
+  const [sourceCache, setSourceCache] = useState<Partial<Record<SourceType, SourceDetailResponse>>>(
+    {},
+  );
   const [activeTab, setActiveTab] = useState<SourceType>("human");
   const [summaryLoading, setSummaryLoading] = useState(true);
   const [tabLoading, setTabLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch summary
-  const fetchSummary = useCallback(
-    async (d: number) => {
-      setSummaryLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(`/api/analytics?days=${d}`);
-        if (!res.ok) throw new Error("获取分析数据失败");
-        const json: AnalyticsSummaryResponse = await res.json();
-        setSummary(json);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "获取分析数据失败",
-        );
-      } finally {
-        setSummaryLoading(false);
-      }
-    },
-    [],
-  );
+  const fetchSummary = useCallback(async (d: number) => {
+    setSummaryLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/analytics?days=${d}`);
+      if (!res.ok) throw new Error("获取分析数据失败");
+      const json: AnalyticsSummaryResponse = await res.json();
+      setSummary(json);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "获取分析数据失败");
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, []);
 
   // Fetch source detail
-  const fetchSourceDetail = useCallback(
-    async (type: SourceType, d: number) => {
-      setTabLoading(true);
-      try {
-        const res = await fetch(
-          `/api/analytics/source?type=${type}&days=${d}`,
-        );
-        if (!res.ok) throw new Error("获取分析数据失败");
-        const json: SourceDetailResponse = await res.json();
-        setSourceCache((prev) => ({ ...prev, [type]: json }));
-      } catch {
-        // Tab fetch failure is non-critical; user can retry by switching tabs
-      } finally {
-        setTabLoading(false);
-      }
-    },
-    [],
-  );
+  const fetchSourceDetail = useCallback(async (type: SourceType, d: number) => {
+    setTabLoading(true);
+    try {
+      const res = await fetch(`/api/analytics/source?type=${type}&days=${d}`);
+      if (!res.ok) throw new Error("获取分析数据失败");
+      const json: SourceDetailResponse = await res.json();
+      setSourceCache((prev) => ({ ...prev, [type]: json }));
+    } catch {
+      // Tab fetch failure is non-critical; user can retry by switching tabs
+    } finally {
+      setTabLoading(false);
+    }
+  }, []);
 
   // Initial load & period change only. Tab switches go through handleTabChange
   // so cached tabs are not re-fetched and uncached tabs are not double-fetched.
@@ -169,7 +149,12 @@ export function AnalyticsDashboard({
   }
 
   if (summaryLoading && !summary) {
-    return <div className="space-y-6">{pageHeader}<AdminAnalyticsBodySkeleton /></div>;
+    return (
+      <div className="space-y-6">
+        {pageHeader}
+        <AdminAnalyticsBodySkeleton />
+      </div>
+    );
   }
 
   if (!summary) return pageHeader;
@@ -187,83 +172,78 @@ export function AnalyticsDashboard({
   return (
     <div className="space-y-6">
       {pageHeader}
-    <div className="grid gap-6 lg:grid-cols-10">
-      {/* ── Left column: charts + tabs (7/10) ── */}
-      <div className="lg:col-span-7 space-y-6">
-        {/* Traffic trend chart */}
-        <TrafficTrend daily={summary.daily} />
+      <div className="grid gap-6 lg:grid-cols-10">
+        {/* ── Left column: charts + tabs (7/10) ── */}
+        <div className="lg:col-span-7 space-y-6">
+          {/* Traffic trend chart */}
+          <TrafficTrend daily={summary.daily} />
 
-        {/* Source tabs */}
-        <div className="space-y-4">
-          {/* Tab bar */}
-          <div className="flex gap-1 rounded-widget border border-basalt-border bg-basalt-secondary p-1">
-            {SOURCE_TYPES.map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => handleTabChange(type)}
-                className={`flex-1 flex items-center justify-center gap-2 rounded-[calc(var(--radius-widget)-4px)] px-3 py-2 text-xs font-medium transition-colors ${
-                  activeTab === type
-                    ? "bg-basalt-secondary text-basalt-foreground shadow-sm"
-                    : "text-basalt-muted-foreground hover:text-basalt-foreground"
-                }`}
-              >
-                <span>{TAB_LABELS[type]}</span>
-                <span
-                  className={`tabular-nums rounded-full px-1.5 py-0.5 text-2xs leading-none ${
+          {/* Source tabs */}
+          <div className="space-y-4">
+            {/* Tab bar */}
+            <div className="flex gap-1 rounded-widget border border-basalt-border bg-basalt-secondary p-1">
+              {SOURCE_TYPES.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => handleTabChange(type)}
+                  className={`flex-1 flex items-center justify-center gap-2 rounded-[calc(var(--radius-widget)-4px)] px-3 py-2 text-xs font-medium transition-colors ${
                     activeTab === type
-                      ? "bg-basalt-secondary text-basalt-foreground"
-                      : "bg-basalt-background/50 text-basalt-muted-foreground"
+                      ? "bg-basalt-secondary text-basalt-foreground shadow-sm"
+                      : "text-basalt-muted-foreground hover:text-basalt-foreground"
                   }`}
                 >
-                  {formatNumber(tabCounts[type])}
-                </span>
-              </button>
-            ))}
-          </div>
+                  <span>{TAB_LABELS[type]}</span>
+                  <span
+                    className={`tabular-nums rounded-full px-1.5 py-0.5 text-2xs leading-none ${
+                      activeTab === type
+                        ? "bg-basalt-secondary text-basalt-foreground"
+                        : "bg-basalt-background/50 text-basalt-muted-foreground"
+                    }`}
+                  >
+                    {formatNumber(tabCounts[type])}
+                  </span>
+                </button>
+              ))}
+            </div>
 
-          {/* Tab content */}
-          {tabLoading && !currentTabData ? (
-            <TabSkeleton />
-          ) : currentTabData ? (
-            <SourceTabContent data={currentTabData} />
-          ) : null}
+            {/* Tab content */}
+            {tabLoading && !currentTabData ? (
+              <TabSkeleton />
+            ) : currentTabData ? (
+              <SourceTabContent data={currentTabData} />
+            ) : null}
+          </div>
+        </div>
+
+        {/* ── Right column: stats cards (3/10) ── */}
+        <div className="lg:col-span-3 space-y-4">
+          {/* Content stats (from server) */}
+          {contentStats && (
+            <div className="space-y-2">
+              <ContentStatCard
+                icon={FileText}
+                label="已发布文章"
+                value={contentStats.postCount}
+                index={0}
+              />
+              <ContentStatCard
+                icon={FolderOpen}
+                label="分类"
+                value={contentStats.categoryCount}
+                index={1}
+              />
+              <ContentStatCard icon={Tags} label="标签" value={contentStats.tagCount} index={2} />
+            </div>
+          )}
+
+          {/* Overview stat cards */}
+          <OverviewCards overview={summary.overview} days={days} />
+
+          {/* System memory stats */}
+          <SystemMemoryCard />
         </div>
       </div>
-
-      {/* ── Right column: stats cards (3/10) ── */}
-      <div className="lg:col-span-3 space-y-4">
-        {/* Content stats (from server) */}
-        {contentStats && (
-          <div className="space-y-2">
-            <ContentStatCard
-              icon={FileText}
-              label="已发布文章"
-              value={contentStats.postCount}
-              index={0}
-            />
-            <ContentStatCard
-              icon={FolderOpen}
-              label="分类"
-              value={contentStats.categoryCount}
-              index={1}
-            />
-            <ContentStatCard
-              icon={Tags}
-              label="标签"
-              value={contentStats.tagCount}
-              index={2}
-            />
-          </div>
-        )}
-
-        {/* Overview stat cards */}
-        <OverviewCards overview={summary.overview} days={days} />
-
-        {/* System memory stats */}
-        <SystemMemoryCard />
-      </div>
-    </div>
     </div>
   );
 }

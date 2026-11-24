@@ -68,7 +68,11 @@ export const SLOTS: SlotDefinition[] = [
     target: ".github/workflows/*.yml (actionlint + immutable base-ci pins)",
     stagedOnly: /^\.github\/workflows\//,
     steps: [
-      { label: "workflow lint", command: "bun run scripts/quality/workflow-lint.ts", timeoutMs: MIN },
+      {
+        label: "workflow lint",
+        command: "bun run scripts/quality/workflow-lint.ts",
+        timeoutMs: MIN,
+      },
     ],
   },
   {

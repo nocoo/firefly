@@ -69,7 +69,9 @@ export function extractPlainText(html: string): string {
     return text;
   }
 
-  return walk(temp).replace(/\n{3,}/g, "\n\n").trim();
+  return walk(temp)
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 export function copyViaExecCommand(html: string): boolean {

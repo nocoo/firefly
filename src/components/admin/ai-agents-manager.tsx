@@ -7,11 +7,7 @@ import { toast } from "@nocoo/basalt/components/toast";
 import type { Category } from "@/models/types";
 import { Button } from "@nocoo/basalt/components/button";
 import { AdminPageHeader } from "./page-header";
-import {
-  DeleteAgentDialog,
-  NewAgentModal,
-  type AgentWithAvatarUrl,
-} from "./ai-agents-helpers";
+import { DeleteAgentDialog, NewAgentModal, type AgentWithAvatarUrl } from "./ai-agents-helpers";
 import { AiAgentsTable } from "./ai-agents-table";
 
 // Re-export so existing consumers can still import NewAgentModal from this module
@@ -30,10 +26,7 @@ interface PromptInfo {
 }
 
 /** Fetch the connection prompt for an agent; falls back to a basic stub on failure. */
-async function fetchAgentPrompt(
-  agent: AgentWithAvatarUrl,
-  mcpUrl: string,
-): Promise<PromptInfo> {
+async function fetchAgentPrompt(agent: AgentWithAvatarUrl, mcpUrl: string): Promise<PromptInfo> {
   const fallbackPrompt = `Author ID: ${agent.id}\n\nMCP URL: ${mcpUrl}`;
   try {
     const res = await fetch(`/api/admin/ai-agents/${agent.id}/prompt`);
@@ -60,13 +53,11 @@ export function AiAgentsManager({
   const router = useRouter();
   const [agents, setAgents] = useState(initialAgents);
   const [newAgent, setNewAgent] = useState<PromptInfo | null>(null);
-  const [confirmDelete, setConfirmDelete] =
-    useState<AgentWithAvatarUrl | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<AgentWithAvatarUrl | null>(null);
   const [showPromptFor, setShowPromptFor] = useState<PromptInfo | null>(null);
   const [loadingPrompt, setLoadingPrompt] = useState(false);
 
-  const handleEdit = (agent: AgentWithAvatarUrl) =>
-    router.push(`/admin/ai-agents/${agent.id}`);
+  const handleEdit = (agent: AgentWithAvatarUrl) => router.push(`/admin/ai-agents/${agent.id}`);
 
   const handleCreate = () => router.push("/admin/ai-agents/new");
 

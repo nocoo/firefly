@@ -2,12 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { YearCount } from "@/data/entities/media";
-import {
-  hasActiveFilters,
-  MONTH_LABELS,
-  MONTHS,
-  type Filters,
-} from "./media-library-helpers";
+import { hasActiveFilters, MONTH_LABELS, MONTHS, type Filters } from "./media-library-helpers";
 import { FilterBar } from "@nocoo/basalt/components/filter-bar";
 import { Input } from "@nocoo/basalt/components/input";
 import {
@@ -34,11 +29,7 @@ function FilterSelect({
   children: ReactNode;
 }) {
   return (
-    <Select
-      value={value}
-      onValueChange={onValueChange}
-      {...(disabled ? { disabled: true } : {})}
-    >
+    <Select value={value} onValueChange={onValueChange} {...(disabled ? { disabled: true } : {})}>
       <SelectTrigger size="sm" className="w-[8.5rem]">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>

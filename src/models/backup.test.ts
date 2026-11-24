@@ -15,9 +15,7 @@ import {
 
 describe("isValidWebhookUrl", () => {
   it("accepts valid HTTPS URL", () => {
-    expect(isValidWebhookUrl("https://example.com/api/webhook/abc")).toBe(
-      true,
-    );
+    expect(isValidWebhookUrl("https://example.com/api/webhook/abc")).toBe(true);
   });
 
   it("accepts valid HTTP URL", () => {
@@ -87,18 +85,12 @@ describe("validateBackyConfig", () => {
   });
 
   it("allows missing apiKey when requireApiKey is false (update mode)", () => {
-    const result = validateBackyConfig(
-      { webhookUrl: "https://example.com" },
-      false,
-    );
+    const result = validateBackyConfig({ webhookUrl: "https://example.com" }, false);
     expect(result).toEqual({ valid: true });
   });
 
   it("allows empty apiKey when requireApiKey is false", () => {
-    const result = validateBackyConfig(
-      { webhookUrl: "https://example.com", apiKey: "" },
-      false,
-    );
+    const result = validateBackyConfig({ webhookUrl: "https://example.com", apiKey: "" }, false);
     expect(result).toEqual({ valid: true });
   });
 
@@ -182,11 +174,7 @@ describe("buildBackyTag", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-03-26T14:30:05Z"));
 
-    const tag = buildBackyTag(
-      "1.4.0",
-      { posts: 10, categories: 3, tags: 7 },
-      "b8z3",
-    );
+    const tag = buildBackyTag("1.4.0", { posts: 10, categories: 3, tags: 7 }, "b8z3");
     expect(tag).toBe("v1.4.0-2026-03-26T14-30-05-b8z3-10post-3cat-7tag");
 
     vi.useRealTimers();
@@ -245,23 +233,17 @@ describe("formatTimeAgo", () => {
   });
 
   it("formats hours ago", () => {
-    const threeHoursAgo = new Date(
-      Date.now() - 3 * 60 * 60 * 1000,
-    ).toISOString();
+    const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
     expect(formatTimeAgo(threeHoursAgo)).toBe("3h ago");
   });
 
   it("formats days ago", () => {
-    const twoDaysAgo = new Date(
-      Date.now() - 2 * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
     expect(formatTimeAgo(twoDaysAgo)).toBe("2d ago");
   });
 
   it("formats months ago", () => {
-    const sixtyDaysAgo = new Date(
-      Date.now() - 60 * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
     expect(formatTimeAgo(sixtyDaysAgo)).toBe("2mo ago");
   });
 });

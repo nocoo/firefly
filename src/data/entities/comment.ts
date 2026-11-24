@@ -10,10 +10,7 @@ import { invalidatePostCaches } from "./post-cache";
 // listCommentsByPost
 // ---------------------------------------------------------------------------
 
-export async function listCommentsByPost(
-  db: Db,
-  postId: string,
-): Promise<Comment[]> {
+export async function listCommentsByPost(db: Db, postId: string): Promise<Comment[]> {
   const result = await db.query<Comment>(
     "SELECT * FROM comments WHERE post_id = ? ORDER BY created_at ASC",
     [postId],
@@ -62,10 +59,7 @@ export interface CreateCommentInput {
   authorUrl?: string | null;
 }
 
-export async function createComment(
-  db: Db,
-  input: CreateCommentInput,
-): Promise<Comment> {
+export async function createComment(db: Db, input: CreateCommentInput): Promise<Comment> {
   const id = crypto.randomUUID();
   const createdAt = Math.floor(Date.now() / 1000);
   const parentId = input.parentId ?? null;
@@ -77,13 +71,21 @@ export async function createComment(
        id, post_id, parent_id, author_name, author_email, author_url,
        content, wp_id, created_at
      ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)`,
-    [id, input.postId, parentId, input.authorName, authorEmail, authorUrl, input.content, createdAt],
+    [
+      id,
+      input.postId,
+      parentId,
+      input.authorName,
+      authorEmail,
+      authorUrl,
+      input.content,
+      createdAt,
+    ],
   );
   try {
-    await db.execute(
-      "UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?",
-      [input.postId],
-    );
+    await db.execute("UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?", [
+      input.postId,
+    ]);
   } finally {
     invalidatePostCaches();
   }
@@ -105,15 +107,9 @@ export async function createComment(
 // deleteComment — delete a comment and all descendants, update post count
 // ---------------------------------------------------------------------------
 
-export async function deleteComment(
-  db: Db,
-  commentId: string,
-): Promise<boolean> {
+export async function deleteComment(db: Db, commentId: string): Promise<boolean> {
   // 1. Get comment to find post_id
-  const comment = await db.firstOrNull<Comment>(
-    "SELECT * FROM comments WHERE id = ?",
-    [commentId],
-  );
+  const comment = await db.firstOrNull<Comment>("SELECT * FROM comments WHERE id = ?", [commentId]);
   if (!comment) return false;
 
   // 2. Count descendants by walking the parent_id → children map in JS.
@@ -152,10 +148,10 @@ export async function deleteComment(
 
   // 4. Decrement post.comment_count
   try {
-    await db.execute(
-      "UPDATE posts SET comment_count = MAX(0, comment_count - ?) WHERE id = ?",
-      [deletedCount, comment.post_id],
-    );
+    await db.execute("UPDATE posts SET comment_count = MAX(0, comment_count - ?) WHERE id = ?", [
+      deletedCount,
+      comment.post_id,
+    ]);
   } finally {
     invalidatePostCaches();
   }

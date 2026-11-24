@@ -89,8 +89,8 @@ const segmenter = new Intl.Segmenter("zh-CN", { granularity: "word" });
 
 function segmentText(text: string): string {
   return [...segmenter.segment(text)]
-    .filter(s => s.isWordLike)
-    .map(s => s.segment.toLowerCase())
+    .filter((s) => s.isWordLike)
+    .map((s) => s.segment.toLowerCase())
     .join(" ");
 }
 
@@ -101,6 +101,7 @@ function segmentText(text: string): string {
 ```
 
 Key properties:
+
 - **Mixed CJK + Latin**: English words preserved as whole tokens, Chinese split into words
 - **`isWordLike` filter**: Strips punctuation and whitespace automatically
 - **Lowercase**: Normalize for case-insensitive matching
@@ -142,12 +143,12 @@ Existing posts must be bulk-segmented and indexed via a Worker endpoint (see Wor
 
 ### FTS5 Query Syntax
 
-| User input | Segmented | FTS5 query | Rationale |
-|---|---|---|---|
-| `cloudflare workers` | `cloudflare workers` | `"cloudflare" "workers"` | AND all terms |
-| `边缘计算` | `边缘 计算` | `"边缘" "计算"` | Segmented then AND |
-| `"exact phrase"` | (pass through) | `"exact phrase"` | Quoted phrases preserved |
-| `cloud*` | `cloud*` | `cloud*` | Prefix match preserved |
+| User input           | Segmented            | FTS5 query               | Rationale                |
+| -------------------- | -------------------- | ------------------------ | ------------------------ |
+| `cloudflare workers` | `cloudflare workers` | `"cloudflare" "workers"` | AND all terms            |
+| `边缘计算`           | `边缘 计算`          | `"边缘" "计算"`          | Segmented then AND       |
+| `"exact phrase"`     | (pass through)       | `"exact phrase"`         | Quoted phrases preserved |
+| `cloud*`             | `cloud*`             | `cloud*`                 | Prefix match preserved   |
 
 ---
 
@@ -236,15 +237,15 @@ File: `src/data/entities/post.ts`
 
 ```typescript
 interface SearchPostsOptions {
-  query: string;           // required, min 1 char
-  status?: PostStatus;     // default: 'published'
-  page?: number;           // default: 1
-  pageSize?: number;       // default: 20
+  query: string; // required, min 1 char
+  status?: PostStatus; // default: 'published'
+  page?: number; // default: 1
+  pageSize?: number; // default: 20
 }
 
 interface SearchResult {
   posts: PostWithCategory[];
-  snippets: Record<string, string>;  // post.id → highlighted snippet HTML
+  snippets: Record<string, string>; // post.id → highlighted snippet HTML
   total: number;
   page: number;
   pageSize: number;
@@ -281,7 +282,7 @@ const db: Db = {
   // ... existing query/execute/batch ...
 
   async call<T>(path: string, body: unknown): Promise<T> {
-    return post<T>(path, body);  // reuses the existing private post() helper
+    return post<T>(path, body); // reuses the existing private post() helper
   },
 };
 ```
@@ -446,7 +447,9 @@ export function SearchInput() {
 // Don't steal "/" when user is typing in an input/textarea/contenteditable
 function isTyping(e: KeyboardEvent): boolean {
   const tag = (e.target as HTMLElement)?.tagName;
-  return tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable === true;
+  return (
+    tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable === true
+  );
 }
 ```
 
@@ -482,7 +485,11 @@ Route: `src/app/(blog)/search/page.tsx` (Server Component)
 - SEO: `noindex` — `export const metadata = { robots: { index: false } }`
 
 ```tsx
-export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; page?: string }>;
+}) {
   const { q, page } = await searchParams;
   if (!q?.trim()) {
     // Show empty search prompt
@@ -576,22 +583,27 @@ interface PostCardProps {
   locale: Locale;
   author?: string;
   priority?: boolean;
-  snippet?: string;  // NEW: FTS5 HTML snippet with <mark> tags
+  snippet?: string; // NEW: FTS5 HTML snippet with <mark> tags
 }
 ```
 
 Rendering logic change in the excerpt section:
 
 ```tsx
-{/* Excerpt — snippet overrides when provided */}
-{(snippet || post.excerpt) && (
-  snippet
-    ? <p className="mt-3 text-base leading-relaxed text-blog-text"
-         dangerouslySetInnerHTML={{ __html: sanitizeSnippet(snippet) }} />
-    : <p className="mt-3 text-base leading-relaxed text-blog-text">
-        {post.excerpt}
-      </p>
-)}
+{
+  /* Excerpt — snippet overrides when provided */
+}
+{
+  (snippet || post.excerpt) &&
+    (snippet ? (
+      <p
+        className="mt-3 text-base leading-relaxed text-blog-text"
+        dangerouslySetInnerHTML={{ __html: sanitizeSnippet(snippet) }}
+      />
+    ) : (
+      <p className="mt-3 text-base leading-relaxed text-blog-text">{post.excerpt}</p>
+    ));
+}
 ```
 
 Sanitizer (only allows `<mark>` tags, collapses CJK inter-word spaces):
@@ -606,10 +618,7 @@ function sanitizeSnippet(html: string): string {
   let prev = "";
   while (prev !== s) {
     prev = s;
-    s = s.replace(
-      /([\u4e00-\u9fff])(<\/mark>)?\s+(<mark>)?([\u4e00-\u9fff])/g,
-      "$1$2$3$4",
-    );
+    s = s.replace(/([\u4e00-\u9fff])(<\/mark>)?\s+(<mark>)?([\u4e00-\u9fff])/g, "$1$2$3$4");
   }
   return s;
 }
@@ -689,64 +698,64 @@ File: `src/app/globals.css`
 
 New keys added to `en.json` and `zh.json`:
 
-| Key | EN | ZH |
-|---|---|---|
-| `blog.search.placeholder` | `Search...` | `搜索...` |
-| `blog.search.resultsTitle` | `{total} results for "{query}"` | `搜索 "{query}" 共 {total} 条结果` |
-| `blog.search.noResults` | `No results found. Try different keywords.` | `未找到相关结果，请尝试其他关键词。` |
-| `blog.search.prompt` | `Enter a keyword to search posts.` | `输入关键词搜索文章。` |
+| Key                        | EN                                          | ZH                                   |
+| -------------------------- | ------------------------------------------- | ------------------------------------ |
+| `blog.search.placeholder`  | `Search...`                                 | `搜索...`                            |
+| `blog.search.resultsTitle` | `{total} results for "{query}"`             | `搜索 "{query}" 共 {total} 条结果`   |
+| `blog.search.noResults`    | `No results found. Try different keywords.` | `未找到相关结果，请尝试其他关键词。` |
+| `blog.search.prompt`       | `Enter a keyword to search posts.`          | `输入关键词搜索文章。`               |
 
 ---
 
 ## Atomic Commits
 
-| # | Commit | Files | Status |
-|---|--------|-------|--------|
-| 1 | `feat(db): add FTS5 search migration` | `scripts/migrations/013-fts5-search.sql` | Done |
-| 2 | `feat(worker): add FTS segmentation and search endpoints` | `worker/src/index.ts`, `worker/src/fts.ts` | Done |
-| 3 | `feat(lib): add Db.call() for custom Worker endpoints` | `src/lib/db.ts` | Done |
-| 4 | `feat(data): add searchPosts() and getPostRowid() functions` | `src/data/entities/post.ts` | Done |
-| 5 | `feat(service): integrate FTS sync into PostService` | `src/services/post-service.ts` | Done |
-| 6 | `test(data): add searchPosts and FTS sync unit tests` | `src/data/entities/post.test.ts` | Done |
-| 7 | `feat(api): add dedicated GET /api/search endpoint` | `src/app/api/search/route.ts` | Done |
-| 8 | `feat(ui): add snippet prop to PostCard with safe HTML rendering` | `src/components/blog/post-card.tsx`, `src/lib/sanitize-snippet.ts` | Done |
-| 9 | `feat(blog): add SearchInput sidebar component` | `src/components/blog/search-input.tsx`, `src/components/blog/blog-sidebar.tsx`, CSS, i18n | Done |
-| 10 | `feat(blog): add /search results page` | `src/app/(blog)/search/page.tsx`, `src/components/blog/pagination.tsx` | Done |
-| 11 | `test(e2e): add search API E2E tests` | `e2e/api/search.test.ts` | Done |
-| 12 | `chore: run fts-rebuild on production` | One-time migration step (manual) | Pending deploy |
+| #   | Commit                                                            | Files                                                                                     | Status         |
+| --- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | -------------- |
+| 1   | `feat(db): add FTS5 search migration`                             | `scripts/migrations/013-fts5-search.sql`                                                  | Done           |
+| 2   | `feat(worker): add FTS segmentation and search endpoints`         | `worker/src/index.ts`, `worker/src/fts.ts`                                                | Done           |
+| 3   | `feat(lib): add Db.call() for custom Worker endpoints`            | `src/lib/db.ts`                                                                           | Done           |
+| 4   | `feat(data): add searchPosts() and getPostRowid() functions`      | `src/data/entities/post.ts`                                                               | Done           |
+| 5   | `feat(service): integrate FTS sync into PostService`              | `src/services/post-service.ts`                                                            | Done           |
+| 6   | `test(data): add searchPosts and FTS sync unit tests`             | `src/data/entities/post.test.ts`                                                          | Done           |
+| 7   | `feat(api): add dedicated GET /api/search endpoint`               | `src/app/api/search/route.ts`                                                             | Done           |
+| 8   | `feat(ui): add snippet prop to PostCard with safe HTML rendering` | `src/components/blog/post-card.tsx`, `src/lib/sanitize-snippet.ts`                        | Done           |
+| 9   | `feat(blog): add SearchInput sidebar component`                   | `src/components/blog/search-input.tsx`, `src/components/blog/blog-sidebar.tsx`, CSS, i18n | Done           |
+| 10  | `feat(blog): add /search results page`                            | `src/app/(blog)/search/page.tsx`, `src/components/blog/pagination.tsx`                    | Done           |
+| 11  | `test(e2e): add search API E2E tests`                             | `e2e/api/search.test.ts`                                                                  | Done           |
+| 12  | `chore: run fts-rebuild on production`                            | One-time migration step (manual)                                                          | Pending deploy |
 
 ---
 
 ## Testing Strategy
 
-| Layer | What | How |
-|---|---|---|
-| **L1 UT** | `segmentText()` — CJK, English, mixed, empty, special chars | Pure function tests (Node 18+ has `Intl.Segmenter`) |
-| **L1 UT** | `searchPosts()` — query building, pagination, snippet extraction | Mock DB calls |
-| **L1 UT** | `sanitizeFtsQuery()` — escape FTS5 special chars, quoted phrases | Pure function tests |
-| **L1 UT** | `sanitizeSnippet()` — strips non-mark tags, collapses CJK spaces, preserves Latin spaces | Pure function tests |
-| **L1 UT** | `SearchInput` — native GET form with action="/search", `/` key focuses input | React Testing Library |
-| **L1 UT** | `PostCard` with snippet — renders `<mark>` safely, strips other tags | React Testing Library |
-| **L2 Lint** | All new files pass ESLint strict mode | Pre-commit hook |
-| **L3 E2E** | `POST /api/v1/fts-search` — verify results, snippet content, BM25 ranking | API E2E against real D1 |
-| **L3 E2E** | `POST /api/v1/fts-search` with Chinese query — verify CJK search works | API E2E against real D1 |
-| **L3 E2E** | `POST /api/v1/fts-search` with nonexistent query — empty results, correct shape | API E2E |
-| **L3 E2E** | `POST /api/v1/fts-sync` — verify index updates after post create/update/delete | API E2E |
-| **L3 E2E** | `GET /api/search?q=...` — verify public search endpoint returns correct shape | API E2E |
+| Layer       | What                                                                                     | How                                                 |
+| ----------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| **L1 UT**   | `segmentText()` — CJK, English, mixed, empty, special chars                              | Pure function tests (Node 18+ has `Intl.Segmenter`) |
+| **L1 UT**   | `searchPosts()` — query building, pagination, snippet extraction                         | Mock DB calls                                       |
+| **L1 UT**   | `sanitizeFtsQuery()` — escape FTS5 special chars, quoted phrases                         | Pure function tests                                 |
+| **L1 UT**   | `sanitizeSnippet()` — strips non-mark tags, collapses CJK spaces, preserves Latin spaces | Pure function tests                                 |
+| **L1 UT**   | `SearchInput` — native GET form with action="/search", `/` key focuses input             | React Testing Library                               |
+| **L1 UT**   | `PostCard` with snippet — renders `<mark>` safely, strips other tags                     | React Testing Library                               |
+| **L2 Lint** | All new files pass ESLint strict mode                                                    | Pre-commit hook                                     |
+| **L3 E2E**  | `POST /api/v1/fts-search` — verify results, snippet content, BM25 ranking                | API E2E against real D1                             |
+| **L3 E2E**  | `POST /api/v1/fts-search` with Chinese query — verify CJK search works                   | API E2E against real D1                             |
+| **L3 E2E**  | `POST /api/v1/fts-search` with nonexistent query — empty results, correct shape          | API E2E                                             |
+| **L3 E2E**  | `POST /api/v1/fts-sync` — verify index updates after post create/update/delete           | API E2E                                             |
+| **L3 E2E**  | `GET /api/search?q=...` — verify public search endpoint returns correct shape            | API E2E                                             |
 
 ---
 
 ## Performance Considerations
 
-| Concern | Mitigation |
-|---|---|
-| FTS5 index size | Default stored mode stores both inverted index and segmented text. Larger than contentless mode, but still < 10 MB for ~1000 posts. Acceptable trade-off for working snippet()/highlight(). |
-| Query latency | FTS5 MATCH is O(log n) vs O(n) for LIKE. Sub-10ms for typical queries. |
-| Segmentation overhead | `Intl.Segmenter` runs in-process on the V8 runtime — microseconds per query. No external service calls. |
-| Extra round-trip | Search queries go Next.js → Worker (segmentation + FTS5) → D1. This is the same hop count as existing queries (Next.js → Worker proxy → D1). No additional latency. |
-| D1 edge reads | FTS5 queries are read-only and benefit from D1's global read replicas. |
-| FTS rebuild | ~500 posts × segmentation + batch INSERT: < 2 seconds. D1.batch() is atomic. |
-| Index staleness | Best-effort sync on write; fts-rebuild as recovery. Acceptable for a personal blog. |
+| Concern               | Mitigation                                                                                                                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FTS5 index size       | Default stored mode stores both inverted index and segmented text. Larger than contentless mode, but still < 10 MB for ~1000 posts. Acceptable trade-off for working snippet()/highlight(). |
+| Query latency         | FTS5 MATCH is O(log n) vs O(n) for LIKE. Sub-10ms for typical queries.                                                                                                                      |
+| Segmentation overhead | `Intl.Segmenter` runs in-process on the V8 runtime — microseconds per query. No external service calls.                                                                                     |
+| Extra round-trip      | Search queries go Next.js → Worker (segmentation + FTS5) → D1. This is the same hop count as existing queries (Next.js → Worker proxy → D1). No additional latency.                         |
+| D1 edge reads         | FTS5 queries are read-only and benefit from D1's global read replicas.                                                                                                                      |
+| FTS rebuild           | ~500 posts × segmentation + batch INSERT: < 2 seconds. D1.batch() is atomic.                                                                                                                |
+| Index staleness       | Best-effort sync on write; fts-rebuild as recovery. Acceptable for a personal blog.                                                                                                         |
 
 ---
 
@@ -754,17 +763,17 @@ New keys added to `en.json` and `zh.json`:
 
 Tested on D1 remote (test env `firefly-db-test`) on 2026-03-29:
 
-| Feature | Result |
-|---|---|
-| `CREATE VIRTUAL TABLE ... USING fts5(...)` | ✅ Works |
-| `INSERT INTO posts_fts` | ✅ Works |
-| `SELECT ... WHERE MATCH 'english'` | ✅ Works |
-| `unicode61` tokenizer on pre-segmented Chinese | ✅ Works (space-delimited tokens) |
-| `unicode61` tokenizer on raw Chinese (no spaces) | ❌ Fails — entire string = 1 token |
-| `trigram` tokenizer | ✅ Works for ≥3 chars, ❌ fails for 2-char Chinese words |
-| `bm25()` ranking | ✅ Works |
-| `snippet()` with default stored mode | ✅ Works — returns highlighted segmented text |
-| `snippet()` with `content=''` (contentless) | ❌ Returns empty string |
+| Feature                                              | Result                                                               |
+| ---------------------------------------------------- | -------------------------------------------------------------------- |
+| `CREATE VIRTUAL TABLE ... USING fts5(...)`           | ✅ Works                                                             |
+| `INSERT INTO posts_fts`                              | ✅ Works                                                             |
+| `SELECT ... WHERE MATCH 'english'`                   | ✅ Works                                                             |
+| `unicode61` tokenizer on pre-segmented Chinese       | ✅ Works (space-delimited tokens)                                    |
+| `unicode61` tokenizer on raw Chinese (no spaces)     | ❌ Fails — entire string = 1 token                                   |
+| `trigram` tokenizer                                  | ✅ Works for ≥3 chars, ❌ fails for 2-char Chinese words             |
+| `bm25()` ranking                                     | ✅ Works                                                             |
+| `snippet()` with default stored mode                 | ✅ Works — returns highlighted segmented text                        |
+| `snippet()` with `content=''` (contentless)          | ❌ Returns empty string                                              |
 | `snippet()` with `content='posts'` + segmented index | ❌ Highlight positions misaligned (original text ≠ segmented tokens) |
 
 This confirms the application-layer segmentation approach is necessary and sufficient.

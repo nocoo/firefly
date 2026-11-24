@@ -11,13 +11,13 @@ not the Journal's public sharing identity.
 
 The homepage now publishes:
 
-| Field | Value |
-| --- | --- |
-| HTML / Open Graph / Twitter title | 李征 — 博客 |
-| Description | 关于软件工程、AI 与团队管理的实践，也记录个人观察与日常。 |
-| Open Graph type / locale | `website` / `zh_CN` |
-| Twitter card | `summary_large_image` |
-| Image | 1200 × 630 JPEG, approximately 55 KiB |
+| Field                             | Value                                                     |
+| --------------------------------- | --------------------------------------------------------- |
+| HTML / Open Graph / Twitter title | 李征 — 博客                                               |
+| Description                       | 关于软件工程、AI 与团队管理的实践，也记录个人观察与日常。 |
+| Open Graph type / locale          | `website` / `zh_CN`                                       |
+| Twitter card                      | `summary_large_image`                                     |
+| Image                             | 1200 × 630 JPEG, approximately 55 KiB                     |
 
 ![Journal homepage social card](../public/social/journal-zh.57dfb0b67f98.jpg)
 

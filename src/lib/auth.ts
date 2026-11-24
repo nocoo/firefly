@@ -5,7 +5,12 @@ import type { Session } from "next-auth";
 
 export { isEmailAllowed } from "./auth-utils";
 
-export const { handlers, signIn, signOut, auth: nextAuth } = NextAuth({
+export const {
+  handlers,
+  signIn,
+  signOut,
+  auth: nextAuth,
+} = NextAuth({
   providers: [Google],
   pages: {
     signIn: "/login",

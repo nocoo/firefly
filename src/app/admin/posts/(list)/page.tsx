@@ -25,9 +25,7 @@ interface AdminPostsPageProps {
 
 const PAGE_SIZE = 30;
 
-export default async function AdminPostsPage({
-  searchParams,
-}: AdminPostsPageProps) {
+export default async function AdminPostsPage({ searchParams }: AdminPostsPageProps) {
   const params = await searchParams;
   const db = getDb();
 
@@ -38,14 +36,30 @@ export default async function AdminPostsPage({
   const archiveYear = params.year ? parseInt(params.year, 10) || undefined : undefined;
   const archiveMonth = params.month ? parseInt(params.month, 10) || undefined : undefined;
 
-  const VALID_SORT_BY = ["published_at", "created_at", "comment_count", "view_count", "title"] as const;
+  const VALID_SORT_BY = [
+    "published_at",
+    "created_at",
+    "comment_count",
+    "view_count",
+    "title",
+  ] as const;
   const sortBy = VALID_SORT_BY.includes(params.sort_by as (typeof VALID_SORT_BY)[number])
     ? (params.sort_by as (typeof VALID_SORT_BY)[number])
     : "created_at";
-  const sortOrder = params.sort_order === "asc" ? "asc" as const : "desc" as const;
+  const sortOrder = params.sort_order === "asc" ? ("asc" as const) : ("desc" as const);
 
   const [result, categories, tags, yearCounts] = await Promise.all([
-    listPosts(db, { status, categoryId, tagId, archiveYear, archiveMonth, page, pageSize: PAGE_SIZE, sortBy, sortOrder }),
+    listPosts(db, {
+      status,
+      categoryId,
+      tagId,
+      archiveYear,
+      archiveMonth,
+      page,
+      pageSize: PAGE_SIZE,
+      sortBy,
+      sortOrder,
+    }),
     listCategories(db),
     listTags(db),
     listPostYears(db),

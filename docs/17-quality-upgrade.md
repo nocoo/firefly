@@ -22,28 +22,29 @@
 Post doc-07 upgrade, firefly is S-tier with all 6 dimensions green. However, doc-13 identified
 5 gaps that remain **unimplemented** as of 2026-03-27:
 
-| Dimension | Status | Key Metric |
-|-----------|--------|------------|
-| L1 Unit | ✅ S | 42+ test files, ≥90% coverage gate, pre-commit |
-| L2 API E2E | ✅ S | 11 API test files, 13/14 endpoints (upload excluded) |
-| L3 Browser E2E | ✅ A | 4 Playwright specs, manual trigger |
-| G1 Static | ✅ S | `tseslint.configs.strict`, `--max-warnings=0`, `tsc --noEmit` |
-| G2 Security | ✅ A | osv-scanner + gitleaks, pre-push, no project-specific config |
-| D1 Isolation | ✅ S | `firefly-db-test`, `[env.test]`, auto-migration |
+| Dimension      | Status | Key Metric                                                    |
+| -------------- | ------ | ------------------------------------------------------------- |
+| L1 Unit        | ✅ S   | 42+ test files, ≥90% coverage gate, pre-commit                |
+| L2 API E2E     | ✅ S   | 11 API test files, 13/14 endpoints (upload excluded)          |
+| L3 Browser E2E | ✅ A   | 4 Playwright specs, manual trigger                            |
+| G1 Static      | ✅ S   | `tseslint.configs.strict`, `--max-warnings=0`, `tsc --noEmit` |
+| G2 Security    | ✅ A   | osv-scanner + gitleaks, pre-push, no project-specific config  |
+| D1 Isolation   | ✅ S   | `firefly-db-test`, `[env.test]`, auto-migration               |
 
 ### Open Gaps (from doc 13, unimplemented)
 
-| # | Gap | Risk | Priority |
-|---|-----|------|----------|
-| GAP-1 | No lint-staged — pre-commit runs full-project lint | Performance degrades as codebase grows | P2 |
-| GAP-2 | No `.gitleaks.toml` — default rules, no project allowlist | False positives cause friction | P3 |
-| GAP-3 | No CI pipeline — all gates rely on local hooks only | `--no-verify` bypasses everything | P1 |
-| GAP-4 | No R2 test bucket — `/api/upload` excluded from L2 | Upload regression risk | P3 |
-| GAP-5 | pre-commit runs `test:coverage` — 15s overhead per commit | Developer velocity hit | P2 |
+| #     | Gap                                                       | Risk                                   | Priority |
+| ----- | --------------------------------------------------------- | -------------------------------------- | -------- |
+| GAP-1 | No lint-staged — pre-commit runs full-project lint        | Performance degrades as codebase grows | P2       |
+| GAP-2 | No `.gitleaks.toml` — default rules, no project allowlist | False positives cause friction         | P3       |
+| GAP-3 | No CI pipeline — all gates rely on local hooks only       | `--no-verify` bypasses everything      | P1       |
+| GAP-4 | No R2 test bucket — `/api/upload` excluded from L2        | Upload regression risk                 | P3       |
+| GAP-5 | pre-commit runs `test:coverage` — 15s overhead per commit | Developer velocity hit                 | P2       |
 
 ### Pre-commit Performance Baseline
 
 Current pre-commit hook runs:
+
 ```
 typecheck → lint (full project) → test:coverage (with V8 instrumentation)
 ```
@@ -54,6 +55,7 @@ Estimated: ~25-30s per commit. Target after optimization: <15s.
 ## Implementation Plan
 
 ### Execution order rationale:
+
 1. **GAP-5 first** — Immediate velocity win, zero risk, no new dependencies
 2. **GAP-1 next** — Builds on GAP-5 to further optimize pre-commit
 3. **GAP-2** — Quick config file, removes future false-positive friction
@@ -105,16 +107,16 @@ bun run security
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
-| `.husky/pre-commit` | `test:coverage` → `test` |
-| `.husky/pre-push` | `test` → `test:coverage` (first step) |
+| File                | Change                                |
+| ------------------- | ------------------------------------- |
+| `.husky/pre-commit` | `test:coverage` → `test`              |
+| `.husky/pre-push`   | `test` → `test:coverage` (first step) |
 
 ### Atomic Commit
 
-| # | Message |
-|---|---------|
-| 1 | `perf: move coverage enforcement from pre-commit to pre-push` |
+| #   | Message                                                       |
+| --- | ------------------------------------------------------------- |
+| 1   | `perf: move coverage enforcement from pre-commit to pre-push` |
 
 ---
 
@@ -133,9 +135,7 @@ bun add -d lint-staged
 ```json
 {
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --max-warnings=0"
-    ]
+    "*.{ts,tsx}": ["eslint --max-warnings=0"]
   }
 }
 ```
@@ -161,16 +161,16 @@ bun run test
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
-| `package.json` | Add `lint-staged` devDependency + config |
-| `.husky/pre-commit` | `bun run lint` → `bunx lint-staged` |
+| File                | Change                                   |
+| ------------------- | ---------------------------------------- |
+| `package.json`      | Add `lint-staged` devDependency + config |
+| `.husky/pre-commit` | `bun run lint` → `bunx lint-staged`      |
 
 ### Atomic Commit
 
-| # | Message |
-|---|---------|
-| 2 | `perf: add lint-staged for incremental pre-commit linting` |
+| #   | Message                                                    |
+| --- | ---------------------------------------------------------- |
+| 2   | `perf: add lint-staged for incremental pre-commit linting` |
 
 ---
 
@@ -204,15 +204,15 @@ automatically (gitleaks auto-detects config file in project root, no flag needed
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
+| File             | Change                              |
+| ---------------- | ----------------------------------- |
 | `.gitleaks.toml` | New — project-level gitleaks config |
 
 ### Atomic Commit
 
-| # | Message |
-|---|---------|
-| 3 | `chore: add .gitleaks.toml with project-specific allowlist` |
+| #   | Message                                                     |
+| --- | ----------------------------------------------------------- |
+| 3   | `chore: add .gitleaks.toml with project-specific allowlist` |
 
 ---
 
@@ -291,15 +291,15 @@ mkdir -p .github/workflows
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
+| File                            | Change                             |
+| ------------------------------- | ---------------------------------- |
 | `.github/workflows/quality.yml` | New — CI pipeline for G1 + L1 + G2 |
 
 ### Atomic Commit
 
-| # | Message |
-|---|---------|
-| 4 | `feat: add GitHub Actions CI for G1+L1+G2 quality gates` |
+| #   | Message                                                  |
+| --- | -------------------------------------------------------- |
+| 4   | `feat: add GitHub Actions CI for G1+L1+G2 quality gates` |
 
 ---
 
@@ -329,6 +329,7 @@ bucket_name = "firefly-test"
 **File**: `e2e/api/upload.test.ts` (new)
 
 Test cases:
+
 - POST `/api/upload` with multipart form data (1x1 PNG) → 200 + URL
 - Error: no file → 400
 - Error: invalid MIME type → 400
@@ -340,18 +341,18 @@ Update `docs/07-quality-system-upgrade.md` scope from 13/14 to **14/14 endpoints
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
-| `worker/wrangler.toml` | Add `[[env.test.r2_buckets]]` |
-| `e2e/api/upload.test.ts` | New — upload endpoint L2 test |
-| `docs/07-quality-system-upgrade.md` | Update L2 scope to 14/14 |
+| File                                | Change                        |
+| ----------------------------------- | ----------------------------- |
+| `worker/wrangler.toml`              | Add `[[env.test.r2_buckets]]` |
+| `e2e/api/upload.test.ts`            | New — upload endpoint L2 test |
+| `docs/07-quality-system-upgrade.md` | Update L2 scope to 14/14      |
 
 ### Atomic Commits
 
-| # | Message |
-|---|---------|
-| 5 | `feat: add R2 test bucket binding for upload isolation` |
-| 6 | `feat: add L2 E2E test for upload endpoint` |
+| #   | Message                                                 |
+| --- | ------------------------------------------------------- |
+| 5   | `feat: add R2 test bucket binding for upload isolation` |
+| 6   | `feat: add L2 E2E test for upload endpoint`             |
 
 ---
 
@@ -361,60 +362,63 @@ Update `docs/07-quality-system-upgrade.md` scope from 13/14 to **14/14 endpoints
 
 ### 6.1 Verification Checklist
 
-| Dimension | Command | Pass Criteria |
-|-----------|---------|---------------|
-| L1 | `bun run test:coverage` | ≥90% all metrics, 0 failures |
-| G1 | `bun run typecheck && bun run lint` | 0 errors, 0 warnings |
-| L2 | `bun run test:e2e:api` | **14/14** endpoints, 0 failures |
-| G2 | `bun run security` | osv-scanner 0 vulns, gitleaks 0 leaks |
-| L3 | `bun run test:e2e:browser` | Core journeys pass |
-| D1 | wrangler.toml `[env.test]` | D1-test + R2-test both bound |
-| CI | Push to main / open PR | GitHub Actions green |
+| Dimension | Command                             | Pass Criteria                         |
+| --------- | ----------------------------------- | ------------------------------------- |
+| L1        | `bun run test:coverage`             | ≥90% all metrics, 0 failures          |
+| G1        | `bun run typecheck && bun run lint` | 0 errors, 0 warnings                  |
+| L2        | `bun run test:e2e:api`              | **14/14** endpoints, 0 failures       |
+| G2        | `bun run security`                  | osv-scanner 0 vulns, gitleaks 0 leaks |
+| L3        | `bun run test:e2e:browser`          | Core journeys pass                    |
+| D1        | wrangler.toml `[env.test]`          | D1-test + R2-test both bound          |
+| CI        | Push to main / open PR              | GitHub Actions green                  |
 
 ### 6.2 Final Hook Layout
 
 **`.husky/pre-commit`** (target: <15s):
+
 ```
 G1: typecheck → G1: lint (staged) → L1: unit tests (no coverage)
 ```
 
 **`.husky/pre-push`** (target: <3min):
+
 ```
 L1: coverage ≥90% → G1: lint → L2: API E2E → G2: security
 ```
 
 **Manual/CI**: L3 Playwright
+
 ```
 bun run test:e2e:browser
 ```
 
 ### 6.3 Update Documentation
 
-| File | Change |
-|------|--------|
-| `docs/13-quality-hardening.md` | Mark all steps as implemented, update status header |
-| `docs/07-quality-system-upgrade.md` | Update L2 scope, add references to doc 13 & 17 |
-| `docs/README.md` | Add entry for doc 17 |
+| File                                | Change                                              |
+| ----------------------------------- | --------------------------------------------------- |
+| `docs/13-quality-hardening.md`      | Mark all steps as implemented, update status header |
+| `docs/07-quality-system-upgrade.md` | Update L2 scope, add references to doc 13 & 17      |
+| `docs/README.md`                    | Add entry for doc 17                                |
 
 ### Atomic Commits
 
-| # | Message |
-|---|---------|
-| 7 | `docs: finalize quality hardening with verification results` |
+| #   | Message                                                      |
+| --- | ------------------------------------------------------------ |
+| 7   | `docs: finalize quality hardening with verification results` |
 
 ---
 
 ## Complete Atomic Commit Sequence
 
-| # | Type | Message | Gap | Est. Time |
-|---|------|---------|-----|-----------|
-| 1 | perf | `perf: move coverage enforcement from pre-commit to pre-push` | GAP-5 | 5 min |
-| 2 | perf | `perf: add lint-staged for incremental pre-commit linting` | GAP-1 | 10 min |
-| 3 | chore | `chore: add .gitleaks.toml with project-specific allowlist` | GAP-2 | 5 min |
-| 4 | feat | `feat: add GitHub Actions CI for G1+L1+G2 quality gates` | GAP-3 | 15 min |
-| 5 | feat | `feat: add R2 test bucket binding for upload isolation` | GAP-4 | 10 min |
-| 6 | feat | `feat: add L2 E2E test for upload endpoint` | GAP-4 | 20 min |
-| 7 | docs | `docs: finalize quality hardening with verification results` | All | 10 min |
+| #   | Type  | Message                                                       | Gap   | Est. Time |
+| --- | ----- | ------------------------------------------------------------- | ----- | --------- |
+| 1   | perf  | `perf: move coverage enforcement from pre-commit to pre-push` | GAP-5 | 5 min     |
+| 2   | perf  | `perf: add lint-staged for incremental pre-commit linting`    | GAP-1 | 10 min    |
+| 3   | chore | `chore: add .gitleaks.toml with project-specific allowlist`   | GAP-2 | 5 min     |
+| 4   | feat  | `feat: add GitHub Actions CI for G1+L1+G2 quality gates`      | GAP-3 | 15 min    |
+| 5   | feat  | `feat: add R2 test bucket binding for upload isolation`       | GAP-4 | 10 min    |
+| 6   | feat  | `feat: add L2 E2E test for upload endpoint`                   | GAP-4 | 20 min    |
+| 7   | docs  | `docs: finalize quality hardening with verification results`  | All   | 10 min    |
 
 **Total estimated time: ~75 min**
 

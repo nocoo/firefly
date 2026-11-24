@@ -39,10 +39,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     }
     return jsonResponse({ success: true, scope: body.scope });
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }
 
@@ -76,9 +73,6 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     }
     return jsonResponse({ success: true, action: "revoked" });
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

@@ -22,10 +22,7 @@ export interface RecordPageViewInput {
   sessionId?: string | null | undefined;
 }
 
-export async function recordPageView(
-  db: Db,
-  input: RecordPageViewInput,
-): Promise<void> {
+export async function recordPageView(db: Db, input: RecordPageViewInput): Promise<void> {
   const id = newId();
   await db.execute(
     `INSERT INTO page_views (id, post_id, path, referrer, user_agent, ip_hash, country, city, device_type, browser, os, is_bot, bot_name, bot_category, session_id)
@@ -53,9 +50,7 @@ export async function recordPageView(
   // UPDATE failure does not affect the page_view INSERT above.
   if (input.postId && !input.isBot) {
     await db
-      .execute("UPDATE posts SET view_count = view_count + 1 WHERE id = ?", [
-        input.postId,
-      ])
+      .execute("UPDATE posts SET view_count = view_count + 1 WHERE id = ?", [input.postId])
       .catch(() => {
         // Silently ignore — view_count is a denormalized cache field
       });

@@ -2,7 +2,15 @@ import { auth } from "@/lib/auth";
 import { isE2EMode } from "@/lib/auth-utils";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
-import { listMcpTokens, generateAccessToken, generateRefreshToken, sha256, createMcpToken, deleteRevokedTokens, countRevokedTokens } from "@/data/mcp-tokens";
+import {
+  listMcpTokens,
+  generateAccessToken,
+  generateRefreshToken,
+  sha256,
+  createMcpToken,
+  deleteRevokedTokens,
+  countRevokedTokens,
+} from "@/data/mcp-tokens";
 import { createMcpClient } from "@/data/mcp-clients";
 import type { McpTokenScope } from "@/models/types";
 
@@ -40,10 +48,7 @@ export async function GET(request: Request) {
     const tokens = await listMcpTokens(db);
     return jsonResponse(tokens);
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }
 
@@ -96,19 +101,19 @@ export async function POST(request: Request) {
     });
 
     // Return plaintext tokens (shown only once)
-    return jsonResponse({
-      id: token.id,
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      token_type: "Bearer",
-      scope: token.scope,
-      client_name: token.client_name,
-    }, 201);
-  } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
+    return jsonResponse(
+      {
+        id: token.id,
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        token_type: "Bearer",
+        scope: token.scope,
+        client_name: token.client_name,
+      },
+      201,
     );
+  } catch (error) {
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }
 
@@ -124,9 +129,6 @@ export async function DELETE() {
     const deletedCount = await deleteRevokedTokens(db);
     return jsonResponse({ success: true, deleted: deletedCount });
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

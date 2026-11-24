@@ -47,8 +47,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   // Prefer siteDescription; fall back to siteTagline; omit if both empty
   // so Next.js does not render an empty <meta name="description"> tag.
-  const description =
-    settings.siteDescription || settings.siteTagline || undefined;
+  const description = settings.siteDescription || settings.siteTagline || undefined;
 
   return {
     metadataBase: new URL(SITE_URL),
@@ -99,11 +98,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   await connection();
   const db = getDb();
   const settings = await getSiteSettings(db);

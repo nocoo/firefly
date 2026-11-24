@@ -10,12 +10,10 @@ import type { TopPageItem } from "@/models/analytics-types";
 export const EXCLUDE_MONITORS =
   "(user_agent IS NULL OR user_agent NOT LIKE 'Uptime-Kuma/%') AND (bot_category IS NULL OR bot_category != 'monitor')";
 
-export const TIME_WINDOW_WHERE =
-  `viewed_at >= unixepoch('now', 'start of day', '-' || ? || ' days') AND viewed_at < unixepoch('now', 'start of day') AND ${EXCLUDE_MONITORS}`;
+export const TIME_WINDOW_WHERE = `viewed_at >= unixepoch('now', 'start of day', '-' || ? || ' days') AND viewed_at < unixepoch('now', 'start of day') AND ${EXCLUDE_MONITORS}`;
 
 /** Previous period window (shifted back by the same number of days) */
-export const PREV_WINDOW_WHERE =
-  `viewed_at >= unixepoch('now', 'start of day', '-' || (2 * ?) || ' days') AND viewed_at < unixepoch('now', 'start of day', '-' || ? || ' days') AND ${EXCLUDE_MONITORS}`;
+export const PREV_WINDOW_WHERE = `viewed_at >= unixepoch('now', 'start of day', '-' || (2 * ?) || ' days') AND viewed_at < unixepoch('now', 'start of day', '-' || ? || ' days') AND ${EXCLUDE_MONITORS}`;
 
 export type SourceType = "human" | "search" | "ai" | "other";
 
@@ -45,11 +43,7 @@ export interface DailyRow {
  * Fill gaps in daily trend data so every date in the range has a row.
  * SQL GROUP BY only returns dates with data — this fills missing dates with zeros.
  */
-export function fillDailyGaps(
-  rows: DailyRow[],
-  startDate: string,
-  endDate: string,
-): DailyRow[] {
+export function fillDailyGaps(rows: DailyRow[], startDate: string, endDate: string): DailyRow[] {
   const map = new Map(rows.map((r) => [r.date, r]));
   const result: DailyRow[] = [];
   for (
@@ -58,9 +52,7 @@ export function fillDailyGaps(
     d.setUTCDate(d.getUTCDate() + 1)
   ) {
     const key = d.toISOString().slice(0, 10);
-    result.push(
-      map.get(key) ?? { date: key, human: 0, search: 0, ai: 0, otherBot: 0 },
-    );
+    result.push(map.get(key) ?? { date: key, human: 0, search: 0, ai: 0, otherBot: 0 });
   }
   return result;
 }
@@ -108,20 +100,14 @@ export function fillDailyByBotGaps(
  */
 export function formatPathAsTitle(path: string): string {
   if (path === "/") return "Homepage";
-  return path
-    .replace(/^\//, "")
-    .replace(/\/$/, "")
-    .replace(/\//g, " / ");
+  return path.replace(/^\//, "").replace(/\/$/, "").replace(/\//g, " / ");
 }
 
 /** Article path regex: /{year}/{month}/{slug} */
 export const ARTICLE_PATH_RE = /^\/(\d{4})\/(\d{2})\/([^/]+)\/?$/;
 
 /** Look up published post title by slug; returns null on miss or DB failure. */
-export async function lookupPostTitleBySlug(
-  db: Db,
-  slug: string,
-): Promise<string | null> {
+export async function lookupPostTitleBySlug(db: Db, slug: string): Promise<string | null> {
   try {
     const post = await db.firstOrNull<{ title: string }>(
       "SELECT title FROM posts WHERE slug = ? AND status = 'published'",
@@ -168,9 +154,7 @@ export function computePeriodDates(days: number): {
   endDate: string;
 } {
   const now = new Date();
-  const end = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 1),
-  );
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 1));
   const start = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - days),
   );

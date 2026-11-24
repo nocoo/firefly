@@ -27,11 +27,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!tag) return { title: "Not Found" };
 
   const { identity } = await loadSiteIdentity(db);
-  return buildPageMeta({
-    title: `#${tag.name} – Page ${page}`,
-    description: `#${tag.name}`,
-    path: `/tag/${slug}/page/${page}`,
-  }, identity);
+  return buildPageMeta(
+    {
+      title: `#${tag.name} – Page ${page}`,
+      description: `#${tag.name}`,
+      path: `/tag/${slug}/page/${page}`,
+    },
+    identity,
+  );
 }
 
 export default async function TagPaged({ params }: Props) {
@@ -74,10 +77,7 @@ export default async function TagPaged({ params }: Props) {
         }}
       />
 
-      <ListPageHeader
-        title={`#${tag.name}`}
-        description={`${tag.post_count} 篇文章`}
-      />
+      <ListPageHeader title={`#${tag.name}`} description={`${tag.post_count} 篇文章`} />
 
       <section>
         {posts.length === 0 ? (
@@ -98,11 +98,7 @@ export default async function TagPaged({ params }: Props) {
         )}
       </section>
 
-      <Pagination
-        currentPage={page}
-        totalPages={totalPages}
-        basePath={`/tag/${slug}`}
-      />
+      <Pagination currentPage={page} totalPages={totalPages} basePath={`/tag/${slug}`} />
     </>
   );
 }

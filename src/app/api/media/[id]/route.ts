@@ -11,10 +11,7 @@ import { MediaService } from "@/services/media-service";
  *
  * Auth: in-route check (defense in depth — proxy authGuard also runs).
  */
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user) {
     return errorResponse("Unauthorized", 401);

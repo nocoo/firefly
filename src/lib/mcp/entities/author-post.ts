@@ -11,12 +11,7 @@ import { z } from "zod";
 import type { Post } from "@/models/types";
 import type { Db } from "@/lib/db";
 import type { EntityConfig } from "../framework/types";
-import {
-  listPosts,
-  getPostById,
-  getPostBySlug,
-  getPostTags,
-} from "@/data/entities/post";
+import { listPosts, getPostById, getPostBySlug, getPostTags } from "@/data/entities/post";
 import { getAiAgentById } from "@/data/entities/ai-agent";
 import { PostService } from "@/services/post-service";
 
@@ -70,12 +65,7 @@ function buildAuthorPostDataLayer(): NonNullable<EntityConfig<Post>["dataLayer"]
 
       const result = await listPosts(db, {
         aiAgentId: author.id,
-        status: o.status as
-          | "draft"
-          | "published"
-          | "private"
-          | "archived"
-          | undefined,
+        status: o.status as "draft" | "published" | "private" | "archived" | undefined,
         query: o.query as string | undefined,
         page: (o.page as number) ?? 1,
         pageSize: (o.page_size as number) ?? 20,
@@ -121,14 +111,10 @@ function buildAuthorPostDataLayer(): NonNullable<EntityConfig<Post>["dataLayer"]
       } = input;
 
       if (inputAgentId && inputAgentId !== author.id) {
-        throw new Error(
-          "Access denied: Cannot reassign post to different author",
-        );
+        throw new Error("Access denied: Cannot reassign post to different author");
       }
       if (inputCategoryId && inputCategoryId !== author.category_id) {
-        throw new Error(
-          "Access denied: Cannot move post to different category",
-        );
+        throw new Error("Access denied: Cannot move post to different category");
       }
 
       // Verify ownership before update
@@ -137,11 +123,7 @@ function buildAuthorPostDataLayer(): NonNullable<EntityConfig<Post>["dataLayer"]
         throw new Error("Post not found or access denied");
       }
 
-      return PostService.update(
-        db,
-        id,
-        rest as Parameters<typeof PostService.update>[2],
-      );
+      return PostService.update(db, id, rest as Parameters<typeof PostService.update>[2]);
     },
 
     delete: async (db, id, args) => {
@@ -215,10 +197,7 @@ const AUTHOR_POST_HOOKS: NonNullable<EntityConfig<Post>["hooks"]> = {
   },
   // mapUpdateInput: same field mapping as postEntity
   mapUpdateInput: (args) => {
-    const { tag_ids, new_slug, featured_image, ...rest } = args as Record<
-      string,
-      unknown
-    >;
+    const { tag_ids, new_slug, featured_image, ...rest } = args as Record<string, unknown>;
     return {
       ...rest,
       ...(tag_ids !== undefined && { tagIds: tag_ids }),
@@ -252,8 +231,6 @@ const AUTHOR_POST_DESCRIPTIONS: NonNullable<EntityConfig<Post>["descriptions"]> 
   get: "Get a single post by id or slug. Requires author_id to verify authorship.",
   create:
     "Create a new post as the specified author. Status is set to private, category is the author's assigned category. Requires author_id.",
-  update:
-    "Update a post. Requires author_id to verify authorship. Cannot change status.",
+  update: "Update a post. Requires author_id to verify authorship. Cannot change status.",
   delete: "Delete a post. Requires author_id to verify authorship.",
 };
-

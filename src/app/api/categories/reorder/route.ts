@@ -17,9 +17,6 @@ export async function PUT(request: NextRequest) {
 
     return jsonResponse({ ok: true });
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

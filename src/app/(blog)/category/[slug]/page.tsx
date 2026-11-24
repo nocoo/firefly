@@ -17,9 +17,7 @@ interface CategoryPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({
-  params,
-}: CategoryPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
   const db = getDb();
   const category = await getCategoryBySlug(db, slug);
@@ -27,11 +25,14 @@ export async function generateMetadata({
   if (!category) return { title: "Not Found" };
 
   const { identity } = await loadSiteIdentity(db);
-  return buildPageMeta({
-    title: category.name,
-    description: category.description ?? `${category.name}分类下的文章`,
-    path: `/category/${category.slug}`,
-  }, identity);
+  return buildPageMeta(
+    {
+      title: category.name,
+      description: category.description ?? `${category.name}分类下的文章`,
+      path: `/category/${category.slug}`,
+    },
+    identity,
+  );
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
@@ -101,11 +102,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         )}
       </section>
 
-      <Pagination
-        currentPage={1}
-        totalPages={totalPages}
-        basePath={`/category/${slug}`}
-      />
+      <Pagination currentPage={1} totalPages={totalPages} basePath={`/category/${slug}`} />
     </>
   );
 }

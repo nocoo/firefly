@@ -123,9 +123,7 @@ function nextImageUrl(src: string, width: number): string {
 // ---------------------------------------------------------------------------
 
 const FOOTNOTE_LABEL = "[A-Za-z0-9_-]+";
-const FOOTNOTE_DEF_RE = new RegExp(
-  `^ {0,3}\\[\\^(${FOOTNOTE_LABEL})\\]:[ \\t]*([^\\n]*)(?:\\n|$)`,
-);
+const FOOTNOTE_DEF_RE = new RegExp(`^ {0,3}\\[\\^(${FOOTNOTE_LABEL})\\]:[ \\t]*([^\\n]*)(?:\\n|$)`);
 const FOOTNOTE_DEF_START_RE = new RegExp(`\\n\\[\\^${FOOTNOTE_LABEL}\\]:`);
 const FOOTNOTE_REF_RE = new RegExp(`^\\[\\^(${FOOTNOTE_LABEL})\\](?!:)`);
 const NUMERIC_LABEL_RE = /^\d+$/;
@@ -197,9 +195,7 @@ function createFootnoteExtension(): MarkedExtension {
           const lis = items
             .map((item) => {
               const content = this.parser.parseInline(item.tokens);
-              const valueAttr = NUMERIC_LABEL_RE.test(item.label)
-                ? ` value="${item.label}"`
-                : "";
+              const valueAttr = NUMERIC_LABEL_RE.test(item.label) ? ` value="${item.label}"` : "";
               return `<li id="fn-${escapeAttr(item.label)}"${valueAttr}>${content}</li>`;
             })
             .join("\n");
@@ -263,9 +259,7 @@ function createRenderer(optimizeImages: boolean, postTitle?: string): MarkedExte
         if (!safeHref) return rendered;
 
         const isExternal = /^https?:\/\//i.test(safeHref);
-        const attrs = isExternal
-          ? ` target="_blank" rel="noopener noreferrer"`
-          : "";
+        const attrs = isExternal ? ` target="_blank" rel="noopener noreferrer"` : "";
         return `<a href="${escapeAttr(safeHref)}"${attrs}>${rendered}</a>`;
       },
 
@@ -319,10 +313,7 @@ function createRenderer(optimizeImages: boolean, postTitle?: string): MarkedExte
 }
 
 function getMarked(optimizeImages: boolean, postTitle?: string): Marked {
-  return new Marked(
-    createRenderer(optimizeImages, postTitle),
-    createFootnoteExtension(),
-  );
+  return new Marked(createRenderer(optimizeImages, postTitle), createFootnoteExtension());
 }
 
 // ---------------------------------------------------------------------------
@@ -342,10 +333,7 @@ function getMarked(optimizeImages: boolean, postTitle?: string): Marked {
  * use the Next.js `/_next/image` proxy with `srcset`/`sizes` for responsive
  * delivery and automatic WebP/AVIF conversion. External URLs are untouched.
  */
-export function renderMarkdown(
-  markdown: string,
-  options?: RenderMarkdownOptions,
-): string {
+export function renderMarkdown(markdown: string, options?: RenderMarkdownOptions): string {
   if (!markdown) return "";
 
   const optimize = options?.optimizeImages ?? false;

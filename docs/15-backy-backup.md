@@ -33,30 +33,30 @@ Zhe（短链接服务）的 Backy 集成：完整 MVVM 分层、Push + Pull 双�
 
 ### 2.1 备份内容
 
-| 数据 | 来源表 | 字段 | 说明 |
-|------|--------|------|------|
-| 文章 | `posts` | 全部字段 | 含 markdown source + HTML cache + reference URL |
-| 分类 | `categories` | 全部字段 | 含 `post_count`（可重建但备份省事） |
-| 标签 | `tags` | 全部字段 | 含 `post_count` |
-| 文章-标签关联 | `post_tags` | `post_id`, `tag_id` | 多对多关系 |
-| 评论 | `comments` | 全部字段 | 只读历史数据，但仍需备份保存 |
-| 附件元数据 | `attachments` | 全部字段 | R2 对象的元数据记录（不含文件本体） |
-| 重定向 | `redirects` | 全部字段 | WordPress 301 重定向规则 |
-| 站点设置 | `site_settings` | **部分字段** | 见 2.2 排除列表 |
+| 数据          | 来源表          | 字段                | 说明                                            |
+| ------------- | --------------- | ------------------- | ----------------------------------------------- |
+| 文章          | `posts`         | 全部字段            | 含 markdown source + HTML cache + reference URL |
+| 分类          | `categories`    | 全部字段            | 含 `post_count`（可重建但备份省事）             |
+| 标签          | `tags`          | 全部字段            | 含 `post_count`                                 |
+| 文章-标签关联 | `post_tags`     | `post_id`, `tag_id` | 多对多关系                                      |
+| 评论          | `comments`      | 全部字段            | 只读历史数据，但仍需备份保存                    |
+| 附件元数据    | `attachments`   | 全部字段            | R2 对象的元数据记录（不含文件本体）             |
+| 重定向        | `redirects`     | 全部字段            | WordPress 301 重定向规则                        |
+| 站点设置      | `site_settings` | **部分字段**        | 见 2.2 排除列表                                 |
 
 ### 2.2 排除内容
 
-| 数据 | 原因 |
-|------|------|
-| `page_views` | 统计信息，数据量大且可重建 |
-| `daily_stats` | 聚合统计，可从 `page_views` 重建 |
-| `site_daily_stats` | 全站聚合统计 |
-| `users` | 认证数据，通过 OAuth 恢复 |
-| `mcp_clients` / `mcp_auth_codes` / `mcp_tokens` | OAuth 会话数据，恢复后需重新授权 |
-| `site_settings.ai_api_key` | 敏感 AI 密钥 |
-| `site_settings.backy_*` | Backy 自身的配置（新增字段），避免循环 |
-| R2 文件本体 | 对象存储文件，不通过此通道备份 |
-| `.env` 中的 secrets | `WORKER_SECRET`、`AUTH_SECRET`、R2 凭证等 |
+| 数据                                            | 原因                                      |
+| ----------------------------------------------- | ----------------------------------------- |
+| `page_views`                                    | 统计信息，数据量大且可重建                |
+| `daily_stats`                                   | 聚合统计，可从 `page_views` 重建          |
+| `site_daily_stats`                              | 全站聚合统计                              |
+| `users`                                         | 认证数据，通过 OAuth 恢复                 |
+| `mcp_clients` / `mcp_auth_codes` / `mcp_tokens` | OAuth 会话数据，恢复后需重新授权          |
+| `site_settings.ai_api_key`                      | 敏感 AI 密钥                              |
+| `site_settings.backy_*`                         | Backy 自身的配置（新增字段），避免循环    |
+| R2 文件本体                                     | 对象存储文件，不通过此通道备份            |
+| `.env` 中的 secrets                             | `WORKER_SECRET`、`AUTH_SECRET`、R2 凭证等 |
 
 ### 2.3 站点设置备份字段明细
 
@@ -81,8 +81,8 @@ Zhe（短链接服务）的 Backy 集成：完整 MVVM 分层、Push + Pull 双�
 ```typescript
 interface FireflyBackupEnvelope {
   schemaVersion: 1;
-  exportedAt: string;                    // ISO 8601
-  appVersion: string;                    // e.g. "1.4.0"
+  exportedAt: string; // ISO 8601
+  appVersion: string; // e.g. "1.4.0"
   posts: ExportedPost[];
   categories: ExportedCategory[];
   tags: ExportedTag[];
@@ -100,16 +100,16 @@ interface FireflyBackupEnvelope {
 
 ```typescript
 interface ExportedPost {
-  id: string;                            // ULID
+  id: string; // ULID
   title: string;
   slug: string;
-  content: string;                       // markdown source
-  content_html: string | null;           // rendered HTML cache
+  content: string; // markdown source
+  content_html: string | null; // rendered HTML cache
   excerpt: string | null;
   status: "draft" | "published" | "private" | "archived";
   category_id: string | null;
   featured_image: string | null;
-  comment_enabled: number;               // 0 | 1
+  comment_enabled: number; // 0 | 1
   comment_count: number;
   view_count: number;
   reading_time: number | null;
@@ -119,9 +119,9 @@ interface ExportedPost {
   reference_title: string | null;
   reference_description: string | null;
   reference_image: string | null;
-  published_at: string | null;           // ISO 8601
-  created_at: string;                    // ISO 8601
-  updated_at: string;                    // ISO 8601
+  published_at: string | null; // ISO 8601
+  created_at: string; // ISO 8601
+  updated_at: string; // ISO 8601
 }
 
 interface ExportedCategory {
@@ -195,12 +195,12 @@ interface ExportedSiteSettings {
   site_author: string;
   author_email: string;
   twitter_handle: string;
-  social_links: string;                  // JSON string
+  social_links: string; // JSON string
   ai_provider: string;
   ai_model: string;
   ai_base_url: string;
   ai_sdk_type: string;
-  updated_at: string;                    // ISO 8601 — 配置最后修改时间
+  updated_at: string; // ISO 8601 — 配置最后修改时间
 }
 ```
 
@@ -240,7 +240,7 @@ const compressed = gzipSync(Buffer.from(json));
 const blob = new Blob([compressed], { type: "application/gzip" });
 
 const form = new FormData();
-form.append("file", blob, fileName);  // firefly-backup-2026-03-26T14-30-05-a7x2.json.gz
+form.append("file", blob, fileName); // firefly-backup-2026-03-26T14-30-05-a7x2.json.gz
 form.append("environment", environment);
 form.append("tag", tag);
 ```
@@ -305,11 +305,11 @@ Backy 通过文件扩展名 `.gz` 检测类型，上传后 Backy 可自动提取
 
 **部分成功语义**: Push 上传和 History 拉取是两个独立操作。`BackyPushDetail` 的结果字段设计如下：
 
-| 场景 | `ok` | `history` | UI 展示 |
-|------|------|-----------|---------|
-| Push 成功 + History 成功 | `true` | `BackyHistoryResponse` | 绿色成功 + 历史列表刷新 |
-| Push 成功 + History 失败/超时 | `true` | `undefined` | 绿色成功 + 历史列表保持旧数据，不显示错误 |
-| Push 失败 | `false` | N/A | 红色失败 + HTTP status + body |
+| 场景                          | `ok`    | `history`              | UI 展示                                   |
+| ----------------------------- | ------- | ---------------------- | ----------------------------------------- |
+| Push 成功 + History 成功      | `true`  | `BackyHistoryResponse` | 绿色成功 + 历史列表刷新                   |
+| Push 成功 + History 失败/超时 | `true`  | `undefined`            | 绿色成功 + 历史列表保持旧数据，不显示错误 |
+| Push 失败                     | `false` | N/A                    | 红色失败 + HTTP status + body             |
 
 History 获取失败**不影响 Push 的成功判定**——用户看到的是"推送成功"，历史列表可通过"刷新历史"按钮手动重试。inline history 是优化（省一次 round-trip），不是必需路径。
 
@@ -322,13 +322,13 @@ Backy cron → POST /api/backup/pull (X-Webhook-Key header)
 
 ### 5.3 与 Zhe 实现的差异
 
-| 方面 | Zhe | Firefly |
-|------|-----|---------|
-| 数据访问 | `ScopedDB` (多用户) | 直接 `getDb()` (单用户) |
-| Auth guard | `getScopedDB()` session | proxy.ts 全方法保护（参照 `/api/analytics` 先例） |
-| Pull key 存储 | `user_settings` 表 | `site_settings` 表 (新增列) |
-| 压缩 | 无（JSON 直传） | **gzip 压缩**（数据量大） |
-| 路由前缀 | `/api/backy/*` | `/api/backup/*` |
+| 方面          | Zhe                            | Firefly                                                                           |
+| ------------- | ------------------------------ | --------------------------------------------------------------------------------- |
+| 数据访问      | `ScopedDB` (多用户)            | 直接 `getDb()` (单用户)                                                           |
+| Auth guard    | `getScopedDB()` session        | proxy.ts 全方法保护（参照 `/api/analytics` 先例）                                 |
+| Pull key 存储 | `user_settings` 表             | `site_settings` 表 (新增列)                                                       |
+| 压缩          | 无（JSON 直传）                | **gzip 压缩**（数据量大）                                                         |
+| 路由前缀      | `/api/backy/*`                 | `/api/backup/*`                                                                   |
 | Envelope 内容 | links, folders, tags, linkTags | posts, categories, tags, postTags, comments, attachments, redirects, siteSettings |
 
 ---
@@ -348,11 +348,11 @@ ALTER TABLE site_settings ADD COLUMN backy_pull_key TEXT DEFAULT '';
 
 ### 6.2 字段说明
 
-| 列 | 类型 | 说明 |
-|----|------|------|
+| 列                  | 类型 | 说明                                                                             |
+| ------------------- | ---- | -------------------------------------------------------------------------------- |
 | `backy_webhook_url` | TEXT | Backy webhook URL (e.g. `https://backy.your-domain.com/api/webhook/{projectId}`) |
-| `backy_api_key` | TEXT | Bearer token (48-char nanoid) |
-| `backy_pull_key` | TEXT | Pull webhook UUID key (Backy 回调认证) |
+| `backy_api_key`     | TEXT | Bearer token (48-char nanoid)                                                    |
+| `backy_pull_key`    | TEXT | Pull webhook UUID key (Backy 回调认证)                                           |
 
 ---
 
@@ -380,23 +380,23 @@ if (pathname.startsWith("/api/backup")) {
 
 ### 7.2 管理端点（需 OAuth 登录，proxy.ts 全方法拦截）
 
-| 方法 | 路由 | 说明 |
-|------|------|------|
-| `GET` | `/api/backup` | 获取 push 配置（URL + 脱敏 key） |
-| `PUT` | `/api/backup` | 保存 push 配置（URL + API key） |
-| `DELETE` | `/api/backup` | 清除 push 配置 |
-| `POST` | `/api/backup/test` | 测试 Backy 连接 (HEAD → Backy) |
-| `POST` | `/api/backup/push` | 执行推送备份 |
-| `GET` | `/api/backup/history` | 获取 Backy 备份历史 |
-| `GET` | `/api/backup/pull-key` | 获取 pull webhook key |
-| `POST` | `/api/backup/pull-key` | 生成/重新生成 pull key |
-| `DELETE` | `/api/backup/pull-key` | 撤销 pull key |
+| 方法     | 路由                   | 说明                             |
+| -------- | ---------------------- | -------------------------------- |
+| `GET`    | `/api/backup`          | 获取 push 配置（URL + 脱敏 key） |
+| `PUT`    | `/api/backup`          | 保存 push 配置（URL + API key）  |
+| `DELETE` | `/api/backup`          | 清除 push 配置                   |
+| `POST`   | `/api/backup/test`     | 测试 Backy 连接 (HEAD → Backy)   |
+| `POST`   | `/api/backup/push`     | 执行推送备份                     |
+| `GET`    | `/api/backup/history`  | 获取 Backy 备份历史              |
+| `GET`    | `/api/backup/pull-key` | 获取 pull webhook key            |
+| `POST`   | `/api/backup/pull-key` | 生成/重新生成 pull key           |
+| `DELETE` | `/api/backup/pull-key` | 撤销 pull key                    |
 
 ### 7.3 Pull Webhook 端点（公开，key 认证）
 
-| 方法 | 路由 | 说明 |
-|------|------|------|
-| `HEAD` | `/api/backup/pull` | 验证 pull key 有效性 |
+| 方法   | 路由               | 说明                        |
+| ------ | ------------------ | --------------------------- |
+| `HEAD` | `/api/backup/pull` | 验证 pull key 有效性        |
 | `POST` | `/api/backup/pull` | 触发推送（Backy cron 调用） |
 
 `/api/backup/pull` 被 proxy.ts 显式豁免 OAuth，自身通过 `X-Webhook-Key` header 做 key 认证。
@@ -495,10 +495,10 @@ const [posts, categories, tags, postTags, comments, attachments, redirects, sett
     db.query<Redirect>("SELECT * FROM redirects ORDER BY id"),
     db.firstOrNull<SiteSettingsRow>(
       "SELECT locale, posts_per_page, comments_enabled, font_style, " +
-      "site_logo_version, site_name, site_tagline, site_description, " +
-      "site_author, author_email, twitter_handle, social_links, " +
-      "ai_provider, ai_model, ai_base_url, ai_sdk_type, updated_at " +
-      "FROM site_settings WHERE id = 1",
+        "site_logo_version, site_name, site_tagline, site_description, " +
+        "site_author, author_email, twitter_handle, social_links, " +
+        "ai_provider, ai_model, ai_base_url, ai_sdk_type, updated_at " +
+        "FROM site_settings WHERE id = 1",
     ),
   ]);
 ```
@@ -573,6 +573,7 @@ Sidebar `NAV_GROUPS` 的"系统"分组新增一项：
 ### 10.3 推送结果展示
 
 成功时显示：
+
 - Tag: `v1.4.0-2026-03-26T14-30-05-a7x2-42post-5cat-12tag`
 - 文件名: `firefly-backup-2026-03-26T14-30-05-a7x2.json.gz`
 - 压缩前/后大小
@@ -625,13 +626,13 @@ v{version}-{datetime}-{rand4}-{posts}post-{cats}cat-{tags}tag
 
 > **测试文件位置**: 沿用项目现有 colocated 风格，unit test 放在被测文件旁边（如 `src/models/backup.test.ts`），不单独建 `tests/unit/` 目录。
 
-| 文件 | 覆盖内容 | 预估 cases |
-|------|----------|-----------|
-| `src/models/backup.test.ts` | `isValidWebhookUrl`, `validateBackyConfig`, `maskApiKey`, `getBackyEnvironment`, `buildBackyTag`, `formatFileSize`, `formatTimeAgo` | ~25 |
-| `src/models/backup-schema.test.ts` | `epochToIso`, `nullableEpochToIso`, `collectBackupData` 返回结构验证, 敏感字段排除验证, schema version | ~15 |
-| `src/data/backup.test.ts` | `getBackyConfig`, `saveBackyConfig`, `clearBackyConfig`, `getBackyPullKey`, `saveBackyPullKey`, `clearBackyPullKey`, `verifyBackyPullKey` — mock DB | ~20 |
-| `src/data/backup-export.test.ts` | `collectBackupData` 完整性 (所有表都被查询), `serializeBackup` 压缩验证 (输出为有效 gzip, 解压后为有效 JSON, schema version 正确) | ~12 |
-| `src/proxy.test.ts` | **鉴权规则测试（最高优先级）**: 直接测 `isProtectedApiRoute` 函数，验证 backup 路由的保护矩阵 | ~10 |
+| 文件                               | 覆盖内容                                                                                                                                            | 预估 cases |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `src/models/backup.test.ts`        | `isValidWebhookUrl`, `validateBackyConfig`, `maskApiKey`, `getBackyEnvironment`, `buildBackyTag`, `formatFileSize`, `formatTimeAgo`                 | ~25        |
+| `src/models/backup-schema.test.ts` | `epochToIso`, `nullableEpochToIso`, `collectBackupData` 返回结构验证, 敏感字段排除验证, schema version                                              | ~15        |
+| `src/data/backup.test.ts`          | `getBackyConfig`, `saveBackyConfig`, `clearBackyConfig`, `getBackyPullKey`, `saveBackyPullKey`, `clearBackyPullKey`, `verifyBackyPullKey` — mock DB | ~20        |
+| `src/data/backup-export.test.ts`   | `collectBackupData` 完整性 (所有表都被查询), `serializeBackup` 压缩验证 (输出为有效 gzip, 解压后为有效 JSON, schema version 正确)                   | ~12        |
+| `src/proxy.test.ts`                | **鉴权规则测试（最高优先级）**: 直接测 `isProtectedApiRoute` 函数，验证 backup 路由的保护矩阵                                                       | ~10        |
 
 > **⚠️ 为什么鉴权测试在 L1 而非 L2**: 现有 E2E 基建中 `.env.test` 固定开启 `E2E_SKIP_AUTH=true`，`proxy.ts` 会直接放行所有请求（见 `e2e/api/auth.test.ts` 注释）。因此 401 行为无法在 L2 API E2E 中验证。鉴权规则的正确性通过 L1 直接测 `isProtectedApiRoute(pathname, method)` 纯函数来保证：
 
@@ -673,6 +674,7 @@ describe("isProtectedApiRoute — backup routes", () => {
 > **前提**: `isProtectedApiRoute` 当前是 `proxy.ts` 的私有函数，实现时需要导出或通过 `_testHelpers` 暴露。
 
 **核心断言**:
+
 - `ai_api_key` 不出现在序列化结果中
 - `backy_*` 字段不出现在序列化结果中
 - `page_views`、`daily_stats`、`site_daily_stats` 数据不出现
@@ -681,18 +683,18 @@ describe("isProtectedApiRoute — backup routes", () => {
 
 ### 13.2 L2 — API E2E Tests (pre-push)
 
-| 文件 | 覆盖内容 | 预估 cases |
-|------|----------|-----------|
-| `e2e/api/backup.test.ts` | 管理端点（E2E_SKIP_AUTH 已登录态）: GET/PUT/DELETE config, POST test, POST push, GET history, pull-key CRUD | ~15 |
-| `e2e/api/backup-pull.test.ts` | Pull webhook: HEAD 200/401 (key 认证, 不依赖 session), POST 200/401/422 | ~5 |
+| 文件                          | 覆盖内容                                                                                                    | 预估 cases |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------- |
+| `e2e/api/backup.test.ts`      | 管理端点（E2E_SKIP_AUTH 已登录态）: GET/PUT/DELETE config, POST test, POST push, GET history, pull-key CRUD | ~15        |
+| `e2e/api/backup-pull.test.ts` | Pull webhook: HEAD 200/401 (key 认证, 不依赖 session), POST 200/401/422                                     | ~5         |
 
 > 注意: L2 在 `E2E_SKIP_AUTH=true` 环境下运行，无法测试 OAuth 401。OAuth 鉴权规则的正确性由 L1 `proxy.test.ts` 保证。Pull webhook 的 key 认证不受 `E2E_SKIP_AUTH` 影响（在 route handler 内部校验），可以在 L2 测试 401。
 
 ### 13.3 L3 — Browser E2E (按需)
 
-| 文件 | 覆盖内容 | 预估 specs |
-|------|----------|-----------|
-| `e2e/browser/backup.spec.ts` | 完整用户流程: 打开页面 → 填写配置 → 保存 → 测试连接 → 编辑/取消 → Pull webhook CRUD | ~10 |
+| 文件                         | 覆盖内容                                                                            | 预估 specs |
+| ---------------------------- | ----------------------------------------------------------------------------------- | ---------- |
+| `e2e/browser/backup.spec.ts` | 完整用户流程: 打开页面 → 填写配置 → 保存 → 测试连接 → 编辑/取消 → Pull webhook CRUD | ~10        |
 
 ### 13.4 G1 — Static Analysis (pre-commit)
 
@@ -754,31 +756,31 @@ src/i18n/locales/en.json                     # 新增 backup 相关翻译
 
 ## 十五、原子化提交计划
 
-| # | Commit | 内容 | 测试 |
-|---|--------|------|------|
-| 1 | `feat(db): add backup settings migration` | `010-backup.sql` + apply | 手动验证 |
-| 2 | `feat(backup): add model types and pure functions` | `models/backup.ts` + `models/backup.server.ts` + `models/backup-schema.ts` | L1: `backup-model.test.ts` + `backup-schema.test.ts` |
-| 3 | `feat(backup): add data layer for config and export` | `data/backup.ts` + `data/backup-export.ts` | L1: `backup-data.test.ts` + `backup-export.test.ts` |
-| 4 | `feat(backup): protect /api/backup routes in proxy` | `proxy.ts` 新增 `/api/backup` 全方法保护 + `/api/backup/pull` 精确豁免 + 导出 `_testHelpers` | L1: `src/proxy.test.ts`（鉴权规则先于 route 实现，确保屏障到位） |
-| 5 | `feat(backup): add config and test API routes` | `api/backup/route.ts` + `api/backup/test/route.ts` | L2: config CRUD tests |
-| 6 | `feat(backup): add push and history API routes` | `api/backup/push/route.ts` + `api/backup/history/route.ts` | L2: push + history tests |
-| 7 | `feat(backup): add pull webhook endpoint` | `api/backup/pull/route.ts` + `api/backup/pull-key/route.ts` | L2: `backup-pull.test.ts` |
-| 8 | `feat(backup): add admin page and sidebar nav` | `app/admin/backup/page.tsx` + `components/admin/backup-page.tsx` + sidebar 修改 + i18n | L3: `backup.spec.ts` |
-| 9 | `docs: add 16-backy-backup design document` | 本文档 | — |
+| #   | Commit                                               | 内容                                                                                         | 测试                                                             |
+| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 1   | `feat(db): add backup settings migration`            | `010-backup.sql` + apply                                                                     | 手动验证                                                         |
+| 2   | `feat(backup): add model types and pure functions`   | `models/backup.ts` + `models/backup.server.ts` + `models/backup-schema.ts`                   | L1: `backup-model.test.ts` + `backup-schema.test.ts`             |
+| 3   | `feat(backup): add data layer for config and export` | `data/backup.ts` + `data/backup-export.ts`                                                   | L1: `backup-data.test.ts` + `backup-export.test.ts`              |
+| 4   | `feat(backup): protect /api/backup routes in proxy`  | `proxy.ts` 新增 `/api/backup` 全方法保护 + `/api/backup/pull` 精确豁免 + 导出 `_testHelpers` | L1: `src/proxy.test.ts`（鉴权规则先于 route 实现，确保屏障到位） |
+| 5   | `feat(backup): add config and test API routes`       | `api/backup/route.ts` + `api/backup/test/route.ts`                                           | L2: config CRUD tests                                            |
+| 6   | `feat(backup): add push and history API routes`      | `api/backup/push/route.ts` + `api/backup/history/route.ts`                                   | L2: push + history tests                                         |
+| 7   | `feat(backup): add pull webhook endpoint`            | `api/backup/pull/route.ts` + `api/backup/pull-key/route.ts`                                  | L2: `backup-pull.test.ts`                                        |
+| 8   | `feat(backup): add admin page and sidebar nav`       | `app/admin/backup/page.tsx` + `components/admin/backup-page.tsx` + sidebar 修改 + i18n       | L3: `backup.spec.ts`                                             |
+| 9   | `docs: add 16-backy-backup design document`          | 本文档                                                                                       | —                                                                |
 
 ---
 
 ## 十六、风险与缓解
 
-| 风险 | 缓解 |
-|------|------|
-| GET /api/backup/* 未登录泄露敏感数据 | proxy.ts 将 `/api/backup` 前缀（除精确 `/api/backup/pull`）整体设为全方法受保护；L1 `proxy.test.ts` 验证保护矩阵 |
-| 备份 JSON 过大（文章含 HTML cache） | gzip 压缩，Backy 限制 50MB |
-| D1 并行查询可能触发 7429 超时 | 现有 D1 客户端已内置指数退避重试 |
-| 同一天/同秒多次推送文件名冲突 | 文件名秒级时间戳 + 4 位随机后缀（`nanoid(4)`） |
-| 导出 JSON 字段顺序不稳定 | 每张表 SELECT 显式 ORDER BY 主键 |
-| Push 成功但 History 拉取超时 | 定义为部分成功：`ok=true` + `history=undefined`，UI 仍显示推送成功 |
-| `site_settings` 未来新增敏感列意外泄露 | SELECT 列白名单（非 `SELECT *` 后删除），新增列默认不备份 |
-| Pull key 泄露导致未授权推送 | UUID v4 足够随机；UI 提供一键撤销/重新生成 |
-| Schema 演进（未来新增表/列） | `schemaVersion` 字段支持向前兼容，恢复时可据此判断 |
-| `content_html` 可从 `content` 重建 | 仍然备份以加速恢复，但标记为可选 |
+| 风险                                   | 缓解                                                                                                             |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| GET /api/backup/* 未登录泄露敏感数据   | proxy.ts 将 `/api/backup` 前缀（除精确 `/api/backup/pull`）整体设为全方法受保护；L1 `proxy.test.ts` 验证保护矩阵 |
+| 备份 JSON 过大（文章含 HTML cache）    | gzip 压缩，Backy 限制 50MB                                                                                       |
+| D1 并行查询可能触发 7429 超时          | 现有 D1 客户端已内置指数退避重试                                                                                 |
+| 同一天/同秒多次推送文件名冲突          | 文件名秒级时间戳 + 4 位随机后缀（`nanoid(4)`）                                                                   |
+| 导出 JSON 字段顺序不稳定               | 每张表 SELECT 显式 ORDER BY 主键                                                                                 |
+| Push 成功但 History 拉取超时           | 定义为部分成功：`ok=true` + `history=undefined`，UI 仍显示推送成功                                               |
+| `site_settings` 未来新增敏感列意外泄露 | SELECT 列白名单（非 `SELECT *` 后删除），新增列默认不备份                                                        |
+| Pull key 泄露导致未授权推送            | UUID v4 足够随机；UI 提供一键撤销/重新生成                                                                       |
+| Schema 演进（未来新增表/列）           | `schemaVersion` 字段支持向前兼容，恢复时可据此判断                                                               |
+| `content_html` 可从 `content` 重建     | 仍然备份以加速恢复，但标记为可选                                                                                 |

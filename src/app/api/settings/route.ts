@@ -28,8 +28,7 @@ function assignString(
   const v = source[key];
   if (typeof v !== "string") return `${key} must be a string`;
   if (required && v.length === 0) return `${key} must be a non-empty string`;
-  if (v.length > maxLen)
-    return `${key} must be at most ${maxLen} characters`;
+  if (v.length > maxLen) return `${key} must be at most ${maxLen} characters`;
   (target as Record<string, unknown>)[fieldKey as string] = v;
   return null;
 }
@@ -95,15 +94,15 @@ function validateSocialLinks(
 }
 
 /** Validate the full PUT body, returning either the input shape or an error string. */
-function parseSettingsBody(
-  body: Record<string, unknown>,
-): UpdateSiteSettingsInput | string {
+function parseSettingsBody(body: Record<string, unknown>): UpdateSiteSettingsInput | string {
   const input: UpdateSiteSettingsInput = {};
   const wechat = wechatSettingsSchema.safeParse(body);
   if (!wechat.success) return wechat.error.issues[0].message;
   if (wechat.data.wechat_name !== undefined) input.wechatName = wechat.data.wechat_name;
-  if (wechat.data.wechat_qr_image_url !== undefined) input.wechatQrImageUrl = wechat.data.wechat_qr_image_url;
-  if (wechat.data.wechat_avatar_url !== undefined) input.wechatAvatarUrl = wechat.data.wechat_avatar_url;
+  if (wechat.data.wechat_qr_image_url !== undefined)
+    input.wechatQrImageUrl = wechat.data.wechat_qr_image_url;
+  if (wechat.data.wechat_avatar_url !== undefined)
+    input.wechatAvatarUrl = wechat.data.wechat_avatar_url;
 
   const stringFields: Array<{
     key: string;

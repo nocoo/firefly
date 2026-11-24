@@ -19,11 +19,7 @@ function decodeHtmlEntities(text: string): string {
  * Look up <meta {attr}="{key}" content="..."> handling both attribute orders
  * and both quote styles. Returns the first match decoded, or null.
  */
-function matchMetaContent(
-  html: string,
-  attr: "property" | "name",
-  key: string,
-): string | null {
+function matchMetaContent(html: string, attr: "property" | "name", key: string): string | null {
   const patterns = [
     new RegExp(`<meta[^>]+${attr}=["']${key}["'][^>]+content="([^"]*)"`, "i"),
     new RegExp(`<meta[^>]+${attr}=["']${key}["'][^>]+content='([^']*)'`, "i"),
@@ -47,9 +43,7 @@ interface OgMetadata {
 
 export function extractOgMetadata(html: string): OgMetadata {
   const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
-  const pageTitle = titleMatch?.[1]
-    ? decodeHtmlEntities(titleMatch[1].trim())
-    : null;
+  const pageTitle = titleMatch?.[1] ? decodeHtmlEntities(titleMatch[1].trim()) : null;
 
   return {
     ogTitle: matchMetaContent(html, "property", "og:title"),
@@ -64,10 +58,7 @@ export function extractOgMetadata(html: string): OgMetadata {
 /** Strip tags + decode entities + collapse whitespace + truncate. */
 export function extractBodyText(html: string): string {
   // Remove <script>, <style>, <noscript> blocks
-  let text = html.replace(
-    /<(script|style|noscript)[^>]*>[\s\S]*?<\/\1>/gi,
-    "",
-  );
+  let text = html.replace(/<(script|style|noscript)[^>]*>[\s\S]*?<\/\1>/gi, "");
 
   // Remove all HTML tags
   text = text.replace(/<[^>]+>/g, " ");

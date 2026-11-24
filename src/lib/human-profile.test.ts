@@ -1,15 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Human } from "@/models/types";
-import {
-  findPublicProfile,
-  hashNormalizedEmail,
-  parseProfileQuery,
-} from "./human-profile";
+import { findPublicProfile, hashNormalizedEmail, parseProfileQuery } from "./human-profile";
 
 vi.mock("./human-avatar", () => ({
-  getHumanAvatarUrl: vi.fn(
-    (id: string, version: string | null) =>
-      version ? `https://cdn.test/humans/${id}/${version}/avatar-80.jpg` : null,
+  getHumanAvatarUrl: vi.fn((id: string, version: string | null) =>
+    version ? `https://cdn.test/humans/${id}/${version}/avatar-80.jpg` : null,
   ),
 }));
 
@@ -88,10 +83,10 @@ describe("findPublicProfile", () => {
   });
 
   it("does not match an agent-shaped record without a public email", () => {
-    const result = findPublicProfile(
-      [human({ email: null, name: "Claude Daily" })],
-      { kind: "email", value: "agent@example.com" },
-    );
+    const result = findPublicProfile([human({ email: null, name: "Claude Daily" })], {
+      kind: "email",
+      value: "agent@example.com",
+    });
     expect(result).toEqual({ name: null, avatar: null });
   });
 });

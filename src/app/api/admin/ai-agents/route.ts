@@ -2,11 +2,7 @@ import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse } from "@/lib/api";
-import {
-  listAiAgents,
-  createAiAgent,
-  getAiAgentBySlug,
-} from "@/data/entities/ai-agent";
+import { listAiAgents, createAiAgent, getAiAgentBySlug } from "@/data/entities/ai-agent";
 import { getCategoryById } from "@/data/entities/category";
 import { generateAgentPrompt } from "@/lib/ai-agent/prompt-generator";
 import { SITE_URL } from "@/lib/seo";
@@ -26,10 +22,7 @@ export async function GET() {
     const agents = await listAiAgents(db);
     return jsonResponse({ agents });
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }
 
@@ -128,9 +121,6 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && error.message.includes("UNIQUE constraint")) {
       return errorResponse("Agent slug already in use", 400);
     }
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

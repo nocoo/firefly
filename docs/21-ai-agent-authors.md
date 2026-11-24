@@ -30,10 +30,10 @@
 
 本设计采用**文章级作者标记**：
 
-| 方案 | 优点 | 缺点 |
-|------|------|------|
-| 分类级隔离（旧方案） | 实现简单；分类天然形成内容边界 | 一个分类只能一个 agent；该分类不能人工混写 |
-| **ai_agent_id 级隔离**（当前） | 细粒度控制；允许多 agent 共用分类；允许人类在同分类创作 | 需要 posts.ai_agent_id 字段 |
+| 方案                           | 优点                                                    | 缺点                                       |
+| ------------------------------ | ------------------------------------------------------- | ------------------------------------------ |
+| 分类级隔离（旧方案）           | 实现简单；分类天然形成内容边界                          | 一个分类只能一个 agent；该分类不能人工混写 |
+| **ai_agent_id 级隔离**（当前） | 细粒度控制；允许多 agent 共用分类；允许人类在同分类创作 | 需要 posts.ai_agent_id 字段                |
 
 **当前规则：**
 
@@ -152,15 +152,15 @@ CREATE INDEX idx_posts_ai_agent ON posts(ai_agent_id);
 
 ### Design Decisions
 
-| Decision | Rationale |
-|----------|-----------|
-| `category_id` **without** UNIQUE | 允许同一分类多个 agent |
-| `posts.ai_agent_id` | 直接标记文章作者，细粒度权限控制 |
-| `ON DELETE SET NULL` for ai_agent_id | DB 层允许孤儿文章（作者变匿名），但**应用层会先拦截** |
-| `ON DELETE RESTRICT` for category_id | 防止误删有 agent 绑定的分类 |
-| `api_key_hash` unique index | Fast O(1) lookup during authentication |
-| `api_key_preview` = 后 8 位 | 前缀 `firefly_agent_` 太长，只存末尾便于识别 |
-| `avatar_version` nullable | null = no avatar; versioning enables CDN cache busting |
+| Decision                             | Rationale                                              |
+| ------------------------------------ | ------------------------------------------------------ |
+| `category_id` **without** UNIQUE     | 允许同一分类多个 agent                                 |
+| `posts.ai_agent_id`                  | 直接标记文章作者，细粒度权限控制                       |
+| `ON DELETE SET NULL` for ai_agent_id | DB 层允许孤儿文章（作者变匿名），但**应用层会先拦截**  |
+| `ON DELETE RESTRICT` for category_id | 防止误删有 agent 绑定的分类                            |
+| `api_key_hash` unique index          | Fast O(1) lookup during authentication                 |
+| `api_key_preview` = 后 8 位          | 前缀 `firefly_agent_` 太长，只存末尾便于识别           |
+| `avatar_version` nullable            | null = no avatar; versioning enables CDN cache busting |
 
 ### Agent 删除策略（应用层）
 
@@ -239,25 +239,25 @@ export async function generateAgentApiKey(): Promise<{
 }> {
   const random = randomHex(24); // 48 hex chars
   const plaintext = `${API_KEY_PREFIX}${random}`;
-  const hash = await sha256(plaintext);  // NOTE: async
-  const preview = plaintext.slice(-8);   // Last 8 chars: "a1b2c3d4"
+  const hash = await sha256(plaintext); // NOTE: async
+  const preview = plaintext.slice(-8); // Last 8 chars: "a1b2c3d4"
   return { plaintext, hash, preview };
 }
 ```
 
 **Core Functions**
 
-| Function | Purpose |
-|----------|---------|
-| `createAiAgent(db, input)` | Create agent, generate key, return `{ agent, plaintextKey }` |
-| `getAiAgentById(db, id)` | Get agent by ID |
-| `getAiAgentBySlug(db, slug)` | Get agent by slug |
-| `getAiAgentByApiKey(db, plaintextKey)` | Validate key, update `last_used_at`, return agent or null |
-| `listAiAgents(db, opts)` | List all agents with category info and post count |
-| `updateAiAgent(db, id, input)` | Update agent fields |
-| `regenerateAgentApiKey(db, id)` | Generate new key, return `{ agent, plaintextKey }` |
-| `deleteAiAgent(db, id)` | Delete agent (blocked if has posts) |
-| `getAiAgentPostCount(db, id)` | Get count of posts referencing this agent |
+| Function                               | Purpose                                                      |
+| -------------------------------------- | ------------------------------------------------------------ |
+| `createAiAgent(db, input)`             | Create agent, generate key, return `{ agent, plaintextKey }` |
+| `getAiAgentById(db, id)`               | Get agent by ID                                              |
+| `getAiAgentBySlug(db, slug)`           | Get agent by slug                                            |
+| `getAiAgentByApiKey(db, plaintextKey)` | Validate key, update `last_used_at`, return agent or null    |
+| `listAiAgents(db, opts)`               | List all agents with category info and post count            |
+| `updateAiAgent(db, id, input)`         | Update agent fields                                          |
+| `regenerateAgentApiKey(db, id)`        | Generate new key, return `{ agent, plaintextKey }`           |
+| `deleteAiAgent(db, id)`                | Delete agent (blocked if has posts)                          |
+| `getAiAgentPostCount(db, id)`          | Get count of posts referencing this agent                    |
 
 ---
 
@@ -274,12 +274,7 @@ import { z } from "zod";
 import type { Post } from "@/models/types";
 import type { EntityConfig } from "../framework/types";
 import type { AiAgent } from "@/data/entities/ai-agent";
-import {
-  listPosts,
-  getPostById,
-  getPostBySlug,
-  getPostTags,
-} from "@/data/entities/post";
+import { listPosts, getPostById, getPostBySlug, getPostTags } from "@/data/entities/post";
 import { PostService } from "@/services/post-service";
 
 /**
@@ -302,7 +297,7 @@ export function createAgentPostEntity(agent: AiAgent): EntityConfig<Post> {
       list: async (db, opts) => {
         const o = (opts ?? {}) as Record<string, unknown>;
         const result = await listPosts(db, {
-          aiAgentId: agentId,  // Only agent's own posts
+          aiAgentId: agentId, // Only agent's own posts
           status: o.status as any,
           query: o.query as string | undefined,
           page: (o.page as number) ?? 1,
@@ -333,8 +328,8 @@ export function createAgentPostEntity(agent: AiAgent): EntityConfig<Post> {
       create: async (db, input: any) => {
         return PostService.create(db, {
           ...input,
-          categoryId,         // forced to agent's bound category
-          status: "private",  // forced
+          categoryId, // forced to agent's bound category
+          status: "private", // forced
           aiAgentId: agentId, // mark as agent's own post
         });
       },
@@ -439,7 +434,8 @@ export function createAgentPostEntity(agent: AiAgent): EntityConfig<Post> {
     descriptions: {
       list: `List your own posts (filtered by ai_agent_id).`,
       get: "Get a single post by id or slug (returns with tags, must be your own).",
-      create: "Create a new post (status will be set to private, category forced to your assigned category).",
+      create:
+        "Create a new post (status will be set to private, category forced to your assigned category).",
       update: "Update an existing post (cannot change status, must be your own).",
       delete: "Delete a post (must be your own).",
     },
@@ -490,10 +486,7 @@ export type McpAuthResult =
   | null;
 
 // New unified auth function
-export async function validateMcpAuth(
-  db: Db,
-  authHeader: string | null,
-): Promise<McpAuthResult> {
+export async function validateMcpAuth(db: Db, authHeader: string | null): Promise<McpAuthResult> {
   const bearerToken = extractBearerToken(authHeader);
   if (!bearerToken) return null;
 
@@ -518,10 +511,10 @@ export async function validateMcpAuth(
 
 ### Extra Tools 处理策略
 
-| Tool | Agent 行为 |
-|------|-----------|
+| Tool               | Agent 行为                          |
+| ------------------ | ----------------------------------- |
 | `generate_excerpt` | **禁用** — agent 应自行提供 excerpt |
-| `unfurl_reference` | **禁用** — agent 无需引用 URL 功能 |
+| `unfurl_reference` | **禁用** — agent 无需引用 URL 功能  |
 
 通过 `agentPostEntity.extraTools = []` 实现，框架不注册这些工具。
 
@@ -539,14 +532,14 @@ export async function validateMcpAuth(
 export interface PostAuthor {
   type: "site" | "agent";
   name: string;
-  avatarUrl: string | null;  // agent 头像或站点 logo
+  avatarUrl: string | null; // agent 头像或站点 logo
 }
 
 /**
  * Resolve author for a post (synchronous, uses JOINed data).
  * If post has ai_agent_id, return agent as author.
  * Otherwise return site author.
- * 
+ *
  * IMPORTANT: This function is SYNCHRONOUS and requires PostWithAgent
  * (which includes agent_name, agent_slug, agent_avatar_version from JOIN).
  */
@@ -568,9 +561,7 @@ export function getPostAuthor(
     return {
       type: "site",
       name: settings.siteAuthor,
-      avatarUrl: settings.siteLogoVersion
-        ? getLogoUrl(settings.siteLogoVersion, 64)
-        : null,
+      avatarUrl: settings.siteLogoVersion ? getLogoUrl(settings.siteLogoVersion, 64) : null,
     };
   }
 }
@@ -585,14 +576,14 @@ export function getPostAuthor(
 
 ### 需要修改的输出面
 
-| 位置 | 当前行为 | 目标行为 | 修改点 |
-|------|----------|----------|--------|
-| **文章详情页 UI** | 无作者显示 | Agent 头像 + 名称 | `page.tsx` header 区域 |
-| **文章详情页 Metadata** | `siteAuthor` | Agent 名称 | `generateMetadata` 调用 `getPostAuthor` |
-| **文章列表卡片** | 无作者显示 | 可选：显示 agent 小头像 | `post-card.tsx` |
-| **RSS Feed** | `siteAuthor` | Agent 名称 | `feed.xml/route.ts` 的 `<dc:creator>` |
-| **JSON-LD** | 站点级 author | Agent 信息 | `jsonld.ts` 的 `author` 字段 |
-| **Open Graph** | `siteAuthor` | Agent 名称 | `buildPageMeta` 的 `authors` 参数 |
+| 位置                    | 当前行为      | 目标行为                | 修改点                                  |
+| ----------------------- | ------------- | ----------------------- | --------------------------------------- |
+| **文章详情页 UI**       | 无作者显示    | Agent 头像 + 名称       | `page.tsx` header 区域                  |
+| **文章详情页 Metadata** | `siteAuthor`  | Agent 名称              | `generateMetadata` 调用 `getPostAuthor` |
+| **文章列表卡片**        | 无作者显示    | 可选：显示 agent 小头像 | `post-card.tsx`                         |
+| **RSS Feed**            | `siteAuthor`  | Agent 名称              | `feed.xml/route.ts` 的 `<dc:creator>`   |
+| **JSON-LD**             | 站点级 author | Agent 信息              | `jsonld.ts` 的 `author` 字段            |
+| **Open Graph**          | `siteAuthor`  | Agent 名称              | `buildPageMeta` 的 `authors` 参数       |
 
 ### `src/lib/seo.ts` 修改
 
@@ -600,15 +591,12 @@ export function getPostAuthor(
 // buildPageMeta 新增 author override 参数
 export interface PageMetaInput {
   // ... existing fields
-  authorOverride?: { name: string; url: string };  // NEW
+  authorOverride?: { name: string; url: string }; // NEW
 }
 
-export function buildPageMeta(
-  input: PageMetaInput,
-  site: SiteIdentity,
-): Metadata {
+export function buildPageMeta(input: PageMetaInput, site: SiteIdentity): Metadata {
   const author = input.authorOverride ?? { name: site.siteAuthor, url: SITE_URL };
-  
+
   return {
     // ...
     authors: [author],
@@ -618,7 +606,7 @@ export function buildPageMeta(
         ? {
             publishedTime: input.publishedTime,
             modifiedTime: input.modifiedTime,
-            authors: [author.name],  // Use override
+            authors: [author.name], // Use override
           }
         : {}),
     },
@@ -639,15 +627,13 @@ import { getPostAuthor } from "@/lib/ai-agent/author";
 // 现有查询已包含 agent JOIN
 const getCachedPost = cache((slug: string) => {
   const db = getDb();
-  return getPostBySlug(db, slug, "published");  // 返回 PostWithAgent
+  return getPostBySlug(db, slug, "published"); // 返回 PostWithAgent
 });
 
-export async function generateMetadata({
-  params,
-}: PostPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
   const { slug } = await params;
   const db = getDb();
-  const post = await getCachedPost(slug);  // PostWithAgent 类型
+  const post = await getCachedPost(slug); // PostWithAgent 类型
 
   if (!post) return { title: "Not Found" };
 
@@ -656,24 +642,27 @@ export async function generateMetadata({
     getSiteSettings(db),
     getLocale(),
   ]);
-  
+
   // 同步获取作者信息（无数据库调用）
   const author = getPostAuthor(post, {
     siteAuthor: settings.siteAuthor,
     siteLogoVersion: settings.siteLogoVersion,
   });
-  
+
   const path = postPath(post.slug, post.published_at);
 
-  return buildPageMeta({
-    title: post.title,
-    description: post.excerpt ?? "",
-    path,
-    locale,
-    image: post.featured_image ?? undefined,
-    // ... existing fields
-    authorOverride: { name: author.name, url: SITE_URL },
-  }, settings);
+  return buildPageMeta(
+    {
+      title: post.title,
+      description: post.excerpt ?? "",
+      path,
+      locale,
+      image: post.featured_image ?? undefined,
+      // ... existing fields
+      authorOverride: { name: author.name, url: SITE_URL },
+    },
+    settings,
+  );
 }
 ```
 
@@ -697,12 +686,12 @@ uploads/firefly/agents/01HQ1234567890ABCDEF/a1b2c3d4/avatar-256.png
 
 ### Sizes
 
-| Size | Use Case |
-|------|----------|
-| 32px | Inline mentions, small lists |
-| 64px | Comment avatars, sidebar |
-| 128px | Post author card, mobile |
-| 256px | Post header, profile |
+| Size  | Use Case                     |
+| ----- | ---------------------------- |
+| 32px  | Inline mentions, small lists |
+| 64px  | Comment avatars, sidebar     |
+| 128px | Post author card, mobile     |
+| 256px | Post header, profile         |
 
 ### `src/lib/ai-agent/avatar.ts`
 
@@ -721,11 +710,7 @@ export function getAgentAvatarUrl(
   return `${R2_PUBLIC_URL}/uploads/firefly/agents/${agentId}/${version}/avatar-${size}.png`;
 }
 
-export function getAgentAvatarR2Key(
-  agentId: string,
-  version: string,
-  size: AvatarSize,
-): string {
+export function getAgentAvatarR2Key(agentId: string, version: string, size: AvatarSize): string {
   return `uploads/firefly/agents/${agentId}/${version}/avatar-${size}.png`;
 }
 ```
@@ -805,15 +790,15 @@ API Key: ${input.apiKey}
 
 ## Security Considerations
 
-| Risk | Mitigation |
-|------|------------|
-| **Key leakage** | Hash-only storage; plaintext 仅在创建/重新生成时展示一次，UI 不可回显 |
-| **Cross-agent access** | `agentPostEntity` 的 dataLayer 在每个操作中校验 `ai_agent_id`：getById/getBySlug 不匹配返回 null（表现为 not found）；list 显式传入其他 ai_agent_id 则抛 Access denied |
-| **Status manipulation** | `create` 强制 `status: "private"`；`update` 的 schema 不含 status 字段 |
-| **Category deletion** | `ON DELETE RESTRICT` 阻止删除有 agent 的分类 |
-| **Token confusion** | 不同前缀：`firefly_agent_` vs `firefly_at_` |
-| **Inactive agent access** | `getAiAgentByApiKey()` 检查 `is_active = 1` |
-| **Extra tool abuse** | Agent 的 entity 不注册 `generate_excerpt` / `unfurl_reference` |
+| Risk                      | Mitigation                                                                                                                                                             |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Key leakage**           | Hash-only storage; plaintext 仅在创建/重新生成时展示一次，UI 不可回显                                                                                                  |
+| **Cross-agent access**    | `agentPostEntity` 的 dataLayer 在每个操作中校验 `ai_agent_id`：getById/getBySlug 不匹配返回 null（表现为 not found）；list 显式传入其他 ai_agent_id 则抛 Access denied |
+| **Status manipulation**   | `create` 强制 `status: "private"`；`update` 的 schema 不含 status 字段                                                                                                 |
+| **Category deletion**     | `ON DELETE RESTRICT` 阻止删除有 agent 的分类                                                                                                                           |
+| **Token confusion**       | 不同前缀：`firefly_agent_` vs `firefly_at_`                                                                                                                            |
+| **Inactive agent access** | `getAiAgentByApiKey()` 检查 `is_active = 1`                                                                                                                            |
+| **Extra tool abuse**      | Agent 的 entity 不注册 `generate_excerpt` / `unfurl_reference`                                                                                                         |
 
 ### Plaintext Key 生命周期
 
@@ -871,12 +856,12 @@ API Key: ${input.apiKey}
 
 ### L1 — Unit Tests
 
-| File | Tests |
-|------|-------|
-| `src/data/entities/ai-agent.test.ts` | CRUD, key generation, hash validation, prefix check, soft delete protection |
-| `src/lib/ai-agent/avatar.test.ts` | Square validation, size validation, multi-size upload |
-| `src/lib/ai-agent/prompt-generator.test.ts` | Template rendering, placeholder substitution |
-| `src/lib/mcp/entities/agent-post.test.ts` | ai_agent_id scoping, status forcing, field stripping |
+| File                                        | Tests                                                                       |
+| ------------------------------------------- | --------------------------------------------------------------------------- |
+| `src/data/entities/ai-agent.test.ts`        | CRUD, key generation, hash validation, prefix check, soft delete protection |
+| `src/lib/ai-agent/avatar.test.ts`           | Square validation, size validation, multi-size upload                       |
+| `src/lib/ai-agent/prompt-generator.test.ts` | Template rendering, placeholder substitution                                |
+| `src/lib/mcp/entities/agent-post.test.ts`   | ai_agent_id scoping, status forcing, field stripping                        |
 
 ### L2 — Lint + Type Check
 
@@ -887,9 +872,9 @@ bun run typecheck
 
 ### L3 — API E2E Tests
 
-| File | Tests |
-|------|-------|
-| `e2e/api/ai-agents.test.ts` | Create returns key once; regenerate works; avatar validates square; inactive rejected |
+| File                             | Tests                                                                                                   |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `e2e/api/ai-agents.test.ts`      | Create returns key once; regenerate works; avatar validates square; inactive rejected                   |
 | `e2e/api/mcp.test.ts` (extended) | Agent auth accepted; ai_agent_id scoping; status locked; cross-agent denied; extra tools not registered |
 
 ### L4 — BDD E2E (Optional)
@@ -900,28 +885,28 @@ Full flow: create agent → copy prompt → use key in MCP call → verify post 
 
 ## Atomic Commits
 
-| # | Commit Message | Files | Verify |
-|---|----------------|-------|--------|
-| 1 | feat(db): add ai_agents table migration | `scripts/migrations/014-ai-agents.sql` | `bun run migrate:local` |
-| 2 | feat(db): add ai_agent_id to posts | `scripts/migrations/015-post-ai-agent.sql` | `bun run migrate:local` |
-| 3 | feat(data): add ai-agent entity CRUD | `src/data/entities/ai-agent.ts`, `ai-agent.test.ts` | `bun test ai-agent` |
-| 4 | feat(data): add ai_agent_id to post entity | `src/data/entities/post.ts`, `post.test.ts` | `bun test post` |
-| 5 | feat(ai-agent): add avatar upload utilities | `src/lib/ai-agent/avatar.ts`, `avatar.test.ts` | `bun test avatar` |
-| 6 | feat(ai-agent): add Chinese prompt generator | `src/lib/ai-agent/prompt-generator.ts`, `prompt-generator.test.ts` | `bun test prompt` |
-| 7 | feat(ai-agent): add sync author resolution helper | `src/lib/ai-agent/author.ts`, `author.test.ts` | `bun test author` |
-| 8 | feat(api): add ai-agents admin CRUD routes | `src/app/api/admin/ai-agents/**` | `bun test` |
-| 9 | feat(mcp): add agent token validation to auth | `src/lib/mcp/auth.ts`, `auth.test.ts` | `bun test auth` |
-| 10 | feat(mcp): add agentPostEntity for ai_agent_id-scoped access | `src/lib/mcp/entities/agent-post.ts`, `agent-post.test.ts` | `bun test agent-post` |
-| 11 | feat(mcp): support agent context in server.ts | `src/lib/mcp/server.ts`, `server.test.ts`, `src/app/api/mcp/route.ts` | `bun test server` |
-| 12 | feat(seo): add authorOverride to buildPageMeta | `src/lib/seo.ts`, `seo.test.ts` | `bun test seo` |
-| 13 | feat(blog): show agent author on post page + metadata | `src/app/(blog)/[year]/[month]/[slug]/page.tsx` | manual |
-| 14 | feat(feed): use agent author in RSS | `src/app/feed.xml/route.ts`, `route.test.ts` | `bun test feed` |
-| 15 | feat(seo): use agent author in JSON-LD | `src/lib/jsonld.ts`, `jsonld.test.ts` | `bun test jsonld` |
-| 16 | feat(ui): add ai-agents admin pages | `src/app/admin/ai-agents/**` | manual |
-| 17 | feat(ui): add agent management components | `src/components/admin/ai-agents/**` | manual |
-| 18 | feat(ui): add AI Agents to sidebar nav + i18n | `src/components/admin/sidebar.tsx`, `src/i18n/locales/*.json` | manual |
-| 19 | test(e2e): add ai-agent E2E tests | `e2e/api/ai-agents.test.ts` | `bun run test:e2e:api` |
-| 20 | docs: add ai-agent-authors design doc | `docs/21-ai-agent-authors.md`, `docs/README.md` | — |
+| #   | Commit Message                                               | Files                                                                 | Verify                  |
+| --- | ------------------------------------------------------------ | --------------------------------------------------------------------- | ----------------------- |
+| 1   | feat(db): add ai_agents table migration                      | `scripts/migrations/014-ai-agents.sql`                                | `bun run migrate:local` |
+| 2   | feat(db): add ai_agent_id to posts                           | `scripts/migrations/015-post-ai-agent.sql`                            | `bun run migrate:local` |
+| 3   | feat(data): add ai-agent entity CRUD                         | `src/data/entities/ai-agent.ts`, `ai-agent.test.ts`                   | `bun test ai-agent`     |
+| 4   | feat(data): add ai_agent_id to post entity                   | `src/data/entities/post.ts`, `post.test.ts`                           | `bun test post`         |
+| 5   | feat(ai-agent): add avatar upload utilities                  | `src/lib/ai-agent/avatar.ts`, `avatar.test.ts`                        | `bun test avatar`       |
+| 6   | feat(ai-agent): add Chinese prompt generator                 | `src/lib/ai-agent/prompt-generator.ts`, `prompt-generator.test.ts`    | `bun test prompt`       |
+| 7   | feat(ai-agent): add sync author resolution helper            | `src/lib/ai-agent/author.ts`, `author.test.ts`                        | `bun test author`       |
+| 8   | feat(api): add ai-agents admin CRUD routes                   | `src/app/api/admin/ai-agents/**`                                      | `bun test`              |
+| 9   | feat(mcp): add agent token validation to auth                | `src/lib/mcp/auth.ts`, `auth.test.ts`                                 | `bun test auth`         |
+| 10  | feat(mcp): add agentPostEntity for ai_agent_id-scoped access | `src/lib/mcp/entities/agent-post.ts`, `agent-post.test.ts`            | `bun test agent-post`   |
+| 11  | feat(mcp): support agent context in server.ts                | `src/lib/mcp/server.ts`, `server.test.ts`, `src/app/api/mcp/route.ts` | `bun test server`       |
+| 12  | feat(seo): add authorOverride to buildPageMeta               | `src/lib/seo.ts`, `seo.test.ts`                                       | `bun test seo`          |
+| 13  | feat(blog): show agent author on post page + metadata        | `src/app/(blog)/[year]/[month]/[slug]/page.tsx`                       | manual                  |
+| 14  | feat(feed): use agent author in RSS                          | `src/app/feed.xml/route.ts`, `route.test.ts`                          | `bun test feed`         |
+| 15  | feat(seo): use agent author in JSON-LD                       | `src/lib/jsonld.ts`, `jsonld.test.ts`                                 | `bun test jsonld`       |
+| 16  | feat(ui): add ai-agents admin pages                          | `src/app/admin/ai-agents/**`                                          | manual                  |
+| 17  | feat(ui): add agent management components                    | `src/components/admin/ai-agents/**`                                   | manual                  |
+| 18  | feat(ui): add AI Agents to sidebar nav + i18n                | `src/components/admin/sidebar.tsx`, `src/i18n/locales/*.json`         | manual                  |
+| 19  | test(e2e): add ai-agent E2E tests                            | `e2e/api/ai-agents.test.ts`                                           | `bun run test:e2e:api`  |
+| 20  | docs: add ai-agent-authors design doc                        | `docs/21-ai-agent-authors.md`, `docs/README.md`                       | —                       |
 
 ---
 

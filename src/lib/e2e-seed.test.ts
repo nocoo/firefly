@@ -80,10 +80,7 @@ describe("seedPostIdempotent", () => {
     await advanceFake(SEED_TOTAL_DEADLINE_MS);
     await p;
 
-    expect(calls).toEqual([
-      `POST ${BASE}/api/posts`,
-      `GET ${BASE}/api/posts/e2e-seed-slug`,
-    ]);
+    expect(calls).toEqual([`POST ${BASE}/api/posts`, `GET ${BASE}/api/posts/e2e-seed-slug`]);
   });
 
   // -------------------------------------------------------------------------
@@ -97,9 +94,7 @@ describe("seedPostIdempotent", () => {
     const fetchMock = vi.fn(async (_url: string, init: RequestInit) => {
       if (init.method === "POST") {
         postCount++;
-        return postCount === 1
-          ? res(500, '{"error":"Network error: fetch failed"}')
-          : res(201);
+        return postCount === 1 ? res(500, '{"error":"Network error: fetch failed"}') : res(201);
       }
       getCount++;
       return res(404);
@@ -119,9 +114,7 @@ describe("seedPostIdempotent", () => {
 
   it("4xx fails fast without reconcile or retry", async () => {
     vi.useFakeTimers();
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(res(400, '{"error":"slug is required"}'));
+    const fetchMock = vi.fn().mockResolvedValue(res(400, '{"error":"slug is required"}'));
 
     const p = seedPostIdempotent(BASE, BODY, depsWithFetch(fetchMock));
     const settled = p.catch((e) => e);
@@ -184,19 +177,17 @@ describe("seedPostIdempotent", () => {
   it("aborts a pending POST at the deadline and throws its own diagnostic", async () => {
     vi.useFakeTimers();
     const started: string[] = [];
-    const fetchMock = vi.fn(
-      (url: string, init: RequestInit & { signal: AbortSignal }) => {
-        started.push(`${init.method ?? "GET"} ${url}`);
-        // Never resolve; the caller must abort us at the deadline.
-        return new Promise<Response>((_, reject) => {
-          init.signal.addEventListener(
-            "abort",
-            () => reject(init.signal.reason ?? new Error("aborted")),
-            { once: true },
-          );
-        });
-      },
-    );
+    const fetchMock = vi.fn((url: string, init: RequestInit & { signal: AbortSignal }) => {
+      started.push(`${init.method ?? "GET"} ${url}`);
+      // Never resolve; the caller must abort us at the deadline.
+      return new Promise<Response>((_, reject) => {
+        init.signal.addEventListener(
+          "abort",
+          () => reject(init.signal.reason ?? new Error("aborted")),
+          { once: true },
+        );
+      });
+    });
 
     const p = seedPostIdempotent(BASE, BODY, depsWithFetch(fetchMock));
     const settled = p.catch((e) => e);
@@ -208,9 +199,7 @@ describe("seedPostIdempotent", () => {
     expect(started).toEqual([`POST ${BASE}/api/posts`]);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(err.message).toMatch(
-      new RegExp(
-        `Failed to seed post before deadline \\(${SEED_TOTAL_DEADLINE_MS}ms\\)`,
-      ),
+      new RegExp(`Failed to seed post before deadline \\(${SEED_TOTAL_DEADLINE_MS}ms\\)`),
     );
   });
 
@@ -220,20 +209,18 @@ describe("seedPostIdempotent", () => {
     // must be aborted by the deadline. Prior to the fix the loop would
     // swallow the abort in slugExists and then wait a full 250 ms sleep
     // before throwing, so the diagnostic surfaced ~250 ms past deadline.
-    const fetchMock = vi.fn(
-      (_url: string, init: RequestInit & { signal: AbortSignal }) => {
-        if (init.method === "POST") {
-          return Promise.resolve(res(500, '{"error":"down"}'));
-        }
-        return new Promise<Response>((_, reject) => {
-          init.signal.addEventListener(
-            "abort",
-            () => reject(init.signal.reason ?? new Error("aborted")),
-            { once: true },
-          );
-        });
-      },
-    );
+    const fetchMock = vi.fn((_url: string, init: RequestInit & { signal: AbortSignal }) => {
+      if (init.method === "POST") {
+        return Promise.resolve(res(500, '{"error":"down"}'));
+      }
+      return new Promise<Response>((_, reject) => {
+        init.signal.addEventListener(
+          "abort",
+          () => reject(init.signal.reason ?? new Error("aborted")),
+          { once: true },
+        );
+      });
+    });
 
     const p = seedPostIdempotent(BASE, BODY, depsWithFetch(fetchMock));
     const settled = p.catch((e) => e);
@@ -246,16 +233,16 @@ describe("seedPostIdempotent", () => {
     const marker = { pending: true };
     const check = Promise.race([
       settled.then(() => ({ pending: false })),
-      Promise.resolve().then(() => Promise.resolve()).then(() => marker),
+      Promise.resolve()
+        .then(() => Promise.resolve())
+        .then(() => marker),
     ]);
     const outcome = await check;
     expect(outcome).not.toBe(marker); // proved settled at deadline
 
     const err = (await settled) as Error;
     expect(err.message).toMatch(
-      new RegExp(
-        `Failed to seed post before deadline \\(${SEED_TOTAL_DEADLINE_MS}ms\\)`,
-      ),
+      new RegExp(`Failed to seed post before deadline \\(${SEED_TOTAL_DEADLINE_MS}ms\\)`),
     );
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
@@ -270,24 +257,22 @@ describe("seedPostIdempotent", () => {
     // throwing at 26 s — this test locks the settlement to the deadline.
     let attempt = 0;
     let getStarted = 0;
-    const fetchMock = vi.fn(
-      (_url: string, init: RequestInit & { signal: AbortSignal }) => {
-        if (init.method === "POST") {
-          attempt++;
-          return Promise.resolve(res(500, '{"error":"down"}'));
-        }
-        getStarted++;
-        if (getStarted < 5) return Promise.resolve(res(404));
-        // 5th GET hangs.
-        return new Promise<Response>((_, reject) => {
-          init.signal.addEventListener(
-            "abort",
-            () => reject(init.signal.reason ?? new Error("aborted")),
-            { once: true },
-          );
-        });
-      },
-    );
+    const fetchMock = vi.fn((_url: string, init: RequestInit & { signal: AbortSignal }) => {
+      if (init.method === "POST") {
+        attempt++;
+        return Promise.resolve(res(500, '{"error":"down"}'));
+      }
+      getStarted++;
+      if (getStarted < 5) return Promise.resolve(res(404));
+      // 5th GET hangs.
+      return new Promise<Response>((_, reject) => {
+        init.signal.addEventListener(
+          "abort",
+          () => reject(init.signal.reason ?? new Error("aborted")),
+          { once: true },
+        );
+      });
+    });
 
     const p = seedPostIdempotent(BASE, BODY, depsWithFetch(fetchMock));
     const settled = p.catch((e) => e);
@@ -297,15 +282,15 @@ describe("seedPostIdempotent", () => {
     const marker = { pending: true };
     const outcome = await Promise.race([
       settled.then(() => ({ pending: false })),
-      Promise.resolve().then(() => Promise.resolve()).then(() => marker),
+      Promise.resolve()
+        .then(() => Promise.resolve())
+        .then(() => marker),
     ]);
     expect(outcome).not.toBe(marker);
 
     const err = (await settled) as Error;
     expect(err.message).toMatch(
-      new RegExp(
-        `Failed to seed post before deadline \\(${SEED_TOTAL_DEADLINE_MS}ms\\)`,
-      ),
+      new RegExp(`Failed to seed post before deadline \\(${SEED_TOTAL_DEADLINE_MS}ms\\)`),
     );
     expect(attempt).toBe(5); // reached but did not exceed attempt 5
   });
@@ -321,24 +306,22 @@ describe("seedPostIdempotent", () => {
     // we make POST 5 hang forever so the abort clearly fires during it.
     let postCount = 0;
     let getCount = 0;
-    const fetchMock = vi.fn(
-      (_url: string, init: RequestInit & { signal: AbortSignal }) => {
-        if (init.method === "POST") {
-          postCount++;
-          if (postCount < 5) return Promise.resolve(res(500));
-          // 5th POST hangs → aborted at deadline.
-          return new Promise<Response>((_, reject) => {
-            init.signal.addEventListener(
-              "abort",
-              () => reject(init.signal.reason ?? new Error("aborted")),
-              { once: true },
-            );
-          });
-        }
-        getCount++;
-        return Promise.resolve(res(404));
-      },
-    );
+    const fetchMock = vi.fn((_url: string, init: RequestInit & { signal: AbortSignal }) => {
+      if (init.method === "POST") {
+        postCount++;
+        if (postCount < 5) return Promise.resolve(res(500));
+        // 5th POST hangs → aborted at deadline.
+        return new Promise<Response>((_, reject) => {
+          init.signal.addEventListener(
+            "abort",
+            () => reject(init.signal.reason ?? new Error("aborted")),
+            { once: true },
+          );
+        });
+      }
+      getCount++;
+      return Promise.resolve(res(404));
+    });
 
     const p = seedPostIdempotent(BASE, BODY, depsWithFetch(fetchMock));
     const settled = p.catch((e) => e);

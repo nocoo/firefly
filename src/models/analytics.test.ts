@@ -42,9 +42,7 @@ describe("detectBot", () => {
   });
 
   it("detects CCBot as AI bot", () => {
-    const result = detectBot(
-      "CCBot/2.0 (https://commoncrawl.org/faq/)",
-    );
+    const result = detectBot("CCBot/2.0 (https://commoncrawl.org/faq/)");
     expect(result.isBot).toBe(true);
     expect(result.botName).toBe("CCBot");
     expect(result.botCategory).toBe("ai");
@@ -174,9 +172,7 @@ describe("parseDevice", () => {
   });
 
   it("detects legacy Opera user agents", () => {
-    const result = parseDevice(
-      "Opera/9.80 (Windows NT 6.1; WOW64) Presto/2.12.388 Version/12.18",
-    );
+    const result = parseDevice("Opera/9.80 (Windows NT 6.1; WOW64) Presto/2.12.388 Version/12.18");
     expect(result.browser).toBe("Opera");
     expect(result.os).toBe("Windows");
   });

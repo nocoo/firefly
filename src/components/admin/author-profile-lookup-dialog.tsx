@@ -4,10 +4,7 @@ import { useEffect, useState } from "react";
 import { Hash } from "@nocoo/basalt/icons";
 import { Button } from "@nocoo/basalt/components/button";
 import { CopyButton } from "@/components/admin/ai-agents-helpers";
-import {
-  buildAuthorProfileBrief,
-  profileLookupPath,
-} from "@/lib/author-profile-brief";
+import { buildAuthorProfileBrief, profileLookupPath } from "@/lib/author-profile-brief";
 
 export interface ProfileLookupAuthor {
   name: string;
@@ -105,10 +102,7 @@ export function AuthorProfileLookupDialog({
         onClick={(event) => event.stopPropagation()}
       >
         <div className="border-b border-basalt-border px-6 py-4">
-          <h2
-            id="profile-lookup-title"
-            className="text-lg font-semibold text-basalt-foreground"
-          >
+          <h2 id="profile-lookup-title" className="text-lg font-semibold text-basalt-foreground">
             公开资料查询
           </h2>
           <p className="mt-1 text-sm text-basalt-muted-foreground">
@@ -119,9 +113,7 @@ export function AuthorProfileLookupDialog({
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
           <div>
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-basalt-muted-foreground">
-                说明
-              </label>
+              <label className="text-xs font-medium text-basalt-muted-foreground">说明</label>
               <CopyButton text={brief} />
             </div>
             <pre className="mt-1 max-h-[240px] overflow-auto whitespace-pre-wrap rounded-md border border-basalt-border bg-basalt-secondary p-3 text-xs font-mono leading-relaxed text-basalt-foreground">
@@ -131,9 +123,7 @@ export function AuthorProfileLookupDialog({
 
           <div>
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium text-basalt-muted-foreground">
-                测试调用
-              </span>
+              <span className="text-xs font-medium text-basalt-muted-foreground">测试调用</span>
               <Button
                 type="button"
                 variant="outline"
@@ -151,15 +141,11 @@ export function AuthorProfileLookupDialog({
                 </span>
               )}
               {author.hash && !author.profilePublic && (
-                <span className="text-xs text-basalt-muted-foreground">
-                  未公开时会返回空结果。
-                </span>
+                <span className="text-xs text-basalt-muted-foreground">未公开时会返回空结果。</span>
               )}
             </div>
 
-            {tryError && (
-              <p className="text-sm text-basalt-destructive">{tryError}</p>
-            )}
+            {tryError && <p className="text-sm text-basalt-destructive">{tryError}</p>}
 
             {trial && (
               <div className="rounded-md border border-basalt-border bg-basalt-secondary">
@@ -187,11 +173,7 @@ export function AuthorProfileLookupDialog({
   );
 }
 
-export function ProfileLookupButton({
-  onClick,
-}: {
-  onClick: () => void;
-}) {
+export function ProfileLookupButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"

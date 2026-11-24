@@ -79,9 +79,7 @@ export function SystemMonitorDashboard() {
   }
 
   const { memory } = stats;
-  const heapPct = Math.round(
-    (memory.current.heapUsedMB / memory.current.heapTotalMB) * 100,
-  );
+  const heapPct = Math.round((memory.current.heapUsedMB / memory.current.heapTotalMB) * 100);
 
   return (
     <div className="space-y-6">
@@ -103,9 +101,7 @@ export function SystemMonitorDashboard() {
           label="堆内存使用"
           value={`${memory.current.heapUsedMB} MB`}
           subtext={`占比 ${heapPct}%，共 ${memory.current.heapTotalMB} MB`}
-          trend={
-            memory.current.heapUsedMB > memory.summary.avgHeapMB ? "up" : "down"
-          }
+          trend={memory.current.heapUsedMB > memory.summary.avgHeapMB ? "up" : "down"}
           index={0}
         />
         <StatCard
@@ -131,10 +127,7 @@ export function SystemMonitorDashboard() {
         />
       </div>
 
-      <MemoryTrendChart
-        history={memory.history}
-        sampleCount={memory.summary.sampleCount}
-      />
+      <MemoryTrendChart history={memory.history} sampleCount={memory.summary.sampleCount} />
 
       <MemoryRecommendation memory={memory} />
     </div>

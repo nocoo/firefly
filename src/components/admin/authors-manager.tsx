@@ -8,10 +8,7 @@ import type { HumanWithMeta } from "@/models/types";
 import { Button } from "@nocoo/basalt/components/button";
 import { AdminPageHeader } from "./page-header";
 import { ConfirmDialog } from "./confirm-dialog";
-import {
-  AuthorProfileLookupDialog,
-  ProfileLookupButton,
-} from "./author-profile-lookup-dialog";
+import { AuthorProfileLookupDialog, ProfileLookupButton } from "./author-profile-lookup-dialog";
 
 export interface HumanWithAvatarUrl extends HumanWithMeta {
   avatarUrl: string | null;
@@ -28,12 +25,8 @@ export function AuthorsManager({
   const router = useRouter();
   const [authors, setAuthors] = useState(initialAuthors);
   const totalAuthors = authors.length;
-  const [confirmDelete, setConfirmDelete] = useState<HumanWithAvatarUrl | null>(
-    null,
-  );
-  const [lookupAuthor, setLookupAuthor] = useState<HumanWithAvatarUrl | null>(
-    null,
-  );
+  const [confirmDelete, setConfirmDelete] = useState<HumanWithAvatarUrl | null>(null);
+  const [lookupAuthor, setLookupAuthor] = useState<HumanWithAvatarUrl | null>(null);
 
   const handleSetDefault = async (author: HumanWithAvatarUrl) => {
     try {
@@ -83,10 +76,7 @@ export function AuthorsManager({
         backHref="/admin"
         backLabel="返回管理"
         actions={
-          <Button
-            icon={<Plus />}
-            onClick={() => router.push("/admin/authors/new")}
-          >
+          <Button icon={<Plus />} onClick={() => router.push("/admin/authors/new")}>
             创建作者
           </Button>
         }
@@ -215,9 +205,7 @@ export function AuthorsManager({
         }}
         title="删除作者"
         description={
-          confirmDelete
-            ? `确定删除「${confirmDelete.name}」？有文章或默认作者不能删除。`
-            : ""
+          confirmDelete ? `确定删除「${confirmDelete.name}」？有文章或默认作者不能删除。` : ""
         }
         destructive
         confirmLabel="删除"

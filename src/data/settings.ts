@@ -133,9 +133,7 @@ export async function getSiteSettings(db: Db, useCache = true): Promise<SiteSett
 }
 
 async function getSiteSettingsUncached(db: Db): Promise<SiteSettings> {
-  const row = await db.firstOrNull<SiteSettingsRow>(
-    "SELECT * FROM site_settings WHERE id = 1",
-  );
+  const row = await db.firstOrNull<SiteSettingsRow>("SELECT * FROM site_settings WHERE id = 1");
 
   return row ? parseRow(row) : { ...DEFAULTS };
 }
@@ -185,9 +183,7 @@ const settingsFields: Record<string, FieldDef> = {
  * Normalize input values before building SET clauses.
  * Applies clamping, slicing, bool→int, and JSON.stringify.
  */
-function normalizeSettingsInput(
-  input: UpdateSiteSettingsInput,
-): Record<string, unknown> {
+function normalizeSettingsInput(input: UpdateSiteSettingsInput): Record<string, unknown> {
   const normalized: Record<string, unknown> = {};
 
   if (input.postsPerPage !== undefined) {
@@ -199,9 +195,11 @@ function normalizeSettingsInput(
   if (input.fontStyle !== undefined) normalized.fontStyle = input.fontStyle;
   if (input.siteName !== undefined) normalized.siteName = input.siteName.slice(0, 255);
   if (input.siteTagline !== undefined) normalized.siteTagline = input.siteTagline.slice(0, 500);
-  if (input.siteDescription !== undefined) normalized.siteDescription = input.siteDescription.slice(0, 1000);
+  if (input.siteDescription !== undefined)
+    normalized.siteDescription = input.siteDescription.slice(0, 1000);
   if (input.authorEmail !== undefined) normalized.authorEmail = input.authorEmail.slice(0, 255);
-  if (input.twitterHandle !== undefined) normalized.twitterHandle = input.twitterHandle.slice(0, 50);
+  if (input.twitterHandle !== undefined)
+    normalized.twitterHandle = input.twitterHandle.slice(0, 50);
   if (input.socialLinks !== undefined) normalized.socialLinks = JSON.stringify(input.socialLinks);
   if (input.wechatName !== undefined) normalized.wechatName = input.wechatName;
   if (input.wechatQrImageUrl !== undefined) normalized.wechatQrImageUrl = input.wechatQrImageUrl;
@@ -223,10 +221,7 @@ export async function updateSiteSettings(
 
   setClauses.push("updated_at = unixepoch()");
 
-  await db.execute(
-    `UPDATE site_settings SET ${setClauses.join(", ")} WHERE id = 1`,
-    params,
-  );
+  await db.execute(`UPDATE site_settings SET ${setClauses.join(", ")} WHERE id = 1`, params);
 
   invalidateSettingsCache();
   return getSiteSettings(db);
@@ -241,10 +236,7 @@ export async function updateSiteSettings(
  * This is the only way to change `site_logo_version` — the general
  * `updateSiteSettings()` does not accept it.
  */
-export async function updateSiteLogoVersion(
-  db: Db,
-  version: string | null,
-): Promise<SiteSettings> {
+export async function updateSiteLogoVersion(db: Db, version: string | null): Promise<SiteSettings> {
   await db.execute(
     "UPDATE site_settings SET site_logo_version = ?, updated_at = unixepoch() WHERE id = 1",
     [version],
@@ -254,14 +246,10 @@ export async function updateSiteLogoVersion(
   return getSiteSettings(db);
 }
 
-export async function updateDefaultHumanId(
-  db: Db,
-  humanId: string,
-): Promise<SiteSettings> {
-  const human = await db.firstOrNull<{ id: string }>(
-    "SELECT id FROM humans WHERE id = ?",
-    [humanId],
-  );
+export async function updateDefaultHumanId(db: Db, humanId: string): Promise<SiteSettings> {
+  const human = await db.firstOrNull<{ id: string }>("SELECT id FROM humans WHERE id = ?", [
+    humanId,
+  ]);
   if (!human) {
     throw new Error("Default human not found");
   }

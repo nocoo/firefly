@@ -20,9 +20,7 @@ describe("parseToolResult", () => {
       content: [{ type: "image", data: "abc", mimeType: "image/png" }],
     } as CallToolResult;
 
-    expect(() => parseToolResult(result)).toThrow(
-      "Expected text content, got image",
-    );
+    expect(() => parseToolResult(result)).toThrow("Expected text content, got image");
   });
 });
 
@@ -42,8 +40,6 @@ describe("expectError", () => {
       content: [{ type: "image", data: "abc", mimeType: "image/png" }],
     } as CallToolResult;
 
-    expect(() => expectError(result, "failed")).toThrow(
-      "Expected text content, got image",
-    );
+    expect(() => expectError(result, "failed")).toThrow("Expected text content, got image");
   });
 });

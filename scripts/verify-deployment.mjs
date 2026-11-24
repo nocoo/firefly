@@ -17,13 +17,14 @@ function validateRelease(sourceSha, imageManifest) {
   } catch {
     throw new Error("RELEASE_IMAGES must be valid JSON");
   }
-  if (!Array.isArray(releases) || releases.length !== 1) throw new Error("expected exactly one deployed image");
+  if (!Array.isArray(releases) || releases.length !== 1)
+    throw new Error("expected exactly one deployed image");
   const [release] = releases;
   if (
-    release?.service !== "web"
-    || release.image !== "ghcr.io/nocoo/firefly"
-    || release.sourceSha !== sourceSha
-    || !/^sha256:[a-f0-9]{64}$/.test(release.digest ?? "")
+    release?.service !== "web" ||
+    release.image !== "ghcr.io/nocoo/firefly" ||
+    release.sourceSha !== sourceSha ||
+    !/^sha256:[a-f0-9]{64}$/.test(release.digest ?? "")
   ) {
     throw new Error("release manifest does not prove the Firefly image digest and source revision");
   }
@@ -39,8 +40,8 @@ function validateTarget(target) {
     throw new Error("DEPLOY_URL must be an absolute URL");
   }
   if (
-    url.href !== "https://lizheng.blog/"
-    || !["https://lizheng.blog", "https://lizheng.blog/"].includes(target)
+    url.href !== "https://lizheng.blog/" ||
+    !["https://lizheng.blog", "https://lizheng.blog/"].includes(target)
   ) {
     throw new Error("DEPLOY_URL must be the canonical https://lizheng.blog origin without a path");
   }
@@ -62,13 +63,13 @@ async function verifyProduction({ target, originMarker, expectedVersion, fetchIm
     const liveResponse = await fetchResponse(fetchImpl, new URL("/api/live", origin));
     const live = await liveResponse.json().catch(() => null);
     if (
-      liveResponse.status === 200
-      && live?.status === "ok"
-      && live.component === "firefly"
-      && live.version === expectedVersion
-      && live.database?.connected === true
-      && liveResponse.headers.get("x-firefly-origin") === originMarker
-      && liveResponse.headers.get("cache-control") === "no-store"
+      liveResponse.status === 200 &&
+      live?.status === "ok" &&
+      live.component === "firefly" &&
+      live.version === expectedVersion &&
+      live.database?.connected === true &&
+      liveResponse.headers.get("x-firefly-origin") === originMarker &&
+      liveResponse.headers.get("cache-control") === "no-store"
     ) {
       return `Production origin verified: ${originMarker}, Firefly ${expectedVersion}, database connected`;
     }

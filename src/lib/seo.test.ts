@@ -33,26 +33,39 @@ describe("homepage social metadata", () => {
       description: meta.description,
       type: "website",
       siteName: testSite.siteName,
-      images: [{
-        url: new URL(homeSocial.image.url, SITE_URL).href,
-        width: 1200, height: 630, type: "image/jpeg", alt: homeSocial.image.alt,
-      }],
+      images: [
+        {
+          url: new URL(homeSocial.image.url, SITE_URL).href,
+          width: 1200,
+          height: 630,
+          type: "image/jpeg",
+          alt: homeSocial.image.alt,
+        },
+      ],
     });
     expect(meta.twitter).toMatchObject({ card: "summary_large_image", title: testSite.siteName });
     expect(meta.alternates?.canonical).toBe(SITE_URL);
   });
 
   it("keeps article titles and featured images independent of the homepage", () => {
-    const meta = buildPageMeta({
-      title: "文章自己的标题", description: "文章自己的摘要", path: "/2026/09/article",
-      type: "article", image: "https://images.example.com/cover.jpg",
-    }, testSite);
+    const meta = buildPageMeta(
+      {
+        title: "文章自己的标题",
+        description: "文章自己的摘要",
+        path: "/2026/09/article",
+        type: "article",
+        image: "https://images.example.com/cover.jpg",
+      },
+      testSite,
+    );
     expect(meta.openGraph).toMatchObject({
-      title: "文章自己的标题", type: "article",
+      title: "文章自己的标题",
+      type: "article",
       images: [{ url: "https://images.example.com/cover.jpg" }],
     });
     expect(meta.twitter).toMatchObject({
-      title: "文章自己的标题", images: ["https://images.example.com/cover.jpg"],
+      title: "文章自己的标题",
+      images: ["https://images.example.com/cover.jpg"],
     });
   });
 });
@@ -78,35 +91,44 @@ describe("locale constants", () => {
 
 describe("buildPageMeta", () => {
   it("uses zh-CN locale", () => {
-    const meta = buildPageMeta({
-      title: "Test",
-      description: "Test description",
-      path: "/test",
-    }, testSite);
+    const meta = buildPageMeta(
+      {
+        title: "Test",
+        description: "Test description",
+        path: "/test",
+      },
+      testSite,
+    );
 
     expect(meta.openGraph?.locale).toBe("zh_CN");
     expect(meta.alternates?.languages).toEqual({ "zh-CN": `${SITE_URL}/test` });
   });
 
   it("sets canonical URL from path", () => {
-    const meta = buildPageMeta({
-      title: "Test",
-      description: "Desc",
-      path: "/2026/03/hello",
-    }, testSite);
+    const meta = buildPageMeta(
+      {
+        title: "Test",
+        description: "Desc",
+        path: "/2026/03/hello",
+      },
+      testSite,
+    );
 
     expect(meta.alternates?.canonical).toBe(`${SITE_URL}/2026/03/hello`);
   });
 
   it("includes article metadata when type is article", () => {
-    const meta = buildPageMeta({
-      title: "Post",
-      description: "Post desc",
-      path: "/post",
-      type: "article",
-      publishedTime: "2026-03-24T00:00:00.000Z",
-      modifiedTime: "2026-03-24T12:00:00.000Z",
-    }, testSite);
+    const meta = buildPageMeta(
+      {
+        title: "Post",
+        description: "Post desc",
+        path: "/post",
+        type: "article",
+        publishedTime: "2026-03-24T00:00:00.000Z",
+        modifiedTime: "2026-03-24T12:00:00.000Z",
+      },
+      testSite,
+    );
 
     const og = meta.openGraph as Record<string, unknown>;
     expect(og.type).toBe("article");
@@ -115,71 +137,91 @@ describe("buildPageMeta", () => {
   });
 
   it("uses summary_large_image twitter card when image is provided", () => {
-    const meta = buildPageMeta({
-      title: "Test",
-      description: "Desc",
-      path: "/test",
-      image: "https://example.com/img.jpg",
-    }, testSite);
+    const meta = buildPageMeta(
+      {
+        title: "Test",
+        description: "Desc",
+        path: "/test",
+        image: "https://example.com/img.jpg",
+      },
+      testSite,
+    );
 
     const twitter = meta.twitter as Record<string, unknown>;
     expect(twitter.card).toBe("summary_large_image");
   });
 
   it("includes keywords when provided", () => {
-    const meta = buildPageMeta({
-      title: "Test",
-      description: "Desc",
-      path: "/test",
-      keywords: ["react", "nextjs"],
-    }, testSite);
+    const meta = buildPageMeta(
+      {
+        title: "Test",
+        description: "Desc",
+        path: "/test",
+        keywords: ["react", "nextjs"],
+      },
+      testSite,
+    );
 
     expect(meta.keywords).toEqual(["react", "nextjs"]);
   });
 
   it("uses site identity for author and siteName", () => {
-    const meta = buildPageMeta({
-      title: "Test",
-      description: "Desc",
-      path: "/test",
-    }, testSite);
+    const meta = buildPageMeta(
+      {
+        title: "Test",
+        description: "Desc",
+        path: "/test",
+      },
+      testSite,
+    );
 
     expect(meta.authors).toEqual([{ name: "Test Author", url: SITE_URL }]);
     expect(meta.openGraph?.siteName).toBe("Test Blog");
   });
 
   it("uses authorOverride when provided", () => {
-    const meta = buildPageMeta({
-      title: "Test",
-      description: "Desc",
-      path: "/test",
-      authorOverride: { name: "Claude Daily", url: `${SITE_URL}/agents/claude-daily` },
-    }, testSite);
+    const meta = buildPageMeta(
+      {
+        title: "Test",
+        description: "Desc",
+        path: "/test",
+        authorOverride: { name: "Claude Daily", url: `${SITE_URL}/agents/claude-daily` },
+      },
+      testSite,
+    );
 
-    expect(meta.authors).toEqual([{ name: "Claude Daily", url: `${SITE_URL}/agents/claude-daily` }]);
+    expect(meta.authors).toEqual([
+      { name: "Claude Daily", url: `${SITE_URL}/agents/claude-daily` },
+    ]);
     expect(meta.openGraph?.siteName).toBe("Test Blog");
   });
 
   it("uses authorOverride in article OG authors", () => {
-    const meta = buildPageMeta({
-      title: "AI Post",
-      description: "Desc",
-      path: "/post",
-      type: "article",
-      publishedTime: "2026-03-24T00:00:00.000Z",
-      authorOverride: { name: "Claude Daily", url: `${SITE_URL}/agents/claude-daily` },
-    }, testSite);
+    const meta = buildPageMeta(
+      {
+        title: "AI Post",
+        description: "Desc",
+        path: "/post",
+        type: "article",
+        publishedTime: "2026-03-24T00:00:00.000Z",
+        authorOverride: { name: "Claude Daily", url: `${SITE_URL}/agents/claude-daily` },
+      },
+      testSite,
+    );
 
     const og = meta.openGraph as Record<string, unknown>;
     expect(og.authors).toEqual(["Claude Daily"]);
   });
 
   it("omits twitter handle when empty", () => {
-    const meta = buildPageMeta({
-      title: "Test",
-      description: "Desc",
-      path: "/test",
-    }, { ...testSite, twitterHandle: "" });
+    const meta = buildPageMeta(
+      {
+        title: "Test",
+        description: "Desc",
+        path: "/test",
+      },
+      { ...testSite, twitterHandle: "" },
+    );
 
     const twitter = meta.twitter as Record<string, unknown>;
     expect(twitter.site).toBeUndefined();
@@ -192,11 +234,14 @@ describe("title composition (regression)", () => {
     const page = 2;
     const title = `Page ${page}`;
 
-    const meta = buildPageMeta({
-      title,
-      description: "Page 2",
-      path: `/page/${page}`,
-    }, testSite);
+    const meta = buildPageMeta(
+      {
+        title,
+        description: "Page 2",
+        path: `/page/${page}`,
+      },
+      testSite,
+    );
 
     expect(meta.title).toBe("Page 2");
     expect(meta.title).not.toContain(testSite.siteName);
@@ -204,11 +249,14 @@ describe("title composition (regression)", () => {
 
   it("category page title should NOT contain siteName", () => {
     const title = "JavaScript";
-    const meta = buildPageMeta({
-      title,
-      description: "Posts in JavaScript",
-      path: "/category/javascript",
-    }, testSite);
+    const meta = buildPageMeta(
+      {
+        title,
+        description: "Posts in JavaScript",
+        path: "/category/javascript",
+      },
+      testSite,
+    );
 
     expect(meta.title).toBe("JavaScript");
     expect(meta.title).not.toContain(testSite.siteName);
@@ -216,23 +264,29 @@ describe("title composition (regression)", () => {
 
   it("article page title should NOT contain siteName", () => {
     const title = "How to Use React Hooks";
-    const meta = buildPageMeta({
-      title,
-      description: "A guide to hooks",
-      path: "/2026/03/react-hooks",
-      type: "article",
-    }, testSite);
+    const meta = buildPageMeta(
+      {
+        title,
+        description: "A guide to hooks",
+        path: "/2026/03/react-hooks",
+        type: "article",
+      },
+      testSite,
+    );
 
     expect(meta.title).toBe("How to Use React Hooks");
     expect(meta.title).not.toContain(testSite.siteName);
   });
 
   it("OG title equals page title", () => {
-    const meta = buildPageMeta({
-      title: "Page 2",
-      description: "Desc",
-      path: "/page/2",
-    }, testSite);
+    const meta = buildPageMeta(
+      {
+        title: "Page 2",
+        description: "Desc",
+        path: "/page/2",
+      },
+      testSite,
+    );
 
     const og = meta.openGraph as Record<string, unknown>;
     expect(og.title).toBe("Page 2");
@@ -290,15 +344,18 @@ describe("postPath", () => {
     }
   });
 
-  it.each(["Asia/Shanghai", "America/Los_Angeles"])("uses UTC at year/month boundaries in %s", (timezone) => {
-    const original = process.env.TZ;
-    process.env.TZ = timezone;
-    try {
-      expect(postPath("hello", Date.parse("2026-03-31T23:30:00Z") / 1000)).toBe("/2026/03/hello");
-      expect(postPath("hello", Date.parse("2026-01-01T00:30:00Z") / 1000)).toBe("/2026/01/hello");
-    } finally {
-      if (original === undefined) Reflect.deleteProperty(process.env, "TZ");
-      else process.env.TZ = original;
-    }
-  });
+  it.each(["Asia/Shanghai", "America/Los_Angeles"])(
+    "uses UTC at year/month boundaries in %s",
+    (timezone) => {
+      const original = process.env.TZ;
+      process.env.TZ = timezone;
+      try {
+        expect(postPath("hello", Date.parse("2026-03-31T23:30:00Z") / 1000)).toBe("/2026/03/hello");
+        expect(postPath("hello", Date.parse("2026-01-01T00:30:00Z") / 1000)).toBe("/2026/01/hello");
+      } finally {
+        if (original === undefined) Reflect.deleteProperty(process.env, "TZ");
+        else process.env.TZ = original;
+      }
+    },
+  );
 });

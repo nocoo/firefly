@@ -19,7 +19,11 @@ export function isImageUrl(value: string): boolean {
   }
 }
 
-const imageUrl = z.string().trim().max(2048).refine(isImageUrl, "Use an HTTP(S) image URL or a site-relative path");
+const imageUrl = z
+  .string()
+  .trim()
+  .max(2048)
+  .refine(isImageUrl, "Use an HTTP(S) image URL or a site-relative path");
 
 export const wechatSettingsSchema = z.object({
   wechat_name: z.string().trim().max(255).optional(),

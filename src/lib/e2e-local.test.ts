@@ -66,15 +66,11 @@ describe("resolveLocalR2Path", () => {
 
   it("throws if E2E_R2_LOCAL_DIR is not set", () => {
     Reflect.deleteProperty(process.env, "E2E_R2_LOCAL_DIR");
-    expect(() => resolveLocalR2Path("foo.png")).toThrow(
-      "E2E_R2_LOCAL_DIR is not set",
-    );
+    expect(() => resolveLocalR2Path("foo.png")).toThrow("E2E_R2_LOCAL_DIR is not set");
   });
 
   it("rejects keys containing '..'", () => {
-    expect(() => resolveLocalR2Path("../etc/passwd")).toThrow(
-      "path traversal",
-    );
+    expect(() => resolveLocalR2Path("../etc/passwd")).toThrow("path traversal");
   });
 
   it("rejects absolute keys", () => {
@@ -95,9 +91,7 @@ describe("resolveLocalR2Path", () => {
     // fails for every legitimate target (e.g. '/foo'), so the escapes-root branch
     // fires. This documents the defensive guard's behaviour on degenerate roots.
     process.env.E2E_R2_LOCAL_DIR = "/";
-    expect(() => resolveLocalR2Path("foo")).toThrow(
-      "resolved path escapes local R2 root",
-    );
+    expect(() => resolveLocalR2Path("foo")).toThrow("resolved path escapes local R2 root");
   });
 
   it("allows empty key resolving exactly to the root (target === root)", () => {

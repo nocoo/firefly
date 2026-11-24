@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { generateR2Key, generateFireflyR2Key, getR2KeyPrefix, extractExtension, validateUpload, detectMimeType } from "./r2";
+import {
+  generateR2Key,
+  generateFireflyR2Key,
+  getR2KeyPrefix,
+  extractExtension,
+  validateUpload,
+  detectMimeType,
+} from "./r2";
 
 // ---------------------------------------------------------------------------
 // Test helpers — real magic byte headers for each format

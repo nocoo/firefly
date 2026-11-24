@@ -42,9 +42,7 @@ export interface UploadHandlers {
  * a stale loop keep `setUploading`/`setQueue`-ing after a newer batch took
  * over the visible state). Users can re-drop once the first batch finishes.
  */
-export function useMediaUpload(
-  onUploadComplete: (item: MediaWithUrl) => void,
-): UploadHandlers {
+export function useMediaUpload(onUploadComplete: (item: MediaWithUrl) => void): UploadHandlers {
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [queue, setQueue] = useState<UploadItem[]>([]);
@@ -108,9 +106,7 @@ export function useMediaUpload(
           const file = files[i];
           const itemId = items[i].id;
           setQueue((prev) =>
-            prev.map((it) =>
-              it.id === itemId ? { ...it, status: "uploading" } : it,
-            ),
+            prev.map((it) => (it.id === itemId ? { ...it, status: "uploading" } : it)),
           );
 
           try {
@@ -127,9 +123,7 @@ export function useMediaUpload(
               const msg = data.error ?? "上传失败";
               setQueue((prev) =>
                 prev.map((it) =>
-                  it.id === itemId
-                    ? { ...it, status: "error", errorMessage: msg }
-                    : it,
+                  it.id === itemId ? { ...it, status: "error", errorMessage: msg } : it,
                 ),
               );
               toast.danger(`上传失败：${file.name}: ${msg}`);
@@ -140,17 +134,13 @@ export function useMediaUpload(
             onUploadComplete({ ...data, url: data.url });
             successCount++;
             setQueue((prev) =>
-              prev.map((it) =>
-                it.id === itemId ? { ...it, status: "success" } : it,
-              ),
+              prev.map((it) => (it.id === itemId ? { ...it, status: "success" } : it)),
             );
           } catch (err) {
             const msg = err instanceof Error ? err.message : "上传失败";
             setQueue((prev) =>
               prev.map((it) =>
-                it.id === itemId
-                  ? { ...it, status: "error", errorMessage: msg }
-                  : it,
+                it.id === itemId ? { ...it, status: "error", errorMessage: msg } : it,
               ),
             );
             toast.danger(`上传失败：${file.name}`);

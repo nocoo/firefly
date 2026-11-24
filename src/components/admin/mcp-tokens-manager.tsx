@@ -18,11 +18,7 @@ interface McpTokensManagerProps {
   mcpUrl: string;
 }
 
-async function callApi(
-  url: string,
-  init: RequestInit,
-  fallbackError: string,
-): Promise<unknown> {
+async function callApi(url: string, init: RequestInit, fallbackError: string): Promise<unknown> {
   const res = await fetch(url, init);
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -42,10 +38,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
     id: string;
   } | null>(null);
 
-  const revokedCount = useMemo(
-    () => tokens.filter((t) => t.revoked === 1).length,
-    [tokens],
-  );
+  const revokedCount = useMemo(() => tokens.filter((t) => t.revoked === 1).length, [tokens]);
 
   const [revokeTargetId, setRevokeTargetId] = useState<string | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
@@ -156,10 +149,7 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
       )}
 
       {newToken && (
-        <McpNewTokenBanner
-          accessToken={newToken.access_token}
-          onClose={() => setNewToken(null)}
-        />
+        <McpNewTokenBanner accessToken={newToken.access_token} onClose={() => setNewToken(null)} />
       )}
 
       <McpTokenCreateForm
@@ -181,7 +171,8 @@ export function McpTokensManager({ tokens, mcpUrl }: McpTokensManagerProps) {
         <div className="space-y-3">
           {revokedCount > 0 && (
             <div className="flex justify-end">
-              <button type="button"
+              <button
+                type="button"
                 onClick={() => setShowBulkDelete(true)}
                 className="inline-flex items-center gap-1.5 text-xs text-basalt-muted-foreground hover:text-basalt-destructive transition-colors"
               >

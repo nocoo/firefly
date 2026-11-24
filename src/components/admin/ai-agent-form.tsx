@@ -56,11 +56,7 @@ function buildSaveBody(args: {
   return isNew ? { ...base, categoryId } : base;
 }
 
-export function AiAgentForm({
-  agent,
-  categories,
-  initialAvatarUrl,
-}: AiAgentFormProps) {
+export function AiAgentForm({ agent, categories, initialAvatarUrl }: AiAgentFormProps) {
   const router = useRouter();
   const isNew = !agent;
 
@@ -102,9 +98,7 @@ export function AiAgentForm({
         description,
         categoryId,
       });
-      const url = isNew
-        ? "/api/admin/ai-agents"
-        : `/api/admin/ai-agents/${agent.id}`;
+      const url = isNew ? "/api/admin/ai-agents" : `/api/admin/ai-agents/${agent.id}`;
       const method = isNew ? "POST" : "PATCH";
 
       const res = await fetch(url, {
@@ -185,12 +179,15 @@ export function AiAgentForm({
             </div>
 
             <div>
-              <label htmlFor="ai-agent-category" className="text-sm font-medium text-basalt-foreground">分类 *</label>
+              <label
+                htmlFor="ai-agent-category"
+                className="text-sm font-medium text-basalt-foreground"
+              >
+                分类 *
+              </label>
               <Select
                 value={categoryId === "" ? EMPTY_CATEGORY : categoryId}
-                onValueChange={(next) =>
-                  setCategoryId(next === EMPTY_CATEGORY ? "" : next)
-                }
+                onValueChange={(next) => setCategoryId(next === EMPTY_CATEGORY ? "" : next)}
                 disabled={!isNew}
               >
                 <SelectTrigger id="ai-agent-category" className="mt-1">
@@ -223,9 +220,7 @@ export function AiAgentForm({
 
             {!isNew && agent && (
               <div>
-                <label className="text-sm font-medium text-basalt-foreground">
-                  Author ID
-                </label>
+                <label className="text-sm font-medium text-basalt-foreground">Author ID</label>
                 <div className="mt-1 flex items-center gap-2 rounded-md border border-basalt-border bg-basalt-secondary px-3 py-2">
                   <code className="flex-1 text-xs font-mono text-basalt-foreground select-all">
                     {agent.id}
@@ -253,10 +248,7 @@ export function AiAgentForm({
           <Button onClick={handleSave} disabled={saving} loading={saving}>
             {isNew ? "创建代理" : "保存更改"}
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => router.push("/admin/ai-agents")}
-          >
+          <Button variant="outline" onClick={() => router.push("/admin/ai-agents")}>
             取消
           </Button>
         </div>

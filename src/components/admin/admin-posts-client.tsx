@@ -11,10 +11,7 @@ import { AdminPostsListView } from "@/components/admin/admin-posts-list-view";
 import { AdminPostsGridView } from "@/components/admin/admin-posts-grid-view";
 import { AdminPageHeader } from "./page-header";
 import { Button } from "@nocoo/basalt/components/button";
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@nocoo/basalt/components/toggle-group";
+import { ToggleGroup, ToggleGroupItem } from "@nocoo/basalt/components/toggle-group";
 
 // ---------------------------------------------------------------------------
 // View-mode external store — keeps preference in localStorage across tabs
@@ -163,13 +160,7 @@ export function AdminPostsClient({
             </Button>
           </>
         }
-        filters={
-          <PostFilters
-            categories={categories}
-            tags={tags}
-            yearCounts={yearCounts}
-          />
-        }
+        filters={<PostFilters categories={categories} tags={tags} yearCounts={yearCounts} />}
       />
 
       {selectedIds.size > 0 && (

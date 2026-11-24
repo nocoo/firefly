@@ -12,10 +12,7 @@ export const metadata: Metadata = {
 
 export default async function AiAgentsPage() {
   const db = getDb();
-  const [agents, categories] = await Promise.all([
-    listAiAgents(db),
-    listCategories(db),
-  ]);
+  const [agents, categories] = await Promise.all([listAiAgents(db), listCategories(db)]);
   const mcpUrl = `${SITE_URL}/api/mcp`;
 
   // Pre-compute avatar URLs on the server (getAgentAvatarUrl is server-only)
@@ -25,11 +22,5 @@ export default async function AiAgentsPage() {
     avatarUrl: getAgentAvatarUrl(agent.id, agent.avatar_version, 64),
   }));
 
-  return (
-    <AiAgentsManager
-      agents={agentsWithAvatarUrls}
-      categories={categories}
-      mcpUrl={mcpUrl}
-    />
-  );
+  return <AiAgentsManager agents={agentsWithAvatarUrls} categories={categories} mcpUrl={mcpUrl} />;
 }

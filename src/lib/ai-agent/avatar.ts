@@ -15,11 +15,7 @@
 import "server-only";
 import { getR2PublicUrl } from "../r2-client";
 import { getR2KeyPrefix } from "../r2";
-import {
-  buildAgentAvatarUrl,
-  AVATAR_SIZES,
-  type AvatarSize,
-} from "./avatar-url";
+import { buildAgentAvatarUrl, AVATAR_SIZES, type AvatarSize } from "./avatar-url";
 
 // Re-export types for convenience
 export { AVATAR_SIZES, type AvatarSize } from "./avatar-url";
@@ -48,13 +44,7 @@ export function getAgentAvatarUrl(
   avatarVersion: string | null,
   size: AvatarSize,
 ): string | null {
-  return buildAgentAvatarUrl(
-    getR2PublicUrl(),
-    getR2KeyPrefix(),
-    agentId,
-    avatarVersion,
-    size,
-  );
+  return buildAgentAvatarUrl(getR2PublicUrl(), getR2KeyPrefix(), agentId, avatarVersion, size);
 }
 
 /**
@@ -62,11 +52,7 @@ export function getAgentAvatarUrl(
  *
  * @param agentId - The agent's stable ID (not slug)
  */
-export function getAgentAvatarR2Key(
-  agentId: string,
-  version: string,
-  size: AvatarSize,
-): string {
+export function getAgentAvatarR2Key(agentId: string, version: string, size: AvatarSize): string {
   return `${getAvatarBasePath()}/${agentId}/${version}/avatar-${size}.jpg`;
 }
 
@@ -75,9 +61,6 @@ export function getAgentAvatarR2Key(
  *
  * @param agentId - The agent's stable ID (not slug)
  */
-export function getAllAvatarR2Keys(
-  agentId: string,
-  version: string,
-): string[] {
+export function getAllAvatarR2Keys(agentId: string, version: string): string[] {
   return AVATAR_SIZES.map((size) => getAgentAvatarR2Key(agentId, version, size));
 }

@@ -5,9 +5,7 @@ import { ResponsiveContainer as RechartsResponsiveContainer } from "recharts";
 
 const CHART_RESIZE_DEBOUNCE_MS = 180;
 
-type DashboardResponsiveContainerProps = ComponentProps<
-  typeof RechartsResponsiveContainer
->;
+type DashboardResponsiveContainerProps = ComponentProps<typeof RechartsResponsiveContainer>;
 
 /**
  * Wrapper around Recharts ResponsiveContainer that defers rendering

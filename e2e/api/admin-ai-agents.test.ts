@@ -333,9 +333,7 @@ describe("GET /api/admin/ai-agents/[id]/prompt", () => {
   it("returns generated prompt for agent", async () => {
     if (!testAgent) return;
 
-    const res = await fetch(
-      `${BASE}/api/admin/ai-agents/${testAgent.id}/prompt`,
-    );
+    const res = await fetch(`${BASE}/api/admin/ai-agents/${testAgent.id}/prompt`);
     expect(res.status).toBe(200);
 
     const body = await res.json();
@@ -376,13 +374,10 @@ describe("POST/DELETE /api/admin/ai-agents/[id]/avatar", () => {
     if (!testAgent) return;
 
     const formData = new FormData();
-    const res = await fetch(
-      `${BASE}/api/admin/ai-agents/${testAgent.id}/avatar`,
-      {
-        method: "POST",
-        body: formData,
-      },
-    );
+    const res = await fetch(`${BASE}/api/admin/ai-agents/${testAgent.id}/avatar`, {
+      method: "POST",
+      body: formData,
+    });
 
     expect(res.status).toBe(400);
   });
@@ -390,12 +385,9 @@ describe("POST/DELETE /api/admin/ai-agents/[id]/avatar", () => {
   it("returns 404 when deleting avatar that does not exist", async () => {
     if (!testAgent) return;
 
-    const res = await fetch(
-      `${BASE}/api/admin/ai-agents/${testAgent.id}/avatar`,
-      {
-        method: "DELETE",
-      },
-    );
+    const res = await fetch(`${BASE}/api/admin/ai-agents/${testAgent.id}/avatar`, {
+      method: "DELETE",
+    });
 
     expect(res.status).toBe(404);
   });

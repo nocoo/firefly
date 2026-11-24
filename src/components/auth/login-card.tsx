@@ -126,12 +126,21 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
                 <div
                   className="h-4 w-8 rounded-full bg-basalt-background/80"
                   style={{
-                    boxShadow: "inset 0 1.5px 3px rgba(0,0,0,0.35), inset 0 -0.5px 1px rgba(255,255,255,0.1)",
+                    boxShadow:
+                      "inset 0 1.5px 3px rgba(0,0,0,0.35), inset 0 -0.5px 1px rgba(255,255,255,0.1)",
                   }}
                 />
                 <div className="flex items-center gap-2">
-                  <img src="/logo-24.png" alt="Firefly" width={24} height={24} className="h-5 w-5" />
-                  <span className="text-sm font-semibold text-basalt-primary-foreground">Firefly</span>
+                  <img
+                    src="/logo-24.png"
+                    alt="Firefly"
+                    width={24}
+                    height={24}
+                    className="h-5 w-5"
+                  />
+                  <span className="text-sm font-semibold text-basalt-primary-foreground">
+                    Firefly
+                  </span>
                 </div>
                 <span className="text-2xs font-medium uppercase tracking-widest text-basalt-primary-foreground/60">
                   BLOG
@@ -152,7 +161,13 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
             <div className="flex flex-1 flex-col items-center px-6 pt-6 pb-5">
               {/* Avatar placeholder */}
               <div className="h-24 w-24 overflow-hidden rounded-full bg-basalt-secondary dark:bg-basalt-background ring-1 ring-basalt-border">
-                <img src={logoUrl ?? "/logo-80.png"} alt="Firefly" width={96} height={96} className="h-full w-full object-cover" />
+                <img
+                  src={logoUrl ?? "/logo-80.png"}
+                  alt="Firefly"
+                  width={96}
+                  height={96}
+                  className="h-full w-full object-cover"
+                />
               </div>
 
               <p className="mt-5 text-lg font-semibold text-basalt-foreground">欢迎回来</p>
@@ -174,7 +189,8 @@ function LoginContent({ logoUrl }: { logoUrl: string | null }) {
               <div className="mt-5" />
 
               {/* Google Sign-in button */}
-              <button type="button"
+              <button
+                type="button"
                 onClick={handleGoogleLogin}
                 className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-basalt-secondary px-4 py-3 text-sm font-medium text-basalt-foreground transition-colors hover:bg-basalt-accent cursor-pointer"
               >

@@ -83,9 +83,7 @@ test.describe("Feature: Home page & post navigation", () => {
 
     // Then: URL matches /YYYY/MM/ and an h1 heading is visible
     expect(url).toMatch(/\/\d{4}\/\d{2}\//);
-    await expect(
-      page.getByRole("heading", { level: 1 }).first(),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
   });
 
   test("Given the home page lists category links, When I click one, Then it opens the category page", async ({
@@ -101,15 +99,10 @@ test.describe("Feature: Home page & post navigation", () => {
     test.skip(gate.skip, gate.reason);
 
     // When: click the first category link
-    await Promise.all([
-      page.waitForURL(/\/category\//, { timeout: 10_000 }),
-      categoryLink.click(),
-    ]);
+    await Promise.all([page.waitForURL(/\/category\//, { timeout: 10_000 }), categoryLink.click()]);
 
     // Then: the category page renders a heading
-    await expect(
-      page.getByRole("heading").first(),
-    ).toBeVisible();
+    await expect(page.getByRole("heading").first()).toBeVisible();
   });
 
   test("Given the home page lists tag links, When I click one, Then it opens the tag page", async ({
@@ -125,15 +118,10 @@ test.describe("Feature: Home page & post navigation", () => {
     test.skip(gate.skip, gate.reason);
 
     // When: click the first tag link
-    await Promise.all([
-      page.waitForURL(/\/tag\//, { timeout: 10_000 }),
-      tagLink.click(),
-    ]);
+    await Promise.all([page.waitForURL(/\/tag\//, { timeout: 10_000 }), tagLink.click()]);
 
     // Then: the tag page renders a heading
-    await expect(
-      page.getByRole("heading").first(),
-    ).toBeVisible();
+    await expect(page.getByRole("heading").first()).toBeVisible();
   });
 
   test("Given an archive year page, When I open /archive/YYYY, Then I see the year heading and a post-count line", async ({
@@ -213,9 +201,7 @@ test.describe("Feature: Post detail rendering", () => {
     // When: click; Then: lands on the category page
     await categoryLink.first().click();
     await page.waitForURL(/\/category\//, { timeout: 10_000 });
-    await expect(
-      page.getByRole("heading", { level: 1 }).first(),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
   });
 
   test("Given a post with tag pills, When I click a pill, Then it navigates to the tag page", async ({
@@ -240,9 +226,7 @@ test.describe("Feature: Post detail rendering", () => {
     // When: click; Then: lands on the tag page
     await tagPill.click();
     await page.waitForURL(/\/tag\//, { timeout: 10_000 });
-    await expect(
-      page.getByRole("heading", { level: 1 }).first(),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
   });
 
   test("Given a post detail page, When I inspect JSON-LD, Then it embeds both BlogPosting/Article and BreadcrumbList schemas", async ({
@@ -255,9 +239,7 @@ test.describe("Feature: Post detail rendering", () => {
 
     // CSS attribute selector: <script type="application/ld+json"> is the
     // standard JSON-LD embedding pattern; no semantic role applies.
-    const blocks = await page
-      .locator('script[type="application/ld+json"]')
-      .allTextContents();
+    const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
     expect(blocks.length).toBeGreaterThanOrEqual(1);
 
     const parsed = blocks
@@ -287,10 +269,9 @@ test.describe("Feature: Post detail rendering", () => {
     // Given/When: visit a deliberately impossible URL. Year/month don't need
     // to be plausible — getPostBySlug returning null triggers notFound()
     // before the URL date guard runs.
-    const response = await page.goto(
-      "/2099/01/non-existent-slug-12345",
-      { waitUntil: "networkidle" },
-    );
+    const response = await page.goto("/2099/01/non-existent-slug-12345", {
+      waitUntil: "networkidle",
+    });
 
     // Then: status is 404
     expect(response?.status()).toBe(404);
@@ -309,20 +290,11 @@ test.describe("Feature: Post detail rendering", () => {
 
     // Then: og:title is populated and og:type is "article".
     // CSS attribute selector: <meta> tags have no role/label/testid.
-    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
-      "content",
-      /.+/,
-    );
-    await expect(page.locator('meta[property="og:type"]')).toHaveAttribute(
-      "content",
-      "article",
-    );
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", /.+/);
+    await expect(page.locator('meta[property="og:type"]')).toHaveAttribute("content", "article");
 
     // Then: <link rel="canonical"> points to the post's /YYYY/MM/ URL.
     // buildPageMeta surfaces alternates.canonical via this link element.
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
-      "href",
-      /\/\d{4}\/\d{2}\//,
-    );
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/\d{4}\/\d{2}\//);
   });
 });

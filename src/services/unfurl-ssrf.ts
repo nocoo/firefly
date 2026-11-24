@@ -38,9 +38,7 @@ function isPrivateIPv6(hostname: string): boolean {
 
 /** Whether the given hostname/IP literal is a private/loopback address. */
 function isPrivateHost(host: string): boolean {
-  return (
-    host === "localhost" || isPrivateIPv4(host) || isPrivateIPv6(host)
-  );
+  return host === "localhost" || isPrivateIPv4(host) || isPrivateIPv6(host);
 }
 
 export function validateUrl(url: string): URL {
@@ -52,10 +50,7 @@ export function validateUrl(url: string): URL {
   }
 
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    throw new UnfurlError(
-      `URL not allowed: protocol "${parsed.protocol}" is not permitted`,
-      400,
-    );
+    throw new UnfurlError(`URL not allowed: protocol "${parsed.protocol}" is not permitted`, 400);
   }
 
   if (isPrivateHost(parsed.hostname)) {
@@ -72,9 +67,7 @@ export function validateUrl(url: string): URL {
  * Uses `all: true` so that dual-stacked domains that mix public and private
  * addresses (e.g. a public A record + a private AAAA record) are still caught.
  */
-export async function resolveAndValidateHostname(
-  hostname: string,
-): Promise<void> {
+export async function resolveAndValidateHostname(hostname: string): Promise<void> {
   // IP literals are already validated by validateUrl — no DNS needed
   if (IP_LITERAL_RE.test(hostname)) return;
 
@@ -84,10 +77,7 @@ export async function resolveAndValidateHostname(
     const result = await Promise.race([
       dns.promises.lookup(hostname, { family: 0, all: true }),
       new Promise<never>((_, reject) => {
-        dnsTimer = setTimeout(
-          () => reject(new Error("DNS timeout")),
-          DNS_TIMEOUT_MS,
-        );
+        dnsTimer = setTimeout(() => reject(new Error("DNS timeout")), DNS_TIMEOUT_MS);
       }),
     ]);
     addresses = result;
@@ -100,15 +90,10 @@ export async function resolveAndValidateHostname(
 
   for (const entry of addresses) {
     // Normalize IPv4-mapped IPv6 (e.g. ::ffff:127.0.0.1 → 127.0.0.1)
-    const normalized = entry.address.startsWith("::ffff:")
-      ? entry.address.slice(7)
-      : entry.address;
+    const normalized = entry.address.startsWith("::ffff:") ? entry.address.slice(7) : entry.address;
 
     if (isPrivateHost(normalized)) {
-      throw new UnfurlError(
-        "URL not allowed: resolves to private network",
-        400,
-      );
+      throw new UnfurlError("URL not allowed: resolves to private network", 400);
     }
   }
 }

@@ -1,17 +1,7 @@
 "use client";
 
 import type { HumanDetailResponse } from "@/models/analytics-types";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  PieChart,
-  Pie,
-  Cell,
-  CartesianGrid,
-} from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, CartesianGrid } from "recharts";
 import {
   CHART_COLORS,
   PIE_COLORS,
@@ -47,10 +37,7 @@ function DonutTooltip({
   return (
     <div className="rounded-widget border border-basalt-border bg-basalt-popover p-2.5 shadow-sm">
       <div className="flex items-center gap-2">
-        <div
-          className="h-3 w-3 rounded-full"
-          style={{ backgroundColor: item.payload.fill }}
-        />
+        <div className="h-3 w-3 rounded-full" style={{ backgroundColor: item.payload.fill }} />
         <span className="text-sm font-medium text-basalt-foreground">{item.name}</span>
       </div>
       <div className="text-sm text-basalt-muted-foreground">
@@ -74,10 +61,7 @@ function BarTooltip({
   return (
     <div className="rounded-widget border border-basalt-border bg-basalt-popover p-2.5 shadow-sm">
       <div className="flex items-center gap-2 text-xs">
-        <div
-          className="h-2 w-2 rounded-full"
-          style={{ backgroundColor: entry.color }}
-        />
+        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
         <span className="text-basalt-muted-foreground">{name}</span>
         <span className="ml-auto font-medium text-basalt-foreground">
           {formatNumber(entry.value)}
@@ -105,9 +89,7 @@ export function HumanTab({ data }: HumanTabProps) {
     <div className="space-y-4">
       {/* Recent 24h banner */}
       <div className="rounded-widget bg-basalt-secondary p-3 text-center ring-1 ring-basalt-border/80 shadow-basalt-card">
-        <span className="text-sm text-basalt-muted-foreground">
-          近 24 小时:
-        </span>{" "}
+        <span className="text-sm text-basalt-muted-foreground">近 24 小时:</span>{" "}
         <span className="text-lg font-semibold font-display tabular-nums">
           {formatNumber(data.recent24h)}
         </span>
@@ -172,10 +154,7 @@ export function HumanTab({ data }: HumanTabProps) {
                         <Cell key={entry.name} fill={entry.fill} />
                       ))}
                     </Pie>
-                    <Tooltip
-                      content={<DonutTooltip />}
-                      isAnimationActive={false}
-                    />
+                    <Tooltip content={<DonutTooltip />} isAnimationActive={false} />
                   </PieChart>
                 </DashboardResponsiveContainer>
               </div>
@@ -250,13 +229,7 @@ export function HumanTab({ data }: HumanTabProps) {
 // Shared sub-components
 // ---------------------------------------------------------------------------
 
-function Panel({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-widget bg-basalt-secondary p-4 ring-1 ring-basalt-border/80 shadow-basalt-card">
       <h3 className="text-sm font-medium text-basalt-foreground mb-3">{title}</h3>
@@ -315,9 +288,7 @@ function RankedTable({
                 row.label
               )}
             </td>
-            <td className="py-2 text-right tabular-nums font-medium">
-              {formatNumber(row.value)}
-            </td>
+            <td className="py-2 text-right tabular-nums font-medium">{formatNumber(row.value)}</td>
           </tr>
         ))}
       </tbody>

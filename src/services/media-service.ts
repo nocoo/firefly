@@ -6,11 +6,7 @@
 
 import type { Db } from "@/lib/db";
 import type { Attachment } from "@/models/types";
-import {
-  createMedia,
-  deleteMedia,
-  getMediaById,
-} from "@/data/entities/media";
+import { createMedia, deleteMedia, getMediaById } from "@/data/entities/media";
 
 // ---------------------------------------------------------------------------
 // R2 client interface (injected for testability)
@@ -45,11 +41,7 @@ export const MediaService = {
   // upload — primary: R2 upload; then: DB record creation
   // -------------------------------------------------------------------------
 
-  async upload(
-    db: Db,
-    r2: R2Client,
-    input: UploadMediaInput,
-  ): Promise<Attachment> {
+  async upload(db: Db, r2: R2Client, input: UploadMediaInput): Promise<Attachment> {
     // Primary: upload to R2 — throws on failure
     await r2.upload(input.r2Key, input.data, input.mimeType);
 
@@ -81,11 +73,7 @@ export const MediaService = {
   // delete — primary: DB delete; secondary: R2 delete (best-effort)
   // -------------------------------------------------------------------------
 
-  async delete(
-    db: Db,
-    r2: R2Client,
-    id: string,
-  ): Promise<boolean> {
+  async delete(db: Db, r2: R2Client, id: string): Promise<boolean> {
     // Fetch media to get R2 key before deletion
     const media = await getMediaById(db, id);
     if (!media) return false;
@@ -98,10 +86,7 @@ export const MediaService = {
     try {
       await r2.delete(media.r2_key);
     } catch (err) {
-      console.error(
-        `[MediaService] R2 delete failed for ${media.r2_key} (best-effort):`,
-        err,
-      );
+      console.error(`[MediaService] R2 delete failed for ${media.r2_key} (best-effort):`, err);
     }
 
     return true;

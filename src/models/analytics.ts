@@ -110,12 +110,9 @@ export function parseDevice(userAgent: string | null): DeviceInfo {
   // Browser
   let browser: string | null = null;
   if (/edg\//i.test(userAgent)) browser = "Edge";
-  else if (/opr\//i.test(userAgent) || /opera/i.test(userAgent))
-    browser = "Opera";
-  else if (/chrome\//i.test(userAgent) && !/edg/i.test(userAgent))
-    browser = "Chrome";
-  else if (/safari\//i.test(userAgent) && !/chrome/i.test(userAgent))
-    browser = "Safari";
+  else if (/opr\//i.test(userAgent) || /opera/i.test(userAgent)) browser = "Opera";
+  else if (/chrome\//i.test(userAgent) && !/edg/i.test(userAgent)) browser = "Chrome";
+  else if (/safari\//i.test(userAgent) && !/chrome/i.test(userAgent)) browser = "Safari";
   else if (/firefox\//i.test(userAgent)) browser = "Firefox";
 
   // OS (order matters: check iOS/Android before macOS/Linux)

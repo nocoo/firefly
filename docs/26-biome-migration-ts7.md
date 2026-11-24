@@ -16,15 +16,15 @@
 
 ## 目标形态
 
-| 项 | 值 |
-|---|---|
-| `typescript` | `7.0.2`（root + worker） |
-| `@typescript/native-preview` | `7.0.0-dev.20260707.2`（root only，Next marker） |
-| `@biomejs/biome` | `2.5.3` |
-| `oxc-parser` | `0.139.0`（pin exact） |
-| `build` | `tsc --noEmit && next build --webpack` |
-| `lint` | `typecheck && biome check … && gate:*` |
-| Next `@/*` paths | Explicit `webpack.resolve.alias` in `next.config.ts` — TS 7 has no `lib/typescript.js`, so Next cannot read `tsconfig.paths` itself |
+| 项                           | 值                                                                                                                                  |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `typescript`                 | `7.0.2`（root + worker）                                                                                                            |
+| `@typescript/native-preview` | `7.0.0-dev.20260707.2`（root only，Next marker）                                                                                    |
+| `@biomejs/biome`             | `2.5.3`                                                                                                                             |
+| `oxc-parser`                 | `0.139.0`（pin exact）                                                                                                              |
+| `build`                      | `tsc --noEmit && next build --webpack`                                                                                              |
+| `lint`                       | `typecheck && biome check … && gate:*`                                                                                              |
+| Next `@/*` paths             | Explicit `webpack.resolve.alias` in `next.config.ts` — TS 7 has no `lib/typescript.js`, so Next cannot read `tsconfig.paths` itself |
 
 移除：`eslint`、`@eslint/js`、`typescript-eslint`、`eslint-plugin-react-hooks`、
 `eslint.config.mjs`。

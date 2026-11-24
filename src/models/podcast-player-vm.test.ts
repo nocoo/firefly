@@ -10,9 +10,15 @@ import {
 describe("podcast-player-vm", () => {
   it("formats durations including hours and invalid values", () => {
     for (const [value, expected] of [
-      [0, "0:00"], [65, "1:05"], [558.9, "9:18"], [3665, "1:01:05"],
-      [-1, "0:00"], [Number.NaN, "0:00"], [Number.POSITIVE_INFINITY, "0:00"],
-    ] as const) expect(formatPlaybackTime(value)).toBe(expected);
+      [0, "0:00"],
+      [65, "1:05"],
+      [558.9, "9:18"],
+      [3665, "1:01:05"],
+      [-1, "0:00"],
+      [Number.NaN, "0:00"],
+      [Number.POSITIVE_INFINITY, "0:00"],
+    ] as const)
+      expect(formatPlaybackTime(value)).toBe(expected);
   });
 
   it("cycles all playback speeds", () => {
@@ -47,8 +53,13 @@ describe("podcast-player-vm", () => {
   it("retains the episode link without audio", () => {
     const { audio: _audio, ...card } = fixtureEp03Published();
     expect(buildPodcastPlayerViewModel(card).audio).toBeNull();
-    expect(buildPodcastPlayerViewModel({ ...card, audio: { url: "", mime: "audio/mpeg" } }).audio).toBeNull();
-    expect(buildPodcastPlayerViewModel({ ...card, audio: { url: "https://his.fm/audio.mp3", mime: "" } }).audio).toBeNull();
+    expect(
+      buildPodcastPlayerViewModel({ ...card, audio: { url: "", mime: "audio/mpeg" } }).audio,
+    ).toBeNull();
+    expect(
+      buildPodcastPlayerViewModel({ ...card, audio: { url: "https://his.fm/audio.mp3", mime: "" } })
+        .audio,
+    ).toBeNull();
   });
 
   it("uses an unknown label until media metadata supplies the duration", () => {

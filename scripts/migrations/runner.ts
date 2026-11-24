@@ -5,7 +5,7 @@
  */
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
-import { resolve, } from "node:path";
+import { resolve } from "node:path";
 import { createAdapter, type DbAdapter } from "./db-adapter.ts";
 
 // ---------------------------------------------------------------------------
@@ -65,13 +65,15 @@ function discoverMigrations(): MigrationFile[] {
     if (!match) return [];
     const path = resolve(MIGRATIONS_DIR, filename);
     const content = readFileSync(path, "utf-8");
-    return [{
-      name: filename.replace(/\.sql$/, ""),
-      filename,
-      path,
-      seq: parseInt(match[1], 10),
-      checksum: sha256(content),
-    }];
+    return [
+      {
+        name: filename.replace(/\.sql$/, ""),
+        filename,
+        path,
+        seq: parseInt(match[1], 10),
+        checksum: sha256(content),
+      },
+    ];
   });
 }
 
@@ -149,15 +151,11 @@ async function getApplied(adapter: DbAdapter): Promise<AppliedMigration[]> {
   );
 }
 
-async function applyOne(
-  adapter: DbAdapter,
-  migration: MigrationFile,
-): Promise<void> {
+async function applyOne(adapter: DbAdapter, migration: MigrationFile): Promise<void> {
   const sql = readFileSync(migration.path, "utf-8");
   const { preBatchStatements, batchSql } = parseMigration(sql);
 
-  const _totalParts =
-    preBatchStatements.length + (batchSql ? 1 : 0);
+  const _totalParts = preBatchStatements.length + (batchSql ? 1 : 0);
   const modeDesc = batchSql
     ? `${preBatchStatements.length} pre-batch + batch`
     : `${preBatchStatements.length} statements`;
@@ -215,9 +213,7 @@ async function applyOne(
 // Public API
 // ---------------------------------------------------------------------------
 
-export async function applyAll(
-  target: "prod" | "local",
-): Promise<ApplyResult> {
+export async function applyAll(target: "prod" | "local"): Promise<ApplyResult> {
   const adapter = createAdapter(target);
   console.log(`▸ Target: ${adapter.label}`);
 
@@ -242,20 +238,14 @@ export async function applyAll(
   // Check for missing files
   for (const a of applied) {
     if (!discovered.some((d) => d.name === a.name)) {
-      throw new Error(
-        `Migration "${a.name}" is recorded as applied but the .sql file is missing`,
-      );
+      throw new Error(`Migration "${a.name}" is recorded as applied but the .sql file is missing`);
     }
   }
 
   const pending = discovered.filter((d) => !appliedNames.has(d.name));
-  const skipped = discovered
-    .filter((d) => appliedNames.has(d.name))
-    .map((d) => d.name);
+  const skipped = discovered.filter((d) => appliedNames.has(d.name)).map((d) => d.name);
 
-  console.log(
-    `▸ Found ${discovered.length} migration files, ${applied.length} already applied`,
-  );
+  console.log(`▸ Found ${discovered.length} migration files, ${applied.length} already applied`);
 
   if (pending.length === 0) {
     console.log("▸ All up-to-date");
@@ -271,9 +261,7 @@ export async function applyAll(
   return { applied: appliedNames2, skipped, warnings };
 }
 
-export async function status(
-  target: "prod" | "local",
-): Promise<void> {
+export async function status(target: "prod" | "local"): Promise<void> {
   const adapter = createAdapter(target);
   console.log(`▸ Target: ${adapter.label}\n`);
 
@@ -289,32 +277,21 @@ export async function status(
   for (const m of discovered) {
     const prev = appliedMap.get(m.name);
     if (prev) {
-      const date = new Date(prev.applied_at * 1000)
-        .toISOString()
-        .replace("T", " ")
-        .slice(0, 19);
+      const date = new Date(prev.applied_at * 1000).toISOString().replace("T", " ").slice(0, 19);
       const match = prev.checksum === m.checksum ? "✓" : "⚠ changed";
-      console.log(
-        `  ${m.name.padEnd(23)} applied     ${date}  ${match}`,
-      );
+      console.log(`  ${m.name.padEnd(23)} applied     ${date}  ${match}`);
     } else {
-      console.log(
-        `  ${m.name.padEnd(23)} pending     ${"—".padEnd(19)}  —`,
-      );
+      console.log(`  ${m.name.padEnd(23)} pending     ${"—".padEnd(19)}  —`);
     }
   }
 
   // Check for applied but missing files
   for (const a of applied) {
     if (!discovered.some((d) => d.name === a.name)) {
-      console.log(
-        `  ${a.name.padEnd(23)} ⚠ MISSING   —                     —`,
-      );
+      console.log(`  ${a.name.padEnd(23)} ⚠ MISSING   —                     —`);
     }
   }
 
-  const pendingCount = discovered.filter(
-    (d) => !appliedMap.has(d.name),
-  ).length;
+  const pendingCount = discovered.filter((d) => !appliedMap.has(d.name)).length;
   console.log(`\n  ${applied.length} applied, ${pendingCount} pending`);
 }

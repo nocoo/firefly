@@ -66,9 +66,7 @@ describe.concurrent("POST /api/posts", () => {
     // Draft posts should NOT appear in public listing
     const listRes = await fetch(`${BASE}/api/posts`);
     const listBody = await listRes.json();
-    const found = listBody.posts.find(
-      (p: { slug: string }) => p.slug === slug,
-    );
+    const found = listBody.posts.find((p: { slug: string }) => p.slug === slug);
     expect(found).toBeUndefined();
 
     // Cleanup: delete the post

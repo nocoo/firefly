@@ -104,8 +104,7 @@ describe("POST /api/unfurl", () => {
     if (res.status !== 200) {
       const body = await res.json();
       const isOutboundFailure =
-        res.status === 502 &&
-        /failed to fetch url|dns resolution failed/i.test(body.error ?? "");
+        res.status === 502 && /failed to fetch url|dns resolution failed/i.test(body.error ?? "");
       if (isOutboundFailure) {
         ctx.skip();
         return;

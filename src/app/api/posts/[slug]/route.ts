@@ -2,10 +2,7 @@ import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { jsonResponse, errorResponse, notFoundResponse } from "@/lib/api";
-import {
-  BodyFieldTypeError,
-  readOptionalBodyString,
-} from "@/lib/api/body-fields";
+import { BodyFieldTypeError, readOptionalBodyString } from "@/lib/api/body-fields";
 import { getPostBySlug } from "@/data/entities/post";
 import { getPostBySlug as getPublicPostBySlug } from "@/data/public-content";
 import type { PostStatus } from "@/models/types";
@@ -33,10 +30,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     response.headers.set("Cache-Control", PUBLIC_CONTENT_CACHE_CONTROL);
     return response;
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }
 
@@ -84,7 +78,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       publishedAt: (body.publishedAt ?? body.published_at) as number | null | undefined,
       referenceUrl: (body.referenceUrl ?? body.reference_url) as string | null | undefined,
       referenceTitle: (body.referenceTitle ?? body.reference_title) as string | null | undefined,
-      referenceDescription: (body.referenceDescription ?? body.reference_description) as string | null | undefined,
+      referenceDescription: (body.referenceDescription ?? body.reference_description) as
+        | string
+        | null
+        | undefined,
       referenceImage: (body.referenceImage ?? body.reference_image) as string | null | undefined,
       podcastUrl,
       tagIds: (body.tagIds ?? body.tag_ids) as string[] | undefined,
@@ -94,16 +91,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     return jsonResponse(updated);
   } catch (error) {
-    if (
-      error instanceof PostAttributionError ||
-      error instanceof PostFieldValidationError
-    ) {
+    if (error instanceof PostAttributionError || error instanceof PostFieldValidationError) {
       return errorResponse(error.message, 400);
     }
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }
 
@@ -127,9 +118,6 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
 
     return jsonResponse({ deleted: true });
   } catch (error) {
-    return errorResponse(
-      error instanceof Error ? error.message : "Internal server error",
-      500,
-    );
+    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500);
   }
 }

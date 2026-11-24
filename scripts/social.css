@@ -13,8 +13,16 @@
   src: url("../assets/social/journal-cjk.woff2") format("woff2");
   font-weight: 400 700;
 }
-* { box-sizing: border-box; }
-html, body { width: 1200px; height: 630px; margin: 0; overflow: hidden; }
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  width: 1200px;
+  height: 630px;
+  margin: 0;
+  overflow: hidden;
+}
 .social-card {
   position: relative;
   width: 1200px;
@@ -30,16 +38,66 @@ header {
   align-items: center;
   justify-content: space-between;
 }
-.brand { display: flex; align-items: center; gap: 12px; font-size: 28px; font-weight: 600; letter-spacing: -.055em; }
-.brand-mark { display: grid; grid-template-columns: repeat(2, 8px); gap: 3px; }
-.brand-mark i { width: 8px; height: 8px; background: #a45536; }
-.brand-period { color: #a45536; }
-.label { font: 13px "Journal Mono", monospace; letter-spacing: .13em; color: #68705f; }
-.copy { position: absolute; left: 68px; top: 198px; z-index: 1; }
-h1 { margin: 0; font-size: 86px; line-height: 1.25; font-weight: 500; letter-spacing: -.04em; }
-.topics { margin: 30px 0 0; font-size: 30px; line-height: 1.5; color: #59664f; }
-.note { margin: 8px 0 0; font-size: 23px; line-height: 1.5; color: #68705f; }
-.illustration { position: absolute; top: 98px; right: 21px; width: 510px; height: 451px; }
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.055em;
+}
+.brand-mark {
+  display: grid;
+  grid-template-columns: repeat(2, 8px);
+  gap: 3px;
+}
+.brand-mark i {
+  width: 8px;
+  height: 8px;
+  background: #a45536;
+}
+.brand-period {
+  color: #a45536;
+}
+.label {
+  font:
+    13px "Journal Mono",
+    monospace;
+  letter-spacing: 0.13em;
+  color: #68705f;
+}
+.copy {
+  position: absolute;
+  left: 68px;
+  top: 198px;
+  z-index: 1;
+}
+h1 {
+  margin: 0;
+  font-size: 86px;
+  line-height: 1.25;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+.topics {
+  margin: 30px 0 0;
+  font-size: 30px;
+  line-height: 1.5;
+  color: #59664f;
+}
+.note {
+  margin: 8px 0 0;
+  font-size: 23px;
+  line-height: 1.5;
+  color: #68705f;
+}
+.illustration {
+  position: absolute;
+  top: 98px;
+  right: 21px;
+  width: 510px;
+  height: 451px;
+}
 footer {
   position: absolute;
   inset: auto 68px 44px;
@@ -48,8 +106,14 @@ footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font: 14px "Journal Mono", monospace;
-  letter-spacing: .04em;
+  font:
+    14px "Journal Mono",
+    monospace;
+  letter-spacing: 0.04em;
   color: #59664f;
 }
-footer strong { font-size: 22px; font-weight: 450; color: #30372e; }
+footer strong {
+  font-size: 22px;
+  font-weight: 450;
+  color: #30372e;
+}

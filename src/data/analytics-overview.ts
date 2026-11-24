@@ -49,19 +49,13 @@ function normalizeCounts(row: SourceCounts | null) {
   };
 }
 
-export async function getAnalyticsOverview(
-  db: Db,
-  days: number,
-): Promise<AnalyticsOverview> {
+export async function getAnalyticsOverview(db: Db, days: number): Promise<AnalyticsOverview> {
   const [current, previous, uniqueCurrent, uniquePrevious] = await Promise.all([
-    db.firstOrNull<SourceCounts>(
-      `${SOURCE_COUNTS_SELECT} WHERE ${TIME_WINDOW_WHERE}`,
-      [days],
-    ),
-    db.firstOrNull<SourceCounts>(
-      `${SOURCE_COUNTS_SELECT} WHERE ${PREV_WINDOW_WHERE}`,
-      [days, days],
-    ),
+    db.firstOrNull<SourceCounts>(`${SOURCE_COUNTS_SELECT} WHERE ${TIME_WINDOW_WHERE}`, [days]),
+    db.firstOrNull<SourceCounts>(`${SOURCE_COUNTS_SELECT} WHERE ${PREV_WINDOW_WHERE}`, [
+      days,
+      days,
+    ]),
     db.firstOrNull<{ count: number }>(
       `SELECT COUNT(DISTINCT ip_hash) AS count
        FROM page_views
@@ -99,10 +93,7 @@ export async function getAnalyticsOverview(
   };
 }
 
-export async function getAnalyticsDailyTrend(
-  db: Db,
-  days: number,
-): Promise<AnalyticsDailyTrend[]> {
+export async function getAnalyticsDailyTrend(db: Db, days: number): Promise<AnalyticsDailyTrend[]> {
   const result = await db.query<{
     date: string;
     human: number;
@@ -135,10 +126,7 @@ export async function getAnalyticsDailyTrend(
   return fillDailyGaps(rows, startDate, endDate);
 }
 
-export async function getAnalyticsAggregates(
-  db: Db,
-  days: number,
-): Promise<AnalyticsAggregates> {
+export async function getAnalyticsAggregates(db: Db, days: number): Promise<AnalyticsAggregates> {
   const [countries, platforms, browsers] = await Promise.all([
     db.query<{ country: string; count: number }>(
       `SELECT COALESCE(country, 'Unknown') AS country, COUNT(*) AS count

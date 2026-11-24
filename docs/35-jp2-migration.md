@@ -30,16 +30,16 @@ Current Docker CD (post–jp4 path migration) uses host directory `/data/firefly
 Tailscale jp4. The table below records the jp2 cutover target; rollback artifacts
 under `/opt/firefly` on jp2 remain historical.
 
-| Item | Target |
-| --- | --- |
-| Image | `ghcr.io/nocoo/firefly`, deployed by digest |
-| GitHub environment | `firefly / production` |
-| Host directory (jp2 cutover) | `/opt/firefly` |
-| Host directory (current CD) | `/data/firefly` on jp4 |
-| Compose service / container | `web` / `firefly-app` |
-| Internal port | `7028` |
-| Runtime | One Node process; standalone output with static and public assets |
-| Storage | Existing external D1/R2; disposable application cache |
+| Item                         | Target                                                            |
+| ---------------------------- | ----------------------------------------------------------------- |
+| Image                        | `ghcr.io/nocoo/firefly`, deployed by digest                       |
+| GitHub environment           | `firefly / production`                                            |
+| Host directory (jp2 cutover) | `/opt/firefly`                                                    |
+| Host directory (current CD)  | `/data/firefly` on jp4                                            |
+| Compose service / container  | `web` / `firefly-app`                                             |
+| Internal port                | `7028`                                                            |
+| Runtime                      | One Node process; standalone output with static and public assets |
+| Storage                      | Existing external D1/R2; disposable application cache             |
 
 The capacity check on 2026-10-21 found 2 vCPU, 15.56 GiB RAM and a 61 GiB root
 filesystem. Retained sysstat samples had at least 13.50 GiB available RAM;
@@ -156,16 +156,16 @@ contains no schema or data migration.
 
 ### Initial staging receipt, 2026-10-21
 
-| Evidence | Result |
-| --- | --- |
-| Release | `v2.18.0`, `84708c3d01e4a3b391f5664ea3eeed6a172a5d09` |
-| CI | [39539639334](https://github.com/nocoo/firefly/actions/runs/39539639334), all enabled jobs successful |
-| Docker CD | [39539959171](https://github.com/nocoo/firefly/actions/runs/39539959171), successful |
-| Image | `ghcr.io/nocoo/firefly@sha256:86a80abc2f9412019b517418c5a731e7996bb12357fa7155a47db2f033a90a62` |
-| Private binding | `127.0.0.1:17028` on jp2, container `firefly-app`, healthy |
-| Environment | All 17 Railway application variables matched the running container; only `RAILWAY_*` platform variables were omitted |
-| Cache | Runtime UID 1000 owned the populated fetch-cache directory; no `EACCES` was observed |
-| Public site | Still Railway `2.17.1`; its GitHub deployment trigger was removed without stopping the active deployment |
+| Evidence        | Result                                                                                                               |
+| --------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Release         | `v2.18.0`, `84708c3d01e4a3b391f5664ea3eeed6a172a5d09`                                                                |
+| CI              | [39539639334](https://github.com/nocoo/firefly/actions/runs/39539639334), all enabled jobs successful                |
+| Docker CD       | [39539959171](https://github.com/nocoo/firefly/actions/runs/39539959171), successful                                 |
+| Image           | `ghcr.io/nocoo/firefly@sha256:86a80abc2f9412019b517418c5a731e7996bb12357fa7155a47db2f033a90a62`                      |
+| Private binding | `127.0.0.1:17028` on jp2, container `firefly-app`, healthy                                                           |
+| Environment     | All 17 Railway application variables matched the running container; only `RAILWAY_*` platform variables were omitted |
+| Cache           | Runtime UID 1000 owned the populated fetch-cache directory; no `EACCES` was observed                                 |
+| Public site     | Still Railway `2.17.1`; its GitHub deployment trigger was removed without stopping the active deployment             |
 
 Local checks passed 1,860 root tests and 109 Worker tests, both configured
 four-metric coverage thresholds, strict lint/types and security. Local API tests

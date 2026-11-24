@@ -10,11 +10,7 @@ import type {
   Attachment,
   Redirect,
 } from "@/models/types";
-import {
-  BACKUP_SCHEMA_VERSION,
-  epochToIso,
-  nullableEpochToIso,
-} from "@/models/backup-schema";
+import { BACKUP_SCHEMA_VERSION, epochToIso, nullableEpochToIso } from "@/models/backup-schema";
 import type {
   FireflyBackupEnvelope,
   ExportedPost,
@@ -212,23 +208,20 @@ function convertSiteSettings(row: BackupSiteSettingsRow): ExportedSiteSettings {
 // ---------------------------------------------------------------------------
 
 /** Collect all backup data from DB into a FireflyBackupEnvelope. */
-export async function collectBackupData(
-  db: Db,
-): Promise<FireflyBackupEnvelope> {
-  const [core, categories, tags, postTags, comments, attachments, redirects] =
-    await Promise.all([
-      db.batch([
-        { sql: "SELECT * FROM humans ORDER BY id" },
-        { sql: "SELECT * FROM posts ORDER BY id" },
-        { sql: SITE_SETTINGS_SQL },
-      ]),
-      db.query<Category>("SELECT * FROM categories ORDER BY id"),
-      db.query<Tag>("SELECT * FROM tags ORDER BY id"),
-      db.query<PostTag>("SELECT * FROM post_tags ORDER BY post_id, tag_id"),
-      db.query<Comment>("SELECT * FROM comments ORDER BY id"),
-      db.query<Attachment>("SELECT * FROM attachments ORDER BY id"),
-      db.query<Redirect>("SELECT * FROM redirects ORDER BY id"),
-    ]);
+export async function collectBackupData(db: Db): Promise<FireflyBackupEnvelope> {
+  const [core, categories, tags, postTags, comments, attachments, redirects] = await Promise.all([
+    db.batch([
+      { sql: "SELECT * FROM humans ORDER BY id" },
+      { sql: "SELECT * FROM posts ORDER BY id" },
+      { sql: SITE_SETTINGS_SQL },
+    ]),
+    db.query<Category>("SELECT * FROM categories ORDER BY id"),
+    db.query<Tag>("SELECT * FROM tags ORDER BY id"),
+    db.query<PostTag>("SELECT * FROM post_tags ORDER BY post_id, tag_id"),
+    db.query<Comment>("SELECT * FROM comments ORDER BY id"),
+    db.query<Attachment>("SELECT * FROM attachments ORDER BY id"),
+    db.query<Redirect>("SELECT * FROM redirects ORDER BY id"),
+  ]);
 
   const humans = { results: (core[0]?.results ?? []) as unknown as Human[] };
   const posts = { results: (core[1]?.results ?? []) as unknown as Post[] };

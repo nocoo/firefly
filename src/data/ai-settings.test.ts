@@ -1,18 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db } from "@/lib/db";
 import { createMockDb } from "@/data/core/test-utils";
-import {
-  getAiSettings,
-  updateAiSettings,
-  _testHelpers,
-} from "./ai-settings";
+import { getAiSettings, updateAiSettings, _testHelpers } from "./ai-settings";
 
 const { parseRow, maskApiKey, DEFAULTS } = _testHelpers;
 
 // ---------------------------------------------------------------------------
 // Mock DB
 // ---------------------------------------------------------------------------
-
 
 const sampleRow = {
   ai_provider: "anthropic",

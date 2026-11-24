@@ -17,7 +17,8 @@ import { join } from "node:path";
 import { checkTool } from "./tools";
 
 const args = process.argv.slice(2);
-const value = (name: string) => args.find((arg) => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
+const value = (name: string) =>
+  args.find((arg) => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
 
 const indexSnapshot = args.includes("--index-snapshot");
 const range = value("range");

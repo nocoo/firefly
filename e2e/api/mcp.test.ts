@@ -40,10 +40,7 @@ async function cleanupToken(id: string): Promise<void> {
 }
 
 /** Send a JSON-RPC request to the MCP endpoint */
-async function mcpRequest(
-  body: unknown,
-  token: string,
-): Promise<Response> {
+async function mcpRequest(body: unknown, token: string): Promise<Response> {
   return fetch(`${BASE}/api/mcp`, {
     method: "POST",
     headers: {
@@ -60,9 +57,7 @@ async function mcpRequest(
 
 describe.concurrent("MCP Metadata Discovery", () => {
   it("GET /.well-known/oauth-authorization-server returns valid metadata", async () => {
-    const res = await fetch(
-      `${BASE}/.well-known/oauth-authorization-server`,
-    );
+    const res = await fetch(`${BASE}/.well-known/oauth-authorization-server`);
     expect(res.status).toBe(200);
 
     const data = await res.json();
@@ -90,9 +85,7 @@ describe.concurrent("MCP Client Registration", () => {
     const data = await res.json();
     expect(data.client_id).toMatch(/^firefly_mcp_/);
     expect(data.client_name).toBe("E2E Test Client");
-    expect(data.redirect_uris).toContain(
-      "http://localhost:9999/callback",
-    );
+    expect(data.redirect_uris).toContain("http://localhost:9999/callback");
   });
 
   it("rejects missing client_name", async () => {
@@ -247,9 +240,7 @@ describe.concurrent("MCP Main Endpoint — Tool Calls", () => {
     const listData = await listRes.json();
     expect(listData.result.tools).toHaveLength(18);
 
-    const toolNames = listData.result.tools.map(
-      (t: { name: string }) => t.name,
-    );
+    const toolNames = listData.result.tools.map((t: { name: string }) => t.name);
     expect(toolNames).toContain("list_posts");
     expect(toolNames).toContain("create_post");
     expect(toolNames).toContain("list_tags");
@@ -260,15 +251,25 @@ describe.concurrent("MCP Main Endpoint — Tool Calls", () => {
   it("export_post returns WeChat and website formats by id and slug without changing the post", async () => {
     const slug = `e2e-post-export-${crypto.randomUUID()}`;
     const call = async (name: string, args: Record<string, unknown>) => {
-      const response = await mcpRequest({
-        jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args },
-      }, accessToken);
+      const response = await mcpRequest(
+        {
+          jsonrpc: "2.0",
+          id: 1,
+          method: "tools/call",
+          params: { name, arguments: args },
+        },
+        accessToken,
+      );
       expect(response.status).toBe(200);
       return (await response.json()).result;
     };
     const created = await call("create_post", {
-      title: "E2E WeChat export", slug, status: "draft", excerpt: "Export summary",
-      content: "## Heading\n\n[Reference](https://example.com/?a=1&b=2)\n\n![Image](https://example.com/body.png)\n\n[Root](/guide) [Parent](../notes) [Section](#part)\n\nLine one  \nLine two\n\n7. Seven\n8. Eight\n\n[**Unsafe**](<java\tscript:alert(1)>)",
+      title: "E2E WeChat export",
+      slug,
+      status: "draft",
+      excerpt: "Export summary",
+      content:
+        "## Heading\n\n[Reference](https://example.com/?a=1&b=2)\n\n![Image](https://example.com/body.png)\n\n[Root](/guide) [Parent](../notes) [Section](#part)\n\nLine one  \nLine two\n\n7. Seven\n8. Eight\n\n[**Unsafe**](<java\tscript:alert(1)>)",
       featured_image: "https://example.com/cover.png",
     });
     expect(created.isError).toBeUndefined();
@@ -278,16 +279,26 @@ describe.concurrent("MCP Main Endpoint — Tool Calls", () => {
         const exported = await call("export_post", { ...identifier, format: "wechat" });
         expect(exported.isError).toBeUndefined();
         const data = JSON.parse(exported.content[0].text);
-        expect(data).toEqual({ id: before.id, slug, format: "wechat", html: renderPostExport(before, "wechat").html });
+        expect(data).toEqual({
+          id: before.id,
+          slug,
+          format: "wechat",
+          html: renderPostExport(before, "wechat").html,
+        });
         expect(data.html).toContain("wechat-footnotes");
         expect(data.html).toContain("wechat-featured-image");
         expect(data.html).toContain('style="');
         const website = await call("export_post", { ...identifier, format: "website" });
         expect(website.isError).toBeUndefined();
         expect(JSON.parse(website.content[0].text)).toEqual({
-          id: before.id, slug, format: "website", title: "E2E WeChat export",
-          url: `https://lizheng.blog/${slug}`, cover: "https://example.com/cover.png",
-          html: '<h2>Heading</h2>\n<p><a href="https://example.com/?a=1&amp;b=2">Reference</a></p>\n<p>[图片 1]</p>\n' +
+          id: before.id,
+          slug,
+          format: "website",
+          title: "E2E WeChat export",
+          url: `https://lizheng.blog/${slug}`,
+          cover: "https://example.com/cover.png",
+          html:
+            '<h2>Heading</h2>\n<p><a href="https://example.com/?a=1&amp;b=2">Reference</a></p>\n<p>[图片 1]</p>\n' +
             `<p><a href="https://lizheng.blog/guide">Root</a> <a href="https://lizheng.blog/notes">Parent</a> <a href="https://lizheng.blog/${slug}#part">Section</a></p>\n` +
             '<p>Line one<br>Line two</p>\n<ol start="7">\n<li>Seven</li>\n<li>Eight</li>\n</ol>\n<p><strong>Unsafe</strong></p>',
           images: [{ index: 1, url: "https://example.com/body.png", alt: "Image", position: 2 }],
@@ -387,9 +398,7 @@ describe.concurrent("MCP Main Endpoint — Tool Calls", () => {
       },
       accessToken,
     );
-    const created = JSON.parse(
-      (await createRes.json()).result.content[0].text,
-    );
+    const created = JSON.parse((await createRes.json()).result.content[0].text);
     const postId = created.id;
 
     // Get by ID
@@ -446,8 +455,7 @@ describe.concurrent("MCP Main Endpoint — Tool Calls", () => {
 
   it("create_post rejects invalid podcast_url and persists valid episode URL", async () => {
     const slug = `e2e-podcast-${Date.now()}`;
-    const episode =
-      "https://his.fm/episodes/manager-notes/what-the-reorg-did-not-write";
+    const episode = "https://his.fm/episodes/manager-notes/what-the-reorg-did-not-write";
 
     const bad = await mcpRequest(
       {
@@ -548,9 +556,7 @@ describe.concurrent("MCP Main Endpoint — Tool Calls", () => {
     expect(parsed).toHaveProperty("total");
     expect(Array.isArray(parsed.posts)).toBe(true);
 
-    const post = (parsed.posts as Record<string, unknown>[]).find(
-      (p) => p.slug === slug,
-    );
+    const post = (parsed.posts as Record<string, unknown>[]).find((p) => p.slug === slug);
 
     // Post MUST be found — fail loudly if not
     expect(post).toBeDefined();
@@ -619,9 +625,7 @@ describe.concurrent("MCP Main Endpoint — Tool Calls", () => {
     expect(parsed).toHaveProperty("posts");
     expect(Array.isArray(parsed.posts)).toBe(true);
 
-    const post = (parsed.posts as Record<string, unknown>[]).find(
-      (p) => p.slug === slug,
-    );
+    const post = (parsed.posts as Record<string, unknown>[]).find((p) => p.slug === slug);
 
     // Post MUST be found — fail loudly if not
     expect(post).toBeDefined();
@@ -666,10 +670,7 @@ describe("MCP Admin Token API", () => {
     expect(created.id).toBeTruthy();
 
     // Revoke
-    const revokeRes = await fetch(
-      `${BASE}/api/mcp/tokens/${created.id}`,
-      { method: "DELETE" },
-    );
+    const revokeRes = await fetch(`${BASE}/api/mcp/tokens/${created.id}`, { method: "DELETE" });
     expect(revokeRes.status).toBe(200);
 
     // Verify token no longer works
@@ -702,10 +703,9 @@ describe("MCP Admin Token API", () => {
     await fetch(`${BASE}/api/mcp/tokens/${created.id}`, { method: "DELETE" });
 
     // Permanently delete
-    const deleteRes = await fetch(
-      `${BASE}/api/mcp/tokens/${created.id}?action=delete`,
-      { method: "DELETE" },
-    );
+    const deleteRes = await fetch(`${BASE}/api/mcp/tokens/${created.id}?action=delete`, {
+      method: "DELETE",
+    });
     expect(deleteRes.status).toBe(200);
     const deleteData = await deleteRes.json();
     expect(deleteData.action).toBe("deleted");
@@ -727,10 +727,9 @@ describe("MCP Admin Token API", () => {
     const created = await createRes.json();
 
     // Try to permanently delete without revoking first
-    const deleteRes = await fetch(
-      `${BASE}/api/mcp/tokens/${created.id}?action=delete`,
-      { method: "DELETE" },
-    );
+    const deleteRes = await fetch(`${BASE}/api/mcp/tokens/${created.id}?action=delete`, {
+      method: "DELETE",
+    });
     expect(deleteRes.status).toBe(404);
 
     // Cleanup: revoke then delete

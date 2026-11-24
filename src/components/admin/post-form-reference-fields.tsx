@@ -99,12 +99,8 @@ export function PostReferenceFields({
 
   return (
     <div className="space-y-2">
-      <label
-        htmlFor="reference-url"
-        className="text-sm font-medium text-basalt-foreground"
-      >
-        {"引用链接"}{" "}
-        <span className="text-basalt-muted-foreground font-normal">{"（可选）"}</span>
+      <label htmlFor="reference-url" className="text-sm font-medium text-basalt-foreground">
+        {"引用链接"} <span className="text-basalt-muted-foreground font-normal">{"（可选）"}</span>
       </label>
       <div className="flex gap-2">
         <Input
@@ -137,10 +133,7 @@ export function PostReferenceFields({
         <div className="space-y-2 rounded-widget border border-basalt-border p-3">
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label
-                htmlFor="reference-title"
-                className="text-xs text-basalt-muted-foreground"
-              >
+              <label htmlFor="reference-title" className="text-xs text-basalt-muted-foreground">
                 {"标题"}
               </label>
               <button
@@ -162,18 +155,13 @@ export function PostReferenceFields({
             />
           </div>
           <div className="space-y-1">
-            <label
-              htmlFor="reference-description"
-              className="text-xs text-basalt-muted-foreground"
-            >
+            <label htmlFor="reference-description" className="text-xs text-basalt-muted-foreground">
               {"描述"}
             </label>
             <Textarea
               id="reference-description"
               value={state.description}
-              onChange={(e) =>
-                onChange({ ...state, description: e.target.value })
-              }
+              onChange={(e) => onChange({ ...state, description: e.target.value })}
               rows={2}
               className="px-3 py-1.5"
             />

@@ -39,15 +39,15 @@ export function AiSettingsProviderCard({
       <h2 className="text-base font-medium text-basalt-foreground">服务商 & 模型</h2>
 
       <div className="space-y-2">
-        <label htmlFor="ai-provider" className="text-sm font-medium text-basalt-foreground">AI 服务商</label>
+        <label htmlFor="ai-provider" className="text-sm font-medium text-basalt-foreground">
+          AI 服务商
+        </label>
         <p className="text-xs text-basalt-muted-foreground">
           选择 AI 服务商。内置服务商会自动填充 URL 和协议。
         </p>
         <Select
           value={provider === "" ? EMPTY : provider}
-          onValueChange={(next) =>
-            onProviderChange(next === EMPTY ? "" : (next as AiProvider))
-          }
+          onValueChange={(next) => onProviderChange(next === EMPTY ? "" : (next as AiProvider))}
         >
           <SelectTrigger id="ai-provider" className="max-w-xs">
             <SelectValue />
@@ -65,12 +65,12 @@ export function AiSettingsProviderCard({
 
       {provider && (
         <div className="space-y-2">
-          <label htmlFor="ai-model" className="text-sm font-medium text-basalt-foreground">模型</label>
+          <label htmlFor="ai-model" className="text-sm font-medium text-basalt-foreground">
+            模型
+          </label>
           <p className="text-xs text-basalt-muted-foreground">
             留空则使用服务商的默认模型。
-            {selectedProvider?.defaultModel && (
-              <> ({selectedProvider.defaultModel})</>
-            )}
+            {selectedProvider?.defaultModel && <> ({selectedProvider.defaultModel})</>}
           </p>
           {selectedProvider && selectedProvider.models.length > 0 ? (
             <Select

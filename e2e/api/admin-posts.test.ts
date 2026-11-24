@@ -42,9 +42,7 @@ describe.concurrent("GET /api/admin/posts", () => {
   });
 
   it("supports sort_by and sort_order", async () => {
-    const res = await fetch(
-      `${BASE}/api/admin/posts?sort_by=created_at&sort_order=desc`,
-    );
+    const res = await fetch(`${BASE}/api/admin/posts?sort_by=created_at&sort_order=desc`);
     expect(res.status).toBe(200);
 
     const body = await res.json();
@@ -174,9 +172,7 @@ describe.concurrent("GET /api/admin/search", () => {
   });
 
   it("returns results for query with no matches", async () => {
-    const res = await fetch(
-      `${BASE}/api/admin/search?q=xyznonexistentquery123`,
-    );
+    const res = await fetch(`${BASE}/api/admin/search?q=xyznonexistentquery123`);
     expect(res.status).toBe(200);
 
     const body = await res.json();

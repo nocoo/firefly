@@ -1,16 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback, useDeferredValue } from "react";
-import {
-  Sun,
-  Moon,
-  Monitor,
-  Smartphone,
-  Globe,
-  Share2,
-  Copy,
-  Check,
-} from "@nocoo/basalt/icons";
+import { Sun, Moon, Monitor, Smartphone, Globe, Share2, Copy, Check } from "@nocoo/basalt/icons";
 import { useTheme } from "next-themes";
 import { toast } from "@nocoo/basalt/components/toast";
 import { renderMarkdown } from "@/models/markdown";
@@ -64,10 +55,7 @@ export function MarkdownPreview({
   const [webCopied, setWebCopied] = useState(false);
 
   // Markdown rendering
-  const html = useMemo(
-    () => (content ? renderMarkdown(content) : ""),
-    [content],
-  );
+  const html = useMemo(() => (content ? renderMarkdown(content) : ""), [content]);
 
   // Deferred content for preview rendering to keep editor typing fluid
   const deferredHtml = useDeferredValue(html);
@@ -102,16 +90,19 @@ export function MarkdownPreview({
 
   const handleCopyWeChat = useCallback(async () => {
     // Generate full inlined CSS with juice only on demand when user copies
-    const inlinedHtml = renderPostExport({
-      content,
-      title: title ?? "",
-      excerpt: excerpt ?? null,
-      featured_image: featuredImage ?? null,
-      reference_url: referenceUrl ?? null,
-      reference_title: referenceTitle ?? null,
-      reference_description: referenceDescription ?? null,
-      reference_image: referenceImage ?? null,
-    }, "wechat").html;
+    const inlinedHtml = renderPostExport(
+      {
+        content,
+        title: title ?? "",
+        excerpt: excerpt ?? null,
+        featured_image: featuredImage ?? null,
+        reference_url: referenceUrl ?? null,
+        reference_title: referenceTitle ?? null,
+        reference_description: referenceDescription ?? null,
+        reference_image: referenceImage ?? null,
+      },
+      "wechat",
+    ).html;
 
     const success = await copyWechatHtmlToClipboard(inlinedHtml);
     if (success) {
@@ -157,8 +148,7 @@ export function MarkdownPreview({
 
   // WeChat preview explicitly omits title and excerpt, so empty state depends solely
   // on whether there is actual content, cover image, or reference.
-  const wechatIsEmpty =
-    !content?.trim() && !featuredImage?.trim() && !referenceUrl?.trim();
+  const wechatIsEmpty = !content?.trim() && !featuredImage?.trim() && !referenceUrl?.trim();
 
   const isCurrentEmpty = platformMode === "wechat" ? wechatIsEmpty : webIsEmpty;
 
@@ -290,9 +280,7 @@ export function MarkdownPreview({
       <div className="flex-1 overflow-y-auto p-4 flex justify-center">
         {isCurrentEmpty ? (
           <div className="flex h-full items-center justify-center self-center">
-            <p className="text-sm text-basalt-muted-foreground">
-              开始编写以查看实时预览
-            </p>
+            <p className="text-sm text-basalt-muted-foreground">开始编写以查看实时预览</p>
           </div>
         ) : (
           <div
@@ -340,9 +328,7 @@ export function MarkdownPreview({
                       )}
 
                       {excerpt && (
-                        <p className="mt-3 text-base leading-relaxed opacity-60">
-                          {excerpt}
-                        </p>
+                        <p className="mt-3 text-base leading-relaxed opacity-60">{excerpt}</p>
                       )}
 
                       {(title || excerpt) && content && (

@@ -14,10 +14,7 @@ import {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function mockFetch(
-  status: number,
-  body: unknown,
-): ReturnType<typeof vi.fn> {
+function mockFetch(status: number, body: unknown): ReturnType<typeof vi.fn> {
   return vi.fn().mockResolvedValue({
     ok: status >= 200 && status < 300,
     status,
@@ -35,9 +32,7 @@ describe("createDb", () => {
   });
 
   it("throws if workerSecret is empty", () => {
-    expect(() => createDb("https://w.test", "")).toThrow(
-      "workerSecret is required",
-    );
+    expect(() => createDb("https://w.test", "")).toThrow("workerSecret is required");
   });
 
   it("does NOT set Connection: close on any URL — keep-alive stays on (STU-2495)", async () => {
@@ -57,9 +52,7 @@ describe("createDb", () => {
     const local = createDb("http://localhost:8787", "s");
     await local.query("SELECT 1");
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(
-      (init.headers as Record<string, string>).Connection,
-    ).toBeUndefined();
+    expect((init.headers as Record<string, string>).Connection).toBeUndefined();
 
     vi.restoreAllMocks();
   });
@@ -74,9 +67,7 @@ describe("createDb", () => {
     const remote = createDb("https://firefly.worker.dev", "s");
     await remote.query("SELECT 1");
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(
-      (init.headers as Record<string, string>).Connection,
-    ).toBeUndefined();
+    expect((init.headers as Record<string, string>).Connection).toBeUndefined();
 
     vi.restoreAllMocks();
   });
@@ -135,9 +126,7 @@ describe("db.query", () => {
 
     await db.query("SELECT 1");
 
-    const body = JSON.parse(
-      (fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string,
-    );
+    const body = JSON.parse((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string);
     expect(body.params).toEqual([]);
   });
 
@@ -146,9 +135,7 @@ describe("db.query", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(db.query("DELETE FROM users")).rejects.toThrow(DbError);
-    await expect(db.query("DELETE FROM users")).rejects.toThrow(
-      "Write queries not allowed",
-    );
+    await expect(db.query("DELETE FROM users")).rejects.toThrow("Write queries not allowed");
   });
 
   it("throws DbError on HTTP error without error field", async () => {
@@ -168,9 +155,7 @@ describe("db.query", () => {
   it("stringifies non-Error fetch rejections in the Network error message", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue("raw string"));
 
-    await expect(db.query("SELECT 1")).rejects.toThrow(
-      "Network error: raw string",
-    );
+    await expect(db.query("SELECT 1")).rejects.toThrow("Network error: raw string");
   });
 
   it("retries transient fetch failures on query() and returns success (STU-2495)", async () => {
@@ -197,14 +182,10 @@ describe("db.query", () => {
   it("gives up after 3 total attempts on repeated fetch failures (remote budget)", async () => {
     // db here targets a remote URL (https://firefly.worker.dev); STU-2495 P1
     // requires the wider 5-attempt tail to stay scoped to localhost.
-    const fetchMock = vi
-      .fn()
-      .mockRejectedValue(new TypeError("fetch failed"));
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError("fetch failed"));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(db.query("SELECT 1")).rejects.toThrow(
-      "Network error: fetch failed",
-    );
+    await expect(db.query("SELECT 1")).rejects.toThrow("Network error: fetch failed");
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
@@ -238,43 +219,30 @@ describe("db.query", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(db.query("SELECT 1")).rejects.toThrow(
-      "Network error: fetch failed downstream",
-    );
+    await expect(db.query("SELECT 1")).rejects.toThrow("Network error: fetch failed downstream");
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("does NOT retry CTE/WITH-prefixed SQL — semantics not proven read-only (STU-2495 P1)", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockRejectedValue(new TypeError("fetch failed"));
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError("fetch failed"));
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(
-      db.query(
-        "WITH c AS (SELECT 1) UPDATE posts SET view_count = view_count + 1",
-      ),
+      db.query("WITH c AS (SELECT 1) UPDATE posts SET view_count = view_count + 1"),
     ).rejects.toThrow("Network error: fetch failed");
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("does NOT retry PRAGMA-prefixed SQL", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockRejectedValue(new TypeError("fetch failed"));
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError("fetch failed"));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(db.query("PRAGMA foreign_keys")).rejects.toThrow(
-      "Network error: fetch failed",
-    );
+    await expect(db.query("PRAGMA foreign_keys")).rejects.toThrow("Network error: fetch failed");
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("kind='network' when fetch throws; status is undefined", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockRejectedValue(new TypeError("fetch failed")),
-    );
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("fetch failed")));
     try {
       await db.query("PRAGMA table_info(posts)");
       expect.fail("should have thrown");
@@ -353,13 +321,9 @@ describe("db.query", () => {
     const failingBody = {
       ok: true,
       status: 200,
-      json: () =>
-        Promise.reject(new TypeError("terminated", { cause })),
+      json: () => Promise.reject(new TypeError("terminated", { cause })),
     };
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(failingBody),
-    );
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(failingBody));
 
     try {
       await db.query("WITH x AS (SELECT 1) SELECT * FROM x");
@@ -409,9 +373,7 @@ describe("db.query", () => {
     const fetchMock = vi.fn().mockResolvedValue(broken);
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(db.query("SELECT 1")).rejects.toThrow(
-      /Malformed response body/,
-    );
+    await expect(db.query("SELECT 1")).rejects.toThrow(/Malformed response body/);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
@@ -432,27 +394,19 @@ describe("db.query localhost retry budget", () => {
   });
 
   it("retries up to 5 attempts on repeated fetch failures (local budget)", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockRejectedValue(new TypeError("fetch failed"));
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError("fetch failed"));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(db.query("SELECT 1")).rejects.toThrow(
-      "Network error: fetch failed",
-    );
+    await expect(db.query("SELECT 1")).rejects.toThrow("Network error: fetch failed");
     expect(fetchMock).toHaveBeenCalledTimes(5);
   });
 
   it("still does NOT retry CTE-prefixed SQL on localhost", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockRejectedValue(new TypeError("fetch failed"));
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError("fetch failed"));
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(
-      db.query(
-        "WITH c AS (SELECT 1) UPDATE posts SET view_count = view_count + 1",
-      ),
+      db.query("WITH c AS (SELECT 1) UPDATE posts SET view_count = view_count + 1"),
     ).rejects.toThrow("Network error: fetch failed");
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
@@ -745,15 +699,11 @@ describe("db bounded concurrency (localhost)", () => {
 
     // Sanity — this is truly a fresh module instance.
     expect(second.createDb).not.toBe(first.createDb);
-    expect(second._internalTestHooks.FdQueue).not.toBe(
-      first._internalTestHooks.FdQueue,
-    );
+    expect(second._internalTestHooks.FdQueue).not.toBe(first._internalTestHooks.FdQueue);
 
     // …but the registry itself is shared via Symbol.for, so a queue
     // created by `first` for a given origin is returned by `second`.
-    expect(second._internalTestHooks.registryKey).toBe(
-      first._internalTestHooks.registryKey,
-    );
+    expect(second._internalTestHooks.registryKey).toBe(first._internalTestHooks.registryKey);
     expect(second._internalTestHooks.getLocalQueues()).toBe(
       first._internalTestHooks.getLocalQueues(),
     );
@@ -808,10 +758,7 @@ describe("db.firstOrNull", () => {
   });
 
   it("returns null when no results", async () => {
-    vi.stubGlobal(
-      "fetch",
-      mockFetch(200, { results: [], meta: { changes: 0, duration: 0 } }),
-    );
+    vi.stubGlobal("fetch", mockFetch(200, { results: [], meta: { changes: 0, duration: 0 } }));
 
     const result = await db.firstOrNull("SELECT * FROM users WHERE id = ?", ["999"]);
     expect(result).toBeNull();
@@ -860,22 +807,16 @@ describe("db.execute", () => {
 
     await db.execute("DELETE FROM temp");
 
-    const body = JSON.parse(
-      (fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string,
-    );
+    const body = JSON.parse((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string);
     expect(body.params).toEqual([]);
   });
 
   it("does NOT retry on network error — writes are non-idempotent (STU-2495)", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockRejectedValue(new TypeError("fetch failed"));
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError("fetch failed"));
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(
-      db.execute("UPDATE posts SET view_count = view_count + 1 WHERE id = ?", [
-        "p1",
-      ]),
+      db.execute("UPDATE posts SET view_count = view_count + 1 WHERE id = ?", ["p1"]),
     ).rejects.toThrow("Network error: fetch failed");
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
@@ -911,18 +852,14 @@ describe("db.batch", () => {
       { sql: "INSERT INTO tags (id, name, slug) VALUES (?, ?, ?)", params: ["2", "GPT", "gpt"] },
     ]);
 
-    const body = JSON.parse(
-      (fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string,
-    );
+    const body = JSON.parse((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string);
     expect(body.statements).toHaveLength(2);
     expect(results).toHaveLength(2);
     expect(results[0].meta.changes).toBe(1);
   });
 
   it("does NOT retry on network error — batches are non-idempotent (STU-2495)", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockRejectedValue(new TypeError("fetch failed"));
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError("fetch failed"));
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(
@@ -953,16 +890,10 @@ describe("db.call", () => {
     globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch;
 
     const db = createDb(url, secret);
-    const result = await db.call<{ ok: boolean; value: number }>(
-      "/api/v1/custom",
-      { foo: "bar" },
-    );
+    const result = await db.call<{ ok: boolean; value: number }>("/api/v1/custom", { foo: "bar" });
     expect(result).toEqual({ ok: true, value: 42 });
 
-    const [reqUrl, reqInit] = fetchMock.mock.calls[0] as [
-      string,
-      RequestInit,
-    ];
+    const [reqUrl, reqInit] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(reqUrl).toBe(`${url}/api/v1/custom`);
     expect(JSON.parse(reqInit.body as string)).toEqual({ foo: "bar" });
   });
@@ -972,21 +903,15 @@ describe("db.call", () => {
     globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch;
 
     const db = createDb(url, secret);
-    await expect(db.call("/api/v1/custom", {})).rejects.toBeInstanceOf(
-      DbError,
-    );
+    await expect(db.call("/api/v1/custom", {})).rejects.toBeInstanceOf(DbError);
   });
 
   it("does NOT retry on network error by default — call() semantics unknown (STU-2495)", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockRejectedValue(new TypeError("fetch failed"));
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError("fetch failed"));
     globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch;
 
     const db = createDb(url, secret);
-    await expect(db.call("/api/v1/custom", {})).rejects.toThrow(
-      "Network error: fetch failed",
-    );
+    await expect(db.call("/api/v1/custom", {})).rejects.toThrow("Network error: fetch failed");
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
@@ -1017,9 +942,9 @@ describe("db.call", () => {
     globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch;
 
     const db = createDb(url, secret);
-    await expect(
-      db.call("/api/v1/fts-search", {}, { retry: "idempotent" }),
-    ).rejects.toThrow("app boom");
+    await expect(db.call("/api/v1/fts-search", {}, { retry: "idempotent" })).rejects.toThrow(
+      "app boom",
+    );
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

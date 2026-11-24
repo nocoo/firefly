@@ -71,9 +71,7 @@ describe("GET /api/media", () => {
 
   it("filters by post_id", async () => {
     // Use a non-existent post_id — should return empty list
-    const res = await fetch(
-      `${BASE}/api/media?post_id=nonexistent-post-xyz`,
-    );
+    const res = await fetch(`${BASE}/api/media?post_id=nonexistent-post-xyz`);
     expect(res.status).toBe(200);
 
     const body = await res.json();
@@ -224,13 +222,9 @@ describe("PATCH /api/media/associate", () => {
     expect(body.updated).toBeGreaterThanOrEqual(1);
 
     // Verify the media is now associated
-    const mediaRes = await fetch(
-      `${BASE}/api/media?post_id=${testPostId}`,
-    );
+    const mediaRes = await fetch(`${BASE}/api/media?post_id=${testPostId}`);
     const mediaBody = await mediaRes.json();
-    expect(mediaBody.media.some((m: { id: string }) => m.id === orphanId)).toBe(
-      true,
-    );
+    expect(mediaBody.media.some((m: { id: string }) => m.id === orphanId)).toBe(true);
   });
 
   it("does not overwrite already-associated records", async () => {

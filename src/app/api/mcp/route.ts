@@ -8,20 +8,14 @@ export async function POST(request: Request) {
   const siteUrl = process.env.AUTH_URL ?? "http://localhost:3000";
 
   // Step 1: Validate Origin header (DNS rebinding prevention)
-  const originError = validateOrigin(
-    request.headers.get("origin"),
-    siteUrl,
-  );
+  const originError = validateOrigin(request.headers.get("origin"), siteUrl);
   if (originError) {
     return errorResponse(originError.error, originError.status);
   }
 
   // Step 2: Validate Bearer token (OAuth tokens only)
   const db = getDb();
-  const authResult = await validateMcpToken(
-    db,
-    request.headers.get("authorization"),
-  );
+  const authResult = await validateMcpToken(db, request.headers.get("authorization"));
   if (!authResult.valid) {
     return errorResponse(authResult.error, authResult.status);
   }
@@ -42,8 +36,12 @@ export async function POST(request: Request) {
     await server.connect(transport);
     return await transport.handleRequest(request);
   } finally {
-    transport.close().catch(() => { /* ignore close errors */ });
-    server.close().catch(() => { /* ignore close errors */ });
+    transport.close().catch(() => {
+      /* ignore close errors */
+    });
+    server.close().catch(() => {
+      /* ignore close errors */
+    });
   }
 }
 

@@ -102,9 +102,9 @@ test.describe("Feature: Admin general settings page", () => {
 
     // Then: AdminShell top-bar <h1> renders i18n key "admin.page.settings" → "设置"
     // (src/components/admin/shell.tsx:30,250-252 + src/lib/i18n/index.ts:40).
-    await expect(
-      page.getByRole("heading", { level: 1, name: "设置" }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 1, name: "设置" }).first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("Given /admin/settings renders, When I view it, Then the 每页文章数 label and number input (min=1 max=100) are visible", async ({
@@ -137,9 +137,7 @@ test.describe("Feature: Admin general settings page", () => {
       timeout: 10_000,
     });
     for (const name of ["苹方", "经典", "衬线", "无衬线"]) {
-      await expect(
-        page.getByRole("radio", { name, exact: true }),
-      ).toBeVisible();
+      await expect(page.getByRole("radio", { name, exact: true })).toBeVisible();
     }
   });
 
@@ -152,9 +150,7 @@ test.describe("Feature: Admin general settings page", () => {
 
     // Then: settings-form.tsx:228 renders the save trigger as a <Button> with
     // "保存设置" copy (or "保存中..." while saving).
-    await expect(
-      page.getByRole("button", { name: "保存设置" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("button", { name: "保存设置" })).toBeVisible({ timeout: 10_000 });
   });
 
   test("Given /admin/settings renders, When I view it, Then all four internal URL rows (Sitemap / Robots.txt / RSS Feed / LLMs.txt) are visible", async ({
@@ -190,13 +186,11 @@ test.describe("Feature: Admin AI settings page", () => {
     await expectPathname(page, "/admin/ai-settings");
 
     // Then: AdminShell h1 — i18n key "admin.page.ai-settings" → "AI 设置".
-    await expect(
-      page.getByRole("heading", { level: 1, name: "AI 设置" }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 1, name: "AI 设置" }).first()).toBeVisible({
+      timeout: 10_000,
+    });
     // Then: AiSettingsProviderCard h2 (provider-card.tsx:31).
-    await expect(
-      page.getByRole("heading", { level: 2, name: "服务商 & 模型" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "服务商 & 模型" })).toBeVisible();
     // Then: the provider combobox shows the empty choice "请选择服务商".
     const providerSelect = page.locator("#ai-provider");
     await expect(providerSelect).toBeVisible();
@@ -218,9 +212,9 @@ test.describe("Feature: Admin AI settings page", () => {
 
     // Then: ai-settings-form.tsx:132-151 — once `provider` is truthy, the 认证
     // card with the password Input becomes visible.
-    await expect(
-      page.getByRole("heading", { level: 2, name: "认证" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 2, name: "认证" })).toBeVisible({
+      timeout: 10_000,
+    });
     // CSS attribute selector: the <Input type="password"> has no role/testid;
     // type=password is the stable identifier for the API Key input.
     await expect(page.locator('input[type="password"]')).toBeVisible();
@@ -264,12 +258,8 @@ test.describe("Feature: Admin AI settings page", () => {
     );
 
     // Then: ai-settings-form.tsx:172-186 — both buttons are gated on `provider`.
-    await expect(
-      page.getByRole("button", { name: "保存设置" }),
-    ).toBeVisible({ timeout: 10_000 });
-    await expect(
-      page.getByRole("button", { name: "测试连接" }),
-    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "保存设置" })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("button", { name: "测试连接" })).toBeVisible();
   });
 });
 
@@ -286,9 +276,9 @@ test.describe("Feature: Admin site identity page", () => {
     await expectPathname(page, "/admin/site-identity");
 
     // Then: AdminShell h1.
-    await expect(
-      page.getByRole("heading", { level: 1, name: "站点身份" }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 1, name: "站点身份" }).first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("Given /admin/site-identity renders, When I view it, Then the 站点信息 card exposes a 站点名称 label and text input", async ({
@@ -301,9 +291,9 @@ test.describe("Feature: Admin site identity page", () => {
     // Then: site-identity-form.tsx:76-90 — 站点信息 card h2 + 站点名称 label
     // paired with an <Input> (defaults to type="text"). Labels have no for/id
     // link, so structural locator on the placeholder "我的博客".
-    await expect(
-      page.getByRole("heading", { level: 2, name: "站点信息" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 2, name: "站点信息" })).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(page.getByText("站点名称")).toBeVisible();
     await expect(page.locator('input[placeholder="我的博客"]')).toBeVisible();
   });
@@ -320,9 +310,7 @@ test.describe("Feature: Admin site identity page", () => {
     await expect(page.getByText("标语", { exact: true })).toBeVisible({
       timeout: 10_000,
     });
-    await expect(
-      page.locator('input[placeholder="一个关于……的个人博客"]'),
-    ).toBeVisible();
+    await expect(page.locator('input[placeholder="一个关于……的个人博客"]')).toBeVisible();
   });
 
   test("Given /admin/site-identity renders, When I view it, Then the 站点图标 card exposes 上传图标 and a file input", async ({
@@ -333,9 +321,9 @@ test.describe("Feature: Admin site identity page", () => {
     await expectPathname(page, "/admin/site-identity");
 
     // Then: site-logo-card.tsx:98 — 站点图标 h2 heading.
-    await expect(
-      page.getByRole("heading", { level: 2, name: "站点图标" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 2, name: "站点图标" })).toBeVisible({
+      timeout: 10_000,
+    });
     // Then: 上传图标 label copy (site-logo-card.tsx:143). The actual <input
     // type="file"> is sr-only; assert it is attached (not visible) since the
     // sr-only class hides it from the AT-tree.
@@ -361,9 +349,7 @@ test.describe("Feature: Admin site identity page", () => {
     // Then: the heading and its + 添加链接 trigger are visible.
     await expect(heading).toBeVisible({ timeout: 10_000 });
     // The "+ 添加链接" trigger is a <button> (social-links-card.tsx:117).
-    await expect(
-      page.getByRole("button", { name: "+ 添加链接" }),
-    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "+ 添加链接" })).toBeVisible();
   });
 
   test("Given /admin/site-identity renders, When I scroll to the bottom, Then the 保存设置 button is visible", async ({
@@ -394,9 +380,9 @@ test.describe("Feature: Admin system monitor page", () => {
     await expectPathname(page, "/admin/system");
 
     // Then: AdminShell h1 — i18n key "admin.page.system" → "系统监控".
-    await expect(
-      page.getByRole("heading", { level: 1, name: "系统监控" }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 1, name: "系统监控" }).first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("Given /admin/system renders the dashboard, When I view it, Then the four StatCard labels (堆内存使用 / RSS（总内存） / 峰值 / 平均 / 运行时间) are visible", async ({
@@ -412,21 +398,13 @@ test.describe("Feature: Admin system monitor page", () => {
     //
     // Scope to the four StatCard tiles — MemoryTrendChart legend reuses
     // "RSS（总内存）" and would trip Playwright strict mode on a page-wide query.
-    const statTiles = page.locator(
-      "div.grid.gap-2.sm\\:grid-cols-2.lg\\:grid-cols-4",
-    );
-    await expect(
-      statTiles.getByText("堆内存使用", { exact: true }),
-    ).toBeVisible({ timeout: 15_000 });
-    await expect(
-      statTiles.getByText("RSS（总内存）", { exact: true }),
-    ).toBeVisible();
-    await expect(
-      statTiles.getByText("峰值 / 平均", { exact: true }),
-    ).toBeVisible();
-    await expect(
-      statTiles.getByText("运行时间", { exact: true }),
-    ).toBeVisible();
+    const statTiles = page.locator("div.grid.gap-2.sm\\:grid-cols-2.lg\\:grid-cols-4");
+    await expect(statTiles.getByText("堆内存使用", { exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(statTiles.getByText("RSS（总内存）", { exact: true })).toBeVisible();
+    await expect(statTiles.getByText("峰值 / 平均", { exact: true })).toBeVisible();
+    await expect(statTiles.getByText("运行时间", { exact: true })).toBeVisible();
   });
 
   test("Given /admin/system renders the dashboard, When I view it, Then the 刷新 button is visible", async ({
@@ -438,9 +416,7 @@ test.describe("Feature: Admin system monitor page", () => {
 
     // Then: system-monitor-dashboard.tsx:73-80 — refresh trigger is a <button>
     // with RefreshCw icon and literal "刷新" copy.
-    await expect(
-      page.getByRole("button", { name: /刷新/ }),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("button", { name: /刷新/ })).toBeVisible({ timeout: 15_000 });
   });
 
   test("Given /admin/system renders the dashboard, When I view the chart card, Then the 内存使用趋势（48小时） heading is visible and either the recharts container or the 已采集 N 个样本 fallback is shown", async ({
@@ -452,9 +428,9 @@ test.describe("Feature: Admin system monitor page", () => {
 
     // Then: system-monitor-chart.tsx:45-48 — card header always renders this h3
     // regardless of whether there is chart data.
-    await expect(
-      page.getByRole("heading", { level: 3, name: /内存使用趋势.*48小时/ }),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("heading", { level: 3, name: /内存使用趋势.*48小时/ })).toBeVisible(
+      { timeout: 15_000 },
+    );
 
     // Then: data-state branch (system-monitor-chart.tsx:51-134):
     //   - chartData.length > 1 → <ResponsiveContainer> renders a recharts SVG.

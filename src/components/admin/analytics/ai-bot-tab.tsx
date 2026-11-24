@@ -47,10 +47,7 @@ function DonutTooltip({
   return (
     <div className="rounded-widget border border-basalt-border bg-basalt-popover p-2.5 shadow-sm">
       <div className="flex items-center gap-2">
-        <div
-          className="h-3 w-3 rounded-full"
-          style={{ backgroundColor: item.payload.fill }}
-        />
+        <div className="h-3 w-3 rounded-full" style={{ backgroundColor: item.payload.fill }} />
         <span className="text-sm font-medium text-basalt-foreground">{item.name}</span>
       </div>
       <div className="text-sm text-basalt-muted-foreground">
@@ -78,10 +75,7 @@ function BotTimelineTooltip({
       </p>
       {payload.map((entry) => (
         <div key={entry.dataKey} className="flex items-center gap-2 text-xs">
-          <div
-            className="h-2 w-2 rounded-full"
-            style={{ backgroundColor: entry.color }}
-          />
+          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
           <span className="text-basalt-muted-foreground">{entry.name}</span>
           <span className="ml-auto font-medium text-basalt-foreground">
             {formatNumber(entry.value)}
@@ -145,10 +139,7 @@ export function AiBotTab({ data }: AiBotTabProps) {
                         <Cell key={entry.name} fill={entry.fill} />
                       ))}
                     </Pie>
-                    <Tooltip
-                      content={<DonutTooltip />}
-                      isAnimationActive={false}
-                    />
+                    <Tooltip content={<DonutTooltip />} isAnimationActive={false} />
                   </PieChart>
                 </DashboardResponsiveContainer>
               </div>
@@ -228,10 +219,7 @@ export function AiBotTab({ data }: AiBotTabProps) {
                   tickLine={false}
                   width={40}
                 />
-                <Tooltip
-                  content={<BotTimelineTooltip />}
-                  isAnimationActive={false}
-                />
+                <Tooltip content={<BotTimelineTooltip />} isAnimationActive={false} />
                 {botNames.map((name, i) => (
                   <Line
                     key={name}
@@ -256,13 +244,7 @@ export function AiBotTab({ data }: AiBotTabProps) {
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function Panel({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-widget bg-basalt-secondary p-4 ring-1 ring-basalt-border/80 shadow-basalt-card">
       <h3 className="text-sm font-medium text-basalt-foreground mb-3">{title}</h3>
@@ -315,9 +297,7 @@ function RankedTable({
                 row.label
               )}
             </td>
-            <td className="py-2 text-right tabular-nums font-medium">
-              {formatNumber(row.value)}
-            </td>
+            <td className="py-2 text-right tabular-nums font-medium">{formatNumber(row.value)}</td>
           </tr>
         ))}
       </tbody>

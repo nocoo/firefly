@@ -71,9 +71,9 @@ test.describe("Feature: Admin backup page", () => {
 
     // Then: AdminShell h1 — i18n key "admin.page.backup" → "备份"
     // (src/components/admin/shell.tsx:34 + src/lib/i18n/index.ts:44).
-    await expect(
-      page.getByRole("heading", { level: 1, name: "备份" }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 1, name: "备份" }).first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("Given /admin/backup renders, When I view it, Then the 远程备份 card is visible", async ({
@@ -86,13 +86,11 @@ test.describe("Feature: Admin backup page", () => {
     // Then: BackupPushCard h2 (backup-push-card.tsx:238). 远程备份 is the
     // stable heading the original "Backy configuration section" test was
     // probing — the Backy literal itself does not appear in the rendered DOM.
-    await expect(
-      page.getByRole("heading", { level: 2, name: "远程备份" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 2, name: "远程备份" })).toBeVisible({
+      timeout: 10_000,
+    });
     // Card body copy below the heading also asserts the Backy intent.
-    await expect(
-      page.getByText("将博客数据推送至 Backy 远程备份服务。"),
-    ).toBeVisible();
+    await expect(page.getByText("将博客数据推送至 Backy 远程备份服务。")).toBeVisible();
   });
 
   test("Given the push card is in editMode, When I view it, Then the Webhook URL label and input are visible (skip when configured)", async ({
@@ -166,18 +164,14 @@ test.describe("Feature: Admin backup page", () => {
     if (isEditMode) {
       // editMode save button — exact match so it does not also match
       // "推送备份" (which uses 备份, not 保存).
-      await expect(
-        page.getByRole("button", { name: "保存", exact: true }),
-      ).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByRole("button", { name: "保存", exact: true })).toBeVisible({
+        timeout: 10_000,
+      });
     } else {
       // configured read-mode: both action buttons visible
       // (backup-push-card.tsx:303-312).
-      await expect(
-        page.getByRole("button", { name: /测试连接/ }),
-      ).toBeVisible({ timeout: 10_000 });
-      await expect(
-        page.getByRole("button", { name: /推送备份/ }),
-      ).toBeVisible();
+      await expect(page.getByRole("button", { name: /测试连接/ })).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByRole("button", { name: /推送备份/ })).toBeVisible();
     }
   });
 
@@ -189,9 +183,9 @@ test.describe("Feature: Admin backup page", () => {
     await expectPathname(page, "/admin/backup");
 
     // Then: 拉取 Webhook card heading is always rendered (backup-pull-card.tsx:46).
-    await expect(
-      page.getByRole("heading", { level: 2, name: "拉取 Webhook" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 2, name: "拉取 Webhook" })).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Scope to the pull card root so the "Webhook URL" label below does not
     // collide with the push card's editMode label (backup-push-card.tsx:248).
@@ -223,15 +217,11 @@ test.describe("Feature: Admin backup page", () => {
       // example. All scoped to pullCard so the push card editMode label and
       // any other "Webhook URL" string elsewhere on the page do not satisfy.
       await expect(pullCard.getByText("Webhook URL").first()).toBeVisible();
-      await expect(
-        pullCard.getByText(/\/api\/backup\/pull/).first(),
-      ).toBeVisible();
+      await expect(pullCard.getByText(/\/api\/backup\/pull/).first()).toBeVisible();
       await expect(pullCard.getByText("X-Webhook-Key")).toBeVisible();
       await expect(pullCard.getByText(/curl -X POST/)).toBeVisible();
       await expect(regenerateButton.first()).toBeVisible();
-      await expect(
-        pullCard.getByRole("button", { name: /撤销/ }),
-      ).toBeVisible();
+      await expect(pullCard.getByRole("button", { name: /撤销/ })).toBeVisible();
     }
   });
 
@@ -255,9 +245,9 @@ test.describe("Feature: Admin backup page", () => {
 
     // Then: h3 heading + the inline refresh button (a <Button variant=ghost>
     // with RefreshCw icon and "刷新" label).
-    await expect(
-      page.getByRole("heading", { level: 3, name: "备份记录" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 3, name: "备份记录" })).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Scope to the HistorySection root (backup-push-card.tsx:64-91): the
     // `<div className="border-t border-border pt-4 space-y-3">` wrapper that
@@ -265,15 +255,11 @@ test.describe("Feature: Admin backup page", () => {
     // pins us to HistorySection itself so the rows locator below cannot catch
     // unrelated `.divide-y > div` matches elsewhere on the page (e.g. inside
     // PushDetailBox or future siblings).
-    const historySection = page
-      .locator("div.border-t.border-border")
-      .filter({
-        has: page.getByRole("heading", { level: 3, name: "备份记录" }),
-      });
+    const historySection = page.locator("div.border-t.border-border").filter({
+      has: page.getByRole("heading", { level: 3, name: "备份记录" }),
+    });
 
-    await expect(
-      historySection.getByRole("button", { name: /刷新/ }),
-    ).toBeVisible();
+    await expect(historySection.getByRole("button", { name: /刷新/ })).toBeVisible();
 
     // Then: history sub-branch — three legitimate render branches
     // (backup-push-card.tsx:74-88):
@@ -282,9 +268,7 @@ test.describe("Feature: Admin backup page", () => {
     //   - history with entries          → .divide-y rows
     // Assert visibility on whichever branch is active — count-only would let
     // a future regression that returns 0 width/0 height blocks slip through.
-    const initialHint = historySection.getByText(
-      "推送备份后将显示远程备份记录。",
-    );
+    const initialHint = historySection.getByText("推送备份后将显示远程备份记录。");
     const emptyHint = historySection.getByText("暂无备份记录");
     const rows = historySection.locator(".divide-y > div").first();
     const initialCount = await initialHint.count();
@@ -319,9 +303,9 @@ test.describe("Feature: Admin MCP tokens page", () => {
 
     // Then: AdminShell h1 — i18n key "admin.page.mcp" → "MCP 令牌"
     // (src/components/admin/shell.tsx:33 + src/lib/i18n/index.ts:43).
-    await expect(
-      page.getByRole("heading", { level: 1, name: "MCP 令牌" }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 1, name: "MCP 令牌" }).first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("Given /admin/mcp renders, When I view it, Then the 配置指南 h3 and the MCP 端点 code containing /api/mcp are visible", async ({
@@ -332,9 +316,9 @@ test.describe("Feature: Admin MCP tokens page", () => {
     await expectPathname(page, "/admin/mcp");
 
     // Then: McpSetupGuide h3 (mcp-tokens-setup-guide.tsx:114).
-    await expect(
-      page.getByRole("heading", { level: 3, name: "配置指南" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { level: 3, name: "配置指南" })).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(page.getByText("MCP 端点")).toBeVisible();
     // Then: the MCP endpoint URL is rendered into a <code> element next to
     // the 端点 label and also embedded in the active code snippet. Either
@@ -382,9 +366,7 @@ test.describe("Feature: Admin MCP tokens page", () => {
     await expectPathname(page, "/admin/mcp");
 
     // Then: EmptyState message (mcp-tokens-manager.tsx:170) — exact copy.
-    const emptyState = page.getByText(
-      "暂无 MCP 令牌。创建一个以连接 AI Agent。",
-    );
+    const emptyState = page.getByText("暂无 MCP 令牌。创建一个以连接 AI Agent。");
     // Then: table header row — McpTokensTable renders <th> 客户端 / 令牌 /
     // 权限 / 状态 (mcp-tokens-table.tsx:123-128).
     const clientHeader = page.getByRole("columnheader", { name: "客户端" });
@@ -422,9 +404,7 @@ test.describe("Feature: Admin MCP tokens page", () => {
     // to the inner <Input id="mcp-client-name"> — so getByLabel is valid here.
     const nameInput = page.getByLabel("客户端名称");
     await expect(nameInput).toBeVisible({ timeout: 10_000 });
-    await expect(
-      page.getByRole("button", { name: /创建令牌/ }),
-    ).toBeVisible();
+    await expect(page.getByRole("button", { name: /创建令牌/ })).toBeVisible();
   });
 
   test("Given /admin/mcp renders, When I view the create form, Then the 权限 label and #mcp-scope select expose 完整 + 作者", async ({

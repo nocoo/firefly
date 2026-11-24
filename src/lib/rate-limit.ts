@@ -88,11 +88,7 @@ export interface RateLimitResult {
  * @returns An object indicating whether the request is allowed, how many
  *          requests remain in the current window, and when the window resets.
  */
-export function rateLimit(
-  key: string,
-  limit: number,
-  windowMs: number,
-): RateLimitResult {
+export function rateLimit(key: string, limit: number, windowMs: number): RateLimitResult {
   const now = Date.now();
   const cutoff = now - windowMs;
 

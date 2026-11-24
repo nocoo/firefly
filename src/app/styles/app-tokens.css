@@ -18,10 +18,14 @@
 :root {
   color-scheme: light;
 
-  --ff-sans: var(--font-ibm-plex-sans), "PingFang SC", "Helvetica Neue", helvetica, arial, "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --ff-sans:
+    var(--font-ibm-plex-sans), "PingFang SC", "Helvetica Neue", helvetica, arial, "Microsoft YaHei",
+    "Noto Sans CJK SC", sans-serif;
   --ff-serif: var(--font-ibm-plex-serif), Georgia, "Times New Roman", "Heti Song", serif;
   --ff-kai: var(--font-ibm-plex-serif), Georgia, "Times New Roman", "Heti Kai", serif;
-  --ff-mono: var(--font-ibm-plex-mono), "SFMono-Regular", consolas, "Liberation Mono", menlo, courier, monospace;
+  --ff-mono:
+    var(--font-ibm-plex-mono), "SFMono-Regular", consolas, "Liberation Mono", menlo, courier,
+    monospace;
   --ff-body: var(--ff-sans);
   --ff-heading: var(--ff-sans);
   --ff-quote: var(--ff-sans);
@@ -51,14 +55,22 @@
   --blog-topbar-h: 2.75rem;
   --blog-topbar-offset: calc(var(--blog-topbar-h) + env(safe-area-inset-top, 0px));
 
-  --tag-1-bg: #EDE8E1; --tag-1-fg: #6B5D4F;
-  --tag-2-bg: #E3EBE8; --tag-2-fg: #4A655B;
-  --tag-3-bg: #E8E3EE; --tag-3-fg: #5E4F6B;
-  --tag-4-bg: #E8EDE3; --tag-4-fg: #556B4A;
-  --tag-5-bg: #EDE3E3; --tag-5-fg: #6B4F4F;
-  --tag-6-bg: #E3E8ED; --tag-6-fg: #4F5D6B;
-  --tag-7-bg: #EDE8E3; --tag-7-fg: #6B5A45;
-  --tag-8-bg: #E3EDEB; --tag-8-fg: #456B63;
+  --tag-1-bg: #ede8e1;
+  --tag-1-fg: #6b5d4f;
+  --tag-2-bg: #e3ebe8;
+  --tag-2-fg: #4a655b;
+  --tag-3-bg: #e8e3ee;
+  --tag-3-fg: #5e4f6b;
+  --tag-4-bg: #e8ede3;
+  --tag-4-fg: #556b4a;
+  --tag-5-bg: #ede3e3;
+  --tag-5-fg: #6b4f4f;
+  --tag-6-bg: #e3e8ed;
+  --tag-6-fg: #4f5d6b;
+  --tag-7-bg: #ede8e3;
+  --tag-7-fg: #6b5a45;
+  --tag-8-bg: #e3edeb;
+  --tag-8-fg: #456b63;
 }
 
 .dark {
@@ -76,14 +88,22 @@
   --blog-accent-theme: #6f98f0;
   --blog-code-bg: #1c1d22;
 
-  --tag-1-bg: #3D3830; --tag-1-fg: #C8BFA8;
-  --tag-2-bg: #303A36; --tag-2-fg: #A8C8BB;
-  --tag-3-bg: #38303D; --tag-3-fg: #BBA8C8;
-  --tag-4-bg: #353D30; --tag-4-fg: #B3C8A8;
-  --tag-5-bg: #3D3030; --tag-5-fg: #C8A8A8;
-  --tag-6-bg: #30353D; --tag-6-fg: #A8B8C8;
-  --tag-7-bg: #3D3830; --tag-7-fg: #C8B8A0;
-  --tag-8-bg: #303D3A; --tag-8-fg: #A0C8C0;
+  --tag-1-bg: #3d3830;
+  --tag-1-fg: #c8bfa8;
+  --tag-2-bg: #303a36;
+  --tag-2-fg: #a8c8bb;
+  --tag-3-bg: #38303d;
+  --tag-3-fg: #bba8c8;
+  --tag-4-bg: #353d30;
+  --tag-4-fg: #b3c8a8;
+  --tag-5-bg: #3d3030;
+  --tag-5-fg: #c8a8a8;
+  --tag-6-bg: #30353d;
+  --tag-6-fg: #a8b8c8;
+  --tag-7-bg: #3d3830;
+  --tag-7-fg: #c8b8a0;
+  --tag-8-bg: #303d3a;
+  --tag-8-fg: #a0c8c0;
 }
 
 [data-font-style="classic"] {

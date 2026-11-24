@@ -4,7 +4,12 @@ import { Suspense, cache } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { getDb } from "@/lib/db";
-import { getPostBySlug, getPostTags, getAdjacentPosts, listCommentsByPost } from "@/data/public-content";
+import {
+  getPostBySlug,
+  getPostTags,
+  getAdjacentPosts,
+  listCommentsByPost,
+} from "@/data/public-content";
 import { isAdminSession } from "@/lib/auth";
 import { buildCommentTree } from "@/data/entities/comment";
 import { FeaturedImage } from "@/components/blog/featured-image";
@@ -41,19 +46,14 @@ interface PostPageProps {
   params: Promise<{ year: string; month: string; slug: string }>;
 }
 
-export async function generateMetadata({
-  params,
-}: PostPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
   const { slug } = await params;
   const db = getDb();
   const post = await getCachedPost(slug);
 
   if (!post) return { title: "Not Found" };
 
-  const [tags, { identity }] = await Promise.all([
-    getPostTags(db, post.id),
-    loadSiteIdentity(db),
-  ]);
+  const [tags, { identity }] = await Promise.all([getPostTags(db, post.id), loadSiteIdentity(db)]);
 
   // Resolve author (agent or site author) - now synchronous with JOINed data
   const authorMeta = getPostAuthorForMeta(post, SITE_URL);
@@ -65,20 +65,21 @@ export async function generateMetadata({
   const ogFallback = `/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(identity.siteName)}`;
   const ogImage = post.featured_image ?? ogFallback;
 
-  return buildPageMeta({
-    title: post.title,
-    description: post.excerpt ?? "",
-    path,
-    image: ogImage,
-    type: "article",
-    publishedTime: post.published_at
-      ? formatDateISO(post.published_at)
-      : undefined,
-    modifiedTime: formatDateISO(post.updated_at),
-    keywords: tags.map((t) => t.name),
-    // Only set authorOverride if it's an agent (different from site author)
-    authorOverride: authorMeta,
-  }, identity);
+  return buildPageMeta(
+    {
+      title: post.title,
+      description: post.excerpt ?? "",
+      path,
+      image: ogImage,
+      type: "article",
+      publishedTime: post.published_at ? formatDateISO(post.published_at) : undefined,
+      modifiedTime: formatDateISO(post.updated_at),
+      keywords: tags.map((t) => t.name),
+      // Only set authorOverride if it's an agent (different from site author)
+      authorOverride: authorMeta,
+    },
+    identity,
+  );
 }
 
 export default async function PostPage({ params }: PostPageProps) {
@@ -108,21 +109,15 @@ export default async function PostPage({ params }: PostPageProps) {
   const adjacent = post.published_at
     ? await getAdjacentPosts(db, post.published_at, post.id)
     : { prev: null, next: null };
-  const prevHref = adjacent.prev
-    ? postPath(adjacent.prev.slug, adjacent.prev.published_at)
-    : null;
-  const nextHref = adjacent.next
-    ? postPath(adjacent.next.slug, adjacent.next.published_at)
-    : null;
+  const prevHref = adjacent.prev ? postPath(adjacent.prev.slug, adjacent.prev.published_at) : null;
+  const nextHref = adjacent.next ? postPath(adjacent.next.slug, adjacent.next.published_at) : null;
 
   const html = renderMarkdown(post.content, {
     optimizeImages: process.env.NODE_ENV === "production",
     postTitle: post.title,
   });
   const toc = extractToc(post.content);
-  const date = post.published_at
-    ? formatDateDisplay(post.published_at)
-    : "草稿";
+  const date = post.published_at ? formatDateDisplay(post.published_at) : "草稿";
 
   const breadcrumbs = [
     { name: "首页", href: "/" },
@@ -142,7 +137,9 @@ export default async function PostPage({ params }: PostPageProps) {
       <script
         type="application/ld+json"
         // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data serialized by jsonld helper
-        dangerouslySetInnerHTML={{ __html: blogPostingJsonLd(post, identity, tagNames, jsonLdAuthor) }}
+        dangerouslySetInnerHTML={{
+          __html: blogPostingJsonLd(post, identity, tagNames, jsonLdAuthor),
+        }}
       />
       <script
         type="application/ld+json"
@@ -156,105 +153,97 @@ export default async function PostPage({ params }: PostPageProps) {
             html={html}
             header={
               <header className="journal-article-header">
-            <p className="journal-eyebrow" lang="en"><span /> THE JOURNAL / FIELD NOTES</p>
-            <h1 className="text-2xl font-bold leading-tight text-blog-text md:text-3xl">
-              {post.title}
-            </h1>
-            <div className="blog-byline">
-              <span className="blog-byline-item">
-                {author.avatarUrl ? (
-                  <Image
-                    src={author.avatarUrl}
-                    alt={author.name}
-                    width={20}
-                    height={20}
-                    className="blog-byline-avatar"
-                  />
-                ) : (
-                  <User className="blog-byline-icon" strokeWidth={1.5} />
-                )}
-                <span>{author.name}</span>
-              </span>
-              <span className="blog-byline-item">
-                <Calendar className="blog-byline-icon" strokeWidth={1.5} />
-                <time
-                  dateTime={
-                    post.published_at
-                      ? new Date(post.published_at * 1000).toISOString()
-                      : undefined
-                  }
-                >
-                  {date}
-                </time>
-              </span>
-              {post.category_name && post.category_slug && (
-                <span className="blog-byline-item">
-                  <Folder className="blog-byline-icon" strokeWidth={1.5} />
-                  <Link href={`/category/${post.category_slug}`} prefetch={false}>
-                    {post.category_name}
-                  </Link>
-                </span>
-              )}
-              {post.reading_time && (
-                <span className="blog-byline-item">
-                  <Clock className="blog-byline-icon" strokeWidth={1.5} />
-                  {`${post.reading_time} 分钟阅读`}
-                </span>
-              )}
-              {isAdmin && (
-                <Link
-                  href={`/admin/posts/${post.id}/edit`}
-                  className="blog-byline-item blog-byline-edit"
-                >
-                  <SquarePen className="blog-byline-icon" strokeWidth={1.5} />
-                  编辑
-                </Link>
-              )}
-            </div>
-          </header>
-        }
-        podcastPlayer={
-          post.podcast_url ? (
-            <PodcastPlayerSection podcastUrl={post.podcast_url} />
-          ) : undefined
-        }
-        featuredImage={
-          post.featured_image ? (
-            <FeaturedImage
-              src={post.featured_image}
-              alt={post.title}
-              priority
-            />
-          ) : undefined
-        }
-        referenceCard={
-          post.reference_url ? (
-            <ReferenceCard
-              url={post.reference_url}
-              title={post.reference_title}
-              description={post.reference_description}
-              image={post.reference_image}
-            />
-          ) : undefined
-        }
-        footer={
-          tags.length > 0 ? (
-            <div className="mt-8">
-              <div className="blog-tag-pills">
-                {tags.map((tag) => (
-                  <Link
-                    key={tag.id}
-                    href={`/tag/${tag.slug}`}
-                    className="blog-tag-pill"
-                  >
-                    {tag.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ) : undefined
-        }
-      />
+                <p className="journal-eyebrow" lang="en">
+                  <span /> THE JOURNAL / FIELD NOTES
+                </p>
+                <h1 className="text-2xl font-bold leading-tight text-blog-text md:text-3xl">
+                  {post.title}
+                </h1>
+                <div className="blog-byline">
+                  <span className="blog-byline-item">
+                    {author.avatarUrl ? (
+                      <Image
+                        src={author.avatarUrl}
+                        alt={author.name}
+                        width={20}
+                        height={20}
+                        className="blog-byline-avatar"
+                      />
+                    ) : (
+                      <User className="blog-byline-icon" strokeWidth={1.5} />
+                    )}
+                    <span>{author.name}</span>
+                  </span>
+                  <span className="blog-byline-item">
+                    <Calendar className="blog-byline-icon" strokeWidth={1.5} />
+                    <time
+                      dateTime={
+                        post.published_at
+                          ? new Date(post.published_at * 1000).toISOString()
+                          : undefined
+                      }
+                    >
+                      {date}
+                    </time>
+                  </span>
+                  {post.category_name && post.category_slug && (
+                    <span className="blog-byline-item">
+                      <Folder className="blog-byline-icon" strokeWidth={1.5} />
+                      <Link href={`/category/${post.category_slug}`} prefetch={false}>
+                        {post.category_name}
+                      </Link>
+                    </span>
+                  )}
+                  {post.reading_time && (
+                    <span className="blog-byline-item">
+                      <Clock className="blog-byline-icon" strokeWidth={1.5} />
+                      {`${post.reading_time} 分钟阅读`}
+                    </span>
+                  )}
+                  {isAdmin && (
+                    <Link
+                      href={`/admin/posts/${post.id}/edit`}
+                      className="blog-byline-item blog-byline-edit"
+                    >
+                      <SquarePen className="blog-byline-icon" strokeWidth={1.5} />
+                      编辑
+                    </Link>
+                  )}
+                </div>
+              </header>
+            }
+            podcastPlayer={
+              post.podcast_url ? <PodcastPlayerSection podcastUrl={post.podcast_url} /> : undefined
+            }
+            featuredImage={
+              post.featured_image ? (
+                <FeaturedImage src={post.featured_image} alt={post.title} priority />
+              ) : undefined
+            }
+            referenceCard={
+              post.reference_url ? (
+                <ReferenceCard
+                  url={post.reference_url}
+                  title={post.reference_title}
+                  description={post.reference_description}
+                  image={post.reference_image}
+                />
+              ) : undefined
+            }
+            footer={
+              tags.length > 0 ? (
+                <div className="mt-8">
+                  <div className="blog-tag-pills">
+                    {tags.map((tag) => (
+                      <Link key={tag.id} href={`/tag/${tag.slug}`} className="blog-tag-pill">
+                        {tag.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : undefined
+            }
+          />
         </div>
         <ArticleToc entries={toc} />
       </div>
@@ -281,13 +270,7 @@ export default async function PostPage({ params }: PostPageProps) {
 // Async server component — loaded inside Suspense to keep article LCP fast
 // ---------------------------------------------------------------------------
 
-async function CommentsSection({
-  postId,
-  isAdmin,
-}: {
-  postId: string;
-  isAdmin: boolean;
-}) {
+async function CommentsSection({ postId, isAdmin }: { postId: string; isAdmin: boolean }) {
   const db = getDb();
   const comments = await listCommentsByPost(db, postId);
   const tree = buildCommentTree(comments);

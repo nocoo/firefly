@@ -23,10 +23,10 @@
 
 一篇文恰好一个署名：
 
-| 文章 | `human_id` | `ai_agent_id` |
-|------|------------|---------------|
-| 人类写的 | 非空 | NULL（与今天人类文相同） |
-| Agent 写的 | NULL | 非空（与今天完全相同） |
+| 文章       | `human_id` | `ai_agent_id`            |
+| ---------- | ---------- | ------------------------ |
+| 人类写的   | 非空       | NULL（与今天人类文相同） |
+| Agent 写的 | NULL       | 非空（与今天完全相同）   |
 
 原则：
 
@@ -41,32 +41,32 @@
 
 这些路径 **禁止**为了本功能去改语义或搬文件：
 
-| 冻结 | 现状 |
-|------|------|
-| `ai_agents` 表 / `014`–`016` | 不改、不迁、不改名 |
-| `posts.ai_agent_id` | 不改名、不改 NULL 语义、不重建 posts |
-| `src/data/entities/ai-agent.ts` | 不改 |
-| `src/lib/mcp/**`（含 `author-post.ts`、token、OAuth） | 不改 |
-| `/api/admin/ai-agents/**`、`/admin/ai-agents/**` | 不改 |
-| `src/lib/ai-agent/avatar.ts`、`avatar-url.ts`、`avatar.test.ts`、R2 `agents/{id}/...` | 不改 |
-| `src/lib/ai-agent/prompt-generator.ts` | 不改 |
-| `src/components/admin/ai-agent-*.tsx`、`ai-agents-*.tsx` | 不改 |
-| `e2e/api/admin-ai-agents.test.ts`、`e2e/bdd/admin-ai-agents.spec.ts`、`e2e/api/mcp.test.ts` | 不改期望 |
+| 冻结                                                                                                                     | 现状                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| `ai_agents` 表 / `014`–`016`                                                                                             | 不改、不迁、不改名                                                    |
+| `posts.ai_agent_id`                                                                                                      | 不改名、不改 NULL 语义、不重建 posts                                  |
+| `src/data/entities/ai-agent.ts`                                                                                          | 不改                                                                  |
+| `src/lib/mcp/**`（含 `author-post.ts`、token、OAuth）                                                                    | 不改                                                                  |
+| `/api/admin/ai-agents/**`、`/admin/ai-agents/**`                                                                         | 不改                                                                  |
+| `src/lib/ai-agent/avatar.ts`、`avatar-url.ts`、`avatar.test.ts`、R2 `agents/{id}/...`                                    | 不改                                                                  |
+| `src/lib/ai-agent/prompt-generator.ts`                                                                                   | 不改                                                                  |
+| `src/components/admin/ai-agent-*.tsx`、`ai-agents-*.tsx`                                                                 | 不改                                                                  |
+| `e2e/api/admin-ai-agents.test.ts`、`e2e/bdd/admin-ai-agents.spec.ts`、`e2e/api/mcp.test.ts`                              | 不改期望                                                              |
 | `src/data/entities/ai-agent.test.ts`、`src/lib/ai-agent/avatar-url.test.ts`、`src/lib/ai-agent/prompt-generator.test.ts` | 不改。`src/lib/ai-agent/author.test.ts` 是明确例外（要加 human 回落） |
-| MCP `scope=author` 工具参数里的 `author_id`（实际是 agent id） | 不改 |
+| MCP `scope=author` 工具参数里的 `author_id`（实际是 agent id）                                                           | 不改                                                                  |
 
 允许的、仅限「署名展示」的只读扩展：`VIEW_QUERY` 增加 `LEFT JOIN humans`，`getPostAuthor` 在 `ai_agent_id` 为空时改走 human，不再读 `site_author` / logo。Agent 分支保持先判 `ai_agent_id`，逻辑与今天一致。
 
 ### 刻意不做
 
-| 不做 | 原因 |
-|------|------|
-| 合并 `authors` 单表 | 27 已证伪；类型谎言全落在 agent 身上 |
-| 改 MCP / 已发布锁定 / token 绑 author | 那是 agent 权限问题，本篇不碰 |
-| 公开 `/author/[slug]` | 只要署名和查询 API |
-| 把 `author_email` 拷到默认人类 | 站点联系邮箱 ≠ 作者查询邮箱 |
-| 用 logo 给没头像的人垫图 | 没头像用 `User` 图标 |
-| 重建 `posts` 加 XOR CHECK | 避免动 agent 列；XOR 放应用层 |
+| 不做                                  | 原因                                 |
+| ------------------------------------- | ------------------------------------ |
+| 合并 `authors` 单表                   | 27 已证伪；类型谎言全落在 agent 身上 |
+| 改 MCP / 已发布锁定 / token 绑 author | 那是 agent 权限问题，本篇不碰        |
+| 公开 `/author/[slug]`                 | 只要署名和查询 API                   |
+| 把 `author_email` 拷到默认人类        | 站点联系邮箱 ≠ 作者查询邮箱          |
+| 用 logo 给没头像的人垫图              | 没头像用 `User` 图标                 |
+| 重建 `posts` 加 XOR CHECK             | 避免动 agent 列；XOR 放应用层        |
 
 ---
 
@@ -234,14 +234,14 @@ LEFT JOIN humans h ON p.human_id = h.id
 
 ### 各输出面
 
-| 位置 | 现在 | 之后 |
-|------|------|------|
-| byline | agent 或 `site_author`+logo | agent 分支不变；否则 human 名+头像 |
-| meta / OG / JSON-LD `author` | 同上 | 同上规则 |
-| JSON-LD `publisher` / layout `authors` | `siteAuthor` | 默认人类 `default_human_id` |
-| RSS `<dc:creator>` | 该篇作者 | 不变（agent 仍走 JOIN） |
-| RSS `<managingEditor>` | `author_email (site_author)` | `author_email (默认人类.name)` |
-| `llms.txt` / `/api/md` | `siteAuthor \|\| siteName` | 默认人类.name 或 `siteName` |
+| 位置                                   | 现在                         | 之后                               |
+| -------------------------------------- | ---------------------------- | ---------------------------------- |
+| byline                                 | agent 或 `site_author`+logo  | agent 分支不变；否则 human 名+头像 |
+| meta / OG / JSON-LD `author`           | 同上                         | 同上规则                           |
+| JSON-LD `publisher` / layout `authors` | `siteAuthor`                 | 默认人类 `default_human_id`        |
+| RSS `<dc:creator>`                     | 该篇作者                     | 不变（agent 仍走 JOIN）            |
+| RSS `<managingEditor>`                 | `author_email (site_author)` | `author_email (默认人类.name)`     |
+| `llms.txt` / `/api/md`                 | `siteAuthor \|\| siteName`   | 默认人类.name 或 `siteName`        |
 
 ---
 
@@ -249,12 +249,12 @@ LEFT JOIN humans h ON p.human_id = h.id
 
 只约束**人类**写入口。Agent / MCP 仍只写 `aiAgentId`。
 
-| 入口 | 行为 |
-|------|------|
-| `POST /api/posts` | 请求体：`human_id` / `ai_agent_id` 都可选。都缺 → 路由/Service 填 `default_human_id`。只传 `ai_agent_id` → 与今天 create 相同 |
-| `PUT /api/posts/[slug]` | 带当前选择（人或 agent） |
-| `PATCH /api/admin/posts/batch` | **不改署名** |
-| MCP create / update | **文件零 diff**。create 只带 `aiAgentId`。update 若 `ai_agent_id: null` 由 PostService 补默认人类（见上） |
+| 入口                           | 行为                                                                                                                          |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/posts`              | 请求体：`human_id` / `ai_agent_id` 都可选。都缺 → 路由/Service 填 `default_human_id`。只传 `ai_agent_id` → 与今天 create 相同 |
+| `PUT /api/posts/[slug]`        | 带当前选择（人或 agent）                                                                                                      |
+| `PATCH /api/admin/posts/batch` | **不改署名**                                                                                                                  |
+| MCP create / update            | **文件零 diff**。create 只带 `aiAgentId`。update 若 `ai_agent_id: null` 由 PostService 补默认人类（见上）                     |
 
 `PostService.create` 读默认人类时 **绕过** `getSiteSettings` 的 5 分钟缓存，直接 `SELECT default_human_id FROM site_settings`。  
 切换默认：专用 `updateDefaultHumanId()`（仿 `updateSiteLogoVersion`），写完 `invalidateSettingsCache()`。
@@ -298,12 +298,12 @@ LEFT JOIN humans h ON p.human_id = h.id
 
 ### 人类（需登录）
 
-| Method | Path | 说明 |
-|--------|------|------|
-| GET | `/api/admin/authors` | 只列 humans |
-| POST | `/api/admin/authors` | 创建人类 |
-| GET/PATCH/DELETE | `/api/admin/authors/[id]` | 人类 CRUD；`is_default` 只改 settings |
-| POST/DELETE | `/api/admin/authors/[id]/avatar` | 人类头像 |
+| Method           | Path                             | 说明                                  |
+| ---------------- | -------------------------------- | ------------------------------------- |
+| GET              | `/api/admin/authors`             | 只列 humans                           |
+| POST             | `/api/admin/authors`             | 创建人类                              |
+| GET/PATCH/DELETE | `/api/admin/authors/[id]`        | 人类 CRUD；`is_default` 只改 settings |
+| POST/DELETE      | `/api/admin/authors/[id]/avatar` | 人类头像                              |
 
 字段 snake_case。不提供「创建 agent」——继续 `/api/admin/ai-agents`。
 
@@ -316,11 +316,11 @@ GET /api/authors/profile?email=
 GET /api/authors/profile?hash=<sha256(lowercase(trim(email)))>
 ```
 
-| 条件 | 响应 |
-|------|------|
-| `profile_public=1` 且命中 | `200 { "name", "avatar" }` |
-| 未命中 / 未公开 / 缺参 | `200 { "name": null, "avatar": null }`（不假装防枚举） |
-| 超限 | `429` |
+| 条件                      | 响应                                                   |
+| ------------------------- | ------------------------------------------------------ |
+| `profile_public=1` 且命中 | `200 { "name", "avatar" }`                             |
+| 未命中 / 未公开 / 缺参    | `200 { "name": null, "avatar": null }`（不假装防枚举） |
+| 超限                      | `429`                                                  |
 
 - 不回 email / id / slug
 - CRUD 写入：`email` 一律 `trim().toLowerCase()`；空串存 NULL。唯一索引建在规范化后的值上（不必 `COLLATE NOCASE`）
@@ -404,37 +404,37 @@ Do not touch:
 
 ### L1
 
-| 文件 | 覆盖 |
-|------|------|
-| `human.test.ts` | CRUD；email 小写唯一；默认切换；删除拦截 |
-| `human-avatar.test.ts` | `humans/{id}/...` 路径 |
+| 文件                        | 覆盖                                                                                                                  |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `human.test.ts`             | CRUD；email 小写唯一；默认切换；删除拦截                                                                              |
+| `human-avatar.test.ts`      | `humans/{id}/...` 路径                                                                                                |
 | `019-human-authors.test.ts` | 夹具含 **已有 agent 文**：迁完 `ai_agent_id` 不变、`human_id` 仍 NULL；无 agent 文补上 human；`default_human_id` 非空 |
-| `author.test.ts` | agent 分支仍只看 `ai_agent_id`；无 agent 走 human，不用 logo |
-| `post-service.test.ts` | 只传 `aiAgentId` 与今天一致；都不传 → 默认人类；两者都传 400；`aiAgentId: null` 更新 agent 文 → 同一语句写成默认人类 |
-| `settings.test.ts` | 无 `siteAuthor`；有 `defaultHumanId` |
-| `profile/route.test.ts` | 默认不公开；不查 agent |
-| `seo` / `jsonld` / `feed` | publisher = 默认人类；agent 文 creator 仍是 agent |
-| **回归** | 现有 `ai-agent.test.ts`、`author-post.test.ts`、`mcp/**` **必须仍绿且不改断言语义** |
+| `author.test.ts`            | agent 分支仍只看 `ai_agent_id`；无 agent 走 human，不用 logo                                                          |
+| `post-service.test.ts`      | 只传 `aiAgentId` 与今天一致；都不传 → 默认人类；两者都传 400；`aiAgentId: null` 更新 agent 文 → 同一语句写成默认人类  |
+| `settings.test.ts`          | 无 `siteAuthor`；有 `defaultHumanId`                                                                                  |
+| `profile/route.test.ts`     | 默认不公开；不查 agent                                                                                                |
+| `seo` / `jsonld` / `feed`   | publisher = 默认人类；agent 文 creator 仍是 agent                                                                     |
+| **回归**                    | 现有 `ai-agent.test.ts`、`author-post.test.ts`、`mcp/**` **必须仍绿且不改断言语义**                                   |
 
 ### L2
 
-| 文件 | 覆盖 |
-|------|------|
-| `e2e/api/admin-authors.test.ts` | 人类 CRUD |
-| `e2e/api/posts.test.ts` | POST 省略署名 → 默认人类；带 `ai_agent_id` 行为与旧测试相同 |
-| `e2e/api/authors-profile.test.ts` | 无 cookie；默认空结果 |
-| **回归** | `e2e/api/admin-ai-agents.test.ts`、`e2e/api/mcp.test.ts` **不改期望** |
+| 文件                              | 覆盖                                                                  |
+| --------------------------------- | --------------------------------------------------------------------- |
+| `e2e/api/admin-authors.test.ts`   | 人类 CRUD                                                             |
+| `e2e/api/posts.test.ts`           | POST 省略署名 → 默认人类；带 `ai_agent_id` 行为与旧测试相同           |
+| `e2e/api/authors-profile.test.ts` | 无 cookie；默认空结果                                                 |
+| **回归**                          | `e2e/api/admin-ai-agents.test.ts`、`e2e/api/mcp.test.ts` **不改期望** |
 
 ### L3
 
-| 场景 | 断言 |
-|------|------|
+| 场景               | 断言                                         |
+| ------------------ | -------------------------------------------- |
 | `/admin/ai-agents` | 与现在相同（h1、创建代理……现有 spec 继续过） |
-| `/admin/authors` | 人类列表；设默认 |
-| `/admin/posts/new` | 选择器预选默认人类；能选到已有 agent |
-| 已发布 agent 文 | byline 仍是 agent 名+agent 头像 |
-| 已发布人类文 | byline 是人类，不是 logo |
-| 站点身份 | 无作者名称；有作者邮箱 |
+| `/admin/authors`   | 人类列表；设默认                             |
+| `/admin/posts/new` | 选择器预选默认人类；能选到已有 agent         |
+| 已发布 agent 文    | byline 仍是 agent 名+agent 头像              |
+| 已发布人类文       | byline 是人类，不是 logo                     |
+| 站点身份           | 无作者名称；有作者邮箱                       |
 
 ### G1 / G2
 
@@ -445,18 +445,18 @@ Do not touch:
 
 ## Atomic Commits
 
-| # | Commit | 文件 |
-|---|--------|------|
-| 1 | `feat(db): add humans table` | `019-human-authors.sql` + 存量迁移测试 |
-| 2 | `feat(data): add human entity` | `human.ts*` |
-| 3 | `feat(data): posts.human_id and default human` | post*、settings |
-| 4 | `feat(lib): resolve human byline` | `author.ts`、`human-avatar.ts*` |
-| 5 | `feat(api): admin humans and profile` | `/api/admin/authors/**`、profile、proxy |
-| 6 | `feat(seo): human publisher fallback` | seo / jsonld / feed / layout / blog |
-| 7 | `feat(ui): humans admin and post picker` | admin/authors、post-form、posts/new、posts/[id]/edit |
-| 8 | `feat(ui): drop site author name` | site-identity-form |
-| 9 | `feat(backup): export humans` | backup-schema / backup-export |
-| 10 | `test(e2e): human authors` | 新 e2e；不改 ai-agents / mcp 期望 |
+| #   | Commit                                         | 文件                                                 |
+| --- | ---------------------------------------------- | ---------------------------------------------------- |
+| 1   | `feat(db): add humans table`                   | `019-human-authors.sql` + 存量迁移测试               |
+| 2   | `feat(data): add human entity`                 | `human.ts*`                                          |
+| 3   | `feat(data): posts.human_id and default human` | post*、settings                                      |
+| 4   | `feat(lib): resolve human byline`              | `author.ts`、`human-avatar.ts*`                      |
+| 5   | `feat(api): admin humans and profile`          | `/api/admin/authors/**`、profile、proxy              |
+| 6   | `feat(seo): human publisher fallback`          | seo / jsonld / feed / layout / blog                  |
+| 7   | `feat(ui): humans admin and post picker`       | admin/authors、post-form、posts/new、posts/[id]/edit |
+| 8   | `feat(ui): drop site author name`              | site-identity-form                                   |
+| 9   | `feat(backup): export humans`                  | backup-schema / backup-export                        |
+| 10  | `test(e2e): human authors`                     | 新 e2e；不改 ai-agents / mcp 期望                    |
 
 每步 `bun run test`。agent 相关测试不得为了本功能去改绿。
 
@@ -483,11 +483,11 @@ bun run test:e2e:api
 
 ## 与 27 / 现状
 
-| | 现在 | 27（废弃） | 28（本篇） |
-|--|------|------------|------------|
-| 人类 | `site_author` + logo | `authors` type=human | `humans` |
-| Agent | `ai_agents` | 迁进 `authors` type=agent | **不动** |
-| 文章指针 | nullable `ai_agent_id` | 单一 `author_id` NOT NULL | `human_id` XOR `ai_agent_id` |
-| MCP | 不改 | 重绑 token / 锁已发布 | **不改** |
-| 默认作者 | 无（隐式 site_author） | `default_author_id` → authors | `default_human_id` → humans |
-| 公开查询 | 无 | 查合并表 | 只查 humans |
+|          | 现在                   | 27（废弃）                    | 28（本篇）                   |
+| -------- | ---------------------- | ----------------------------- | ---------------------------- |
+| 人类     | `site_author` + logo   | `authors` type=human          | `humans`                     |
+| Agent    | `ai_agents`            | 迁进 `authors` type=agent     | **不动**                     |
+| 文章指针 | nullable `ai_agent_id` | 单一 `author_id` NOT NULL     | `human_id` XOR `ai_agent_id` |
+| MCP      | 不改                   | 重绑 token / 锁已发布         | **不改**                     |
+| 默认作者 | 无（隐式 site_author） | `default_author_id` → authors | `default_human_id` → humans  |
+| 公开查询 | 无                     | 查合并表                      | 只查 humans                  |

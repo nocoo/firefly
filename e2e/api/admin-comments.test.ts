@@ -101,10 +101,7 @@ describe("DELETE /api/admin/comments/[id]", () => {
       expect(preBody.comment_count).toBe(3);
 
       // The gate-under-test: admin DELETE cascades the whole subtree.
-      const delRes = await fetch(
-        `${BASE}/api/admin/comments/${parent.id}`,
-        { method: "DELETE" },
-      );
+      const delRes = await fetch(`${BASE}/api/admin/comments/${parent.id}`, { method: "DELETE" });
       // Before the fix, this was 500 with "Write queries not allowed on
       // /api/v1/query" because `deleteComment` fired a WITH RECURSIVE
       // subtree count that the Worker gate rejected. Now it must be 200.

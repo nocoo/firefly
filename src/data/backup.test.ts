@@ -15,7 +15,6 @@ import {
 // Mock DB
 // ---------------------------------------------------------------------------
 
-
 let db: Db;
 
 beforeEach(() => {
@@ -57,12 +56,8 @@ describe("getBackyConfig", () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(null);
     await getBackyConfig(db);
 
-    expect(db.firstOrNull).toHaveBeenCalledWith(
-      expect.stringContaining("backy_webhook_url"),
-    );
-    expect(db.firstOrNull).toHaveBeenCalledWith(
-      expect.stringContaining("backy_api_key"),
-    );
+    expect(db.firstOrNull).toHaveBeenCalledWith(expect.stringContaining("backy_webhook_url"));
+    expect(db.firstOrNull).toHaveBeenCalledWith(expect.stringContaining("backy_api_key"));
   });
 });
 
@@ -102,10 +97,10 @@ describe("saveBackyConfig", () => {
       apiKey: "new-key",
     });
 
-    expect(db.execute).toHaveBeenCalledWith(
-      expect.stringContaining("backy_webhook_url"),
-      ["https://backy.dev/api/webhook/abc", "new-key"],
-    );
+    expect(db.execute).toHaveBeenCalledWith(expect.stringContaining("backy_webhook_url"), [
+      "https://backy.dev/api/webhook/abc",
+      "new-key",
+    ]);
     expect(db.execute).toHaveBeenCalledWith(
       expect.stringContaining("updated_at"),
       expect.any(Array),
@@ -122,12 +117,8 @@ describe("clearBackyConfig", () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });
     await clearBackyConfig(db);
 
-    expect(db.execute).toHaveBeenCalledWith(
-      expect.stringContaining("backy_webhook_url = ''"),
-    );
-    expect(db.execute).toHaveBeenCalledWith(
-      expect.stringContaining("backy_api_key = ''"),
-    );
+    expect(db.execute).toHaveBeenCalledWith(expect.stringContaining("backy_webhook_url = ''"));
+    expect(db.execute).toHaveBeenCalledWith(expect.stringContaining("backy_api_key = ''"));
   });
 });
 
@@ -140,10 +131,9 @@ describe("saveBackyPullKey", () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });
     await saveBackyPullKey(db, "new-pull-key");
 
-    expect(db.execute).toHaveBeenCalledWith(
-      expect.stringContaining("backy_pull_key"),
-      ["new-pull-key"],
-    );
+    expect(db.execute).toHaveBeenCalledWith(expect.stringContaining("backy_pull_key"), [
+      "new-pull-key",
+    ]);
   });
 });
 
@@ -156,9 +146,7 @@ describe("clearBackyPullKey", () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 1 });
     await clearBackyPullKey(db);
 
-    expect(db.execute).toHaveBeenCalledWith(
-      expect.stringContaining("backy_pull_key = ''"),
-    );
+    expect(db.execute).toHaveBeenCalledWith(expect.stringContaining("backy_pull_key = ''"));
   });
 });
 

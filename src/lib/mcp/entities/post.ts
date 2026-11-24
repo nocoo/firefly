@@ -4,12 +4,7 @@
 
 import { z } from "zod";
 import type { Post, PostStatus } from "@/models/types";
-import {
-  listPosts,
-  getPostById,
-  getPostBySlug,
-  getPostTags,
-} from "@/data/entities/post";
+import { listPosts, getPostById, getPostBySlug, getPostTags } from "@/data/entities/post";
 import { PostService } from "@/services/post-service";
 import { generateExcerpt, summarizeUnfurl } from "@/services/ai";
 import { unfurlUrl, UnfurlError } from "@/services/unfurl";
@@ -25,10 +20,7 @@ import { mcpPodcastUrlSchema } from "@/lib/mcp/podcast-url-schema";
 // Extra tool: unfurl_reference (two modes: preview + save)
 // ---------------------------------------------------------------------------
 
-async function handleUnfurlReference(
-  ctx: ToolContext,
-  args: Record<string, unknown>,
-) {
+async function handleUnfurlReference(ctx: ToolContext, args: Record<string, unknown>) {
   const id = args.id as string | undefined;
   const slug = args.slug as string | undefined;
   let url = args.url as string | undefined;
@@ -38,13 +30,7 @@ async function handleUnfurlReference(
     const idOrSlug: Record<string, string> = {};
     if (id) idOrSlug.id = id;
     if (slug) idOrSlug.slug = slug;
-    const resolved = await resolveEntity(
-      ctx.db,
-      idOrSlug,
-      getPostById,
-      getPostBySlug,
-      "Post",
-    );
+    const resolved = await resolveEntity(ctx.db, idOrSlug, getPostById, getPostBySlug, "Post");
     if ("error" in resolved) return error(resolved.error);
 
     if (!url) {
@@ -57,14 +43,9 @@ async function handleUnfurlReference(
 
     try {
       const raw = await unfurlUrl(url);
-      const ai = await summarizeUnfurl(
-        raw.ogTitle,
-        raw.ogDescription,
-        raw.bodyText,
-      );
+      const ai = await summarizeUnfurl(raw.ogTitle, raw.ogDescription, raw.bodyText);
 
-      const title =
-        ai?.title ?? raw.ogTitle ?? raw.pageTitle ?? new URL(url).hostname;
+      const title = ai?.title ?? raw.ogTitle ?? raw.pageTitle ?? new URL(url).hostname;
       const description = ai?.description ?? raw.ogDescription ?? "";
       const image = raw.ogImage ?? raw.readmeImage ?? null;
 
@@ -98,14 +79,9 @@ async function handleUnfurlReference(
 
   try {
     const raw = await unfurlUrl(url);
-    const ai = await summarizeUnfurl(
-      raw.ogTitle,
-      raw.ogDescription,
-      raw.bodyText,
-    );
+    const ai = await summarizeUnfurl(raw.ogTitle, raw.ogDescription, raw.bodyText);
 
-    const title =
-      ai?.title ?? raw.ogTitle ?? raw.pageTitle ?? new URL(url).hostname;
+    const title = ai?.title ?? raw.ogTitle ?? raw.pageTitle ?? new URL(url).hostname;
     const description = ai?.description ?? raw.ogDescription ?? "";
     const image = raw.ogImage ?? raw.readmeImage ?? null;
 
@@ -152,9 +128,7 @@ export const postEntity: EntityConfig<Post> = {
   },
   schemas: {
     list: {
-      status: z
-        .enum(["draft", "published", "private", "archived"])
-        .optional(),
+      status: z.enum(["draft", "published", "private", "archived"]).optional(),
       category_id: z.string().optional(),
       tag_id: z.string().optional(),
       query: z.string().optional(),
@@ -166,16 +140,20 @@ export const postEntity: EntityConfig<Post> = {
       title: z.string(),
       slug: z.string(),
       content: z.string(),
-      status: z
-        .enum(["draft", "published", "private", "archived"])
-        .optional(),
+      status: z.enum(["draft", "published", "private", "archived"]).optional(),
       excerpt: z.string().optional(),
       category_id: z.string().optional(),
       tag_ids: z.array(z.string()).optional(),
       featured_image: z.string().optional(),
       published_at: z.number().optional(),
-      ai_agent_id: z.string().optional().describe("AI author ID. Optional in full mode; omit for normal (human) posts."),
-      human_id: z.string().optional().describe("Human author ID. Mutually exclusive with ai_agent_id."),
+      ai_agent_id: z
+        .string()
+        .optional()
+        .describe("AI author ID. Optional in full mode; omit for normal (human) posts."),
+      human_id: z
+        .string()
+        .optional()
+        .describe("Human author ID. Mutually exclusive with ai_agent_id."),
       podcast_url: mcpPodcastUrlSchema.describe(
         "his.fm episode page URL (https://his.fm/episodes/<column>/<slug>), or null to clear.",
       ),
@@ -184,9 +162,7 @@ export const postEntity: EntityConfig<Post> = {
       title: z.string().optional(),
       new_slug: z.string().optional(),
       content: z.string().optional(),
-      status: z
-        .enum(["draft", "published", "private", "archived"])
-        .optional(),
+      status: z.enum(["draft", "published", "private", "archived"]).optional(),
       excerpt: z.string().nullable().optional(),
       category_id: z.string().nullable().optional(),
       tag_ids: z.array(z.string()).optional(),
@@ -196,11 +172,19 @@ export const postEntity: EntityConfig<Post> = {
       reference_title: z.string().nullable().optional(),
       reference_description: z.string().nullable().optional(),
       reference_image: z.string().nullable().optional(),
-      ai_agent_id: z.string().nullable().optional().describe("AI author ID. Set to reassign, null to clear."),
-      human_id: z.string().nullable().optional().describe("Human author ID. Set to reassign; null uses default human when clearing an AI author."),
-      podcast_url: mcpPodcastUrlSchema.describe(
-        "his.fm episode page URL, or null to clear.",
-      ),
+      ai_agent_id: z
+        .string()
+        .nullable()
+        .optional()
+        .describe("AI author ID. Set to reassign, null to clear."),
+      human_id: z
+        .string()
+        .nullable()
+        .optional()
+        .describe(
+          "Human author ID. Set to reassign; null uses default human when clearing an AI author.",
+        ),
+      podcast_url: mcpPodcastUrlSchema.describe("his.fm episode page URL, or null to clear."),
     },
   },
   hooks: {
@@ -284,19 +268,23 @@ export const postEntity: EntityConfig<Post> = {
   extraTools: [
     {
       name: "export_post",
-      description:
-        `Export a post by id or slug (exactly one required). Supported formats: ${POST_EXPORT_FORMATS.join(", ")}. wechat returns inline-styled HTML matching the admin copy action. website returns clean semantic HTML for X Articles, h2 headings, absolute inline links, preserved hard breaks and list numbering, numbered image placeholder paragraphs, and images with 1-based index, absolute url, alt, and 0-based source top-level block position. website also returns title, canonical url, and an absolute cover URL or null. Read-only; does not upload or publish.`,
+      description: `Export a post by id or slug (exactly one required). Supported formats: ${POST_EXPORT_FORMATS.join(", ")}. wechat returns inline-styled HTML matching the admin copy action. website returns clean semantic HTML for X Articles, h2 headings, absolute inline links, preserved hard breaks and list numbering, numbered image placeholder paragraphs, and images with 1-based index, absolute url, alt, and 0-based source top-level block position. website also returns title, canonical url, and an absolute cover URL or null. Read-only; does not upload or publish.`,
       schema: {
         id: z.string().optional(),
         slug: z.string().optional(),
-        format: z.enum(POST_EXPORT_FORMATS).describe("wechat: inline-styled HTML; website: unstyled X Article HTML with separate image metadata."),
+        format: z
+          .enum(POST_EXPORT_FORMATS)
+          .describe(
+            "wechat: inline-styled HTML; website: unstyled X Article HTML with separate image metadata.",
+          ),
       },
       handler: async (ctx, args) => {
         const format = z.enum(POST_EXPORT_FORMATS).safeParse(args.format);
-        if (!format.success) return error(`Unsupported export format. Supported formats: ${POST_EXPORT_FORMATS.join(", ")}.`);
-        const resolved = await resolveEntity(
-          ctx.db, args, getPostById, getPostBySlug, "Post",
-        );
+        if (!format.success)
+          return error(
+            `Unsupported export format. Supported formats: ${POST_EXPORT_FORMATS.join(", ")}.`,
+          );
+        const resolved = await resolveEntity(ctx.db, args, getPostById, getPostBySlug, "Post");
         if ("error" in resolved) return error(resolved.error);
         const url = `${POST_EXPORT_SITE_URL}${postPath(resolved.slug, resolved.published_at)}`;
         return ok({
@@ -304,13 +292,15 @@ export const postEntity: EntityConfig<Post> = {
           slug: resolved.slug,
           format: format.data,
           ...renderPostExport(resolved, format.data, url),
-          ...(format.data === "website" ? {
-            title: resolved.title,
-            url,
-            cover: resolved.featured_image
-              ? absoluteWebsiteImageUrl(resolved.featured_image, url)
-              : null,
-          } : {}),
+          ...(format.data === "website"
+            ? {
+                title: resolved.title,
+                url,
+                cover: resolved.featured_image
+                  ? absoluteWebsiteImageUrl(resolved.featured_image, url)
+                  : null,
+              }
+            : {}),
         });
       },
     },
@@ -323,27 +313,16 @@ export const postEntity: EntityConfig<Post> = {
         slug: z.string().optional(),
       },
       handler: async (ctx, args) => {
-        const resolved = await resolveEntity(
-          ctx.db,
-          args,
-          getPostById,
-          getPostBySlug,
-          "Post",
-        );
+        const resolved = await resolveEntity(ctx.db, args, getPostById, getPostBySlug, "Post");
         if ("error" in resolved) return error(resolved.error);
         try {
-          const excerpt = await generateExcerpt(
-            resolved.title,
-            resolved.content,
-          );
+          const excerpt = await generateExcerpt(resolved.title, resolved.content);
           await PostService.update(ctx.db, resolved.id, { excerpt });
           return ok({ slug: resolved.slug, excerpt, saved: true });
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           if (msg === "AI not configured") {
-            return error(
-              "AI provider not configured. Go to Settings > AI to set it up.",
-            );
+            return error("AI provider not configured. Go to Settings > AI to set it up.");
           }
           return error(`Excerpt generation failed: ${msg}`);
         }
@@ -367,7 +346,6 @@ export const postEntity: EntityConfig<Post> = {
     create: "Create a new blog post. Set tag_ids to associate tags.",
     update:
       "Update an existing post by id or slug (exactly one required). Set tag_ids to replace all tags.",
-    delete:
-      "Delete a post by id or slug (exactly one required). Irreversible.",
+    delete: "Delete a post by id or slug (exactly one required). Irreversible.",
   },
 };

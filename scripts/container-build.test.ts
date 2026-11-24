@@ -17,9 +17,7 @@ const requestTimeEntries = [
 
 describe("production container", () => {
   it("pins a shared Node 26 Debian base and the project's frozen Bun installer", () => {
-    expect(dockerfile).toMatch(
-      /FROM node:26\.\d+\.\d+-bookworm-slim@sha256:[a-f0-9]{64} AS base/,
-    );
+    expect(dockerfile).toMatch(/FROM node:26\.\d+\.\d+-bookworm-slim@sha256:[a-f0-9]{64} AS base/);
     expect(dockerfile).toMatch(/FROM oven\/bun:1\.2\.15@sha256:[a-f0-9]{64} AS bun/);
     expect(dockerfile).toContain("FROM base AS dependencies");
     expect(dockerfile).toContain("FROM base AS builder");
@@ -34,7 +32,9 @@ describe("production container", () => {
     expect(pkg.dependencies.next).toBe("16.4.6");
     expect(pkg.scripts.build).toBe("next typegen && tsc --noEmit && next build --webpack");
     expect(dockerfile).toContain("npm run build");
-    expect(dockerfile).not.toMatch(/bun (?:--bun|run build)|ignoreBuildErrors|canary|NEXT_PRIVATE_/);
+    expect(dockerfile).not.toMatch(
+      /bun (?:--bun|run build)|ignoreBuildErrors|canary|NEXT_PRIVATE_/,
+    );
     expect(config).toMatch(/output:\s*"standalone"/);
   });
 
@@ -44,19 +44,25 @@ describe("production container", () => {
       "R2_PUBLIC_URL",
     ]);
     expect(dockerfile).toContain('test -n "$AUTH_URL" && test -n "$R2_PUBLIC_URL"');
-    expect(dockerfile).not.toMatch(/SECRET|PASSWORD|TOKEN|WORKER_URL|AUTH_GOOGLE|AUTH_ALLOWED|E2E_|VITEST|CI=true/);
+    expect(dockerfile).not.toMatch(
+      /SECRET|PASSWORD|TOKEN|WORKER_URL|AUTH_GOOGLE|AUTH_ALLOWED|E2E_|VITEST|CI=true/,
+    );
     expect(dockerfile).not.toMatch(/--mount=type=secret|COPY .*\.env|ARG \w+=/);
   });
 
   it("packages standalone, static and public assets for a non-root Node server", () => {
     expect(dockerfile).toContain("COPY --from=builder --chown=node:node /app/.next/standalone ./");
-    expect(dockerfile).toContain("COPY --from=builder --chown=node:node /app/.next/static ./.next/static");
+    expect(dockerfile).toContain(
+      "COPY --from=builder --chown=node:node /app/.next/static ./.next/static",
+    );
     expect(dockerfile).toContain("COPY --from=builder --chown=node:node /app/public ./public");
     expect(dockerfile).toContain("USER node");
     expect(dockerfile).toContain("PORT=7028");
     expect(dockerfile).toContain("HOSTNAME=0.0.0.0");
     expect(dockerfile).toContain('CMD ["node", "server.js"]');
-    expect(dockerfile).toMatch(/USER node\s+RUN node -e "require\('sharp'\).*\.png\(\)\.toBuffer\(\)/);
+    expect(dockerfile).toMatch(
+      /USER node\s+RUN node -e "require\('sharp'\).*\.png\(\)\.toBuffer\(\)/,
+    );
   });
 
   it("allowlists build source without local environments, dependencies or deployment state", () => {
@@ -76,9 +82,16 @@ describe("production container", () => {
       "!scripts/wechat-draft.ts",
       "!scripts/wechat-draft.test.ts",
     ]);
-    expect(rules).toEqual(expect.arrayContaining([
-      "**/.env*", "**/.dev.vars*", "**/*.pem", "**/*.key", "**/node_modules", "**/.wrangler",
-    ]));
+    expect(rules).toEqual(
+      expect.arrayContaining([
+        "**/.env*",
+        "**/.dev.vars*",
+        "**/*.pem",
+        "**/*.key",
+        "**/node_modules",
+        "**/.wrangler",
+      ]),
+    );
   });
 });
 
@@ -88,21 +101,29 @@ describe("database-independent prerendering", () => {
     expect(entry).toMatch(/import \{ connection \} from "next\/server"/);
     expect(entry.match(/await connection\(\);\s+const db = getDb\(\);/g)).toHaveLength(count);
     expect(entry.match(/getDb\(\)/g)).toHaveLength(count);
-    expect(entry).not.toMatch(/force-dynamic|force-no-store|unstable_noStore|E2E_|WORKER_SECRET|\btry\s*\{/);
+    expect(entry).not.toMatch(
+      /force-dynamic|force-no-store|unstable_noStore|E2E_|WORKER_SECRET|\btry\s*\{/,
+    );
   });
 
   it("retains the explicit public cache, without route-wide cache overrides", () => {
     const entries = requestTimeEntries.map(([file]) => source(file)).join("\n");
-    expect(entries + config).not.toMatch(/fetchCache\s*[:=]|revalidate\s*[:=]\s*0|cacheMaxMemorySize|cacheHandler/);
+    expect(entries + config).not.toMatch(
+      /fetchCache\s*[:=]|revalidate\s*[:=]\s*0|cacheMaxMemorySize|cacheHandler/,
+    );
     const cache = source("src/data/core/public-cache.ts");
-    expect(cache).toContain("unstable_cache(async () =>");
+    expect(cache).toMatch(/unstable_cache\(\s*async \(\) =>/);
     expect(cache).toContain("revalidate: REVALIDATE_SECONDS");
-    expect(cache).toContain('revalidateTag(TAG, { expire: 0 })');
+    expect(cache).toContain("revalidateTag(TAG, { expire: 0 })");
     expect(source("src/app/sitemap.xml/route.ts")).toContain("PUBLIC_CONTENT_CACHE_CONTROL");
   });
 
   it("leaves other database-backed GET exports request-time by native Next defaults", () => {
-    for (const file of ["src/app/feed.xml/route.ts", "src/app/llms.txt/route.ts", "src/app/sitemap.xsl/route.ts"]) {
+    for (const file of [
+      "src/app/feed.xml/route.ts",
+      "src/app/llms.txt/route.ts",
+      "src/app/sitemap.xsl/route.ts",
+    ]) {
       const entry = source(file);
       expect(entry).not.toMatch(/export const (?:dynamic|revalidate)|generateStaticParams/);
     }

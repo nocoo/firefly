@@ -2,11 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Db } from "@/lib/db";
 import { createMockDb } from "@/data/core/test-utils";
 import type { McpToken } from "@/models/types";
-import {
-  extractBearerToken,
-  validateMcpToken,
-  validateOrigin,
-} from "./auth";
+import { extractBearerToken, validateMcpToken, validateOrigin } from "./auth";
 
 // ---------------------------------------------------------------------------
 // Mock dependencies
@@ -19,7 +15,6 @@ vi.mock("@/data/mcp-tokens", () => ({
 }));
 
 import { getValidTokenByHash, updateLastUsed } from "@/data/mcp-tokens";
-
 
 const now = Math.floor(Date.now() / 1000);
 

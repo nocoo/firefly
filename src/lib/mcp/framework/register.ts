@@ -44,9 +44,7 @@ export function registerEntityTools<T extends { id: string }>(
               include: z
                 .array(z.string())
                 .optional()
-                .describe(
-                  "Opt-in fields excluded by default. Use 'full' for all fields.",
-                ),
+                .describe("Opt-in fields excluded by default. Use 'full' for all fields."),
             }
           : {}),
       } as any,

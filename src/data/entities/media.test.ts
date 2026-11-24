@@ -39,7 +39,9 @@ const sampleAttachment: Attachment = {
 
 describe("listMedia", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns paginated media with default options", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue({ cnt: 1 });
@@ -188,7 +190,9 @@ describe("listMedia", () => {
 
 describe("getMediaById", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns attachment when found", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(sampleAttachment);
@@ -212,7 +216,9 @@ describe("getMediaById", () => {
 
 describe("createMedia", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("inserts attachment and returns it", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
@@ -269,7 +275,9 @@ describe("createMedia", () => {
 
 describe("deleteMedia", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("deletes and returns true", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
@@ -292,7 +300,9 @@ describe("deleteMedia", () => {
 
 describe("listMediaByPost", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns attachments for a post", async () => {
     vi.mocked(db.query).mockResolvedValue({
@@ -325,7 +335,9 @@ describe("listMediaByPost", () => {
 
 describe("associateMedia", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("updates post_id for specified media", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 2, duration: 3 });
@@ -354,7 +366,9 @@ describe("associateMedia", () => {
 
 describe("batchCreateMedia", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("creates media in batches", async () => {
     vi.mocked(db.batch).mockResolvedValue([
@@ -401,7 +415,9 @@ describe("batchCreateMedia", () => {
 
 describe("listMediaYears", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns distinct years with counts", async () => {
     vi.mocked(db.query).mockResolvedValue({

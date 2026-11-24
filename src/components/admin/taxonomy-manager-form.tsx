@@ -64,12 +64,7 @@ export function TaxonomyForm({
             placeholder="名称"
           />
         </Field>
-        <Field
-          htmlFor="taxonomy-slug"
-          label="别名"
-          className="space-y-1"
-          error={slugError}
-        >
+        <Field htmlFor="taxonomy-slug" label="别名" className="space-y-1" error={slugError}>
           <Input
             id="taxonomy-slug"
             type="text"
@@ -85,11 +80,7 @@ export function TaxonomyForm({
           />
         </Field>
       </div>
-      <Field
-        htmlFor="taxonomy-description"
-        label="描述（可选）"
-        className="space-y-1"
-      >
+      <Field htmlFor="taxonomy-description" label="描述（可选）" className="space-y-1">
         <Input
           id="taxonomy-description"
           type="text"

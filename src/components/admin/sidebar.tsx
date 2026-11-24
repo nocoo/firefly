@@ -125,7 +125,9 @@ function NavItemButton({
     <SidebarItem
       active={active}
       aria-label={item.title}
-      className={item.external ? "my-basalt-space-lg bg-basalt-primary text-basalt-primary-foreground" : ""}
+      className={
+        item.external ? "my-basalt-space-lg bg-basalt-primary text-basalt-primary-foreground" : ""
+      }
       onClick={(event) => onNavigate(item, event)}
       onAuxClick={(event) => onNavigate(item, event)}
     >
@@ -180,7 +182,11 @@ function CollapsedNavItem({
         <SidebarIconItem
           active={active}
           aria-label={item.title}
-          className={item.external ? "my-basalt-space-lg bg-basalt-primary text-basalt-primary-foreground" : ""}
+          className={
+            item.external
+              ? "my-basalt-space-lg bg-basalt-primary text-basalt-primary-foreground"
+              : ""
+          }
           onClick={(event) => onNavigate(item, event)}
           onAuxClick={(event) => onNavigate(item, event)}
         >
@@ -211,11 +217,7 @@ function AdminSidebarNav({
         <SidebarSearch shortcut="⌘K" onClick={() => openSearch(true)} aria-label="搜索 (⌘K)">
           搜索
         </SidebarSearch>
-        <CollapsedNavItem
-          item={VISIT_SITE_ITEM}
-          active={false}
-          onNavigate={onNavigate}
-        />
+        <CollapsedNavItem item={VISIT_SITE_ITEM} active={false} onNavigate={onNavigate} />
         {ALL_NAV_ITEMS.map((item) => (
           <CollapsedNavItem
             key={item.href}
@@ -280,11 +282,7 @@ export function AdminSidebar({ resizable = true, onMobileDismiss, user }: AdminS
   );
 
   const brandAction = onMobileDismiss ? (
-    <SidebarToggle
-      mode="dismiss"
-      onDismiss={onMobileDismiss}
-      dismissLabel="关闭导航"
-    />
+    <SidebarToggle mode="dismiss" onDismiss={onMobileDismiss} dismissLabel="关闭导航" />
   ) : (
     <SidebarToggle expandLabel="展开侧边栏" collapseLabel="收起侧边栏" />
   );

@@ -1,8 +1,14 @@
 import Link from "next/link";
 
 export const journalSurfaceUrls = {
-  play: process.env.NODE_ENV === "development" ? "https://lizheng-me.dev.hexly.ai/" : "https://lizheng.me/",
-  resume: process.env.NODE_ENV === "development" ? "https://lizheng-dev.dev.hexly.ai/" : "https://lizheng.dev/",
+  play:
+    process.env.NODE_ENV === "development"
+      ? "https://lizheng-me.dev.hexly.ai/"
+      : "https://lizheng.me/",
+  resume:
+    process.env.NODE_ENV === "development"
+      ? "https://lizheng-dev.dev.hexly.ai/"
+      : "https://lizheng.dev/",
   portfolio: "https://hexly.ai",
 };
 
@@ -18,13 +24,7 @@ export function JournalSurfaces({ inert }: { inert?: boolean }) {
     <nav className="journal-surfaces" aria-label="访问面" inert={inert}>
       {SURFACES.map((surface) =>
         surface.id === "blog" ? (
-          <Link
-            key={surface.id}
-            href={surface.href}
-            prefetch={false}
-            aria-current="true"
-            lang="en"
-          >
+          <Link key={surface.id} href={surface.href} prefetch={false} aria-current="true" lang="en">
             {surface.name}
           </Link>
         ) : (

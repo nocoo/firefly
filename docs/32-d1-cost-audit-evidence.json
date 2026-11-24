@@ -1505,11 +1505,7 @@
       "name": "list_current",
       "capturedAt": "2026-09-17T22:43:21.181Z",
       "sql": "SELECT p.*, c.name AS category_name, c.slug AS category_slug,\n         a.name AS agent_name, a.slug AS agent_slug, a.avatar_version AS agent_avatar_version,\n         h.name AS human_name, h.slug AS human_slug, h.avatar_version AS human_avatar_version\n  FROM posts p\n  LEFT JOIN categories c ON p.category_id = c.id\n  LEFT JOIN ai_agents a ON p.ai_agent_id = a.id\n  LEFT JOIN humans h ON p.human_id = h.id\n\n    WHERE p.status = ?\n    ORDER BY p.published_at DESC, p.created_at DESC\n    LIMIT ? OFFSET ?",
-      "params": [
-        "published",
-        10,
-        0
-      ],
+      "params": ["published", 10, 0],
       "rowsRead": 1976,
       "rowsWritten": 0,
       "durationMs": 14.9859,
@@ -1551,11 +1547,7 @@
       "name": "list_using_date_index",
       "capturedAt": "2026-09-17T22:43:21.485Z",
       "sql": "SELECT p.*, c.name AS category_name, c.slug AS category_slug,\n         a.name AS agent_name, a.slug AS agent_slug, a.avatar_version AS agent_avatar_version,\n         h.name AS human_name, h.slug AS human_slug, h.avatar_version AS human_avatar_version\n  FROM posts p INDEXED BY idx_posts_published\n  LEFT JOIN categories c ON p.category_id = c.id\n  LEFT JOIN ai_agents a ON p.ai_agent_id = a.id\n  LEFT JOIN humans h ON p.human_id = h.id\n\n    WHERE p.status = ?\n    ORDER BY p.published_at DESC, p.created_at DESC\n    LIMIT ? OFFSET ?",
-      "params": [
-        "published",
-        10,
-        0
-      ],
+      "params": ["published", 10, 0],
       "rowsRead": 43,
       "rowsWritten": 0,
       "durationMs": 8.1237,
@@ -1597,11 +1589,7 @@
       "name": "list_projection_only",
       "capturedAt": "2026-09-17T22:48:24.136Z",
       "sql": "SELECT p.id, p.slug, p.title, p.published_at, c.name AS category_name, c.slug AS category_slug,\n         a.name AS agent_name, a.slug AS agent_slug, a.avatar_version AS agent_avatar_version,\n         h.name AS human_name, h.slug AS human_slug, h.avatar_version AS human_avatar_version\n  FROM posts p\n  LEFT JOIN categories c ON p.category_id = c.id\n  LEFT JOIN ai_agents a ON p.ai_agent_id = a.id\n  LEFT JOIN humans h ON p.human_id = h.id\n\n    WHERE p.status = ?\n    ORDER BY p.published_at DESC, p.created_at DESC\n    LIMIT ? OFFSET ?",
-      "params": [
-        "published",
-        10,
-        0
-      ],
+      "params": ["published", 10, 0],
       "rowsRead": 1976,
       "rowsWritten": 0,
       "durationMs": 4.3595,
@@ -1611,9 +1599,7 @@
       "name": "browser_current30",
       "capturedAt": "2026-09-17T22:43:21.938Z",
       "sql": "SELECT COALESCE(browser, 'Unknown') AS browser, COUNT(*) AS count FROM page_views WHERE date(viewed_at, 'unixepoch') BETWEEN date('now', '-' || ? || ' days') AND date('now', '-1 day') AND is_bot = 0 GROUP BY browser ORDER BY count DESC LIMIT 10",
-      "params": [
-        30
-      ],
+      "params": [30],
       "rowsRead": 450814,
       "rowsWritten": 0,
       "durationMs": 271.7395,
@@ -1643,9 +1629,7 @@
       "name": "browser_range30",
       "capturedAt": "2026-09-17T22:43:22.379Z",
       "sql": "SELECT COALESCE(browser, 'Unknown') AS browser, COUNT(*) AS count FROM page_views WHERE viewed_at >= unixepoch('now', 'start of day', '-' || ? || ' days') AND viewed_at < unixepoch('now', 'start of day') AND is_bot = 0 GROUP BY browser ORDER BY count DESC LIMIT 10",
-      "params": [
-        30
-      ],
+      "params": [30],
       "rowsRead": 450814,
       "rowsWritten": 0,
       "durationMs": 249.4812,
@@ -1675,9 +1659,7 @@
       "name": "browser_range_timeindex30",
       "capturedAt": "2026-09-17T22:43:22.650Z",
       "sql": "SELECT COALESCE(browser, 'Unknown') AS browser, COUNT(*) AS count FROM page_views INDEXED BY idx_page_views_viewed_at WHERE viewed_at >= unixepoch('now', 'start of day', '-' || ? || ' days') AND viewed_at < unixepoch('now', 'start of day') AND is_bot = 0 GROUP BY browser ORDER BY count DESC LIMIT 10",
-      "params": [
-        30
-      ],
+      "params": [30],
       "rowsRead": 154717,
       "rowsWritten": 0,
       "durationMs": 85.5407,
@@ -1707,9 +1689,7 @@
       "name": "overview_current30",
       "capturedAt": "2026-09-17T22:43:23.026Z",
       "sql": "SELECT COUNT(*) AS total, SUM(is_bot = 0) AS human, SUM(is_bot = 1 AND bot_category = 'search') AS search, SUM(is_bot = 1 AND bot_category = 'ai') AS ai FROM page_views WHERE date(viewed_at, 'unixepoch') BETWEEN date('now', '-' || ? || ' days') AND date('now', '-1 day')",
-      "params": [
-        30
-      ],
+      "params": [30],
       "rowsRead": 475258,
       "rowsWritten": 0,
       "durationMs": 192.7381,
@@ -1727,9 +1707,7 @@
       "name": "overview_range30",
       "capturedAt": "2026-09-17T22:43:23.249Z",
       "sql": "SELECT COUNT(*) AS total, SUM(is_bot = 0) AS human, SUM(is_bot = 1 AND bot_category = 'search') AS search, SUM(is_bot = 1 AND bot_category = 'ai') AS ai FROM page_views WHERE viewed_at >= unixepoch('now', 'start of day', '-' || ? || ' days') AND viewed_at < unixepoch('now', 'start of day')",
-      "params": [
-        30
-      ],
+      "params": [30],
       "rowsRead": 85703,
       "rowsWritten": 0,
       "durationMs": 46.9009,
@@ -1820,14 +1798,8 @@
       }
     ],
     "new_index_sizes": [
-      [
-        "idx_posts_status_published_created",
-        28672
-      ],
-      [
-        "idx_posts_status_published_id",
-        45056
-      ]
+      ["idx_posts_status_published_created", 28672],
+      ["idx_posts_status_published_id", 45056]
     ],
     "same_results": true,
     "notes": "Local SQLite with production indexed-column distribution, placeholder body fields. VM steps are not D1 rows_read."

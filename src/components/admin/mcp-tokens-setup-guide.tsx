@@ -7,13 +7,7 @@ import { Check, Copy, Terminal } from "@nocoo/basalt/icons";
 // Copy button (reusable across mcp-tokens views)
 // ---------------------------------------------------------------------------
 
-export function CopyButton({
-  text,
-  className,
-}: {
-  text: string;
-  className?: string;
-}) {
+export function CopyButton({ text, className }: { text: string; className?: string }) {
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(timerRef.current), []);
@@ -26,16 +20,13 @@ export function CopyButton({
   };
 
   return (
-    <button type="button"
+    <button
+      type="button"
       onClick={handleCopy}
       className={`shrink-0 rounded-md p-1.5 text-basalt-muted-foreground hover:bg-basalt-accent hover:text-basalt-foreground transition-colors ${className ?? ""}`}
       title="Copy"
     >
-      {copied ? (
-        <Check className="h-3.5 w-3.5 text-green-600" />
-      ) : (
-        <Copy className="h-3.5 w-3.5" />
-      )}
+      {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
     </button>
   );
 }
@@ -87,9 +78,7 @@ function buildCliCommand(mcpUrl: string): string {
 }
 
 export function McpSetupGuide({ mcpUrl }: { mcpUrl: string }) {
-  const [activeTab, setActiveTab] = useState<"claude" | "cursor" | "cli">(
-    "claude",
-  );
+  const [activeTab, setActiveTab] = useState<"claude" | "cursor" | "cli">("claude");
 
   const clientConfig = buildClientConfig(mcpUrl);
   const configs = {
@@ -113,15 +102,14 @@ export function McpSetupGuide({ mcpUrl }: { mcpUrl: string }) {
         <div>
           <h3 className="text-sm font-semibold text-basalt-foreground">配置指南</h3>
           <p className="mt-0.5 text-xs text-basalt-muted-foreground leading-relaxed">
-            通过 Model Context Protocol 将 AI Agent 连接到博客。在下方创建令牌，然后将配置粘贴到客户端。
+            通过 Model Context Protocol 将 AI Agent
+            连接到博客。在下方创建令牌，然后将配置粘贴到客户端。
           </p>
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-basalt-muted-foreground">
-          MCP 端点
-        </label>
+        <label className="text-xs font-medium text-basalt-muted-foreground">MCP 端点</label>
         <div className="flex items-center gap-2 rounded-widget border border-basalt-border bg-basalt-secondary px-3 py-2">
           <code className="flex-1 text-xs font-mono text-basalt-foreground break-all">
             {mcpUrl}
@@ -139,7 +127,8 @@ export function McpSetupGuide({ mcpUrl }: { mcpUrl: string }) {
       <div className="space-y-2">
         <div className="flex gap-1 rounded-lg bg-basalt-secondary/50 p-0.5 w-fit">
           {tabs.map(({ key, label }) => (
-            <button type="button"
+            <button
+              type="button"
               key={key}
               onClick={() => setActiveTab(key)}
               className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
@@ -152,10 +141,7 @@ export function McpSetupGuide({ mcpUrl }: { mcpUrl: string }) {
             </button>
           ))}
         </div>
-        <CodeBlock
-          code={configs[activeTab]}
-          lang={activeTab === "cli" ? "bash" : "json"}
-        />
+        <CodeBlock code={configs[activeTab]} lang={activeTab === "cli" ? "bash" : "json"} />
       </div>
 
       <p className="text-xs text-basalt-muted-foreground">

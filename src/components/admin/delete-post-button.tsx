@@ -38,9 +38,7 @@ export function DeletePostButton({ slug, title, iconOnly }: DeletePostButtonProp
       });
       router.refresh();
     } catch (err) {
-      toast.danger(
-        err instanceof Error ? err.message : "删除失败",
-      );
+      toast.danger(err instanceof Error ? err.message : "删除失败");
     } finally {
       setDeleting(false);
     }
@@ -49,7 +47,8 @@ export function DeletePostButton({ slug, title, iconOnly }: DeletePostButtonProp
   return (
     <>
       {iconOnly ? (
-        <button type="button"
+        <button
+          type="button"
           onClick={openConfirm}
           disabled={deleting}
           className="flex h-8 w-8 items-center justify-center rounded-widget bg-white/90 text-basalt-destructive transition-colors hover:bg-white disabled:opacity-50"
@@ -58,7 +57,8 @@ export function DeletePostButton({ slug, title, iconOnly }: DeletePostButtonProp
           <Trash2 className="h-4 w-4" strokeWidth={1.5} />
         </button>
       ) : (
-        <button type="button"
+        <button
+          type="button"
           onClick={openConfirm}
           disabled={deleting}
           className="rounded-md p-1.5 text-basalt-muted-foreground transition-colors hover:bg-basalt-destructive/10 hover:text-basalt-destructive disabled:opacity-50"

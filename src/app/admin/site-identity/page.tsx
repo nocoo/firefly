@@ -11,9 +11,7 @@ export const metadata: Metadata = {
 export default async function SiteIdentityPage() {
   const db = getDb();
   const settings = await getSiteSettings(db);
-  const logoUrl = settings.siteLogoVersion
-    ? getLogoUrl(settings.siteLogoVersion, 80)
-    : null;
+  const logoUrl = settings.siteLogoVersion ? getLogoUrl(settings.siteLogoVersion, 80) : null;
 
   return <SiteIdentityForm settings={settings} logoUrl={logoUrl} />;
 }

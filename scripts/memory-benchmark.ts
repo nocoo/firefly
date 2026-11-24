@@ -22,11 +22,16 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchWithTimeout(url: string, timeoutMs: number): Promise<{ status: number; body: string }> {
+async function fetchWithTimeout(
+  url: string,
+  timeoutMs: number,
+): Promise<{ status: number; body: string }> {
   return new Promise((resolve, reject) => {
     const req = http.get(url, (res) => {
       let body = "";
-      res.on("data", (chunk) => { body += chunk; });
+      res.on("data", (chunk) => {
+        body += chunk;
+      });
       res.on("end", () => resolve({ status: res.statusCode ?? 0, body }));
     });
     req.on("error", reject);
@@ -64,7 +69,7 @@ function findNodeProcessPid(): number | null {
   } catch {
     // Fallback: find any next start process
   }
-  
+
   try {
     const psOutput = execSync(`pgrep -f "next start" | head -1`, { encoding: "utf-8" });
     const pid = parseInt(psOutput.trim(), 10);
@@ -72,7 +77,7 @@ function findNodeProcessPid(): number | null {
   } catch {
     // No process found
   }
-  
+
   return null;
 }
 
@@ -85,8 +90,8 @@ function getProcessMemory(pid: number): { rssMB: number; vszMB: number } | null 
       const rssKB = parseInt(parts[0], 10);
       const vszKB = parseInt(parts[1], 10);
       return {
-        rssMB: Math.round(rssKB / 1024 * 100) / 100,
-        vszMB: Math.round(vszKB / 1024 * 100) / 100,
+        rssMB: Math.round((rssKB / 1024) * 100) / 100,
+        vszMB: Math.round((vszKB / 1024) * 100) / 100,
       };
     }
   } catch {
@@ -101,10 +106,10 @@ function getProcessMemory(pid: number): { rssMB: number; vszMB: number } | null 
 
 // Typical blog routes to test
 const ROUTES = [
-  "/",                          // Homepage
-  "/robots.txt",                // Static
-  "/sitemap.xml",               // Dynamic sitemap
-  "/feed.xml",                  // RSS feed
+  "/", // Homepage
+  "/robots.txt", // Static
+  "/sitemap.xml", // Dynamic sitemap
+  "/feed.xml", // RSS feed
 ];
 
 async function simulateRequests(count: number): Promise<void> {
@@ -125,7 +130,7 @@ async function simulateRequests(count: number): Promise<void> {
 
 async function main(): Promise<void> {
   console.log("Starting memory benchmark...");
-  
+
   // Kill any existing process on the port
   try {
     execSync(`lsof -ti :${PORT} | xargs kill -9 2>/dev/null || true`, { encoding: "utf-8" });
@@ -133,7 +138,7 @@ async function main(): Promise<void> {
   } catch {
     // No process to kill
   }
-  
+
   // Start the server using npx next start directly (not through bun run)
   // This gives us a more direct process to measure
   const serverProcess = spawn("npx", ["next", "start", "-p", String(PORT)], {
@@ -144,11 +149,11 @@ async function main(): Promise<void> {
   });
 
   let _serverOutput = "";
-  
+
   serverProcess.stdout?.on("data", (data) => {
     _serverOutput += data.toString();
   });
-  
+
   serverProcess.stderr?.on("data", (data) => {
     _serverOutput += data.toString();
   });
@@ -197,37 +202,38 @@ async function main(): Promise<void> {
 
     // Try to get cache stats via curl (requires building with proper exports)
     // For now, just output memory metrics
-    
+
     console.log("\n--- Memory Benchmark Results ---");
     console.log(`METRIC rss_mb=${finalMemory.rssMB}`);
     console.log(`METRIC vsz_mb=${finalMemory.vszMB}`);
     console.log(`METRIC startup_time_ms=${startupTimeMs}`);
-    
+
     // Also log baseline for reference
     if (baselineMemory) {
       console.log(`INFO baseline_rss_mb=${baselineMemory.rssMB}`);
       console.log(`INFO memory_growth_mb=${(finalMemory.rssMB - baselineMemory.rssMB).toFixed(2)}`);
     }
-    
+
     // RSS is our primary metric for memory optimization
     console.log(`METRIC heap_used_mb=${finalMemory.rssMB}`);
-
   } finally {
     // Cleanup
     try {
-      const pid = serverProcess.pid; if (pid != null) process.kill(-pid, "SIGTERM");
+      const pid = serverProcess.pid;
+      if (pid != null) process.kill(-pid, "SIGTERM");
     } catch {
       serverProcess.kill("SIGTERM");
     }
     await sleep(500);
     if (!serverProcess.killed) {
       try {
-        const pid2 = serverProcess.pid; if (pid2 != null) process.kill(-pid2, "SIGKILL");
+        const pid2 = serverProcess.pid;
+        if (pid2 != null) process.kill(-pid2, "SIGKILL");
       } catch {
         serverProcess.kill("SIGKILL");
       }
     }
-    
+
     // Extra cleanup: kill any remaining processes on the port
     try {
       execSync(`lsof -ti :${PORT} | xargs kill -9 2>/dev/null || true`);

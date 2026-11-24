@@ -59,9 +59,7 @@ export function readingTime(content: string): number {
 
   // Remove CJK characters, then count words
   const withoutCjk = stripped.replace(CJK_RE, " ");
-  const words = withoutCjk
-    .split(/\s+/)
-    .filter((w) => w.length > 0);
+  const words = withoutCjk.split(/\s+/).filter((w) => w.length > 0);
   const wordCount = words.length;
 
   const minutes = wordCount / WORDS_PER_MINUTE + cjkCount / CJK_CHARS_PER_MINUTE;

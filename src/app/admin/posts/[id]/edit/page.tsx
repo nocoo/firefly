@@ -6,10 +6,7 @@ import { listCategories } from "@/data/entities/category";
 import { listTags } from "@/data/entities/tag";
 import { listHumans, getDefaultHumanIdUncached } from "@/data/entities/human";
 import { listAiAgents } from "@/data/entities/ai-agent";
-import {
-  listCommentsByPost,
-  buildCommentTree,
-} from "@/data/entities/comment";
+import { listCommentsByPost, buildCommentTree } from "@/data/entities/comment";
 import { PostForm } from "@/components/admin/post-form";
 import { Comments } from "@/components/blog/comments";
 
@@ -17,9 +14,7 @@ interface EditPostPageProps {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({
-  params,
-}: EditPostPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: EditPostPageProps): Promise<Metadata> {
   const { id } = await params;
   const db = getDb();
   const post = await getPostById(db, id);
@@ -60,9 +55,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
       />
       {commentTree.length > 0 && (
         <section className="mt-8 rounded-widget border border-basalt-border p-6">
-          <h2 className="mb-4 text-lg font-semibold">
-            评论 ({comments.length})
-          </h2>
+          <h2 className="mb-4 text-lg font-semibold">评论 ({comments.length})</h2>
           <Comments comments={commentTree} postId={id} isAdmin />
         </section>
       )}

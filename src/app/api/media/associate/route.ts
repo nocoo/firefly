@@ -36,10 +36,9 @@ export async function PATCH(request: NextRequest) {
     const db = getDb();
 
     // Validate postId exists
-    const post = await db.firstOrNull<{ id: string }>(
-      "SELECT id FROM posts WHERE id = ?",
-      [postId],
-    );
+    const post = await db.firstOrNull<{ id: string }>("SELECT id FROM posts WHERE id = ?", [
+      postId,
+    ]);
     if (!post) {
       return errorResponse("Post not found", 400);
     }

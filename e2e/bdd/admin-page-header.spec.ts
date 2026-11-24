@@ -1,7 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { test, expect } from "./fixtures";
 
-test("Every admin page has a title, subtitle and icon-only parent link", async ({ page, request }) => {
+test("Every admin page has a title, subtitle and icon-only parent link", async ({
+  page,
+  request,
+}) => {
   test.setTimeout(180_000);
   const slug = `header-${randomUUID()}`;
   const categoryResponse = await request.post("/api/categories", { data: { name: slug, slug } });
@@ -10,10 +13,14 @@ test("Every admin page has a title, subtitle and icon-only parent link", async (
   const authorResponse = await request.post("/api/admin/authors", { data: { name: slug, slug } });
   expect(authorResponse.status()).toBe(201);
   const { author } = await authorResponse.json();
-  const agentResponse = await request.post("/api/admin/ai-agents", { data: { name: slug, slug, categoryId: category.id } });
+  const agentResponse = await request.post("/api/admin/ai-agents", {
+    data: { name: slug, slug, categoryId: category.id },
+  });
   expect(agentResponse.status()).toBe(201);
   const { agent } = await agentResponse.json();
-  const postResponse = await request.post("/api/posts", { data: { title: slug, slug, content: "Header acceptance", status: "draft" } });
+  const postResponse = await request.post("/api/posts", {
+    data: { title: slug, slug, content: "Header acceptance", status: "draft" },
+  });
   expect(postResponse.status()).toBe(201);
   const post = await postResponse.json();
 
@@ -73,10 +80,15 @@ test("Every admin page has a title, subtitle and icon-only parent link", async (
 });
 
 for (const width of [390, 1440]) {
-  test(`At ${width}px back stays in the title band and filters retain the full left edge`, async ({ page }) => {
+  test(`At ${width}px back stays in the title band and filters retain the full left edge`, async ({
+    page,
+  }) => {
     test.setTimeout(90_000);
     await page.setViewportSize({ width, height: 1000 });
-    for (const [path, label] of [["/admin/posts", "筛选文章"], ["/admin/media", "筛选媒体"]]) {
+    for (const [path, label] of [
+      ["/admin/posts", "筛选文章"],
+      ["/admin/media", "筛选媒体"],
+    ]) {
       await page.goto(path, { waitUntil: "networkidle" });
       const header = page.locator("[data-admin-page-header]");
       const back = header.getByRole("link", { name: /^返回/ });

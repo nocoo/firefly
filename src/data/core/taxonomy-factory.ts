@@ -51,8 +51,7 @@ export interface TaxonomyEntity<T, CreateInput, UpdateInput> {
 export function createTaxonomyEntity<T, CreateInput, UpdateInput extends object>(
   config: TaxonomyConfig<T, CreateInput, UpdateInput>,
 ): TaxonomyEntity<T, CreateInput, UpdateInput> {
-  const { table, entityName, fields, orderBy, cacheTtl, insertColumns, buildInsertParams } =
-    config;
+  const { table, entityName, fields, orderBy, cacheTtl, insertColumns, buildInsertParams } = config;
 
   const cache = new EntityCacheManager<T[]>(cacheTtl);
 

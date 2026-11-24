@@ -5,10 +5,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { splitSqlStatements } from "./db-adapter";
 
-const SQL_PATH = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  "019-human-authors.sql",
-);
+const SQL_PATH = resolve(dirname(fileURLToPath(import.meta.url)), "019-human-authors.sql");
 const MIGRATION_SQL = readFileSync(SQL_PATH, "utf-8");
 
 function applyStatements(db: DatabaseSync, sql: string): void {
@@ -88,9 +85,9 @@ describe("019-human-authors migration", () => {
       .get() as { default_human_id: string | null };
     expect(settings.default_human_id).toBe(humanPost.human_id);
 
-    const cols = (
-      db.prepare("PRAGMA table_info(site_settings)").all() as { name: string }[]
-    ).map((c) => c.name);
+    const cols = (db.prepare("PRAGMA table_info(site_settings)").all() as { name: string }[]).map(
+      (c) => c.name,
+    );
     expect(cols).not.toContain("site_author");
     expect(cols).toContain("default_human_id");
 
@@ -125,9 +122,9 @@ describe("019-human-authors migration", () => {
       }
     }).toThrow(/CHECK constraint failed/);
 
-    const cols = (
-      db.prepare("PRAGMA table_info(site_settings)").all() as { name: string }[]
-    ).map((c) => c.name);
+    const cols = (db.prepare("PRAGMA table_info(site_settings)").all() as { name: string }[]).map(
+      (c) => c.name,
+    );
     expect(cols).toContain("site_author");
     db.close();
   });
@@ -136,9 +133,7 @@ describe("019-human-authors migration", () => {
     const db = new DatabaseSync(":memory:");
     seed018Fixture(db);
     const parts = splitSqlStatements(MIGRATION_SQL);
-    const backfillIdx = parts.findIndex(
-      (s) => /UPDATE posts/i.test(s) && /human_id/i.test(s),
-    );
+    const backfillIdx = parts.findIndex((s) => /UPDATE posts/i.test(s) && /human_id/i.test(s));
     expect(backfillIdx).toBeGreaterThan(0);
 
     expect(() => {
@@ -148,9 +143,9 @@ describe("019-human-authors migration", () => {
       }
     }).toThrow(/CHECK constraint failed/);
 
-    const cols = (
-      db.prepare("PRAGMA table_info(site_settings)").all() as { name: string }[]
-    ).map((c) => c.name);
+    const cols = (db.prepare("PRAGMA table_info(site_settings)").all() as { name: string }[]).map(
+      (c) => c.name,
+    );
     expect(cols).toContain("site_author");
     db.close();
   });

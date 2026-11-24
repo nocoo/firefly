@@ -53,9 +53,7 @@ export async function PUT(request: NextRequest) {
       return errorResponse(validation.error);
     }
 
-    const apiKey = body.apiKey?.trim()
-      ? (body.apiKey as string)
-      : existing?.apiKey;
+    const apiKey = body.apiKey?.trim() ? (body.apiKey as string) : existing?.apiKey;
 
     if (!apiKey) {
       return errorResponse("API Key is required");

@@ -14,9 +14,7 @@ export function profileLookupUrl(siteUrl: string, hash: string): string {
   return `${siteUrl.replace(/\/$/, "")}${profileLookupPath(hash)}`;
 }
 
-export function buildAuthorProfileBrief(
-  input: AuthorProfileBriefInput,
-): string {
+export function buildAuthorProfileBrief(input: AuthorProfileBriefInput): string {
   const origin = input.siteUrl.replace(/\/$/, "");
   const exampleUrl = input.hash
     ? profileLookupUrl(origin, input.hash)

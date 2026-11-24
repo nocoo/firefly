@@ -3,12 +3,7 @@
 import { Calendar, Copy, FileCode2, HardDrive, RulerIcon, Trash2 } from "@nocoo/basalt/icons";
 import { formatFileSize } from "@/models/backup";
 import { ImageLightbox } from "@/components/image-lightbox";
-import {
-  FileTypeIcon,
-  formatDate,
-  isImageMime,
-  type MediaWithUrl,
-} from "./media-library-helpers";
+import { FileTypeIcon, formatDate, isImageMime, type MediaWithUrl } from "./media-library-helpers";
 
 export function MediaLibraryPreview({
   preview,
@@ -28,14 +23,12 @@ export function MediaLibraryPreview({
       open={!!preview}
       onClose={onClose}
       previewContent={
-        preview && !isImageMime(preview.mime_type)
-          ? (
-            <div className="flex flex-col items-center justify-center gap-3 text-basalt-muted-foreground">
-              <FileTypeIcon mime={preview.mime_type} className="h-16 w-16" />
-              <span className="text-sm font-medium">{preview.filename}</span>
-            </div>
-          )
-          : undefined
+        preview && !isImageMime(preview.mime_type) ? (
+          <div className="flex flex-col items-center justify-center gap-3 text-basalt-muted-foreground">
+            <FileTypeIcon mime={preview.mime_type} className="h-16 w-16" />
+            <span className="text-sm font-medium">{preview.filename}</span>
+          </div>
+        ) : undefined
       }
     >
       {preview && (

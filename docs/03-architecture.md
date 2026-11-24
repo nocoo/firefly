@@ -39,54 +39,54 @@
 
 ### Runtime & Framework
 
-| Layer | Technology | Version | Rationale |
-|-------|-----------|---------|-----------|
-| Runtime | Bun | latest | Fast build, native TS, workspace support |
-| Framework | Next.js | 16.x | App Router, RSC, ISR |
-| Language | TypeScript | 5.x | Strict mode, exactOptionalPropertyTypes |
-| Styling | Tailwind CSS | 4.x | @tailwindcss/postcss, CSS variables |
-| UI Components | shadcn/ui (basalt variant) | — | Copy-paste from ../basalt, Radix primitives |
-| Icons | Lucide React | latest | 1.5px stroke, consistent with basalt |
-| Editor | TBD (Phase 1: basic) | — | Markdown with live preview |
+| Layer         | Technology                 | Version | Rationale                                   |
+| ------------- | -------------------------- | ------- | ------------------------------------------- |
+| Runtime       | Bun                        | latest  | Fast build, native TS, workspace support    |
+| Framework     | Next.js                    | 16.x    | App Router, RSC, ISR                        |
+| Language      | TypeScript                 | 5.x     | Strict mode, exactOptionalPropertyTypes     |
+| Styling       | Tailwind CSS               | 4.x     | @tailwindcss/postcss, CSS variables         |
+| UI Components | shadcn/ui (basalt variant) | —       | Copy-paste from ../basalt, Radix primitives |
+| Icons         | Lucide React               | latest  | 1.5px stroke, consistent with basalt        |
+| Editor        | TBD (Phase 1: basic)       | —       | Markdown with live preview                  |
 
 ### Data Layer
 
-| Layer | Technology | Rationale |
-|-------|-----------|-----------|
-| Database | Cloudflare D1 | SQLite at edge, free tier generous, zero-config |
-| Object Storage | Cloudflare R2 | Already has blog images, S3-compatible |
-| D1 Access | Worker proxy (native D1 binding) | Railway → Worker HTTP → D1, lower latency than REST API |
-| ORM | None (raw SQL) | D1 works best with raw SQL, keeps control |
+| Layer          | Technology                       | Rationale                                               |
+| -------------- | -------------------------------- | ------------------------------------------------------- |
+| Database       | Cloudflare D1                    | SQLite at edge, free tier generous, zero-config         |
+| Object Storage | Cloudflare R2                    | Already has blog images, S3-compatible                  |
+| D1 Access      | Worker proxy (native D1 binding) | Railway → Worker HTTP → D1, lower latency than REST API |
+| ORM            | None (raw SQL)                   | D1 works best with raw SQL, keeps control               |
 
 ### Auth
 
-| Component | Technology |
-|-----------|-----------|
-| Provider | Google OAuth |
-| Library | Auth.js (NextAuth v5) |
-| Strategy | JWT (stateless, no session table needed) |
+| Component | Technology                                         |
+| --------- | -------------------------------------------------- |
+| Provider  | Google OAuth                                       |
+| Library   | Auth.js (NextAuth v5)                              |
+| Strategy  | JWT (stateless, no session table needed)           |
 | Whitelist | Email whitelist in env var (single user initially) |
 
 ### Deployment
 
-| Component | Platform | Notes |
-|-----------|----------|-------|
-| Compute | Railway | Docker (Bun build → Node runtime) |
-| Database | Cloudflare D1 | `firefly-db` (prod) / `firefly-db-test` (test) |
-| Images | Cloudflare R2 | `firefly` bucket, custom domain |
-| DNS | Cloudflare | your-domain.com |
-| CI/CD | Railway auto-deploy | From GitHub main branch |
+| Component | Platform            | Notes                                          |
+| --------- | ------------------- | ---------------------------------------------- |
+| Compute   | Railway             | Docker (Bun build → Node runtime)              |
+| Database  | Cloudflare D1       | `firefly-db` (prod) / `firefly-db-test` (test) |
+| Images    | Cloudflare R2       | `firefly` bucket, custom domain                |
+| DNS       | Cloudflare          | your-domain.com                                |
+| CI/CD     | Railway auto-deploy | From GitHub main branch                        |
 
 ### Quality (6-dimensional) — Tier S
 
-| Dimension | Tool | Gate | Status |
-|-----------|------|------|--------|
-| L1 Unit | Vitest 4.1, ≥90% coverage (actual: 97%+) | pre-commit | ✅ 978 tests |
-| L2 Integration | API E2E tests, real HTTP vs D1-test | pre-push | ✅ |
-| L3 System | Playwright 1.58 (chromium) | manual/CI | ✅ |
-| G1 Static | tsc --noEmit + ESLint strict + --max-warnings=0 | pre-commit | ✅ 0 errors |
-| G2 Security | osv-scanner 2.3 + gitleaks 8.30 | pre-push | ✅ 0 vulns, 0 leaks |
-| D1 Isolation | Local Miniflare SQLite via `wrangler dev --local` | E2E only | ✅ |
+| Dimension      | Tool                                              | Gate       | Status              |
+| -------------- | ------------------------------------------------- | ---------- | ------------------- |
+| L1 Unit        | Vitest 4.1, ≥90% coverage (actual: 97%+)          | pre-commit | ✅ 978 tests        |
+| L2 Integration | API E2E tests, real HTTP vs D1-test               | pre-push   | ✅                  |
+| L3 System      | Playwright 1.58 (chromium)                        | manual/CI  | ✅                  |
+| G1 Static      | tsc --noEmit + ESLint strict + --max-warnings=0   | pre-commit | ✅ 0 errors         |
+| G2 Security    | osv-scanner 2.3 + gitleaks 8.30                   | pre-push   | ✅ 0 vulns, 0 leaks |
+| D1 Isolation   | Local Miniflare SQLite via `wrangler dev --local` | E2E only   | ✅                  |
 
 ## Architecture Patterns
 
@@ -136,9 +136,10 @@ Railway (Next.js) → HTTP → Worker (firefly.worker.dev) → D1 native binding
 ```
 
 Worker endpoints:
-- `GET  /api/v1/health`   — health check (no auth)
-- `POST /api/v1/query`    — read-only SQL (write-guarded by regex)
-- `POST /api/v1/execute`  — write SQL (single + batch)
+
+- `GET  /api/v1/health` — health check (no auth)
+- `POST /api/v1/query` — read-only SQL (write-guarded by regex)
+- `POST /api/v1/execute` — write SQL (single + batch)
 
 Auth: `Authorization: Bearer WORKER_SECRET` on query/execute.
 
@@ -175,6 +176,7 @@ await db.batch([
 ### AI Crawler Support
 
 Explicit support for AI crawlers:
+
 - `llms.txt` at root with site description and content index
 - Proper `User-Agent` detection for GPTBot, ClaudeBot, Google-Extended, etc.
 - Track AI crawler visits separately in analytics

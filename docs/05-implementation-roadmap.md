@@ -31,6 +31,7 @@ firefly/
 ```
 
 Commits:
+
 1. ✅ `chore: initialize next.js 16 with bun and typescript strict` — Next.js 16.2.1, React 19
 2. ✅ `chore: configure tailwind 4, eslint strict, vitest` — Tailwind CSS 4, ESLint 10 + typescript-eslint
 3. `chore: setup husky pre-commit and pre-push hooks`
@@ -45,6 +46,7 @@ Commits:
 5. ✅ Implement DB client (`src/lib/db.ts`) — 16 tests, 100% coverage
 
 Commits:
+
 1. `chore: create d1 databases and migration scripts`
 2. `feat: implement d1 rest client with test isolation`
 3. `test: verify d1 client against test database`
@@ -57,6 +59,7 @@ Commits:
 4. ✅ Login page (basalt design)
 
 Commits:
+
 1. ✅ `feat: configure google oauth with auth.js` — Auth.js v5, Google provider, JWT strategy
 2. ✅ `feat: add email whitelist and route guard middleware` — protect /admin/* and write APIs
 3. ✅ `feat: implement login page with basalt design` — gradient blobs, Card, Google OAuth button
@@ -78,6 +81,7 @@ data/tags.ts         ← CRUD queries
 ```
 
 Commits (TDD — test first, then implementation):
+
 1. ✅ `feat: add domain type definitions for all database entities`
 2. ✅ `test: add post model unit tests`
 3. ✅ `feat: implement post model (slugify, reading time, excerpt)` — 28 tests
@@ -100,6 +104,7 @@ Commits (TDD — test first, then implementation):
 ```
 
 Commits:
+
 1. ✅ `feat: implement post api routes` — includes all 6 endpoints + shared helpers
 
 ### 1.3 Public Pages (SSR) ✅
@@ -116,6 +121,7 @@ Commits:
 ```
 
 Commits:
+
 1. ✅ `feat: implement home page with post list`
 2. ✅ `feat: implement post detail page with seo meta`
 3. ✅ `feat: implement category and tag archive pages`
@@ -129,6 +135,7 @@ Display historical WordPress comments on post pages. No new comment submission.
 Comments shown only on posts with `comment_enabled = 1`.
 
 Commits:
+
 1. ✅ `feat: implement comment display on post pages` — data layer + threaded display, 5 tests
 
 ### 1.5 Redirects ✅
@@ -136,6 +143,7 @@ Commits:
 Middleware to handle 301 redirects from WordPress URLs.
 
 Commits:
+
 1. ✅ `feat: implement 301 redirect middleware for wordpress urls` — with async hit counter
 
 ## Phase 2: Admin Panel
@@ -145,6 +153,7 @@ Commits:
 Based on basalt design system: sidebar navigation, top bar, responsive.
 
 Commits:
+
 1. ✅ `feat: implement admin layout with basalt design system` — sidebar, top bar, mobile overlay, dashboard page
 
 ### 2.2 Post Management ✅
@@ -152,6 +161,7 @@ Commits:
 List, create, edit, delete posts from admin panel.
 
 Commits:
+
 1. ✅ `feat: implement admin post list with search and filters` — paginated table, status/category/search filters
 2. ✅ `feat: implement post create/edit form` — PostForm with markdown, tags, API tag_ids support
 3. ✅ `feat: add markdown editor with live preview`
@@ -161,17 +171,20 @@ Commits:
 ### 2.3 Category & Tag Management ✅
 
 Commits:
+
 1. ✅ `feat: implement admin category and tag crud` — reusable TaxonomyManager, inline create/edit/delete
 
 ### 2.4 Site Analytics Dashboard ✅
 
 Track and display:
+
 - Page views, unique visitors, sessions
 - Bot traffic breakdown (search engines vs AI crawlers)
 - Top posts, referrers, countries, devices
 - Time-series charts (daily/weekly/monthly)
 
 Commits:
+
 1. ✅ `feat: implement page view tracking middleware` — fire-and-forget tracking, IP hashing, 9 tests
 2. ✅ `feat: implement bot detection and classification`
 3. ✅ `test: add analytics model and data layer tests`
@@ -183,6 +196,7 @@ Commits:
 Execute migration scripts in order (see doc 04).
 
 Commits:
+
 1. ✅ `feat: add wp data export script` — parse MySQL dump to JSON
 2. ✅ `feat: add r2 image audit and sync scripts` — list R2 objects, directory summary
 3. ✅ `feat: add post migration with content transform` — users, categories, tags, posts with image URL rewriting
@@ -199,4 +213,3 @@ Commits:
 4. Switch DNS from VPS → Railway
 5. Monitor 301 redirects and error rates
 6. Sunset WordPress after 30 days of stable operation
-

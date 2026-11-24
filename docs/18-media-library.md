@@ -69,16 +69,16 @@ ImageUploadZone → fetch POST /api/upload
 
 ### Reusable Code
 
-| Module | Function | Location |
-|--------|----------|----------|
-| Upload to R2 | `uploadToR2(buffer, filename, mime, key)` | `src/lib/r2-client.ts` |
-| Delete from R2 | `deleteFromR2(key)` | `src/lib/r2-client.ts` |
-| Key generation | `generateFireflyR2Key(filename)` | `src/lib/r2.ts` |
-| Validation | `validateUpload(data, mime)` | `src/lib/r2.ts` |
-| R2 list pagination | `listAllObjects()` | `scripts/migrations/01-audit-r2-images.ts` |
-| Confirm dialog | `ConfirmDialog` | `src/components/admin/confirm-dialog.tsx` |
-| DB helper pattern | `getDb()`, query patterns | `src/data/posts.ts` |
-| ULID generation | `import { ulid } from "ulid"` | Used across `src/data/*.ts` |
+| Module             | Function                                  | Location                                   |
+| ------------------ | ----------------------------------------- | ------------------------------------------ |
+| Upload to R2       | `uploadToR2(buffer, filename, mime, key)` | `src/lib/r2-client.ts`                     |
+| Delete from R2     | `deleteFromR2(key)`                       | `src/lib/r2-client.ts`                     |
+| Key generation     | `generateFireflyR2Key(filename)`          | `src/lib/r2.ts`                            |
+| Validation         | `validateUpload(data, mime)`              | `src/lib/r2.ts`                            |
+| R2 list pagination | `listAllObjects()`                        | `scripts/migrations/01-audit-r2-images.ts` |
+| Confirm dialog     | `ConfirmDialog`                           | `src/components/admin/confirm-dialog.tsx`  |
+| DB helper pattern  | `getDb()`, query patterns                 | `src/data/posts.ts`                        |
+| ULID generation    | `import { ulid } from "ulid"`             | Used across `src/data/*.ts`                |
 
 ---
 
@@ -108,7 +108,7 @@ schema. The backup types also need `post_id` so exports don't silently drop it.
 export interface Attachment {
   // ... existing fields ...
   alt_text: string | null;
-  post_id: string | null;   // ← NEW: optional post association
+  post_id: string | null; // ← NEW: optional post association
   wp_id: number | null;
   created_at: number;
 }
@@ -120,7 +120,7 @@ export interface Attachment {
 export interface ExportedAttachment {
   // ... existing fields ...
   alt_text: string | null;
-  post_id: string | null;   // ← NEW
+  post_id: string | null; // ← NEW
   wp_id: number | null;
   created_at: string;
 }
@@ -133,7 +133,7 @@ function convertAttachment(a: Attachment): ExportedAttachment {
   return {
     // ... existing fields ...
     alt_text: a.alt_text,
-    post_id: a.post_id,   // ← NEW: pass through as-is (no epoch conversion)
+    post_id: a.post_id, // ← NEW: pass through as-is (no epoch conversion)
     wp_id: a.wp_id,
     created_at: epochToIso(a.created_at),
   };
@@ -142,18 +142,18 @@ function convertAttachment(a: Attachment): ExportedAttachment {
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
-| `scripts/migrations/011-media-post-id.sql` | New — migration |
-| `src/models/types.ts` | Add `post_id` to `Attachment` interface |
-| `src/models/backup-schema.ts` | Add `post_id` to `ExportedAttachment` interface |
-| `src/data/backup-export.ts` | Add `post_id` to `convertAttachment()` |
+| File                                       | Change                                          |
+| ------------------------------------------ | ----------------------------------------------- |
+| `scripts/migrations/011-media-post-id.sql` | New — migration                                 |
+| `src/models/types.ts`                      | Add `post_id` to `Attachment` interface         |
+| `src/models/backup-schema.ts`              | Add `post_id` to `ExportedAttachment` interface |
+| `src/data/backup-export.ts`                | Add `post_id` to `convertAttachment()`          |
 
 ### Atomic Commit
 
-| # | Message |
-|---|---------|
-| 1 | `feat: add post_id column and indexes to attachments table` | ✅ |
+| #   | Message                                                     |
+| --- | ----------------------------------------------------------- |
+| 1   | `feat: add post_id column and indexes to attachments table` | ✅  |
 
 ---
 
@@ -186,38 +186,26 @@ export interface CreateMediaInput {
 // List media with pagination, optional post_id filter
 export async function listMedia(
   db: Db,
-  opts: { page?: number; pageSize?: number; postId?: string }
-): Promise<{ media: Attachment[]; total: number }>
+  opts: { page?: number; pageSize?: number; postId?: string },
+): Promise<{ media: Attachment[]; total: number }>;
 
 // Get single media by id
-export async function getMedia(
-  db: Db,
-  id: string
-): Promise<Attachment | null>
+export async function getMedia(db: Db, id: string): Promise<Attachment | null>;
 
 // Create media record (called after R2 upload)
-export async function createMedia(
-  db: Db,
-  input: CreateMediaInput
-): Promise<Attachment>
+export async function createMedia(db: Db, input: CreateMediaInput): Promise<Attachment>;
 
 // Delete media record by id
-export async function deleteMedia(
-  db: Db,
-  id: string
-): Promise<void>
+export async function deleteMedia(db: Db, id: string): Promise<void>;
 
 // List media by post (for editor gallery)
-export async function listMediaByPost(
-  db: Db,
-  postId: string
-): Promise<Attachment[]>
+export async function listMediaByPost(db: Db, postId: string): Promise<Attachment[]>;
 
 // Batch create (for R2 sync script) — inserts in chunks of 50
 export async function batchCreateMedia(
   db: Db,
-  items: Array<Omit<CreateMediaInput, "postId">>
-): Promise<number>
+  items: Array<Omit<CreateMediaInput, "postId">>,
+): Promise<number>;
 ```
 
 > **Note**: `Attachment` is imported from `src/models/types.ts` (single source of truth),
@@ -230,6 +218,7 @@ export async function batchCreateMedia(
 **File**: `src/data/media.test.ts` (new)
 
 Test cases:
+
 - `createMedia`: returns created record with ULID id
 - `getMedia`: returns record by id, returns null for non-existent
 - `listMedia`: pagination (page/pageSize), total count, desc order by created_at
@@ -240,16 +229,16 @@ Test cases:
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
-| `src/data/media.ts` | New — data access layer |
-| `src/data/media.test.ts` | New — unit tests |
+| File                     | Change                  |
+| ------------------------ | ----------------------- |
+| `src/data/media.ts`      | New — data access layer |
+| `src/data/media.test.ts` | New — unit tests        |
 
 ### Atomic Commit
 
-| # | Message |
-|---|---------|
-| 2 | `feat: add media data access layer with CRUD operations` | ✅ |
+| #   | Message                                                  |
+| --- | -------------------------------------------------------- |
+| 2   | `feat: add media data access layer with CRUD operations` | ✅  |
 
 ---
 
@@ -262,10 +251,12 @@ Test cases:
 **File**: `src/app/api/media/route.ts` (new)
 
 **GET `/api/media`** (auth required):
+
 - Query params: `page` (default 1), `page_size` (default 24), `post_id` (optional)
 - Returns: `{ media: Attachment[], total: number, page: number, pageSize: number }`
 
 **POST `/api/media`** (auth required):
+
 - Accept: `multipart/form-data` with `file` field + optional `post_id` field
 - Flow:
   1. Parse formData → extract file and post_id
@@ -279,9 +270,11 @@ Test cases:
 **File**: `src/app/api/media/[id]/route.ts` (new)
 
 **GET `/api/media/[id]`** (auth required):
+
 - Returns single attachment or 404
 
 **DELETE `/api/media/[id]`** (auth required):
+
 - Flow:
   1. `getMedia(db, id)` → look up record (404 if not found)
   2. `deleteFromR2(record.r2_key)` → remove from R2
@@ -290,16 +283,16 @@ Test cases:
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
-| `src/app/api/media/route.ts` | New — GET list + POST create |
-| `src/app/api/media/[id]/route.ts` | New — GET single + DELETE |
+| File                              | Change                       |
+| --------------------------------- | ---------------------------- |
+| `src/app/api/media/route.ts`      | New — GET list + POST create |
+| `src/app/api/media/[id]/route.ts` | New — GET single + DELETE    |
 
 ### Atomic Commit
 
-| # | Message |
-|---|---------|
-| 3 | `feat: add media API routes for list, create, and delete` | ✅ |
+| #   | Message                                                   |
+| --- | --------------------------------------------------------- |
+| 3   | `feat: add media API routes for list, create, and delete` | ✅  |
 
 ---
 
@@ -312,6 +305,7 @@ Test cases:
 **File**: `src/components/admin/image-upload-zone.tsx`
 
 Key changes:
+
 - Add props: `postId?: string`, `results: UploadResult[]`, `onResultsChange: (results: UploadResult[]) => void`
 - **Controlled component**: No internal `result` / `results` state.
   Parent owns the array; this component renders it and calls `onResultsChange` on upload.
@@ -328,6 +322,7 @@ Key changes:
 **Problem**: `PostForm` renders TWO `ImageUploadZone` instances — one in the
 mobile `lg:hidden` block (line 325) and one in the desktop `hidden lg:block`
 block (line 340). If each instance maintains its own `results` state:
+
 - `useRef` can only point to one instance
 - Uploads in mobile are invisible to the desktop instance and vice versa
 - Edit-mode preload would fire twice
@@ -362,8 +357,9 @@ Both the mobile and desktop `<ImageUploadZone />` receive the same
 with updates the shared state; both instances reflect it.
 
 On save, `PostForm` reads `uploadedMedia` directly (no ref needed):
+
 ```typescript
-const mediaIds = uploadedMedia.map(r => r.id);
+const mediaIds = uploadedMedia.map((r) => r.id);
 ```
 
 ### 4.3 Post-save Backfill — Critical for New Post Scenario
@@ -378,10 +374,12 @@ the upload zone.
 **File**: `src/app/api/media/associate/route.ts` (new)
 
 **PATCH `/api/media/associate`** (auth required):
+
 - Body: `{ mediaIds: string[], postId: string }`
 - Flow:
   1. Validate `postId` exists in posts table
   2. Build dynamic placeholders for the array:
+
      ```typescript
      const placeholders = mediaIds.map(() => "?").join(", ");
      await db.execute(
@@ -389,11 +387,13 @@ the upload zone.
        [postId, ...mediaIds]
      );
      ```
+
      Alternatively, use `db.batch()` with one UPDATE per media ID if the array
      could be large (>50 items, unlikely for a single post).
   3. Return 200 + `{ updated: number }` (from `meta.changes`)
 
 **PostForm save flow** (updated):
+
 ```
 1. User clicks "Create Post"
 2. POST /api/posts → { id, slug }
@@ -410,17 +410,17 @@ the upload zone.
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
+| File                                         | Change                                  |
+| -------------------------------------------- | --------------------------------------- |
 | `src/components/admin/image-upload-zone.tsx` | Single → array results, call /api/media |
-| `src/components/admin/post-form.tsx` | Pass postId, backfill after create |
-| `src/app/api/media/associate/route.ts` | New — PATCH endpoint for backfill |
+| `src/components/admin/post-form.tsx`         | Pass postId, backfill after create      |
+| `src/app/api/media/associate/route.ts`       | New — PATCH endpoint for backfill       |
 
 ### Atomic Commit
 
-| # | Message |
-|---|---------|
-| 4 | `feat: upgrade image upload zone to support continuous uploads` | ✅ |
+| #   | Message                                                         |
+| --- | --------------------------------------------------------------- |
+| 4   | `feat: upgrade image upload zone to support continuous uploads` | ✅  |
 
 ---
 
@@ -439,6 +439,7 @@ Server component — fetch initial media list and pass to client component.
 **File**: `src/components/admin/media-library.tsx` (new)
 
 Features:
+
 - **Grid layout**: Responsive — 2 cols (mobile) / 3 cols (tablet) / 4 cols (desktop)
 - **Each card**:
   - Thumbnail image (object-cover, rounded)
@@ -456,6 +457,7 @@ Features:
 **File**: `src/components/admin/sidebar.tsx`
 
 Add to Content group (after Tags):
+
 ```typescript
 { titleKey: "admin.nav.media", href: "/admin/media", icon: ImageIcon }
 ```
@@ -465,6 +467,7 @@ Import `Image as ImageIcon` from `lucide-react`.
 **File**: `src/components/admin/shell.tsx`
 
 Add to `PAGE_TITLE_KEYS`:
+
 ```typescript
 "/admin/media": "admin.nav.media",
 ```
@@ -492,21 +495,21 @@ Add to `PAGE_TITLE_KEYS`:
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
-| `src/app/admin/media/page.tsx` | New — server page |
+| File                                     | Change                 |
+| ---------------------------------------- | ---------------------- |
+| `src/app/admin/media/page.tsx`           | New — server page      |
 | `src/components/admin/media-library.tsx` | New — client component |
-| `src/components/admin/sidebar.tsx` | Add Media nav item |
-| `src/components/admin/shell.tsx` | Add title key |
-| `src/i18n/locales/en.json` | Add media keys |
-| `src/i18n/locales/zh.json` | Add media keys |
+| `src/components/admin/sidebar.tsx`       | Add Media nav item     |
+| `src/components/admin/shell.tsx`         | Add title key          |
+| `src/i18n/locales/en.json`               | Add media keys         |
+| `src/i18n/locales/zh.json`               | Add media keys         |
 
 ### Atomic Commits
 
-| # | Message |
-|---|---------|
-| 5 | `feat: add media library page with grid view and pagination` | ✅ |
-| 6 | `feat: add media link to admin sidebar and i18n keys` | ✅ |
+| #   | Message                                                      |
+| --- | ------------------------------------------------------------ |
+| 5   | `feat: add media library page with grid view and pagination` | ✅  |
+| 6   | `feat: add media link to admin sidebar and i18n keys`        | ✅  |
 
 ---
 
@@ -539,6 +542,7 @@ Logic (reuse `01-audit-r2-images.ts` ListObjectsV2 pagination pattern):
 ```
 
 **DB access**: Uses the project's `Db` interface from `src/lib/db.ts`:
+
 - Read (check existing): `db.query()` via Worker `/api/v1/query`
 - Write (insert): `db.execute()` or `db.batch()` via Worker `/api/v1/execute`
 - **NOT** raw HTTP to `/api/v1/query` for writes (that endpoint is read-only)
@@ -549,6 +553,7 @@ in seconds. Must convert: `Math.floor(date.getTime() / 1000)`.
 Do **NOT** store ISO string directly — it would cause type mismatch.
 
 Usage:
+
 ```bash
 bun scripts/migrations/02-sync-r2-to-db.ts
 bun scripts/migrations/02-sync-r2-to-db.ts --test  # target test DB
@@ -556,15 +561,15 @@ bun scripts/migrations/02-sync-r2-to-db.ts --test  # target test DB
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
+| File                                     | Change                    |
+| ---------------------------------------- | ------------------------- |
 | `scripts/migrations/02-sync-r2-to-db.ts` | New — R2 → DB sync script |
 
 ### Atomic Commit
 
-| # | Message |
-|---|---------|
-| 7 | `feat: add R2 to DB sync script for initial media library population` | ✅ |
+| #   | Message                                                               |
+| --- | --------------------------------------------------------------------- |
+| 7   | `feat: add R2 to DB sync script for initial media library population` | ✅  |
 
 ---
 
@@ -575,6 +580,7 @@ bun scripts/migrations/02-sync-r2-to-db.ts --test  # target test DB
 **File**: `e2e/api/media.test.ts` (new)
 
 Test cases:
+
 - `GET /api/media` — returns paginated list
 - `GET /api/media?post_id=xxx` — filters by post
 - `POST /api/media` — upload file + create DB record, returns 201
@@ -591,33 +597,33 @@ Add entry for doc 18.
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
+| File                    | Change             |
+| ----------------------- | ------------------ |
 | `e2e/api/media.test.ts` | New — L2 E2E tests |
-| `docs/README.md` | Add doc 18 entry |
+| `docs/README.md`        | Add doc 18 entry   |
 
 ### Atomic Commits
 
-| # | Message |
-|---|---------|
-| 8 | `test: add L2 E2E tests for media API endpoints` | ✅ |
-| 9 | `docs: mark media library document as implemented` | ✅ |
+| #   | Message                                            |
+| --- | -------------------------------------------------- |
+| 8   | `test: add L2 E2E tests for media API endpoints`   | ✅  |
+| 9   | `docs: mark media library document as implemented` | ✅  |
 
 ---
 
 ## Complete Atomic Commit Sequence
 
-| # | Type | Message | Scope |
-|---|------|---------|-------|
-| 1 | feat | `feat: add post_id column and indexes to attachments table` | DB |
-| 2 | feat | `feat: add media data access layer with CRUD operations` | Data + tests |
-| 3 | feat | `feat: add media API routes for list, create, and delete` | API |
-| 4 | feat | `feat: upgrade image upload zone to support continuous uploads` | Component |
-| 5 | feat | `feat: add media library page with grid view and pagination` | Admin page |
-| 6 | feat | `feat: add media link to admin sidebar and i18n keys` | Nav + i18n |
-| 7 | feat | `feat: add R2 to DB sync script for initial media library population` | Script |
-| 8 | test | `test: add L2 E2E tests for media API endpoints` | E2E |
-| 9 | docs | `docs: mark media library document as implemented` | Docs |
+| #   | Type | Message                                                               | Scope        |
+| --- | ---- | --------------------------------------------------------------------- | ------------ |
+| 1   | feat | `feat: add post_id column and indexes to attachments table`           | DB           |
+| 2   | feat | `feat: add media data access layer with CRUD operations`              | Data + tests |
+| 3   | feat | `feat: add media API routes for list, create, and delete`             | API          |
+| 4   | feat | `feat: upgrade image upload zone to support continuous uploads`       | Component    |
+| 5   | feat | `feat: add media library page with grid view and pagination`          | Admin page   |
+| 6   | feat | `feat: add media link to admin sidebar and i18n keys`                 | Nav + i18n   |
+| 7   | feat | `feat: add R2 to DB sync script for initial media library population` | Script       |
+| 8   | test | `test: add L2 E2E tests for media API endpoints`                      | E2E          |
+| 9   | docs | `docs: mark media library document as implemented`                    | Docs         |
 
 ---
 

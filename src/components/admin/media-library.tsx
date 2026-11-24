@@ -27,11 +27,7 @@ interface MediaLibraryProps {
   initialYearCounts: YearCount[];
 }
 
-export function MediaLibrary({
-  initialMedia,
-  initialTotal,
-  initialYearCounts,
-}: MediaLibraryProps) {
+export function MediaLibrary({ initialMedia, initialTotal, initialYearCounts }: MediaLibraryProps) {
   const [media, setMedia] = useState<MediaWithUrl[]>(initialMedia);
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
@@ -53,27 +49,24 @@ export function MediaLibrary({
   const upload = useMediaUpload(handleUploadComplete);
 
   // Re-fetch when filters change
-  const fetchMedia = useCallback(
-    async (f: Filters, page: number, append: boolean) => {
-      const setter = append ? setLoading : setFetching;
-      setter(true);
-      try {
-        const res = await fetch(`/api/media?${buildQuery(f, page)}`);
-        if (!res.ok) return;
-        const data = await res.json();
-        if (append) {
-          setMedia((prev) => [...prev, ...data.media]);
-        } else {
-          setMedia(data.media);
-        }
-        setTotal(data.total);
-        pageRef.current = page;
-      } finally {
-        setter(false);
+  const fetchMedia = useCallback(async (f: Filters, page: number, append: boolean) => {
+    const setter = append ? setLoading : setFetching;
+    setter(true);
+    try {
+      const res = await fetch(`/api/media?${buildQuery(f, page)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (append) {
+        setMedia((prev) => [...prev, ...data.media]);
+      } else {
+        setMedia(data.media);
       }
-    },
-    [],
-  );
+      setTotal(data.total);
+      pageRef.current = page;
+    } finally {
+      setter(false);
+    }
+  }, []);
 
   // Debounced search input → filters.search
   useEffect(() => {
@@ -218,12 +211,7 @@ export function MediaLibrary({
 
       {media.length < total && media.length > 0 && (
         <div className="mt-6 flex justify-center">
-          <Button
-            variant="outline"
-            onClick={loadMore}
-            disabled={loading}
-            loading={loading}
-          >
+          <Button variant="outline" onClick={loadMore} disabled={loading} loading={loading}>
             加载更多
           </Button>
         </div>

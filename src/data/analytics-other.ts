@@ -6,10 +6,7 @@ import type { Db } from "@/lib/db";
 import type { OtherBotDetailResponse } from "@/models/analytics-types";
 import { TIME_WINDOW_WHERE, sourceCondition } from "./analytics-helpers";
 
-export async function getOtherBotDetail(
-  db: Db,
-  days: number,
-): Promise<OtherBotDetailResponse> {
+export async function getOtherBotDetail(db: Db, days: number): Promise<OtherBotDetailResponse> {
   const otherCond = sourceCondition("other");
 
   const [byCategory, socialBots, monitorBots, unknownBots] = await Promise.all([

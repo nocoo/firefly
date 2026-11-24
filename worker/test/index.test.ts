@@ -14,7 +14,7 @@
  * - 404 for unknown routes
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ─── Mock Types ─────────────────────────────────────────────────────────────
 
@@ -49,7 +49,7 @@ let worker: {
 beforeEach(async () => {
   vi.restoreAllMocks();
   // Dynamic import to pick up fresh module state
-  const mod = await import('../src/index.js');
+  const mod = await import("../src/index.js");
   worker = mod.default as unknown as typeof worker;
 });
 
@@ -69,7 +69,7 @@ function makeEnv(overrides?: Partial<MockEnv>): MockEnv {
       batch: vi.fn().mockResolvedValue([]),
       exec: vi.fn().mockResolvedValue({ count: 1, duration: 10 }),
     },
-    WORKER_SECRET: 'test-secret',
+    WORKER_SECRET: "test-secret",
     ...overrides,
   };
 }
@@ -78,13 +78,10 @@ function makeCtx(): MockCtx {
   return { waitUntil: vi.fn() };
 }
 
-function makeRequest(
-  path: string,
-  options?: RequestInit & { auth?: boolean },
-): Request {
+function makeRequest(path: string, options?: RequestInit & { auth?: boolean }): Request {
   const headers = new Headers(options?.headers);
   if (options?.auth) {
-    headers.set('Authorization', 'Bearer test-secret');
+    headers.set("Authorization", "Bearer test-secret");
   }
   return new Request(`https://firefly.example.com${path}`, {
     ...options,
@@ -94,27 +91,23 @@ function makeRequest(
 
 // ─── CORS Tests ─────────────────────────────────────────────────────────────
 
-describe('CORS preflight', () => {
-  it('responds to OPTIONS with CORS headers', async () => {
+describe("CORS preflight", () => {
+  it("responds to OPTIONS with CORS headers", async () => {
     const env = makeEnv();
-    const res = await worker.fetch(
-      makeRequest('/any-path', { method: 'OPTIONS' }),
-      env,
-      makeCtx(),
-    );
+    const res = await worker.fetch(makeRequest("/any-path", { method: "OPTIONS" }), env, makeCtx());
 
     expect(res.status).toBe(200);
-    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*');
-    expect(res.headers.get('Access-Control-Allow-Methods')).toContain('POST');
-    expect(res.headers.get('Access-Control-Allow-Headers')).toContain('Authorization');
-    expect(res.headers.get('Access-Control-Max-Age')).toBe('86400');
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
+    expect(res.headers.get("Access-Control-Allow-Methods")).toContain("POST");
+    expect(res.headers.get("Access-Control-Allow-Headers")).toContain("Authorization");
+    expect(res.headers.get("Access-Control-Max-Age")).toBe("86400");
   });
 });
 
 // ─── GET /api/live Tests ────────────────────────────────────────────────────
 
-describe('GET /api/live', () => {
-  it('returns healthy status when DB is connected', async () => {
+describe("GET /api/live", () => {
+  it("returns healthy status when DB is connected", async () => {
     const mockFirst = vi.fn().mockResolvedValue({ probe: 1 });
     const mockBind = vi.fn().mockReturnValue({ first: mockFirst });
     const env = makeEnv({
@@ -125,19 +118,19 @@ describe('GET /api/live', () => {
       },
     });
 
-    const res = await worker.fetch(makeRequest('/api/live'), env, makeCtx());
+    const res = await worker.fetch(makeRequest("/api/live"), env, makeCtx());
 
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.status).toBe('ok');
-    expect(json.component).toBe('firefly-worker');
+    expect(json.status).toBe("ok");
+    expect(json.component).toBe("firefly-worker");
     expect(json.database.connected).toBe(true);
     expect(json.uptime).toBeGreaterThanOrEqual(0);
     expect(json.timestamp).toBeDefined();
   });
 
-  it('returns error status when DB connection fails', async () => {
-    const mockFirst = vi.fn().mockRejectedValue(new Error('Connection refused'));
+  it("returns error status when DB connection fails", async () => {
+    const mockFirst = vi.fn().mockRejectedValue(new Error("Connection refused"));
     const env = makeEnv({
       DB: {
         prepare: vi.fn().mockReturnValue({ first: mockFirst }),
@@ -146,18 +139,18 @@ describe('GET /api/live', () => {
       },
     });
 
-    const res = await worker.fetch(makeRequest('/api/live'), env, makeCtx());
+    const res = await worker.fetch(makeRequest("/api/live"), env, makeCtx());
 
     expect(res.status).toBe(503);
     const json = await res.json();
-    expect(json.status).toBe('error');
+    expect(json.status).toBe("error");
     expect(json.database.connected).toBe(false);
-    expect(json.database.error).toContain('Connection refused');
+    expect(json.database.error).toContain("Connection refused");
   });
 
   it('sanitizes "ok" in error messages', async () => {
     // Tests word-boundary replacement: \bok\b only matches whole word "ok"
-    const mockFirst = vi.fn().mockRejectedValue(new Error('connection ok failed'));
+    const mockFirst = vi.fn().mockRejectedValue(new Error("connection ok failed"));
     const env = makeEnv({
       DB: {
         prepare: vi.fn().mockReturnValue({ first: mockFirst }),
@@ -166,27 +159,23 @@ describe('GET /api/live', () => {
       },
     });
 
-    const res = await worker.fetch(makeRequest('/api/live'), env, makeCtx());
+    const res = await worker.fetch(makeRequest("/api/live"), env, makeCtx());
     const json = await res.json();
     // "ok" as a whole word should be replaced with "***"
-    expect(json.database.error).toBe('connection *** failed');
+    expect(json.database.error).toBe("connection *** failed");
   });
 
-  it('returns 405 for non-GET methods', async () => {
+  it("returns 405 for non-GET methods", async () => {
     const env = makeEnv();
-    const res = await worker.fetch(
-      makeRequest('/api/live', { method: 'POST' }),
-      env,
-      makeCtx(),
-    );
+    const res = await worker.fetch(makeRequest("/api/live", { method: "POST" }), env, makeCtx());
 
     expect(res.status).toBe(405);
     const json = await res.json();
-    expect(json.error).toBe('Method not allowed');
+    expect(json.error).toBe("Method not allowed");
   });
 
-  it('handles non-Error exceptions', async () => {
-    const mockFirst = vi.fn().mockRejectedValue('string error');
+  it("handles non-Error exceptions", async () => {
+    const mockFirst = vi.fn().mockRejectedValue("string error");
     const env = makeEnv({
       DB: {
         prepare: vi.fn().mockReturnValue({ first: mockFirst }),
@@ -195,17 +184,17 @@ describe('GET /api/live', () => {
       },
     });
 
-    const res = await worker.fetch(makeRequest('/api/live'), env, makeCtx());
+    const res = await worker.fetch(makeRequest("/api/live"), env, makeCtx());
     expect(res.status).toBe(503);
     const json = await res.json();
-    expect(json.database.error).toBe('string error');
+    expect(json.database.error).toBe("string error");
   });
 });
 
 // ─── GET /api/v1/health Tests ───────────────────────────────────────────────
 
-describe('GET /api/v1/health', () => {
-  it('returns healthy status with DB latency', async () => {
+describe("GET /api/v1/health", () => {
+  it("returns healthy status with DB latency", async () => {
     const mockFirst = vi.fn().mockResolvedValue({ 1: 1 });
     const env = makeEnv({
       DB: {
@@ -215,13 +204,13 @@ describe('GET /api/v1/health', () => {
       },
     });
 
-    const res = await worker.fetch(makeRequest('/api/v1/health'), env, makeCtx());
+    const res = await worker.fetch(makeRequest("/api/v1/health"), env, makeCtx());
 
     expect(res.status).toBe(200);
-    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    expect(res.headers.get("Cache-Control")).toBe("no-store");
 
     const json = await res.json();
-    expect(json.status).toBe('ok');
+    expect(json.status).toBe("ok");
     expect(json.version).toBeDefined();
     expect(json.uptime).toBeGreaterThanOrEqual(0);
     expect(json.db.connected).toBe(true);
@@ -229,8 +218,8 @@ describe('GET /api/v1/health', () => {
     expect(json.timestamp).toBeDefined();
   });
 
-  it('returns error status when DB fails', async () => {
-    const mockFirst = vi.fn().mockRejectedValue(new Error('DB error'));
+  it("returns error status when DB fails", async () => {
+    const mockFirst = vi.fn().mockRejectedValue(new Error("DB error"));
     const env = makeEnv({
       DB: {
         prepare: vi.fn().mockReturnValue({ first: mockFirst }),
@@ -239,19 +228,19 @@ describe('GET /api/v1/health', () => {
       },
     });
 
-    const res = await worker.fetch(makeRequest('/api/v1/health'), env, makeCtx());
+    const res = await worker.fetch(makeRequest("/api/v1/health"), env, makeCtx());
 
     expect(res.status).toBe(503);
     const json = await res.json();
-    expect(json.status).toBe('error');
+    expect(json.status).toBe("error");
     expect(json.db.connected).toBe(false);
     expect(json.db.error).toBeDefined();
   });
 
-  it('returns 405 for non-GET methods', async () => {
+  it("returns 405 for non-GET methods", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/health', { method: 'POST' }),
+      makeRequest("/api/v1/health", { method: "POST" }),
       env,
       makeCtx(),
     );
@@ -259,8 +248,8 @@ describe('GET /api/v1/health', () => {
     expect(res.status).toBe(405);
   });
 
-  it('handles non-Error exceptions', async () => {
-    const mockFirst = vi.fn().mockRejectedValue('string error');
+  it("handles non-Error exceptions", async () => {
+    const mockFirst = vi.fn().mockRejectedValue("string error");
     const env = makeEnv({
       DB: {
         prepare: vi.fn().mockReturnValue({ first: mockFirst }),
@@ -269,22 +258,22 @@ describe('GET /api/v1/health', () => {
       },
     });
 
-    const res = await worker.fetch(makeRequest('/api/v1/health'), env, makeCtx());
+    const res = await worker.fetch(makeRequest("/api/v1/health"), env, makeCtx());
     expect(res.status).toBe(503);
     const json = await res.json();
-    expect(json.db.error).toBe('string error');
+    expect(json.db.error).toBe("string error");
   });
 });
 
 // ─── Authentication Tests ───────────────────────────────────────────────────
 
-describe('Authentication', () => {
-  it('returns 401 for missing Authorization header', async () => {
+describe("Authentication", () => {
+  it("returns 401 for missing Authorization header", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
-        body: JSON.stringify({ sql: 'SELECT 1' }),
+      makeRequest("/api/v1/query", {
+        method: "POST",
+        body: JSON.stringify({ sql: "SELECT 1" }),
       }),
       env,
       makeCtx(),
@@ -292,16 +281,16 @@ describe('Authentication', () => {
 
     expect(res.status).toBe(401);
     const json = await res.json();
-    expect(json.error).toBe('Unauthorized');
+    expect(json.error).toBe("Unauthorized");
   });
 
-  it('returns 401 for invalid token', async () => {
+  it("returns 401 for invalid token", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
-        headers: { Authorization: 'Bearer wrong-token' },
-        body: JSON.stringify({ sql: 'SELECT 1' }),
+      makeRequest("/api/v1/query", {
+        method: "POST",
+        headers: { Authorization: "Bearer wrong-token" },
+        body: JSON.stringify({ sql: "SELECT 1" }),
       }),
       env,
       makeCtx(),
@@ -310,13 +299,13 @@ describe('Authentication', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 401 for malformed Authorization header', async () => {
+  it("returns 401 for malformed Authorization header", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
-        headers: { Authorization: 'Basic dXNlcjpwYXNz' },
-        body: JSON.stringify({ sql: 'SELECT 1' }),
+      makeRequest("/api/v1/query", {
+        method: "POST",
+        headers: { Authorization: "Basic dXNlcjpwYXNz" },
+        body: JSON.stringify({ sql: "SELECT 1" }),
       }),
       env,
       makeCtx(),
@@ -325,13 +314,13 @@ describe('Authentication', () => {
     expect(res.status).toBe(401);
   });
 
-  it('accepts valid Bearer token', async () => {
+  it("accepts valid Bearer token", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify({ sql: 'SELECT 1' }),
+        body: JSON.stringify({ sql: "SELECT 1" }),
       }),
       env,
       makeCtx(),
@@ -340,21 +329,21 @@ describe('Authentication', () => {
     expect(res.status).toBe(200);
   });
 
-  it('rejects an equal-length wrong token without native timingSafeEqual', async () => {
+  it("rejects an equal-length wrong token without native timingSafeEqual", async () => {
     const subtle = crypto.subtle as SubtleCrypto & {
       timingSafeEqual?: (a: BufferSource, b: BufferSource) => boolean;
     };
-    expect(typeof subtle.timingSafeEqual).toBe('undefined');
+    expect(typeof subtle.timingSafeEqual).toBe("undefined");
     // 'Bearer test-secret' is 18 chars; supply a same-length wrong header so
     // the comparison cannot early-exit on length and must walk the bytes.
-    const wrong = 'Bearer xxxx-xxxxxx';
-    expect(wrong.length).toBe('Bearer test-secret'.length);
+    const wrong = "Bearer xxxx-xxxxxx";
+    expect(wrong.length).toBe("Bearer test-secret".length);
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         headers: { Authorization: wrong },
-        body: JSON.stringify({ sql: 'SELECT 1' }),
+        body: JSON.stringify({ sql: "SELECT 1" }),
       }),
       env,
       makeCtx(),
@@ -363,13 +352,13 @@ describe('Authentication', () => {
     expect(res.status).toBe(401);
   });
 
-  it('rejects token of different length', async () => {
+  it("rejects token of different length", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
-        headers: { Authorization: 'Bearer test-secret-extra' },
-        body: JSON.stringify({ sql: 'SELECT 1' }),
+      makeRequest("/api/v1/query", {
+        method: "POST",
+        headers: { Authorization: "Bearer test-secret-extra" },
+        body: JSON.stringify({ sql: "SELECT 1" }),
       }),
       env,
       makeCtx(),
@@ -377,31 +366,25 @@ describe('Authentication', () => {
 
     expect(res.status).toBe(401);
   });
-
-
 });
 
 // ─── POST /api/v1/query Tests ───────────────────────────────────────────────
 
-describe('POST /api/v1/query', () => {
-  it('returns 405 for GET method', async () => {
+describe("POST /api/v1/query", () => {
+  it("returns 405 for GET method", async () => {
     const env = makeEnv();
-    const res = await worker.fetch(
-      makeRequest('/api/v1/query', { auth: true }),
-      env,
-      makeCtx(),
-    );
+    const res = await worker.fetch(makeRequest("/api/v1/query", { auth: true }), env, makeCtx());
 
     expect(res.status).toBe(405);
   });
 
-  it('returns 400 for invalid JSON body', async () => {
+  it("returns 400 for invalid JSON body", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
-        body: 'not json',
+        body: "not json",
       }),
       env,
       makeCtx(),
@@ -409,16 +392,16 @@ describe('POST /api/v1/query', () => {
 
     expect(res.status).toBe(400);
     const json = await res.json();
-    expect(json.error).toBe('Invalid JSON body');
+    expect(json.error).toBe("Invalid JSON body");
   });
 
-  it('returns 400 for non-object body', async () => {
+  it("returns 400 for non-object body", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify('string'),
+        body: JSON.stringify("string"),
       }),
       env,
       makeCtx(),
@@ -426,14 +409,14 @@ describe('POST /api/v1/query', () => {
 
     expect(res.status).toBe(400);
     const json = await res.json();
-    expect(json.error).toBe('Invalid request body');
+    expect(json.error).toBe("Invalid request body");
   });
 
-  it('returns 400 for null body', async () => {
+  it("returns 400 for null body", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
         body: JSON.stringify(null),
       }),
@@ -444,11 +427,11 @@ describe('POST /api/v1/query', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 for missing sql', async () => {
+  it("returns 400 for missing sql", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({}),
       }),
@@ -458,16 +441,16 @@ describe('POST /api/v1/query', () => {
 
     expect(res.status).toBe(400);
     const json = await res.json();
-    expect(json.error).toBe('Missing or empty sql');
+    expect(json.error).toBe("Missing or empty sql");
   });
 
-  it('returns 400 for empty sql', async () => {
+  it("returns 400 for empty sql", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify({ sql: '   ' }),
+        body: JSON.stringify({ sql: "   " }),
       }),
       env,
       makeCtx(),
@@ -476,13 +459,13 @@ describe('POST /api/v1/query', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 403 for write queries', async () => {
+  it("returns 403 for write queries", async () => {
     const env = makeEnv();
 
-    for (const keyword of ['INSERT', 'UPDATE', 'DELETE', 'DROP', 'ALTER', 'CREATE', 'PRAGMA']) {
+    for (const keyword of ["INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE", "PRAGMA"]) {
       const res = await worker.fetch(
-        makeRequest('/api/v1/query', {
-          method: 'POST',
+        makeRequest("/api/v1/query", {
+          method: "POST",
           auth: true,
           body: JSON.stringify({ sql: `${keyword} INTO posts` }),
         }),
@@ -492,17 +475,17 @@ describe('POST /api/v1/query', () => {
 
       expect(res.status).toBe(403);
       const json = await res.json();
-      expect(json.error).toContain('Write queries not allowed');
+      expect(json.error).toContain("Write queries not allowed");
     }
   });
 
-  it('handles case-insensitive write detection', async () => {
+  it("handles case-insensitive write detection", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify({ sql: 'insert INTO posts' }),
+        body: JSON.stringify({ sql: "insert INTO posts" }),
       }),
       env,
       makeCtx(),
@@ -511,13 +494,13 @@ describe('POST /api/v1/query', () => {
     expect(res.status).toBe(403);
   });
 
-  it('allows leading whitespace before write keyword detection', async () => {
+  it("allows leading whitespace before write keyword detection", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify({ sql: '  INSERT INTO posts' }),
+        body: JSON.stringify({ sql: "  INSERT INTO posts" }),
       }),
       env,
       makeCtx(),
@@ -526,7 +509,7 @@ describe('POST /api/v1/query', () => {
     expect(res.status).toBe(403);
   });
 
-  it('blocks CTE-wrapped writes on /api/v1/query (STU-2497 hardening)', async () => {
+  it("blocks CTE-wrapped writes on /api/v1/query (STU-2497 hardening)", async () => {
     // STU-2495 documented a known gap: the old WRITE_RE only inspected
     // the first keyword, so a CTE like
     //   WITH c AS (SELECT 1) UPDATE posts SET view_count = view_count + 1
@@ -546,12 +529,11 @@ describe('POST /api/v1/query', () => {
     });
     const env = makeEnv({ DB: { prepare } as unknown as D1Database });
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({
-          sql:
-            'WITH c AS (SELECT 1) UPDATE posts SET view_count = view_count + 1',
+          sql: "WITH c AS (SELECT 1) UPDATE posts SET view_count = view_count + 1",
         }),
       }),
       env,
@@ -563,12 +545,16 @@ describe('POST /api/v1/query', () => {
     expect(mockAll).not.toHaveBeenCalled();
   });
 
-  it('rejects CTE-wrapped INSERT/DELETE/REPLACE (STU-2497)', async () => {
+  it("rejects CTE-wrapped INSERT/DELETE/REPLACE (STU-2497)", async () => {
     const env = makeEnv();
-    for (const kw of ['INSERT INTO posts (id) VALUES (\'a\')', 'DELETE FROM posts', 'REPLACE INTO posts (id) VALUES (\'a\')']) {
+    for (const kw of [
+      "INSERT INTO posts (id) VALUES ('a')",
+      "DELETE FROM posts",
+      "REPLACE INTO posts (id) VALUES ('a')",
+    ]) {
       const res = await worker.fetch(
-        makeRequest('/api/v1/query', {
-          method: 'POST',
+        makeRequest("/api/v1/query", {
+          method: "POST",
           auth: true,
           body: JSON.stringify({ sql: `WITH x AS (SELECT 1) ${kw}` }),
         }),
@@ -579,7 +565,7 @@ describe('POST /api/v1/query', () => {
     }
   });
 
-  it('rejects the quote-in-block-comment WITH bypass (Reviewer-01 PoC)', async () => {
+  it("rejects the quote-in-block-comment WITH bypass (Reviewer-01 PoC)", async () => {
     // Reviewer-01 confirmed on 0e40a75 that a block comment inside the CTE
     // could embed a quote that pairs with the real string literal after
     // the closing `)`, letting the string-strip regex delete UPDATE and
@@ -592,8 +578,8 @@ describe('POST /api/v1/query', () => {
     });
     const env = makeEnv({ DB: { prepare } as unknown as D1Database });
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({
           sql: "WITH x AS (SELECT 1 /* ' */)\nUPDATE t SET v='pwn' RETURNING v",
@@ -606,7 +592,7 @@ describe('POST /api/v1/query', () => {
     expect(prepare).not.toHaveBeenCalled();
   });
 
-  it('rejects a line-comment-embedded quote bypass', async () => {
+  it("rejects a line-comment-embedded quote bypass", async () => {
     // Symmetric to the block-comment case: an unbalanced quote inside a
     // `-- …` line comment used to shift string parity for the subsequent
     // scrub. WITH-blanket rejection covers this equally.
@@ -617,8 +603,8 @@ describe('POST /api/v1/query', () => {
     });
     const env = makeEnv({ DB: { prepare } as unknown as D1Database });
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({
           sql: "WITH x AS (SELECT 1 -- '\n)\nUPDATE t SET v='pwn'",
@@ -631,18 +617,18 @@ describe('POST /api/v1/query', () => {
     expect(prepare).not.toHaveBeenCalled();
   });
 
-  it('rejects read-only WITH too — WITH is blanket-blocked (STU-2497)', async () => {
+  it("rejects read-only WITH too — WITH is blanket-blocked (STU-2497)", async () => {
     // Deliberately gives up the tiny read-only CTE surface. If a future
     // caller needs it, replace the regex-based gate with a state-machine
     // lexer; do not re-add a scrub-based allowlist.
     const prepare = vi.fn();
     const env = makeEnv({ DB: { prepare } as unknown as D1Database });
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({
-          sql: 'WITH x AS (SELECT id FROM posts) SELECT * FROM x',
+          sql: "WITH x AS (SELECT id FROM posts) SELECT * FROM x",
         }),
       }),
       env,
@@ -652,22 +638,22 @@ describe('POST /api/v1/query', () => {
     expect(prepare).not.toHaveBeenCalled();
   });
 
-  it('rejects REPLACE / VACUUM / ATTACH / DETACH / BEGIN / COMMIT / ROLLBACK / SAVEPOINT / RELEASE (STU-2497)', async () => {
+  it("rejects REPLACE / VACUUM / ATTACH / DETACH / BEGIN / COMMIT / ROLLBACK / SAVEPOINT / RELEASE (STU-2497)", async () => {
     const env = makeEnv();
     for (const kw of [
-      'REPLACE',
-      'VACUUM',
-      'ATTACH',
-      'DETACH',
-      'BEGIN',
-      'COMMIT',
-      'ROLLBACK',
-      'SAVEPOINT',
-      'RELEASE',
+      "REPLACE",
+      "VACUUM",
+      "ATTACH",
+      "DETACH",
+      "BEGIN",
+      "COMMIT",
+      "ROLLBACK",
+      "SAVEPOINT",
+      "RELEASE",
     ]) {
       const res = await worker.fetch(
-        makeRequest('/api/v1/query', {
-          method: 'POST',
+        makeRequest("/api/v1/query", {
+          method: "POST",
           auth: true,
           body: JSON.stringify({ sql: `${kw} something` }),
         }),
@@ -678,13 +664,13 @@ describe('POST /api/v1/query', () => {
     }
   });
 
-  it('rejects SQL prefixed by a line comment that hides a write (STU-2497)', async () => {
+  it("rejects SQL prefixed by a line comment that hides a write (STU-2497)", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify({ sql: '-- pretend\nDELETE FROM posts' }),
+        body: JSON.stringify({ sql: "-- pretend\nDELETE FROM posts" }),
       }),
       env,
       makeCtx(),
@@ -692,13 +678,13 @@ describe('POST /api/v1/query', () => {
     expect(res.status).toBe(403);
   });
 
-  it('rejects SQL prefixed by a block comment that hides a write (STU-2497)', async () => {
+  it("rejects SQL prefixed by a block comment that hides a write (STU-2497)", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify({ sql: '/* trick */ UPDATE posts SET x=1' }),
+        body: JSON.stringify({ sql: "/* trick */ UPDATE posts SET x=1" }),
       }),
       env,
       makeCtx(),
@@ -706,7 +692,7 @@ describe('POST /api/v1/query', () => {
     expect(res.status).toBe(403);
   });
 
-  it('allows a comment-prefixed SELECT (STU-2497)', async () => {
+  it("allows a comment-prefixed SELECT (STU-2497)", async () => {
     // The prelude-strip lets a legitimate leading comment through as
     // long as the first executable keyword is a read.
     const mockAll = vi.fn().mockResolvedValue({
@@ -719,11 +705,11 @@ describe('POST /api/v1/query', () => {
       } as unknown as D1Database,
     });
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({
-          sql: '/* metric: post-fetch */ SELECT * FROM posts',
+          sql: "/* metric: post-fetch */ SELECT * FROM posts",
         }),
       }),
       env,
@@ -732,9 +718,9 @@ describe('POST /api/v1/query', () => {
     expect(res.status).toBe(200);
   });
 
-  it('allows EXPLAIN queries (STU-2497)', async () => {
+  it("allows EXPLAIN queries (STU-2497)", async () => {
     const mockAll = vi.fn().mockResolvedValue({
-      results: [{ detail: 'SCAN posts' }],
+      results: [{ detail: "SCAN posts" }],
       meta: { changes: 0, duration: 1 },
     });
     const env = makeEnv({
@@ -743,10 +729,10 @@ describe('POST /api/v1/query', () => {
       } as unknown as D1Database,
     });
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify({ sql: 'EXPLAIN SELECT * FROM posts' }),
+        body: JSON.stringify({ sql: "EXPLAIN SELECT * FROM posts" }),
       }),
       env,
       makeCtx(),
@@ -754,9 +740,9 @@ describe('POST /api/v1/query', () => {
     expect(res.status).toBe(200);
   });
 
-  it('executes SELECT query successfully', async () => {
+  it("executes SELECT query successfully", async () => {
     const mockAll = vi.fn().mockResolvedValue({
-      results: [{ id: 1, name: 'Test' }],
+      results: [{ id: 1, name: "Test" }],
       meta: { changes: 0, duration: 5 },
     });
     const mockBind = vi.fn().mockReturnValue({ all: mockAll });
@@ -769,10 +755,10 @@ describe('POST /api/v1/query', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify({ sql: 'SELECT * FROM posts' }),
+        body: JSON.stringify({ sql: "SELECT * FROM posts" }),
       }),
       env,
       makeCtx(),
@@ -780,11 +766,11 @@ describe('POST /api/v1/query', () => {
 
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.results).toEqual([{ id: 1, name: 'Test' }]);
+    expect(json.results).toEqual([{ id: 1, name: "Test" }]);
     expect(json.meta.changes).toBe(0);
   });
 
-  it('executes query with params', async () => {
+  it("executes query with params", async () => {
     const mockAll = vi.fn().mockResolvedValue({
       results: [{ id: 1 }],
       meta: { changes: 0 },
@@ -799,12 +785,12 @@ describe('POST /api/v1/query', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({
-          sql: 'SELECT * FROM posts WHERE id = ?',
-          params: ['post-123'],
+          sql: "SELECT * FROM posts WHERE id = ?",
+          params: ["post-123"],
         }),
       }),
       env,
@@ -812,10 +798,10 @@ describe('POST /api/v1/query', () => {
     );
 
     expect(res.status).toBe(200);
-    expect(mockBind).toHaveBeenCalledWith('post-123');
+    expect(mockBind).toHaveBeenCalledWith("post-123");
   });
 
-  it('handles empty params array', async () => {
+  it("handles empty params array", async () => {
     const mockAll = vi.fn().mockResolvedValue({
       results: [],
       meta: { changes: 0 },
@@ -829,10 +815,10 @@ describe('POST /api/v1/query', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify({ sql: 'SELECT 1', params: [] }),
+        body: JSON.stringify({ sql: "SELECT 1", params: [] }),
       }),
       env,
       makeCtx(),
@@ -841,8 +827,8 @@ describe('POST /api/v1/query', () => {
     expect(res.status).toBe(200);
   });
 
-  it('returns 500 on D1 error', async () => {
-    const mockAll = vi.fn().mockRejectedValue(new Error('Query failed'));
+  it("returns 500 on D1 error", async () => {
+    const mockAll = vi.fn().mockRejectedValue(new Error("Query failed"));
     const env = makeEnv({
       DB: {
         prepare: vi.fn().mockReturnValue({ all: mockAll }),
@@ -852,10 +838,10 @@ describe('POST /api/v1/query', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify({ sql: 'SELECT * FROM nonexistent' }),
+        body: JSON.stringify({ sql: "SELECT * FROM nonexistent" }),
       }),
       env,
       makeCtx(),
@@ -863,11 +849,11 @@ describe('POST /api/v1/query', () => {
 
     expect(res.status).toBe(500);
     const json = await res.json();
-    expect(json.error).toContain('D1 query failed');
+    expect(json.error).toContain("D1 query failed");
   });
 
-  it('handles non-Error exceptions', async () => {
-    const mockAll = vi.fn().mockRejectedValue('string error');
+  it("handles non-Error exceptions", async () => {
+    const mockAll = vi.fn().mockRejectedValue("string error");
     const env = makeEnv({
       DB: {
         prepare: vi.fn().mockReturnValue({ all: mockAll }),
@@ -877,10 +863,10 @@ describe('POST /api/v1/query', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify({ sql: 'SELECT 1' }),
+        body: JSON.stringify({ sql: "SELECT 1" }),
       }),
       env,
       makeCtx(),
@@ -889,7 +875,7 @@ describe('POST /api/v1/query', () => {
     expect(res.status).toBe(500);
   });
 
-  it('handles missing results in response', async () => {
+  it("handles missing results in response", async () => {
     const mockAll = vi.fn().mockResolvedValue({ meta: { changes: 0 } });
     const env = makeEnv({
       DB: {
@@ -900,10 +886,10 @@ describe('POST /api/v1/query', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify({ sql: 'SELECT 1' }),
+        body: JSON.stringify({ sql: "SELECT 1" }),
       }),
       env,
       makeCtx(),
@@ -914,7 +900,7 @@ describe('POST /api/v1/query', () => {
     expect(json.results).toEqual([]);
   });
 
-  it('handles missing meta in response', async () => {
+  it("handles missing meta in response", async () => {
     const mockAll = vi.fn().mockResolvedValue({ results: [] });
     const env = makeEnv({
       DB: {
@@ -925,10 +911,10 @@ describe('POST /api/v1/query', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/query', {
-        method: 'POST',
+      makeRequest("/api/v1/query", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify({ sql: 'SELECT 1' }),
+        body: JSON.stringify({ sql: "SELECT 1" }),
       }),
       env,
       makeCtx(),
@@ -942,12 +928,12 @@ describe('POST /api/v1/query', () => {
 
 // ─── POST /api/v1/execute Tests ─────────────────────────────────────────────
 
-describe('POST /api/v1/execute', () => {
-  it('returns 400 for invalid body', async () => {
+describe("POST /api/v1/execute", () => {
+  it("returns 400 for invalid body", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/execute', {
-        method: 'POST',
+      makeRequest("/api/v1/execute", {
+        method: "POST",
         auth: true,
         body: JSON.stringify(null),
       }),
@@ -958,11 +944,11 @@ describe('POST /api/v1/execute', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 for missing sql without statements', async () => {
+  it("returns 400 for missing sql without statements", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/execute', {
-        method: 'POST',
+      makeRequest("/api/v1/execute", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({}),
       }),
@@ -973,7 +959,7 @@ describe('POST /api/v1/execute', () => {
     expect(res.status).toBe(400);
   });
 
-  it('executes single INSERT statement', async () => {
+  it("executes single INSERT statement", async () => {
     const mockAll = vi.fn().mockResolvedValue({
       results: [],
       meta: { changes: 1, duration: 5 },
@@ -988,12 +974,12 @@ describe('POST /api/v1/execute', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/execute', {
-        method: 'POST',
+      makeRequest("/api/v1/execute", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({
-          sql: 'INSERT INTO posts (id, title) VALUES (?, ?)',
-          params: ['post-1', 'Test'],
+          sql: "INSERT INTO posts (id, title) VALUES (?, ?)",
+          params: ["post-1", "Test"],
         }),
       }),
       env,
@@ -1005,7 +991,7 @@ describe('POST /api/v1/execute', () => {
     expect(json.meta.changes).toBe(1);
   });
 
-  it('executes batch statements', async () => {
+  it("executes batch statements", async () => {
     const mockBatch = vi.fn().mockResolvedValue([
       { results: [], meta: { changes: 1 } },
       { results: [], meta: { changes: 1 } },
@@ -1020,13 +1006,13 @@ describe('POST /api/v1/execute', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/execute', {
-        method: 'POST',
+      makeRequest("/api/v1/execute", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({
           statements: [
-            { sql: 'INSERT INTO posts (id) VALUES (?)', params: ['1'] },
-            { sql: 'INSERT INTO posts (id) VALUES (?)', params: ['2'] },
+            { sql: "INSERT INTO posts (id) VALUES (?)", params: ["1"] },
+            { sql: "INSERT INTO posts (id) VALUES (?)", params: ["2"] },
           ],
         }),
       }),
@@ -1041,10 +1027,8 @@ describe('POST /api/v1/execute', () => {
     expect(json.results).toHaveLength(2);
   });
 
-  it('handles batch statement without params', async () => {
-    const mockBatch = vi.fn().mockResolvedValue([
-      { results: [], meta: { changes: 1 } },
-    ]);
+  it("handles batch statement without params", async () => {
+    const mockBatch = vi.fn().mockResolvedValue([{ results: [], meta: { changes: 1 } }]);
     const env = makeEnv({
       DB: {
         prepare: vi.fn().mockReturnValue({ bind: vi.fn().mockReturnThis() }),
@@ -1054,11 +1038,11 @@ describe('POST /api/v1/execute', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/execute', {
-        method: 'POST',
+      makeRequest("/api/v1/execute", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({
-          statements: [{ sql: 'DELETE FROM posts' }],
+          statements: [{ sql: "DELETE FROM posts" }],
         }),
       }),
       env,
@@ -1068,10 +1052,8 @@ describe('POST /api/v1/execute', () => {
     expect(res.status).toBe(200);
   });
 
-  it('handles batch with empty params array', async () => {
-    const mockBatch = vi.fn().mockResolvedValue([
-      { results: [], meta: { changes: 1 } },
-    ]);
+  it("handles batch with empty params array", async () => {
+    const mockBatch = vi.fn().mockResolvedValue([{ results: [], meta: { changes: 1 } }]);
     const env = makeEnv({
       DB: {
         prepare: vi.fn().mockReturnValue({ bind: vi.fn().mockReturnThis() }),
@@ -1081,11 +1063,11 @@ describe('POST /api/v1/execute', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/execute', {
-        method: 'POST',
+      makeRequest("/api/v1/execute", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({
-          statements: [{ sql: 'DELETE FROM posts', params: [] }],
+          statements: [{ sql: "DELETE FROM posts", params: [] }],
         }),
       }),
       env,
@@ -1095,7 +1077,7 @@ describe('POST /api/v1/execute', () => {
     expect(res.status).toBe(200);
   });
 
-  it('uses exec() for multi-statement SQL', async () => {
+  it("uses exec() for multi-statement SQL", async () => {
     const mockExec = vi.fn().mockResolvedValue({ count: 2, duration: 10 });
     const env = makeEnv({
       DB: {
@@ -1106,11 +1088,11 @@ describe('POST /api/v1/execute', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/execute', {
-        method: 'POST',
+      makeRequest("/api/v1/execute", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({
-          sql: 'PRAGMA foreign_keys = OFF; DROP TABLE IF EXISTS temp;',
+          sql: "PRAGMA foreign_keys = OFF; DROP TABLE IF EXISTS temp;",
         }),
       }),
       env,
@@ -1125,7 +1107,7 @@ describe('POST /api/v1/execute', () => {
     expect(json.meta.count).toBe(2);
   });
 
-  it('detects multi-statement with semicolon followed by non-whitespace', async () => {
+  it("detects multi-statement with semicolon followed by non-whitespace", async () => {
     const mockExec = vi.fn().mockResolvedValue({ count: 2, duration: 5 });
     const env = makeEnv({
       DB: {
@@ -1136,11 +1118,11 @@ describe('POST /api/v1/execute', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/execute', {
-        method: 'POST',
+      makeRequest("/api/v1/execute", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({
-          sql: 'SELECT 1;SELECT 2',
+          sql: "SELECT 1;SELECT 2",
         }),
       }),
       env,
@@ -1151,7 +1133,7 @@ describe('POST /api/v1/execute', () => {
     expect(mockExec).toHaveBeenCalled();
   });
 
-  it('treats trailing semicolon as single statement', async () => {
+  it("treats trailing semicolon as single statement", async () => {
     const mockAll = vi.fn().mockResolvedValue({
       results: [],
       meta: { changes: 1 },
@@ -1166,12 +1148,12 @@ describe('POST /api/v1/execute', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/execute', {
-        method: 'POST',
+      makeRequest("/api/v1/execute", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({
-          sql: 'DELETE FROM posts WHERE id = ?;',
-          params: ['1'],
+          sql: "DELETE FROM posts WHERE id = ?;",
+          params: ["1"],
         }),
       }),
       env,
@@ -1183,8 +1165,8 @@ describe('POST /api/v1/execute', () => {
     expect(env.DB.exec).not.toHaveBeenCalled();
   });
 
-  it('returns 500 on D1 execute error', async () => {
-    const mockAll = vi.fn().mockRejectedValue(new Error('Execute failed'));
+  it("returns 500 on D1 execute error", async () => {
+    const mockAll = vi.fn().mockRejectedValue(new Error("Execute failed"));
     const env = makeEnv({
       DB: {
         prepare: vi.fn().mockReturnValue({ all: mockAll }),
@@ -1194,10 +1176,10 @@ describe('POST /api/v1/execute', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/execute', {
-        method: 'POST',
+      makeRequest("/api/v1/execute", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify({ sql: 'INSERT INTO posts (id) VALUES (?)' }),
+        body: JSON.stringify({ sql: "INSERT INTO posts (id) VALUES (?)" }),
       }),
       env,
       makeCtx(),
@@ -1205,13 +1187,11 @@ describe('POST /api/v1/execute', () => {
 
     expect(res.status).toBe(500);
     const json = await res.json();
-    expect(json.error).toContain('D1 execute failed');
+    expect(json.error).toContain("D1 execute failed");
   });
 
-  it('handles batch missing results/meta', async () => {
-    const mockBatch = vi.fn().mockResolvedValue([
-      { results: undefined, meta: undefined },
-    ]);
+  it("handles batch missing results/meta", async () => {
+    const mockBatch = vi.fn().mockResolvedValue([{ results: undefined, meta: undefined }]);
     const env = makeEnv({
       DB: {
         prepare: vi.fn().mockReturnValue({ bind: vi.fn().mockReturnThis() }),
@@ -1221,11 +1201,11 @@ describe('POST /api/v1/execute', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/execute', {
-        method: 'POST',
+      makeRequest("/api/v1/execute", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({
-          statements: [{ sql: 'DELETE FROM posts' }],
+          statements: [{ sql: "DELETE FROM posts" }],
         }),
       }),
       env,
@@ -1238,7 +1218,7 @@ describe('POST /api/v1/execute', () => {
     expect(json.results[0].meta.changes).toBe(0);
   });
 
-  it('handles single statement missing results/meta', async () => {
+  it("handles single statement missing results/meta", async () => {
     const mockAll = vi.fn().mockResolvedValue({});
     const env = makeEnv({
       DB: {
@@ -1249,10 +1229,10 @@ describe('POST /api/v1/execute', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/execute', {
-        method: 'POST',
+      makeRequest("/api/v1/execute", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify({ sql: 'DELETE FROM posts' }),
+        body: JSON.stringify({ sql: "DELETE FROM posts" }),
       }),
       env,
       makeCtx(),
@@ -1264,8 +1244,8 @@ describe('POST /api/v1/execute', () => {
     expect(json.meta.changes).toBe(0);
   });
 
-  it('handles non-Error exceptions', async () => {
-    const mockAll = vi.fn().mockRejectedValue('string error');
+  it("handles non-Error exceptions", async () => {
+    const mockAll = vi.fn().mockRejectedValue("string error");
     const env = makeEnv({
       DB: {
         prepare: vi.fn().mockReturnValue({ all: mockAll }),
@@ -1275,10 +1255,10 @@ describe('POST /api/v1/execute', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/execute', {
-        method: 'POST',
+      makeRequest("/api/v1/execute", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify({ sql: 'DELETE FROM posts' }),
+        body: JSON.stringify({ sql: "DELETE FROM posts" }),
       }),
       env,
       makeCtx(),
@@ -1290,13 +1270,13 @@ describe('POST /api/v1/execute', () => {
 
 // ─── FTS Endpoint Integration Tests ─────────────────────────────────────────
 
-describe('POST /api/v1/fts-sync', () => {
-  it('requires authentication', async () => {
+describe("POST /api/v1/fts-sync", () => {
+  it("requires authentication", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/fts-sync', {
-        method: 'POST',
-        body: JSON.stringify({ action: 'upsert', postId: '1' }),
+      makeRequest("/api/v1/fts-sync", {
+        method: "POST",
+        body: JSON.stringify({ action: "upsert", postId: "1" }),
       }),
       env,
       makeCtx(),
@@ -1305,7 +1285,7 @@ describe('POST /api/v1/fts-sync', () => {
     expect(res.status).toBe(401);
   });
 
-  it('routes to FTS sync handler', async () => {
+  it("routes to FTS sync handler", async () => {
     const mockFirst = vi.fn().mockResolvedValue({ rowid: 1 });
     const mockBind = vi.fn().mockReturnValue({
       first: mockFirst,
@@ -1320,13 +1300,13 @@ describe('POST /api/v1/fts-sync', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/fts-sync', {
-        method: 'POST',
+      makeRequest("/api/v1/fts-sync", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({
-          action: 'upsert',
-          postId: 'test-post',
-          title: 'Test',
+          action: "upsert",
+          postId: "test-post",
+          title: "Test",
         }),
       }),
       env,
@@ -1337,13 +1317,13 @@ describe('POST /api/v1/fts-sync', () => {
   });
 });
 
-describe('POST /api/v1/fts-search', () => {
-  it('requires authentication', async () => {
+describe("POST /api/v1/fts-search", () => {
+  it("requires authentication", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/fts-search', {
-        method: 'POST',
-        body: JSON.stringify({ query: 'test' }),
+      makeRequest("/api/v1/fts-search", {
+        method: "POST",
+        body: JSON.stringify({ query: "test" }),
       }),
       env,
       makeCtx(),
@@ -1352,7 +1332,7 @@ describe('POST /api/v1/fts-search', () => {
     expect(res.status).toBe(401);
   });
 
-  it('routes to FTS search handler', async () => {
+  it("routes to FTS search handler", async () => {
     const mockAll = vi.fn().mockResolvedValue({ results: [] });
     const mockFirst = vi.fn().mockResolvedValue({ count: 0 });
     const mockBind = vi.fn().mockReturnValue({
@@ -1369,10 +1349,10 @@ describe('POST /api/v1/fts-search', () => {
     });
 
     const res = await worker.fetch(
-      makeRequest('/api/v1/fts-search', {
-        method: 'POST',
+      makeRequest("/api/v1/fts-search", {
+        method: "POST",
         auth: true,
-        body: JSON.stringify({ query: 'hello' }),
+        body: JSON.stringify({ query: "hello" }),
       }),
       env,
       makeCtx(),
@@ -1384,21 +1364,21 @@ describe('POST /api/v1/fts-search', () => {
 
 // ─── 404 Tests ──────────────────────────────────────────────────────────────
 
-describe('404 handling', () => {
-  it('returns 404 for unknown paths', async () => {
+describe("404 handling", () => {
+  it("returns 404 for unknown paths", async () => {
     const env = makeEnv();
-    const res = await worker.fetch(makeRequest('/unknown'), env, makeCtx());
+    const res = await worker.fetch(makeRequest("/unknown"), env, makeCtx());
 
     expect(res.status).toBe(404);
     const json = await res.json();
-    expect(json.error).toBe('Not found');
+    expect(json.error).toBe("Not found");
   });
 
-  it('returns 404 for unknown /api/v1 paths with auth', async () => {
+  it("returns 404 for unknown /api/v1 paths with auth", async () => {
     const env = makeEnv();
     const res = await worker.fetch(
-      makeRequest('/api/v1/unknown', {
-        method: 'POST',
+      makeRequest("/api/v1/unknown", {
+        method: "POST",
         auth: true,
         body: JSON.stringify({}),
       }),
@@ -1409,9 +1389,9 @@ describe('404 handling', () => {
     expect(res.status).toBe(404);
   });
 
-  it('returns 404 for root path', async () => {
+  it("returns 404 for root path", async () => {
     const env = makeEnv();
-    const res = await worker.fetch(makeRequest('/'), env, makeCtx());
+    const res = await worker.fetch(makeRequest("/"), env, makeCtx());
 
     expect(res.status).toBe(404);
   });

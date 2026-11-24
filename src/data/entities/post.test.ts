@@ -238,7 +238,9 @@ describe("listPosts", () => {
 
 describe("getPostBySlug", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns post with category via viewQuery", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(samplePostWithCategory);
@@ -272,7 +274,9 @@ describe("getPostBySlug", () => {
 
 describe("getPostById", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns post with category via viewQuery", async () => {
     vi.mocked(db.firstOrNull).mockResolvedValue(samplePostWithCategory);
@@ -297,7 +301,9 @@ describe("getPostById", () => {
 
 describe("createPost", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("inserts post with computed fields and returns it", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 3 });
@@ -366,9 +372,7 @@ describe("createPost", () => {
 
     const params = vi.mocked(db.execute).mock.calls[0][1]!;
     // publishedAt should be a number (epoch timestamp)
-    const publishedAtParam = params.find(
-      (p) => typeof p === "number" && p > now - 10 && p !== 3,
-    );
+    const publishedAtParam = params.find((p) => typeof p === "number" && p > now - 10 && p !== 3);
     expect(publishedAtParam).toBeDefined();
   });
 
@@ -420,7 +424,9 @@ describe("createPost", () => {
 
 describe("updatePost", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("updates specified fields", async () => {
     vi.mocked(db.firstOrNull)
@@ -505,9 +511,7 @@ describe("updatePost", () => {
     const [sql, params] = vi.mocked(db.execute).mock.calls[0];
     expect(sql).toContain("published_at = ?");
     // The published_at param should be a recent epoch timestamp
-    const pubAt = params!.find(
-      (p) => typeof p === "number" && p > now - 10 && p !== 3,
-    );
+    const pubAt = params!.find((p) => typeof p === "number" && p > now - 10 && p !== 3);
     expect(pubAt).toBeDefined();
   });
 
@@ -524,16 +528,18 @@ describe("updatePost", () => {
     const [sql, params] = vi.mocked(db.execute).mock.calls[0];
     expect(sql).toContain("published_at = ?");
     // The published_at param should be a recent epoch timestamp
-    const pubAt = params!.find(
-      (p) => typeof p === "number" && p > now - 10,
-    );
+    const pubAt = params!.find((p) => typeof p === "number" && p > now - 10);
     expect(pubAt).toBeDefined();
   });
 
   it("does not overwrite existing publishedAt when updating published post", async () => {
     const existingPubAt = 1700000000;
     vi.mocked(db.firstOrNull)
-      .mockResolvedValueOnce({ ...samplePostWithCategory, status: "published", published_at: existingPubAt })
+      .mockResolvedValueOnce({
+        ...samplePostWithCategory,
+        status: "published",
+        published_at: existingPubAt,
+      })
       .mockResolvedValueOnce(samplePostWithCategory);
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
 
@@ -546,7 +552,11 @@ describe("updatePost", () => {
 
   it("allows explicitly setting publishedAt to null", async () => {
     vi.mocked(db.firstOrNull)
-      .mockResolvedValueOnce({ ...samplePostWithCategory, status: "draft", published_at: 1700000000 })
+      .mockResolvedValueOnce({
+        ...samplePostWithCategory,
+        status: "draft",
+        published_at: 1700000000,
+      })
       .mockResolvedValueOnce(samplePostWithCategory);
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
 
@@ -620,7 +630,9 @@ describe("updatePost", () => {
 
 describe("deletePost", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("deletes and returns true", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
@@ -643,7 +655,9 @@ describe("deletePost", () => {
 
 describe("getPostTags", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns tags for a post", async () => {
     const tags = [
@@ -680,7 +694,9 @@ describe("getPostTags", () => {
 
 describe("getPostsTagsMap", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns a map of post IDs to tags", async () => {
     vi.mocked(db.query).mockResolvedValue({
@@ -698,9 +714,7 @@ describe("getPostsTagsMap", () => {
       { id: "t1", name: "React", slug: "react" },
       { id: "t2", name: "TypeScript", slug: "typescript" },
     ]);
-    expect(result.get("p2")).toEqual([
-      { id: "t1", name: "React", slug: "react" },
-    ]);
+    expect(result.get("p2")).toEqual([{ id: "t1", name: "React", slug: "react" }]);
     expect(result.get("p3")).toBeUndefined();
   });
 
@@ -717,7 +731,9 @@ describe("getPostsTagsMap", () => {
 
 describe("setPostTags", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("deletes old and inserts new tags via batch", async () => {
     vi.mocked(db.batch).mockResolvedValue([
@@ -753,7 +769,9 @@ describe("setPostTags", () => {
 
 describe("batchUpdatePosts", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("updates status for multiple posts", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 3, duration: 5 });
@@ -810,7 +828,9 @@ describe("batchUpdatePosts", () => {
 
 describe("refreshCategoryPostCount", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("updates category post_count from published posts", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 1, duration: 2 });
@@ -841,7 +861,9 @@ describe("refreshCategoryPostCount", () => {
 
 describe("refreshAllCategoryPostCounts", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("updates all categories post_count", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 5, duration: 3 });
@@ -860,7 +882,9 @@ describe("refreshAllCategoryPostCounts", () => {
 
 describe("refreshAllTagPostCounts", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("updates all tag post_count from published posts", async () => {
     vi.mocked(db.execute).mockResolvedValue({ changes: 5, duration: 3 });
@@ -922,7 +946,9 @@ describe("listMonthlyArchives", () => {
 
 describe("listPostYears", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns distinct years with counts", async () => {
     const years = [
@@ -950,15 +976,15 @@ describe("listPostYears", () => {
 
 describe("getAdjacentPosts", () => {
   let db: Db;
-  beforeEach(() => { db = createMockDb(); });
+  beforeEach(() => {
+    db = createMockDb();
+  });
 
   it("returns prev and next posts", async () => {
     const prevPost = { slug: "older", title: "Older Post", published_at: now - 100 };
     const nextPost = { slug: "newer", title: "Newer Post", published_at: now + 100 };
 
-    vi.mocked(db.firstOrNull)
-      .mockResolvedValueOnce(prevPost)
-      .mockResolvedValueOnce(nextPost);
+    vi.mocked(db.firstOrNull).mockResolvedValueOnce(prevPost).mockResolvedValueOnce(nextPost);
 
     const result = await getAdjacentPosts(db, now, "post-1");
 
@@ -1018,10 +1044,7 @@ describe("getPostRowid", () => {
     const result = await getPostRowid(db, "post-1");
 
     expect(result).toBe(42);
-    expect(db.firstOrNull).toHaveBeenCalledWith(
-      "SELECT rowid FROM posts WHERE id = ?",
-      ["post-1"],
-    );
+    expect(db.firstOrNull).toHaveBeenCalledWith("SELECT rowid FROM posts WHERE id = ?", ["post-1"]);
   });
 
   it("returns null when post not found", async () => {
@@ -1055,12 +1078,16 @@ describe("searchPosts", () => {
 
     const result = await searchPosts(db, { query: "hello" });
 
-    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
-      query: "hello",
-      status: "published",
-      page: 1,
-      pageSize: 20,
-    }, { retry: "idempotent" });
+    expect(db.call).toHaveBeenCalledWith(
+      "/api/v1/fts-search",
+      {
+        query: "hello",
+        status: "published",
+        page: 1,
+        pageSize: 20,
+      },
+      { retry: "idempotent" },
+    );
     expect(result.posts).toHaveLength(1);
     expect(result.snippets["post-1"]).toBe("Hello <mark>World</mark>");
     expect(result.total).toBe(1);
@@ -1082,12 +1109,16 @@ describe("searchPosts", () => {
       pageSize: 10,
     });
 
-    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
-      query: "test",
-      status: "draft",
-      page: 2,
-      pageSize: 10,
-    }, { retry: "idempotent" });
+    expect(db.call).toHaveBeenCalledWith(
+      "/api/v1/fts-search",
+      {
+        query: "test",
+        status: "draft",
+        page: 2,
+        pageSize: 10,
+      },
+      { retry: "idempotent" },
+    );
   });
 
   it("omits status when null (searches all statuses)", async () => {
@@ -1105,11 +1136,15 @@ describe("searchPosts", () => {
       pageSize: 10,
     });
 
-    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
-      query: "admin search",
-      page: 1,
-      pageSize: 10,
-    }, { retry: "idempotent" });
+    expect(db.call).toHaveBeenCalledWith(
+      "/api/v1/fts-search",
+      {
+        query: "admin search",
+        page: 1,
+        pageSize: 10,
+      },
+      { retry: "idempotent" },
+    );
     // Ensure status key is not present at all
     const callArgs = vi.mocked(db.call).mock.calls[0][1] as Record<string, unknown>;
     expect("status" in callArgs).toBe(false);
@@ -1126,12 +1161,16 @@ describe("searchPosts", () => {
 
     await searchPosts(db, { query: "edge computing" });
 
-    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
-      query: "edge computing",
-      status: "published",
-      page: 1,
-      pageSize: 20,
-    }, { retry: "idempotent" });
+    expect(db.call).toHaveBeenCalledWith(
+      "/api/v1/fts-search",
+      {
+        query: "edge computing",
+        status: "published",
+        page: 1,
+        pageSize: 20,
+      },
+      { retry: "idempotent" },
+    );
   });
 
   it("clamps NaN page to default", async () => {
@@ -1145,12 +1184,16 @@ describe("searchPosts", () => {
 
     await searchPosts(db, { query: "test", page: NaN });
 
-    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
-      query: "test",
-      status: "published",
-      page: 1,
-      pageSize: 20,
-    }, { retry: "idempotent" });
+    expect(db.call).toHaveBeenCalledWith(
+      "/api/v1/fts-search",
+      {
+        query: "test",
+        status: "published",
+        page: 1,
+        pageSize: 20,
+      },
+      { retry: "idempotent" },
+    );
   });
 
   it("clamps negative page to default", async () => {
@@ -1164,12 +1207,16 @@ describe("searchPosts", () => {
 
     await searchPosts(db, { query: "test", page: -1, pageSize: 0 });
 
-    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
-      query: "test",
-      status: "published",
-      page: 1,
-      pageSize: 20,
-    }, { retry: "idempotent" });
+    expect(db.call).toHaveBeenCalledWith(
+      "/api/v1/fts-search",
+      {
+        query: "test",
+        status: "published",
+        page: 1,
+        pageSize: 20,
+      },
+      { retry: "idempotent" },
+    );
   });
 
   it("clamps oversized pageSize to max 100", async () => {
@@ -1183,12 +1230,16 @@ describe("searchPosts", () => {
 
     await searchPosts(db, { query: "test", pageSize: 999 });
 
-    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
-      query: "test",
-      status: "published",
-      page: 1,
-      pageSize: 100,
-    }, { retry: "idempotent" });
+    expect(db.call).toHaveBeenCalledWith(
+      "/api/v1/fts-search",
+      {
+        query: "test",
+        status: "published",
+        page: 1,
+        pageSize: 100,
+      },
+      { retry: "idempotent" },
+    );
   });
 });
 
@@ -1719,12 +1770,16 @@ describe("searchPosts branch coverage", () => {
 
     await searchPosts(db, { query: "test", pageSize: 15.9 });
 
-    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
-      query: "test",
-      status: "published",
-      page: 1,
-      pageSize: 15,
-    }, { retry: "idempotent" });
+    expect(db.call).toHaveBeenCalledWith(
+      "/api/v1/fts-search",
+      {
+        query: "test",
+        status: "published",
+        page: 1,
+        pageSize: 15,
+      },
+      { retry: "idempotent" },
+    );
   });
 
   it("floors page to integer", async () => {
@@ -1738,12 +1793,16 @@ describe("searchPosts branch coverage", () => {
 
     await searchPosts(db, { query: "test", page: 2.8 });
 
-    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
-      query: "test",
-      status: "published",
-      page: 2,
-      pageSize: 20,
-    }, { retry: "idempotent" });
+    expect(db.call).toHaveBeenCalledWith(
+      "/api/v1/fts-search",
+      {
+        query: "test",
+        status: "published",
+        page: 2,
+        pageSize: 20,
+      },
+      { retry: "idempotent" },
+    );
   });
 
   it("handles Infinity page by falling back to default", async () => {
@@ -1757,12 +1816,16 @@ describe("searchPosts branch coverage", () => {
 
     await searchPosts(db, { query: "test", page: Infinity });
 
-    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
-      query: "test",
-      status: "published",
-      page: 1,
-      pageSize: 20,
-    }, { retry: "idempotent" });
+    expect(db.call).toHaveBeenCalledWith(
+      "/api/v1/fts-search",
+      {
+        query: "test",
+        status: "published",
+        page: 1,
+        pageSize: 20,
+      },
+      { retry: "idempotent" },
+    );
   });
 
   it("handles Infinity pageSize by falling back to default", async () => {
@@ -1776,11 +1839,15 @@ describe("searchPosts branch coverage", () => {
 
     await searchPosts(db, { query: "test", pageSize: Infinity });
 
-    expect(db.call).toHaveBeenCalledWith("/api/v1/fts-search", {
-      query: "test",
-      status: "published",
-      page: 1,
-      pageSize: 20,
-    }, { retry: "idempotent" });
+    expect(db.call).toHaveBeenCalledWith(
+      "/api/v1/fts-search",
+      {
+        query: "test",
+        status: "published",
+        page: 1,
+        pageSize: 20,
+      },
+      { retry: "idempotent" },
+    );
   });
 });

@@ -53,9 +53,7 @@ describe("GET /api/search", () => {
   });
 
   it("returns empty results for nonexistent query", async () => {
-    const res = await fetch(
-      `${BASE}/api/search?q=zzz_nonexistent_query_xyz_12345`,
-    );
+    const res = await fetch(`${BASE}/api/search?q=zzz_nonexistent_query_xyz_12345`);
     expect(res.status).toBe(200);
 
     const body = await res.json();

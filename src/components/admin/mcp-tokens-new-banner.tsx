@@ -24,10 +24,9 @@ export function McpNewTokenBanner({
         </code>
         <CopyButton text={accessToken} />
       </div>
-      <p className="mt-1 text-xs text-basalt-muted-foreground">
-        此令牌仅显示一次，请安全保存。
-      </p>
-      <button type="button"
+      <p className="mt-1 text-xs text-basalt-muted-foreground">此令牌仅显示一次，请安全保存。</p>
+      <button
+        type="button"
         onClick={onClose}
         className="mt-2 text-xs text-basalt-muted-foreground underline hover:text-basalt-foreground"
       >

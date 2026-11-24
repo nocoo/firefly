@@ -99,6 +99,7 @@ Source: `wp_posts` WHERE post_type='post' AND post_status IN ('publish', 'draft'
 ### 5a. Content processing
 
 For each post:
+
 1. Extract markdown from `post_content` (WordPress stores HTML/Gutenberg blocks)
 2. Convert WordPress HTML → clean Markdown (using turndown or similar)
 3. Replace image URLs: `https://your-domain.com/wp-content/uploads/` → `https://assets.your-domain.com/wp-content/uploads/`
@@ -160,11 +161,13 @@ Migration script must maintain wp_id → new_id mapping for threading.
 ## Step 7: Generate Redirects
 
 For each published post, create redirect:
+
 ```
 /index.php/YYYY/MM/slug/ → /YYYY/MM/slug
 ```
 
 Also handle:
+
 ```
 /index.php/category/writting/ → /category/writing
 /index.php/category/diary/ → /category/diary

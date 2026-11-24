@@ -18,9 +18,7 @@ function formatDate(epoch: number | null): string {
 function statusFor(token: McpToken): { label: string; cls: string } {
   const isRevoked = token.revoked === 1;
   const label = isRevoked ? "已撤销" : "有效";
-  const cls = isRevoked
-    ? "text-basalt-muted-foreground"
-    : "text-green-600 dark:text-green-400";
+  const cls = isRevoked ? "text-basalt-muted-foreground" : "text-green-600 dark:text-green-400";
   return { label, cls };
 }
 
@@ -48,10 +46,7 @@ function ScopeCell({
       value={token.scope}
       onValueChange={(next) => onScopeChange(token.id, next as McpTokenScope)}
     >
-      <SelectTrigger
-        size="sm"
-        aria-label={`${token.client_name ?? "令牌"} 权限`}
-      >
+      <SelectTrigger size="sm" aria-label={`${token.client_name ?? "令牌"} 权限`}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -140,10 +135,16 @@ export function McpTokensTable({
         <thead>
           <tr className="border-b border-basalt-border bg-basalt-secondary/50">
             <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground">客户端</th>
-            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground hidden sm:table-cell">令牌</th>
+            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground hidden sm:table-cell">
+              令牌
+            </th>
             <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground">权限</th>
-            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground hidden md:table-cell">最后使用</th>
-            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground hidden lg:table-cell">创建时间</th>
+            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground hidden md:table-cell">
+              最后使用
+            </th>
+            <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground hidden lg:table-cell">
+              创建时间
+            </th>
             <th className="px-4 py-3 text-left font-medium text-basalt-muted-foreground">状态</th>
             <th className="px-4 py-3 text-right font-medium text-basalt-muted-foreground"></th>
           </tr>

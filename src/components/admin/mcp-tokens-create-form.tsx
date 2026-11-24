@@ -33,11 +33,7 @@ export function McpTokenCreateForm({
 }) {
   return (
     <div className="flex items-end gap-3">
-      <Field
-        htmlFor="mcp-client-name"
-        label="客户端名称"
-        className="flex-1 space-y-1"
-      >
+      <Field htmlFor="mcp-client-name" label="客户端名称" className="flex-1 space-y-1">
         <Input
           id="mcp-client-name"
           type="text"
@@ -48,16 +44,10 @@ export function McpTokenCreateForm({
         />
       </Field>
       <div className="w-32 shrink-0 space-y-1">
-        <label
-          htmlFor="mcp-scope"
-          className="text-sm font-medium text-basalt-foreground"
-        >
+        <label htmlFor="mcp-scope" className="text-sm font-medium text-basalt-foreground">
           权限
         </label>
-        <Select
-          value={scope}
-          onValueChange={(next) => onScopeChange(next as McpTokenScope)}
-        >
+        <Select value={scope} onValueChange={(next) => onScopeChange(next as McpTokenScope)}>
           <SelectTrigger id="mcp-scope">
             <SelectValue />
           </SelectTrigger>

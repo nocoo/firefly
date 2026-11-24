@@ -111,9 +111,7 @@ describe("PUT /api/backup", () => {
     const getRes = await fetch(`${BASE}/api/backup`);
     const getBody = await getRes.json();
     expect(getBody.configured).toBe(true);
-    expect(getBody.webhookUrl).toBe(
-      "https://example.com/api/webhook/updated-project",
-    );
+    expect(getBody.webhookUrl).toBe("https://example.com/api/webhook/updated-project");
     // Key should still be masked (preserved from before)
     expect(getBody.apiKey).toContain("\u2022");
   });
@@ -151,9 +149,7 @@ describe("GET /api/backup (configured)", () => {
 
     const body = await res.json();
     expect(body.configured).toBe(true);
-    expect(body.webhookUrl).toBe(
-      "https://example.com/api/webhook/test-project",
-    );
+    expect(body.webhookUrl).toBe("https://example.com/api/webhook/test-project");
     // API key should be masked (not the raw key)
     expect(body.apiKey).not.toBe("test-api-key-1234567890abcdef");
     expect(body.apiKey).toContain("\u2022"); // bullet character from masking

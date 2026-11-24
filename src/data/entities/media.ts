@@ -58,10 +58,7 @@ const MAX_PAGE_SIZE = 250;
 const ALLOWED_SORT_COLUMNS = ["created_at", "size", "filename"] as const;
 type AllowedSort = (typeof ALLOWED_SORT_COLUMNS)[number];
 
-export async function listMedia(
-  db: Db,
-  opts: ListMediaOptions = {},
-): Promise<ListMediaResult> {
+export async function listMedia(db: Db, opts: ListMediaOptions = {}): Promise<ListMediaResult> {
   const page = Math.max(1, opts.page ?? 1);
   const pageSize = Math.max(1, Math.min(MAX_PAGE_SIZE, opts.pageSize ?? DEFAULT_PAGE_SIZE));
   const offset = (page - 1) * pageSize;
@@ -87,9 +84,7 @@ export async function listMedia(
   if (opts.year) {
     const startMonth = opts.month ?? 1;
     const endMonth = opts.month ?? 12;
-    const start = Math.floor(
-      new Date(opts.year, startMonth - 1, 1).getTime() / 1000,
-    );
+    const start = Math.floor(new Date(opts.year, startMonth - 1, 1).getTime() / 1000);
     const end = Math.floor(
       new Date(
         endMonth === 12 ? opts.year + 1 : opts.year,
@@ -101,13 +96,10 @@ export async function listMedia(
     params.push(start, end);
   }
 
-  const where =
-    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   // Validate sort column
-  const sortBy: AllowedSort = ALLOWED_SORT_COLUMNS.includes(
-    opts.sortBy as AllowedSort,
-  )
+  const sortBy: AllowedSort = ALLOWED_SORT_COLUMNS.includes(opts.sortBy as AllowedSort)
     ? (opts.sortBy as AllowedSort)
     : "created_at";
   const sortOrder = opts.sortOrder === "asc" ? "ASC" : "DESC";
@@ -130,24 +122,15 @@ export async function listMedia(
 // getMediaById
 // ---------------------------------------------------------------------------
 
-export async function getMediaById(
-  db: Db,
-  id: string,
-): Promise<Attachment | null> {
-  return db.firstOrNull<Attachment>(
-    "SELECT * FROM attachments WHERE id = ?",
-    [id],
-  );
+export async function getMediaById(db: Db, id: string): Promise<Attachment | null> {
+  return db.firstOrNull<Attachment>("SELECT * FROM attachments WHERE id = ?", [id]);
 }
 
 // ---------------------------------------------------------------------------
 // createMedia
 // ---------------------------------------------------------------------------
 
-export async function createMedia(
-  db: Db,
-  input: CreateMediaInput,
-): Promise<Attachment> {
+export async function createMedia(db: Db, input: CreateMediaInput): Promise<Attachment> {
   const id = newId();
   const now = nowEpoch();
 
@@ -179,10 +162,7 @@ export async function createMedia(
 // ---------------------------------------------------------------------------
 
 export async function deleteMedia(db: Db, id: string): Promise<boolean> {
-  const meta = await db.execute(
-    "DELETE FROM attachments WHERE id = ?",
-    [id],
-  );
+  const meta = await db.execute("DELETE FROM attachments WHERE id = ?", [id]);
   return meta.changes > 0;
 }
 
@@ -190,10 +170,7 @@ export async function deleteMedia(db: Db, id: string): Promise<boolean> {
 // listMediaByPost
 // ---------------------------------------------------------------------------
 
-export async function listMediaByPost(
-  db: Db,
-  postId: string,
-): Promise<Attachment[]> {
+export async function listMediaByPost(db: Db, postId: string): Promise<Attachment[]> {
   const result = await db.query<Attachment>(
     "SELECT * FROM attachments WHERE post_id = ? ORDER BY created_at DESC",
     [postId],
@@ -205,11 +182,7 @@ export async function listMediaByPost(
 // associateMedia — backfill post_id for unlinked media
 // ---------------------------------------------------------------------------
 
-export async function associateMedia(
-  db: Db,
-  mediaIds: string[],
-  postId: string,
-): Promise<number> {
+export async function associateMedia(db: Db, mediaIds: string[], postId: string): Promise<number> {
   if (mediaIds.length === 0) return 0;
 
   const placeholders = mediaIds.map(() => "?").join(", ");
@@ -251,10 +224,7 @@ export async function batchCreateMedia(
     }));
 
     const results = await db.batch(statements);
-    inserted += results.reduce(
-      (sum, r) => sum + (r.meta?.changes ?? 0),
-      0,
-    );
+    inserted += results.reduce((sum, r) => sum + (r.meta?.changes ?? 0), 0);
   }
 
   return inserted;
