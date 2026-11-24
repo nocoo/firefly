@@ -2,6 +2,8 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
+    allowOnly: false,
+    passWithNoTests: false,
     globals: true,
     environment: "node",
     include: ["test/**/*.test.ts"],

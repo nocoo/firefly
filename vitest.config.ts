@@ -5,6 +5,8 @@ const srcAlias = new URL("./src", import.meta.url).pathname;
 
 export default defineConfig({
   test: {
+    allowOnly: false,
+    passWithNoTests: false,
     pool: "threads",
     isolate: false,
     maxConcurrency: 20,
