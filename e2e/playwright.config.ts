@@ -22,9 +22,7 @@ function computeWorkers(): number {
 }
 
 export default defineConfig({
-  // Stage 2 (final) of the L3 → BDD migration (see docs/25-l3-bdd-refactor.md
-  // §6.2): the legacy `e2e/browser/` directory has been emptied and removed;
-  // the runner now collects only `e2e/bdd/*.spec.ts` (12 specs / 162 tests).
+  // L4 core smoke suite (`e2e/bdd/*.spec.ts`): 6 specs on Desktop Chromium.
   testDir: "./bdd",
   timeout: 30_000,
   retries: 1,

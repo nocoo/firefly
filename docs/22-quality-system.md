@@ -1,7 +1,7 @@
 # 22 — Quality System (System0 slots)
 
 > Authoritative quality document for this repository. Slot semantics come from the
-> `system1-quality` skill (v1.3.0, system repository); base-ci v2026.15 only supplies
+> `system1-quality` skill (v1.3.0, system repository); base-ci v2026.18 only supplies
 > composite actions and the deploy interface.
 >
 > Supersedes [07](./07-quality-system-upgrade.md) and [17](./17-quality-upgrade.md)
@@ -26,7 +26,7 @@ Twelve slots, no more and no fewer. `impl` means the check really runs and block
 | L1 Unit         | pre-commit, pre-push, CI                                       | `bun run test:coverage`, `bun run test:worker:coverage` | statements/branches/functions/lines ≥95% in both lanes                                                                                     | impl   | 2.2s                         |
 | L2 Runtime      | —                                                              | —                                                       | no workerd / vitest-pool-workers suite; `worker/test` is Node with a mocked D1 binding and counts as L1; real D1 execution is proven by L3 | **na** | —                            |
 | L3 Integration  | pre-push, CI                                                   | `bun run test:e2e:api`                                  | real HTTP through `wrangler dev` + `next start`, per-run D1/R2, `_test_marker`, synthetic credentials                                      | impl   | 5.5s                         |
-| L4 E2E          | pre-push, CI                                                   | `bun run test:e2e:browser`                              | Playwright chromium journeys (blog + admin)                                                                                                | impl   | 29.4s                        |
+| L4 E2E          | pre-push, CI                                                   | `bun run test:e2e:browser`                              | Playwright Desktop Chromium core smoke journeys (6 specs: auth, blog reading, SEO/RSS, admin dashboard/posts, public cache)                | impl   | 29.4s                        |
 | P1 Package      | CI                                                             | `docker build` + `bun scripts/run-e2e.ts --api-only`    | Docker image build + real HTTP API E2E against the built container                                                                         | impl   | —                            |
 | Z1 Gate         | every stage                                                    | `scripts/quality/gate.ts` (local), `Z1: Gate` job (CI)  | all slots above                                                                                                                            | impl   | —                            |
 
@@ -94,14 +94,15 @@ Native mode: `.github/workflows/ci.yml` is a single caller job (key `quality`, n
 - Each slot is a top-level job named exactly `<ID>: <Name>`, so checks render as
   `quality / S1: Types` … `quality / Z1: Gate`.
 - No matrix suffixes and no nested reusable workflows; steps are inlined. base-ci
-  composite actions
-  (`setup-js`, `setup-security-scanners`) are pinned to
-  `777bbe4f9bacab8a91d8c01974480a6ee23d28e0  # v2026.15`.
+  composite actions (`setup-js`, `setup-playwright`, `lint-workflows`, `scan-secrets`,
+  `scan-dependencies`, `z1-gate`) are pinned to
+  `bfaac83b5a4d5c7ed26320bb5b09f3ca0a01932c  # v2026.18`.
 - `na` slots keep their job with a job-level `if:` so all twelve names exist and
   stay visibly skipped.
-- `Z1: Gate` runs with `if: always()`, needs every slot job, and fails when an `impl`
-  slot did not succeed, an `na`/`todo` slot actually ran, a job reports no `tested-sha`,
-  the reported SHAs differ, or the declaration itself is malformed.
+- `Z1: Gate` runs checkout-free via `nocoo/base-ci/.github/actions/z1-gate` with
+  `if: always()`, needs every slot job, and fails when an `impl` slot did not
+  succeed, an `na` slot actually ran, a job reports no `tested-sha`, or reported
+  SHAs differ.
 - `P1: Package` (`p1-package` in `quality-slots.yml`) runs
   `bun scripts/run-e2e.ts --api-only --container-image=<image>`. This Linux-only
   lane uses host networking and the same per-run marked D1/R2 isolation; it never
@@ -111,7 +112,7 @@ Native mode: `.github/workflows/ci.yml` is a single caller job (key `quality`, n
   `if: always()` and `if-no-files-found: ignore`, retention 7 days.
 - Branch protection on `main` requires exactly `quality / Z1: Gate`. Admin bypass
   is enabled so direct pushes to `main` keep working; no other check is required.
-- Releases: `release.yml` calls `deploy-docker.yml@777bbe4f…# v2026.15`, which
+- Releases: `release.yml` calls `deploy-docker.yml@bfaac83b…# v2026.18`, which
   proves the source run/SHA before deploying and then requires a successful
   `quality / Z1: Gate` check-run on that exact SHA (`required-quality-check`
   defaults to `quality / Z1: Gate`, `require-quality-check` defaults to true — the

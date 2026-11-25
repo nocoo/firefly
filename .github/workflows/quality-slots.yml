@@ -1,4 +1,4 @@
-# System1 quality slots, native mode (system1-quality v1.3.0).
+# System1 quality slots, native mode (system1-quality v1.3.0, base-ci v2026.18).
 #
 # Every slot is a top-level job whose name is exactly "<ID>: <Name>", so the
 # caller (ci.yml job `quality`) renders the canonical check names
@@ -25,19 +25,6 @@ env:
   BUN_VERSION: "1.4.4"
   NODE_VERSION: "26.13.1"
   NO_COLOR: "1"
-  SLOT_STATUS: >-
-    {"S1": {"status": "impl"},
-    "S2": {"status": "impl"},
-    "S3": {"status": "impl"},
-    "G1": {"status": "impl"},
-    "G2": {"status": "impl"},
-    "B1": {"status": "impl"},
-    "L1": {"status": "impl"},
-    "L2": {"status": "na", "reason": "worker/test runs in Node with a mocked D1 binding (L1 evidence); no workerd or vitest-pool-workers runtime suite exists. Real D1 execution is covered by L3 Integration."},
-    "L3": {"status": "impl"},
-    "L4": {"status": "impl"},
-    "P1": {"status": "impl"},
-    "Z1": {"status": "impl"}}
 
 jobs:
   s1-types:
@@ -50,7 +37,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
+      - uses: nocoo/base-ci/.github/actions/setup-js@bfaac83b5a4d5c7ed26320bb5b09f3ca0a01932c # v2026.18
         with:
           runtime-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
@@ -73,7 +60,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
+      - uses: nocoo/base-ci/.github/actions/setup-js@bfaac83b5a4d5c7ed26320bb5b09f3ca0a01932c # v2026.18
         with:
           runtime-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
@@ -96,7 +83,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/lint-workflows@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
+      - uses: nocoo/base-ci/.github/actions/lint-workflows@bfaac83b5a4d5c7ed26320bb5b09f3ca0a01932c # v2026.18
       - name: Record tested SHA
         id: record-sha
         if: always()
@@ -113,7 +100,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 1
-      - uses: nocoo/base-ci/.github/actions/scan-secrets@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
+      - uses: nocoo/base-ci/.github/actions/scan-secrets@bfaac83b5a4d5c7ed26320bb5b09f3ca0a01932c # v2026.18
       - name: Record tested SHA
         id: record-sha
         if: always()
@@ -129,7 +116,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/scan-dependencies@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
+      - uses: nocoo/base-ci/.github/actions/scan-dependencies@bfaac83b5a4d5c7ed26320bb5b09f3ca0a01932c # v2026.18
         with:
           lockfiles: "bun.lock,worker/bun.lock"
       - name: Record tested SHA
@@ -147,7 +134,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
+      - uses: nocoo/base-ci/.github/actions/setup-js@bfaac83b5a4d5c7ed26320bb5b09f3ca0a01932c # v2026.18
         with:
           runtime-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
@@ -172,7 +159,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
+      - uses: nocoo/base-ci/.github/actions/setup-js@bfaac83b5a4d5c7ed26320bb5b09f3ca0a01932c # v2026.18
         with:
           runtime-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
@@ -194,7 +181,7 @@ jobs:
           tail -20 "$RUNNER_TEMP/l1-worker.log"
       - name: Upload lane logs
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: l1-unit-logs
           path: ${{ runner.temp }}/*.log
@@ -242,7 +229,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
+      - uses: nocoo/base-ci/.github/actions/setup-js@bfaac83b5a4d5c7ed26320bb5b09f3ca0a01932c # v2026.18
         with:
           runtime-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
@@ -267,7 +254,7 @@ jobs:
           AUTH_ALLOWED_EMAILS: ${{ secrets.AUTH_ALLOWED_EMAILS }}
       - name: Upload runtime logs
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: l3-integration-logs
           path: .wrangler/e2e-logs/
@@ -275,7 +262,7 @@ jobs:
           retention-days: 7
       - name: Upload integration test output
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: l3-integration-output
           path: ${{ runner.temp }}/*.log
@@ -296,14 +283,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
+      - uses: nocoo/base-ci/.github/actions/setup-js@bfaac83b5a4d5c7ed26320bb5b09f3ca0a01932c # v2026.18
         with:
           runtime-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
           install-policy: project
           extra-install-dirs: worker
-      - name: Install Chromium
-        run: bunx playwright install --with-deps chromium
+      - uses: nocoo/base-ci/.github/actions/setup-playwright@bfaac83b5a4d5c7ed26320bb5b09f3ca0a01932c # v2026.18
+        with:
+          package-manager: bun
+          browsers: chromium
       - name: Browser journeys
         run: |
           set -euo pipefail
@@ -321,7 +310,7 @@ jobs:
           AUTH_ALLOWED_EMAILS: ${{ secrets.AUTH_ALLOWED_EMAILS }}
       - name: Upload Playwright evidence
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: l4-e2e-results
           path: |
@@ -331,7 +320,7 @@ jobs:
           retention-days: 7
       - name: Upload browser test output
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: l4-e2e-output
           path: ${{ runner.temp }}/*.log
@@ -352,7 +341,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
+      - uses: nocoo/base-ci/.github/actions/setup-js@bfaac83b5a4d5c7ed26320bb5b09f3ca0a01932c # v2026.18
         with:
           runtime-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
@@ -393,186 +382,24 @@ jobs:
       - p1-package
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      tested-sha: ${{ steps.z1.outputs.tested-sha }}
     steps:
-      - name: Verify slot declarations against the jobs that ran
-        env:
-          NEEDS_JSON: ${{ toJSON(needs) }}
-          EXPECTED_SHA: ${{ github.sha }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import json
-          import os
-          import sys
-          import urllib.request
-
-          SLOT_JOBS = {
-              "S1": ("s1-types", "S1: Types"),
-              "S2": ("s2-lint", "S2: Lint"),
-              "S3": ("s3-workflow", "S3: Workflow"),
-              "G1": ("g1-secrets", "G1: Secrets"),
-              "G2": ("g2-dependencies", "G2: Dependencies"),
-              "B1": ("b1-build", "B1: Build"),
-              "L1": ("l1-unit", "L1: Unit"),
-              "L2": ("l2-runtime", "L2: Runtime"),
-              "L3": ("l3-integration", "L3: Integration"),
-              "L4": ("l4-e2e", "L4: E2E"),
-              "P1": ("p1-package", "P1: Package"),
-          }
-          EXTRA_BLOCKING = {}
-          VALID = ("impl", "na", "todo")
-          TARGET_SECONDS = 5 * 60
-          LIMIT_SECONDS = 10 * 60
-
-          def fail(message):
-              sys.stderr.write(f"::error::{message}\n")
-              print(f"| Z1 | **FAIL** | {message} |", file=summary)
-              sys.exit(1)
-
-          def durations():
-              token = os.environ.get("GITHUB_TOKEN", "").strip()
-              repo = os.environ.get("GITHUB_REPOSITORY", "").strip()
-              run_id = os.environ.get("GITHUB_RUN_ID", "").strip()
-              if not (token and repo and run_id):
-                  return {}, None
-              request = urllib.request.Request(
-                  f"{os.environ.get('GITHUB_API_URL', 'https://api.github.com')}/repos/{repo}/actions/runs/{run_id}/jobs?per_page=100",
-                  headers={
-                      "Authorization": f"Bearer {token}",
-                      "Accept": "application/vnd.github+json",
-                      "X-GitHub-Api-Version": "2022-11-28",
-                      "User-Agent": "firefly-z1-gate",
-                  },
-              )
-              try:
-                  with urllib.request.urlopen(request, timeout=60) as response:
-                      payload = json.loads(response.read().decode("utf-8"))
-              except Exception as exc:
-                  print(f"::warning::Z1 could not read job timings ({exc})")
-                  return {}, None
-              seconds = {}
-              for job in payload.get("jobs", []):
-                  started, completed = job.get("started_at"), job.get("completed_at")
-                  if not (started and completed):
-                      continue
-                  from datetime import datetime
-
-                  fmt = "%Y-%m-%dT%H:%M:%SZ"
-                  seconds[job.get("name", "")] = int(
-                      (datetime.strptime(completed, fmt) - datetime.strptime(started, fmt)).total_seconds()
-                  )
-              run_url = f"{os.environ.get('GITHUB_API_URL', 'https://api.github.com')}/repos/{repo}/actions/runs/{run_id}"
-              wall = None
-              try:
-                  request = urllib.request.Request(
-                      run_url,
-                      headers={
-                          "Authorization": f"Bearer {token}",
-                          "Accept": "application/vnd.github+json",
-                          "X-GitHub-Api-Version": "2022-11-28",
-                          "User-Agent": "firefly-z1-gate",
-                      },
-                  )
-                  with urllib.request.urlopen(request, timeout=60) as response:
-                      run = json.loads(response.read().decode("utf-8"))
-                  from datetime import datetime
-
-                  fmt = "%Y-%m-%dT%H:%M:%SZ"
-                  if run.get("run_started_at") and run.get("updated_at"):
-                      wall = int(
-                          (
-                              datetime.strptime(run["updated_at"], fmt)
-                              - datetime.strptime(run["run_started_at"], fmt)
-                          ).total_seconds()
-                      )
-              except Exception as exc:
-                  print(f"::warning::Z1 could not read the run duration ({exc})")
-              return seconds, wall
-
-          summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
-          summary = open(summary_path, "w") if summary_path else sys.stdout
-          needs = json.loads(os.environ["NEEDS_JSON"])
-          declarations = json.loads(os.environ["SLOT_STATUS"])
-          timings, wall = durations()
-          expected_sha = os.environ.get("EXPECTED_SHA", "").strip()
-
-          if not isinstance(declarations, dict):
-              fail("SLOT_STATUS must be a JSON object")
-          unknown = sorted(set(declarations) - set(SLOT_JOBS) - {"Z1"})
-          if unknown:
-              fail(f"declares unknown slots: {', '.join(unknown)}")
-          missing = [slot for slot in [*SLOT_JOBS, "Z1"] if slot not in declarations]
-          if missing:
-              fail(f"is missing slot declarations: {', '.join(missing)}")
-
-          verified = []
-          rows = ["| Slot | Status | Reason | Result | Time |", "| --- | --- | --- | --- | --- |"]
-          for slot, (job, name) in SLOT_JOBS.items():
-              entry = declarations[slot]
-              if not isinstance(entry, dict) or entry.get("status") not in VALID:
-                  fail(f"{slot} has an invalid status")
-              status = entry["status"]
-              reason = entry.get("reason", "")
-              if status in ("na", "todo") and not str(reason).strip():
-                  fail(f"{slot} is declared {status} without a reason")
-              state = needs.get(job, {})
-              result = state.get("result", "missing")
-              sha = (state.get("outputs") or {}).get("tested-sha", "")
-              seconds = timings.get(name, "")
-              time_cell = f"{seconds}s" if seconds != "" else "-"
-              if status == "impl":
-                  if result != "success":
-                      fail(f"{slot} is declared impl but its job finished '{result}'")
-                  if not sha:
-                      fail(f"{slot} is declared impl but reported no tested SHA")
-                  verified.append((slot, sha))
-              else:
-                  if result != "skipped":
-                      fail(f"{slot} is declared {status} but its job finished '{result}'")
-              rows.append(f"| {slot} | {status} | {reason or '-'} | {result} | {time_cell} |")
-
-          if declarations.get("Z1", {}).get("status") != "impl":
-              fail("Z1 must be declared impl")
-          if not verified:
-              fail("no implemented slot besides Z1")
-
-          for job, name in EXTRA_BLOCKING.items():
-              state = needs.get(job, {})
-              result = state.get("result", "missing")
-              sha = (state.get("outputs") or {}).get("tested-sha", "")
-              seconds = timings.get(name, "")
-              rows.append(
-                  f"| {name} | extra | blocking, not a slot | {result} | {seconds if seconds != '' else '-'} |"
-              )
-              if result != "success":
-                  fail(f"blocking job {name} finished '{result}'")
-              if not sha:
-                  fail(f"blocking job {name} reported no tested SHA")
-              verified.append((name, sha))
-
-          shas = {sha for _, sha in verified}
-          if len(shas) != 1:
-              detail = ", ".join(f"{name}={sha}" for name, sha in verified)
-              fail(f"slot jobs tested different commits: {detail}")
-          tested_sha = shas.pop()
-          if expected_sha and tested_sha != expected_sha:
-              fail(f"slot jobs tested {tested_sha} but this run is {expected_sha}")
-
-          verdict = ""
-          if wall is not None:
-              if wall <= TARGET_SECONDS:
-                  verdict = f"within the {TARGET_SECONDS // 60} min target"
-              elif wall <= LIMIT_SECONDS:
-                  verdict = f"over the {TARGET_SECONDS // 60} min target, within the {LIMIT_SECONDS // 60} min limit"
-              else:
-                  verdict = f"over the {LIMIT_SECONDS // 60} min limit"
-              verdict = f" — wall time {wall}s, {verdict}"
-
-          rows.append("| Z1 | impl | all impl slots succeeded on the same SHA | success | - |")
-          print("\n".join(rows), file=summary)
-          print(f"\nTested SHA: `{tested_sha}`{verdict}", file=summary)
-          if summary is not sys.stdout:
-              summary.close()
-          print(f"Z1: {len(verified)} jobs verified on {tested_sha}{verdict}")
-          PY
+      - id: z1
+        uses: nocoo/base-ci/.github/actions/z1-gate@bfaac83b5a4d5c7ed26320bb5b09f3ca0a01932c # v2026.18
+        with:
+          needs-json: ${{ toJSON(needs) }}
+          expected-sha: ${{ github.sha }}
+          required-jobs: |
+            s1-types=S1: Types
+            s2-lint=S2: Lint
+            s3-workflow=S3: Workflow
+            g1-secrets=G1: Secrets
+            g2-dependencies=G2: Dependencies
+            b1-build=B1: Build
+            l1-unit=L1: Unit
+            l3-integration=L3: Integration
+            l4-e2e=L4: E2E
+            p1-package=P1: Package
+          skipped-jobs: |
+            l2-runtime=L2: Runtime
