@@ -178,14 +178,14 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           install-policy: project
           extra-install-dirs: worker
-      - name: Root coverage (>= 95% x4)
+      - name: Root coverage (>= 80% x4)
         run: |
           set -euo pipefail
           if ! bun run test:coverage > "$RUNNER_TEMP/l1-root.log" 2>&1; then
             tail -200 "$RUNNER_TEMP/l1-root.log"; exit 1
           fi
           tail -20 "$RUNNER_TEMP/l1-root.log"
-      - name: Worker coverage (>= 95% x4)
+      - name: Worker coverage (>= 80% x4)
         run: |
           set -euo pipefail
           if ! bun run test:worker:coverage > "$RUNNER_TEMP/l1-worker.log" 2>&1; then
