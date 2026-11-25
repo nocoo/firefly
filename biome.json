@@ -95,6 +95,7 @@
         "noDangerouslySetInnerHtml": "error"
       },
       "performance": {
+        "noDelete": "error",
         "noImgElement": "off"
       },
       "a11y": {

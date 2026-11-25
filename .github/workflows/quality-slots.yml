@@ -50,7 +50,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
+      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
         with:
           runtime-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
@@ -73,7 +73,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
+      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
         with:
           runtime-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
@@ -96,27 +96,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install verified actionlint
-        run: |
-          set -euo pipefail
-          curl --fail --silent --show-error --location --retry 3 \
-            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
-            -o "$RUNNER_TEMP/actionlint.tar.gz"
-          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $RUNNER_TEMP/actionlint.tar.gz" | sha256sum --check
-          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
-          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
-      - uses: nocoo/base-ci/.github/actions/setup-js@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
-        with:
-          runtime-version: ${{ env.BUN_VERSION }}
-          node-version: ${{ env.NODE_VERSION }}
-          install-policy: project
-      - name: actionlint and immutable base-ci pins
-        run: bun run scripts/quality/workflow-lint.ts
-      - name: YAML style
-        run: |
-          set -euo pipefail
-          python3 -m pip install --quiet 'yamllint==1.38.0'
-          yamllint -d '{extends: default, rules: {line-length: disable, document-start: disable, truthy: disable}}' .github/workflows/*.yml
+      - uses: nocoo/base-ci/.github/actions/lint-workflows@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
       - name: Record tested SHA
         id: record-sha
         if: always()
@@ -133,11 +113,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 1
-      - uses: nocoo/base-ci/.github/actions/setup-security-scanners@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
-      - name: Gitleaks over the checked-out content
-        run: |
-          set -euo pipefail
-          gitleaks dir . --no-banner --redact --config=.gitleaks.toml --gitleaks-ignore-path=.
+      - uses: nocoo/base-ci/.github/actions/scan-secrets@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
       - name: Record tested SHA
         id: record-sha
         if: always()
@@ -153,16 +129,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-security-scanners@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
-      - name: OSV scan both lockfiles
-        run: |
-          set -euo pipefail
-          for lockfile in bun.lock worker/bun.lock; do
-            test -f "$lockfile" || { echo "::error::missing $lockfile"; exit 1; }
-            echo "::group::scan $lockfile"
-            osv-scanner scan --lockfile="$lockfile" --config=osv-scanner.toml
-            echo "::endgroup::"
-          done
+      - uses: nocoo/base-ci/.github/actions/scan-dependencies@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
+        with:
+          lockfiles: "bun.lock,worker/bun.lock"
       - name: Record tested SHA
         id: record-sha
         if: always()
@@ -178,7 +147,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
+      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
         with:
           runtime-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
@@ -203,7 +172,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
+      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
         with:
           runtime-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
@@ -273,7 +242,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
+      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
         with:
           runtime-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
@@ -327,7 +296,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
+      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
         with:
           runtime-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
@@ -383,7 +352,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: nocoo/base-ci/.github/actions/setup-js@6424d395d36a815d931f10e557762eb635d511c0 # v2026.16
+      - uses: nocoo/base-ci/.github/actions/setup-js@dc858360aa7812db61fd9d825943e4efd4dcd0e7 # v2026.17
         with:
           runtime-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
