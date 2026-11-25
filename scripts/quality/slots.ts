@@ -169,11 +169,6 @@ export const NOT_APPLICABLE: { id: string; name: string; reason: string }[] = [
     reason:
       "worker/test runs in Node with a mocked D1 binding (L1 evidence); no workerd / vitest-pool-workers runtime suite exists",
   },
-  {
-    id: "P1",
-    name: "P1: Package",
-    reason: "root package.json is private and nothing is published to npm",
-  },
 ];
 
 export function slotsForStage(stage: Stage): SlotDefinition[] {

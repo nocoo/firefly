@@ -5,9 +5,8 @@
 # `quality / S1: Types` ... `quality / Z1: Gate`. Steps are inlined; only
 # composite actions from nocoo/base-ci are reused, pinned to a full SHA.
 #
-# L2 Runtime and P1 Package are declared `na` in AGENTS.md and stay skipped.
-# `container-image-e2e` is the one blocking job outside the 12 slots; it is named
-# without a slot id and aggregated by Z1.
+# L2 Runtime is declared `na` in AGENTS.md and stays skipped.
+# P1 Package verifies the built Docker image and is aggregated by Z1.
 name: Quality slots
 
 on:
@@ -37,7 +36,7 @@ env:
     "L2": {"status": "na", "reason": "worker/test runs in Node with a mocked D1 binding (L1 evidence); no workerd or vitest-pool-workers runtime suite exists. Real D1 execution is covered by L3 Integration."},
     "L3": {"status": "impl"},
     "L4": {"status": "impl"},
-    "P1": {"status": "na", "reason": "root package.json is private and nothing is published to npm"},
+    "P1": {"status": "impl"},
     "Z1": {"status": "impl"}}
 
 jobs:
@@ -376,29 +375,6 @@ jobs:
 
   p1-package:
     name: "P1: Package"
-    # Declared na in AGENTS.md: private root package, nothing published.
-    if: ${{ vars.ENABLE_P1_PACKAGE == 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    outputs:
-      tested-sha: ${{ steps.record-sha.outputs.sha }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: No published package
-        run: |
-          echo "::error::P1 Package is declared na; drop the private flag and add a consumer check before enabling this slot"
-          exit 1
-      - name: Record tested SHA
-        id: record-sha
-        if: always()
-        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-  # Blocking job outside the 12 slots: verifies the Docker artifact CI builds.
-  # It is named without a slot id and aggregated by Z1.
-  container-image-e2e:
-    name: "Container image E2E"
     runs-on: ubuntu-latest
     timeout-minutes: 30
     outputs:
@@ -446,7 +422,6 @@ jobs:
       - l3-integration
       - l4-e2e
       - p1-package
-      - container-image-e2e
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -476,7 +451,7 @@ jobs:
               "L4": ("l4-e2e", "L4: E2E"),
               "P1": ("p1-package", "P1: Package"),
           }
-          EXTRA_BLOCKING = {"container-image-e2e": "Container image E2E"}
+          EXTRA_BLOCKING = {}
           VALID = ("impl", "na", "todo")
           TARGET_SECONDS = 5 * 60
           LIMIT_SECONDS = 10 * 60

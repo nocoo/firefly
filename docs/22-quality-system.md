@@ -27,13 +27,13 @@ Twelve slots, no more and no fewer. `impl` means the check really runs and block
 | L2 Runtime      | —                                                              | —                                                       | no workerd / vitest-pool-workers suite; `worker/test` is Node with a mocked D1 binding and counts as L1; real D1 execution is proven by L3 | **na** | —                            |
 | L3 Integration  | pre-push, CI                                                   | `bun run test:e2e:api`                                  | real HTTP through `wrangler dev` + `next start`, per-run D1/R2, `_test_marker`, synthetic credentials                                      | impl   | 5.5s                         |
 | L4 E2E          | pre-push, CI                                                   | `bun run test:e2e:browser`                              | Playwright chromium journeys (blog + admin)                                                                                                | impl   | 29.4s                        |
-| P1 Package      | —                                                              | —                                                       | `package.json` is private and nothing is published to npm                                                                                  | **na** | —                            |
+| P1 Package      | CI                                                             | `docker build` + `bun scripts/run-e2e.ts --api-only`    | Docker image build + real HTTP API E2E against the built container                                                                         | impl   | —                            |
 | Z1 Gate         | every stage                                                    | `scripts/quality/gate.ts` (local), `Z1: Gate` job (CI)  | all slots above                                                                                                                            | impl   | —                            |
 
 Coverage today: root 98.63 / 95.67 / 99.16 / 99.18 (statements/branches/functions/lines),
 worker 98.64 / 96.59 / 100 / 99.52. The 95% floor is a floor, not a target.
 
-### Why L2 and P1 are `na`
+### Why L2 is `na`
 
 `worker/test` imports Vitest, mocks the whole `D1Database` interface and runs with
 `environment: "node"`; there is no `@cloudflare/vitest-pool-workers` or workerd
@@ -41,8 +41,6 @@ dependency. Under the slot definition that is L1 evidence, not a runtime suite.
 Real runtime and SQL behavior is covered by the L3 lane, which drives a real
 `wrangler dev` process against per-run SQLite. Adding a workerd suite would let
 L2 move to `impl`; it is tracked as an optional follow-up, not a current gap.
-
-`P1` would only apply if this repository published a package; it does not.
 
 ## 2. Local gates
 
@@ -101,14 +99,13 @@ Native mode: `.github/workflows/ci.yml` is a single caller job (key `quality`, n
   `777bbe4f9bacab8a91d8c01974480a6ee23d28e0  # v2026.15`.
 - `na` slots keep their job with a job-level `if:` so all twelve names exist and
   stay visibly skipped.
-- `Z1: Gate` runs with `if: always()`, needs every slot job plus the one blocking
-  job outside the slots (`Container image E2E`), and fails when an `impl` slot did
-  not succeed, an `na`/`todo` slot actually ran, a job reports no `tested-sha`,
+- `Z1: Gate` runs with `if: always()`, needs every slot job, and fails when an `impl`
+  slot did not succeed, an `na`/`todo` slot actually ran, a job reports no `tested-sha`,
   the reported SHAs differ, or the declaration itself is malformed.
-- `Container image E2E` (`container-image-e2e` in `quality-slots.yml`) runs
+- `P1: Package` (`p1-package` in `quality-slots.yml`) runs
   `bun scripts/run-e2e.ts --api-only --container-image=<image>`. This Linux-only
   lane uses host networking and the same per-run marked D1/R2 isolation; it never
-  pulls an unspecified image, carries no slot ID, is aggregated by `Z1: Gate`,
+  pulls an unspecified image, is aggregated by `Z1: Gate`,
   and must not run alongside another E2E lane or a development Worker.
 - L3 uploads `.wrangler/e2e-logs/`, L4 uploads `test-results/` and the logs with
   `if: always()` and `if-no-files-found: ignore`, retention 7 days.
