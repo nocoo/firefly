@@ -1,7 +1,7 @@
 # 22 — Quality System (System0 slots)
 
 > Authoritative quality document for this repository. Slot semantics come from the
-> `system1-quality` skill (v1.3.0, system repository); base-ci v2026.19 only supplies
+> `system1-quality` skill (v1.3.0, system repository); base-ci v2026.20 only supplies
 > composite actions and the deploy interface.
 >
 > Supersedes [07](./07-quality-system-upgrade.md) and [17](./17-quality-upgrade.md)
@@ -96,7 +96,7 @@ Native mode: `.github/workflows/ci.yml` is a single caller job (key `quality`, n
 - No matrix suffixes and no nested reusable workflows; steps are inlined. base-ci
   composite actions (`setup-js`, `setup-playwright`, `lint-workflows`, `scan-secrets`,
   `scan-dependencies`, `z1-gate`) are pinned to
-  `98fc023423f82b010f17e0ebbc9dd580fe68736a  # v2026.19`.
+  `e5876a604547b1ddb0916f16dd841a4f832609a0  # v2026.20`.
 - `na` slots keep their job with a job-level `if:` so all twelve names exist and
   stay visibly skipped.
 - `Z1: Gate` runs checkout-free via `nocoo/base-ci/.github/actions/z1-gate` with
@@ -112,7 +112,7 @@ Native mode: `.github/workflows/ci.yml` is a single caller job (key `quality`, n
   `if: always()` and `if-no-files-found: ignore`, retention 7 days.
 - Branch protection on `main` requires exactly `quality / Z1: Gate`. Admin bypass
   is enabled so direct pushes to `main` keep working; no other check is required.
-- Releases: `release.yml` calls `deploy-docker.yml@bfaac83b…# v2026.19`, which
+- Releases: `release.yml` calls `deploy-docker.yml@e5876a60…# v2026.20`, which
   proves the source run/SHA before deploying and then requires a successful
   `quality / Z1: Gate` check-run on that exact SHA (`required-quality-check`
   defaults to `quality / Z1: Gate`, `require-quality-check` defaults to true — the
