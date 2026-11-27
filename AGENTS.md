@@ -36,16 +36,16 @@ Auth requires `AUTH_SECRET`, `AUTH_URL`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`,
 - **UI & build**: MVVM — keep ViewModels free of Views/DOM and routes thin. Build runs stable `tsc` before Webpack alongside `@typescript/native-preview` ([tooling](docs/26-biome-migration-ts7.md)).
 - **Migrations**: Connection-scoped PRAGMAs use `-- @batch`. Apply schema before dependent code; `bun run migrate` targets prod. Never revive retired remote test D1 procedures.
 - **Tests & headers**: Restore fake timers in every suite (root Vitest uses `isolate: false`). Test prod-only security headers separately from dev; never set HSTS on localhost.
-- **CD & releases**: Main CI triggers Docker CD (`firefly / production`, jp4 `/data/firefly`, immutable digests), even on doc pushes. Worker deploy/migrations stay separate; root `package.json` owns version.
+- **CD & releases**: Main `Pipeline` (`.github/workflows/pipeline.yml`) runs `quality` then D1–D5 Docker CD (`firefly / production`, jp4 `/data/firefly`, immutable digests) on `main` push (or `workflow_dispatch` with `deploy=true`). Worker deploy/migrations stay separate; root `package.json` owns version.
 - **Origin & routing**: One active write origin only; only `lizheng.blog` routes to Firefly (`www` is a redirect Worker; `origin.lizheng.blog` retired). Keep `DEPLOY_ORIGIN_MARKER=jp2` until DNS cutover.
 - **Rollback & TLS**: Railway stays stopped for rollback (deletion needs owner approval); prod TLS (`tls_client_auth=on`), Caddy `SIGUSR1` reload, and rollback live in [runbook](docs/35-jp2-migration.md).
 
 ## Quality & Local Gates
 
-Follows `system1-quality`; CI slots and pinned `base-ci` live in `.github/workflows/quality-slots.yml` (`ci.yml` caller `quality`; `quality / Z1: Gate` required on `main`, admin bypass enabled), local config in `scripts/quality/slots.ts`. Status: `enforced`, `planned`, `manual`, `N/A`.
+Follows `system1-quality`; CI slots and pinned `base-ci` (`v2026.24`) live in `.github/workflows/quality-slots.yml` (`pipeline.yml` caller `quality`; `quality / Z1: Gate` required on `main`, admin bypass enabled), local config in `scripts/quality/slots.ts`. Status: `enforced`, `planned`, `manual`, `N/A`.
 
 - **Exceptions**: `L2 Runtime` is `N/A` (`worker/test` mocks D1 in Node as L1; L3 covers real D1).
-- **Coverage & package gate**: `L1 Unit` enforces >=80% x4 on root (`src/`, minus `vitest.config.ts` exclusions) and `worker/src/`. `L4 E2E` runs 6 core smoke specs on Desktop Chromium. CI `P1: Package` verifies the built Docker image via API E2E, aggregated by checkout-free `Z1: Gate` (`nocoo/base-ci/.github/actions/z1-gate@v2026.20`).
+- **Coverage & package gate**: `L1 Unit` enforces >=80% x4 on root (`src/`, minus `vitest.config.ts` exclusions) and `worker/src/`. `L4 E2E` runs 6 core smoke specs on Desktop Chromium. CI `P1: Package` verifies the built Docker image via API E2E, aggregated by checkout-free `Z1: Gate` (`nocoo/base-ci/.github/actions/z1-gate@v2026.24`).
 - **Local hooks**: Installed via `bun run prepare` (`.husky/`); check-only, never touch worktree. `pre-commit` checks staged Git index (`S1/S2/L1/G1` + `S3` when workflows change).
 - **Pre-push & guards**: `pre-push` checks detached worktrees per pushed OID (`S1/S2/L1/G1/G2/B1/L3/L4`). Missing scanners, Bun drift, empty runs, or timeouts fail; never bypass ([docs/22](docs/22-quality-system.md)).
 
