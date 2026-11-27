@@ -15,7 +15,7 @@ const expectedVersion = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf8"),
 ).version;
 const releaseWorkflow = readFileSync(
-  new URL("../.github/workflows/release.yml", import.meta.url),
+  new URL("../.github/workflows/pipeline.yml", import.meta.url),
   "utf8",
 );
 const productionOriginMarker = "jp4";
