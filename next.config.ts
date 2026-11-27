@@ -69,6 +69,9 @@ const nextConfig: NextConfig = {
         protocol: assetsOrigin.protocol,
         hostname: assetsOrigin.hostname,
       },
+      ...(assetsOrigin.hostname === "b.no.mt"
+        ? []
+        : [{ protocol: "https" as const, hostname: "b.no.mt" }]),
       { protocol: "https", hostname: "f.no.mt" },
       { protocol: "https", hostname: "his.fm" },
     ],

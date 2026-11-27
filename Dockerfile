@@ -13,11 +13,7 @@ FROM base AS builder
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
-ARG AUTH_URL
-ARG R2_PUBLIC_URL
-ENV AUTH_URL=$AUTH_URL \
-    R2_PUBLIC_URL=$R2_PUBLIC_URL
-RUN test -n "$AUTH_URL" && test -n "$R2_PUBLIC_URL" && npm run build
+RUN --mount=type=cache,id=firefly-next,target=/app/.next/cache npm run build
 
 FROM base AS runner
 ENV NODE_ENV=production \

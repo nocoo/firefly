@@ -34,7 +34,7 @@ jobs:
     with:
       tailscale: true
       environment: firefly / production
-      images: '[{"image":"ghcr.io/nocoo/firefly","service":"web","build-args":"AUTH_URL=https://lizheng.blog\nR2_PUBLIC_URL=https://b.no.mt"}]'
+      images: '[{"image":"ghcr.io/nocoo/firefly","service":"web"}]'
       deploy-directory: /data/firefly
       remote-verify-command: |
         python3 - <<'PY'
