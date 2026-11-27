@@ -38,12 +38,9 @@ describe("production container", () => {
     expect(config).toMatch(/output:\s*"standalone"/);
   });
 
-  it("requires only explicit public build configuration, never secrets or test switches", () => {
-    expect([...dockerfile.matchAll(/^ARG (\w+)/gm)].map((match) => match[1])).toEqual([
-      "AUTH_URL",
-      "R2_PUBLIC_URL",
-    ]);
-    expect(dockerfile).toContain('test -n "$AUTH_URL" && test -n "$R2_PUBLIC_URL"');
+  it("builds without baked runtime URLs, secrets, or test switches", () => {
+    expect([...dockerfile.matchAll(/^ARG (\w+)/gm)].map((match) => match[1])).toEqual([]);
+    expect(dockerfile).not.toMatch(/AUTH_URL|R2_PUBLIC_URL/);
     expect(dockerfile).not.toMatch(
       /SECRET|PASSWORD|TOKEN|WORKER_URL|AUTH_GOOGLE|AUTH_ALLOWED|E2E_|VITEST|CI=true/,
     );

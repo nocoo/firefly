@@ -372,9 +372,6 @@ jobs:
           push: false
           load: true
           tags: firefly-ci:${{ github.sha }}
-          build-args: |
-            AUTH_URL=http://localhost:17028
-            R2_PUBLIC_URL=http://localhost:17028/__e2e-r2
           cache-from: type=gha,scope=firefly-web
           cache-to: type=gha,mode=max,scope=firefly-web
       - name: Real HTTP against the built image
