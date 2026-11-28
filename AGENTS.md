@@ -14,8 +14,8 @@ bun run dev                  # Web 127.0.0.1:7028 (start local Worker 8787 first
 bun run migrate:local        # Local Worker 8787 (`bun run migrate` defaults to prod)
 bun run typecheck            # S1: next typegen + tsc (root + worker)
 bun run lint                 # S2: Biome check-only (0 warnings) + oxc AST gates
-bun run test:coverage        # L1: root >= 80% (4 metrics)
-bun run test:worker:coverage # L1: worker >= 80%
+bun run test:coverage        # L1: root >= 90/90/90/85 (st/ln/fn/br)
+bun run test:worker:coverage # L1: worker >= 90/90/90/85 (st/ln/fn/br)
 bun run test:e2e:api         # L3: HTTP against wrangler dev + next start
 bun run test:e2e:browser     # L4: Playwright Chromium (`bunx playwright install chromium`)
 bun run security             # G2: osv-scanner (root + worker lockfiles)
@@ -45,7 +45,7 @@ Auth requires `AUTH_SECRET`, `AUTH_URL`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`,
 Follows `system1-quality`; CI slots and pinned `base-ci` (`v2026.24`) live in `.github/workflows/quality-slots.yml` (`pipeline.yml` caller `quality`; `quality / Z1: Gate` required on `main`, admin bypass enabled), local config in `scripts/quality/slots.ts`. Status: `enforced`, `planned`, `manual`, `N/A`.
 
 - **Exceptions**: `L2 Runtime` is `N/A` (`worker/test` mocks D1 in Node as L1; L3 covers real D1).
-- **Coverage & package gate**: `L1 Unit` enforces >=80% x4 on root (`src/`, minus `vitest.config.ts` exclusions) and `worker/src/`. `L4 E2E` runs 6 core smoke specs on Desktop Chromium. CI `P1: Package` verifies the built Docker image via API E2E, aggregated by checkout-free `Z1: Gate` (`nocoo/base-ci/.github/actions/z1-gate@v2026.24`).
+- **Coverage & package gate**: `L1 Unit` enforces >=90/90/90/85 (statements/lines/functions/branches) on root (`src/`, minus `vitest.config.ts` exclusions) and `worker/src/`. `L4 E2E` runs 6 core smoke specs on Desktop Chromium. CI `P1: Package` verifies the built Docker image via API E2E, aggregated by checkout-free `Z1: Gate` (`nocoo/base-ci/.github/actions/z1-gate@v2026.24`).
 - **Local hooks**: Installed via `bun run prepare` (`.husky/`); check-only, never touch worktree. `pre-commit` checks staged Git index (`S1/S2/L1/G1` + `S3` when workflows change).
 - **Pre-push & guards**: `pre-push` checks detached worktrees per pushed OID (`S1/S2/L1/G1/G2/B1/L3/L4`). Missing scanners, Bun drift, empty runs, or timeouts fail; never bypass ([docs/22](docs/22-quality-system.md)).
 

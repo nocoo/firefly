@@ -103,8 +103,11 @@ export async function checkBun(root: string): Promise<ToolCheck> {
   if (!declared) {
     return { name: "bun", ok: true, detail: `${actual} (no .mise.toml declaration)` };
   }
+  const declaredParts = declared.split(".");
   const matches =
-    actual === declared || (declared.split(".").length < 3 && actual.startsWith(`${declared}.`));
+    actual === declared ||
+    (declaredParts.length < 3 && actual.startsWith(`${declared}.`)) ||
+    actual.split(".").slice(0, 2).join(".") === declaredParts.slice(0, 2).join(".");
   return {
     name: "bun",
     ok: matches,
